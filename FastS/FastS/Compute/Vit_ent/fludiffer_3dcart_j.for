@@ -1,0 +1,76 @@
+        du =(qm2-qp2)*sj
+        dv =(qm3-qp3)*sj
+        dw =(qm4-qp4)*sj
+        dp = p2-p1
+        dqn=qn2-qn1  !Sdqn
+
+c.....Evaluation des valeurs propres
+        s_1 =1./max(sj,1.e-30)
+        ny = tcy*s_1
+
+        qn = v*ny
+
+        f1 = qn                                       !vl
+        f4 = psiroe*(abs(f1) + c)  !delta
+
+        f2 =.5+sign(.5,abs(f1)-f4)                    !switch
+        f3 =(f2-1.)*(f1*f1/f4 + f4)*0.5  -f2*abs(f1)  !-ambda1
+ 
+        f1  = (r2-r1 - dp/(c*c))*sj !  a123
+ 
+        flu1= f3*( f1                                   )
+        flu2= f3*( f1 * u + r * (du         )           )
+        flu3= f3*( f1 * v + r * (dv - ny*dqn)           )
+        flu4= f3*( f1 * w + r * (dw         )           )
+        flu5= f3*( f1 * q + r * (u*du+v*dv+w*dw-qn*dqn) )
+
+c          if(j.le.3.and.l-lij.eq.15.and.k.eq.3)
+c     &    write(*,'(a,4f25.12,i5)')'f12 ',-f3,
+c     &         f2, qn, f4    ,j
+c         fl12 = -flu2
+
+        f1 = qn+c
+        f2 =.5+sign(.5,abs(f1)-f4)
+        f3 =(f2-1.)*(f1*f1/f4 + f4)*0.5  -f2*abs(f1)
+ 
+        f1 = (dp+r*c*dqn*s_1) / (2.*c*c)*sj*f3  !lambda4*S*a4
+
+        flu1 = flu1 + f1
+        flu2 = flu2 + f1 * (u        )
+        flu3 = flu3 + f1 * (v + ny* c)
+        flu4 = flu4 + f1 * (w        )
+        flu5 = flu5 + f1 * (h + qn *c)
+
+c        fl42 = -f1*u
+
+        f1 = qn-c
+        f2 =.5+sign(.5,abs(f1)-f4)
+        f3 =(f2-1.)*(f1*f1/f4 + f4)*0.5  -f2*abs(f1)
+
+        f1 = (dp-r*c*dqn*s_1) / (2.*c*c)*f3*sj !lambda5*S*a5
+ 
+        flu1 = flu1 + f1 
+        flu2 = flu2 + f1 * (u        )
+        flu3 = flu3 + f1 * (v - ny* c)
+        flu4 = flu4 + f1 * (w        )
+        flu5 = flu5 + f1 * (h - qn* c)
+
+c        fl52 = -f1*u
+
+        rou1=r1*qn1
+        rou2=r2*qn2
+        p1p2=p1+p2
+ 
+c        f122 = rou1*qp2 + rou2*qm2
+
+        flu1 = (flu1 + rou1     + rou2                 )*0.5
+        flu2 = (flu2 + rou1*qp2 + rou2*qm2             )*0.5
+        flu3 = (flu3 + rou1*qp3 + rou2*qm3 + tcy * p1p2)*0.5
+        flu4 = (flu4 + rou1*qp4 + rou2*qm4             )*0.5
+        flu5 = (flu5 + rou1*h1  + rou2*h2              )*0.5
+
+c          if(j.le.3.and.l-lij.eq.15.and.k.eq.3)
+c     &    write(*,'(a,5f25.12,i5)')'f2j ',
+c     &             flu2,f122*0.5,fl12*0.5,
+c     &             fl42*0.5,fl52*0.5,j
+

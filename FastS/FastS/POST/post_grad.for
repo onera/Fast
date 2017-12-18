@@ -1,0 +1,219 @@
+c***********************************************************************
+c     $Date: 2010-11-04 13:25:50 +0100 (Thu, 04 Nov 2010) $
+c     $Revision: 64 $
+c     $Author: IvanMary $
+c***********************************************************************
+      subroutine post_grad( ndo, nidom, Nbre_thread_actif, 
+     &        ithread, Nbre_socket, socket, mx_synchro, neq_grad, order,
+     &        param_int, param_real, 
+     &        ijkv_sdm,
+     &        ind_sdm, ind_coe, ind_grad, 
+     &        ind_dm_zone, ind_dm_socket, ind_dm_omp,
+     &        socket_topology, lok ,
+     &        rop , ti, tj, tk, vol, grad)
+
+c***********************************************************************
+c_U   USER : TERRACOL
+c
+c     ACT
+c_A    Appel du calcul des flux explicites
+c
+c     VAL
+c_V    gaz parfait monoespece
+c_V    processeur domaine
+c_V    steady/unsteady
+c
+c     INP
+c_I    tijk     : vecteur param_int( IO_THREAD)rmale aux facettes des mailles
+c_I    vent     : vitesses d'entrainement aux facettes preced.
+c
+c     LOC
+c_L    flu      : flux convectifs dans une direction de maillage
+c
+c     I/O
+c_/    grad    : increment de la solution
+c
+c***********************************************************************
+      implicit none
+
+      INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, 
+     & ithread, Nbre_socket, socket , neq_grad, order
+
+      INTEGER_E  ijkv_sdm(3),ind_coe(6),ind_grad(6),ind_dm_zone(6),
+     & ind_dm_omp(6), ind_dm_socket(6), ind_sdm(6), socket_topology(3),
+     & param_int(0:*), lok(*)
+
+      REAL_E rop(*), ti(*),tj(*),tk(*),vol(*), grad(*)
+
+      REAL_E param_real(0:*)
+C Var loc 
+      logical ksa, lerr
+      INTEGER_E idir,nbdr_sdm,OMP_get_thread_num,icache,jcache,kcache,
+     & Imax,Jmax,Kmax,itabi,ios,i,k, ind,lok_shap_loc,l,j,io,inc1,inc2,
+     & size_max, size_loc,thread_parsock,inc11,inc22,l0,nitrun,
+     & thread_parsock_actif,V1,V2,V3,lij,ltij,lt,lvo,extended_range,
+     & lok_shap_sock(4),thread_topology(3),
+     & socket_pos(3), synchro_receive_sock(3),synchro_send_sock(3),
+     & lok_shap(4), size_cache(3),
+     & synchro_receive_th(3),synchro_send_th(3),ipt_lok_sock,
+     & ithread_sock,ithread_io,ipt_lok,size_max_sock,neq_lok,taille,
+     & ijkv_thread(3),kGbloc,jGbloc,iGbloc,ip,jp,kp,lth,
+     & ibloc,jbloc,kbloc,ijkvloc(3),skip(3),shift(3),test(3),lwait,lgo,
+     & size_thread(3),topo_s(3),thread_pos(3),thread_pos_tmp(3),sens(3),
+     & ind_rhs(6),ind_mjr(6), size_target(3), cache(3),ind_loop(6)
+
+      character*7 omp_init,omp_wait,omp_go,omp_wait_lu
+
+      REAL_E c1,c2,volinv
+
+#include "FastS/param_solver.h"
+#include "FastS/formule_param.h"
+#include "FastS/formule_mtr_param.h"
+
+      !coeficient pour calcul gradient ordre4 !c1=0.5 c2 =0 ordre 2
+      if(order.eq.4) then
+        c1 = 7./6.
+        c2 = 1./6.
+      ! ordre 2 obligatoire si calcul sur une rangee fictive
+      else
+        c1 = 1.
+        c2 = 0.
+      endif
+
+      nitrun =-2
+
+      V1 = 0
+      V2 =   param_int(NDIMDX)
+      V3 = 2*param_int(NDIMDX)
+
+
+#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+      if(c1.eq.1.) extended_range = 1
+#include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
+#include "FastS/HPC_LAYER/INDICE_RANGE.for"
+
+           !Initilalisation systematique de grad
+           call init_rhs(ndo, 1, param_int, param_int(NDIMDX),
+     &                   neq_grad, ind_rhs, grad )
+
+            call synchro_omp_scater(param_int, ithread_io,
+     &                          lth, sens,lgo,lwait,Nbre_socket,
+     &                          Nbre_thread_actif,thread_parsock,
+     &                          lok_shap_sock, lok_shap,neq_lok,
+     &                          socket , socket_topology, socket_pos,
+     &                          ithread, thread_topology,thread_pos_tmp,
+     &                          synchro_receive_sock, synchro_send_sock,
+     &                          synchro_receive_th  , synchro_send_th,
+     &                          ibloc , jbloc , kbloc , ijkv_thread,
+     &                          icache, jcache, kcache, ijkv_sdm,
+     &                          ind_dm_omp,
+     &                          grad, grad, grad, 
+     &                          lok(1),lok(ipt_lok_sock),
+     &                          lok(ipt_lok), omp_wait )
+
+            if(param_int(ITYPZONE).eq.0) then
+
+               call cp_gradvar_3dfull(ndo, ithread, neq_grad,
+     &                        param_int, c1,c2,
+     &                        ind_sdm,
+     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
+     &                        synchro_send_sock, synchro_send_th,
+     &                        synchro_receive_sock, synchro_receive_th,
+     &                        ibloc , jbloc , kbloc ,
+     &                        icache, jcache, kcache,
+     &                        rop, grad,ti,tj,tk)
+            
+                ind_loop(:) = ind_mjr(:)
+#include        "FastS/Compute/loop_begin.for"
+                   volinv=0.5/vol(lvo)
+                   grad(l+ V1) = grad(l+ V1)*volinv
+                   grad(l+ V2) = grad(l+ V2)*volinv
+                   grad(l+ V3) = grad(l+ V3)*volinv
+#include         "FastS/Compute/loop_end.for"
+
+            elseif(param_int(ITYPZONE).eq.1) then
+
+               call cp_gradvar_3dhomo(ndo, ithread, neq_grad,
+     &                        param_int, c1,c2,
+     &                        ind_sdm,
+     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
+     &                        synchro_send_sock, synchro_send_th,
+     &                        synchro_receive_sock, synchro_receive_th,
+     &                        ibloc , jbloc , kbloc ,
+     &                        icache, jcache, kcache,
+     &                        rop, grad,ti,tj,tk)
+              
+                ind_loop(:) = ind_mjr(:)
+#include        "FastS/Compute/loop_begin.for"
+                   volinv=0.5/vol(lvo)
+                   grad(l+ V1) = grad(l+ V1)*volinv
+                   grad(l+ V2) = grad(l+ V2)*volinv
+                   grad(l+ V3) = grad(l+ V3)*volinv
+#include         "FastS/Compute/loop_end.for"
+
+            elseif(param_int(ITYPZONE).eq.2) then
+
+              
+               call cp_gradvar_3dcart(ndo, ithread, neq_grad,
+     &                        param_int, c1,c2,
+     &                        ind_sdm,
+     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
+     &                        synchro_send_sock, synchro_send_th,
+     &                        synchro_receive_sock, synchro_receive_th,
+     &                        ibloc , jbloc , kbloc ,
+     &                        icache, jcache, kcache,
+     &                        rop, grad,ti,tj,tk)
+
+                 volinv=0.5/vol(1)
+                 ind_loop(:) = ind_mjr(:)
+#include        "FastS/Compute/loop_begin.for"
+                   grad(l+ V1) = grad(l+ V1)*volinv
+                   grad(l+ V2) = grad(l+ V2)*volinv
+                   grad(l+ V3) = grad(l+ V3)*volinv
+#include         "FastS/Compute/loop_end.for"
+
+
+            else
+               call cp_gradvar_2d(ndo, ithread, neq_grad,
+     &                        param_int, c1,c2,
+     &                        ind_sdm,
+     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
+     &                        synchro_send_sock, synchro_send_th,
+     &                        synchro_receive_sock, synchro_receive_th,
+     &                        ibloc , jbloc , kbloc ,
+     &                        icache, jcache, kcache,
+     &                        rop, grad,ti,tj,tk)
+
+                 ind_loop(:) = ind_mjr(:)
+#include        "FastS/Compute/loop_begin.for"
+                   volinv=0.5/vol(lvo)
+                   grad(l+ V1) = grad(l+ V1)*volinv
+                   grad(l+ V2) = grad(l+ V2)*volinv
+#include         "FastS/Compute/loop_end.for"
+
+            endif
+
+            call extrap(ndo,param_int,c1,ind_sdm,ind_dm_zone,grad(1+V1))
+            call extrap(ndo,param_int,c1,ind_sdm,ind_dm_zone,grad(1+V2))
+            if(param_int(ITYPZONE).ne.3) 
+     &      call extrap(ndo,param_int,c1,ind_sdm,ind_dm_zone,grad(1+V3))
+               
+            call synchro_omp_scater(param_int, ithread_io,
+     &                          lth, sens,lgo,lwait,Nbre_socket,
+     &                          Nbre_thread_actif,thread_parsock,
+     &                          lok_shap_sock, lok_shap,neq_lok,
+     &                          socket , socket_topology, socket_pos,
+     &                          ithread, thread_topology,thread_pos_tmp,
+     &                          synchro_receive_sock, synchro_send_sock,
+     &                          synchro_receive_th  , synchro_send_th,
+     &                          ibloc , jbloc , kbloc , ijkv_thread,
+     &                          icache, jcache, kcache, ijkv_sdm,
+     &                          ind_dm_omp,
+     &                          grad, grad, grad, 
+     &                          lok(1),lok(ipt_lok_sock),
+     &                          lok(ipt_lok), omp_go )
+
+#include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
+#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+
+      end
