@@ -127,7 +127,7 @@ def metric(t):
 # Initialisation parametre calcul: calcul metric + var primitive + compactage 
 # + alignement + placement DRAM
 #==============================================================================
-def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False):
+def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     global FIRST_IT, HOOK, HOOKIBC
     # Get omp_mode
     omp_mode = 0
@@ -213,6 +213,17 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False):
        X.miseAPlatDonnorTree__(zones, tc, procDict=g, procList=l)
        #t1=timeit.default_timer()
        #print "cout tc compact= ", t1-t0
+
+    #
+    # Compactage arbre moyennes stat
+    #
+    if tmy is not None:
+        sol = Internal.getNodesFromName3(tmy, 'FlowSolution#Centers')
+        var = Internal.getNodesFromType1(sol[0] , 'DataArray_t')
+        varmy=[]
+        for v in var: varmy.append('centers:'+v[0])
+        _compact(tmy, fields=varmy)
+
     #
     # remplissage ghostcells
     #
@@ -224,8 +235,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False):
     _fillGhostcells(zones, tc, metrics, nitrun, ['Density'], nstep, hook1) 
     #t1=timeit.default_timer()
     #print "cout ghostcell= ", t1-t0
-    
-    return (t, tc, metrics)
+    if tmy is None: return (t, tc, metrics)
+    else: return (t, tc, metrics, tmy)
 
 #==============================================================================
 def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolutionCenters__], fields=None, mode=None):

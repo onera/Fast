@@ -19,13 +19,10 @@ anglez = 0.
 
 
 a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5)) 
-
 b = T.rotate(a, (0.,0.,0.), (0.,1.,0.), 90.); b[0] = 'cart'
-
 t = C.newPyTree(['Base',b])
-
-t = C.addState(t, 'GoverningEquations', 'NSLaminar')
-t = C.addState(t, MInf=0.1, ReInf=1600, adim='adim2funk')
+C._addState(t, 'GoverningEquations', 'NSLaminar')
+C._addState(t, MInf=0.1, ReInf=1600, adim='adim2funk')
 
 # Get dim
 dim = 3
@@ -62,20 +59,15 @@ ret = C.isNamePresent(t, 'centers:TurbulentDistance')
 if Model == 'NSTurbulent' and ret != 1: # Wall distance not present
     import Dist2Walls.PyTree as DTW
     walls = C.extractBCOfType(t, 'BCWall')
-    t = DTW.distance2Walls(t, walls, loc='centers', type='ortho')
-
-
-
+    DTW._distance2Walls(t, walls, loc='centers', type='ortho')
 
 t = X.connectMatchPeriodic(t, rotationCenter=[0.,0.,0.], rotationAngle=[anglex,angley,anglez])
-t = C.fillEmptyBCWith(t, 'Extrap', 'BCExtrapolate', dim=3)
-
+C._fillEmptyBCWith(t, 'Extrap', 'BCExtrapolate', dim=3)
 
 # Ajout des ghost cells
 C.addState2Node__(t, 'EquationDimension', dim)
 NGhostCells = 2
-t = Internal.addGhostCells(t, t, NGhostCells, adaptBCs=1, fillCorner=0)
-
+Internal._addGhostCells(t, t, NGhostCells, adaptBCs=1, fillCorner=0)
 tc = C.node2Center(t)
 tc = X.setInterpData(t,tc, storage='inverse',loc='centers',penalty=1,nature=1,itype='abutting')
 C._rmVars(tc, 'FlowSolution')

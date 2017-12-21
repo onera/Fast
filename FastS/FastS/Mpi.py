@@ -110,7 +110,7 @@ def _fillGhostcells(zones, tc, metrics, nitrun, vars, nstep, hook1, graphID, gra
 
    return None
 #==============================================================================
-def warmup(t, tc, graph=None, infos_ale=None):
+def warmup(t, tc, graph=None, infos_ale=None, tmy=None):
     #global FIRST_IT, HOOK, HOOKIBC
 
     if graph is not None:
@@ -189,6 +189,16 @@ def warmup(t, tc, graph=None, infos_ale=None):
        X.miseAPlatDonnorTree__(zones, tc, procDict=g, procList=l)
 
     #
+    # Compactage arbre moyennes stat
+    #
+    if tmy is not None:
+        sol = Internal.getNodesFromName3(tmy, 'FlowSolution#Centers')
+        var = Internal.getNodesFromType1(sol[0] , 'DataArray_t')
+        varmy=[]
+        for v in var: varmy.append('centers:'+v[0])
+        _compact(tmy, fields=varmy)
+
+    #
     # remplissage ghostcells
     #
     hook1[12] = 0
@@ -196,5 +206,5 @@ def warmup(t, tc, graph=None, infos_ale=None):
     nitrun    = 0
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     _fillGhostcells(zones, tc, metrics, nitrun, ['Density'], nstep, hook1,graphID, graphIBCD, procDict) 
-    
-    return (t, tc, metrics)
+    if tmy is None: return (t, tc, metrics)
+    else: return (t, tc, metrics, tmy)

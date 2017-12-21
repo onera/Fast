@@ -12,11 +12,9 @@ import KCore.test as test
 
 angle = 45.
 a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5)) 
-
 t = C.newPyTree(['Base',a])
-
-t = C.addState(t, 'GoverningEquations', 'NSLaminar')
-t = C.addState(t, MInf=0.1, ReInf=1600, adim='adim2funk')
+C._addState(t, 'GoverningEquations', 'NSLaminar')
+C._addState(t, MInf=0.1, ReInf=1600, adim='adim2funk')
 
 # Get dim
 dim = 3
@@ -53,10 +51,10 @@ ret = C.isNamePresent(t, 'centers:TurbulentDistance')
 if Model == 'NSTurbulent' and ret != 1: # Wall distance not present
     import Dist2Walls.PyTree as DTW
     walls = C.extractBCOfType(t, 'BCWall')
-    t = DTW.distance2Walls(t, walls, loc='centers', type='ortho')
+    DTW._distance2Walls(t, walls, loc='centers', type='ortho')
 
 t = X.connectMatchPeriodic(t, rotationCenter=[0.,0.,0.], rotationAngle=[0.,0.,angle])
-t = C.fillEmptyBCWith(t, 'Extrap', 'BCExtrapolate', dim=3)
+C._fillEmptyBCWith(t, 'Extrap', 'BCExtrapolate', dim=3)
 #t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period kmin', 'BCautoperiod', 'kmin')
 #t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period kmax', 'BCautoperiod', 'kmax')
 
@@ -64,11 +62,11 @@ t = C.fillEmptyBCWith(t, 'Extrap', 'BCExtrapolate', dim=3)
 # Ajout des ghost cells
 C.addState2Node__(t, 'EquationDimension', dim)
 NGhostCells = 2
-t = Internal.addGhostCells(t, t, NGhostCells, adaptBCs=1, fillCorner=0)
+Internal._addGhostCells(t, t, NGhostCells, adaptBCs=1, fillCorner=0)
 if dim == 2: 
-    t = T.addkplane(t)
-    t = T.contract(t, (0,0,0), (1,0,0), (0,1,0), 0.01)
-    t = T.makeDirect(t)
+    T._addkplane(t)
+    T._contract(t, (0,0,0), (1,0,0), (0,1,0), 0.01)
+    T._makeDirect(t)
 #C.convertPyTree2File(t,"in.cgns")
 #C._initVars(t,"centers:cellN",1.)
 
@@ -88,6 +86,6 @@ C._initVars(t, '{centers:Temperature}=1.')
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
-test.testT(t, 1)
+test.testT(t,1)
 
 #C.convertPyTree2File(t, 'out.cgns')

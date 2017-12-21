@@ -159,9 +159,9 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
        donorBases[name] = tmp
       
     #rotation parameter
-    THETADEG  = THETA/math.pi*180
+    THETADEG  = THETA*Internal.__RAD2DEG__
     RotCenter = numpy.zeros((3), numpy.float64)
-    RotAngleDG= [ numpy.zeros((3), numpy.float64), numpy.zeros((3), numpy.float64)]
+    RotAngle  = [ numpy.zeros((3), numpy.float64), numpy.zeros((3), numpy.float64)]
     RotCenter[0]  = XC0; RotCenter[1] = YC0; RotCenter[2] = ZC0
     
     C._initVars(tcyl,"CoordinateX0={CoordinateX}")
@@ -174,8 +174,9 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
     ReceptCyl={}
     translate={'Rotor':True, 'Stator':True}
     #for it in xrange(0,NIT):
+    DTHETADEG = DTHETA*Internal.__RAD2DEG__
     for it in xrange(IT_DEB, IT_FIN):
-        print 'theta(radians,degree) = ', it*DTHETA,' ,', it*DTHETA/math.pi*180
+        print 'theta(radians,degree) = ', it*DTHETA,' ,', it*DTHETADEG
 
         for name in basenames:
            Internal._rmNodesByName( donorBases[name],'ID_*')
@@ -263,11 +264,11 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
            c = 1
            for bloc_Perio in RD[1][1:]:
           
-             print 'tetadeg', theta_perio[donor][c], donor, c
+             print 'teta(rad)', theta_perio[donor][c], donor, c
 
-             RotAngleDG[c-1][0] =AXISX*theta_perio[donor][c]/math.pi*180
-             RotAngleDG[c-1][1] =AXISY*theta_perio[donor][c]/math.pi*180
-             RotAngleDG[c-1][2] =AXISZ*theta_perio[donor][c]/math.pi*180
+             RotAngle[c-1][0] =AXISX*theta_perio[donor][c]
+             RotAngle[c-1][1] =AXISY*theta_perio[donor][c] 
+             RotAngle[c-1][2] =AXISZ*theta_perio[donor][c]
 
              for nozd in xrange(len(bloc_Perio[2])):
                zdperio = bloc_Perio[2][nozd]
@@ -279,7 +280,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
                       srname = srname[1]
                       zsr[0] = 'IDPER#%d_%s'%(it,srname)
                       # ajout des infos de periodicite 
-                      Internal.createChild(zsr,'RotationAngle' ,'DataArray_t',value=RotAngleDG[c-1])
+                      Internal.createChild(zsr,'RotationAngle' ,'DataArray_t',value=RotAngle[c-1])
                       Internal.createChild(zsr,'RotationCenter','DataArray_t',value=RotCenter)   
                       zdorig[2].append(zsr)
 
