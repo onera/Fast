@@ -25,5 +25,3 @@ effort = FastS._computeStress(t, teff, metrics)
 Internal._rmNodesByName(teff, '.Solver#Param')
 Internal._rmNodesByName(teff, '.Solver#ownData')
 test.testT(teff, 1)
-
-
