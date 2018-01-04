@@ -157,6 +157,7 @@ def _reorder(t, tc=None, omp_mode=0):
 # Init/create primitive Variable 
 #==============================================================================
 def _createPrimVars(base, zone, FIRST_IT, omp_mode, rmConsVars=True, adjoint=False):
+    import timeit
     # Get model
     model = "Euler"
     a = Internal.getNodeFromName2(zone, 'GoverningEquations')
@@ -185,14 +186,40 @@ def _createPrimVars(base, zone, FIRST_IT, omp_mode, rmConsVars=True, adjoint=Fal
             raise ValueError("createPrimVars: TurbulentDistance field required at cell centers for RANS computations.")
     
     rgp = (adim[11]-1.)*adim[7]
+    t0=timeit.default_timer()
     if C.isNamePresent(zone, 'centers:VelocityX'  ) != 1: P._computeVariables(zone, ['centers:VelocityX'  ], rgp=rgp)
+    ''' 
+    t1=timeit.default_timer()
+    print "cout calcul VX= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:VelocityY'  ) != 1: P._computeVariables(zone, ['centers:VelocityY'  ], rgp=rgp)
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul VY= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:VelocityZ'  ) != 1: P._computeVariables(zone, ['centers:VelocityZ'  ], rgp=rgp)
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul VZ= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:Temperature') != 1: P._computeVariables(zone, ['centers:Temperature'], rgp=rgp)
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul T = ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
 
     if (sa and C.isNamePresent(zone, 'centers:TurbulentSANuTilde') != 1): 
         if C.isNamePresent(zone, 'centers:TurbulentSANuTildeDensity') != 1: C._initVars(zone, 'centers:TurbulentSANuTilde= %20.16g/{centers:Density}'%adim[14])
         else: C._initVars(zone, 'centers:TurbulentSANuTilde= {centers:TurbulentSANuTildeDensity}/{centers:Density}')
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul Nu = ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
 
     if rmConsVars:
         C._rmVars(zone, 'centers:MomentumX')
@@ -201,21 +228,87 @@ def _createPrimVars(base, zone, FIRST_IT, omp_mode, rmConsVars=True, adjoint=Fal
         C._rmVars(zone, 'centers:EnergyStagnationDensity')
         C._rmVars(zone, 'centers:TurbulentSANuTildeDensity')
 
+    '''
+    t1=timeit.default_timer()
+    print "cout rmvars    = ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
+
     #on test s'il existe 2 niveau en temps dans l'arbre pour appliquer la bonne formule de derivee temporelle a la premere iteration
     FIRST_IT = 1
     if C.isNamePresent(zone, 'centers:Density_M1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_M1')  ; FIRST_IT=0
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul RoM1= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:VelocityX_M1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_M1'); FIRST_IT=0
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul VXM1= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:VelocityY_M1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_M1'); FIRST_IT=0
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul VYM1= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:VelocityZ_M1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_M1'); FIRST_IT=0
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul VZM1= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul TM1 = ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_M1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_M1'); FIRST_IT=0
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul NuM1= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
 
     if C.isNamePresent(zone, 'centers:Density_P1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_P1')  
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul RoP1= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:VelocityX_P1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_P1')
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul VXP1= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:VelocityY_P1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_P1')
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul VYP1= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:VelocityZ_P1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_P1')
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul VZP1= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if C.isNamePresent(zone, 'centers:Temperature_P1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_P1')
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul TP1 = ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
     if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_P1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_P1')
+    '''
+    t1=timeit.default_timer()
+    print "cout calcul NuP1= ", t1-t0, zone[0]
+    t0=timeit.default_timer()
+    '''
 
     sfd = 0
     a = Internal.getNodeFromName2(zone, 'sfd')
@@ -394,7 +487,9 @@ def tagBC(bcname):
   elif bcname == "BCOutpres":               tag =16;
   elif bcname == "BCInj1":                  tag =17;
   elif bcname == "BCDegenerateLine":        tag = 0;
-  else: print "Warning: unknown BC type %s."%bcname
+  else:
+    tag = -1
+    print "Warning: unknown BC type %s."%bcname
   return tag
 
 #==============================================================================

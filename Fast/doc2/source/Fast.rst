@@ -166,6 +166,11 @@ Actions
         + "zdes3"   (mode 3, see p118 https://tel.archives-ouvertes.fr/tel-01365361/document))
         + default value is 'none'
 
+    - **'sgsmodel'**: possible values are
+
+        + "Miles"   (ViscosityEddy==LaminarViscosity)
+        + "smsm"    (Selective Mixed Scale model, Lenormand et al, (2000), LES of sub and supersonic channel flow at moderate Re. Int. J. Numer. Meth. Fluids, 32: 369–406)
+        + default value is 'Miles'
     *Example of use:*
 
     * `Set numerics to zone (pyTree) <Examples/Fast/setNum2ZonesPT.py>`_:
