@@ -24,8 +24,10 @@
         shift(1)= skip(1)-1
         if(test(1).ne.0.and.iGbloc.eq.ijkv_thread(1))shift(1)=shift(1)-1
 
+#if CHECK_SPLIT > 1
          inc11=0
          inc22=0
+#endif 
          do kp=0,shift(3)
 
           kbloc = kGbloc + kp

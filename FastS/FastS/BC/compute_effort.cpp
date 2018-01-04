@@ -181,7 +181,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
   FldArrayI thread_topology(3*Nbre_thread_max); 
   FldArrayI   ind_dm_thread(6*Nbre_thread_max);  
 
-  E_Int itypecp_loc=2;
+  E_Int lmin = 4;
   //
   //
   //loop sur les fenetres pour calcul flux
@@ -214,7 +214,8 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
        if(nd==0) for (E_Int i = 0; i < 8; i++) effort_omp[i]=0;
 
         //calcul du sous domaine a traiter par le thread 
-        indice_boucle_lu_(nd, ithread, Nbre_thread_actif, itypecp_loc,
+
+        indice_boucle_lu_(nd, ithread, Nbre_thread_actif, lmin,
                            ipt_param_int_eff[nd]+EFF_LOOP,
                            ipt_thread_topology, ind_loop);
 

@@ -75,6 +75,7 @@ Preparation
         5. Initialization of grid Velocities (ALE)  
         6. Memory optimimization access for the connectivity tree, tc.
         7. Ghostcell cells filling with BC and connectivity
+        8. Init of ViscosityEddy for NSLaminar, LES and SA computations
 
     :param t: input pyTree
     :type t: pyTree

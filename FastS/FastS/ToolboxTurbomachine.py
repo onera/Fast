@@ -17,7 +17,7 @@ from scipy import interpolate
 #~ import Converter.Array3D as CA
 #~ ====================
 
-from userData2 import *
+#from userData2 import *
 
 def addInletData(data,famName):
    inletDict = {}
@@ -1574,7 +1574,8 @@ def _rhoVthetaUpdate(t, outBlock):
 			vz    = CI.getNodeFromName(sol, 'VelocityZ')[1]
 			theta = CI.getNodeFromName(sol, 'theta')[1]
 
-                        vteta[0:]= vy[0:]*numpy.cos(theta[0:]) - vz[0:]*numpy.sin(theta[0:])
+                        #vteta[0:]= vy[0:]*numpy.cos(theta[0:]) - vz[0:]*numpy.sin(theta[0:])
+                        vteta[0:]= vz[0:]*numpy.cos(theta[0:]) - vy[0:]*numpy.sin(theta[0:])
 
                	        #for k in range(vteta.shape[2]):
                	        #	for j in range(vteta.shape[1]):

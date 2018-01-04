@@ -56,7 +56,6 @@ extern "C"
   void init_ventijk_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   ,
                       E_Int* ipt_param_int      , E_Float* ipt_param_real  , 
                       E_Int* ipt_ijkv_sdm       ,
-                      E_Int* ipt_sdm            , E_Int* ipt_coe        , E_Int* ipt_grad         , 
                       E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
                       E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , 
                       E_Float* ipti_df          , E_Float* iptj_df     , E_Float* iptk_df        , 
@@ -64,11 +63,9 @@ extern "C"
                       E_Float* iptx             , E_Float* ipty         , E_Float* iptz    );
 
 
-
   void post_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& neq_grad,
               E_Int* ipt_param_int      , E_Float* ipt_param_real  ,  E_Float& tke      , E_Float& enst     ,  E_Int& compteur  ,
               E_Int* ipt_ijkv_sdm       ,
-              E_Int* ipt_sdm            , E_Int* ipt_coe        , E_Int* ipt_grad         , 
               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
               E_Float* iptro            ,
               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , E_Float* iptgrad   );
@@ -76,7 +73,6 @@ extern "C"
   void post_grad_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& neq_grad, E_Int& order,
               E_Int* ipt_param_int      , E_Float* ipt_param_real  ,
               E_Int* ipt_ijkv_sdm       ,
-              E_Int* ipt_sdm            , E_Int* ipt_coe        , E_Int* ipt_grad         , 
               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
               E_Float* iptro            ,
               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , E_Float* iptgrad   );
@@ -85,7 +81,6 @@ extern "C"
   void post_q_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& flag,  E_Int& dim_grad,
               E_Int* ipt_param_int      , E_Float* ipt_param_real   , 
               E_Int* ipt_ijkv_sdm       ,
-              E_Int* ipt_sdm            , E_Int* ipt_coe        , E_Int* ipt_grad         , 
               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
               E_Float* iptro            ,
               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , E_Float* iptQ,  E_Float* iptenst ,  E_Float* iptvort   );
@@ -93,7 +88,6 @@ extern "C"
   void post_qprime_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& flag,  E_Int& dim_grad,
               E_Int* ipt_param_int      , E_Float* ipt_param_real   , 
               E_Int* ipt_ijkv_sdm       ,
-              E_Int* ipt_sdm            , E_Int* ipt_coe        , E_Int* ipt_grad         , 
               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
               E_Float* iptro            , E_Float* iptro_m1    ,
               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , E_Float* iptQ   );
@@ -102,7 +96,6 @@ extern "C"
               E_Int& order              ,  E_Int& dim_grad          , E_Int& var1, E_Int& var2       ,
               E_Int* ipt_param_int      , E_Float* ipt_param_real   , 
               E_Int* ipt_ijkv_sdm       ,
-              E_Int* ipt_sdm            , E_Int* ipt_coe        , E_Int* ipt_grad         , 
               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
               E_Float* iptro            , E_Float* iptro_m1    ,
               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , E_Float* iptQ , E_Float* iptrot );
@@ -111,7 +104,6 @@ extern "C"
   void post_enst_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& flag,  E_Int& dim_grad,
               E_Int* ipt_param_int      , E_Float* ipt_param_real   , 
               E_Int* ipt_ijkv_sdm       ,
-              E_Int* ipt_sdm            , E_Int* ipt_coe        , E_Int* ipt_grad         , 
               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
               E_Float* iptro            ,
               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , E_Float* iptQ,  E_Float* iptenst ,  E_Float* iptvort   );
@@ -119,7 +111,6 @@ extern "C"
   void post_q_enst_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& flag,  E_Int& dim_grad,
               E_Int* ipt_param_int      , E_Float* ipt_param_real   , 
               E_Int* ipt_ijkv_sdm       ,
-              E_Int* ipt_sdm            , E_Int* ipt_coe        , E_Int* ipt_grad         , 
               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
               E_Float* iptro            ,
               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , E_Float* iptQ,  E_Float* iptenst ,  E_Float* iptvort   );
@@ -128,17 +119,22 @@ extern "C"
   void post_drodt_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& flag,  E_Int& dim_grad,
               E_Int* ipt_param_int      , E_Float* ipt_param_real   , 
               E_Int* ipt_ijkv_sdm       ,
-              E_Int* ipt_sdm            , E_Int* ipt_coe        , E_Int* ipt_grad         , 
               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
               E_Float* iptro            , E_Float*rop_n         , E_Float* rop_n1         , E_Float*drodt );
 
+
+  void viles_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& neq_grad, 
+              E_Int* ipt_param_int      , E_Float* ipt_param_real  ,
+              E_Int* ipt_ijkv_sdm       ,
+              E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
+              E_Float* iptro            ,
+              E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol          ,  E_Float* iptmut, E_Float* iptdist, E_Float* iptrot   );
 
   void navier_stokes_struct_( E_Int& ndo    , E_Int& nidom            , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , 
                               E_Int& lssiter_verif  , E_Int& nptpsi            , E_Int& nitcfg  , E_Int& nitrun     , E_Int& first_it   ,  E_Int& nb_pulse  , E_Int&   flagCellN  ,
                               E_Int* ipt_param_int  , E_Float* ipt_param_real  ,
                               E_Float& temps        , E_Int* ipt_tot,   
                               E_Int* ipt_ijkv_sdm       ,
-                              E_Int* ipt_sdm            , E_Int* ipt_coe        , E_Int* ipt_grad         , 
                               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
                               E_Float* ipt_cfl        ,
                               E_Float* iptx             , E_Float* ipty         , E_Float* iptz          , E_Float* iptCellN       ,
@@ -147,7 +143,7 @@ extern "C"
                               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , 
                               E_Float* ipti_df          , E_Float* iptj_df     , E_Float* iptk_df        , E_Float* iptvol_df      , 
                               E_Float* iptventi         , E_Float* iptventj    , E_Float* iptventk       ,  
-                              E_Float* iptwig           , E_Float* iptstat_wig ,
+                              E_Float* iptwig           , E_Float* iptstat_wig , E_Float* iptrot         ,
                               E_Float* iptdrodm         , E_Float* iptcoe      );
 
   void invlu_(                E_Int& ndo      , E_Int& nitcfg      , E_Int& nitrun   , E_Int*  param_int , E_Float* param_real,
@@ -232,7 +228,7 @@ extern "C"
 
    void     mjr_ale_3dhomocart_( E_Int& ndo  , E_Int* param_int   , E_Float* param_real,
                         E_Int& socket        , E_Int& Nbre_socket , E_Int& thread_sock , 
-                        E_Int& thread_parsock, E_Int* ind_socket  , E_Int* topo, E_Int* ind_loop, 
+                        E_Int& thread_parsock, E_Int* ind_socket  , E_Int* topo,
                         E_Float* iptx  , E_Float* ipty , E_Float* iptz, 
                         E_Float* ipti  , E_Float* iptj , E_Float* iptk ,
                         E_Float* ipti0 , E_Float* iptj0, E_Float* iptk0, E_Float* iptvol ,E_Float* venti, E_Float* ventj, E_Float* ventk);

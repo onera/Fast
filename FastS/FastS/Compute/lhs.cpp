@@ -11,7 +11,7 @@
                      E_Int* ipt_ind_dm_loc         = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;      //ind_dm(6, < ssdom_lu,nssiter)
 
                     // Distribution de la sous-zone sur les threads
-                    indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, param_int[nd][ ITYPCP ],
+                    indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, lmin,
                                       ipt_ind_dm_loc,
                                       ipt_topology_socket, ipt_ind_dm_omp_thread );
 
@@ -60,7 +60,7 @@
                          //
                          //
                          // CL sur rhs pour implicitation
-                         E_Int lrhs=1; E_Int lcorner=1;
+                         E_Int lrhs=1; E_Int lcorner=1; E_Int ipt_ind_coe_thread[6];
                          BCzone( nd, lrhs, lcorner,
                                  param_int[nd], param_real[nd],
                                  npass,

@@ -65,7 +65,7 @@ PyObject* K_FASTS::cartMesh(PyObject* self, PyObject* args)
   E_Float* zt = coord + 2*nijk;
 
   E_Int ndo    =1;
-  E_Int icp    =2;
+  E_Int lmin       = 4;
   E_Int max_thread = 1;
 #ifdef _OPENMP
   max_thread = omp_get_max_threads(); // !nombre de thread maximal dans le calcul
@@ -110,7 +110,7 @@ PyObject* K_FASTS::cartMesh(PyObject* self, PyObject* args)
       if( nk == 1) ipt_ind_dm_thread[5] = 1;
       
 
-      indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, icp,
+      indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, lmin,
                         ipt_ind_dm_thread, 
                         ipt_thread_topology,  ipt_ind_dm_omp_thread);
 

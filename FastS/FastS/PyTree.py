@@ -235,6 +235,16 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     _fillGhostcells(zones, tc, metrics, nitrun, ['Density'], nstep, hook1) 
     #t1=timeit.default_timer()
     #print "cout ghostcell= ", t1-t0
+    
+    #
+    # initialisation Mut
+    #
+    hook1[12] = 0
+    nstep     = 1
+    nitrun    = 0
+    if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
+    fasts._computePT_mut(zones, metrics, nitrun, nstep, omp_mode, hook1)
+
     if tmy is None: return (t, tc, metrics)
     else: return (t, tc, metrics, tmy)
 
@@ -1244,6 +1254,7 @@ def _buildOwnData(t):
     'rotation':4,
     'time_step':1,
     'io_thread':0,
+    'sgsmodel': ['smsm','Miles'],
     'cache_blocking_I':0,
     'cache_blocking_J':0,
     'cache_blocking_K':0,
@@ -1339,8 +1350,9 @@ def _buildOwnData(t):
                                            'UserDefinedData_t')
 
             # - defaults -
-            model = "Euler"
-            des = "none"
+            model    = "Euler"
+            sgsmodel = "Miles"
+            des      = "none"
             temporal_scheme = "implicit"
             scheme  = "ausmpred"
             slope   = "o3"
@@ -1418,6 +1430,8 @@ def _buildOwnData(t):
                 if a is not None: cacheblckJ = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'cache_blocking_K')
                 if a is not None: cacheblckK = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'sgsmodel')
+                if a is not None: sgsmodel = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'time_step_nature')
                 if a is not None: dtnature = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'time_step')
@@ -1445,16 +1459,16 @@ def _buildOwnData(t):
                 a = Internal.getNodeFromName1(d, 'sfd_init_iter')
                 if a is not None: sfd_init_iter = Internal.getValue(a)
                
-            iflow  = 1; iles = 0
+            iflow  = 1
             ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0;
             azgris = 0.01; addes = 0.2; ratiom = 10000.
 
             if model == "Euler" or model == "euler":
-                iflow  = 1; iles = 0
+                iflow  = 1
             elif  model == "NSLaminar" or model == "nslaminar": 
-                iflow = 2; iles =0
+                iflow = 2
             elif model == "NSLes" or model == "nsles": 
-                iflow = 2; iles =1
+                iflow = 2
             elif model == "nsspalart" or model == "NSTurbulent": 
                 iflow = 3
                 if des != 'none':
@@ -1465,6 +1479,11 @@ def _buildOwnData(t):
                     elif des == "ZDES3" or des == "zdes3": ides = 5
             else:
                  print 'Warning: FastS: model %s is invalid.'%model
+
+            iles = 0
+            if sgsmodel == 'smsm': iles = 1
+
+
             size_ssdom_I = 1000000
             size_ssdom_J = 1000000
             size_ssdom_K = 1000000

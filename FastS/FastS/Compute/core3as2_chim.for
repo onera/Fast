@@ -55,6 +55,18 @@ C Var loc
 
          if (param_int(ITYPZONE).ne.3) then
 
+           if(param_int(DTLOC).eq.1) then
+#include  "FastS/Compute/loop_core_begin.for"
+            drodm(l,1)= coe(l,1)*drodm(l,1) 
+            drodm(l,2)= coe(l,1)*drodm(l,2) 
+            drodm(l,3)= coe(l,1)*drodm(l,3) 
+            drodm(l,4)= coe(l,1)*drodm(l,4) 
+            drodm(l,5)= coe(l,1)*drodm(l,5) 
+            drodm(l,6)= coe(l,1)*drodm(l,6) 
+#include  "FastS/Compute/loop_end.for"
+
+           else
+
 #include  "FastS/Compute/loop_core_begin.for"
             amor      = MIN(cellN(l),2.-cellN(l))
 
@@ -89,8 +101,21 @@ C Var loc
      &                     + (  c4*rop   (l,6)*rop   (l,1)
      &                        + c3*rop_n1(l,6)*rop_n1(l,1) )*amor
 #include  "FastS/Compute/loop_end.for"
+           endif !optim bdf1 
 
         else !dom 2d
+
+           if(param_int(DTLOC).eq.1) then
+#include  "FastS/Compute/loop_core_begin.for"
+            drodm(l,1)= coe(l,1)*drodm(l,1) 
+            drodm(l,2)= coe(l,1)*drodm(l,2) 
+            drodm(l,3)= coe(l,1)*drodm(l,3) 
+            drodm(l,5)= coe(l,1)*drodm(l,5) 
+            drodm(l,6)= coe(l,1)*drodm(l,6) 
+#include  "FastS/Compute/loop_end.for"
+
+           else
+
 #include  "FastS/Compute/loop_core_begin.for"
             amor      = MIN(cellN(l),2.-cellN(l))
 
@@ -120,6 +145,7 @@ C Var loc
      &                     + (  c4*rop   (l,6)*rop   (l,1)
      &                        + c3*rop_n1(l,6)*rop_n1(l,1) )*amor
 #include  "FastS/Compute/loop_end.for"
+           endif !optim bdf1 
 
         endif!2d/3d
 

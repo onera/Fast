@@ -250,9 +250,9 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   /// Tableau pour  pour modele LES
   ///sauvegarde pointeur pour allouer memoire SGS qu'on peut ecraser une fois calculer mut
   E_Int neq_les  = 0;
-  if(kles==1) neq_les = 25;
-  FldArrayF  mules(ndimdx_max*neq_les);
-  E_Float* iptmules = mules.begin();
+  if(kles==1) neq_les = 3;
+  FldArrayF  rot(ndimt*neq_les);
+  E_Float* iptrot = rot.begin();
 
   E_Int kwig_stat    = 0;  
   E_Int neq_wig_stat = 0;
@@ -288,9 +288,6 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   //printf("thread =%d\n",threadmax_sdm);
   FldArrayI ijkv_sdm(         3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(         3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
-  FldArrayI ind_sdm(          6*threadmax_sdm); E_Int* ipt_ind_sdm    =  ind_sdm.begin();
-  FldArrayI ind_coe(          6*threadmax_sdm); E_Int* ipt_ind_coe    =  ind_coe.begin();
-  FldArrayI ind_grad(         6*threadmax_sdm); E_Int* ipt_ind_grad   =  ind_grad.begin();
   FldArrayI ind_CL(           6*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
   FldArrayI ind_CL119(        6*threadmax_sdm); E_Int* ipt_ind_CL119  =  ind_CL119.begin();
   FldArrayI ind_dm_omp(      12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
@@ -312,8 +309,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
         nb_pulse           ,                
         temps              ,
         ipt_ijkv_sdm       , 
-        ipt_ind_dm_omp     , ipt_topology      ,
-        ipt_ind_sdm        , ipt_ind_coe      , ipt_ind_grad      , ipt_ind_CL   , ipt_ind_CL119, ipt_lok,
+        ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_ind_CL119, ipt_lok,
         iptludic           , iptlumax         ,
         ipt_ind_dm         , ipt_it_lu_ssdom  ,
         ipt_cfl            ,
@@ -327,7 +323,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
         iptventi           , iptventj         , iptventk          ,  
         iptrdm             ,
         iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
-        iptdrodm           , iptcoe           , iptmules      );
+        iptdrodm           , iptcoe           , iptrot      );
 
   if (lssiter_verif == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
   {

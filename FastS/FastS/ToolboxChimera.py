@@ -122,24 +122,24 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
 
     basenames  = ['Stator', 'Rotor' ]
     donorBases = {}
-    theta_limit= {}
-    theta_perio= {}
+    theta_meanDonor = {}
+    theta_meanRecept= {}
+    theta_perioDonor= {}
 
     theta_abs  = abs(THETA)
     dtheta_abs = abs(DTHETA)
     for name in basenames:
 
-       base   = Internal.getNodeFromName(tc, name)
+       base   = Internal.getNodeFromName(tc[name], name)
        zones  = Internal.getZones(base)
 
+
        if AXISX > 0. or AXISZ > 0.:
-          minval     = C.getMinValue(zones, 'CoordinateY')
-          maxval     = C.getMaxValue(zones, 'CoordinateY')
+          thetameanD = C.getMeanValue(zones, 'CoordinateY')
           zonesPerioD= T.translate(zones,(0, theta_abs, 0))
           zonesPerioG= T.translate(zones,(0,-theta_abs, 0))
        elif AXISY > 0.: 
-          minval     = C.getMinValue(zones, 'CoordinateX')
-          maxval     = C.getMaxValue(zones, 'CoordinateX')
+          thetameanD = C.getMeanValue(zones, 'CoordinateX')
           zonesPerioD= T.translate(zones,( theta_abs, 0, 0))
           zonesPerioG= T.translate(zones,(-theta_abs, 0, 0))
 
@@ -151,141 +151,234 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
        newbaseD= Internal.newCGNSBase( name+'_PeriodicD'); newbaseD[2] += zonesPerioD
        newbaseG= Internal.newCGNSBase( name+'_PeriodicG'); newbaseG[2] += zonesPerioG
 
-       tmp = [newbase,newbaseD,newbaseG]
+       tmp = [newbaseG,newbase,newbaseD]
        tmp = Internal.rmNodesByName( tmp,'ID_*')
 
-       theta_perio[name]= [ 0. , theta_abs, -theta_abs]
-       theta_limit[name]= [minval,maxval]
+       theta_perioDonor[name]= [      -theta_abs      , 0.        ,       theta_abs        ]
+       theta_meanDonor[name] = [ thetameanD- theta_abs, thetameanD, thetameanD+ theta_abs, ]
        donorBases[name] = tmp
+       print name, ' is Donor.  <angle>= ', theta_meanDonor[name][1]/math.pi*180,' <angle> donnorGD=', theta_meanDonor[name][0]/math.pi*180, theta_meanDonor[name][2]/math.pi*180
+
+
+       #calcul theta_meanRecepteur
+       base   = Internal.getNodeFromName(tcyl[name], name)
+       zones  = Internal.getZones(base)
+       thetameanR= C.getMeanValue(zones, 'CoordinateY')
+       theta_meanRecept[name] = [thetameanR] 
+       print  name, ' is Recept. <angle>= ', thetameanR/math.pi*180
       
     #rotation parameter
-    THETADEG  = THETA*Internal.__RAD2DEG__
+    THETADEG  = THETA/math.pi*180
     RotCenter = numpy.zeros((3), numpy.float64)
-    RotAngle  = [ numpy.zeros((3), numpy.float64), numpy.zeros((3), numpy.float64)]
-    RotCenter[0]  = XC0; RotCenter[1] = YC0; RotCenter[2] = ZC0
+    RotCenter[0] = XC0 
+    RotCenter[1] = YC0
+    RotCenter[2] = ZC0
     
-    C._initVars(tcyl,"CoordinateX0={CoordinateX}")
-    C._initVars(tcyl,"CoordinateY0={CoordinateY}")
-    C._initVars(donorBases['Rotor'],"CoordinateX0={CoordinateX}")
-    C._initVars(donorBases['Rotor'],"CoordinateY0={CoordinateY}")
-    #C._initVars(tcyl,"CoordinateZ0={CoordinateZ}")        
-    #C._initVars(donorBases['Rotor'],"CoordinateZ0={CoordinateZ}")
+    #tcyl['Rotor']       = C.initVars(tcyl['Rotor']      ,"CoordinateX0={CoordinateX}")
+    #tcyl['Rotor']       = C.initVars(tcyl['Rotor']      ,"CoordinateY0={CoordinateY}")
+    #donorBases['Rotor'] = C.initVars(donorBases['Rotor'],"CoordinateX0={CoordinateX}")
+    #donorBases['Rotor'] = C.initVars(donorBases['Rotor'],"CoordinateY0={CoordinateY}")
+
+    if AXISX > 0. or AXISZ > 0.:
+      T._translate( tcyl['Rotor']       ,  (0, (IT_DEB-1)*DTHETA, 0))
+      T._translate( donorBases['Rotor'] ,  (0, (IT_DEB-1)*DTHETA, 0))
+    elif AXISY > 0.:
+      T._translate( tcyl['Rotor']       ,  ( (IT_DEB-1)*DTHETA, 0, 0))
+      T._translate( donorBases['Rotor'] ,  ( (IT_DEB-1)*DTHETA, 0, 0))
 
     ReceptCyl={}
-    translate={'Rotor':True, 'Stator':True}
-    #for it in xrange(0,NIT):
-    DTHETADEG = DTHETA*Internal.__RAD2DEG__
     for it in xrange(IT_DEB, IT_FIN):
-        print 'theta(radians,degree) = ', it*DTHETA,' ,', it*DTHETADEG
+        print '-----------'
+        print 'theta(radians,degree) = ', it*DTHETA,' ,', it*DTHETA/math.pi*180
+        print '-----------'
+        RotAngleDG= [ numpy.zeros( (3), numpy.float64 ) , numpy.zeros( (3), numpy.float64), numpy.zeros( (3), numpy.float64) ]
 
-        for name in basenames:
-           Internal._rmNodesByName( donorBases[name],'ID_*')
-           ReceptCyl[name] = Internal.getNodeFromName(tcyl, name )
+        for rcpt in basenames:
+        #for rcpt in ['Rotor']:
+           print '  '
 
-           if name == 'Rotor':
+           ReceptCyl[ rcpt ] = Internal.getNodeFromName(tcyl[ rcpt ], rcpt )
+
+           if rcpt == 'Rotor':
                 zones2translateR =  ReceptCyl['Rotor']
                 donor            = 'Stator'
-                #angle limite receveur
-                theta_minR= theta_limit[name][0]+it*DTHETA
-                theta_maxR= theta_limit[name][1]+it*DTHETA
-                #angle limite donneur
-                theta_maxD= theta_limit[donor][0]+theta_abs
-                theta_minD= theta_limit[donor][1]-theta_abs
+                #angle moyen receveur
+                theta_meanR= theta_meanRecept[rcpt][0]+it*DTHETA
+                #angle moyen donneur
+                theta_meanDonorD= theta_meanDonor[donor][2]
+                theta_meanDonorG= theta_meanDonor[donor][0]
+                print 'Rcpt  rotor.  <angle> receveur=', theta_meanR*180/math.pi, '<angle> donnorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi
            else:
                 zones2translateR =  donorBases['Rotor']
                 donor            = 'Rotor'
-                theta_minR= theta_limit[name][0]
-                theta_maxR= theta_limit[name][1]
-                theta_maxD= theta_limit[donor][0]+theta_abs +it*DTHETA
-                theta_minD= theta_limit[donor][1]-theta_abs +it*DTHETA
+                #angle moyen receveur
+                theta_meanR= theta_meanRecept[rcpt][0]
+                #angle moyen donneur
+                theta_meanDonorD= theta_meanDonor[donor][2] +it*DTHETA
+                theta_meanDonorG= theta_meanDonor[donor][0] +it*DTHETA
+                print 'Rcpt stator. <angle> receveur=', theta_meanR*180/math.pi, '<angle> donnorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi
+
+           Internal._rmNodesByName( donorBases[donor],'ID_*')
 
            if AXISX > 0. or AXISZ > 0.:
-                C._initVars( zones2translateR ,'CoordinateY={CoordinateY0}')
-                T._translate(zones2translateR ,(0, it*DTHETA, 0))
 
-                '''print 'teta min', theta_minR*180/3.14, name
-                print 'teta max', theta_maxR*180/3.14, name
-                print 'teta l1 ', theta_maxD*180/3.14,  translate[donor]
-                print 'teta l2 ', theta_minD*180/3.14,  translate[donor]
-                '''
-                if    theta_maxR<  theta_maxD and translate[donor]:
-                      T._translate(donorBases[donor][1],(0, -3*theta_abs, 0))
-                      theta_perio[donor][2]=-2*theta_abs
-                      translate[donor]     = False
-                      #print 'teta_max', theta_maxD*180/3.14, it, name
+                #C._initVars( zones2translateR ,'CoordinateY={CoordinateY0}')
+                #T._translate(zones2translateR ,(0, it*DTHETA, 0))
+                T._translate(zones2translateR ,(0, DTHETA, 0))
 
-                elif theta_minR>  theta_minD and translate[donor]:
-                      T._translate(donorBases[donor][2],(0, 3*theta_abs, 0))
-                      theta_perio[donor][1]= 2*theta_abs
-                      translate[donor]     = False
-                      #print 'teta_min', theta_minD*180/3.14,it, name
+                coef_secure = 1.3
+                if    theta_meanR +theta_abs*coef_secure <  theta_meanDonorD:
+
+                      T._translate(donorBases[donor][2],(0, -3*theta_abs, 0))
+
+                      #mise a jour base Gauche, centre, droite
+                      tmp1 = donorBases[donor][0]
+                      donorBases[donor][0] =   donorBases[donor][2]
+                      donorBases[donor][2] =   donorBases[donor][1]
+                      donorBases[donor][1] =   tmp1
+                      #mise a jour angle moyen base Gauche, centre, droite
+                      tmp2 = theta_meanDonor[donor][0]
+                      theta_meanDonor[donor][0] =   theta_meanDonor[donor][2] -3*theta_abs
+                      theta_meanDonor[donor][2] =   theta_meanDonor[donor][1]
+                      theta_meanDonor[donor][1] =   tmp2
+                     
+                      #mise a jour peridicite base Gauche, centre, droite
+                      tmp3 = theta_perioDonor[donor][0]
+                      theta_perioDonor[donor][0] =   -2*theta_abs
+                      theta_perioDonor[donor][2] =   theta_perioDonor[donor][1]
+                      theta_perioDonor[donor][1] =   tmp3
+
+                      print 'Donnor_D du ', rcpt, ' moved by', -3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor D=',theta_meanDonorD*180/math.pi
+
+                elif theta_meanR -theta_abs*coef_secure >  theta_meanDonorG:
+
+                      T._translate(donorBases[donor][0],(0, 3*theta_abs, 0))
+
+                      #mise a jour base Gauche, centre, droite
+                      tmp1 = donorBases[donor][2]
+                      donorBases[donor][2] =   donorBases[donor][0]
+                      donorBases[donor][0] =   donorBases[donor][1]
+                      donorBases[donor][1] =   tmp1
+
+                      #mise a jour angle moyen base Gauche, centre, droite
+                      tmp2 = theta_meanDonor[donor][2]
+                      theta_meanDonor[donor][2] =   theta_meanDonor[donor][0]
+                      theta_meanDonor[donor][0] =   theta_meanDonor[donor][1]
+                      theta_meanDonor[donor][1] =   tmp2
+
+                      #mise a jour peridicite base Gauche, centre, droite
+                      tmp3 = theta_perioDonor[donor][2]
+                      theta_perioDonor[donor][2] =   2*theta_abs
+                      theta_perioDonor[donor][0] =   theta_perioDonor[donor][1]
+                      theta_perioDonor[donor][1] =   tmp3
+
+                      print 'Donnor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi
                       
            elif AXISY > 0.: 
-                C._initVars(  zones2translateR , 'CoordinateX={CoordinateX0}')
-                T._translate( zones2translateR , (it*DTHETA, 0, 0))
 
-                theta_min = theta_limit[name][0]+it*DTHETA
-                theta_max = theta_limit[name][1]+it*DTHETA
+                #C._initVars(  zones2translateR , 'CoordinateX={CoordinateX0}')
+                #T._translate( zones2translateR , (it*DTHETA, 0, 0))
+                T._translate(zones2translateR ,( DTHETA, 0, 0))
 
-                if    theta_maxR<  theta_maxD and translate[donor]:
-                      T._translate(donorBases[donor][1],(-3*theta_abs, 0, 0))
-                      theta_perio[donor][2]=-2*theta_abs
-                      translate[donor]     = False
+                coef_secure = 1.3
 
-                elif theta_minR>  theta_minD and translate[donor]:
-                      T._translate(donorBases[donor][2],( 3*theta_abs, 0, 0))
-                      theta_perio[donor][1]= 2*theta_abs
-                      translate[donor]     = False
+                if    theta_meanR +theta_abs*coef_secure <  theta_meanDonorD:
 
+                      T._translate(donorBases[donor][2],( -3*theta_abs, 0, 0))
 
-                if    theta_max >=  theta_limit[donor][1]+theta_abs and translate[donor]:
-                      T._translate(donorBases[donor][2],(  3*theta_abs, 0, 0))
-                      theta_perio[donor][2]= 2*theta_abs
-                      translate[donor]     = False
-                elif theta_min <=  theta_limit[donor][0]-theta_abs and translate[donor]:
-                      T._translate(donorBases[donor][1],( -3*theta_abs, 0, 0))
-                      theta_perio[donor][1]=-2*theta_abs
-                      translate[donor]     = False
+                      #mise a jour base Gauche, centre, droite
+                      tmp1 = donorBases[donor][0]
+                      donorBases[donor][0] =   donorBases[donor][2]
+                      donorBases[donor][2] =   donorBases[donor][1]
+                      donorBases[donor][1] =   tmp1
+                      #mise a jour angle moyen base Gauche, centre, droite
+                      tmp2 = theta_meanDonor[donor][0]
+                      theta_meanDonor[donor][0] =   theta_meanDonor[donor][2] -3*theta_abs
+                      theta_meanDonor[donor][2] =   theta_meanDonor[donor][1]
+                      theta_meanDonor[donor][1] =   tmp2
+                     
+                      #mise a jour peridicite base Gauche, centre, droite
+                      tmp3 = theta_perioDonor[donor][0]
+                      theta_perioDonor[donor][0] =   -2*theta_abs
+                      theta_perioDonor[donor][2] =   theta_perioDonor[donor][1]
+                      theta_perioDonor[donor][1] =   tmp3
 
-           RD = [ ReceptCyl[name] , donorBases[donor]] 
+                      print 'Donnor_D du ', rcpt, ' moved by', -3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor D=',theta_meanDonorD*180/math.pi
 
-           C._rmVars( RD[0], 'FlowSolution')
-           C._rmVars( RD[1], 'FlowSolution')
-           C.convertPyTree2File( RD[0],name+'recept_'+str(it)+'.cgns')
-           C.convertPyTree2File( RD[1],name+'donors_'+str(it)+'.cgns')
+                elif theta_meanR -theta_abs*coef_secure >  theta_meanDonorG:
+
+                      T._translate(donorBases[donor][0],( 3*theta_abs, 0, 0))
+
+                      #mise a jour base Gauche, centre, droite
+                      tmp1 = donorBases[donor][2]
+                      donorBases[donor][2] =   donorBases[donor][0]
+                      donorBases[donor][0] =   donorBases[donor][1]
+                      donorBases[donor][1] =   tmp1
+
+                      #mise a jour angle moyen base Gauche, centre, droite
+                      tmp2 = theta_meanDonor[donor][2]
+                      theta_meanDonor[donor][2] =   theta_meanDonor[donor][0]
+                      theta_meanDonor[donor][0] =   theta_meanDonor[donor][1]
+                      theta_meanDonor[donor][1] =   tmp2
+
+                      #mise a jour peridicite base Gauche, centre, droite
+                      tmp3 = theta_perioDonor[donor][2]
+                      theta_perioDonor[donor][2] =   2*theta_abs
+                      theta_perioDonor[donor][0] =   theta_perioDonor[donor][1]
+                      theta_perioDonor[donor][1] =   tmp3
+
+                      print 'Donnor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi
+
+           RD = [ ReceptCyl[rcpt] , donorBases[donor]] 
+
+           #C._rmVars( RD[0], 'FlowSolution')
+           #C._rmVars( RD[1], 'FlowSolution')
+           #C.convertPyTree2File( RD[0],rcpt+'recept_'+str(it)+'.cgns')
+           #C.convertPyTree2File( RD[1],rcpt+'donors_'+str(it)+'.cgns')
 
            RD[1] = X.setInterpData( RD[0], RD[1], storage='inverse',loc='centers',penalty=1,nature=1,itype='chimera')
         
            # bloc donneur periodiques -> remise dans le bloc original
            # bloc original     =RD[1][0] 
            # bloc perio Droite =RD[1][1] 
-           # bloc perio Gauche =RD[1][2] 
-           bloc_target= RD[1][0]  #bloc original
-           c = 1
-           for bloc_Perio in RD[1][1:]:
+           # bloc perio Gauche =RD[1][2]
+           #bloc_target= RD[1][0]  #bloc original
+           c = 0
+           for perio in theta_perioDonor[donor]:
+             if perio == 0. : blk_target = c 
+             c+=1
+
+           bloc_target= RD[1][blk_target]  #bloc original
+           c = 0
+           for bloc_Perio in RD[1][0:]:
           
-             print 'teta(rad)', theta_perio[donor][c], donor, c
 
-             RotAngle[c-1][0] =AXISX*theta_perio[donor][c]
-             RotAngle[c-1][1] =AXISY*theta_perio[donor][c] 
-             RotAngle[c-1][2] =AXISZ*theta_perio[donor][c]
+             if c != blk_target:
+               RotAngleDG[c][0] =AXISX*theta_perioDonor[donor][c]/math.pi*180
+               RotAngleDG[c][1] =AXISY*theta_perioDonor[donor][c]/math.pi*180
+               RotAngleDG[c][2] =AXISZ*theta_perioDonor[donor][c]/math.pi*180
 
-             for nozd in xrange(len(bloc_Perio[2])):
-               zdperio = bloc_Perio[2][nozd]
-               if zdperio[3] == "Zone_t":
-                  zname  = zdperio[0].split('_Perio')[0]
-                  zdorig = Internal.getNodeFromName(tc,zname)
-                  for zsr in Internal.getNodesFromName(zdperio,"ID_*"):
+
+
+               for nozd in xrange(len(bloc_Perio[2])):
+                 zdperio = bloc_Perio[2][nozd]
+                 if zdperio[3] == "Zone_t":
+                    zname  = zdperio[0].split('_Perio')[0]
+                    zdorig = Internal.getNodeFromName(tc[donor],zname)
+
+                    for zsr in Internal.getNodesFromName(zdperio,"ID_*"):
+                      print rcpt,' est le receveur.  teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c
+
                       srname = zsr[0].split('_')
                       srname = srname[1]
                       zsr[0] = 'IDPER#%d_%s'%(it,srname)
                       # ajout des infos de periodicite 
-                      Internal.createChild(zsr,'RotationAngle' ,'DataArray_t',value=RotAngle[c-1])
+                      Internal.createChild(zsr,'RotationAngle' ,'DataArray_t',value=RotAngleDG[c])
                       Internal.createChild(zsr,'RotationCenter','DataArray_t',value=RotCenter)   
                       zdorig[2].append(zsr)
 
-                  zd = bloc_target[2][nozd]
-                  for zsr in Internal.getNodesFromName(zd,"ID_*"):                
+                    zd = bloc_target[2][nozd]
+                    for zsr in Internal.getNodesFromName(zd,"ID_*"):                
                       srname = zsr[0].split('_'); srname = srname[1]
                       zsr[0] = 'ID#%d_%s'%(it,srname)
                       zdorig[2].append(zsr)
@@ -297,5 +390,9 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
             C.convertPyTree2File(ReceptCyl['Rotor'],"rotor.cgns")
             C.convertPyTree2File(donorBases['Stator'],"stator.cgns")
     
-    Internal._rmNodesByName(tc,'GridCoordinates')                            
-    return tc                       
+        Internal._rmNodesByName(tc[rcpt],'GridCoordinates')
+
+    connec_tree=[]
+    for name in basenames:  connec_tree.append( tc[name] )
+
+    return connec_tree

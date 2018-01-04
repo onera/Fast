@@ -369,7 +369,10 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
           }
 
          E_Int nd =0;
-         indice_boucle_lu_(nd, socket , Nbre_socket, ipt_param_int[ ITYPCP ],
+         E_Int lmin = 10;
+         if (ipt_param_int[ ITYPCP ] == 2) lmin = 4;
+
+         indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
                               ipt_ind_dm_loc, 
                               ipt_topology_socket, ipt_ind_dm_socket );
 

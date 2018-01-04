@@ -24,11 +24,11 @@
             //E_Int icp_loc =2;
             
             //Pour les CL
-            indice_boucle_lu_(ndo, ithread_loc, Nbre_thread_actif_loc, param_int[nd][ ITYPCP ],
+            indice_boucle_lu_(ndo, ithread_loc, Nbre_thread_actif_loc, lmin,
                               ipt_ind_dm_loc,
                               ipt_topology_socket, ipt_ind_dm_omp_thread );
 
-            indice_boucle_lu_(ndo, socket , Nbre_socket, param_int[nd][ ITYPCP ],
+            indice_boucle_lu_(ndo, socket , Nbre_socket, lmin,
                               ipt_ind_dm_loc,
                               ipt_topology_socket, ipt_ind_dm_socket );
 
@@ -52,8 +52,7 @@
             navier_stokes_struct_( ndo, nidom, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro , lssiter_verif, nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN,
                                   param_int[nd] , param_real[nd] ,
                                   temps               , ipt_tot                 ,
-                                  ipt_ijkv_sdm_thread , ipt_ind_sdm_thread      , ipt_ind_coe_thread     , ipt_ind_grad_thread  ,
-                                  ipt_ind_dm_loc      , ipt_ind_dm_socket       , ipt_ind_dm_omp_thread  ,  ipt_topology_socket , ipt_lok_thread       ,
+                                  ipt_ijkv_sdm_thread , ipt_ind_dm_loc      , ipt_ind_dm_socket       , ipt_ind_dm_omp_thread  ,  ipt_topology_socket , ipt_lok_thread       ,
                                   ipt_cfl_thread      ,
                                   iptx[nd]                , ipty[nd]                , iptz[nd]            , iptCellN_loc     ,
                                   iptro[nd]               , iptro_m1[nd]            , iptrotmp[nd]        , iptro_ssiter[nd] ,
@@ -61,7 +60,7 @@
                                   ipti[nd]                , iptj[nd]                , iptk[nd]            , iptvol[nd]       ,
                                   ipti0[nd]               , iptj0[nd]               , iptk0[nd]           , iptvol_df[nd]    ,
                                   iptventi[nd]            , iptventj[nd]            , iptventk[nd]        ,
-                                  iptwig   + shift_wig    , iptstat_wig + shift_wig ,
+                                  iptwig   + shift_wig    , iptstat_wig + shift_wig , iptrot+ shift_wig   ,
 				  iptdrodm + shift_zone   , iptcoe  + shift_coe     );
 
             nd_current++;

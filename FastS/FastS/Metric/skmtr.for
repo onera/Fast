@@ -63,7 +63,7 @@ C_LOCAL
      & imin,jmin,kmin,ind_rhs(6),ind_ven(6),
      & icache,jcache,kcache, ind0, lmtr,lmtr0, ne, l,l0,lmtrj,lmtr0j,
      & lmtri,lmtr0i,lmtrk,lmtr0k,li,lj,lk,ind1,ind2,ind3,no,
-     & jmax,kmax,imax,translation_pur
+     & jmax,kmax,imax,translation_pur,lmin
       REAL_E ix,iy,iz,eps
 
 #include "FastS/param_solver.h"
@@ -76,8 +76,10 @@ C_LOCAL
 !!!
       IF(.not.l_initmtr) THEN
 
-        call indice_boucle_lu(ndom, ithread_sock, thread_parsock, 
-     &                        param_int(ITYPCP),
+        lmin = 10;
+        if (param_int(ITYPCP).eq.2) lmin = 4
+
+        call indice_boucle_lu(ndom, ithread_sock, thread_parsock, lmin,
      &                        ind_dm_socket, 
      &                        thread_topology, ind_dm_omp )
 
@@ -340,8 +342,7 @@ C_LOCAL
            ind_mtr(6) = 1
        endif   
 
-        call indice_boucle_lu(ndom, ithread_sock, thread_parsock, 
-     &                        param_int(ITYPCP),
+        call indice_boucle_lu(ndom, ithread_sock, thread_parsock, lmin, 
      &                        ind_mtr, 
      &                        thread_topology, ind_ven )
 

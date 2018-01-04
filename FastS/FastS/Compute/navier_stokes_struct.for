@@ -9,7 +9,6 @@ c***********************************************************************
      &        param_int, param_real,
      &        temps, tot,
      &        ijkv_sdm,
-     &        ind_sdm, ind_coe, ind_grad,
      &        ind_dm_zone, ind_dm_socket, ind_dm_omp,
      &        socket_topology, lok ,
      &        cfl,
@@ -18,7 +17,7 @@ c***********************************************************************
      &        xmut  , dist     ,
      &        ti, tj, tk, vol,  ti_df, tj_df, tk_df, vol_df,
      &        venti , ventj , ventk ,
-     &        wig , stat_wig  ,
+     &        wig , stat_wig, rot,
      &        drodm , coe)
 
 c***********************************************************************
@@ -50,13 +49,13 @@ c***********************************************************************
      & ithread, Nbre_socket, socket, nitrun, nptpsi, nitcfg, nb_pulse,
      & lssiter_verif,flagCellN
 
-      INTEGER_E  ijkv_sdm(3),ind_coe(6),ind_grad(6),ind_dm_zone(6),
-     & ind_dm_omp(6), ind_dm_socket(6), ind_sdm(6), socket_topology(3),
+      INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
+     & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
      & param_int(0:*), lok(*)
 
       REAL_E rop(*),rop_m1(*),rop_tmp(*),rop_ssiter(*),xmut(*),drodm(*),
      & coe(*),dist(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
-     & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*), celln(*),
+     & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*), rot(*), celln(*),
      & ti_df(*),tj_df(*),tk_df(*),vol_df(*)
 
       REAL_E psi(nptpsi)
@@ -65,30 +64,26 @@ c***********************************************************************
       REAL_E drodmstk(20000,param_int(NEQ))
 
 C Var loc
-      logical ksa, lerr
-      INTEGER_E idir,nbdr_sdm,OMP_get_thread_num,icache,jcache,kcache,
-     & Imax,Jmax,Kmax,itabi,ios,i,k, ind,lok_shap_loc,l,j,io,inc1,inc2,
-     & size_max, size_loc,thread_parsock,inc11,inc22,l0,extended_range,
-     & lok_shap_sock(4),thread_topology(3),thread_parsock_actif,
-     & socket_pos(3), synchro_receive_sock(3),synchro_send_sock(3),
-     & lok_shap(4), size_cache(3),
-     & synchro_receive_th(3),synchro_send_th(3),ipt_lok_sock,
-     & ithread_sock,ithread_io,ipt_lok,size_max_sock,neq_lok,taille,
-     & ijkv_thread(3),kGbloc,jGbloc,iGbloc,ip,jp,kp,lth,
-     & ibloc,jbloc,kbloc,ijkvloc(3),skip(3),shift(3),test(3),lwait,lgo,
-     & size_thread(3),topo_s(3),thread_pos(3),thread_pos_tmp(3),sens(3),
-     & ind_rhs(6),ind_mjr(6), size_target(3), topo_target(3), cache(3)
+#include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
-      INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4)
-      INTEGER_E ind_loop(6)
-
-      character*7 omp_init,omp_wait,omp_go,omp_wait_lu
-
+      INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
+     & ind_loop(6),neq_rot,depth
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 
 
+
+       !Calcul de la taille minimal 1D du bloc thread 
+       if(param_int(ITYPCP).eq.2) then
+
+         lmin = 4
+         !blindage modele ssmaile pour race omp
+         if(     param_int(IFLOW).eq.2.and.param_int(ILES).eq.1
+     &      .and.param_int(NIJK+4).ne.0.and.nitcfg.eq.1) lmin = 8
+       else
+         lmin =10
+       endif
 
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
@@ -114,6 +109,7 @@ c           write(*,'(a,6i6)')'ind_mjr   =',ind_mjr
 c         endif
 
           call  correct_coins(ndo,  param_int, ind_grad, rop_ssiter)
+          !call  correct_coins(ndo,  param_int, ind_sdm, rop_ssiter)
 
            IF(nitcfg.eq.1) then
 
@@ -131,19 +127,28 @@ c         endif
               endif
 
               !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
-              if(param_int(IFLOW).eq.2.and.
-     &          (param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) ) then
+              if(param_int(IFLOW).eq.2) then
 
+                if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
 
-               call invist(ndo, param_int, param_real, ind_grad,
-     &                     rop_ssiter, xmut )
+                   call invist(ndo, param_int, param_real, ind_grad,
+     &                        rop_ssiter, xmut )
+
+                !LES selective mixed scale model
+                else
+                   neq_rot = 3
+                   depth   = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
+                   call lesvist(ndo, param_int,param_real,neq_rot,depth,
+     &                          ind_grad, ind_coe, ind_dm_zone,
+     &                          xmut, rop_ssiter, ti,tj,tk, vol, rot)
+                endif
 
               elseif(param_int(IFLOW).eq.3) then
 
                 !! remplissage tableau xmut si SA uniquememnt. 
                 !! Pour ZDES, remplissage dans terme source 
                 call vispalart(ndo, param_int, param_real, ind_grad,
-     &                         ti, tj, tk, vol, dist, xmut,rop)
+     &                         ti, tj, tk, vol, dist, xmut,rop_ssiter)
 
               endif
 
@@ -152,14 +157,16 @@ c         endif
              call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
      &                   flagCellN, param_int, param_real,
      &                   ind_sdm, ind_grad,
-     &                   cfl, xmut,rop, cellN, coe, ti,tj,tk, vol,venti)
+     &                   cfl, xmut,rop_ssiter, cellN, coe,
+     &                   ti,tj,tk, vol,venti)
 
            ENDIF!!1ere sous-iteration
 
            ! - Ajout d'un eventuel terme source au second membre
            ! - initialisation drodm
            call src_term(ndo, nitcfg, nb_pulse, param_int, param_real,
-     &                   ind_sdm, ind_rhs, ind_grad,
+c     &                   ind_sdm, ind_rhs, ind_grad,
+     &                   ind_sdm, ind_rhs, ind_ssa,
      &                   temps,
      &                   rop_ssiter, xmut, drodm, coe, x,y,z,
      &                   ti,tj,tk,vol,dist)

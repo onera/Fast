@@ -114,13 +114,14 @@ PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
      E_Int* ipt_ind_loop          = ind_loop.begin()          + 6*(ithread-1);
 
      //decoupage socket
-     indice_boucle_lu_(ndo, socket , Nbre_socket, ipt_param_int[ ITYPCP ],
-                       ipt_ind_dm, 
+     E_Int lmin = 10;
+     if (ipt_param_int[ ITYPCP ] == 2) lmin = 4;
+
+     indice_boucle_lu_(ndo, socket , Nbre_socket, lmin, ipt_ind_dm, 
                        ipt_thread_topology, ipt_ind_dm_socket );
 
      //decoupage sur les threads du socket
-     indice_boucle_lu_(ndo, ithread_sock, thread_parsock, ipt_param_int[ ITYPCP ],
-                       ipt_ind_dm_socket, 
+     indice_boucle_lu_(ndo, ithread_sock, thread_parsock, lmin, ipt_ind_dm_socket, 
                        ipt_thread_topology, ipt_ind_dm_thread );
 
 

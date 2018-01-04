@@ -4,7 +4,7 @@ c     $Revision: 58 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine src_term(ndom, nitcfg, nb_pulse, param_int, param_real,
-     &                    ind_sdm, ind_rhs, ind_grad,
+     &                    ind_sdm, ind_rhs, ind_ssa,
      &                    temps,
      &                    rop, xmut, drodm, coe, x,y,z,
      &                    ti, tj, tk, vol,dlng)
@@ -26,7 +26,7 @@ c      drodm  : bilan de flux
 C-----------------------------------------------------------------------
       implicit  none
 
-      INTEGER_E ndom,nitcfg,nb_pulse,ind_sdm(6),ind_rhs(6),ind_grad(6),
+      INTEGER_E ndom,nitcfg,nb_pulse,ind_sdm(6),ind_rhs(6),ind_ssa(6),
      & param_int(0:*)
 c
       REAL_E rop(*),xmut(*),drodm(*),coe(*),dlng(*)
@@ -60,7 +60,7 @@ C Var loc
       ! => terme source volumique ajoute au bilan de flux (force centrifuge)
       IF (param_int(DTLOC).eq.1 .and. param_real(ROT_TETAP).ne.0.) THEN
         call spsource_MEANFLOW(ndom, nitcfg, param_int, param_real,
-     &                         ind_grad, rop ,coe, vol, drodm)
+     &                         ind_ssa, rop ,coe, vol, drodm)
       ENDIF
 c---------------------------------------------------------------------
 c----- Calcul des termes sources de l''equation de Spalart Allmaras et de mut pour ZDES
@@ -71,31 +71,31 @@ c
             if(param_int(SA_INT+ SA_IDES-1).eq.0) then !SA
 
              call spsource_SA(ndom, nitcfg, param_int, param_real,
-     &                        ind_grad,
+     &                        ind_ssa,
      &                        xmut,rop,coe, ti, tj, tk, vol,dlng, drodm)
 
             elseif(param_int(SA_INT+ SA_IDES-1).eq.1) then !ZDES mode 1, delta_vol
 
              call spsource_ZDES1_vol(ndom, param_int, param_real,
-     &                           ind_grad,
+     &                           ind_ssa,
      &                           xmut,rop,coe, ti,tj,tk,vol,dlng, drodm)
 
             elseif(param_int(SA_INT+ SA_IDES-1).eq.2) then !ZDES mode 1, delta_rot
 
              call spsource_ZDES1_rot(ndom, param_int, param_real,
-     &                           ind_grad,
+     &                           ind_ssa,
      &                           xmut,rop,coe, ti,tj,tk,vol,dlng, drodm)
 
             elseif(param_int(SA_INT+ SA_IDES-1).eq.3) then !ZDES mode 2, delta_vol
 
              call spsource_ZDES2_vol(ndom, param_int, param_real,
-     &                               ind_grad,
+     &                               ind_ssa,
      &                           xmut,rop,coe, ti,tj,tk,vol,dlng, drodm)
 
             elseif(param_int(SA_INT+ SA_IDES-1).eq.4) then !ZDES mode 2, delta_rot
 
              call spsource_ZDES2_rot(ndom, param_int, param_real,
-     &                               ind_grad,
+     &                               ind_ssa,
      &                           xmut,rop,coe, ti,tj,tk,vol,dlng, drodm)
             else
 !$OMP SINGLE

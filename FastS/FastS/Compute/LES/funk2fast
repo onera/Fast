@@ -1,0 +1,24 @@
+#!/bin/ksh
+# secexample nom_de_fichier
+#for i in `grep -l "init_var_omp(" *.f`
+for i
+do
+echo $i
+cp  /stck1/stck7/stck7.3/imary/FUNk/SRC/$i sav_$i
+cat sav_$i | sed "s/indcg(ndom,/indcg(/ " | sed "s/inddm(ndom,/inddm(/ "> tmp_$i
+cp tmp_$i sav_$i
+cat sav_$i | sed "s/integer/INTEGER_E/g" | sed "s/real/REAL_E/g"> tmp_$i
+cp tmp_$i sav_$i
+cat sav_$i | sed "s/ific(ndom)/nijk(4)/g" | sed "s/kfic(ndom)/nijk(5)/g" | sed "s/ni(ndom)/nijk(1)/g" | sed "s/nj(ndom)/nijk(2)/g"| sed "s/nk(ndom)/nijk(3)/g"> tmp_$i
+cp tmp_$i sav_$i
+cat sav_$i | sed "s/ific_xyz(ndom)/nijk_xyz(4)/g" | sed "s/kfic_xyz(ndom)/nijk_xyz(5)/g" | sed "s/ni_xyz(ndom)/nijk_xyz(1)/g" | sed "s/nj_xyz(ndom)/nijk_xyz(2)/g"| sed "s/nk_xyz(ndom)/nijk_xyz(3)/g"> tmp_$i
+cp tmp_$i sav_$i
+cat sav_$i | sed "s/iv(ndom)/ijkv(1)/g" | sed "s/jv(ndom)/ijkv(2)/g" | sed "s/kv(ndom)/ijkv(3)/g" > tmp_$i
+cp tmp_$i sav_$i
+cat sav_$i | sed "s/ni(ndom)/nijk(1)/g" | sed "s/nj(ndom)/nijk(2)/g" | sed "s/nk(ndom)/nijk(3)/g" > tmp_$i
+cp tmp_$i sav_$i
+cat sav_$i | sed "s/iv_lu(ndo)/ijkv_lu(1)/g" | sed "s/jv_lu(ndo)/ijkv_lu(2)/g" | sed "s/kv_lu(ndo)/ijkv_lu(3)/g" > $i"or"
+rm -f sav_$i
+rm -f tmp_$i
+done
+

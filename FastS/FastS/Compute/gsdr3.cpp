@@ -17,8 +17,7 @@ E_Int K_FASTS::gsdr3(
   E_Int& nb_pulse     , 
   E_Float& temps,
   E_Int* ipt_ijkv_sdm  ,
-  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    ,
-  E_Int* ipt_ind_sdm   , E_Int* ipt_ind_coe     , E_Int* ipt_ind_grad, E_Int* ipt_ind_CL, E_Int* ipt_ind_CL119, E_Int* ipt_lok,
+  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_ind_CL119   , E_Int* ipt_lok,
   E_Int*     iptludic        , E_Int*   iptlumax       ,
   E_Int** ipt_ind_dm         , E_Int** ipt_it_lu_ssdom  ,
   E_Float*   ipt_cfl,
@@ -32,7 +31,8 @@ E_Int K_FASTS::gsdr3(
   E_Float**  iptventi        , E_Float**  iptventj         , E_Float** iptventk     ,
   E_Float**& iptrdm          ,
   E_Float*   iptroflt        , E_Float*   iptroflt2        , E_Float*  iptwig       , E_Float*   iptstat_wig  ,
-  E_Float*   iptdrodm        , E_Float*   iptcoe           , E_Float* iptmules      )
+  E_Float*   iptdrodm        , E_Float*   iptcoe           , E_Float* iptrot        )
+
 
  {
       E_Int npass         = 0;
@@ -66,9 +66,6 @@ E_Int K_FASTS::gsdr3(
 
    E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3;
    E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3;
-   E_Int* ipt_ind_sdm_thread     = ipt_ind_sdm        + (ithread-1)*6;
-   E_Int* ipt_ind_coe_thread     = ipt_ind_coe        + (ithread-1)*6;
-   E_Int* ipt_ind_grad_thread    = ipt_ind_grad       + (ithread-1)*6;
    E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
    E_Int* ipt_ind_CL119_thread   = ipt_ind_CL119      + (ithread-1)*6;
    E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
@@ -137,7 +134,7 @@ E_Int K_FASTS::gsdr3(
                              {
                                mjr_ale_3dhomocart_(nd, param_int[nd] ,   param_real[nd]   ,
                                                   socket             ,  Nbre_socket       , ithread_sock        , thread_parsock,
-                                                  ipt_ind_dm_socket  , ipt_topology_socket, ipt_ind_coe_thread  ,
+                                                  ipt_ind_dm_socket  , ipt_topology_socket,
                                                   iptx[nd]           , ipty[nd]           , iptz[nd]            ,
                                                   ipti[nd]           , iptj[nd]           , iptk[nd]            ,
                                                   ipti0[nd]          , iptj0[nd]          , iptk0[nd]           , iptvol[nd] ,
@@ -156,10 +153,14 @@ E_Int K_FASTS::gsdr3(
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
         E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int nd_current=0;
+        //calcul du sous domaine a traiter par le thread 
         if (omp_mode == 0)
         { 
           for (E_Int nd = 0; nd < nidom; nd++)
           {
+           E_Int lmin = 10;
+           if (param_int[nd][ITYPCP] == 2) lmin = 4;
+
            //double beg = omp_get_wtime();
 #include "Compute/rhs.cpp"
            //double fin = omp_get_wtime()- beg;
@@ -179,6 +180,8 @@ E_Int K_FASTS::gsdr3(
           //Parcours des zones pour LUSGS
           for (E_Int nd = 0; nd < nidom; nd++)
           {
+           E_Int lmin = 10;
+           if (param_int[nd][ITYPCP] == 2) lmin = 4;
            //double beg = omp_get_wtime();
 # include "Compute/lhs.cpp"
            //double fin = omp_get_wtime()- beg;
@@ -196,6 +199,9 @@ E_Int K_FASTS::gsdr3(
           #pragma omp for schedule(static,1)
           for (E_Int nd = 0; nd < nidom; nd++)
           {
+            E_Int lmin = 10;
+            if (param_int[nd][ITYPCP] == 2) lmin = 4;
+
            for (E_Int l = nd_deb; l < nd; l++)
            {
             shift_zone = shift_zone + param_int[l][ NDIMDX ]*param_int[l][ NEQ ];

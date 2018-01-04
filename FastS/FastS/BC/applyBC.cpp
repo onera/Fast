@@ -119,7 +119,10 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
 //       E_Float* ipt_roteta        = roteta.begin( );
 
         //calcul du sous domaine a traiter par le thread 
-        indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, ipt_param_int[ ITYPCP ],
+        E_Int lmin = 10;
+        if (ipt_param_int[ ITYPCP ] == 2) lmin = 4;
+
+        indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, lmin,
                            ipt_ind_dm,
                            ipt_thread_topology, ipt_ind_dm_thread);
 

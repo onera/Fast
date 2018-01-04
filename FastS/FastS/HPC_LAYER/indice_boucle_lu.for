@@ -3,7 +3,7 @@ c     $Date: 2010-11-04 13:25:50 +0100 (Thu, 04 Nov 2010) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine indice_boucle_lu(ndom,ndsdm,nsdom_lu,icp,
+      subroutine indice_boucle_lu(ndom,ndsdm,nsdom_lu, lmin,
      &                            ind_dm,
      &                            thread_topology, ind_sdm)
 c***********************************************************************
@@ -23,14 +23,14 @@ c***********************************************************************
 
       include "omp_lib.h"
 
-      INTEGER_E ndom,ndsdm,nsdom_lu,icp,ind_dm(6),ind_sdm(6),
+      INTEGER_E ndom,ndsdm,nsdom_lu, lmin,ind_dm(6),ind_sdm(6),
      & thread_topology(3)
 
 c Var loc
       logical l1,l2,l21,l12
       INTEGER_E p1,p2,r1,i,j,k,ivsdm,jvsdm,kvsdm,
 !     & lmin(3),Imin,Kmin,Jmin,ncombi,first(4),loptim,l,
-     & lmin,Imin,Kmin,Jmin,ncombi,first(7),loptim,l,
+     & Imin,Kmin,Jmin,ncombi,first(7),loptim,l,
      & Imax,Kmax,Jmax,ivloc,jvloc,kvloc,iseuil, iverbs
       REAL_E cost, cout, surcout
 
@@ -82,20 +82,14 @@ c Var loc
           first(ncombi) = 8
         endif
 
-           
-
         ! on determine l'epaisseur minimal du sous domaine
-        if(icp.eq.2) then   !integration explicite: on minimise l'epaisseur pour optimiser la repartition
-          !lmin(1) = 1000    !(ific+2)
-          lmin =  4         !(ific+2)
-          !lmin(1) =   4     !(ific+2)
-          !lmin(2) =   4     !(ific+2)
-          !lmin(3) =   4     !(ific+2)
-        else                !integration implicite: on evite les domaines trop fin pour preserver la convergence du LU
-          !lmin(:) = 10
-          lmin = 10
-        endif
- 
+        !if(icp.eq.2) then   !integration explicite: on minimise l'epaisseur pour optimiser la repartition
+        !  !lmin(1) = 1000    !(ific+2)
+        !  lmin =  4         !(ific+2)
+        !  !lmin(3) =   4     !(ific+2)
+        !else                !integration implicite: on evite les domaines trop fin pour preserver la convergence du LU
+        !  lmin = 10
+        !endif
 
         ivloc = ind_dm(2)- ind_dm(1) + 1
         jvloc = ind_dm(4)- ind_dm(3) + 1

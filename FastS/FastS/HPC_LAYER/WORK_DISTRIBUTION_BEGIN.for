@@ -1,4 +1,5 @@
 #define CHECK_SPLIT 0
+#define CHECK_BLOCK 1
 #if CHECK_SPLIT > 0
       tot(:,ithread)=0
 #endif
@@ -10,7 +11,6 @@
       omp_wait_lu   = 'wait_lu'
       lerr          =.false.
 
-      ithread_io     = ithread
       thread_parsock =  Nbre_thread_actif/Nbre_socket
 
 #include   "FastS/HPC_LAYER/topo_cache.for"

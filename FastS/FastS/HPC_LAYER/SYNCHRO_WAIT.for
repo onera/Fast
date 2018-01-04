@@ -1,4 +1,4 @@
-              call synchro_omp_scater(param_int, ithread_io,
+              call synchro_omp_scater(param_int, ithread,
      &                          lth, sens,lgo,lwait,Nbre_socket,
      &                          Nbre_thread_actif,thread_parsock,
      &                          lok_shap_sock, lok_shap,neq_lok,

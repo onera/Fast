@@ -159,8 +159,8 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
              E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_omp  + (ithread-1)*6;
 
              // Distribution de la sous-zone sur les threads
-             E_Int type_decoup =2;
-             indice_boucle_lu_(nd, ithread, Nbre_thread_actif, type_decoup,
+             E_Int lmin =4;
+             indice_boucle_lu_(nd, ithread, Nbre_thread_actif, lmin,
                                iptmoy_param[nd]+11, 
                                ipt_topology_thread, ipt_ind_dm_omp_thread );
 

@@ -3,7 +3,7 @@ c     $Date: 2010-11-04 13:25:50 +0100 (Thu, 04 Nov 2010) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine topo_scater(ndo, ithread, socket, icp,
+      subroutine topo_scater(ndo, ithread, socket, lmin,
      &                       thread_parsock, thread_parsock_actif,
      &                       ithread_sock, socket_topology,
      &                       size_target, ind_dm_zone, 
@@ -12,7 +12,7 @@ c***********************************************************************
 
       implicit none
 
-      INTEGER_E ndo,ithread, socket,thread_parsock,icp,
+      INTEGER_E ndo,ithread, socket,thread_parsock, lmin,
      & ithread_sock, socket_topology(3),thread_parsock_actif,
      & size_target(3), ind_dm_zone(6), topo_s(3),
      & ijkvloc(3), thread_pos(3), socket_pos(3), thread_topology(3),
@@ -33,7 +33,7 @@ C Var loc
       i = socket_topology(1)*socket_topology(2)*socket_topology(3)
       If(i.eq.1) then
 
-           call indice_boucle_lu(ndo, ithread, thread_parsock, icp,
+           call indice_boucle_lu(ndo, ithread, thread_parsock, lmin,
      &                           ind_dm_zone, 
      &                           topo_s, ind_dm_loc )
 
@@ -124,8 +124,10 @@ C Var loc
       compteur = compteur + 1
       if(new_try) then
          size_target(1) = max(32, size_target(1)/2)   !taille minimale vecto
-         size_target(2) = max(2 , size_target(2)/2)
-         size_target(3) = max(2 , size_target(3)/2)     !taille minimal pour synchro omp
+         size_target(2) = max(8 , size_target(2)/2)
+         size_target(3) = max(8 , size_target(3)/2)     !taille minimal pour synchro omp
+         !size_target(2) = max(2 , size_target(2)/2)
+         !size_target(3) = max(2 , size_target(3)/2)     !taille minimal pour synchro omp
         goto 1000
       endif
 

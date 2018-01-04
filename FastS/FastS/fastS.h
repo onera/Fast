@@ -31,6 +31,7 @@ namespace K_FASTS
   PyObject* itt(                     PyObject* self, PyObject* args);
   PyObject* compute(                 PyObject* self, PyObject* args);
   PyObject* _computePT(              PyObject* self, PyObject* args);
+  PyObject* _computePT_mut(          PyObject* self, PyObject* args);
   PyObject* _applyBC(                PyObject* self, PyObject* args);
   PyObject* PygetRange(              PyObject* self, PyObject* args);
   PyObject* display_ss_iteration(    PyObject* self, PyObject* args);
@@ -83,9 +84,7 @@ namespace K_FASTS
     E_Int& nb_pulse     ,
     E_Float& temps,
     E_Int* ipt_ijkv_sdm       , 
-    E_Int* ipt_ind_dm_omp     , E_Int* ipt_topology      ,
-    E_Int* ipt_ind_sdm        , E_Int* ipt_ind_coe    , E_Int* ipt_ind_grad      ,
-    E_Int* ipt_ind_CL     , E_Int* ipt_ind_CL119     , E_Int* ipt_lok       ,
+    E_Int* ipt_ind_dm_omp     , E_Int* ipt_topology      , E_Int* ipt_ind_CL     , E_Int* ipt_ind_CL119     , E_Int* ipt_lok       ,
     E_Int* iptludic, E_Int* iptlumax, 
     E_Int** ipt_ind_dm, E_Int** ipt_it_lu_ssdom,
     E_Float* ipt_cfl,

@@ -170,9 +170,6 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
   //FldArrayI compteur(     threadmax_sdm); E_Int* ipt_compteur   =  compteur.begin();
   FldArrayI ijkv_sdm(   3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(   3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
-  FldArrayI ind_sdm(    6*threadmax_sdm); E_Int* ipt_ind_sdm    =  ind_sdm.begin();
-  FldArrayI ind_coe(    6*threadmax_sdm); E_Int* ipt_ind_coe    =  ind_coe.begin();
-  FldArrayI ind_grad(   6*threadmax_sdm); E_Int* ipt_ind_grad   =  ind_grad.begin();
   FldArrayI ind_dm(     6*threadmax_sdm); E_Int* ipt_ind_dm     =  ind_dm.begin();
   FldArrayI ind_dm_omp(12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
@@ -192,20 +189,8 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-   E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
-   if( Nbre_thread_actif < Nbre_socket ) Nbre_socket = 1;
 
-   E_Int thread_parsock  =  Nbre_thread_actif/Nbre_socket;
-   E_Int socket          = (ithread-1)/thread_parsock +1;
-   E_Int  ithread_sock   = ithread-(socket-1)*thread_parsock;
-
-        for (E_Int nd = 0; nd < nidom; nd++)
-          {
-             E_Int l =  nd*mx_synchro*Nbre_thread_actif  + (ithread-1)*mx_synchro;
-             for (E_Int i = 0;  i < mx_synchro ; i++)
-                { ipt_lok[ l + i ]  = 0; }
-          }
-          #pragma omp barrier
+# include "HPC_LAYER/INIT_LOCK.h"
 
       //
       //---------------------------------------------------------------------
@@ -215,7 +200,6 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
           {  
 
             E_Int flag_loc = flag;                   //pour eviter race omp
-            E_Int ndo   = nd; 
             
             E_Int* ipt_lok_thread   = ipt_lok   + nd*mx_synchro*Nbre_thread_actif;
             
@@ -229,14 +213,14 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
 
             E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
             E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
-            E_Int* ipt_ind_sdm_thread     = ipt_ind_sdm        + (ithread-1)*6;
-            E_Int* ipt_ind_coe_thread     = ipt_ind_coe        + (ithread-1)*6;
-            E_Int* ipt_ind_grad_thread    = ipt_ind_grad       + (ithread-1)*6;
             E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
             E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
 
              // Distribution de la sous-zone sur les threads
-             indice_boucle_lu_(ndo, socket , Nbre_socket, ipt_param_int[nd][ ITYPCP ],
+             E_Int lmin = 10;
+             if (ipt_param_int[nd][ ITYPCP ] == 2) lmin = 4;
+
+             indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
                               ipt_ind_dm_loc, 
                               ipt_topology_socket, ipt_ind_dm_socket );
 
@@ -250,7 +234,6 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
                post_drodt_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, flag, dim_grad,
                        ipt_param_int[nd], ipt_param_real[nd],
                        ipt_ijkv_sdm_thread,
-                       ipt_ind_sdm_thread, ipt_ind_coe_thread, ipt_ind_grad_thread, 
                        ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
                        ipt_topology_socket, ipt_lok_thread ,
                        iptro[nd] , iptro_m1[nd] , iptro_p1[nd] , iptdrodt[nd] );
@@ -261,7 +244,6 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
                 post_qprime_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, order, dim_grad,
                     ipt_param_int[nd], ipt_param_real[nd],
                     ipt_ijkv_sdm_thread,
-                    ipt_ind_sdm_thread, ipt_ind_coe_thread, ipt_ind_grad_thread, 
                     ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
                     ipt_topology_socket, ipt_lok_thread ,
                     iptro[nd] , iptro_m1[nd], ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd] , iptQ[nd] );
@@ -277,7 +259,6 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
                                    order, dim_grad, vr1, vr2,
                     ipt_param_int[nd], ipt_param_real[nd],
                     ipt_ijkv_sdm_thread,
-                    ipt_ind_sdm_thread, ipt_ind_coe_thread, ipt_ind_grad_thread, 
                     ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
                     ipt_topology_socket, ipt_lok_thread ,
                     iptro[nd] , iptro_m1[nd], ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd] , iptQ[nd] , iptvort[nd]);
@@ -291,7 +272,6 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
                 post_q_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, order, dim_grad,
                     ipt_param_int[nd], ipt_param_real[nd],
                     ipt_ijkv_sdm_thread,
-                    ipt_ind_sdm_thread, ipt_ind_coe_thread, ipt_ind_grad_thread, 
                     ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
                     ipt_topology_socket, ipt_lok_thread ,
                     iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptQ[nd], iptenst[nd], iptvort[nd]);
@@ -302,7 +282,6 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
                 post_enst_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, order, dim_grad,
                     ipt_param_int[nd], ipt_param_real[nd],
                     ipt_ijkv_sdm_thread,
-                    ipt_ind_sdm_thread, ipt_ind_coe_thread, ipt_ind_grad_thread, 
                     ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
                     ipt_topology_socket, ipt_lok_thread ,
                     iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptQ[nd], iptenst[nd], iptvort[nd]);
@@ -313,7 +292,6 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
                 post_q_enst_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, order, dim_grad,
                     ipt_param_int[nd], ipt_param_real[nd],
                     ipt_ijkv_sdm_thread,
-                    ipt_ind_sdm_thread, ipt_ind_coe_thread, ipt_ind_grad_thread, 
                     ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
                     ipt_topology_socket, ipt_lok_thread ,
                     iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptQ[nd], iptenst[nd], iptvort[nd]);
