@@ -1,5 +1,5 @@
 /*    
-    Copyright 2013-2017 Onera.
+    Copyright 2013-2018 Onera.
 
     This file is part of Cassiopee.
 
@@ -20,7 +20,6 @@
 # ifndef _FAST_FAST_H_
 # define _FAST_FAST_H_
 
-# include "Python.h"
 # include "kcore.h"
 # include "Fortran.h"
 

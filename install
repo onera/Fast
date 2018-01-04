@@ -62,5 +62,5 @@ if [ "$1" = "doc" ]; then
 fi
 
 # Installation des fichiers d'environnement
-cp Envs/env_Cassiopee* "$CASSIOPEE"/Dist
-cp Envs/sh_Cassiopee*  "$CASSIOPEE"/Dist
+#cp Envs/env_Cassiopee* "$CASSIOPEE"/Dist
+#cp Envs/sh_Cassiopee*  "$CASSIOPEE"/Dist
