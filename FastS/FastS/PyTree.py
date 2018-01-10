@@ -87,7 +87,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
             # Ghostcell
             vars = varsP
             if  nstep == 2 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
-            _fillGhostcells(zones, tc, metrics, nitrun+1, vars, nstep, hook1) 
+            timelevel_target = int(dtloc[4])
+            _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1) 
+
+    # data update for unsteady joins
+    dtloc[3] +=1   #time_level_motion
+    dtloc[4] +=1   #time_level_target
 
     # switch pointers
     FastI.switchPointers__(zones, orderRk)
@@ -232,7 +237,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     nitrun    = 0
     #t0=timeit.default_timer()
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
-    _fillGhostcells(zones, tc, metrics, nitrun, ['Density'], nstep, hook1) 
+    timelevel_target = int(dtloc[4]) 
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, hook1) 
     #t1=timeit.default_timer()
     #print "cout ghostcell= ", t1-t0
     
@@ -303,6 +309,99 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
 
                 c += 1
     return None
+
+
+#==============================================================================
+# For periodic unsteady chimera join, parameter must be updated peridicaly 
+#==============================================================================
+def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_steady.cgns', directory='.'):
+
+    bases = Internal.getNodesFromType1(t      , 'CGNSBase_t')       # noeud
+    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
+    dtloc = None
+    if own is not None: dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+
+    #on cree les noeud infos insta pour chimere perio s'il n'existe pas 
+    TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget'] 
+    for opt in TimeLevelOpts:
+       tmp = Internal.getNodeFromName1(t, opt)
+       Internal.createUniqueChild(t, opt, 'DataArray_t', value=0)
+
+    if dtloc is not None:
+      dtloc            = Internal.getValue(dtloc) # tab numpy
+      timelevel_motion = dtloc[3]
+      timelevel_target = dtloc[4]
+    else:
+      timelevel_motion = 0
+      timelevel_target = 0
+
+    timelevel_period = timelevelInfos["TimeLevelPeriod"]
+    timelevel_360    = timelevelInfos["TimeLevel360"]
+    timelevel_perfile= timelevelInfos["TimeLevelPerFile"]
+    timelevel_axeRot = timelevelInfos["TimeLevelRotationAxis"]
+
+    No_period = timelevel_motion//timelevel_period 
+
+    #
+    #target in no more in tc; need need data in a new file
+    #
+    if timelevel_target == timelevel_perfile+1 or tc == None: 
+
+       tmp  = No_period*timelevel_period
+       root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
+
+       FILE = tc_steady
+       if os.access(FILE, os.F_OK): tc  = C.convertFile2PyTree(FILE)
+       else: print "error reading", FILE, 'target=', timelevel_target, 'motionlevel=', timelevel_motion
+       FILE = directory+'/tc_'+str(root)+'.cgns'
+       print 'File inst=', FILE, 
+       if os.access(FILE, os.F_OK): tc_inst  = C.convertFile2PyTree(FILE)
+       else: print "error reading", FILE
+
+       #UnsteadyConnectInfos  = X.getUnsteadyConnectInfos(tc_inst)
+       tc = Internal.merge( [tc, tc_inst] )
+
+       # Get omp_mode
+       omp_mode = 0
+       node = Internal.getNodeFromName2(t, '.Solver#define')
+       if node is not None:
+        node = Internal.getNodeFromName1(node, 'omp_mode')
+        if  node is not None: omp_mode = Internal.getValue(node)
+
+       # Reordone les zones pour garantir meme ordre entre t et tc
+       FastI._reorder(t, tc, omp_mode)
+
+       # Compactage arbre transfert
+       g = None; l = None
+       zones=Internal.getZones(t)
+       X.miseAPlatDonnorTree__(zones, tc, procDict=g, procList=l)
+
+       #Remise zero target
+       if dtloc is not None: dtloc[4] = 0
+
+    #
+    #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
+    #
+    if timelevel_motion == timelevel_period+1: 
+       bases  = Internal.getNodesFromType1(tc    , 'CGNSBase_t')       # noeud
+
+       sign =-1
+       if omega > 0: sign = 1
+       for base in bases:
+         if   base[0]=='Rotor': teta = -math.pi*timelevel_period/timelevel_360*No_period*sign
+         elif base[0]=='Stator':teta =  math.pi*timelevel_period/timelevel_360*No_period*sign
+         zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
+         for z in zones:
+           angles = Internal.getNodesFromName2(z, 'RotationAngle')
+           for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
+
+       
+    #
+    #timelevel_motion larger than number of timelevels for 360degre 
+    #
+    if timelevel_motion > timelevel_360: dtloc[3] = 0  # remise a zero du compteur si 360degres 
+
+    return tc
 
 #==============================================================================
 # Converti les variables conservatives de l'arbre en variables primitives
@@ -441,7 +540,7 @@ def _applyBC(t, metrics, var="Density"):
     return None
 
 #==============================================================================
-def _fillGhostcells(zones, tc, metrics, nitrun, vars, nstep, hook1): 
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1): 
 
     # hook1[10] = nombre equations max
     # hook1[11] = nidom_lu
@@ -469,7 +568,7 @@ def _fillGhostcells(zones, tc, metrics, nitrun, vars, nstep, hook1):
 
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
-              Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, nitrun, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)
+              Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)
 
        #apply BC
        _applyBC(zones, metrics, var=vars[0])
@@ -1245,7 +1344,7 @@ def _buildOwnData(t):
     'rk':0, 
     'modulo_verif':0,
     'exp_local':0,
-    'time_begin_ale':0,
+    'time_begin_ale':1,
     'omp_mode':0
     }
     keys4Zone = {
@@ -1289,6 +1388,10 @@ def _buildOwnData(t):
         exploc          = 0
         t_init_ale      = temps
 
+        timelevel_motion= 0
+        timelevel_target= 0
+        timelevel_prfile= 0
+
         if d is not None:
             FastI.checkKeys(d, keys4Base)
             a = Internal.getNodeFromName1(d, 'temporal_scheme')
@@ -1310,6 +1413,11 @@ def _buildOwnData(t):
             if a is not None: itexploc = Internal.getValue(a)
             a = Internal.getNodeFromName1(d, 'time_begin_ale')
             if a is not None: t_init_ale = Internal.getValue(a)  
+
+        a = Internal.getNodeFromName1(t, 'TimeLevelMotion')
+        if a is not None: timelevel_motion = Internal.getValue(a)
+        a = Internal.getNodeFromName1(t, 'TimeLevelTarget')
+        if a is not None: timelevel_target = Internal.getValue(a)
           
         # Base ownData (generated)
         o = Internal.createUniqueChild(b, '.Solver#ownData', 
@@ -1328,11 +1436,15 @@ def _buildOwnData(t):
         if (exploc == 1 and temporal_scheme == "explicit"): nssiter = rk*maxlevel # explicit local
         if (exploc == 2 and temporal_scheme == "explicit"): itexploc = 4
         else: itexploc=0
-        dtdim = nssiter + 4
+        dtdim = nssiter + 7
         datap = numpy.empty((dtdim), numpy.int32) 
-        datap[0] = nssiter ; datap[1] = modulo_verif
+        datap[0] = nssiter 
+        datap[1] = modulo_verif
         datap[2] = restart_fields-1
-        datap[3:dtdim-1] = 1
+        datap[3] = timelevel_motion
+        datap[4] = timelevel_target 
+        datap[5] = timelevel_prfile 
+        datap[6:dtdim-1] = 1
         datap[dtdim-1] = rk
         Internal.createUniqueChild(o, '.Solver#dtloc', 'DataArray_t', datap)
 

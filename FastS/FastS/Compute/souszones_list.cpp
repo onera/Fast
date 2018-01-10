@@ -120,14 +120,14 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
      lssiter_verif = 1;
 
      if (nstep == iptdtloc[0] && itypcp!=2) lexit_lu  = 1;
-     iptdtloc[nstep+2] = nidom_tot;
+     iptdtloc[nstep+5] = nidom_tot;
 
      RELEASESHAREDN(iskipArray, iskip_lu);
 
    }  //fin if module_verif
 
   else
-   { nidom_tot = iptdtloc[nstep+2]; }
+   { nidom_tot = iptdtloc[nstep+5]; }
 
   RELEASESHAREDN(dtlocArray, dtloc);
   RELEASEHOOK(hook)

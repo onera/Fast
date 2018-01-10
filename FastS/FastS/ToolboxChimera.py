@@ -186,10 +186,11 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
       T._translate( tcyl['Rotor']       ,  ( (IT_DEB-1)*DTHETA, 0, 0))
       T._translate( donorBases['Rotor'] ,  ( (IT_DEB-1)*DTHETA, 0, 0))
 
+    coef_secure = 1.3
     ReceptCyl={}
     for it in xrange(IT_DEB, IT_FIN):
         print '-----------'
-        print 'theta(radians,degree) = ', it*DTHETA,' ,', it*DTHETA/math.pi*180
+        print 'theta(radians,degree,it) = ', it*DTHETA,' ,', it*DTHETA/math.pi*180,' ,', it
         print '-----------'
         RotAngleDG= [ numpy.zeros( (3), numpy.float64 ) , numpy.zeros( (3), numpy.float64), numpy.zeros( (3), numpy.float64) ]
 
@@ -226,7 +227,6 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
                 #T._translate(zones2translateR ,(0, it*DTHETA, 0))
                 T._translate(zones2translateR ,(0, DTHETA, 0))
 
-                coef_secure = 1.3
                 if    theta_meanR +theta_abs*coef_secure <  theta_meanDonorD:
 
                       T._translate(donorBases[donor][2],(0, -3*theta_abs, 0))
@@ -280,7 +280,6 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
                 #T._translate( zones2translateR , (it*DTHETA, 0, 0))
                 T._translate(zones2translateR ,( DTHETA, 0, 0))
 
-                coef_secure = 1.3
 
                 if    theta_meanR +theta_abs*coef_secure <  theta_meanDonorD:
 
@@ -338,50 +337,34 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
 
            RD[1] = X.setInterpData( RD[0], RD[1], storage='inverse',loc='centers',penalty=1,nature=1,itype='chimera')
         
-           # bloc donneur periodiques -> remise dans le bloc original
-           # bloc original     =RD[1][0] 
-           # bloc perio Droite =RD[1][1] 
-           # bloc perio Gauche =RD[1][2]
-           #bloc_target= RD[1][0]  #bloc original
-           c = 0
-           for perio in theta_perioDonor[donor]:
-             if perio == 0. : blk_target = c 
-             c+=1
-
-           bloc_target= RD[1][blk_target]  #bloc original
+           # bloc perio Droite =RD[1][2] 
+           # bloc original     =RD[1][1] 
+           # bloc perio Gauche =RD[1][0]
+           # bloc donneur periodiques -> remise dans le bloc original +  ajout des infos de periodicite 
            c = 0
            for bloc_Perio in RD[1][0:]:
           
+             RotAngleDG[c][0] =AXISX*theta_perioDonor[donor][c]
+             RotAngleDG[c][1] =AXISY*theta_perioDonor[donor][c]
+             RotAngleDG[c][2] =AXISZ*theta_perioDonor[donor][c]
 
-             if c != blk_target:
-               RotAngleDG[c][0] =AXISX*theta_perioDonor[donor][c]/math.pi*180
-               RotAngleDG[c][1] =AXISY*theta_perioDonor[donor][c]/math.pi*180
-               RotAngleDG[c][2] =AXISZ*theta_perioDonor[donor][c]/math.pi*180
+             if   c==0: source='M'
+             elif c==1: source='C'
+             else     : source='P'
 
-
-
-               for nozd in xrange(len(bloc_Perio[2])):
-                 zdperio = bloc_Perio[2][nozd]
-                 if zdperio[3] == "Zone_t":
-                    zname  = zdperio[0].split('_Perio')[0]
-                    zdorig = Internal.getNodeFromName(tc[donor],zname)
-
-                    for zsr in Internal.getNodesFromName(zdperio,"ID_*"):
-                      print rcpt,' est le receveur.  teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c
-
-                      srname = zsr[0].split('_')
-                      srname = srname[1]
-                      zsr[0] = 'IDPER#%d_%s'%(it,srname)
-                      # ajout des infos de periodicite 
-                      Internal.createChild(zsr,'RotationAngle' ,'DataArray_t',value=RotAngleDG[c])
-                      Internal.createChild(zsr,'RotationCenter','DataArray_t',value=RotCenter)   
-                      zdorig[2].append(zsr)
-
-                    zd = bloc_target[2][nozd]
-                    for zsr in Internal.getNodesFromName(zd,"ID_*"):                
-                      srname = zsr[0].split('_'); srname = srname[1]
-                      zsr[0] = 'ID#%d_%s'%(it,srname)
-                      zdorig[2].append(zsr)
+             for nozd in xrange(len(bloc_Perio[2])):
+               zdperio = bloc_Perio[2][nozd]
+               if zdperio[3] == "Zone_t":
+                  zname  = zdperio[0].split('_Perio')[0]
+                  zdorig = Internal.getNodeFromName(tc[donor],zname)
+                  for zsr in Internal.getNodesFromName(zdperio,"ID_*"):
+                    print rcpt,' est le receveur.  teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c
+                    srname = zsr[0].split('_');srname = srname[1]
+                    zsr[0] = 'IDPER'+source+'#%d_%s'%(it,srname)
+                    # 
+                    Internal.createChild(zsr,'RotationAngle' ,'DataArray_t',value=RotAngleDG[c])
+                    Internal.createChild(zsr,'RotationCenter','DataArray_t',value=RotCenter)   
+                    zdorig[2].append(zsr)
              c+=1
 
         #--------------CHECKS----------------------------

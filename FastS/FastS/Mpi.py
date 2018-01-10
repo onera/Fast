@@ -5,6 +5,8 @@ from PyTree import display_temporal_criteria, createConvergenceHistory, extractC
 
 try:
     import Converter.PyTree as C
+    import Converter.Mpi    as Cmpi
+    import Distributor2.PyTree as D2
     import Converter.Internal as Internal
     import Connector.Mpi as Xmpi
     import Connector.PyTree as X
@@ -60,7 +62,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
             # Ghostcell
             vars = PyTree.varsP
             if  nstep == 2 and itypcp == 2 : vars = PyTree.varsN  # Choix du tableau pour application transfer et BC
-            _fillGhostcells(zones, tc, metrics, nitrun, vars, nstep, hook1, graphID, graphIBCD, procDict)
+            timelevel_target = int(dtloc[4])
+            _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, hook1, graphID, graphIBCD, procDict)
+
+    # data update for unsteady joins
+    dtloc[3] +=1   #time_level_motion
+    dtloc[4] +=1   #time_level_target
 
     # switch pointers
     FastI.switchPointers__(zones, orderRk)
@@ -70,7 +77,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
     return None
 
 #==============================================================================
-def _fillGhostcells(zones, tc, metrics, nitrun, vars, nstep, hook1, graphID, graphIBCD, procDict): 
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1, graphID, graphIBCD, procDict): 
     
    # hook1[10] = nombre equations max
    # hook1[11] = nidom_lu
@@ -97,12 +104,12 @@ def _fillGhostcells(zones, tc, metrics, nitrun, vars, nstep, hook1, graphID, gra
 
               #recuperation Nb pas instationnnaire dans tc
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-              Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, nitrun,
+              Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,
                                         bcType=bcType, varType=varType, compact=1,
                                         graph=graphIBCD, procDict=procDict, 
                                         Gamma=Gamma, Cv=Cv, MuS=Mus, Cs=Cs, Ts=Ts)
               type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-              Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, nitrun,
+              Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,
                                         varType=varType, compact=1, graph=graphID, procDict=procDict)
 
        #apply BC
@@ -112,6 +119,8 @@ def _fillGhostcells(zones, tc, metrics, nitrun, vars, nstep, hook1, graphID, gra
 #==============================================================================
 def warmup(t, tc, graph=None, infos_ale=None, tmy=None):
     #global FIRST_IT, HOOK, HOOKIBC
+
+    rank = Cmpi.rank
 
     if graph is not None:
         procDict  = graph['procDict']
@@ -208,3 +217,113 @@ def warmup(t, tc, graph=None, infos_ale=None, tmy=None):
     _fillGhostcells(zones, tc, metrics, nitrun, ['Density'], nstep, hook1,graphID, graphIBCD, procDict) 
     if tmy is None: return (t, tc, metrics)
     else: return (t, tc, metrics, tmy)
+
+#==============================================================================
+# For periodic unsteady chimera join, parameter must be updated peridicaly 
+#==============================================================================
+def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_steady.cgns', directory='.'):
+
+    bases = Internal.getNodesFromType1(t      , 'CGNSBase_t')       # noeud
+    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
+    dtloc = None
+    if own is not None: dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+
+    #on cree les noeud infos insta pour chimere perio s'il n'existe pas 
+    TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget'] 
+    for opt in TimeLevelOpts:
+       tmp = Internal.getNodeFromName1(t, opt)
+       Internal.createUniqueChild(t, opt, 'DataArray_t', value=0)
+
+    if dtloc is not None:
+      dtloc            = Internal.getValue(dtloc) # tab numpy
+      timelevel_motion = dtloc[3]
+      timelevel_target = dtloc[4]
+    else:
+      timelevel_motion = 0
+      timelevel_target = 0
+
+    timelevel_period = timelevelInfos["TimeLevelPeriod"]
+    timelevel_360    = timelevelInfos["TimeLevel360"]
+    timelevel_perfile= timelevelInfos["TimeLevelPerFile"]
+    timelevel_axeRot = timelevelInfos["TimeLevelRotationAxis"]
+
+    No_period = timelevel_motion//timelevel_period 
+    #
+    #target in no more in tc; need need data in a new file
+    #
+    if timelevel_target == timelevel_perfile+1: 
+
+       tmp  = No_period*timelevel_period
+       root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
+
+       FILE = tc_steady
+       if os.access(FILE, os.F_OK): 
+          tc = Cmpi.convertFile2SkeletonTree(FILE)
+          tc = Cmpi.readZones(tc, FILE, rank=rank)
+          tc = Cmpi.convert2PartialTree(tc)
+
+       FILE = directory+'/tc_'+str(root)+'.cgns'
+       if os.access(FILE, os.F_OK): 
+          tc_inst = Cmpi.convertFile2SkeletonTree(FILE)
+          tc_inst = Cmpi.readZones(tc_inst, FILE, rank=rank)
+          tc_inst = Cmpi.convert2PartialTree(tc_inst)
+
+       tc = Internal.merge( [tc, tc_inst] )
+
+       graphID   = Cmpi.computeGraph(tc, type='ID')
+       graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
+       procDict  = D2.getProcDict(tc)
+       procList  = D2.getProcList(tc)
+       graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+
+       #UnsteadyConnectInfos  = X.getUnsteadyConnectInfos(tc_inst)
+
+       #
+       #Compactage tc
+       # 
+       # Get omp_mode
+       omp_mode = 0
+       node = Internal.getNodeFromName2(t, '.Solver#define')
+       if node is not None:
+        node = Internal.getNodeFromName1(node, 'omp_mode')
+        if  node is not None: omp_mode = Internal.getValue(node)
+
+       # Reordone les zones pour garantir meme ordre entre t et tc
+       FastI._reorder(t, tc, omp_mode)
+
+       # Compactage arbre transfert
+       if graph is not None: 
+           g = graph['procDict']
+           l = graph['procList']
+       else: 
+           print "Error: true graph is missing in _UpdateUnsteadyJoinParam"
+           import sys; sys.exit()
+
+       zones=Internal.getZones(t)
+       X.miseAPlatDonnorTree__(zones, tc, procDict=g, procList=l)
+
+       #Remise zero target
+       if dtloc is not None: dtloc[4] = 0
+    #
+    #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
+    #
+    if timelevel_motion == timelevel_period+1: 
+       bases  = Internal.getNodesFromType1(tc    , 'CGNSBase_t')       # noeud
+
+       sign =-1
+       if omega > 0: sign = 1
+       for base in bases:
+         if   base[0]=='Rotor': teta = -math.pi*timelevel_period/timelevel_360*No_period*sign
+         elif base[0]=='Stator':teta =  math.pi*timelevel_period/timelevel_360*No_period*sign
+         zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
+         for z in zones:
+           angles = Internal.getNodesFromName2(z, 'RotationAngle')
+           for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
+
+       
+    #
+    #timelevel_motion larger than number of timelevels for 360degre 
+    #
+    if timelevel_motion > timelevel_360: dtloc[3] = 0  # remise a zero du compteur si 360degres 
+
+    return tc
