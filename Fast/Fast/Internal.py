@@ -421,7 +421,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         c       += 1
 
     mx_sszone   = 20
-    mx_synchro  = 2000 
+    mx_synchro  = 6000 
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
     verrou      = mx_sszone*c*mx_synchro*mx_thread
 
