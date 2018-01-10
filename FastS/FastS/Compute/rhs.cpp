@@ -65,6 +65,24 @@
 
             nd_current++;
 
-            if(nd_current > mx_nidom) {printf("redimensionner mx_nidom= %d a %d\n ", mx_nidom ,nd_current); exit(0);}
+            if(nd_current > mx_nidom)
+             {
+               if (ithread==1)
+               {
+                printf("------\n");
+                printf("Error msg\n");
+                printf("------\n");
+                printf("resize MX_SSZONE. Present value= %d \n ", mx_nidom/nidom);
+                printf("Value must be at least larger than : %d \n ", nd_current/nidom +2);
+                printf("Just after the modules import of userscript.py, add the following python command:\n");
+                printf("#\n");
+                printf("#\n");
+                printf("Fast.FastI.MX_SSZONE= %d\n ", nd_current/nidom +3);
+                printf("------\n");
+                printf("End error msg\n");
+                printf("------\n");
+                exit(0);
+               }
+             }
             //
           } //Fin boucle sur param_int[nd][ ILES ] sous-zones eventuelparam_int[nd][ ILES ] pour calcul RHS

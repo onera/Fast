@@ -15,6 +15,9 @@ try:
     OMP_NUM_THREADS = int(OMP_NUM_THREADS)
 except: OMP_NUM_THREADS = 1
 
+MX_SYNCHRO = 1000
+MX_SSZONE  = 10
+
 #==============================================================================
 # Met un dictionnaire de numerics dans une/des zones
 #==============================================================================
@@ -420,10 +423,8 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         ndimwig +=        3*nijk      # surdimensionne ici
         c       += 1
 
-    mx_sszone   = 20
-    mx_synchro  = 6000 
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
-    verrou      = mx_sszone*c*mx_synchro*mx_thread
+    verrou      = MX_SSZONE*c*MX_SYNCHRO*mx_thread
 
 #    wig   = KCore.empty(ndimwig, CACHELINE)
 #    coe   = KCore.empty(ndimcoe, CACHELINE)
@@ -459,7 +460,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     iskip_lu = numpy.empty(dtloc[0]*2 , dtype=numpy.int32  )   # (dtloc[0] = nitmax
 
     
-    hook = [wig, coe, drodm, lok, iskip_lu, dtloc, lssiter_loc, mx_sszone, mx_synchro, FIRST_IT, neq_max]
+    hook = [wig, coe, drodm, lok, iskip_lu, dtloc, lssiter_loc, MX_SSZONE, MX_SYNCHRO, FIRST_IT, neq_max]
     
     return hook
 

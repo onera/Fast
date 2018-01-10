@@ -13,11 +13,6 @@ try:
 except:
     raise ImportError("Fast.PyTree: requires Converter module.")
 
-try:
-    OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
-    OMP_NUM_THREADS = int(OMP_NUM_THREADS)
-except: OMP_NUM_THREADS = 1
-
 # Solveurs disponibles
 FASTP = True
 try: import FastP.PyTree as FastP

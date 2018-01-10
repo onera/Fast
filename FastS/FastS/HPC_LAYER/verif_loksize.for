@@ -49,8 +49,22 @@
          
           if( lerr  ) then
           !$OMP   SINGLE
-            write(*,*)'redimensionner mx_synchro=:',mx_synchro
-            write(*,*)'mx_synchro > :',lok_shap(3)*size_max
+            write(*,*)'------'
+            write(*,*)'error msg'
+            write(*,*)'------'
+            write(*,'(a,i5)')'resize MX_SYNCHRO. Present value=',
+     & mx_synchro
+            write(*,*)'Value must be at least larger than  :',
+     & lok_shap(3)*size_max
+            write(*,*)'Just after modules import of userscript.py,
+     & add the following python command:'
+            write(*,'(a)')'#'
+            write(*,'(a)')'#'
+            write(*,'(a,i5)')'Fast.FastI.MX_SYNCHRO=',
+     & lok_shap(3)*size_max+1
+            write(*,*)'------'
+            write(*,*)' End error msg'
+            write(*,*)'------'
             call error('navier_stokes_struct$',70,1)
           !$OMP   END SINGLE
           endif
