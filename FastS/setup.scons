@@ -99,9 +99,11 @@ if f77compiler == 'ifort':
    cacheLine = Dist.getCacheLine()
 
    if   (cacheLine != 1 ): f77Args += ' -align array%dbyte '%cacheLine
-   if   (cacheLine == 16): f77Args += ' -xSSE4.2 '
-   elif (cacheLine == 32): f77Args += ' -xCORE-AVX2 '
-   elif (cacheLine == 64): f77Args += ' -xMIC-AVX512 '
+   #if   (cacheLine == 16): f77Args += ' -xSSE4.2 '
+   #elif (cacheLine == 32): f77Args += ' -xCORE-AVX2 '
+   #elif (cacheLine == 64): f77Args += ' -xMIC-AVX512 '
+   if (cacheLine == 64): f77Args += ' -xMIC-AVX512 '
+   else:  f77Args += ' -xHost '
 
    if version[0] >= 15:
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -qopt-report5 -qopt-report-phase=vec,loop -unroll0 -c -o $TARGET $SOURCE')

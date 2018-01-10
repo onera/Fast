@@ -352,9 +352,9 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        FILE = tc_steady
        if os.access(FILE, os.F_OK): tc  = C.convertFile2PyTree(FILE)
-       else: print "error reading", FILE, 'target=', timelevel_target, 'motionlevel=', timelevel_motion
+       else: print "error reading", FILE
        FILE = directory+'/tc_'+str(root)+'.cgns'
-       print 'File inst=', FILE, 
+       print 'File inst=', FILE, 'target=', timelevel_target, 'motionlevel=', timelevel_motion
        if os.access(FILE, os.F_OK): tc_inst  = C.convertFile2PyTree(FILE)
        else: print "error reading", FILE
 
