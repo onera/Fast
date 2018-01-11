@@ -109,6 +109,8 @@ if f77compiler == 'ifort':
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -qopt-report5 -qopt-report-phase=vec,loop -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'-override-limit -qopt-report5 -qopt-report-phase=vec,loop -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O2 -r8 -i4 -traceback -check all -fpe-all=0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
+      if Dist.DEBUG == True:
+         env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 -r8 -i4 -traceback -fpe-all=0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
    else:
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O2 -r8 -i4 -g -qopt-report5 -qopt-report-phase=vec,loop -no-vec -no-simd -c -o $TARGET $SOURCE')

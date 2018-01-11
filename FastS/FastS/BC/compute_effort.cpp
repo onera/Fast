@@ -254,8 +254,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
   delete [] iptx; delete [] ipt_param_int;  delete [] iptflu; delete [] ipt_param_int_eff;
 
   RELEASESHAREDN( wigArray  , wig  );
-
-
+  RELEASESHAREDN( effarray, eff);
   RELEASEHOOK(hook)
 
   Py_INCREF(Py_None);

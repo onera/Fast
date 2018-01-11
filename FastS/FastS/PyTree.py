@@ -458,10 +458,10 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             elif(C.isNamePresent(z, 'centers:ViscosityEddy') != 1 and C.isNamePresent(z, 'centers:TurbulentDistance') == 1): _compact(z, fields=['centers:TurbulentDistance'], mode=count)
             elif(C.isNamePresent(z, 'centers:ViscosityEddy') == 1 and C.isNamePresent(z, 'centers:TurbulentDistance') != 1): _compact(z, fields=['centers:ViscosityEddy']    , mode=count)
 
-            if  (C.isNamePresent(z, 'centers:cellN') == 1 ): _compact(z, fields=['centers:cellN'], mode=count)
+            if  C.isNamePresent(z, 'centers:cellN') == 1: _compact(z, fields=['centers:cellN'], mode=count)
 
             #  adjoint 
-            if  (C.isNamePresent(z, 'centers:dpCLp_dpDensity') == 1): 
+            if  C.isNamePresent(z, 'centers:dpCLp_dpDensity') == 1: 
                 _compact(z, fields=['centers:dpCDp_dpDensity','centers:dpCDp_dpMomentumX','centers:dpCDp_dpMomentumY','centers:dpCDp_dpMomentumZ','centers:dpCDp_dpEnergyStagDens'], mode=count)
                 _compact(z, fields=['centers:dpCLp_dpDensity','centers:dpCLp_dpMomentumX','centers:dpCLp_dpMomentumY','centers:dpCLp_dpMomentumZ','centers:dpCLp_dpEnergyStagDens'], mode=count)
                 _compact(z, fields=['centers:rhsIterAdjCLp_RDensity','centers:rhsIterAdjCLp_RMomentumX','centers:rhsIterAdjCLp_RMomentumY','centers:rhsIterAdjCLp_RMomentumZ','centers:rhsIterAdjCLp_REnergyStagDens'], mode=count)
@@ -524,10 +524,8 @@ def checkBalance(t):
 # Interface for Vtune/Advisor collection control
 #==============================================================================
 def itt(var):
-    if var == 'pause':
-          ivar =1
-    else :
-          ivar = 0
+    if var == 'pause': ivar =1
+    else: ivar = 0
     print "itt collection (Vtune/Advisor)", var
     fasts.itt(ivar)
     return None
@@ -624,7 +622,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             if dim[3] == 2: inck =  0
             zp = T.subzone(z, (1,1,1), (-1,-1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: zp = C.initVars(zp, var, 0.)
+	    for var in varmy: C._initVars(zp, var, 0.)
 
             dim_my = Internal.getZoneDim(zp)
             datap[0]  = 0                                                # nbr direction homogene
@@ -652,7 +650,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
             b[0][2].append(zp)
 
-    elif (dir == 'i'):
+    elif dir == 'i':
         for z in zones:
             #
             datap = numpy.empty((17), numpy.int32)
@@ -663,7 +661,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             #
             zp = T.subzone(z, (1,1,1), (1,-1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: zp = C.initVars(zp, var, 0.)
+	    for var in varmy: C._initVars(zp, var, 0.)
             #
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, 1 , dim_tr[1], dim_tr[2] ]
@@ -717,7 +715,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             #
             zp = T.subzone(z, (1,1,1), (-1,1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: zp = C.initVars(zp, var, 0.)
+	    for var in varmy: C._initVars(zp, var, 0.)
             #
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, dim_tr[1], 1, dim_tr[2] ]
@@ -771,7 +769,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             #
             zp = T.subzone(z, (1,1,1), (-1,-1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: zp = C.initVars(zp, var, 0.)
+	    for var in varmy: C._initVars(zp, var, 0.)
             #
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, dim_tr[1], dim_tr[2], 1 ]
@@ -824,7 +822,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             #
             zp = T.subzone(z, (1,1,1), (1,1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: zp = C.initVars(zp, var, 0.)
+	    for var in varmy: C._initVars(zp, var, 0.)
             #
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, 1, 1, dim_tr[1] ]
@@ -879,7 +877,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             #
             zp = T.subzone(z, (1,1,1), (1,-1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: zp = C.initVars(zp, var, 0.)
+	    for var in varmy: C._initVars(zp, var, 0.)
             #
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, 1, dim_tr[1], 1 ]
@@ -934,7 +932,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             #
             zp = T.subzone(z, (1,1,1), (-1,1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: zp = C.initVars(zp, var, 0.)
+	    for var in varmy: C._initVars(zp, var, 0.)
             #
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, dim_tr[1], 1, 1 ]
@@ -1854,6 +1852,7 @@ def extractConvergenceHistory(t, fileout):
 # Cree un arbre Stress pour calcul effort
 # IN: t: tree
 # IN: BC: list des BC concernees ['BCWall', BCFarfield',...]
+# IN: window: ou range de window
 # OUT: return arbre stress
 #==============================================================================
 #def createStressNodes(t, BC=['BCWall']):
@@ -1871,11 +1870,11 @@ def createStressNodes(t, BC=None, window=None):
     b    = Internal.getNodesFromName1(teff, PostBaseName)
 
     zones = []
-    no_z =0
+    no_z = 0
     for b0 in Internal.getNodesFromType1(t,'CGNSBase_t'):
         dimbase=  b0[1][0]
         if b0[0] != PostBaseName:
-           zones    = Internal.getNodesFromType1(b0, 'Zone_t')
+           zones = Internal.getNodesFromType1(b0, 'Zone_t')
 
            for z in zones:
 
@@ -1902,13 +1901,13 @@ def createStressNodes(t, BC=None, window=None):
               compact = 0
               ific    = 2
               param_int = Internal.getNodeFromName2(z, 'Parameter_int')
-              if (param_int is not None): ific = param_int[1][3]
+              if param_int is not None: ific = param_int[1][3]
               ndf =0
               for v in list_bc:
                  if BC is not None:
-                   name    = Internal.getValue(v)
+                   name = Internal.getValue(v)
                  else:
-                   name    = v[0]
+                   name = v[0]
 
                  #if name in BC:
                  if (BC is not None and name in BC) or (window is not None and z[0]==window[0]):
@@ -1927,7 +1926,7 @@ def createStressNodes(t, BC=None, window=None):
                       
                    dim = Internal.getValue(ptrg)
                    #print 'ptrg',ptrg
-                   print 'dim ', dim
+                   #print 'dim ', dim
                    compact = 1
 
                    #dir=0,...5
@@ -1953,8 +1952,8 @@ def createStressNodes(t, BC=None, window=None):
                    c = 0
 	           for v1 in varc: 
                       #print 'var name=',v1,zp[0], c
-                      zp = C.initVars(zp, v1, c)
-                      c=c+1
+                      C._initVars(zp, v1, c)
+                      c += 1
                    #print 'zone name=',zp[0]
                    #print 'dim0=',dim[0,0],dim[0,1],dim[1,0],dim[1,1],dim[2,0],dim[2,1]
 
@@ -2040,7 +2039,7 @@ def createStressNodes(t, BC=None, window=None):
               no_z +=1
               ndf  +=1
 
-              if(compact==1): _compact(zp, fields=var+vargrad)
+              if compact==1: _compact(zp, fields=varc)
 
     Internal._rmNodesByType(b,'ZoneGridConnectivity_t')
     Internal._rmNodesByType(b,'ZoneBC_t')

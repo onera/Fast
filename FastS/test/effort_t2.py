@@ -18,7 +18,7 @@ a = G.cylinder((0,0,0), 0.5, 25., 360., 0., 0.5, (NI,NJ,NK))
 distrib = G.cart((0,0,0),(1/(NJ-1.),1,1),(NJ,1,1))
 distrib = G.enforcePlusX(distrib,2.e-5,15,25)
 a = G.map(a,distrib,dir=2)
-#
+
 a1 = T.subzone(a,(1,1,1),(NI/2,-1,-1)); a1[0] = 'cyl1'
 a2 = T.subzone(a,(NI/2,1,1),(NI,-1,-1)); a2[0] = 'cyl2'
 t = C.newPyTree(["Base"]); t[2][1][2] = [a1,a2]
@@ -58,7 +58,7 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 # Prim vars, solver tag, compact, metrics
 (t, tc, metrics) = FastS.warmup(t, tc)
 
-FastS._applyBC(t, metrics)
+#FastS._applyBC(t, metrics)
 
 teff = FastS.createStressNodes(t, BC=['BCWall'])
 

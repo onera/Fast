@@ -13,17 +13,15 @@ import KCore.Adim as Adim
 import KCore.test as test
 import math
 
-
-#grille cylindrique d'axe Z
+# grille cylindrique d'axe Z
 a = G.cart((0,0,0), (0.5,0.5,0.25), (200,100,15))
-
 t = C.newPyTree(['Base',a])
 
-U0= 140.67
-P0= 89280.81
-L0=1.  
-R0=1.111711
-T0=279.15
+U0 = 140.67
+P0 = 89280.81
+L0 =1.  
+R0 =1.111711
+T0 =279.15
 t = C.addState(t, 'GoverningEquations', 'NSLaminar')
 t = C.addState(t, UInf=U0, RoInf=R0, PInf=P0, LInf=L0, alphaZ=0., adim='dim3')
 
@@ -59,18 +57,13 @@ C.addState2Node__(t, 'EquationDimension', dim)
 NGhostCells = 2
 t = Internal.addGhostCells(t, t, NGhostCells, adaptBCs=1, fillCorner=0)
 
-#import sys
-#sys.exit()
-
-
 
 # initialisation
-
-t= C.initVars(t, '{centers:Density}= 1.')
-t= C.initVars(t, '{centers:VelocityX}= 1.')
-t= C.initVars(t, '{centers:VelocityY}= 1.')
-t= C.initVars(t, '{centers:VelocityZ}= 1.')
-t= C.initVars(t, '{centers:Temperature}=1.')
+C._initVars(t, '{centers:Density}= 1.')
+C._initVars(t, '{centers:VelocityX}= 1.')
+C._initVars(t, '{centers:VelocityY}= 1.')
+C._initVars(t, '{centers:VelocityZ}= 1.')
+C._initVars(t, '{centers:Temperature}=1.')
 
 zones = Internal.getZones(t)
 
