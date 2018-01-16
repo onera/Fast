@@ -88,12 +88,13 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
             vars = varsP
             if  nstep == 2 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
             timelevel_target = int(dtloc[4])
+            #if nstep ==1: print 'it_target ghost=', timelevel_target
             _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1) 
 
     # data update for unsteady joins
     dtloc[3] +=1   #time_level_motion
     dtloc[4] +=1   #time_level_target
-
+    #print 'level and target=',dtloc[3], dtloc[4], nitrun
     # switch pointers
     FastI.switchPointers__(zones, orderRk)
     # flag pour derivee temporelle 1er pas de temps implicit
@@ -332,8 +333,8 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
       timelevel_motion = dtloc[3]
       timelevel_target = dtloc[4]
     else:
-      timelevel_motion = 0
-      timelevel_target = 0
+      timelevel_motion = 1
+      timelevel_target = 1
 
     timelevel_period = timelevelInfos["TimeLevelPeriod"]
     timelevel_360    = timelevelInfos["TimeLevel360"]
@@ -342,10 +343,12 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
     No_period = timelevel_motion//timelevel_period 
 
+    #print 'mjr=', timelevel_target, timelevel_perfile+1
     #
     #target in no more in tc; need need data in a new file
     #
-    if timelevel_target == timelevel_perfile+1 or tc == None: 
+    #if timelevel_target == timelevel_perfile+1 or tc == None: 
+    if timelevel_target == timelevel_perfile or tc == None: 
 
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile

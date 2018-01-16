@@ -1,3 +1,15 @@
+/*#include "Converter/IO/GenIO.h"
+	   vector<E_Int> ni(nidom);  vector<E_Int> nj(nidom);   vector<E_Int> nk(nidom);
+	   for (E_Int i = 0; i < nidom; i++) ni[i] = 1;
+           vector<FldArrayF*> field(nidom);
+	   vector<char*> zoneNames;
+   	   for (E_Int i = 0; i < nidom; i++) field[i] = K_FLD::FldArrayF(size, nfld, iptro, true);
+	   for (E_Int i = 0; i < nidom; i++) zonesNames = "zone";
+           GenIO::tecwrite("toto.plt", "5e12", "ro,rou", field, zoneNmaes);
+	   
+*/
+     
+
           ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
           nb_subzone    = ipt_nidom_loc [nitcfg-1];                                            //nbre sous-zone a la sousiter courante
 

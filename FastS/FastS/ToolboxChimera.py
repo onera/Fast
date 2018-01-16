@@ -1,5 +1,6 @@
 import Converter.PyTree as C
 import Converter.Internal as Internal
+import Converter.GhostCells as Ghost
 import Connector.PyTree as X
 import Transform.PyTree as T
 import Generator.PyTree as G
@@ -118,7 +119,7 @@ def modifyBCOverlapsForGhostMesh(t,NGhostCells):
 # INTERPOLATIONS CHIMERE PERIODIQUE ENTRE LE ROTOR ET LE STATOR
 # Les donnees d interpolation sont calculees dans le repere cylindrique
 #-----------------------------------------------------------------------------
-def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,AXISY,AXISZ), check=False):
+def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, (XC0,YC0,ZC0), (AXISX,AXISY,AXISZ), check=False):
 
     basenames  = ['Stator', 'Rotor' ]
     donorBases = {}
@@ -132,7 +133,6 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
 
        base   = Internal.getNodeFromName(tc[name], name)
        zones  = Internal.getZones(base)
-
 
        if AXISX > 0. or AXISZ > 0.:
           thetameanD = C.getMeanValue(zones, 'CoordinateY')
@@ -192,11 +192,12 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
         print '-----------'
         print 'theta(radians,degree,it) = ', it*DTHETA,' ,', it*DTHETA/math.pi*180,' ,', it
         print '-----------'
-        RotAngleDG= [ numpy.zeros( (3), numpy.float64 ) , numpy.zeros( (3), numpy.float64), numpy.zeros( (3), numpy.float64) ]
 
         for rcpt in basenames:
         #for rcpt in ['Rotor']:
            print '  '
+
+           RotAngleDG= [ numpy.zeros( (3), numpy.float64 ) , numpy.zeros( (3), numpy.float64), numpy.zeros( (3), numpy.float64) ]
 
            ReceptCyl[ rcpt ] = Internal.getNodeFromName(tcyl[ rcpt ], rcpt )
 
@@ -361,7 +362,9 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
                     print rcpt,' est le receveur.  teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c
                     srname = zsr[0].split('_');srname = srname[1]
                     zsr[0] = 'IDPER'+source+'#%d_%s'%(it,srname)
-                    # 
+                    #modif pointlist pour calcul sur zone reduite
+                    _adaptRange(zdorig, zsr, infos_PtlistRebuild ) 
+
                     Internal.createChild(zsr,'RotationAngle' ,'DataArray_t',value=RotAngleDG[c])
                     Internal.createChild(zsr,'RotationCenter','DataArray_t',value=RotCenter)   
                     zdorig[2].append(zsr)
@@ -375,7 +378,166 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, (XC0,YC0,ZC0), (AXISX,
     
         Internal._rmNodesByName(tc[rcpt],'GridCoordinates')
 
-    connec_tree=[]
-    for name in basenames:  connec_tree.append( tc[name] )
+    tc_out =  C.newPyTree(['Base'])
+    for name in basenames:  tc_out[2].append( tc[name] ) 
+    Internal._rmNodesByName(tc_out,'Base')
 
-    return connec_tree
+    vars= ['FlowSolution','CoordinateX','CoordinateY','CoordinateZ']
+    for v in vars: C._rmVars(tc_out, v)
+
+    return tc_out
+    #connec_tree=[]
+    #for name in basenames:  connec_tree.append( tc[name] )
+    #return connec_tree
+
+#------------------------------------------------------------------
+# modify Pointlist and PointlistDonor in order to compute unsteady chimera interpolation on smaller grid
+#  z       = zone donneuse
+#  s       = subregion
+#  dim_old = dictionnary of (ni,nj,nk) of reduced zone
+#  dim_new = dictionnary of (ni,nj,nk) of true    zone
+#  shift   = dictionnary of (ni,nj,nk) of true    zone
+#------------------------------------------------------------------
+def _adaptRange(z, s, infos_Ptlist):
+
+     #zonename du receveur
+     recpt = Internal.getValue(s)
+
+     #print 'zname',z[0],' rac=', s[0]
+     ptlist  = Internal.getNodeFromName( s, "PointList" )[1]
+     ptlistD = Internal.getNodeFromName( s, "PointListDonor" )[1]
+
+     shift   = infos_Ptlist[ z[0]  ] [0]
+     nijkOpt = infos_Ptlist[ z[0]  ] [1]
+     nijk    = infos_Ptlist[ z[0]  ] [2]
+
+     #mise a jour info taille de zone donneuse
+     z[1][0:4,0] = nijk[0:4]+1 
+     z[1][0:4,1] = nijk[0:4] 
+ 
+
+     shiftD  = infos_Ptlist[ recpt ] [0]
+     nijkOptD= infos_Ptlist[ recpt ] [1]
+     nijkD   = infos_Ptlist[ recpt ] [2]
+
+     ninj   = nijkOpt[0]*nijkOpt[1]
+     ni     = nijkOpt[0]
+     ninjnew= nijk[0]*nijk[1]
+     ninew  = nijk[0]
+
+     ninjD   = nijkOptD[0]*nijkOptD[1]
+     niD     = nijkOptD[0]
+     ninjDnew= nijkD[0]*nijkD[1]
+     niDnew  = nijkD[0]
+
+     k     = numpy.empty( ptlist.size, dtype=numpy.int32)
+     j     = numpy.empty( ptlist.size, dtype=numpy.int32)
+     i     = numpy.empty( ptlist.size, dtype=numpy.int32)
+     kD    = numpy.empty( ptlist.size, dtype=numpy.int32)
+     jD    = numpy.empty( ptlist.size, dtype=numpy.int32)
+     iD    = numpy.empty( ptlist.size, dtype=numpy.int32)
+
+
+     k[:] =  ptlist[:]//ninj
+     j[:] = (ptlist[:] -k[:]*ninj)//ni
+     i[:] =  ptlist[:] -k[:]*ninj -j*ni
+
+     kD[:]= ptlistD[:]//ninjD
+     jD[:]= (ptlistD[:] -kD[:]*ninjD)//niD
+     iD[:]=  ptlistD[:] -kD[:]*ninjD -jD*niD
+
+     ptlistD[:] = iD[:]+shiftD[0] + (jD[:]+shiftD[1])*niDnew + (kD[:]+shiftD[2])*ninjDnew
+     ptlist[:]  =  i[:]+ shift[0] + ( j[:]+ shift[1])*ninew  + ( k[:]+ shift[2])*ninjnew
+
+     return None
+
+#------------------------------------------------------------------
+# selection des subzones pour optimiser calcul chimere instationnaire
+#------------------------------------------------------------------
+def ZonePrecond( base, NGhostCells, info_PtlistRebuild, dim=3):
+
+     zones=[]
+     for z in Internal.getZones(base):
+        print 'zone selectionnee', z[0]
+        #on cherche si interface =imin, imax, ...
+        connect =Internal.getNodeFromType(z ,'ZoneGridConnectivity_t')
+        conns   =Internal.getNodesFromType1(connect ,'GridConnectivity_t')
+        for conn in conns:
+          contype =Internal.getNodeFromType(conn ,'GridConnectivityType_t')
+          print contype
+          if Internal.getValue(contype) == 'Overset':
+             ptrange =Internal.getNodeFromType(conn ,'IndexRange_t')
+             #dir=0,...5
+             idir = Ghost.getDirection__(dim, [ptrange])
+             rg = Internal.getValue(ptrange)
+             nijk     = numpy.empty(3, dtype=numpy.int32)
+             nijkOpt  = numpy.empty(3, dtype=numpy.int32)
+             shift_ijk= numpy.zeros(3, dtype=numpy.int32)
+             dimzone  = Internal.getZoneDim(z)
+             nijk[0:3]= dimzone[1:4]
+             nijk[ :] -=1  #vertex2center
+             print 'WARNING'
+             print 'WARNING'
+             print 'WARNING'
+             print 'WARNING'
+             print 'WARNING'
+             print 'WARNING'
+             print 'ZonePrecond: warning specif case'
+             print 'WARNING'
+             print 'WARNING'
+             print 'WARNING'
+             print 'WARNING'
+             print 'WARNING'
+             print 'WARNING'
+             nijk[ 0] =70
+             depth = 8
+             if idir == 0:
+                zp = T.subzone(z, (rg[0,0]+NGhostCells,rg[1,0],rg[2,0]), (rg[0,0]+depth,rg[1,1],rg[2,1]))
+                zp[0] = z[0]
+                dimzone      = Internal.getZoneDim(zp)
+                nijkOpt[0:3] = dimzone[1:4]
+                nijkOpt[ :] -=1
+                shift_ijk[0] = NGhostCells
+             elif idir == 1:
+                zp = T.subzone(z, (rg[0,1]-depth,rg[1,0],rg[2,0]), (rg[0,1]-NGhostCells ,rg[1,1],rg[2,1]))
+                zp[0] = z[0]
+                dimzone      = Internal.getZoneDim(zp)
+                nijkOpt[0:3] = dimzone[1:4]
+                nijkOpt[ :] -=1
+                shift_ijk[0] = nijk[ 0] - nijkOpt[0] -NGhostCells
+             elif idir == 2:
+                zp = T.subzone(z, (rg[0,0], rg[1,0]+NGhostCells, rg[2,0]),   (rg[0,1],rg[1,0]+depth,rg[2,1]))
+                zp[0] = z[0]
+                dimzone      = Internal.getZoneDim(zp)
+                nijkOpt[0:3] = dimzone[1:4]
+                nijkOpt[ :] -=1
+                shift_ijk[1] = NGhostCells
+             elif idir == 3:
+                zp = T.subzone(z, (rg[0,0], rg[1,1]-depth, rg[2,0]), (rg[0,1] ,rg[1,1]-NGhostCells,rg[2,1]))
+                zp[0] = z[0]
+                dimzone      = Internal.getZoneDim(zp)
+                nijkOpt[0:3] = dimzone[1:4]
+                nijkOpt[ :] -=1
+                shift_ijk[1] = nijk[ 1] - nijkOpt[1] -NGhostCells
+             elif idir == 4:
+                zp = T.subzone(z, (rg[0,0], rg[1,0], rg[2,0]+NGhostCells),   (rg[0,1],rg[1,1],rg[2,0]+depth))
+                zp[0] = z[0]
+                dimzone      = Internal.getZoneDim(zp)
+                nijkOpt[0:3] = dimzone[1:4]
+                nijkOpt[ :] -=1
+                shift_ijk[2] = NGhostCells
+             elif idir == 5:
+                zp = T.subzone(z, (rg[0,0], rg[1,1], rg[2,1]-depth),  (rg[0,1] , rg[1,1], rg[2,1]-NGhostCells))
+                zp[0] = z[0]
+                dimzone      = Internal.getZoneDim(zp)
+                nijkOpt[0:3] = dimzone[1:4]
+                nijkOpt[ :] -=1
+                shift_ijk[2] = nijk[ 2] - nijkOpt[2] -NGhostCells
+
+
+
+             info_PtlistRebuild[zp[0]]  = [ shift_ijk , nijkOpt, nijk ]
+
+             zones.append(zp)
+
+     return zones
