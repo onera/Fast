@@ -161,12 +161,12 @@ c
 
                  test =max(xro,xrou,xrov,xrow,xroe,xnut)
                  if(test.gt.0)
-     &           write(*,'(a,a,a,i5,a,f12.5)')'Warning convergence
+     &           write(*,'(a,a,a,i6,a,f12.5)')'Warning convergence
      &             L2  Newton: dom=',zone_name,
      &             ' Pas de temps=',nitrun,' divergence=',test
                  test1=max(xro1,xrou1,xrov1,xrow1,xroe1,xnut1)
                  if(test1.gt.0)
-     &           write(*,'(a,a,a,i5,a,f12.5)')'Warning convergence
+     &           write(*,'(a,a,a,i6,a,f12.5)')'Warning convergence
      &             Loo Newton: dom=',zone_name,
      &          ' Pas de temps=',nitrun,' divergence=',test1
 
@@ -184,12 +184,12 @@ c
  
                 test =max(xro,xrou,xrov,xrow,xroe)
                 if(test.gt.0)
-     &           write(*,'(a,a,a,i5,a,f12.5)')'Warning convergence
+     &           write(*,'(a,a,a,i6,a,f12.5)')'Warning convergence
      &             L2  Newton: dom=',zone_name,' Pas de temps=',nitrun,
      &             ' divergence=', test
                 test1=max(xro1,xrou1,xrov1,xrow1,xroe1)
                 if(test1.gt.0)
-     &           write(*,'(a,a,a,i5,a,f12.5)')'Warning convergence
+     &           write(*,'(a,a,a,i6,a,f12.5)')'Warning convergence
      &             Loo Newton: dom=',zone_name,' Pas de temps=',nitrun,
      &            ' divergence=',test1
 

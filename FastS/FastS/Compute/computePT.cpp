@@ -77,20 +77,24 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   E_Float** iptdist;    E_Float** iptventi; E_Float** iptventj; E_Float** iptventk;
   E_Float** iptrdm;
   E_Float** iptCellN  ; E_Float** ipt_cfl_zones;
-  E_Float** iptro_sfd;
+  E_Float** iptro_sfd; E_Float** iptdelta; E_Float** iptfd; E_Float** iptro_zgris; E_Float** iptro_res;
 
   ipt_param_int     = new E_Int*[nidom*3];
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
 
-  iptx              = new E_Float*[nidom*29];
+  iptx              = new E_Float*[nidom*33];
   ipty              = iptx            + nidom;
   iptz              = ipty            + nidom;
   iptro             = iptz            + nidom;
   iptro_m1          = iptro           + nidom;
   iptro_p1          = iptro_m1        + nidom;
   iptro_sfd         = iptro_p1        + nidom;
-  iptmut            = iptro_sfd       + nidom;
+  iptdelta          = iptro_sfd       + nidom;
+  iptfd             = iptdelta        + nidom;
+  iptro_zgris       = iptfd           + nidom;
+  iptro_res         = iptro_zgris     + nidom;
+  iptmut            = iptro_res       + nidom;
   ipti              = iptmut          + nidom;
   iptj              = ipti            + nidom;
   iptk              = iptj            + nidom;
@@ -172,6 +176,26 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
     {
       t            = K_PYTREE::getNodeFromName1(sol_center, "Density_f");
       iptro_sfd[nd]= K_PYTREE::getValueAF(t, hook);
+    }
+    if (ipt_param_int[nd][ SA_INT+ SA_IDES-1 ] >= 2)
+    {
+      t            = K_PYTREE::getNodeFromName1(sol_center, "delta");
+      iptdelta[nd] = K_PYTREE::getValueAF(t, hook);
+    }
+    if ((ipt_param_int[nd][ SA_INT+ SA_IDES-1 ] == 4) || (ipt_param_int[nd][ SA_INT+ SA_IDES-1 ] == 5))
+    {
+      t            = K_PYTREE::getNodeFromName1(sol_center, "fd");
+      iptfd[nd]    = K_PYTREE::getValueAF(t, hook);
+    }
+    if (ipt_param_int[nd][ SA_INT+ SA_IDES-1 ] >= 6)
+    {
+      t               = K_PYTREE::getNodeFromName1(sol_center, "zgris");
+      iptro_zgris[nd] = K_PYTREE::getValueAF(t, hook);
+    }
+    if (ipt_param_int[nd][ EXTRACT_RES ] == 1)
+    {
+      t            = K_PYTREE::getNodeFromName1(sol_center, "Res_Density");
+      iptro_res[nd]= K_PYTREE::getValueAF(t, hook);
     }
 
     if(ipt_param_int[nd][ IFLOW ] > 1)
@@ -323,7 +347,8 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
         iptventi           , iptventj         , iptventk          ,  
         iptrdm             ,
         iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
-        iptdrodm           , iptcoe           , iptrot      );
+        iptdrodm           , iptcoe           , iptrot            , iptdelta      ,
+        iptfd              , iptro_zgris      , iptro_res);
 
   if (lssiter_verif == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
   {

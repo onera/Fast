@@ -7,7 +7,7 @@ c***********************************************************************
      &                    ind_sdm, ind_rhs, ind_ssa,
      &                    temps,
      &                    rop, xmut, drodm, coe, x,y,z,
-     &                    ti, tj, tk, vol,dlng)
+     &                    ti, tj, tk, vol, dlng, delta, fd, zgris)
 c***********************************************************************
 c_P                          O N E R A
 c
@@ -33,6 +33,7 @@ c
       REAL_E ti(*),tj(*),tk(*), vol(*)
       REAL_E x(*),y(*),z(*)
       REAL_E param_real(0:*), temps
+      REAL_E delta(*), fd(*), zgris(*)
 
 C Var loc
       INTEGER_E nacp,l,idirx,idirz,i,j,k,n,n2,i1,j1,k1,i2m1,j2m1,k2m1,
@@ -74,29 +75,55 @@ c
      &                        ind_ssa,
      &                        xmut,rop,coe, ti, tj, tk, vol,dlng, drodm)
 
-            elseif(param_int(SA_INT+ SA_IDES-1).eq.1) then !ZDES mode 1, delta_vol
+            elseif(param_int(SA_INT+ SA_IDES-1).eq.1) then !SA_comp
+
+             call spsource_SA_comp(ndom, nitcfg, param_int, param_real,
+     &                             ind_ssa,
+     &                             xmut,rop,coe, ti, tj, tk, vol,dlng,
+     &                             drodm)
+
+            elseif(param_int(SA_INT+ SA_IDES-1).eq.2) then !ZDES mode 1, delta_vol
 
              call spsource_ZDES1_vol(ndom, param_int, param_real,
-     &                           ind_ssa,
-     &                           xmut,rop,coe, ti,tj,tk,vol,dlng, drodm)
-
-            elseif(param_int(SA_INT+ SA_IDES-1).eq.2) then !ZDES mode 1, delta_rot
+     &                               ind_ssa,
+     &                               xmut,rop,coe, ti,tj,tk,vol,dlng, 
+     &                               drodm, delta)
+ 
+            elseif(param_int(SA_INT+ SA_IDES-1).eq.3) then !ZDES mode 1, delta_rot
 
              call spsource_ZDES1_rot(ndom, param_int, param_real,
-     &                           ind_ssa,
-     &                           xmut,rop,coe, ti,tj,tk,vol,dlng, drodm)
-
-            elseif(param_int(SA_INT+ SA_IDES-1).eq.3) then !ZDES mode 2, delta_vol
+     &                               ind_ssa,
+     &                               xmut,rop,coe, ti,tj,tk,vol,dlng,
+     &                               drodm, delta)
+ 
+            elseif(param_int(SA_INT+ SA_IDES-1).eq.4) then !ZDES mode 2, delta_vol
 
              call spsource_ZDES2_vol(ndom, param_int, param_real,
      &                               ind_ssa,
-     &                           xmut,rop,coe, ti,tj,tk,vol,dlng, drodm)
-
-            elseif(param_int(SA_INT+ SA_IDES-1).eq.4) then !ZDES mode 2, delta_rot
+     &                               xmut,rop,coe, ti,tj,tk,vol,dlng,
+     &                               drodm, delta, fd)
+ 
+            elseif(param_int(SA_INT+ SA_IDES-1).eq.5) then !ZDES mode 2, delta_rot
 
              call spsource_ZDES2_rot(ndom, param_int, param_real,
      &                               ind_ssa,
-     &                           xmut,rop,coe, ti,tj,tk,vol,dlng, drodm)
+     &                               xmut,rop,coe, ti,tj,tk,vol,dlng,
+     &                               drodm, delta, fd)
+
+            elseif(param_int(SA_INT+ SA_IDES-1).eq.6) then !ZDES mode 3, delta_vol
+
+             call spsource_ZDES3_vol(ndom, param_int, param_real,
+     &                               ind_ssa,
+     &                               xmut,rop,coe, ti,tj,tk,vol,dlng,
+     &                               drodm, delta, zgris)
+
+            elseif(param_int(SA_INT+ SA_IDES-1).eq.7) then !ZDES mode 3, delta_rot
+
+             call spsource_ZDES3_rot(ndom, param_int, param_real,
+     &                               ind_ssa,
+     &                               xmut,rop,coe, ti,tj,tk,vol,dlng,
+     &                               drodm, delta, zgris)
+
             else
 !$OMP SINGLE
               write(*,*)'erreur source SA: pas code...'

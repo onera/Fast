@@ -18,7 +18,7 @@ c***********************************************************************
      &        ti, tj, tk, vol,  ti_df, tj_df, tk_df, vol_df,
      &        venti , ventj , ventk ,
      &        wig , stat_wig, rot,
-     &        drodm , coe)
+     &        drodm , coe, delta, fd, zgris, ro_res)
 
 c***********************************************************************
 c_U   USER : TERRACOL
@@ -57,6 +57,7 @@ c***********************************************************************
      & coe(*),dist(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
      & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*), rot(*), celln(*),
      & ti_df(*),tj_df(*),tk_df(*),vol_df(*)
+      REAL_E delta(*),fd(*),zgris(*),ro_res(*)
 
       REAL_E psi(nptpsi)
 
@@ -169,7 +170,7 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                   ind_sdm, ind_rhs, ind_ssa,
      &                   temps,
      &                   rop_ssiter, xmut, drodm, coe, x,y,z,
-     &                   ti,tj,tk,vol,dist)
+     &                   ti,tj,tk,vol,dist,delta,fd,zgris)
 
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
 
@@ -244,6 +245,12 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                  venti, ventj, ventk, xmut)
            endif
 
+           !Extraction tableau residu
+           if(param_int(EXTRACT_RES).eq.1) then
+              call extract_res(ndo, param_int, param_real,
+     &                         ind_mjr,
+     &                         drodm, vol, ro_res)
+           endif
               
            if(param_int(ITYPCP).le.1) then
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0

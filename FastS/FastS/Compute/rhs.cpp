@@ -73,7 +73,7 @@
                                   ipti0[nd]               , iptj0[nd]               , iptk0[nd]           , iptvol_df[nd]    ,
                                   iptventi[nd]            , iptventj[nd]            , iptventk[nd]        ,
                                   iptwig   + shift_wig    , iptstat_wig + shift_wig , iptrot+ shift_wig   ,
-				  iptdrodm + shift_zone   , iptcoe  + shift_coe     );
+				  iptdrodm + shift_zone   , iptcoe  + shift_coe     , iptdelta[nd]        , iptfd[nd]        , iptro_zgris[nd]         , iptro_res[nd]     );
 
             nd_current++;
 

@@ -67,7 +67,7 @@ c.....formulation originelle
       !Modele Spalart
       !
       !
-      IF (param_int(SA_INT + SA_IDES-1 ).eq.0) THEN  !SA 
+      IF (param_int(SA_INT + SA_IDES-1 ).le.1) THEN  !SA
 
 #include     "FastS/Compute/loop_begin.for" 
        

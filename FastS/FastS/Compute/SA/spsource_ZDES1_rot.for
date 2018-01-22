@@ -5,7 +5,8 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine spsource_ZDES1_rot(ndom, param_int, param_real,
      &                     ind_loop, 
-     &                     xmut,rop,coe, ti, tj, tk, vol,dlng, drodm)
+     &                     xmut,rop,coe, ti, tj, tk, vol,dlng, drodm,
+     &                     delta)
 c***********************************************************************
 c_P                          O N E R A
 c     ACT
@@ -44,6 +45,7 @@ c***********************************************************************
       REAL_E ti( param_int(NDIMDX_MTR) , param_int(NEQ_IJ) ),
      &       tj( param_int(NDIMDX_MTR) , param_int(NEQ_IJ) ),
      &       tk( param_int(NDIMDX_MTR) , param_int(NEQ_K ) )
+      REAL_E delta(param_int(NDIMDX))
 
       REAL_E dlng(param_int(NDIMDX)),vol(param_int(NDIMDX_MTR))
 
@@ -114,6 +116,7 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/metric_3dfull.for"
 #include       "FastS/Compute/SA/rot_3dfull.for" 
 #include       "FastS/Compute/SA/delta_rot_3dfull.for"
+               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES1_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
@@ -125,6 +128,7 @@ c.....formulation originelle
 #include   "FastS/Compute/loop_begin.for"
 #include       "FastS/Compute/SA/metric_3dfull.for"
 #include       "FastS/Compute/SA/rot_3dfull.for" 
+               delta(l) = adelta1
 #include       "FastS/Compute/SA/delta_rot_3dfull.for"
 #include       "FastS/Compute/SA/sourceZDES1_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
@@ -147,6 +151,7 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/metric_3dhomo.for"
 #include       "FastS/Compute/SA/rot_3dhomo.for" 
 #include       "FastS/Compute/SA/delta_rot_3dhomo.for"
+               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES1_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
@@ -158,6 +163,7 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/metric_3dhomo.for"
 #include       "FastS/Compute/SA/rot_3dhomo.for" 
 #include       "FastS/Compute/SA/delta_rot_3dhomo.for"
+               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES1_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
 #include   "FastS/Compute/loop_end.for"
@@ -202,6 +208,7 @@ c.....formulation originelle
 
 #include       "FastS/Compute/SA/rot_3dcart.for" 
 #include       "FastS/Compute/SA/delta_rot_3dcart.for"
+               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES1_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
@@ -217,6 +224,7 @@ c.....formulation originelle
 
 #include       "FastS/Compute/SA/rot_3dcart.for" 
 #include       "FastS/Compute/SA/delta_rot_3dcart.for"
+               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES1_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
  202  continue
@@ -237,6 +245,7 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/metric_2d.for" 
 #include       "FastS/Compute/SA/rot_2d.for" 
 #include       "FastS/Compute/SA/delta_rot_2d.for"
+               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES1_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
@@ -248,6 +257,7 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/metric_2d.for" 
 #include       "FastS/Compute/SA/rot_2d.for" 
 #include       "FastS/Compute/SA/delta_rot_2d.for"
+               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES1_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
 #include   "FastS/Compute/loop_end.for"

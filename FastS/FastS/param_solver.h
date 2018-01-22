@@ -113,7 +113,8 @@
 #define SFD_INIT_IT  63
 #define SLOPE        64
 #define NIT_INFLOW   65
-#define BC_NBBC	     66
+#define EXTRACT_RES  66
+#define BC_NBBC	     67
 #define BC_TYPE	      0
 #define BC_IDIR       1
 #define BC_FEN        2

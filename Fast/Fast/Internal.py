@@ -324,6 +324,40 @@ def _createPrimVars(base, zone, FIRST_IT, omp_mode, rmConsVars=True, adjoint=Fal
        if C.isNamePresent(zone, 'centers:Temperature_f') != 1: C._initVars(zone, 'centers:Temperature_f', 0.)
        if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_f') != 1): C._initVars(zone, 'centers:TurbulentSANuTilde_f', 0.)
 
+    des = "none"
+    a = Internal.getNodeFromName2(zone, 'DES')
+    if a is not None: des = Internal.getValue(a)
+    else:
+        a = Internal.getNodeFromName2(zone, 'des')
+        if a is not None: des = Internal.getValue(a)
+        else:
+            a = Internal.getNodeFromName2(base, 'DES')
+            if a is not None: des = Internal.getValue(a)
+            else:
+                a = Internal.getNodeFromName2(base, 'des')
+                if a is not None: des = Internal.getValue(a)
+    if des != 'none':
+       if   des == "ZDES1" or des == "zdes1": ides = 2
+       elif des == "ZDES1_w" or des == "zdes1_w": ides = 3
+       elif des == "ZDES2" or des == "zdes2": ides = 4
+       elif des == "ZDES2_w" or des == "zdes2_w": ides = 5
+       elif des == "ZDES3" or des == "zdes3": ides = 6
+       elif des == "ZDES3_w" or des == "zdes3_w": ides = 7
+       if ides >= 2: 
+          if C.isNamePresent(zone, 'centers:delta')   != 1:   C._initVars(zone, 'centers:delta', 0.); FIRST_IT=0
+       if ides == 4 or ides == 5: 
+          if C.isNamePresent(zone, 'centers:fd')   != 1:   C._initVars(zone, 'centers:fd', 0.); FIRST_IT=0
+
+    extract_res = 0
+    a = Internal.getNodeFromName2(zone, 'extract_res')
+    if a is not None: extract_res = Internal.getValue(a)
+    if extract_res == 1:
+       if C.isNamePresent(zone, 'centers:Res_Density') != 1:   C._initVars(zone, 'centers:Res_Density', 0.); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:Res_MomentumX') != 1:   C._initVars(zone, 'centers:Res_MomentumX', 0.); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:Res_MomentumY') != 1:   C._initVars(zone, 'centers:Res_MomentumY', 0.); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:Res_MomentumZ') != 1:   C._initVars(zone, 'centers:Res_MomentumZ', 0.); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:Res_EnergyStagnationDensity') != 1: C._initVars(zone, 'centers:Res_EnergyStagnationDensity', 0.); FIRST_IT=0
+       if (sa and  C.isNamePresent(zone, 'centers:Res_TurbulentSANuTildeDensity') != 1): C._initVars(zone, 'centers:Res_TurbulentSANuTildeDensity', 0.); FIRST_IT=0
 
    # TEST PYTHON CONTEXTE ADJOINT ? (dpCLp, dpCDp)  -----------------------------
     if (adjoint==True): 

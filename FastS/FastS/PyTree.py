@@ -433,6 +433,9 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             sfd = 0
             a = Internal.getNodeFromName2(z, 'sfd')
             if a is not None: sfd = Internal.getValue(a)
+            extract_res = 0
+            a = Internal.getNodeFromName2(z, 'extract_res')
+            if a is not None: extract_res = Internal.getValue(a)
             if sa:
                 t0=timeit.default_timer()
                 _compact(z, fields=['centers:Density'   , 'centers:VelocityX'   , 'centers:VelocityY'   ,'centers:VelocityZ'   , 'centers:Temperature'   , 'centers:TurbulentSANuTilde']   , mode=count)
@@ -449,12 +452,16 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                 t0=timeit.default_timer()
                 if sfd == 1:
                    _compact(z, fields=['centers:Density_f','centers:VelocityX_f','centers:VelocityY_f','centers:VelocityZ_f','centers:Temperature_f', 'centers:TurbulentSANuTilde_f'],mode=count)
+                if extract_res == 1:
+                   _compact(z, fields=['centers:Res_Density','centers:Res_MomentumX','centers:Res_MomentumY','centers:Res_MomentumZ','centers:Res_EnergyStagnationDensity','centers:Res_TurbulentSANuTildeDensity'],mode=count)
             else:
                 _compact(z, fields=['centers:Density'   , 'centers:VelocityX'   , 'centers:VelocityY'   ,'centers:VelocityZ'   , 'centers:Temperature'   ], mode=count)
                 _compact(z, fields=['centers:Density_M1', 'centers:VelocityX_M1', 'centers:VelocityY_M1','centers:VelocityZ_M1', 'centers:Temperature_M1'], mode=count)
                 _compact(z, fields=['centers:Density_P1', 'centers:VelocityX_P1', 'centers:VelocityY_P1','centers:VelocityZ_P1', 'centers:Temperature_P1'], mode=count)
                 if sfd == 1:
                    _compact(z, fields=['centers:Density_f','centers:VelocityX_f','centers:VelocityY_f','centers:VelocityZ_f','centers:Temperature_f'],mode=count)
+                if extract_res == 1:
+                   _compact(z, fields=['centers:Res_Density','centers:Res_MomentumX','centers:Res_MomentumY','centers:Res_MomentumZ','centers:Res_EnergyStagnationDensity'],mode=count)
 
             # on compacte seulement pour recuperer le bon alignement
             if  (C.isNamePresent(z, 'centers:ViscosityEddy') == 1 and C.isNamePresent(z, 'centers:TurbulentDistance') == 1): _compact(z, fields=['centers:ViscosityEddy','centers:TurbulentDistance'], mode=count)
@@ -462,6 +469,34 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             elif(C.isNamePresent(z, 'centers:ViscosityEddy') == 1 and C.isNamePresent(z, 'centers:TurbulentDistance') != 1): _compact(z, fields=['centers:ViscosityEddy']    , mode=count)
 
             if  C.isNamePresent(z, 'centers:cellN') == 1: _compact(z, fields=['centers:cellN'], mode=count)
+
+            if  (C.isNamePresent(z, 'centers:delta') == 1 ): _compact(z, fields=['centers:delta'], mode=count)
+            if  (C.isNamePresent(z, 'centers:fd') == 1 ):    _compact(z, fields=['centers:fd'], mode=count)
+
+            # zone grise
+            des = "none"
+            ides = 0
+            a = Internal.getNodeFromName2(z, 'DES')
+            if a is not None: des = Internal.getValue(a)
+            else:
+                a = Internal.getNodeFromName2(z, 'des')
+                if a is not None: des = Internal.getValue(a)
+                else:
+                    a = Internal.getNodeFromName2(b, 'DES')
+                    if a is not None: des = Internal.getValue(a)
+                    else:
+                        a = Internal.getNodeFromName2(b, 'des')
+                        if a is not None: des = Internal.getValue(a)
+            if des != 'none':
+                if des == "ZDES3" or des == "zdes3": ides = 6
+                elif des == "ZDES3_w" or des == "zdes3_w": ides = 7
+                if ides == 6 or ides == 7:
+                    if (C.isNamePresent(z, 'centers:zgris') == 1 ):
+                        _compact(z, fields=['centers:zgris'], mode=count)
+                    else:
+                        print 'In ZDES mode 3, zgris variable must be provided'
+                        import sys
+                        sys.exit()
 
             #  adjoint 
             if  C.isNamePresent(z, 'centers:dpCLp_dpDensity') == 1: 
@@ -1372,8 +1407,10 @@ def _buildOwnData(t):
     'sfd_delta':1, 
     'sfd_init_iter':0, 
     'slope':["o1", "o3", "minmod"],
-    'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3"],
-    'snear': 1 # ignored
+    'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3", "zdes3_w"],
+    'snear': 1, # ignored
+    'SA_comp':0,
+    'extract_res':0
     }
 
     for b in bases:
@@ -1488,6 +1525,8 @@ def _buildOwnData(t):
             sfd_init_iter= 1
             nit_inflow   = 10
             epsi_inflow  = 1.e-5
+            SA_comp      = 0
+            extract_res  = 0
             
             a = Internal.getNodeFromName2(z, 'GoverningEquations')
             if a is not None: model = Internal.getValue(a)
@@ -1571,6 +1610,10 @@ def _buildOwnData(t):
                 if a is not None: sfd_delta = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'sfd_init_iter')
                 if a is not None: sfd_init_iter = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'SA_comp')
+                if a is not None: SA_comp = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'extract_res')
+                if (a != None): extract_res = Internal.getValue(a)
                
             iflow  = 1
             ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0;
@@ -1584,12 +1627,15 @@ def _buildOwnData(t):
                 iflow = 2
             elif model == "nsspalart" or model == "NSTurbulent": 
                 iflow = 3
+                if SA_comp == 1:
+                    ides = 1
                 if des != 'none':
-                    if   des == "ZDES1" or des == "zdes1": ides = 1
-                    elif des == "ZDES1_w" or des == "zdes1_w": ides = 2
-                    elif des == "ZDES2" or des == "zdes2": ides = 3
-                    elif des == "ZDES2_w" or des == "zdes2_w": ides = 4
-                    elif des == "ZDES3" or des == "zdes3": ides = 5
+                    if   des == "ZDES1" or des == "zdes1": ides = 2
+                    elif des == "ZDES1_w" or des == "zdes1_w": ides = 3
+                    elif des == "ZDES2" or des == "zdes2": ides = 4
+                    elif des == "ZDES2_w" or des == "zdes2_w": ides = 5
+                    elif des == "ZDES3" or des == "zdes3": ides = 6
+                    elif des == "ZDES3_w" or des == "zdes3_w": ides = 7
             else:
                  print 'Warning: FastS: model %s is invalid.'%model
 
@@ -1652,7 +1698,7 @@ def _buildOwnData(t):
             # creation noeud parametre integer
             # Determination de levelg et leveld             
 
-            datap = numpy.empty(66, numpy.int32)
+            datap = numpy.empty(67, numpy.int32)
             datap[0:25]= -1
             datap[25]  = 0     # zone 3D curvi par defaut
             datap[26]  = 0     # Vent 3D par defaut
@@ -1687,6 +1733,7 @@ def _buildOwnData(t):
             datap[63]  = sfd_init_iter
             datap[64]  = islope
             datap[65]  = nit_inflow
+            datap[66]  = extract_res
 
             i += 1
          
