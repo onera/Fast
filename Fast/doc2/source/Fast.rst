@@ -156,6 +156,12 @@ Actions
         + turbulent Prandtl number (only active for 'model'='NSTurbulent')
         + default value is 0.92
 
+    - **'ransmodel'**: possible values are
+
+        + "SA"      (Standard Spalart-Allmaras model)
+        + "SA_comp" (SA with mixing layer compressible correction https://turbmodels.larc.nasa.gov/spalart.html)
+        + default value is 'SA'
+
     - **'DES'**: possible values are
 
         + "none"    (SA computation)
@@ -166,11 +172,24 @@ Actions
         + "zdes3"   (mode 3, see p118 https://tel.archives-ouvertes.fr/tel-01365361/document))
         + default value is 'none'
 
+    - **'DES_debug'**: possible values are
+
+        + "none"    
+        + "active"  (save delta and fd functions in the FlowSolution#Centers node)
+        + default value is 'none'
+
     - **'sgsmodel'**: possible values are
 
         + "Miles"   (ViscosityEddy==LaminarViscosity)
         + "smsm"    (Selective Mixed Scale model, Lenormand et al, (2000), LES of sub and supersonic channel flow at moderate Re. Int. J. Numer. Meth. Fluids, 32: 369–406)
         + default value is 'Miles'
+
+    - **'extract_res'**: possible values are
+
+        + 0   
+        + 1  (save div(F_Euler-F_viscous) in the FlowSolution#Centers node)
+        + default value is 0
+
     *Example of use:*
 
     * `Set numerics to zone (pyTree) <Examples/Fast/setNum2ZonesPT.py>`_:
