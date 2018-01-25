@@ -14,11 +14,11 @@ c***********************************************************************
      &        cfl,
      &        x , y , z, cellN,
      &        rop , rop_m1     , rop_tmp , rop_ssiter,
-     &        xmut  , dist     ,
+     &        xmut  ,
      &        ti, tj, tk, vol,  ti_df, tj_df, tk_df, vol_df,
      &        venti , ventj , ventk ,
      &        wig , stat_wig, rot,
-     &        drodm , coe, delta, fd, zgris, ro_res)
+     &        drodm , coe, delta, ro_res)
 
 c***********************************************************************
 c_U   USER : TERRACOL
@@ -54,10 +54,10 @@ c***********************************************************************
      & param_int(0:*), lok(*)
 
       REAL_E rop(*),rop_m1(*),rop_tmp(*),rop_ssiter(*),xmut(*),drodm(*),
-     & coe(*),dist(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
+     & coe(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
      & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*), rot(*), celln(*),
      & ti_df(*),tj_df(*),tk_df(*),vol_df(*)
-      REAL_E delta(*),fd(*),zgris(*),ro_res(*)
+      REAL_E delta(*),ro_res(*)
 
       REAL_E psi(nptpsi)
 
@@ -149,7 +149,7 @@ c         endif
                 !! remplissage tableau xmut si SA uniquememnt. 
                 !! Pour ZDES, remplissage dans terme source 
                 call vispalart(ndo, param_int, param_real, ind_grad,
-     &                         ti, tj, tk, vol, dist, xmut,rop_ssiter)
+     &                         xmut,rop_ssiter)
 
               endif
 
@@ -170,7 +170,7 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                   ind_sdm, ind_rhs, ind_ssa,
      &                   temps,
      &                   rop_ssiter, xmut, drodm, coe, x,y,z,
-     &                   ti,tj,tk,vol,dist,delta,fd,zgris)
+     &                   ti,tj,tk,vol, delta)
 
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
 

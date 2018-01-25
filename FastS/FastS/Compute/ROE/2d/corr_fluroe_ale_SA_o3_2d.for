@@ -101,6 +101,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       lvo = lt
       tcx = ti(lt)
       tcy = tj(lt)
+      tcz = 0. 
       si      = abs (tcx)
       sj      = abs (tcy)
       volinv  = 0.5/vol(lvo)
@@ -153,6 +154,8 @@ c      c7     = c4/c5
       wig_j = v2
       wig_k = v3
 
+      qen = 0.  !pour blinder Roe 6eme variable   
+
       ck_vent = 1                                       
       if(param_int(NEQ_VENT).eq.2) ck_vent =0.          
       v1ven =   0                                       
@@ -178,7 +181,7 @@ c      c7     = c4/c5
                   
             l0= l  - shift
 #include    "FastS/Compute/ROE/2d/fluFaceEuler_ale_o3_2d_i.for"
-#include    "FastS/Compute/ROE/2d/fluFaceSA_o3.for"
+#include    "FastS/Compute/ROE/2d/fluFaceSA_ale_o3_2d_i.for"
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
          ENDDO
@@ -194,7 +197,7 @@ c      c7     = c4/c5
 
             l0= l  - shift
 #include    "FastS/Compute/ROE/2d/fluFaceEuler_ale_o3_2d_j.for"
-#include    "FastS/Compute/ROE/2d/fluFaceSA_o3.for"
+#include    "FastS/Compute/ROE/2d/fluFaceSA_ale_o3_2d_j.for"
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
          ENDDO

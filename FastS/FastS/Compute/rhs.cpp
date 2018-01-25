@@ -68,12 +68,12 @@
                                   ipt_cfl_thread      ,
                                   iptx[nd]                , ipty[nd]                , iptz[nd]            , iptCellN_loc     ,
                                   iptro[nd]               , iptro_m1[nd]            , iptrotmp[nd]        , iptro_ssiter[nd] ,
-                                  iptmut[nd]              , iptdist[nd]             ,
+                                  iptmut[nd]              , 
                                   ipti[nd]                , iptj[nd]                , iptk[nd]            , iptvol[nd]       ,
                                   ipti0[nd]               , iptj0[nd]               , iptk0[nd]           , iptvol_df[nd]    ,
                                   iptventi[nd]            , iptventj[nd]            , iptventk[nd]        ,
                                   iptwig   + shift_wig    , iptstat_wig + shift_wig , iptrot+ shift_wig   ,
-				  iptdrodm + shift_zone   , iptcoe  + shift_coe     , iptdelta[nd]        , iptfd[nd]        , iptro_zgris[nd]         , iptro_res[nd]     );
+				  iptdrodm + shift_zone   , iptcoe  + shift_coe     , iptdelta[nd]        , iptro_res[nd]     );
 
             nd_current++;
 

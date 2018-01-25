@@ -100,7 +100,8 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       lvo = lt
       tcx = ti(lt)
       tcy = tj(lt)
-      tcz = tk(lt)             
+      tcz = 0. 
+      tcz = tk(lt) 
       si      = abs (tcx)
       sj      = abs (tcy)
       sk      = abs (tcz)      
@@ -154,6 +155,8 @@ c      c7     = c4/c5
       wig_j = v2
       wig_k = v3
 
+      qen = 0.  !pour blinder Roe 6eme variable   
+
 
       sens  =-1
       shift = 0
@@ -174,7 +177,7 @@ c      c7     = c4/c5
                   
             l0= l  - shift
 #include    "FastS/Compute/ROE/3dhomo/fluFaceEuler_o3_3dhomo_i.for"
-#include    "FastS/Compute/ROE/3dhomo/fluFaceSA_o3.for"
+#include    "FastS/Compute/ROE/3dhomo/fluFaceSA_o3_3dhomo_i.for"
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
          ENDDO
@@ -190,7 +193,7 @@ c      c7     = c4/c5
 
             l0= l  - shift
 #include    "FastS/Compute/ROE/3dhomo/fluFaceEuler_o3_3dhomo_j.for"
-#include    "FastS/Compute/ROE/3dhomo/fluFaceSA_o3.for"
+#include    "FastS/Compute/ROE/3dhomo/fluFaceSA_o3_3dhomo_j.for"
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
          ENDDO
@@ -206,7 +209,7 @@ c      c7     = c4/c5
                                                   
             l0= l  - shift                        
 #include    "FastS/Compute/ROE/3dhomo/fluFaceEuler_o3_3dhomo_k.for"    
-#include    "FastS/Compute/ROE/3dhomo/fluFaceSA_o3.for"     
+#include    "FastS/Compute/ROE/3dhomo/fluFaceSA_o3_3dhomo_k.for"     
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"         
            enddo                                  
                                                   

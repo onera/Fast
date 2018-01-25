@@ -4,9 +4,8 @@ c     $Revision: 38 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine spsource_ZDES2_rot(ndom, param_int, param_real,
-     &                     ind_loop, 
-     &                     xmut,rop,coe, ti, tj, tk, vol,dlng, drodm,
-     &                     delta, fd)
+     &                             ind_loop, 
+     &                     xmut,rop,coe, ti, tj, tk, vol,dlng, drodm)
 c***********************************************************************
 c_P                          O N E R A
 c     ACT
@@ -45,7 +44,6 @@ c***********************************************************************
       REAL_E ti( param_int(NDIMDX_MTR) , param_int(NEQ_IJ) ),
      &       tj( param_int(NDIMDX_MTR) , param_int(NEQ_IJ) ),
      &       tk( param_int(NDIMDX_MTR) , param_int(NEQ_K ) )
-      REAL_E delta(param_int(NDIMDX)), fd(param_int(NDIMDX))
 
       REAL_E dlng(param_int(NDIMDX)),vol(param_int(NDIMDX_MTR))
 
@@ -116,11 +114,9 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/metric_3dfull.for"
 #include       "FastS/Compute/SA/rot_3dfull.for" 
 #include       "FastS/Compute/SA/delta_rot_3dfull.for"
-               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-               fd(l) = testfa
 #include    "FastS/Compute/loop_end.for"
 
        Else  !calcul explicit, Stockage terme source inutile
@@ -129,10 +125,8 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/metric_3dfull.for"
 #include       "FastS/Compute/SA/rot_3dfull.for" 
 #include       "FastS/Compute/SA/delta_rot_3dfull.for"
-               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-               fd(l) = testfa
 #include    "FastS/Compute/loop_end.for"
 
        endif!explicite/implicite
@@ -152,11 +146,9 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/metric_3dhomo.for"
 #include       "FastS/Compute/SA/rot_3dhomo.for" 
 #include       "FastS/Compute/SA/delta_rot_3dhomo.for"
-               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-               fd(l) = testfa
 #include    "FastS/Compute/loop_end.for"
 
         Else  !calcul explicit, Stockage terme source inutile
@@ -165,10 +157,8 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/metric_3dhomo.for"
 #include       "FastS/Compute/SA/rot_3dhomo.for" 
 #include       "FastS/Compute/SA/delta_rot_3dhomo.for"
-               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-               fd(l) = testfa
 #include    "FastS/Compute/loop_end.for"
 
 
@@ -211,11 +201,9 @@ c.....formulation originelle
 
 #include       "FastS/Compute/SA/rot_3dcart.for" 
 #include       "FastS/Compute/SA/delta_rot_3dcart.for"
-               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-               fd(l) = testfa
  102  continue
 
         Else  !calcul explicit, Stockage terme source inutile
@@ -228,10 +216,8 @@ c.....formulation originelle
 
 #include       "FastS/Compute/SA/rot_3dcart.for" 
 #include       "FastS/Compute/SA/delta_rot_3dcart.for"
-               delta(l) = adelta1
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-               fd(l) = testfa
  202  continue
 
        endif!explicite/implicite 3dcart
@@ -253,7 +239,6 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-               fd(l) = testfa
 #include    "FastS/Compute/loop_end.for"
 
        Else  !calcul explicit, Stockage terme source inutile
@@ -264,7 +249,6 @@ c.....formulation originelle
 #include       "FastS/Compute/SA/delta_rot_2d.for"
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-               fd(l) = testfa
 #include    "FastS/Compute/loop_end.for"
 
        endif!explicite/implicite

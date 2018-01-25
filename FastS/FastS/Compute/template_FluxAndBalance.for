@@ -113,7 +113,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       lvo = lt
       tcx = ti(lt)
       tcy = tj(lt)
-      tcz = tk(lt)
+      tcz = tk(lt) !3D only
       si      = abs (tcx)
       sj      = abs (tcy)
       sk      = abs (tcz)

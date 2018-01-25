@@ -58,7 +58,79 @@ C Var loc
      &        +  10*iflow_loc
      &        +      param_int(ITYPZONE)
 
-       IF  (option.eq.330) THEN
+       IF  (option.eq.320) THEN
+                                               
+         call corr_fluroe_lamin_minmod_3dfull(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.321) THEN
+                                               
+         call corr_fluroe_lamin_minmod_3dhomo(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.322) THEN
+                                               
+         call corr_fluroe_lamin_minmod_3dcart(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.323) THEN
+                                               
+         call corr_fluroe_lamin_minmod_2d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.220) THEN
+                                               
+         call corr_fluroe_lamin_o3_3dfull(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.221) THEN
+                                               
+         call corr_fluroe_lamin_o3_3dhomo(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.222) THEN
+                                               
+         call corr_fluroe_lamin_o3_3dcart(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.223) THEN
+                                               
+         call corr_fluroe_lamin_o3_2d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.330) THEN
                                                
          call corr_fluroe_SA_minmod_3dfull(ndom, ithread, idir,
      &                 param_int, param_real,
@@ -196,6 +268,78 @@ C Var loc
        ELSEIF (option.eq.213) THEN
                                                
          call corr_fluroe_euler_o3_2d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1320) THEN
+                                               
+         call corr_fluroe_ale_lamin_minmod_3dfull(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1321) THEN
+                                               
+         call corr_fluroe_ale_lamin_minmod_3dhomo(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1322) THEN
+                                               
+         call corr_fluroe_ale_lamin_minmod_3dcart(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1323) THEN
+                                               
+         call corr_fluroe_ale_lamin_minmod_2d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1220) THEN
+                                               
+         call corr_fluroe_ale_lamin_o3_3dfull(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1221) THEN
+                                               
+         call corr_fluroe_ale_lamin_o3_3dhomo(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1222) THEN
+                                               
+         call corr_fluroe_ale_lamin_o3_3dcart(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1223) THEN
+                                               
+         call corr_fluroe_ale_lamin_o3_2d(ndom, ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
      &                 rop, drodm , wig,

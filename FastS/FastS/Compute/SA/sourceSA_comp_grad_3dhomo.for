@@ -75,8 +75,9 @@
                rot     = sqrt(rotx*rotx+roty*roty+rotz*rotz)* xvol
 
                cc = -3.5*rop(l,1)*rop(l,6)**2/(gam*rgp*rop(l,5))
-     &              *(dudx**2+dudy**2+dudz**2+dvdx**2+dvdy**2+dvdz**2
-     &               +dwdx**2+dwdy**2+dwdz**2)*xvol*xvol
+     &              *(dudx**2+dudy**2+dudz**2
+     &               +dvdx**2+dvdy**2+dvdz**2
+     &               +dwdx**2+dwdy**2+dwdz**2)
 
                !formulation compressible complete
                u1 = (rop(l,6)+rop(l2,6))
@@ -101,12 +102,12 @@
               u5 = rop(l,6)*rop(l,1) + rop(l5,6)*rop(l5,1)
               u6 = rop(l,6)*rop(l,1) + rop(l6,6)*rop(l6,1)
               !dudx
-               dudx = dudx* (  u3*tix1 - u1*tix + u2*tjx1 - u4*tjx )
+              dudx = dudx* (  u3*tix1 - u1*tix + u2*tjx1 - u4*tjx )
 
               !dudy
-               dudy = dudy* (  u3*tiy1 - u1*tiy + u2*tjy1 - u4*tjy )
+              dudy = dudy* (  u3*tiy1 - u1*tiy + u2*tjy1 - u4*tjy )
 
               !dudz
-               dudz = dudz* (  u5 - u6)*tkz  
+              dudz = dudz* (  u5 - u6)*tkz  
 
-               anvisc    = c1*(dudx+dudy+dudz)*xvol*xvol
+              anvisc    = ( c1*(dudx+dudy+dudz) + cc ) *xvol*xvol

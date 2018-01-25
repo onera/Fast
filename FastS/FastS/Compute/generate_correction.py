@@ -8,10 +8,10 @@ if (n != 2):
     sys.exit()
 
 dico= {}
-dico["SENSOR_INIT"] = { 'name':'flusenseur_init', 'model':['SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
-dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
-dico["AUSM"]        = { 'name':'fluausm'        , 'model':['SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
-dico["ROE"]         = { 'name':'fluroe'         , 'model':['SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3']}
+dico["SENSOR_INIT"] = { 'name':'flusenseur_init', 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
+dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
+dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
+dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3']}
 
 rep = sys.argv[1]
 if rep not in dico.keys():
@@ -137,15 +137,14 @@ for ale in TypeMotion:
 			# creation subroutine fortran du flux
                         name_routine = 'corr_'+flux+ale1+eq+'_'+slope+'_'+typezone
                         name_fluEuler= 'fluFaceEuler' +ale1 +slope+ '_'+typezone
-                        name_fluRans = 'fluFace'  +eq +'_'+slope
-                        #name_fluRans = 'fluFace'  +eq +'_'+ale+ '_'+slope+ '_'+typezone
+                        name_fluRans = 'fluFace'  +eq +ale1 +slope+ '_'+typezone
                         for i in range( len(lines) ):
                             lines[i]=lines[i].replace("!ALE only","").replace("!3D only","")
 
                             lines[i]=lines[i].replace("corr_lam_template",name_routine).replace("loopI_begin.for",'loopI'+ale1+'begin.for')
-                            lines[i]=lines[i].replace("fluFaceEuler_i",typezone+'/'+name_fluEuler+'_i').replace("fluFaceRans_i",typezone+'/'+name_fluRans)
-                            lines[i]=lines[i].replace("fluFaceEuler_j",typezone+'/'+name_fluEuler+'_j').replace("fluFaceRans_j",typezone+'/'+name_fluRans)
-                            lines[i]=lines[i].replace("fluFaceEuler_k",typezone+'/'+name_fluEuler+'_k').replace("fluFaceRans_k",typezone+'/'+name_fluRans)
+                            lines[i]=lines[i].replace("fluFaceEuler_i",typezone+'/'+name_fluEuler+'_i').replace("fluFaceRans_i",typezone+'/'+name_fluRans+'_i')
+                            lines[i]=lines[i].replace("fluFaceEuler_j",typezone+'/'+name_fluEuler+'_j').replace("fluFaceRans_j",typezone+'/'+name_fluRans+'_j')
+                            lines[i]=lines[i].replace("fluFaceEuler_k",typezone+'/'+name_fluEuler+'_k').replace("fluFaceRans_k",typezone+'/'+name_fluRans+'_k')
 
                             lines[i]=lines[i].replace("fluViscLaminar_i",'fluvisq_'+typezone+'_i').replace("fluViscRans_i",'fluvisq_'+eq+'_'+typezone+'_i')
                             lines[i]=lines[i].replace("fluViscLaminar_j",'fluvisq_'+typezone+'_j').replace("fluViscRans_j",'fluvisq_'+eq+'_'+typezone+'_j')

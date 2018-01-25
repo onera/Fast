@@ -114,7 +114,8 @@
 #define SLOPE        64
 #define NIT_INFLOW   65
 #define EXTRACT_RES  66
-#define BC_NBBC	     67
+#define SA_DEBUG     67
+#define BC_NBBC	     68
 #define BC_TYPE	      0
 #define BC_IDIR       1
 #define BC_FEN        2
@@ -165,7 +166,8 @@
 #define SA_CB1      0.1355
 #define SA_CB2      0.622
 #define SA_CV1      357.911
-#define SA_CV2      5.
+#define SA_CV2      0.7
+#define SA_CV3      0.9
 #define SA_CW2      0.3
 #define SA_CW3      64.
 #define SA_SIGMA    (2./3.)

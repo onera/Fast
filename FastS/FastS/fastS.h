@@ -91,16 +91,15 @@ namespace K_FASTS
     E_Float**  iptx, E_Float**  ipty, E_Float** iptz,
     E_Float**  iptCellN, 
     E_Float**& iptro, E_Float**& iptro_m1, E_Float**&  iptrotmp,  E_Float**& iptro_sfd,
-    E_Float**  iptmut, E_Float** iptdist,
+    E_Float**  iptmut,
     E_Float**  ipti, E_Float**  iptj, E_Float** iptk, E_Float** iptvol, 
     E_Float**  ipti0, E_Float**  iptj0, E_Float** iptk0,     
     E_Float**  ipti_df, E_Float**  iptj_df, E_Float** iptk_df, 
     E_Float**  iptvol_df, 
     E_Float**  iptventi, E_Float**  iptventj, E_Float** iptventk,  
     E_Float**& iptrdm,
-    E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*  iptwig, E_Float* iptstat_wig,
-    E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta,
-    E_Float**& iptfd, E_Float**& iptro_zgris, E_Float**& iptro_res );
+    E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*   iptwig, E_Float* iptstat_wig,
+    E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res );
 
   //=======
   // - BC -

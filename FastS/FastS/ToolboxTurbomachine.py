@@ -17,7 +17,7 @@ from scipy import interpolate
 #~ import Converter.Array3D as CA
 #~ ====================
 
-#from userData2 import *
+from userData2 import *
 
 def addInletData(data,famName):
    inletDict = {}
@@ -722,17 +722,12 @@ def addNonUniformOutletData2FastS(data,Name,DataFile, kpiv):
 				   data_extracted = data_array2extract[p]
 				   data_out.append(data_extracted)
 				   p += 1
-
-	
        if (j1 == jm):
 		   for k in range(km-1) :     
 			   for i in range(im-1) :
 				   data_extracted = data_array2extract[p]
 				   data_out.append(data_extracted)
 				   p += 1		     
-
-
-	
        if (k1 == km):
 		   for j in range(jm-1) :     
 			   for i in range(im-1) :
@@ -893,70 +888,65 @@ def addUniformInletData2FastS(data,Name,d0x,d0y,d0z,pa,ha,turb1):
          Prop=CI.createChild(bc,'.Solver#Property','UserDefinedData_t')
          for d in inletDict: CI.createChild(Prop,d,'DataArray_t',value=inletDict[d])
 
-# XXX	 
-def addNonUniformInletData2FastS(data, Name, DataFile):    
-   #data_carto = CP.convertFile2PyTree(DataFile,'fmt_v3d')
-   print 'cocuc'
+def addNonUniformInletData2FastS(t, Name, DataFile):
    data_carto = CP.convertFile2PyTree(DataFile)
    data2extract = ['d0x', 'd0y', 'd0z', 'pa', 'ha', 'tur1']
    
-   for bc in CI.getNodesFromName(data,Name):
+   zones = CI.getZones(t)
+   for z in zones:
+     bcs =  CI.getNodesFromType(z,'BC_t')
 
-       CI.setValue(bc,'BCInj1')
-       pr = CI.getNodesFromName(bc,'PointRange')
-       index = CI.getValue(pr[0])
+     for bc in bcs:
+       if Name in bc[0]:
+         CI.setValue(bc,'BCInj1')
+         pr = CI.getNodesFromName(bc,'PointRange')
        
-       i1 = index[0][0]
-       im = index[0][1]
-       j1 = index[1][0]
-       jm = index[1][1]
-       k1 = index[2][0]
-       km = index[2][1]
-   
-       Prop=CI.createChild(bc,'.Solver#Property','UserDefinedData_t')
+         Prop=CI.createUniqueChild(bc,'.Solver#Property','UserDefinedData_t')
 
-   for data in data2extract: #we sort each carto on a specific array
+         zone_carto = CI.getNodeFromName(data_carto, z[0])
+         for data in data2extract: #we sort each carto on a specific array
       
-       data_inj = 'inj_' + data
-       data_inj = []
+           data_node2extract  = CI.getNodeFromName(zone_carto, data)      #we get the node
+           data_array2extract = CI.getValue(data_node2extract)            #we extract the array associated to the specific node
 
-       data_node2extract  = CI.getNodeFromName(data_carto, data)      #we get the node
-       data_array2extract = CI.getValue(data_node2extract)            #we extract the array associated to the specific node
+           sp       = data_array2extract.shape
+           size     = sp[0]*sp[1]                               #dimension of the array
 
-       sp                 = data_array2extract.shape
-       size               = sp[0]*sp[1]                               #dimension of the array
+           data_array2extract = numpy.reshape(data_array2extract, size, order='F') #we reshape the array with a Fortran like order
 
-       data_array2extract = numpy.reshape(data_array2extract, size, order='F') #we reshape the array with a Fortran like order
-       data_array2extract = list(data_array2extract)
-       p = 0
-     #~ # Important : Ordre des boucles = ordre FastS
-       if (i1 == im):
-		   for k in range(km-1) :
-			   for j in range(jm-1) :
-				   data_extracted = data_array2extract[p]
-				   data_inj.append(data_extracted)
-				   p += 1
+           CI.createUniqueChild(Prop,data,'DataArray_t',value=data_array2extract) #we create a child node for each para
 
-	
-       if (j1 == jm):
-		   for k in range(km-1) :     
-			   for i in range(im-1) :
-				   data_extracted = data_array2extract[p]
-				   data_inj.append(data_extracted)
-				   p += 1		     
+   return None
 
+### 
+### 
+### 
+def addNonUniformBCData(t, BCName, BCValue, DataFile):
 
-	
-       if (k1 == km):
-		   for j in range(jm-1) :     
-			   for i in range(im-1) :
-				   data_extracted = data_array2extract[p]
-				   data_inj.append(data_extracted)
-				   p += 1
-	     
-       data_inj = numpy.array(data_inj)
-       CI.createChild(Prop,data,'DataArray_t',value=data_inj) #we create a child node for each para
-       	 
+   data_carto   = CP.convertFile2PyTree(DataFile)
+
+   zones = CI.getZones(t)
+   for z in zones:
+     bcs =  CI.getNodesFromType(z,'BC_t')
+
+     for bc in bcs:
+       if BCName in bc[0]:
+         CI.setValue(bc, BCValue)
+       
+         Prop       = CI.createUniqueChild(bc,'.Solver#Property','UserDefinedData_t')
+         zone_carto = CI.getNodeFromName(data_carto, z[0])
+         sol_carto  = CI.getNodeFromName(zone_carto, 'FlowSolution')
+         print sol_carto[0]
+         vars       = CI.getNodesFromType(sol_carto, 'DataArray_t')
+         #CI.printTree(zone_carto) 
+         for v in vars:
+           varBC = numpy.reshape( v[1], v[1].size, order='F')                 #we reshape the array with a Fortran like order
+
+           CI.createUniqueChild( Prop, v[0],'DataArray_t',value= varBC)          #we create a child node for each para
+
+   return None
+
+      	 
 def addWallData2FastS(data,Name):
    for bc in CI.getNodesFromName(data,Name):
        if Governing_Equation == 'Euler': 

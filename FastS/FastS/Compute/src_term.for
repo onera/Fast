@@ -7,7 +7,7 @@ c***********************************************************************
      &                    ind_sdm, ind_rhs, ind_ssa,
      &                    temps,
      &                    rop, xmut, drodm, coe, x,y,z,
-     &                    ti, tj, tk, vol, dlng, delta, fd, zgris)
+     &                    ti, tj, tk, vol, delta)
 c***********************************************************************
 c_P                          O N E R A
 c
@@ -29,11 +29,11 @@ C-----------------------------------------------------------------------
       INTEGER_E ndom,nitcfg,nb_pulse,ind_sdm(6),ind_rhs(6),ind_ssa(6),
      & param_int(0:*)
 c
-      REAL_E rop(*),xmut(*),drodm(*),coe(*),dlng(*)
+      REAL_E rop(*),xmut(*),drodm(*),coe(*)
       REAL_E ti(*),tj(*),tk(*), vol(*)
       REAL_E x(*),y(*),z(*)
       REAL_E param_real(0:*), temps
-      REAL_E delta(*), fd(*), zgris(*)
+      REAL_E delta(*)
 
 C Var loc
       INTEGER_E nacp,l,idirx,idirz,i,j,k,n,n2,i1,j1,k1,i2m1,j2m1,k2m1,
@@ -73,56 +73,127 @@ c
 
              call spsource_SA(ndom, nitcfg, param_int, param_real,
      &                        ind_ssa,
-     &                        xmut,rop,coe, ti, tj, tk, vol,dlng, drodm)
+     &                        xmut, rop, coe, ti, tj, tk, vol,
+     &                        xmut(1+param_int(NDIMDX)),       !dist
+     &                        drodm)
 
             elseif(param_int(SA_INT+ SA_IDES-1).eq.1) then !SA_comp
 
              call spsource_SA_comp(ndom, nitcfg, param_int, param_real,
      &                             ind_ssa,
-     &                             xmut,rop,coe, ti, tj, tk, vol,dlng,
+     &                             xmut, rop, coe, ti, tj, tk, vol,
+     &                             xmut(1+param_int(NDIMDX)),       !dist
      &                             drodm)
 
             elseif(param_int(SA_INT+ SA_IDES-1).eq.2) then !ZDES mode 1, delta_vol
 
-             call spsource_ZDES1_vol(ndom, param_int, param_real,
-     &                               ind_ssa,
-     &                               xmut,rop,coe, ti,tj,tk,vol,dlng, 
-     &                               drodm, delta)
+             if(param_int(SA_DEBUG).eq.1) then  !sauvegarde de delta
+
+               call spsource_ZDES1_vol_debug(ndom,param_int, param_real,
+     &                                      ind_ssa,
+     &                                      xmut,rop,coe, ti,tj,tk,vol,
+     &                                      xmut(1+param_int(NDIMDX)),!dist
+     &                                      drodm, delta)
+             else
+               call spsource_ZDES1_vol(ndom,param_int, param_real,
+     &                                 ind_ssa,
+     &                                 xmut,rop,coe, ti,tj,tk,vol,
+     &                                 xmut(1+param_int(NDIMDX)),!dist
+     &                                 drodm)
+             endif
  
             elseif(param_int(SA_INT+ SA_IDES-1).eq.3) then !ZDES mode 1, delta_rot
 
-             call spsource_ZDES1_rot(ndom, param_int, param_real,
-     &                               ind_ssa,
-     &                               xmut,rop,coe, ti,tj,tk,vol,dlng,
-     &                               drodm, delta)
- 
+             if(param_int(SA_DEBUG).eq.1) then  !sauvegarde de delta
+
+               call spsource_ZDES1_rot_debug(ndom,param_int, param_real,
+     &                                      ind_ssa,
+     &                                      xmut,rop,coe, ti,tj,tk,vol,
+     &                                      xmut(1+param_int(NDIMDX)),!dist
+     &                                      drodm, delta)
+             else
+               call spsource_ZDES1_rot(ndom,param_int, param_real,
+     &                                 ind_ssa,
+     &                                 xmut,rop,coe, ti,tj,tk,vol,
+     &                                 xmut(1+param_int(NDIMDX)),!dist
+     &                                 drodm)
+             endif
+
             elseif(param_int(SA_INT+ SA_IDES-1).eq.4) then !ZDES mode 2, delta_vol
 
+             if(param_int(SA_DEBUG).eq.1) then  !sauvegarde de delta
+
+               call spsource_ZDES2_vol_debug(ndom,param_int, param_real,
+     &                                       ind_ssa,
+     &                                       xmut,rop,coe, ti,tj,tk,vol,
+     &                                       xmut(1+param_int(NDIMDX)), !dist
+     &                                       delta, 
+     &                                       delta(1+param_int(NDIMDX)),!fd  
+     &                                       drodm)
+             else
              call spsource_ZDES2_vol(ndom, param_int, param_real,
      &                               ind_ssa,
-     &                               xmut,rop,coe, ti,tj,tk,vol,dlng,
-     &                               drodm, delta, fd)
+     &                               xmut,rop,coe, ti,tj,tk,vol,
+     &                               xmut(1+param_int(NDIMDX)),       !dist
+     &                               drodm)
+             endif
  
             elseif(param_int(SA_INT+ SA_IDES-1).eq.5) then !ZDES mode 2, delta_rot
 
+             if(param_int(SA_DEBUG).eq.1) then  !sauvegarde de delta
+
+               call spsource_ZDES2_rot_debug(ndom,param_int, param_real,
+     &                                       ind_ssa,
+     &                                       xmut,rop,coe, ti,tj,tk,vol,
+     &                                       xmut(1+param_int(NDIMDX)), !dist
+     &                                       delta, 
+     &                                       delta(1+param_int(NDIMDX)),!fd  
+     &                                       drodm)
+             else
              call spsource_ZDES2_rot(ndom, param_int, param_real,
      &                               ind_ssa,
-     &                               xmut,rop,coe, ti,tj,tk,vol,dlng,
-     &                               drodm, delta, fd)
+     &                               xmut,rop,coe, ti,tj,tk,vol,
+     &                               xmut(1+param_int(NDIMDX)),       !dist
+     &                               drodm)
+             endif
 
             elseif(param_int(SA_INT+ SA_IDES-1).eq.6) then !ZDES mode 3, delta_vol
 
-             call spsource_ZDES3_vol(ndom, param_int, param_real,
-     &                               ind_ssa,
-     &                               xmut,rop,coe, ti,tj,tk,vol,dlng,
-     &                               drodm, delta, zgris)
+             if(param_int(SA_DEBUG).eq.1) then  !sauvegarde de delta
+
+               call spsource_ZDES3_vol_debug(ndom,param_int, param_real,
+     &                                 ind_ssa,
+     &                                 xmut,rop,coe, ti,tj,tk,vol,
+     &                                 xmut(1+param_int(NDIMDX)),       !dist
+     &                                 xmut(1+param_int(NDIMDX)*2),     !zgris
+     &                                 delta, drodm)
+             else
+               call spsource_ZDES3_vol(ndom, param_int, param_real,
+     &                                 ind_ssa,
+     &                                 xmut,rop,coe, ti,tj,tk,vol,
+     &                                 xmut(1+param_int(NDIMDX)),       !dist
+     &                                 xmut(1+param_int(NDIMDX)*2),     !zgris
+     &                                 drodm)
+             endif
 
             elseif(param_int(SA_INT+ SA_IDES-1).eq.7) then !ZDES mode 3, delta_rot
 
-             call spsource_ZDES3_rot(ndom, param_int, param_real,
-     &                               ind_ssa,
-     &                               xmut,rop,coe, ti,tj,tk,vol,dlng,
-     &                               drodm, delta, zgris)
+             if(param_int(SA_DEBUG).eq.1) then  !sauvegarde de delta
+
+               call spsource_ZDES3_rot_debug(ndom,param_int, param_real,
+     &                                      ind_ssa,
+     &                                      xmut,rop,coe, ti,tj,tk,vol,
+     &                                      xmut(1+param_int(NDIMDX)),  !dist
+     &                                      xmut(1+param_int(NDIMDX)*2),!zgris
+     &                                      delta, drodm)
+             else
+               call spsource_ZDES3_rot(ndom, param_int, param_real,
+     &                                 ind_ssa,
+     &                                 xmut,rop,coe, ti,tj,tk,vol,
+     &                                 xmut(1+param_int(NDIMDX)),       !dist
+     &                                 xmut(1+param_int(NDIMDX)*2),     !zgris
+     &                                 drodm)
+             endif
 
             else
 !$OMP SINGLE

@@ -47,7 +47,7 @@ c
                rot     = abs(rotz)* xvol
 
                cc = -3.5*rop(l,1)*rop(l,6)**2/(gam*rgp*rop(l,5))
-     &              *(dudx**2+dudy**2+dvdx**2+dvdy**2)*xvol*xvol
+     &              *(dudx**2+dudy**2+dvdx**2+dvdy**2)
 
                !formulation compressible complete
                u1 = (rop(l,6)+rop(l2,6))
@@ -74,4 +74,4 @@ c
                dudy = dudy* (  u3*tiy1 - u1*tiy
      &                       + u2*tjy1 - u4*tjy )
 
-               anvisc    = c1*(dudx+dudy)*xvol*xvol
+               anvisc    = ( c1*(dudx+dudy) + cc ) *xvol*xvol

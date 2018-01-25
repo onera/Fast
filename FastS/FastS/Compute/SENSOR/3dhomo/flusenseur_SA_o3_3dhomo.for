@@ -110,7 +110,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       lvo = lt
       tcx = ti(lt)
       tcy = tj(lt)
-      tcz = tk(lt)
+      tcz = tk(lt) 
       si      = abs (tcx)
       sj      = abs (tcy)
       sk      = abs (tcz)
@@ -181,7 +181,7 @@ c      c7     = c4/c5
 #include "FastS/Compute/loopI_begin.for"                  
             l0= l  - inck                   
 #include    "FastS/Compute/SENSOR/3dhomo/fluFaceEuler_o3_3dhomo_k.for"  
-#include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3.for"   
+#include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3_3dhomo_k.for"   
 #include    "FastS/Compute/SA/fluvisq_3dhomo_k.for"          
 #include    "FastS/Compute/SA/fluvisq_SA_3dhomo_k.for"             
 #include    "FastS/Compute/SA/assemble_drodm_plus_vec1.for"  
@@ -190,7 +190,7 @@ c      c7     = c4/c5
 #include  "FastS/Compute/loopI_begin.for"
             l0= l  - incj 
 #include    "FastS/Compute/SENSOR/3dhomo/fluFaceEuler_o3_3dhomo_j.for"
-#include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3.for"
+#include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3_3dhomo_j.for"
 #include    "FastS/Compute/SA/fluvisq_3dhomo_j.for"
 #include    "FastS/Compute/SA/fluvisq_SA_3dhomo_j.for"
 #include    "FastS/Compute/SA/assemble_drodm_plus_vec1.for"
@@ -199,7 +199,7 @@ c      c7     = c4/c5
 #include "FastS/Compute/loopI_begin.for"
             l0= l  - inci
 #include    "FastS/Compute/SENSOR/3dhomo/fluFaceEuler_o3_3dhomo_i.for"
-#include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3.for"
+#include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3_3dhomo_i.for"
 #include    "FastS/Compute/SA/fluvisq_3dhomo_i.for"
 #include    "FastS/Compute/SA/fluvisq_SA_3dhomo_i.for"
 #include    "FastS/Compute/SA/assemble_drodm_plus_vec1.for"
@@ -210,7 +210,7 @@ c      c7     = c4/c5
              l   = inddm(  i, j, k)
              lt  = indmtr( i, j, k)
 #include    "FastS/Compute/SENSOR/3dhomo/fluFaceEuler_o3_3dhomo_i.for"
-#include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3.for"
+#include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3_3dhomo_i.for"
 #include    "FastS/Compute/SA/fluvisq_3dhomo_i.for"
 #include    "FastS/Compute/SA/fluvisq_SA_3dhomo_i.for"
               ls = l -inci
@@ -226,7 +226,7 @@ c      c7     = c4/c5
 #include "FastS/Compute/loopI_begin.for"
 
 #include       "FastS/Compute/SENSOR/3dhomo/fluFaceEuler_o3_3dhomo_j.for"
-#include       "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3.for"
+#include       "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3_3dhomo_j.for"
 #include       "FastS/Compute/SA/fluvisq_3dhomo_j.for"
 #include       "FastS/Compute/SA/fluvisq_SA_3dhomo_j.for"
                ls = l -incj
@@ -247,7 +247,7 @@ c      c7     = c4/c5
 #include "FastS/Compute/loopI_begin.for"                 
                                            
 #include   "FastS/Compute/SENSOR/3dhomo/fluFaceEuler_o3_3dhomo_k.for"  
-#include   "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3.for"   
+#include   "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3_3dhomo_k.for"   
 #include   "FastS/Compute/SA/fluvisq_3dhomo_k.for"          
 #include   "FastS/Compute/SA/fluvisq_SA_3dhomo_k.for"             
             ls = l -inck                   

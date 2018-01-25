@@ -101,7 +101,8 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       lvo = lt
       tcx = ti(lt)
       tcy = tj(lt)
-      tcz = tk(lt)             
+      tcz = 0. 
+      tcz = tk(lt) 
       si      = abs (tcx)
       sj      = abs (tcy)
       sk      = abs (tcz)      
@@ -155,6 +156,8 @@ c      c7     = c4/c5
       wig_j = v2
       wig_k = v3
 
+      qen = 0.  !pour blinder Roe 6eme variable   
+
       ck_vent = 1                                       
       if(param_int(NEQ_VENT).eq.2) ck_vent =0.          
       v1ven =   0                                       
@@ -180,7 +183,7 @@ c      c7     = c4/c5
                   
             l0= l  - shift
 #include    "FastS/Compute/ROE/3dcart/fluFaceEuler_ale_o3_3dcart_i.for"
-#include    "FastS/Compute/ROE/3dcart/fluFaceSA_o3.for"
+#include    "FastS/Compute/ROE/3dcart/fluFaceSA_ale_o3_3dcart_i.for"
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
          ENDDO
@@ -196,7 +199,7 @@ c      c7     = c4/c5
 
             l0= l  - shift
 #include    "FastS/Compute/ROE/3dcart/fluFaceEuler_ale_o3_3dcart_j.for"
-#include    "FastS/Compute/ROE/3dcart/fluFaceSA_o3.for"
+#include    "FastS/Compute/ROE/3dcart/fluFaceSA_ale_o3_3dcart_j.for"
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
          ENDDO
@@ -212,7 +215,7 @@ c      c7     = c4/c5
                                                   
             l0= l  - shift                        
 #include    "FastS/Compute/ROE/3dcart/fluFaceEuler_ale_o3_3dcart_k.for"    
-#include    "FastS/Compute/ROE/3dcart/fluFaceSA_o3.for"     
+#include    "FastS/Compute/ROE/3dcart/fluFaceSA_ale_o3_3dcart_k.for"     
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"         
            enddo                                  
                                                   

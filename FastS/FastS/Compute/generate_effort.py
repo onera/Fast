@@ -148,9 +148,9 @@ for ale in TypeMotion:
                             lines[i]=lines[i].replace("!ALE only","").replace("!3D only","")
 
                             lines[i]=lines[i].replace("eff_lam_template",name_routine).replace("loopI_begin.for",'loopI'+ale1+'begin.for')
-                            lines[i]=lines[i].replace("fluFaceEuler_i",typezone+'/'+name_fluEuler+'_i').replace("fluFaceRans_i",typezone+'/'+name_fluRans)
-                            lines[i]=lines[i].replace("fluFaceEuler_j",typezone+'/'+name_fluEuler+'_j').replace("fluFaceRans_j",typezone+'/'+name_fluRans)
-                            lines[i]=lines[i].replace("fluFaceEuler_k",typezone+'/'+name_fluEuler+'_k').replace("fluFaceRans_k",typezone+'/'+name_fluRans)
+                            lines[i]=lines[i].replace("fluFaceEuler_i",typezone+'/'+name_fluEuler+'_i').replace("fluFaceRans_i",typezone+'/'+name_fluRans+'_i')
+                            lines[i]=lines[i].replace("fluFaceEuler_j",typezone+'/'+name_fluEuler+'_j').replace("fluFaceRans_j",typezone+'/'+name_fluRans+'_j')
+                            lines[i]=lines[i].replace("fluFaceEuler_k",typezone+'/'+name_fluEuler+'_k').replace("fluFaceRans_k",typezone+'/'+name_fluRans+'_k')
 
                             lines[i]=lines[i].replace("fluViscLaminar_i",'fluvisq_'+typezone+'_i').replace("fluViscRans_i",'fluvisq_'+eq+'_'+typezone+'_i')
                             lines[i]=lines[i].replace("fluViscLaminar_j",'fluvisq_'+typezone+'_j').replace("fluViscRans_j",'fluvisq_'+eq+'_'+typezone+'_j')

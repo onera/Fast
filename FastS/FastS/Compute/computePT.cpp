@@ -83,7 +83,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
 
-  iptx              = new E_Float*[nidom*33];
+  iptx              = new E_Float*[nidom*28];
   ipty              = iptx            + nidom;
   iptz              = ipty            + nidom;
   iptro             = iptz            + nidom;
@@ -91,9 +91,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   iptro_p1          = iptro_m1        + nidom;
   iptro_sfd         = iptro_p1        + nidom;
   iptdelta          = iptro_sfd       + nidom;
-  iptfd             = iptdelta        + nidom;
-  iptro_zgris       = iptfd           + nidom;
-  iptro_res         = iptro_zgris     + nidom;
+  iptro_res         = iptdelta        + nidom;
   iptmut            = iptro_res       + nidom;
   ipti              = iptmut          + nidom;
   iptj              = ipti            + nidom;
@@ -106,8 +104,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   iptj_df           = ipti_df         + nidom;
   iptk_df           = iptj_df         + nidom;
   iptvol_df         = iptk_df         + nidom;
-  iptdist           = iptvol_df       + nidom;
-  iptventi          = iptdist         + nidom;
+  iptventi          = iptvol_df       + nidom;
   iptventj          = iptventi        + nidom;
   iptventk          = iptventj        + nidom;
   iptrdm            = iptventk        + nidom;
@@ -172,52 +169,38 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
     t            = K_PYTREE::getNodeFromName1(sol_center, "cellN");
     if (t == NULL) iptCellN[nd] = NULL;
     else iptCellN[nd] = K_PYTREE::getValueAF(t, hook);
+
+    //Pointeur sfd
     if (ipt_param_int[nd][ SFD ] == 1)
     {
       t            = K_PYTREE::getNodeFromName1(sol_center, "Density_f");
       iptro_sfd[nd]= K_PYTREE::getValueAF(t, hook);
     }
-    if (ipt_param_int[nd][ SA_INT+ SA_IDES-1 ] >= 2)
+    //Pointeur debug DES: delta et fd compact
+    if (ipt_param_int[nd][ SA_INT+ SA_IDES-1 ] >= 2 && ipt_param_int[nd][ SA_DEBUG ]==1)
     {
       t            = K_PYTREE::getNodeFromName1(sol_center, "delta");
       iptdelta[nd] = K_PYTREE::getValueAF(t, hook);
     }
-    if ((ipt_param_int[nd][ SA_INT+ SA_IDES-1 ] == 4) || (ipt_param_int[nd][ SA_INT+ SA_IDES-1 ] == 5))
-    {
-      t            = K_PYTREE::getNodeFromName1(sol_center, "fd");
-      iptfd[nd]    = K_PYTREE::getValueAF(t, hook);
-    }
-    if (ipt_param_int[nd][ SA_INT+ SA_IDES-1 ] >= 6)
-    {
-      t               = K_PYTREE::getNodeFromName1(sol_center, "zgris");
-      iptro_zgris[nd] = K_PYTREE::getValueAF(t, hook);
-    }
+    //Pointeur extraction RHS
     if (ipt_param_int[nd][ EXTRACT_RES ] == 1)
     {
       t            = K_PYTREE::getNodeFromName1(sol_center, "Res_Density");
       iptro_res[nd]= K_PYTREE::getValueAF(t, hook);
     }
 
+    //Pointeur visqeux: mut, dist, zgris sont en acces compact
     if(ipt_param_int[nd][ IFLOW ] > 1)
-      { t  = K_PYTREE::getNodeFromName1(sol_center, "ViscosityEddy");
-        if (t == NULL) { PyErr_SetString(PyExc_ValueError, "ViscosityEddy is missing for NS computations."); return NULL; }
-        else           { iptmut[nd]   = K_PYTREE::getValueAF(t, hook);}
+      { t          = K_PYTREE::getNodeFromName1(sol_center, "ViscosityEddy");
+        iptmut[nd] = K_PYTREE::getValueAF(t, hook);
+
         if (ipt_param_int[nd][ IFLOW ] ==3) 
-            { t  = K_PYTREE::getNodeFromName1(sol_center, "TurbulentDistance");
-
-              if (t == NULL) { PyErr_SetString(PyExc_ValueError, "TurbulentDistance is missing for NS computations."); return NULL;}
-              else iptdist[nd] = K_PYTREE::getValueAF(t, hook);
-
-              neq_max = 6;
-              
+            { neq_max = 6;
               //Recherche du domaine RANS/DES le + gros
               if (ipt_param_int[nd][ ILES ] == 0) { if( ipt_param_int[nd][ NDIMDX ] > ndimdx_sa ) ndimdx_sa = ipt_param_int[nd][ NDIMDX ]; }
             }
-         //else iptdist[nd] = NULL;
-         else iptdist[nd] = iptro[nd];
-          }
-    //else {iptmut[nd] = NULL; iptdist[nd] = NULL;}
-    else {iptmut[nd] = iptro[nd]; iptdist[nd] = iptro[nd];}
+      }
+    else {iptmut[nd] = iptro[nd];}
 
 
     //
@@ -340,15 +323,14 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
         iptx               , ipty             , iptz              ,
         iptCellN           ,
         iptro              , iptro_m1         , iptro_p1          , iptro_sfd     ,
-        iptmut             , iptdist          ,
+        iptmut             ,
         ipti               , iptj             , iptk              , iptvol        , 
         ipti0              , iptj0            , iptk0             ,     
         ipti_df            , iptj_df          , iptk_df           , iptvol_df     , 
         iptventi           , iptventj         , iptventk          ,  
         iptrdm             ,
         iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
-        iptdrodm           , iptcoe           , iptrot            , iptdelta      ,
-        iptfd              , iptro_zgris      , iptro_res);
+        iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res);
 
   if (lssiter_verif == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
   {

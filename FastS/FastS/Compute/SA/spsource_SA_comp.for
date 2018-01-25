@@ -112,7 +112,7 @@ c.....formulation originelle
 #include  "FastS/Compute/loop_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_comp_grad_3d.for"
-#include       "FastS/Compute/SA/sourceSA_comp_prod_dest.for"
+#include       "FastS/Compute/SA/sourceSA_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
 
@@ -123,7 +123,7 @@ c.....formulation originelle
 #include  "FastS/Compute/loop_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_comp_grad_3d.for"
-#include       "FastS/Compute/SA/sourceSA_comp_prod_dest.for"
+#include       "FastS/Compute/SA/sourceSA_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
 
 #include  "FastS/Compute/loop_end.for"
@@ -154,7 +154,7 @@ c.....formulation originelle
 #include  "FastS/Compute/loop_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_comp_grad_3dhomo.for"
-#include       "FastS/Compute/SA/sourceSA_comp_prod_dest.for"
+#include       "FastS/Compute/SA/sourceSA_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
 #include  "FastS/Compute/loop_end.for"
@@ -164,7 +164,7 @@ c.....formulation originelle
 #include  "FastS/Compute/loop_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_comp_grad_3dhomo.for"
-#include       "FastS/Compute/SA/sourceSA_comp_prod_dest.for"
+#include       "FastS/Compute/SA/sourceSA_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
 #include  "FastS/Compute/loop_end.for"
 
@@ -212,7 +212,7 @@ c.....formulation originelle
              do l = lij, lij +  ind_loop(2)- ind_loop(1)
 
 #include       "FastS/Compute/SA/sourceSA_comp_grad_3dcart.for"
-#include       "FastS/Compute/SA/sourceSA_comp_prod_dest.for"
+#include       "FastS/Compute/SA/sourceSA_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
              enddo
@@ -228,7 +228,7 @@ c.....formulation originelle
              do l = lij, lij +  ind_loop(2)- ind_loop(1)
 
 #include       "FastS/Compute/SA/sourceSA_comp_grad_3dcart.for"
-#include       "FastS/Compute/SA/sourceSA_comp_prod_dest.for"
+#include       "FastS/Compute/SA/sourceSA_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
              enddo
            enddo
@@ -257,7 +257,7 @@ c.....formulation originelle
 #include  "FastS/Compute/loop_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_comp_grad_2d.for"
-#include       "FastS/Compute/SA/sourceSA_comp_prod_dest.for"
+#include       "FastS/Compute/SA/sourceSA_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
 #include  "FastS/Compute/loop_end.for"
@@ -267,7 +267,7 @@ c.....formulation originelle
 #include  "FastS/Compute/loop_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_comp_grad_2d.for"
-#include       "FastS/Compute/SA/sourceSA_comp_prod_dest.for"
+#include       "FastS/Compute/SA/sourceSA_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
 #include  "FastS/Compute/loop_end.for"
 

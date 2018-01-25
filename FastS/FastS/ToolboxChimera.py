@@ -359,9 +359,9 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                   zname  = zdperio[0].split('_Perio')[0]
                   zdorig = Internal.getNodeFromName(tc[donor],zname)
                   for zsr in Internal.getNodesFromName(zdperio,"ID_*"):
-                    print rcpt,' est le receveur.  teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c
-                    srname = zsr[0].split('_');srname = srname[1]
+                    srname = Internal.getValue(zsr)
                     zsr[0] = 'IDPER'+source+'#%d_%s'%(it,srname)
+                    print 'zoneD=',zdperio[0],'zoneR=',srname,'subRegionName=', zsr[0],'. teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c
                     #modif pointlist pour calcul sur zone reduite
                     _adaptRange(zdorig, zsr, infos_PtlistRebuild ) 
 
@@ -385,10 +385,14 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
     vars= ['FlowSolution','CoordinateX','CoordinateY','CoordinateZ']
     for v in vars: C._rmVars(tc_out, v)
 
+    #mise a jour info taille de zone donneuse
+    zones = Internal.getZones(tc_out)
+    for z in zones:
+       nijk    = infos_PtlistRebuild[ z[0]  ] [2]
+       z[1][0:4,0] = nijk[0:4]+1 
+       z[1][0:4,1] = nijk[0:4] 
+
     return tc_out
-    #connec_tree=[]
-    #for name in basenames:  connec_tree.append( tc[name] )
-    #return connec_tree
 
 #------------------------------------------------------------------
 # modify Pointlist and PointlistDonor in order to compute unsteady chimera interpolation on smaller grid
@@ -410,11 +414,6 @@ def _adaptRange(z, s, infos_Ptlist):
      shift   = infos_Ptlist[ z[0]  ] [0]
      nijkOpt = infos_Ptlist[ z[0]  ] [1]
      nijk    = infos_Ptlist[ z[0]  ] [2]
-
-     #mise a jour info taille de zone donneuse
-     z[1][0:4,0] = nijk[0:4]+1 
-     z[1][0:4,1] = nijk[0:4] 
- 
 
      shiftD  = infos_Ptlist[ recpt ] [0]
      nijkOptD= infos_Ptlist[ recpt ] [1]
@@ -476,6 +475,7 @@ def ZonePrecond( base, NGhostCells, info_PtlistRebuild, dim=3):
              dimzone  = Internal.getZoneDim(z)
              nijk[0:3]= dimzone[1:4]
              nijk[ :] -=1  #vertex2center
+             '''
              print 'WARNING'
              print 'WARNING'
              print 'WARNING'
@@ -490,6 +490,7 @@ def ZonePrecond( base, NGhostCells, info_PtlistRebuild, dim=3):
              print 'WARNING'
              print 'WARNING'
              nijk[ 0] =70
+             '''
              depth = 8
              if idir == 0:
                 zp = T.subzone(z, (rg[0,0]+NGhostCells,rg[1,0],rg[2,0]), (rg[0,0]+depth,rg[1,1],rg[2,1]))

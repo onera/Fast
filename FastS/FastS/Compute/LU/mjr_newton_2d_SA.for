@@ -25,5 +25,5 @@
         t_old  = (ro_old*nu_old + drodm(l,6))*r_1
 
         t_old      = min(t_old,anulam)
-!        rop_1(l,6) = max(t_old,0.)
-        rop_1(l,6) = max(t_old,param_real(RONUTILDEINF))
+        rop_1(l,6) = max(t_old,0.)
+!        rop_1(l,6) = max(t_old,param_real(RONUTILDEINF))

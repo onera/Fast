@@ -102,7 +102,8 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       lvo = lt
       tcx = ti(lt)
       tcy = tj(lt)
-      tcz = tk(lt)             
+      tcz = 0. 
+      tcz = tk(lt) 
       si      = abs (tcx)
       sj      = abs (tcy)
       sk      = abs (tcz)      
@@ -155,6 +156,8 @@ c      c7     = c4/c5
       wig_i = v1
       wig_j = v2
       wig_k = v3
+
+      qen = 0.  !pour blinder Roe 6eme variable   
 
       ck_vent = 1                                       
       if(param_int(NEQ_VENT).eq.2) ck_vent =0.          

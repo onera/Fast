@@ -137,15 +137,14 @@ for ale in TypeMotion:
 			# creation subroutine fortran du flux
                         name_routine = flux+ale1+eq+'_'+slope+'_'+typezone
                         name_fluEuler= 'fluFaceEuler' +ale1 +slope+ '_'+typezone
-                        name_fluRans = 'fluFace'  +eq +'_'+slope
-                        #name_fluRans = 'fluFace'  +eq +'_'+ale+ '_'+slope+ '_'+typezone
+                        name_fluRans = 'fluFace'  +eq +ale1 +slope+ '_'+typezone
                         for i in range( len(lines) ):
                             lines[i]=lines[i].replace("!ALE only","").replace("!3D only","")
 
                             lines[i]=lines[i].replace("flu_lam_template",name_routine).replace("loopI_begin.for",'loopI'+ale1+'begin.for')
-                            lines[i]=lines[i].replace("fluFaceEuler_i",typezone+'/'+name_fluEuler+'_i').replace("fluFaceRans_i",typezone+'/'+name_fluRans)
-                            lines[i]=lines[i].replace("fluFaceEuler_j",typezone+'/'+name_fluEuler+'_j').replace("fluFaceRans_j",typezone+'/'+name_fluRans)
-                            lines[i]=lines[i].replace("fluFaceEuler_k",typezone+'/'+name_fluEuler+'_k').replace("fluFaceRans_k",typezone+'/'+name_fluRans)
+                            lines[i]=lines[i].replace("fluFaceEuler_i",typezone+'/'+name_fluEuler+'_i').replace("fluFaceRans_i",typezone+'/'+name_fluRans+'_i')
+                            lines[i]=lines[i].replace("fluFaceEuler_j",typezone+'/'+name_fluEuler+'_j').replace("fluFaceRans_j",typezone+'/'+name_fluRans+'_j')
+                            lines[i]=lines[i].replace("fluFaceEuler_k",typezone+'/'+name_fluEuler+'_k').replace("fluFaceRans_k",typezone+'/'+name_fluRans+'_k')
 
                             lines[i]=lines[i].replace("fluViscLaminar_i",'fluvisq_'+typezone+'_i').replace("fluViscRans_i",'fluvisq_'+eq+'_'+typezone+'_i')
                             lines[i]=lines[i].replace("fluViscLaminar_j",'fluvisq_'+typezone+'_j').replace("fluViscRans_j",'fluvisq_'+eq+'_'+typezone+'_j')
@@ -204,21 +203,23 @@ for ale in TypeMotion:
                                    for l in lines_rans: franso.write(l)
                                    franso.close()     
 
-                        #Include generation for RANS
-                        if eq not in ['euler','lamin']:
-                             #flux face
-                             frans = open(rep+'/fluFace'+eq+'.for','r')                         #  Template flux RANS
-                             lines_rans = frans.readlines()
+                                #Include generation for RANS
+                                if eq not in ['euler','lamin']:
+                                  #flux face
+                                  #frans = open(rep+'/fluFace'+eq+ale1+slope+'_'+typezone+'_'+dir+'.for','r')                         #  Template flux RANS
+                                  frans = open(rep+'/fluFace'+eq+'.for','r')                         #  Template flux RANS
+                                  lines_rans = frans.readlines()
 
-                             fransout = rep+'/'+typezone+'/'+'fluFace'+ eq +'_'+slope+'.for'
-                             franso   = open(fransout,"w")                  # ouvrir le fichier de sortie
+                                  fransout = rep+'/'+typezone+'/'+'fluFace'+ eq +ale1+slope+'_'+typezone+'_'+dir+'.for'
+                                  franso   = open(fransout,"w")                  # ouvrir le fichier de sortie
 
-                             slp = slope+'_slope'
-                             for i in range( len(lines_rans) ):
-                                   lines_rans[i]=lines_rans[i].replace("o3_slope",slp)
+                                  slp = slope+'_slope'
+                                  for i in range( len(lines_rans) ):
+                                     lines_rans[i]=lines_rans[i].replace("o3_slope",slp)
+                                     lines_rans[i]=lines_rans[i].replace("qn_3dfull_i"       , 'qn'+ale1+typezone+'_'+dir)
 
-                             for l in lines_rans: franso.write(l)
-                             franso.close()                               # fermer le fichier output rans
+                                  for l in lines_rans: franso.write(l)
+                                  franso.close()                               # fermer le fichier output rans
 
 
                         for l in lines: fo.write(l)

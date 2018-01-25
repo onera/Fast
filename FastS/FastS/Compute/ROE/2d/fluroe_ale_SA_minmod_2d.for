@@ -113,7 +113,6 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       lvo = lt
       tcx = ti(lt)
       tcy = tj(lt)
-      
       si      = abs (tcx)
       sj      = abs (tcy)
       
@@ -190,7 +189,7 @@ c      c7     = c4/c5
 #include  "FastS/Compute/loopI_ale_begin.for"
             l0= l  - incj 
 #include    "FastS/Compute/ROE/2d/fluFaceEuler_ale_minmod_2d_j.for"
-#include    "FastS/Compute/ROE/2d/fluFaceSA_minmod.for"
+#include    "FastS/Compute/ROE/2d/fluFaceSA_ale_minmod_2d_j.for"
 #include    "FastS/Compute/SA/fluvisq_2d_j.for"
 #include    "FastS/Compute/SA/fluvisq_SA_2d_j.for"
 #include    "FastS/Compute/SA/assemble_drodm_plus_vec1.for"
@@ -199,7 +198,7 @@ c      c7     = c4/c5
 #include "FastS/Compute/loopI_ale_begin.for"
             l0= l  - inci
 #include    "FastS/Compute/ROE/2d/fluFaceEuler_ale_minmod_2d_i.for"
-#include    "FastS/Compute/ROE/2d/fluFaceSA_minmod.for"
+#include    "FastS/Compute/ROE/2d/fluFaceSA_ale_minmod_2d_i.for"
 #include    "FastS/Compute/SA/fluvisq_2d_i.for"
 #include    "FastS/Compute/SA/fluvisq_SA_2d_i.for"
 #include    "FastS/Compute/SA/assemble_drodm_plus_vec1.for"
@@ -211,7 +210,7 @@ c      c7     = c4/c5
              lt  = indmtr( i, j, k)
              lven= indven( i, j, k)         
 #include    "FastS/Compute/ROE/2d/fluFaceEuler_ale_minmod_2d_i.for"
-#include    "FastS/Compute/ROE/2d/fluFaceSA_minmod.for"
+#include    "FastS/Compute/ROE/2d/fluFaceSA_ale_minmod_2d_i.for"
 #include    "FastS/Compute/SA/fluvisq_2d_i.for"
 #include    "FastS/Compute/SA/fluvisq_SA_2d_i.for"
               ls = l -inci
@@ -227,7 +226,7 @@ c      c7     = c4/c5
 #include "FastS/Compute/loopI_ale_begin.for"
 
 #include       "FastS/Compute/ROE/2d/fluFaceEuler_ale_minmod_2d_j.for"
-#include       "FastS/Compute/ROE/2d/fluFaceSA_minmod.for"
+#include       "FastS/Compute/ROE/2d/fluFaceSA_ale_minmod_2d_j.for"
 #include       "FastS/Compute/SA/fluvisq_2d_j.for"
 #include       "FastS/Compute/SA/fluvisq_SA_2d_j.for"
                ls = l -incj
