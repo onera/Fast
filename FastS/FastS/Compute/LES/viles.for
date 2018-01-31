@@ -57,31 +57,11 @@ C Var loc
 #include "FastS/formule_mtr_param.h"
 
       nitrun =0
-      !Calcul de la taille minimal 1D du bloc thread 
-      if(param_int(ITYPCP).eq.2) then
-        lmin = 8
-      else
-        lmin =10
-      endif
+#include "FastS/HPC_LAYER/SIZE_MIN.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
-
-       call synchro_omp_scater(param_int, ithread,
-     &                     lth, sens,lgo,lwait,Nbre_socket,
-     &                     Nbre_thread_actif,thread_parsock,
-     &                     lok_shap_sock, lok_shap,neq_lok,
-     &                     socket , socket_topology, socket_pos,
-     &                     ithread, thread_topology,thread_pos_tmp,
-     &                     synchro_receive_sock, synchro_send_sock,
-     &                     synchro_receive_th  , synchro_send_th,
-     &                     ibloc , jbloc , kbloc , ijkv_thread,
-     &                     icache, jcache, kcache, ijkv_sdm,
-     &                     ind_dm_omp,
-     &                     rot, rot, rot, 
-     &                     lok(1),lok(ipt_lok_sock),
-     &                     lok(ipt_lok), omp_wait )
-
+#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
 
       !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
       if(param_int(IFLOW).eq.2) then
@@ -108,21 +88,7 @@ c
 
       endif
                
-      call synchro_omp_scater(param_int, ithread,
-     &                        lth, sens,lgo,lwait,Nbre_socket,
-     &                        Nbre_thread_actif,thread_parsock,
-     &                        lok_shap_sock, lok_shap,neq_lok,
-     &                        socket , socket_topology, socket_pos,
-     &                        ithread, thread_topology,thread_pos_tmp,
-     &                        synchro_receive_sock, synchro_send_sock,
-     &                        synchro_receive_th  , synchro_send_th,
-     &                        ibloc , jbloc , kbloc , ijkv_thread,
-     &                        icache, jcache, kcache, ijkv_sdm,
-     &                        ind_dm_omp,
-     &                        rot, rot, rot, 
-     &                        lok(1),lok(ipt_lok_sock),
-     &                        lok(ipt_lok), omp_go )
-
+#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 

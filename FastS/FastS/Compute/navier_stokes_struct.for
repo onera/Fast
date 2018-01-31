@@ -73,27 +73,13 @@ C Var loc
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 
-
-
-       !Calcul de la taille minimal 1D du bloc thread 
-       if(param_int(ITYPCP).eq.2) then
-
-         lmin = 4
-         !blindage modele ssmaile pour race omp
-         if(     param_int(IFLOW).eq.2.and.param_int(ILES).eq.1
-     &      .and.param_int(NIJK+4).ne.0.and.nitcfg.eq.1) lmin = 8
-       else
-         lmin =10
-       endif
-
+#include "FastS/HPC_LAYER/SIZE_MIN.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
 
 
 c         if(ithread.eq.param_int( IO_THREAD).and.nitcfg.le.1) then
-c           write(*,'(a,7i6)')'nisdom',nisdom,ndo
-c
 c           write(*,'(a,7i6)')'ijkv_sdm  =',ijkv_sdm,icache,jcache,
 c     &                                     kcache,ithread
 c           write(*,'(a,9i6)')'ind_dm_zone=',ind_dm_zone,

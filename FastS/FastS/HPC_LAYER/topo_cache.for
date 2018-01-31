@@ -8,13 +8,6 @@
       cache(2)       = param_int(CACHEBLCKJ)
       cache(3)       = param_int(CACHEBLCKK)
 
-      !Calcul modele ssmaille
-      if(lmin.eq.8) then
-        cache(1) = max(4,cache(1))
-        cache(2) = max(4,cache(2))
-        cache(3) = max(4,cache(3))
-      endif
-
 !DIR$ ATTRIBUTES FORCEINLINE :: topo_scater
       call topo_scater(ndo, ithread, socket, lmin,
      &                  thread_parsock, thread_parsock_actif,

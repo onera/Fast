@@ -246,11 +246,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     #
     # initialisation Mut
     #
-    hook1[12] = 0
-    nstep     = 1
-    nitrun    = 0
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
-    fasts._computePT_mut(zones, metrics, nitrun, nstep, omp_mode, hook1)
+    fasts._computePT_mut(zones, metrics, hook1)
 
     if tmy is None: return (t, tc, metrics)
     else: return (t, tc, metrics, tmy)

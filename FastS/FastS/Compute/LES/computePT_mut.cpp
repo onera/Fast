@@ -35,14 +35,8 @@ using namespace K_FLD;
 PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* work;
-  E_Int nitrun; E_Int nstep; E_Int omp_mode;
 
-#if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOlllO", &zones , &metrics, &nitrun, &nstep, &omp_mode, &work)) return NULL; 
-#else 
-  if (!PyArg_ParseTuple(args, "OOiiiO", &zones , &metrics, &nitrun, &nstep, &omp_mode, &work)) return NULL; 
-#endif
-
+  if (!PyArg_ParseTuple(args, "OOO", &zones , &metrics, &work)) return NULL; 
 
   /* tableau pour stocker dimension sous-domaine omp */
   E_Int threadmax_sdm = 1;

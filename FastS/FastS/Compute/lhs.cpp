@@ -22,7 +22,7 @@
                      //if( kimpli == 1)
                      // {
 
-                         if(ithread== param_int[nd][ IO_THREAD ]&& nd_subzone==nb_subzone-1  && nd==nidom-1) printf("balance %d %d \n", balance, nitcfg); 
+                         //if(ithread== param_int[nd][ IO_THREAD ]&& nd_subzone==nb_subzone-1  && nd==nidom-1) printf("balance %d %d \n", balance, nitcfg); 
 
                          if(lssiter_verif ==1  && nd_subzone ==0 && ( param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
                           {

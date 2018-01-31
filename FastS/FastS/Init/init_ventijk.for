@@ -57,36 +57,20 @@ C Var loc
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 
-      !coefficient pour calcul gradient ordre4 - c1=7./12 c2=1./12 ordre 4 - c1=0.5 c2=0 ordre 2
-      c1 = 7./12
-      c2 = 1./12
+      if(param_int(LALE).ge.1) then ! mise a jour Vent et tijk
 
-      nitrun   = -2
-      nitcfg   = 1
+
+        !coefficient pour calcul gradient ordre4 - c1=7./12 c2=1./12 ordre 4 - c1=0.5 c2=0 ordre 2
+        c1 = 7./12
+        c2 = 1./12
+
+        nitrun   = -2
+        nitcfg   = 1
 #include "FastS/HPC_LAYER/SIZE_MIN.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
-
-
-            if(param_int(LALE).ge.1) then ! mise a jour Vent et tijk
-
-            call synchro_omp_scater(param_int, ithread,
-     &                          lth, sens,lgo,lwait,Nbre_socket,
-     &                          Nbre_thread_actif,thread_parsock,
-     &                          lok_shap_sock, lok_shap,neq_lok,
-     &                          socket , socket_topology, socket_pos,
-     &                          ithread, thread_topology,thread_pos_tmp,
-     &                          synchro_receive_sock, synchro_send_sock,
-     &                          synchro_receive_th  , synchro_send_th,
-     &                          ibloc , jbloc , kbloc , ijkv_thread,
-     &                          icache, jcache, kcache, ijkv_sdm,
-     &                          ind_dm_omp,
-     &                          venti, ventj, ventk, 
-     &                          lok(1),lok(ipt_lok_sock),
-     &                          lok(ipt_lok), omp_wait )
-
-
+#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
 
                 call mjr_ale(ndo,nitcfg, ithread,
      &                        param_int, param_real,
@@ -98,24 +82,10 @@ C Var loc
      &                        x,y,z,ti,ti_df,tj,tj_df,tk,tk_df,vol,
      &                        venti, ventj, ventk)
 
-            call synchro_omp_scater(param_int, ithread,
-     &                          lth, sens,lgo,lwait,Nbre_socket,
-     &                          Nbre_thread_actif,thread_parsock,
-     &                          lok_shap_sock, lok_shap,neq_lok,
-     &                          socket , socket_topology, socket_pos,
-     &                          ithread, thread_topology,thread_pos_tmp,
-     &                          synchro_receive_sock, synchro_send_sock,
-     &                          synchro_receive_th  , synchro_send_th,
-     &                          ibloc , jbloc , kbloc , ijkv_thread,
-     &                          icache, jcache, kcache, ijkv_sdm,
-     &                          ind_dm_omp,
-     &                          venti, ventj, ventk, 
-     &                          lok(1),lok(ipt_lok_sock),
-     &                          lok(ipt_lok), omp_go )
-              endif
-
-
+#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+
+      endif
 
       end

@@ -81,20 +81,7 @@ C Var loc
            call init_rhs(ndo, 1, param_int, param_int(NDIMDX),
      &                   neq_grad, ind_rhs, grad )
 
-            call synchro_omp_scater(param_int, ithread,
-     &                          lth, sens,lgo,lwait,Nbre_socket,
-     &                          Nbre_thread_actif,thread_parsock,
-     &                          lok_shap_sock, lok_shap,neq_lok,
-     &                          socket , socket_topology, socket_pos,
-     &                          ithread, thread_topology,thread_pos_tmp,
-     &                          synchro_receive_sock, synchro_send_sock,
-     &                          synchro_receive_th  , synchro_send_th,
-     &                          ibloc , jbloc , kbloc , ijkv_thread,
-     &                          icache, jcache, kcache, ijkv_sdm,
-     &                          ind_dm_omp,
-     &                          grad, grad, grad, 
-     &                          lok(1),lok(ipt_lok_sock),
-     &                          lok(ipt_lok), omp_wait )
+#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
 
             if(param_int(ITYPZONE).eq.0) then
 
@@ -183,21 +170,7 @@ C Var loc
             if(param_int(ITYPZONE).ne.3) 
      &      call extrap(ndo,param_int,c1,ind_sdm,ind_dm_zone,grad(1+V3))
                
-            call synchro_omp_scater(param_int, ithread,
-     &                          lth, sens,lgo,lwait,Nbre_socket,
-     &                          Nbre_thread_actif,thread_parsock,
-     &                          lok_shap_sock, lok_shap,neq_lok,
-     &                          socket , socket_topology, socket_pos,
-     &                          ithread, thread_topology,thread_pos_tmp,
-     &                          synchro_receive_sock, synchro_send_sock,
-     &                          synchro_receive_th  , synchro_send_th,
-     &                          ibloc , jbloc , kbloc , ijkv_thread,
-     &                          icache, jcache, kcache, ijkv_sdm,
-     &                          ind_dm_omp,
-     &                          grad, grad, grad, 
-     &                          lok(1),lok(ipt_lok_sock),
-     &                          lok(ipt_lok), omp_go )
-
+#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 

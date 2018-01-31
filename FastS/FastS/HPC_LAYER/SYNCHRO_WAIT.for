@@ -8,7 +8,7 @@
      &                          synchro_receive_th  , synchro_send_th,
      &                          ibloc , jbloc , kbloc , ijkv_thread,
      &                          icache, jcache, kcache, ijkv_sdm,
+     &                          size_cache,
      &                          ind_dm_omp,
-     &                          drodm, coe, xmut,
      &                          lok(1),lok(ipt_lok_sock),
      &                          lok(ipt_lok), omp_wait )

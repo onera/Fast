@@ -214,7 +214,15 @@ def warmup(t, tc, graph=None, infos_ale=None, tmy=None):
     nstep     = 1
     nitrun    = 0
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
-    _fillGhostcells(zones, tc, metrics, nitrun, ['Density'], nstep, hook1,graphID, graphIBCD, procDict) 
+    timelevel_target = int(dtloc[4]) 
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, hook1,graphID, graphIBCD, procDict)
+
+    #
+    # initialisation Mut
+    #
+    if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
+    fasts._computePT_mut(zones, metrics, hook1)
+
     if tmy is None: return (t, tc, metrics)
     else: return (t, tc, metrics, tmy)
 

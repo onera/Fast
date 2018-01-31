@@ -13,9 +13,9 @@ c***********************************************************************
      &                          synchro_receive_th  , synchro_send_th,
      &                          isock, jsock, ksock , ijkv_sock,
      &                          ith  , jth  ,  kth  , ijkv_th,
+     &                          size_cache,
      &                          ind_dm_thread,
-     &                          drodm, coe, xmut, lok_new, 
-     &                          lok_sock, lok, ctype)
+     &                          lok_new, lok_sock, lok, ctype)
 c***********************************************************************
 c_P                          O N E R A
 c=======================================================================
@@ -26,14 +26,13 @@ c=======================================================================
       character*7 ctype
       INTEGER_E ithread_io, lth, neq_lok,
      & Nbre_thread_actif,thread_parsock,lgo,lwait,Nbre_socket,
-     & socket , topo_socket(3), socket_pos(3),sens(3),
+     & socket , topo_socket(3), socket_pos(3), sens(3), size_cache(3),
      & ithread, topo_thread(3), thread_pos(3),
      & synchro_send_sock(3),synchro_receive_sock(3),
      & synchro_send_th(3),synchro_receive_th(3),
      & isock, jsock,ksock, ith,jth,kth, ijkv_sock(3), ijkv_th(3),
      & ind_dm_thread(6), lok_new(Nbre_thread_actif),
      & lok_sock_shap(4),lok_shap(4),
-c     & lok_sock(lok_sock_shap(4), lok_sock_shap(3), Nbre_thread_actif),
      & lok_sock(lok_sock_shap(4), lok_sock_shap(3), Nbre_socket),
      & lok( lok_shap(4), lok_shap(3), neq_lok, Nbre_thread_actif),
      & param_int(0:*)
@@ -41,16 +40,13 @@ c     & lok_sock(lok_sock_shap(4), lok_sock_shap(3), Nbre_thread_actif),
 
 #include "FastS/param_solver.h"
 
-      REAL_E  drodm( param_int(NDIMDX), param_int(NEQ    ) ) 
-      REAL_E    coe( param_int(NDIMDX), param_int(NEQ_COE) )
-      REAL_E   xmut( param_int(NDIMDX) )
-
 C Var loc  
       character*20 str
       logical llu_wait, lwait_i, lwait_j, lwait_k,ldir2,ldir3
       integer*8 compteur
       INTEGER_E l, iverbs,ncell, blk_shift,ithread_rac,socket_rac,
-     & ldir,lmod, no, imax,jmax,kmax,ithread_i1,itest,l0
+     & ldir,lmod, no, imax,jmax,kmax,ithread_i1,itest,l0,
+     & verrou_cachebloc(3),shift,overlap,i
 
 #define DEBUG 0
 
@@ -383,6 +379,21 @@ c     &          + (ksock-1)*ijkv_sock(1)*ijkv_sock(2)
 
       ELSEIF(ctype(1:5).eq.'wait ') THEN  ! mise en attente du thread pour le calcul du sousdomaine ndsdm :
 
+          !Determination de la postion du verrou pour gerer
+          !recouvrememnt ind_coe sur 4 maille
+          ! ijkv_th   si size_cache>=overlap
+          ! ijkv_th-1 si size_cache=3
+          ! ijkv_th-2 si size_cache=2
+          ! ijkv_th-4 si size_cache=1
+          overlap = 4
+          do i=1,3
+            verrou_cachebloc(i)= ijkv_th(i)
+            if (size_cache(i).lt.overlap) then
+               shift = 1 + mod(overlap,size_cache(i))/size_cache(i)
+               verrou_cachebloc(i)=  max( 1, verrou_cachebloc(i) -shift)
+            endif
+          enddo
+ 
           !
           !
           !synchro Imin
@@ -462,56 +473,60 @@ c     &                              + (topo_thread(1)-1)                !ipos =
           Endif
 
 
-
           !
           !
           !synchro Imax
           !
           !
           !Thread
-          if(ith.eq.ijkv_th(1).and.thread_pos(1).ne.topo_thread(1)
-     &                        .and.synchro_receive_th(1).eq.1 ) Then
+          !if(ith.eq.ijkv_th(1).and.thread_pos(1).ne.topo_thread(1)
+          If( ith.eq.verrou_cachebloc(1) ) Then
 
-             lmod =   mod(lth, neq_lok)
-             if(lmod.eq.0) lmod = neq_lok
+             !!Thread
+             if(     thread_pos(1).ne.topo_thread(1)
+     &          .and.synchro_receive_th(1).eq.1 ) Then
 
-             ithread_rac =  ithread +  sens(1)
+                lmod =   mod(lth, neq_lok)
+                if(lmod.eq.0) lmod = neq_lok
 
-             l   = kth + (jth-1)*ijkv_th(3) 
+                ithread_rac =  ithread +  sens(1)
 
-             ldir = 1
+                l    = kth + (jth-1)*ijkv_th(3) 
 
-             str='avwait Imax :ithkth='
-#include     "FastS/HPC_LAYER/write_wait.for"
+                ldir = 1
 
-             call verrou(  lok(l, ldir, lmod, ithread_rac), 2, compteur)
+                str='avwait Imax :ithkth='
+#include        "FastS/HPC_LAYER/write_wait.for"
 
-             str='  wait Imax :ithkth='
-#include     "FastS/HPC_LAYER/write_wait.for"
-#include     "FastS/HPC_LAYER/flush.for"
-          endif
-          itest = kth*jth*synchro_receive_sock(1)
-          !Socket
-          if(     isock.eq.ijkv_sock(1) .and.ith.eq.ijkv_th(1)
-     &       .and.thread_pos(2).eq.1
-     &       .and.thread_pos(3).eq.1
-     &       .and.itest.eq.1 .and.thread_pos(1).eq.topo_thread(1) ) then
+                call verrou(lok(l,ldir, lmod, ithread_rac), 2, compteur)
 
-             socket_rac =  socket +  1
-             ithread_rac= socket_rac
-c             ithread_rac =  ithread +  thread_parsock !shift socket
-c     &                              - (topo_thread(1)-1) !ipos =1
+                str='  wait Imax :ithkth='
+#include        "FastS/HPC_LAYER/write_wait.for"
+#include        "FastS/HPC_LAYER/flush.for"
+             endif
+             itest = kth*jth*synchro_receive_sock(1)
+            !Socket
+             if(     isock.eq.ijkv_sock(1)
+     &          .and.thread_pos(2).eq.1
+     &          .and.thread_pos(3).eq.1
+     &          .and.itest.eq.1.and.thread_pos(1).eq.topo_thread(1))then
 
-             l    = ksock + (jsock-1)*ijkv_sock(3) 
-             ldir = 1
-             str='avwait Imax :isokso='
-#include     "FastS/HPC_LAYER/write_wait.for"
-             call verrou( lok_sock(l,ldir,  socket_rac), 2, compteur)
-             !call verrou( lok_sock(l,ldir,  ithread_rac), 2, compteur)
-             str='  wait Imax :isokso='
-#include     "FastS/HPC_LAYER/write_wait.for"
-#include     "FastS/HPC_LAYER/flush.for"
-          endif 
+                socket_rac =  socket +  1
+                ithread_rac= socket_rac
+c               ithread_rac=  ithread +  thread_parsock !shift socket
+c     &                               - (topo_thread(1)-1) !ipos =1
+
+                l    = ksock + (jsock-1)*ijkv_sock(3) 
+                ldir = 1
+                str='avwait Imax :isokso='
+#include        "FastS/HPC_LAYER/write_wait.for"
+                call verrou( lok_sock(l,ldir,  socket_rac), 2, compteur)
+               !call verrou( lok_sock(l,ldir,  ithread_rac), 2, compteur)
+                str='  wait Imax :isokso='
+#include        "FastS/HPC_LAYER/write_wait.for"
+#include        "FastS/HPC_LAYER/flush.for"
+             endif 
+          Endif 
 
           !
           !
@@ -604,7 +619,8 @@ c     &                              + (topo_thread(2)-1)                !jpos =
           !synchro Jmax
           !
           !
-           If( jth.eq.ijkv_th(2)) Then
+           !If( jth.eq.ijkv_th(2)) Then
+           If( jth.eq.verrou_cachebloc(2) ) Then
 
              !!Thread
              if(      thread_pos(2).ne.topo_thread(2)
@@ -690,7 +706,8 @@ c
           !synchro Kmax
           !
           !
-           If( kth.eq.ijkv_th(3)) Then
+           !If( kth.eq.ijkv_th(3)) Then
+           If( kth.eq.verrou_cachebloc(3) ) Then
              !!thread
              if(     thread_pos(3).ne.topo_thread(3)
      &          .and.synchro_receive_th(3).eq.1     )  then
