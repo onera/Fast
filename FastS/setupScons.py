@@ -30,7 +30,7 @@ if prod is None: prod = 'xx'
 # Setting libraryDirs, include dirs and libraries =============================
 libraryDirs = ["build/"+prod, kcoreLibDir, '.']
 includeDirs = [numpyIncDir, kcoreIncDir]
-libraries = ["fastS1", "fastS2", "fastS3", "fastS1", "fastS2", "fastS3", "kcore"]
+libraries = ["fastS1", "fastS2", "fastS3", "fastS4", "fastS1", "fastS2", "fastS3", "fastS4", "kcore"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
