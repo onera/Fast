@@ -29,7 +29,7 @@ fi
 # Compilation et installation
 which scons &>/dev/null
 if [ $? -eq 0 ]; then
-     if [ "$OMP_NUM_THREADS" != "" ]; then
+    if [ "$OMP_NUM_THREADS" != "" ]; then
         export SCONSOPT="-j $OMP_NUM_THREADS"
     else
         export SCONSOPT=""

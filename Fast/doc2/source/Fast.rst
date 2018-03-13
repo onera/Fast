@@ -23,10 +23,10 @@ List of functions
 
 .. autosummary::
 
-   Fast.setNum2Base
-   Fast.setNum2Zones
-   Fast.save
-   Fast.load
+   Fast.PyTree.setNum2Base
+   Fast.PyTree.setNum2Zones
+   Fast.PyTree.save
+   Fast.PyTree.load
 .. Fast.metric ..
 
 
@@ -37,7 +37,7 @@ Contents
 Actions
 --------------------------
 
-.. py:function:: Fast.setNum2Base(a, numb)
+.. py:function:: Fast.PyTree.setNum2Base(a, numb)
 
     Set the numb dictionary to bases. Exists also
     as in place version (_setNum2Base) that modifies a
@@ -75,7 +75,7 @@ Actions
 
 ------------------------------------------------------------------
 
-.. py:function:: Fast._setNum2Zones(a, numz)
+.. py:function:: Fast.PyTree.setNum2Zones(a, numz)
 
     Set the numz dictionary to zones. Exists also
     as in place version (_setNum2Zones) that modifies a
@@ -197,7 +197,7 @@ Actions
     .. literalinclude:: ../build/Examples/Fast/setNum2ZonesPT.py
 
 ..  ----------------------------------------------------
-.. ..py:function:: Fast.metric(a)
+.. ..py:function:: Fast.PyTree.metric(a)
 .. Compute the metric needed by the solvers.
 .. :param a: input data
 .. :type a: Zone, Base, pyTree
@@ -207,7 +207,7 @@ Actions
 ------------------------------------------------------------------
 
 
-.. py:function:: Fast.save(t, fileName='restart.cgns', split='single', temporal_scheme='implicit', NP=0)
+.. py:function:: Fast.PyTree.save(t, fileName='restart.cgns', split='single', temporal_scheme='implicit', NP=0)
     
     Save computation tree t in file. If you run in
     mpi, NP must be the number of processor. If you run in seq mode, 
@@ -232,7 +232,7 @@ Actions
 
 ----------------------------------------------------
 
-.. py:function:: Fast.load(fileName='restart.cgns', fileNameC= 'tc.cgns', fileNameS='tstat.cgns', split='single', restart=False, NP=0)
+.. py:function:: Fast.PyTree.load(fileName='restart.cgns', fileNameC= 'tc.cgns', fileNameS='tstat.cgns', split='single', restart=False, NP=0)
     
     Load computation tree t from file. 
     Optionaly load tc (connectivity file) or tstat (statistics file).
@@ -254,58 +254,7 @@ Actions
     * `Load pyTree (pyTree) <Examples/Fast/loadPT.py>`_:
 
     .. literalinclude:: ../build/Examples/Fast/loadPT.py
-    
-------------------------------------------------------------------
 
-.. py:function:: Fast.save(t, fileName='restart.cgns', split='single', temporal_scheme='implicit', NP=0)
-    
-    Save computation tree t in file. If you run in
-    mpi, NP must be the number of processor. If you run in seq mode, 
-    NP must be 0 or a negative number. If split='single', a single file
-    is written. If split='multiple', different files are created
-    depending on the proc number of each zone (restart/restart_0.cgns, ...):
-    
-    :param a: input data
-    :type a: pyTree
-    :param fileName: name of file for save
-    :type fileName: string
-    :param split: 'single' or 'multiple'
-    :type split: string
-    :param NP: number of processors
-    :type NP: int
-
-    *Example of use:*
-
-    * `Save pyTree (pyTree) <Examples/Fast/savePT.py>`_:
-
-    .. literalinclude:: ../build/Examples/Fast/savePT.py
-
-----------------------------------------------------
-
-.. py:function:: Fast.load(fileName='restart.cgns', fileNameC= 'tc.cgns', fileNameS='tstat.cgns', split='single', restart=False, NP=0)
-    
-    Load computation tree t from file. 
-    Optionaly load tc (connectivity file) or tstat (statistics file).
-    Returns also the graph as a dictionary {'procDict', 'graphID', 'graphIBC'}.
-    The meaning of NP is the same as for save.
-
-    :param a: input data
-    :type a: pyTree
-    :param fileName: name of file for save
-    :type fileName: string
-    :param split: 'single' or 'multiple'
-    :type split: string
-    :param NP: number of processors
-    :type NP: int
-    :return: t, tc, ts, graph
-    :rtype: tuple
-
-    *Example of use:*
-
-    * `Load pyTree (pyTree) <Examples/Fast/loadPT.py>`_:
-
-    .. literalinclude:: ../build/Examples/Fast/loadPT.py
-    
 
 .. toctree::
    :maxdepth: 2   

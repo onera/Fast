@@ -26,28 +26,28 @@ List of functions
 
 .. autosummary::
 
-   FastS.warmup
-   FastS.createConvergenceHistory
-   FastS.createStatNodes
-   FastS.createStressNodes
+   FastS.PyTree.warmup
+   FastS.PyTree.createConvergenceHistory
+   FastS.PyTree.createStatNodes
+   FastS.PyTree.createStressNodes
 
 
 **-- Running computation**
 
 .. autosummary::
 
-    FastS._compute
-    FastS.display_temporal_criteria
+    FastS.PyTree._compute
+    FastS.PyTree.display_temporal_criteria
 
 **-- Post**
 
 .. autosummary::
 
-    FastS._computeStats
-    FastS._computeStress
-    FastS._computeVariables
-    FastS._computeGrad
-    FastS.extractConvergenceHistory
+    FastS.PyTree._computeStats
+    FastS.PyTree._computeStress
+    FastS.PyTree._computeVariables
+    FastS.PyTree._computeGrad
+    FastS.PyTree.extractConvergenceHistory
 
 Contents
 #########
@@ -55,7 +55,7 @@ Contents
 Preparation
 --------------------------
 
-.. py:function:: FastS.warmup(t, tc, graph=None, infos_ale=None)
+.. py:function:: FastS.PyTree.warmup(t, tc, graph=None, infos_ale=None)
 
 
    **CAUTION!!!**
@@ -97,7 +97,7 @@ Preparation
 
 -------------------------------------------
 
-.. py:function:: FastS.createConvergenceHistory(t, nrec)
+.. py:function:: FastS.PyTree.createConvergenceHistory(t, nrec)
 
      Create a node in each zone with convergence information (residuals)
      MUST be called before display_temporal_criteria() and only for steady case.
@@ -117,7 +117,7 @@ Preparation
 
 --------------------------------------------------------------
     
-.. py:function:: FastS.createStatNodes(t, dir='0')
+.. py:function:: FastS.PyTree.createStatNodes(t, dir='0')
 
     Create a tree, tmy, used by FastS._computeStats, to compute and store space and time averaged value of the flowfield. 
 
@@ -168,7 +168,7 @@ Preparation
 
 ------------------------------------------------
 
-.. py:function:: FastS.createStressNodes(t, BC= BCTypes)
+.. py:function:: FastS.PyTree.createStressNodes(t, BC= BCTypes)
 
     Create a tree, used by FastS._computeStress, to compute and store numerical fluxes, Gradient and Cp  on a list of boundary conditions.
     Return a new tree in teff.
@@ -192,7 +192,7 @@ Preparation
 Running computation
 ---------------------
 
-.. py:function:: FastS._compute(t, metrics, nit, tc=None, graph=None)
+.. py:function:: FastS.PyTree._compute(t, metrics, nit, tc=None, graph=None)
 
     Perform one iteration of solver to advance (in place) the solution from t^n to t^(n+1). 
 
@@ -217,7 +217,7 @@ Running computation
 
 -------------------------------------------
 
-.. py:function:: FastS.display_temporal_criteria(t, metrics, nit, format=None)
+.. py:function:: FastS.PyTree.display_temporal_criteria(t, metrics, nit, format=None)
 
     Display CFL and implicit convergence informations.
 
@@ -248,7 +248,7 @@ Post
 -------
 
 
-.. py:function:: FastS._computeStats(t, tmy, metrics)
+.. py:function:: FastS.PyTree._computeStats(t, tmy, metrics)
 
     Compute the space/time average of the flowfield in a tree tmy (in place).
 
@@ -267,7 +267,7 @@ Post
 
 ----------------------------------------------------
 
-.. py:function:: FastS._computeStress(t, teff, metrics)
+.. py:function:: FastS.PyTree._computeStress(t, teff, metrics)
 
     Compute in teff (in place) data related to a list of Boundary conditions defined by FastS._createStressNodes.
 
@@ -329,7 +329,7 @@ Post
 
 ------------------------------------------------------
 
-.. py:function:: FastS._computeVariables(t, metrics, variables)
+.. py:function:: FastS.PyTree._computeVariables(t, metrics, variables)
 
     Compute specified variables.
 
@@ -355,7 +355,7 @@ Post
 
 ------------------------------------------------------
 
-.. py:function:: FastS._computeGrad(t, metrics, variables, order=2)
+.. py:function:: FastS.PyTree._computeGrad(t, metrics, variables, order=2)
 
     Compute specified variables gradients at cell centers with FV Green Gauss approach.
 
@@ -382,7 +382,7 @@ Post
 
 --------------------------------------------------------
 
-.. py:function:: FastS.extractConvergenceHistory(t, fileout)
+.. py:function:: FastS.PyTree.extractConvergenceHistory(t, fileout)
 
     Extract convergence information (residuals) in each zone (residuals)
     t is a pyTree, fileout is the name of the output file in the tecplot ascii format.

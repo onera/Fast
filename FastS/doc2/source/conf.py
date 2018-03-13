@@ -145,6 +145,10 @@ html_static_path = ['_static']
 # typographically correct entities.
 #html_use_smartypants = True
 
+# encoding
+#html_output_encoding = 'ISO-8859-1'
+html_output_encoding = 'ASCII'
+
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {'**': ['localtoc.html', 'relations.html', 'searchbox.html', 'mine.html']}
 
