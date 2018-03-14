@@ -3,7 +3,7 @@ c     $Date: 2010-11-04 13:25:50 +0100 (Thu, 04 Nov 2010) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine topo_scater(ndo, ithread, socket, lmin,
+      subroutine topo_scater(ndo, ithread, socket, lmin,kfludom,
      &                       thread_parsock, thread_parsock_actif,
      &                       ithread_sock, socket_topology,
      &                       size_target, ind_dm_zone, 
@@ -16,7 +16,7 @@ c***********************************************************************
      & ithread_sock, socket_topology(3),thread_parsock_actif,
      & size_target(3), ind_dm_zone(6), topo_s(3),
      & ijkvloc(3), thread_pos(3), socket_pos(3), thread_topology(3),
-     & size_thread(3), ijkv_thread(3)
+     & size_thread(3), ijkv_thread(3),kfludom
 
 C Var loc 
       logical new_try,lskip,lpair
@@ -31,6 +31,7 @@ C Var loc
       !!Bypass de la routine pour forcer le mode mono-bloc si Nombre de
       !Socket =1
       i = socket_topology(1)*socket_topology(2)*socket_topology(3)
+      if(kfludom.eq.7) i=2
       If(i.eq.1) then
 
            call indice_boucle_lu(ndo, ithread, thread_parsock, lmin,

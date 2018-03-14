@@ -58,7 +58,9 @@
 #define BCINJ1                   17
 
 
-#if (CACHELINE == 32)
+#if (CACHELINE == 64)
+#define VECLENGTH     8
+#elif (CACHELINE == 32)
 #define VECLENGTH     4
 #else 
 #define VECLENGTH     4
@@ -99,8 +101,9 @@
 #define IO_THREAD    45
 #define DTLOC        46   
 #define SA_INT       47
-#define RK	     52
-#define LEVEL	     53
+                                                  
+#define RK	         52
+#define LEVEL	       53
 #define EXPLOC       54
 #define ITEXPLOC     55
 #define LEVELG	     56
@@ -113,9 +116,12 @@
 #define SFD_INIT_IT  63
 #define SLOPE        64
 #define NIT_INFLOW   65
-#define EXTRACT_RES  66
-#define SA_DEBUG     67
-#define BC_NBBC	     68
+
+#define SHIFTVAR     66
+#define EXTRACT_RES  67
+#define SA_DEBUG     68
+#define BC_NBBC	     69
+
 #define BC_TYPE	      0
 #define BC_IDIR       1
 #define BC_FEN        2

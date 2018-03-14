@@ -104,7 +104,7 @@ PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
      E_Int  ithread_sock   = ithread-(socket-1)*thread_parsock;
 
  
-     E_Int shiftvar = ivar* ipt_param_int[NIJK]*ipt_param_int[NIJK+1]*ipt_param_int[NIJK+2];
+     E_Int shiftvar = ivar* (ipt_param_int[NIJK]*ipt_param_int[NIJK+1]*ipt_param_int[NIJK+2] + ipt_param_int[SHIFTVAR]) ;
 
   if(thread_numa == -1)
   { 

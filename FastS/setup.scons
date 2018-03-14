@@ -20,25 +20,40 @@ installPath = Dist.getInstallPath(prefix)
 # Python ======================================================================
 (pythonVersion, pythonIncDir, pythonLibDir, pythonLibs) = Dist.checkPython()
 
-# Test if numpy exists =======================================================
+# Test if numpy exists ======================================================
 (numpyVersion, numpyIncDir, numpyLibDir) = Dist.checkNumpy()
 
-# Test if kcore exists =======================================================
+# Test if kcore exists ======================================================
 (kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
+
+# Test if connector exists ==================================================
+(connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
 
 # Test if fast exists =======================================================
 (fastVersion, fastIncDir, fastLibDir) = Dist.checkFast()
 
+# Test if libmpi exists ======================================================
+(mpi, mpiIncDir, mpiLibDir) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
+
 from KCore.config import *
 
 # Setting libraryDirs and libraries ===========================================
-libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, fastLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, pythonIncDir]
-libraries = ["kcore", "fast"]
+libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, fastLibDir, connectorLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir, connectorIncDir, pythonIncDir]
+libraries = ["kcore", "fast","connector"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
+
+if mpi:
+    libraryDirs.append(mpiLibDir)
+    includeDirs.append(mpiIncDir)
+    ADDITIONALCPPFLAGS = ['-D_MPI']
+else:	       
+    ADDITIONALCPPFLAGS = []
+
+if mpi: libraries.append('mpi')
 
 # Builder fortran
 #==============================================================================
@@ -84,7 +99,7 @@ env = Dist.createFortranScanner(env)
 # Pre processing du C
 cppArgs = Dist.getCppArgs()+['-g']+["-DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN"]
 if Dist.getCacheLine() == 1: cppArgs += ['-DCACHELINE=16']
-env.Replace(CPPFLAGS=cppArgs)
+env.Replace(CPPFLAGS=cppArgs+ADDITIONALCPPFLAGS)
 
 ### voir installBase de KCore pour option de compil par defaut
 if f90compiler == 'ifort':
@@ -95,7 +110,7 @@ else:
 
 if f77compiler == 'ifort':
    version = Dist.getForVersion() # A utiliser version=(13,4)
-   f77Args = ' -O2  -r8 -i4 -g -fno-alias -fno-fnalias -ip'
+   f77Args = '-r8 -i4 -g -fno-alias -fno-fnalias -ip'
    cacheLine = Dist.getCacheLine()
 
    if   (cacheLine != 1 ): f77Args += ' -align array%dbyte '%cacheLine
@@ -105,16 +120,15 @@ if f77compiler == 'ifort':
    if (cacheLine == 64): f77Args += ' -xMIC-AVX512 '
    else:  f77Args += ' -xHost '
 
-   if version[0] >= 15:
+   if version[0] >= 17:
+      env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -O3 -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
+   elif version[0] >= 15:
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -qopt-report5 -qopt-report-phase=vec,loop -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'-override-limit -qopt-report5 -qopt-report-phase=vec,loop -unroll0 -c -o $TARGET $SOURCE')
-      #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O2 -r8 -i4 -traceback -check all -fpe-all=0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
       if Dist.DEBUG == True:
          env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 -r8 -i4 -traceback -fpe-all=0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
    else:
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -unroll0 -c -o $TARGET $SOURCE')
-      #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O2 -r8 -i4 -g -qopt-report5 -qopt-report-phase=vec,loop -no-vec -no-simd -c -o $TARGET $SOURCE')
-      #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 -r8 -i4 -traceback -check all -fpe-all=0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
 
 elif f77compiler == 'gfortran' or f90compiler == 'x86_64-w64-mingw32-gfortran':
    env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -fdefault-real-8 -fdefault-double-8 -c -o $TARGET $SOURCE')  

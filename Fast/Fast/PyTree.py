@@ -227,9 +227,9 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             else:
                 FILE = fileNameC+'.cgns'
                 tc = Cmpi.convertFile2SkeletonTree(FILE)
-                tc = Cmpi.readZones(tc, FILE, rank=rank)
-                graphID = Cmpi.computeGraph(tc, type='ID')
-                graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
+                tc = Cmpi.readZones(tc, FILE, rank=rank)        
+                graphID = Cmpi.computeGraph(tc, type='ID',reduction=False)
+                graphIBCD = Cmpi.computeGraph(tc, type='IBCD',reduction=False)
                 procDict = D2.getProcDict(tc)
                 procList = D2.getProcList(tc)
                 graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }

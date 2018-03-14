@@ -8,6 +8,7 @@ CCCC!$OMP simd aligned(drodm,rop,xmut: CACHELINE)
 #else
 !DIR$ IVDEP
 #endif
+!DIR$ DISTRIBUTE POINT
       do l = lij+1, lij+1 + ind_loop(2) - ind_loop(1)
 
         lt = l  - ltij

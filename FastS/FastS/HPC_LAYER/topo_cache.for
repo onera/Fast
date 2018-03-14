@@ -1,8 +1,8 @@
       !cible taille souszone omp si socket!=1
-      size_target(1) = 2048
-      size_target(2) =  3 
-      size_target(3) = 10
-
+      size_target(1) =  2048
+      size_target(2) =  3
+      size_target(3) =  7
+      
       !cible taille cache bloc appliquée a la souszone omp
       cache(1)       = param_int(CACHEBLCKI)
       cache(2)       = param_int(CACHEBLCKJ)
@@ -10,6 +10,7 @@
 
 !DIR$ ATTRIBUTES FORCEINLINE :: topo_scater
       call topo_scater(ndo, ithread, socket, lmin,
+     &                  param_int(KFLUDOM),
      &                  thread_parsock, thread_parsock_actif,
      &                  ithread_sock, socket_topology,
      &                  size_target, ind_dm_zone, 

@@ -6,6 +6,7 @@
      &                            ind_dm_omp )
 
            !mise en place du cache bloking + synchro
+           if(param_int(KFLUDOM).ne.7)then
            do i=1,3
              if(thread_topology(i)*socket_topology(i).eq.1) then
              !if(thread_topology(i).eq.1) then  
@@ -13,8 +14,12 @@
              else
                size_cache(i)=(ind_dm_omp(2*i)-ind_dm_omp(2*i-1)+1)/2
                size_cache(i)=min( cache(i),size_cache(i) )
+               size_cache(i)=max(1,size_cache(i))
              endif
            enddo
+           else
+           size_cache=  cache   
+           endif
 
            !on dertemine synchro_socket
 
@@ -31,7 +36,7 @@
      &                       synchro_receive_th, synchro_send_th,
      &                       ind_dm_socket     , ind_dm_omp, ijkv_sdm )
 
-       if(ithread.eq.param_int( IO_THREAD).and.nitrun.eq.0)then
+        if(ithread.eq.param_int( IO_THREAD).and.nitrun.eq.0)then
        !if(ithread.eq.param_int( IO_THREAD).and.mod(nitrun,5).eq.0)then
            !write(*,'(a,4i4)')'ijkboc =',ibloc,jbloc,kbloc,ithread_sock
            !write(*,'(a,4i4)')'ijkboc =',ibloc,jbloc,kbloc
@@ -44,5 +49,7 @@
            write(*,'(a,3i4)')'IJKV thread=',ijkv_sdm
            write(*,'(a,9i4)')'topo socket',socket_topology,ind_dm_socket
            write(*,'(a,9i4)')'topo thread',thread_topology,ind_dm_omp
+           write(*,'(a,9i4)')'synchro_receive_th',synchro_receive_th
+           write(*,'(a,9i4)')'synchro_send_th',synchro_send_th
           endif
        endif

@@ -20,8 +20,19 @@
 # ifndef _FASTS_FASTS_H_
 # define _FASTS_FASTS_H_
 
+# include "connector.h"
 # include "kcore.h"
 # include "Fortran.h"
+
+#ifdef _MPI
+#include "CMP/include/pending_message_container.hpp"
+#include "CMP/include/recv_buffer.hpp"
+#include "CMP/include/send_buffer.hpp"
+#include "setInterpTransfersD.h"
+typedef typename CMP::PendingMsgContainer<CMP::RecvBuffer> RecvQueue;
+typedef typename CMP::PendingMsgContainer<CMP::SendBuffer> SendQueue;
+#endif
+
 
 //# include "Zone.h"
 using namespace K_FLD;
@@ -31,6 +42,7 @@ namespace K_FASTS
   PyObject* itt(                     PyObject* self, PyObject* args);
   PyObject* compute(                 PyObject* self, PyObject* args);
   PyObject* _computePT(              PyObject* self, PyObject* args);
+  PyObject* computePT_trans(         PyObject* self, PyObject* args);
   PyObject* _computePT_mut(          PyObject* self, PyObject* args);
   PyObject* _applyBC(                PyObject* self, PyObject* args);
   PyObject* PygetRange(              PyObject* self, PyObject* args);
@@ -53,6 +65,12 @@ namespace K_FASTS
   // - Metric -
   //===========
   PyObject* metric(PyObject* self, PyObject* args);
+
+  //===========
+  // - Vtune -
+  //===========
+
+  PyObject* itt(PyObject* self, PyObject* args);
 
   //===========
   // - creation grille cartesienne
@@ -101,10 +119,69 @@ namespace K_FASTS
     E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*   iptwig, E_Float* iptstat_wig,
     E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res );
 
+  //Including transfers 
+  E_Int gsdr3_trans(
+    E_Int**& ipt_param_int , E_Float**& ipt_param_real, 
+    E_Int& nidom        , E_Int& nitrun    , E_Int& nstep     , E_Int& nssiter ,  E_Int& it_target     ,  E_Int& first_it    ,E_Int& kimpli       , E_Int& lssiter_verif,  E_Int& lexit_lu  ,  E_Int& omp_mode,
+    E_Int& nisdom_lu_max, E_Int& mx_nidom  , E_Int& ndimt_flt , E_Int& threadmax_sdm, E_Int& mx_synchro   , 
+    E_Int& nb_pulse     ,
+    E_Float& temps,
+    E_Int* ipt_ijkv_sdm       , 
+    E_Int* ipt_ind_dm_omp     , E_Int* ipt_topology      , E_Int* ipt_ind_CL     , E_Int* ipt_ind_CL119     , E_Int* ipt_lok       ,
+    E_Int* iptludic, E_Int* iptlumax, 
+    E_Int** ipt_ind_dm, E_Int** ipt_it_lu_ssdom,
+    E_Float* ipt_cfl,
+    E_Float**  iptx, E_Float**  ipty, E_Float** iptz,
+    E_Float**  iptCellN, 
+    E_Float**& iptro, E_Float**& iptro_m1, E_Float**&  iptrotmp,  E_Float**& iptro_sfd,
+    E_Float**  iptmut,
+    E_Float**  ipti, E_Float**  iptj, E_Float** iptk, E_Float** iptvol, 
+    E_Float**  ipti0, E_Float**  iptj0, E_Float** iptk0,     
+    E_Float**  ipti_df, E_Float**  iptj_df, E_Float** iptk_df, 
+    E_Float**  iptvol_df, 
+    E_Float**  iptventi, E_Float**  iptventj, E_Float** iptventk,  
+    E_Float**& iptrdm,
+    E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*   iptwig, E_Float* iptstat_wig,
+    E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res,
+    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc);
+
+  //==============================
+  // - Transfer with CMP library -
+  //==============================
+  
+  /* Transferts FastS Intra process */
+  void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
+                              E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
+                              E_Int& NoTransfert, E_Float*& ipt_timecount);
+
+  #ifdef _MPI
+  /* Call to transfers from FastS */
+  void setInterpTransfersFastS(
+  E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
+  E_Int*& param_bci, E_Float*& param_bcf, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount);
+
+  /* Transferts FastS Inter process */
+  void setInterpTransfersInter(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
+                                E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int& TypeTransfert, E_Int& nitrun, 
+                                E_Int& nidom, E_Int& NoTransfert,std::pair<RecvQueue*, SendQueue*>*& pair_of_queue, E_Float*& ipt_timecount);
+
+  /* Get Transfert Inter process */
+  void getTransfersInter(E_Float**& ipt_roD, E_Int*& ipt_ndimdxD, E_Int*& ipt_param_int ,
+                          std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
+
+  /* Init Transfert Inter process */
+  void init_TransferInter(std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
+
+  /* Delete Transfert Inter process */
+  void del_TransferInter(std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
+  #endif
+
+
   //=======
   // - BC -
   //=======
   /* For applyBC */
+
   E_Int getDir(E_Int* ijkv,  E_Int* ind_fen);
   E_Int getRange( E_Int* ind_cgns,  E_Int* ind_fen, E_Int* param_int);
 
@@ -122,6 +199,11 @@ namespace K_FASTS
                E_Int* ipt_ind_CL  , E_Int* ipt_ind_CL119, E_Int* ishift_lu,
                E_Float*   iptrop  , E_Float*   ipti     , E_Float*  iptj    , E_Float* iptk   , E_Float* iptx, E_Float* ipty, E_Float* iptz,
                E_Float* iptventi  , E_Float* iptventj   , E_Float* iptventk);
+
+  void __applyBC(E_Float**& iptro,E_Int& nidom, E_Int**& ipt_param_int, E_Float**& ipt_param_real,
+                 E_Float** iptx,  E_Float** ipty, E_Float** iptz,
+                 E_Float** ipti,  E_Float** iptj, E_Float** iptk, E_Float** iptvol,
+                 E_Float** iptventi        , E_Float**  iptventj         , E_Float** iptventk);
 
 }
 #endif

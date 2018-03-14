@@ -4,7 +4,7 @@ c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine indice_boucle_ssdom(ndo, extended_range,
-     &                              ith,jth,kth, ic,jc,kc,
+     &                              ith,jth,kth, ic,jc,kc,kfludom,
      &                               topo_th, ithread, thread_pos,
      &                               size_cache, 
      &                               synchro_receive_sock, 
@@ -39,7 +39,8 @@ c***********************************************************************
      & synchro_send_sock(3), synchro_send_th(3),
      & nijk(5), ind_dm_zone(6), ind_dm_sock(6),ind_dm_thread(6),
      & ijkv_sdm(3),ind_sdm(6),ind_ssa(6),
-     & ind_coe(6),ind_grad(6), ind_rhs(6), ind_mjr(6),ind_flt(6)
+     & ind_coe(6),ind_grad(6), ind_rhs(6), ind_mjr(6),
+     & kfludom 
 
 c Var loc
       INTEGER_E inck, shift_coe,shift_grad, shift_rhs,c1,c2,i,j,k,
@@ -215,5 +216,14 @@ c      endif
            ind_ssa(ifin)  = ind_sdm(ifin) + shift_ssa2
 
         enddo !! boucle dir I,J,K
+
+         if(kfludom.eq.7)then
+         if(jc.eq.1)          ind_mjr(3)=ind_sdm(3)   
+         if(jc.eq.ijkv_sdm(2))ind_mjr(4)=ind_sdm(4)
+         if(kc.eq.1)          ind_mjr(5)=ind_sdm(5)   
+         if(kc.eq.ijkv_sdm(3))ind_mjr(6)=ind_sdm(6)
+         endif
+
+
 
       end

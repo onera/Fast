@@ -209,9 +209,12 @@ c       endif
       ELSE !domaine 3D
 
        xcart    = .true.
-       !xcart    = .false.
+       !!xcart    = .false.
        ycart    = .true.
        zcart    = .true.
+C        xcart = .false.  
+C        ycart = .false.  
+       !zcart = .false.  
        !zcart = .false.
        xcte     = .true.
        ycte     = .true.

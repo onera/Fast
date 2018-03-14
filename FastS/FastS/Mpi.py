@@ -2,6 +2,10 @@
 import PyTree
 import fasts
 from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, metric, createPrimVars, _createPrimVars, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _buildOwnData,  metric, _BCcompact, _computeVelocityAle, checkBalance, itt
+import timeit
+
+import numpy
+import sys
 
 try:
     import Converter.PyTree as C
@@ -12,6 +16,7 @@ try:
     import Connector.PyTree as X
     import Connector
     import Fast.Internal as FastI
+    import Converter.Mpi as Cmpi
 except:
     raise ImportError("FastS: requires Converter and Connector modules.")
 
@@ -54,6 +59,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
         if (hook1[13] == 0 and nstep == nitmax and itypcp ==1): skip = 1
 
         # calcul Navier Stokes + appli CL
+        
+
         if nidom_loc > 0 and skip ==0:
 
             # Navier-Stokes
@@ -64,7 +71,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
             if  nstep == 2 and itypcp == 2 : vars = PyTree.varsN  # Choix du tableau pour application transfer et BC
             timelevel_target = int(dtloc[4])
             _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, hook1, graphID, graphIBCD, procDict)
-
+            if(Cmpi.rank ==0): print " nstep is :",nstep," skip:",skip," nidom_loc:",nidom_loc, " ,hook13 :",hook1[13]
     # data update for unsteady joins
     dtloc[3] +=1   #time_level_motion
     dtloc[4] +=1   #time_level_target
@@ -77,12 +84,79 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
     return None
 
 #==============================================================================
-def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1, graphID, graphIBCD, procDict): 
+def _compute_c(t, metrics, nitrun, tc=None, graph=None):
+    rank=Cmpi.rank       
+
+    base = Internal.getNodeFromType1(t,"CGNSBase_t")
+    own   = Internal.getNodeFromName1(base, '.Solver#ownData')  
+    dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')
+    zones = Internal.getZones(t)
+    node = Internal.getNodeFromName(t, '.Solver#define')
+    node = Internal.getNodeFromName1(node, 'omp_mode')
+    omp_mode = 0
+    if node is not None: omp_mode = Internal.getValue(node)
+    dtloc   = Internal.getValue(dtloc) # tab numpy
+    nitmax  = int(dtloc[0])
+    orderRk = int(dtloc[len(dtloc)-1])
+
+    #### a blinder...
+    itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
+    #### a blinder...
+
+    # #  #transfert
+    parambci = numpy.empty((2), numpy.int32)         
+    parambcf = numpy.empty((5), numpy.float64) 
+    parambc  = []
     
+    if tc is not None :
+        tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
+        if tc_compact is not None:
+
+            param_real_tc= tc_compact[1]
+            if param_real_tc == None:
+                print "Parameter_real is none"+str(Cmpi.rank)
+
+            param_int_tc = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]      
+
+            parambci[1]=PyTree.HOOKIBC[0]; parambcf[0]=PyTree.HOOKIBC[1]; parambcf[1]=PyTree.HOOKIBC[2]; 
+            parambcf[2]=PyTree.HOOKIBC[3]; parambcf[3]=PyTree.HOOKIBC[4]; parambcf[4]=PyTree.HOOKIBC[5];
+  
+
+    hook1 = PyTree.HOOK    
+
+    if hook1[10] == 5: varType = 2
+    else             : varType = 21
+    parambci[0]=varType
+    # if(nstep==1):
+    parambc.append(parambci)
+    parambc.append(parambcf)
+
+    fasts.computePT_trans(zones, metrics, nitrun, nitmax, omp_mode, hook1,
+                          param_int_tc,  param_real_tc,parambc)  
+    
+    # data update for unsteady joins
+    dtloc[3] +=1   #time_level_motion
+    dtloc[4] +=1   #time_level_target
+    # switch pointers
+    FastI.switchPointers__(zones, orderRk)
+    # flag pour derivee temporelle 1er pas de temps implicit
+    PyTree.HOOK[9]  = 1
+    PyTree.FIRST_IT = 1
+    return None
+
+#==============================================================================
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1, graphID, graphIBCD, procDict): 
+
+   rank=Cmpi.rank 
    # hook1[10] = nombre equations max
    # hook1[11] = nidom_lu
    # hook1[12] = lskip_lu
    # hook1[13] = lssiter_verif
+   
+   #timecount = numpy.zeros(4, dtype=numpy.float64)
+   timecount = []
+   if (Cmpi.rank == 0): print "lskip_lu :",hook1[12]
+
    if hook1[12] ==0:
 
        #transfert
@@ -91,6 +165,9 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1, gr
            if tc_compact is not None:
 
               param_real= tc_compact[1]
+              if param_real == None:
+                  print "Parameter_real is none",Cmpi.rank
+                
               param_int = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
               zonesD    = Internal.getZones(tc)
 
@@ -102,18 +179,27 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1, gr
               if nstep <= 3: 
                  for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
-              #recuperation Nb pas instationnnaire dans tc
+              # #recuperation Nb pas instationnnaire dans tc
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-              Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,
+              Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                         bcType=bcType, varType=varType, compact=1,
                                         graph=graphIBCD, procDict=procDict, 
                                         Gamma=Gamma, Cv=Cv, MuS=Mus, Cs=Cs, Ts=Ts)
               type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-              Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,
+              Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                         varType=varType, compact=1, graph=graphID, procDict=procDict)
-
+       # if (rank == 0):
+       #     print "Time in MPI send_buffer, irecv ","%.6f"%timecount[0]
+       #     print "Time InterpTransfert (Inter)  ","%.6f"%timecount[1]
+       #     print "Time InterpTransfert (Intra)  ","%.6f"%timecount[2]
+       #     print "Time in getTransfersInter ","%.6f"%timecount[3]
+       # if (rank == 0 ): t0=timeit.default_timer()
        #apply BC
-       _applyBC(zones, metrics, var=vars[0])
+       c = 0    
+       for z in zones: fasts._applyBC(z, metrics[c], vars[0]); c += 1
+       # if (rank == 0 ):
+       #     t1=timeit.default_timer()
+       #     print "time/it (s) BC only (=t_RK X 1.0): ",(t1-t0)
 
    return None
 #==============================================================================
@@ -184,18 +270,13 @@ def warmup(t, tc, graph=None, infos_ale=None, tmy=None):
         teta = infos_ale[0];  tetap = infos_ale[1]
         _motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
-
     #
     # Compactage arbre transfert
     #
-    if tc is not None:
-       if graph is not None: 
-          g = graph['procDict']
-          l = graph['procList']
-       else: 
-          g = None; l = None
-
-       X.miseAPlatDonnorTree__(zones, tc, procDict=g, procList=l)
+    if tc is not None:      
+       X.miseAPlatDonnorTree__(zones, tc, graph=graph)
+       # if Cmpi.rank == 0:
+       #    print"graphinwarmup",graph['graphIBCD']
 
     #
     # Compactage arbre moyennes stat
@@ -308,7 +389,8 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
            import sys; sys.exit()
 
        zones=Internal.getZones(t)
-       X.miseAPlatDonnorTree__(zones, tc, procDict=g, procList=l)
+       # X.miseAPlatDonnorTree__(zones, tc, procDict=g, procList=l)
+       X.miseAPlatDonnorTree__(zones, tc, graph=graph)
 
        #Remise zero target
        if dtloc is not None: dtloc[4] = 0

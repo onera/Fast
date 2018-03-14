@@ -26,27 +26,54 @@
 //# include <omp.h>
 #if TIMER == 1
 # include <ctime>
+E_Float timein;
+E_Float timeout;
 #endif
 using namespace std;
 using namespace K_FLD;
+#ifdef _MPI
+#include <mpi.h>
+#endif
 
 //=============================================================================
 // Compute pour l'interface pyTree
 //=============================================================================
-PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
+PyObject* K_FASTS::computePT_trans(PyObject* self, PyObject* args)
 {
-  PyObject* zones; PyObject* metrics; PyObject* work;
-  E_Int nitrun; E_Int nstep; E_Int omp_mode;
+  PyObject* zones; PyObject* metrics; PyObject* work; 
+  PyObject *pyParam_int_tc; 
+  PyObject *pyParam_real_tc;
+  PyObject* parambc;
 
+  E_Int nitrun,nitmax,omp_mode; 
+  
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOlllO", &zones , &metrics, &nitrun, &nstep, &omp_mode, &work)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOlllOOOO" , &zones , &metrics, &nitrun, &nitmax, &omp_mode, &work, 
+                          &pyParam_int_tc, &pyParam_real_tc, &parambc)) return NULL; 
 #else 
-  if (!PyArg_ParseTuple(args, "OOiiiO", &zones , &metrics, &nitrun, &nstep, &omp_mode, &work)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOiiiOOOO" , &zones , &metrics, &nitrun, &nitmax, &omp_mode, &work, 
+                          &pyParam_int_tc, &pyParam_real_tc, &parambc)) return NULL; 
 #endif
+
+  E_Int rank=0;
+#ifdef _MPI
+  MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+#endif
+  
+PyObject* tmpbci = PyList_GetItem(parambc,0);
+PyObject* tmpbcf = PyList_GetItem(parambc,1);
+
+FldArrayI* parambci;FldArrayF* parambcf;
+K_NUMPY::getFromNumpyArray(tmpbci, parambci, true);
+K_NUMPY::getFromNumpyArray(tmpbcf, parambcf, true);
+
+E_Int*   ipt_parambci = parambci->begin();
+E_Float* ipt_parambcf = parambcf->begin();
 
 #if TIMER == 1
   clock_t c_start,c_end;
   c_start = clock();
+  timein = omp_get_wtime();
 #endif
 
   //* tableau pour stocker dimension sous-domaine omp *//
@@ -55,15 +82,25 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   PyObject* tmp = PyList_GetItem(work, 7); E_Int mx_sszone     = PyLong_AsLong(tmp);  
             tmp = PyList_GetItem(work, 8); E_Int mx_synchro    = PyLong_AsLong(tmp);  
             tmp = PyList_GetItem(work, 9); E_Int first_it      = PyLong_AsLong(tmp);  
-            tmp = PyList_GetItem(work,12); E_Int lexit_lu      = PyLong_AsLong(tmp);
-            tmp = PyList_GetItem(work,13); E_Int lssiter_verif = PyLong_AsLong(tmp);  
+
+
+
+  // 
+  
+  E_Int lexit_lu, lssiter_verif, nidom_tot, itypcp=0;
+  
+  lexit_lu      = 0; // par defaut on ne skippe pas l'appel des routine LU
+  lssiter_verif = 0; // par defaut, pas de calcul cfl , ni residu Newton
+  nidom_tot     = 0;             
+
 
   PyObject* dtlocArray  = PyList_GetItem(work,5); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
 
-  E_Int nidom    = PyList_Size(zones);
+  E_Int it_target = iptdtloc[4];
 
+  E_Int nidom    = PyList_Size(zones);
 
   FldArrayI n0_flt(nidom); E_Int* ipt_n0_flt = n0_flt.begin();
 
@@ -127,6 +164,28 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   E_Int neq_max       = 5;
   E_Int iorder_flt    =10;
   E_Float temps;
+
+
+  E_Int*   ipt_param_int_tc = NULL;
+  E_Float* ipt_param_real_tc= NULL;
+  
+  FldArrayI* param_inttc;
+  FldArrayF* param_realtc;
+
+  // Transfer Data
+  if (pyParam_int_tc != Py_None)
+  {
+  K_NUMPY::getFromNumpyArray(pyParam_int_tc , param_inttc , true);
+  ipt_param_int_tc = param_inttc -> begin();
+  }
+
+  if (pyParam_real_tc != Py_None)
+  {
+  K_NUMPY::getFromNumpyArray(pyParam_real_tc, param_realtc, true);
+  ipt_param_real_tc= param_realtc-> begin();  
+  }
+  
+  
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
     // check zone
@@ -144,8 +203,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
     PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
 
     if( ipt_param_int[nd][ NDIMDX ] > ndimdx_max ) ndimdx_max = ipt_param_int[nd][ NDIMDX ];
-
-
+    
     //
     //
     //Pointeur maillage
@@ -181,7 +239,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
     {
       t            = K_PYTREE::getNodeFromName1(sol_center, "delta");
       iptdelta[nd] = K_PYTREE::getValueAF(t, hook);
-    }
+    }    
     //Pointeur extraction RHS
     if (ipt_param_int[nd][ EXTRACT_RES ] == 1)
     {
@@ -218,11 +276,13 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
     ipt_ind_dm[ nd ]      =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
     ipt_it_lu_ssdom[ nd ] =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_ITLU) );
 
-    if(lssiter_verif  == 1 && nstep ==1 ) 
-    { 
+
+
+    // if(lssiter_verif  == 1 && nstep ==1 ) 
+    // { 
        PyObject* t2 = K_PYTREE::getNodeFromName1(numerics, "CFL_minmaxmoy");
        if (t2 != NULL) { ipt_cfl_zones[nd] = K_PYTREE::getValueAF(t2, hook);}
-    }
+    // }
 
     if( ipt_param_int[ nd ][ MXSSDOM_LU ] > nisdom_lu_max) nisdom_lu_max = ipt_param_int[ nd ][ MXSSDOM_LU ];
 
@@ -243,11 +303,9 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   } // boucle zone
 
   
-//
-//  
-//  Reservation tableau travail temporaire pour calcul du champ N+1
-//
-//  
+
+ 
+//  // Reservation tableau travail temporaire pour calcul du champ N+1
 
   /// Tableau pour filtrage Visbal
   if (kfiltering == 0) neq_max = 0;
@@ -260,7 +318,6 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   if(kles==1) neq_les = 3;
   FldArrayF  rot(ndimt*neq_les);
   E_Float* iptrot = rot.begin();
-
   E_Int kwig_stat    = 0;  
   E_Int neq_wig_stat = 0;
   if (kwig_stat ==  1) neq_wig_stat = 3; 
@@ -295,11 +352,87 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   //printf("thread =%d\n",threadmax_sdm);
   FldArrayI ijkv_sdm(         3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(         3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
+ // FldArrayI ind_sdm(          6*threadmax_sdm); E_Int* ipt_ind_sdm    =  ind_sdm.begin();
+ // FldArrayI ind_coe(          6*threadmax_sdm); E_Int* ipt_ind_coe    =  ind_coe.begin();
+ // FldArrayI ind_grad(         6*threadmax_sdm); E_Int* ipt_ind_grad   =  ind_grad.begin();
   FldArrayI ind_CL(           6*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
   FldArrayI ind_CL119(        6*threadmax_sdm); E_Int* ipt_ind_CL119  =  ind_CL119.begin();
   FldArrayI ind_dm_omp(      12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
   FldArrayF cfl( nidom*3*threadmax_sdm); E_Float* ipt_cfl    = cfl.begin();
+
+
+  PyObject* iskipArray = PyList_GetItem(work,4); FldArrayI* iskip_lu;
+  K_NUMPY::getFromNumpyArray(iskipArray, iskip_lu, true); E_Int* ipt_iskip_lu = iskip_lu->begin();
+
+  PyObject* tmp1 = PyList_GetItem(work,6); 
+  E_Int lssiter_loc;
+  if (PyLong_Check(tmp1) == true) lssiter_loc = PyLong_AsLong(tmp1);
+  else lssiter_loc = PyInt_AsLong(tmp1);
+
+
+// SOUS PAS
+#ifdef TIMER
+// TMP compute nb point for current process
+  E_Int nbpointsTot =0;
+
+  for (E_Int nd = 0; nd < nidom; nd++)
+      {
+        nbpointsTot = nbpointsTot + ipt_param_int[nd][ IJKV    ]*ipt_param_int[nd][ IJKV +1 ]*ipt_param_int[nd][ IJKV +2 ];
+      }
+#endif
+
+  for (E_Int nstep = 1; nstep < nitmax+1; ++nstep)
+  {
+    
+
+    E_Int nitcfg = nstep;  
+
+    //calcul dimension et nombre souszone
+    if(nitrun % iptdtloc[1] == 0 || nitrun == 1)   //iptdtloc[1] = kmod
+    {
+      for (E_Int nd = 0; nd < nidom; nd++)
+      {  
+       E_Int ijkv_lu[3];
+       ijkv_lu[0] = K_FUNC::E_max( 1, ipt_param_int[nd][ IJKV    ]/ipt_param_int[nd][ SIZE_SSDOM   ]);
+       ijkv_lu[1] = K_FUNC::E_max( 1, ipt_param_int[nd][ IJKV +1 ]/ipt_param_int[nd][ SIZE_SSDOM +1]);
+       ijkv_lu[2] = K_FUNC::E_max( 1, ipt_param_int[nd][ IJKV +2 ]/ipt_param_int[nd][ SIZE_SSDOM +2]);
+      
+       E_Int*   ipt_it_lu_ssdom_loc =  ipt_it_lu_ssdom[nd];
+       E_Int*   ipt_it_target_ssdom =  ipt_it_lu_ssdom[nd] + ipt_param_int[nd][ MXSSDOM_LU ];
+       E_Int*   ipt_it_target_old   =  ipt_it_lu_ssdom[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*2;
+       E_Int*   ipt_no_lu           =  ipt_it_lu_ssdom[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*4;
+
+
+       E_Int*   ipt_nisdom_residu = ipt_ind_dm[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*6*iptdtloc[0];                  //nisdom_residu(nssiter)
+       E_Int*   ipt_nidom_loc     = ipt_ind_dm[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*6*iptdtloc[0] + iptdtloc[0];    //nidom_loc(nssiter)
+       E_Int*   ipt_it_bloc       = ipt_ind_dm[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*6*iptdtloc[0] + iptdtloc[0]*2;  //it_bloc(nidom)
+
+
+       itypcp = ipt_param_int[nd][ ITYPCP ];
+       {  
+           FldArrayI ijk_lu(ipt_param_int[nd][ MXSSDOM_LU ]*3); E_Int* ipt_ijk_lu  = ijk_lu.begin();
+       
+           init_ssiter_bloc_( nd                    , nitcfg               ,  iptdtloc[0] ,
+                             lssiter_loc            , ipt_param_int[nd][ ITYPCP ]  ,
+                             ipt_param_int[nd] + IJKV       , ijkv_lu              , ipt_ijk_lu        , ipt_param_int[nd] + SIZE_SSDOM ,
+                             ipt_param_int[nd][ MXSSDOM_LU ], ipt_iskip_lu         ,
+                             ipt_ind_dm[nd]             , ipt_nidom_loc        , ipt_it_bloc[0]    , ipt_nisdom_residu,
+                             ipt_it_lu_ssdom_loc    , ipt_it_target_ssdom  , ipt_it_target_old , ipt_no_lu, ipt_param_int[nd]);
+           
+           nidom_tot = nidom_tot + ipt_nidom_loc[0];
+       }
+      }
+
+       lssiter_verif = 1;
+
+       if (nstep == iptdtloc[0] && itypcp!=2) lexit_lu  = 1;
+       iptdtloc[nstep+2] = nidom_tot;
+
+    }
+    else
+    { nidom_tot = iptdtloc[nstep+2]; }
+
 
   if (lssiter_verif == 1 && nstep == 1) 
   { for (E_Int i = 0;  i <  nidom*threadmax_sdm; i++)
@@ -309,8 +442,14 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   //revoir dimension nisdom_lu_max: trop gros
   E_Int mx_nidom   = mx_sszone*nidom; // nombre maximale de domaine une fois la partition Lu local active
 
-  gsdr3(ipt_param_int      , ipt_param_real    ,
-        nidom              , nitrun           , nstep             , nssiter       , first_it,
+E_Int skip = 0;
+if ( lssiter_verif == 0 && nstep == nitmax && ipt_param_int[0][ ITYPCP ] ==1){skip = 1;}
+
+//calcul Navier Stokes + appli CL
+if (nidom_tot > 0 && skip ==0){
+
+  gsdr3_trans(ipt_param_int      , ipt_param_real    ,
+        nidom              , nitrun           , nstep             , nssiter       , it_target, first_it,
         kimpli             , lssiter_verif    , lexit_lu          , omp_mode      ,
         nisdom_lu_max      ,  mx_nidom        , ndimt_flt         , threadmax_sdm , mx_synchro,
         nb_pulse           ,                
@@ -323,14 +462,15 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
         iptx               , ipty             , iptz              ,
         iptCellN           ,
         iptro              , iptro_m1         , iptro_p1          , iptro_sfd     ,
-        iptmut             ,
+        iptmut             , 
         ipti               , iptj             , iptk              , iptvol        , 
         ipti0              , iptj0            , iptk0             ,     
         ipti_df            , iptj_df          , iptk_df           , iptvol_df     , 
         iptventi           , iptventj         , iptventk          ,  
         iptrdm             ,
         iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
-        iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res);
+        iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res,
+        ipt_parambci       , ipt_parambcf     , ipt_param_int_tc  , ipt_param_real_tc);
 
   if (lssiter_verif == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
   {
@@ -356,26 +496,48 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
           }
     }
   }
+
+
   if((nstep == nssiter && lssiter_verif==1) || (nstep == nssiter-1 && lssiter_verif==0))  // mise a jour  du temps courant
    {
      for (E_Int nd = 0; nd < nidom ; nd++) { ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]; }
    }
+}
+}
 
   delete [] iptx; delete [] ipt_param_int;
 
+  
   RELEASESHAREDN( wigArray  , wig  );
   RELEASESHAREDN( drodmArray, drodm);
   RELEASESHAREDN( coeArray  , coe  );
   RELEASESHAREDN( lokArray  , lok  );
   RELEASESHAREDN( dtlocArray, dtloc);
-
+  if (pyParam_int_tc != Py_None)
+  {
+  RELEASESHAREDN( pyParam_int_tc, param_inttc);
+  }
+  if (pyParam_real_tc != Py_None)
+  {
+  RELEASESHAREDN( pyParam_real_tc, param_realtc);
+  }
+  RELEASESHAREDN( iskipArray, iskip_lu);
+  RELEASESHAREDN( tmpbci, parambci);
+  RELEASESHAREDN( tmpbcf, parambcf);
   RELEASEHOOK(hook)
 
 #if TIMER == 1
   c_end = clock();
-  E_Float duree = (float)(c_end-c_start) / CLOCKS_PER_SEC/threadmax_sdm;
+  timeout = omp_get_wtime();
+  E_Float duree  = (float)(c_end-c_start) / CLOCKS_PER_SEC/threadmax_sdm;
+  E_Float duree2 = timeout - timein;
+
+  E_Float cpuadim = duree2/nbpointsTot/3.0*threadmax_sdm;
+
+  std::cout << "ThreadMAx = " << threadmax_sdm << std::endl;
+
   //printf("nitrun =%d, temps =%g, cpu =%g \n",nitrun_loc,temps,duree);
-  printf("nitrun =%d, temps =%f, cpu =%f \n",nitrun_loc,temps,duree);
+  printf("rank=%d, nitrun =%d, nbpointsTot =%d, cpuadim=%e \n",rank,nitrun,nbpointsTot,cpuadim);
 #endif
 
   Py_INCREF(Py_None);

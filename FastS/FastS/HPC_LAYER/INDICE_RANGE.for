@@ -2,6 +2,7 @@
            call indice_boucle_ssdom(ndo, extended_range,
      &                              ibloc , jbloc , kbloc,
      &                              icache, jcache, kcache,
+     &                              param_int(KFLUDOM),
      &                              topo_s, ithread_sock,thread_pos_tmp,
      &                              size_cache,
      &                              synchro_receive_sock,

@@ -12,12 +12,14 @@ import numpy
 import os
 try:
     import Converter.PyTree as C
+    #import Converter.Mpi as Cmpi
     import Converter.Internal as Internal
     import Connector
     import Connector.PyTree as X
     import Fast.Internal as FastI
     import KCore
     import math
+#   import Transform.PyTree as T
     import timeit
     #import KCore.Dist as Dist
 except:
@@ -59,9 +61,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
     dtloc = Internal.getValue(dtloc) # tab numpy
     nitmax = int(dtloc[0])                 
     orderRk = int(dtloc[len(dtloc)-1])
-    
-    bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
 
+    bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
+    
     #### a blinder...
     itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
     #### a blinder...
@@ -80,27 +82,95 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
 
         # calcul Navier_stokes + appli CL
     	if nidom_loc > 0 and skip == 0:
-
             # Navier-Stokes
             fasts._computePT(zones, metrics, nitrun, nstep, omp_mode, hook1)
+              
+            #Ghostcell
+            vars=  varsP
 
-            # Ghostcell
-            vars = varsP
             if  nstep == 2 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
             timelevel_target = int(dtloc[4])
-            #if nstep ==1: print 'it_target ghost=', timelevel_target
             _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1) 
+            
 
     # data update for unsteady joins
     dtloc[3] +=1   #time_level_motion
     dtloc[4] +=1   #time_level_target
-    #print 'level and target=',dtloc[3], dtloc[4], nitrun
+    
     # switch pointers
     FastI.switchPointers__(zones, orderRk)
     # flag pour derivee temporelle 1er pas de temps implicit
     HOOK[9]  = 1
     FIRST_IT = 1
     return None
+
+#==============================================================================
+# compute in place
+# graph is a dummy argument to be compatible with mpi version 
+#==============================================================================
+def _compute_c(t, metrics, nitrun, tc=None, graph=None):
+    global FIRST_IT, HOOK, HOOKIBC
+
+    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
+    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+
+    zones = []
+    for f in bases:
+        zones += Internal.getNodesFromType1(f, 'Zone_t') 
+
+    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(node, 'omp_mode')
+    omp_mode = 0
+    if  node is not None: omp_mode = Internal.getValue(node)
+
+    dtloc = Internal.getValue(dtloc) # tab numpy
+    nitmax = int(dtloc[0])                 
+    orderRk = int(dtloc[len(dtloc)-1])
+    
+    #### a blinder...
+    itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
+    #### a blinder...    
+
+    #bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
+    parambci = numpy.empty((2), numpy.int32)         
+    parambcf = numpy.empty((5), numpy.float64) 
+    parambc  =[]
+    
+    if tc is not None :
+        tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
+        if tc_compact is not None:
+
+            param_real_tc= tc_compact[1]
+            param_int_tc = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
+
+            parambci[1]=HOOKIBC[0]; parambcf[0]=HOOKIBC[1]; parambcf[1]=HOOKIBC[2]; 
+            parambcf[2]=HOOKIBC[3]; parambcf[3]=HOOKIBC[4]; parambcf[4]=HOOKIBC[5];
+            
+    else:
+        param_int_tc = None
+        param_real_tc= None  
+
+    if HOOK[10] == 5: varType = 2
+    else             : varType = 21
+    parambci[0]=varType
+    
+    # if(nstep==1):
+    parambc.append(parambci)
+    parambc.append(parambcf)
+
+    fasts.computePT_trans(zones, metrics, nitrun, nitmax, omp_mode, HOOK,
+                          param_int_tc,  param_real_tc,parambc)    
+    # data update for unsteady joins
+    dtloc[3] +=1   #time_level_motion
+    dtloc[4] +=1   #time_level_target
+    
+    # switch pointers
+    FastI.switchPointers__(zones, orderRk)
+    # flag pour derivee temporelle 1er pas de temps implicit
+    HOOK[9]  = 1
+    FIRST_IT = 1
+    return None    
 #
 #==============================================================================
 # Calcul et retourne la metrique
@@ -142,9 +212,27 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
         node = Internal.getNodeFromName1(node, 'omp_mode')
         if  node is not None: omp_mode = Internal.getValue(node)
 
+#    # Distribute amongst OMP THREADS    
+#    t    = T.splitSizeUpR_OMP__(t,0,OMP_NUM_THREADS,0,[3,2],1) # Minmum size per direction 1, 
+#                                                               # split in j,k only ([2,3]), 
+#                                                               # no specified averaged cells/threads (first 0),
+#                                                               # no multigrid (second 0)
+#                                                                
+#    node = Internal.getNodeFromName3(t, '.Solver#Param')    
+#    if node is not None:
+#        node = Internal.getNodeFromName1(node, 'omp_threads')
+#    if node is not None:
+#        for nbth in xrange(1,OMP_NUM_THREADS+1):    
+#            nodeth = Internal.getNodeFromName1(node,str(nbth))
+#            subz   = Internal.getChildren(nodeth)
+#            nbsz   = len(subz)
+#            for nb in xrange(0,nbsz):
+#                print nbth,nb,Internal.getValue(subz[nb])
+#        
+#
+
     # Reordone les zones pour garantir meme ordre entre t et tc
     FastI._reorder(t, tc, omp_mode)
-
     # Construction param_int et param_real des zones
     _buildOwnData(t)
     # Calul de la metric: tijk, ventijk, ssiter_loc
@@ -166,18 +254,16 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     zones = Internal.getZones(t)
 
     #Allocation HOOK
-    #t0=timeit.default_timer()
     f_it = FIRST_IT
     if HOOK is None: HOOK = FastI.createWorkArrays__(zones, dtloc, f_it ); FIRST_IT = f_it
     for nstep in xrange(1, int(dtloc[0])+1): hook1 = HOOK + fasts.souszones_list(zones, metrics, HOOK, 1, nstep)
-    #t1=timeit.default_timer()
-    #print "cout create workarray= ", t1-t0
+
+
 
     #Allocation HOOKIBC
     if HOOKIBC is None: HOOKIBC = FastI.getIBCInfo__(t)
-
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
-    #t0=timeit.default_timer()
+
     c   = 0
     ale = False
     for z in zones:
@@ -190,8 +276,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
             metrics[c][2] = ro[1]
         else: ale = True
         c += 1
-    #t1=timeit.default_timer()
-    #print "cout mise a jour pointer= ", t1-t0
+    
 
     #
     # mise a jour vitesse entrainememnt
@@ -209,16 +294,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     # Compactage arbre transfert
     #
     if tc is not None:
-       if graph is not None: 
-          g = graph['procDict']
-          l = graph['procList']
-       else: 
-          g = None; l = None
-
-       #t0=timeit.default_timer()
-       X.miseAPlatDonnorTree__(zones, tc, procDict=g, procList=l)
-       #t1=timeit.default_timer()
-       #print "cout tc compact= ", t1-t0
+       X.miseAPlatDonnorTree__(zones, tc, graph=graph) 
 
     #
     # Compactage arbre moyennes stat
@@ -236,12 +312,11 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     hook1[12] = 0
     nstep     = 1
     nitrun    = 0
-    #t0=timeit.default_timer()
+    
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4]) 
     _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, hook1) 
-    #t1=timeit.default_timer()
-    #print "cout ghostcell= ", t1-t0
+   
     
     #
     # initialisation Mut
@@ -275,11 +350,11 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
             elif a1.shape == sh: val.append(a)
         nfields = len(val)
         if nfields > 0:
+            param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
             # Create an equivalent contiguous numpy [flat]
     	    #eq = KCore.empty(size*nfields, CACHELINE)
-            eq = numpy.empty(nfields*size, dtype=numpy.float64)
-            c = 0
-            param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
+            eq = numpy.empty(nfields*(size+ param_int[1][66]), dtype=numpy.float64) # add a shift  between prim. variables (param_int[1][SHIFTVAR])
+            c = 0        
             if param_int is None:
                 raise ValueError("_compact: Parameter_int is missing for zone %s."%z[0])
             for a in val:
@@ -297,7 +372,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
                 #fasts.initNuma( ptr , eq, param_int, c )
                 #eq[c*size:(c+1)*size] = ptr[:]   
                 # Replace numpys with slice
-                a[1] = eq[c*size:(c+1)*size]
+                a[1] = eq[c*(size)+c*param_int[1][66]:(c+1)*(size)+c*param_int[1][66]]
                 a[1] = a[1].reshape(sh, order='Fortran')
                 ## marc a[1] = eq[c*size:(c+1)*size]
                 ## marc a[1] = a[1].reshape(sh, order='Fortran')
@@ -561,6 +636,9 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1):
     # hook1[11] = nidom_lu
     # hook1[12] = lskip_lu
     # hook1[13] = lssiter_verif
+   
+   timecount = numpy.zeros(4, dtype=numpy.float64)
+
    if hook1[12] ==0:
 
        #transfert
@@ -583,11 +661,21 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1):
 
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
-              Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)
+              Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)#,timecount)
+              # Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)
+              # print "Time in MPI send_buffer, irecv ","%.6f"%timecount[0]
+              # print "Time InterpTransfert (Inter)  ","%.6f"%timecount[1]
+              # print "Time InterpTransfert (Intra)  ","%.6f"%timecount[2]
+              # print "Time in getTransfersInter ","%.6f"%timecount[3]
 
        #apply BC
+       #t0=timeit.default_timer()
        _applyBC(zones, metrics, var=vars[0])
-
+       # c = 0    
+       # for z in zones: fasts._applyBC(z, metrics[c], vars[0]); c += 1
+       #t1=timeit.default_timer()
+       #print "Time BC",(t1-t0)
+            
    return None
 #==============================================================================
 # Cree un noeud POST
@@ -1194,6 +1282,25 @@ def display_temporal_criteria(t, metrics, nitrun, format=None):
                                 nssiter, lft)
 
     return None
+#==============================================================================
+# Interface for Vtune/Advisor collection control
+#==============================================================================
+def itt(var):
+    if var == 'pause':
+          ivar =1
+    else :
+          ivar = 0
+    print "itt collection (Vtune/Advisor)", var
+    fasts.itt(ivar)
+    return None
+#==============================================================================
+# IN: d: container
+# IN: keys: les cles possibles
+#==============================================================================
+def checkKeys(d, keys):
+    for i in d[2]:
+        if i[0] not in keys:
+            print 'Warning: FastS: keyword %s is invalid.'%i[0]
 
 #==============================================================================
 # Construit les donnees compactees pour traiter les BC
@@ -1373,6 +1480,7 @@ def _buildOwnData(t):
     'cache_blocking_I':0,
     'cache_blocking_J':0,
     'cache_blocking_K':0,
+    'shiftvar':0,
     'time_step_nature':['local', 'global'],
     'ssdom_IJK':3,
     'epsi_newton':1,
@@ -1467,6 +1575,16 @@ def _buildOwnData(t):
         Internal.createUniqueChild(o, '.Solver#dtloc', 'DataArray_t', datap)
 
     # Data for each zone
+    #==== Check if padding file exists (potential cache associativity issue)
+    try:
+        f       = open('padding.bin','rb')
+        pad     = 1
+    except IOError as e:
+        print('Padding file not found, using default values')
+        pad   = 0
+    if(pad == 1): padding = numpy.fromfile(f,dtype='int32')        
+
+
     bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
     
     i=0
@@ -1474,6 +1592,13 @@ def _buildOwnData(t):
         zones = Internal.getNodesFromType1(b, 'Zone_t')
         nzones=len(zones)
         for z in zones:
+            shiftvar   = 0
+            #=== check for a padding file  (cache associativity issue)
+            dims = Internal.getZoneDim(z)
+            if(pad == 1):
+                if ((dims[1] < 20) or (dims[2] < 20) or (dims[1] > 200) or (dims[2] > 200)):
+                    shiftvar=0
+                else:shiftvar=padding[(dims[2]-20)*padding[0]+(dims[1]-20)+2]
 
             # zone ownData (generated)
             o = Internal.createUniqueChild(z, '.Solver#ownData', 
@@ -1563,10 +1688,12 @@ def _buildOwnData(t):
                 if a is not None: cacheblckJ = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'cache_blocking_K')
                 if a is not None: cacheblckK = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'shiftvar')
+                if a is not None: shiftvar = Internal.getValue(a)                
+                a = Internal.getNodeFromName1(d, 'time_step_nature')            
+                if a is not None: dtnature = Internal.getValue(a)                
                 a = Internal.getNodeFromName1(d, 'sgsmodel')
                 if a is not None: sgsmodel = Internal.getValue(a)
-                a = Internal.getNodeFromName1(d, 'time_step_nature')
-                if a is not None: dtnature = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'time_step')
                 if a is not None: dtc = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'inj1_newton_tol')
@@ -1661,6 +1788,9 @@ def _buildOwnData(t):
               islope  = 1
             elif scheme == "roe": 
               kfludom = 5
+            elif(scheme == "ausmpred_pattern")  :  
+                kfludom = 7
+
             else: print 'Warning: FastS: scheme %s is invalid.'%scheme
 
             lale   = 0; size_ale =0;
@@ -1680,7 +1810,7 @@ def _buildOwnData(t):
             # creation noeud parametre integer
             # Determination de levelg et leveld             
 
-            datap = numpy.empty(68, numpy.int32)
+            datap = numpy.empty(69, numpy.int32)
             datap[0:25]= -1
             datap[25]  = 0     # zone 3D curvi par defaut
             datap[26]  = 0     # Vent 3D par defaut
@@ -1715,8 +1845,10 @@ def _buildOwnData(t):
             datap[63]  = sfd_init_iter
             datap[64]  = islope
             datap[65]  = nit_inflow
-            datap[66]  = extract_res
-            datap[67]  = DES_debug
+            datap[66]  = shiftvar
+            datap[67]  = extract_res
+            datap[68]  = DES_debug
+
 
             i += 1
          
@@ -1780,6 +1912,7 @@ def _buildOwnData(t):
             Internal.createUniqueChild(o, 'type_zone'    , 'DataArray_t',  0)
             Internal.createUniqueChild(o, 'model', 'DataArray_t', model)
             Internal.createUniqueChild(o, 'temporal_scheme', 'DataArray_t', temporal_scheme)
+    if(pad==1):f.close()
     return None
 
 

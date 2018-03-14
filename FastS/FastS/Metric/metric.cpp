@@ -136,8 +136,9 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
     ipt_param_int[ IJKV   ]  = ipt_param_int[ NIJK   ]-2*ipt_param_int[ NIJK +3];
     ipt_param_int[ IJKV +1]  = ipt_param_int[ NIJK+1 ]-2*ipt_param_int[ NIJK +3];
     ipt_param_int[ IJKV +2]  = ipt_param_int[ NIJK+2 ]-2*ipt_param_int[ NIJK +4];
-
-    ipt_param_int[ NDIMDX      ] =  ipt_param_int[ NIJK     ]*ipt_param_int[ NIJK+1     ]*ipt_param_int[ NIJK+2     ];   
+    
+    ipt_param_int[ NDIMDX      ] =  ipt_param_int[ NIJK     ]*ipt_param_int[ NIJK+1     ]*ipt_param_int[ NIJK+2     ] + ipt_param_int[SHIFTVAR]; 
+    //*ipt_param_int[ NDIMDX      ] =  ipt_param_int[ NIJK     ]*ipt_param_int[ NIJK+1     ]*ipt_param_int[ NIJK+2     ];
     ipt_param_int[ NDIMDX_XYZ  ] =  ipt_param_int[ NIJK_XYZ ]*ipt_param_int[ NIJK_XYZ+1 ]*ipt_param_int[ NIJK_XYZ+2 ];
 
     //
@@ -261,7 +262,6 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
 
      E_Int neq_mtr = 2*neq_ij+ neq_k + 1; // ti+ tj+ tk+ vol
      ipti  = K_NUMPY::buildNumpyArray( ndimdx_mtr, neq_mtr, 0, 1);  
-
      //
      //* Declare memoire pour metric instant initial si zone ale: normales + volume)
      //
@@ -277,7 +277,6 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
        ipti0    = K_NUMPY::buildNumpyArray( ipt_param_int[ NDIMDX_MTR  ], neq_mtr-1 , 0, 1);  
        iptventi = K_NUMPY::buildNumpyArray( ipt_param_int[ NDIMDX_VENT ], neq_vent  , 0, 1); 
      }
-
      //
      //* Declare memoire pour metric DF
      //
@@ -311,7 +310,6 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
      FldArrayF iptmpj2(   ipt_param_int[ NDIMDX_XYZ ]);
      FldArrayF iptmpk2(   ipt_param_int[ NDIMDX_XYZ ]);
      FldArrayF  iptmtr( 9*ipt_param_int[ NDIMDX_XYZ ]);
-
 #pragma omp parallel default(shared) 
      {
 	//* variable declaree dans zone parallele = private *//
@@ -385,7 +383,6 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
                 ipt_topology_socket, 
                 ithread_sock       , thread_parsock    , Nbre_thread_actif, Nbre_socket, socket,
                 ithread);
-
 	if(kfludom == 3)
 	{
 

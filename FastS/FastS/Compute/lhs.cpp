@@ -15,7 +15,7 @@
                                       ipt_ind_dm_loc,
                                       ipt_topology_socket, ipt_ind_dm_omp_thread );
 
-                    if(ithread == param_int[nd][ IO_THREAD ]) { balance = balance +  (1+ipt_ind_dm_loc[1]-ipt_ind_dm_loc[0])*(1+ipt_ind_dm_loc[3]-ipt_ind_dm_loc[2])*(1+ipt_ind_dm_loc[5]-ipt_ind_dm_loc[4]);}
+                    //if(ithread == param_int[nd][ IO_THREAD ]) { balance = balance +  (1+ipt_ind_dm_loc[1]-ipt_ind_dm_loc[0])*(1+ipt_ind_dm_loc[3]-ipt_ind_dm_loc[2])*(1+ipt_ind_dm_loc[5]-ipt_ind_dm_loc[4]);}
 
                     //if(nd==2 && ithread==1) printf(" dom %d %d %d %d %d %d \n", ipt_ind_dm_loc[0],ipt_ind_dm_loc[1],ipt_ind_dm_loc[2],ipt_ind_dm_loc[3],ipt_ind_dm_loc[4],ipt_ind_dm_loc[5]  );
                      //sortie de la carte d residu du Newton
@@ -23,6 +23,7 @@
                      // {
 
                          //if(ithread== param_int[nd][ IO_THREAD ]&& nd_subzone==nb_subzone-1  && nd==nidom-1) printf("balance %d %d \n", balance, nitcfg); 
+
 
                          if(lssiter_verif ==1  && nd_subzone ==0 && ( param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
                           {
@@ -42,7 +43,7 @@
                             E_Int* ipt_it_temp_ssdom   =  ipt_it_lu_ssdom[nd] + param_int[nd][ MXSSDOM_LU ]*3;
                             E_Int* ipt_no_lu           =  ipt_it_lu_ssdom[nd] + param_int[nd][ MXSSDOM_LU ]*4;
 
-                           if(ithread== param_int[nd][ IO_THREAD ] && nd_subzone==nb_subzone-1  && nd==nidom-1) printf("balance %d %d \n", balance, nitcfg); 
+			    //                           if(ithread== param_int[nd][ IO_THREAD ] && nd_subzone==nb_subzone-1  && nd==nidom-1) printf("balance %d %d \n", balance, nitcfg); 
  
                             cprdu3s1_(nd,nitcfg, nssiter          , param_int[nd][ NEQ ], param_int[nd][ NDIMDX ], ndim_rdm , nitrun,
                                       param_int[nd][ IFLOW ]      , param_int[nd][ ILES ] , ithread_loc          , omp_mode,

@@ -48,7 +48,7 @@ c***********************************************************************
       INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, first_it,
      & ithread, Nbre_socket, socket, nitrun, nptpsi, nitcfg, nb_pulse,
      & lssiter_verif,flagCellN
-
+c
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
      & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
      & param_int(0:*), lok(*)
@@ -78,7 +78,6 @@ C Var loc
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
 
-
 c         if(ithread.eq.param_int( IO_THREAD).and.nitcfg.le.1) then
 c           write(*,'(a,7i6)')'ijkv_sdm  =',ijkv_sdm,icache,jcache,
 c     &                                     kcache,ithread
@@ -97,6 +96,7 @@ c         endif
 
           call  correct_coins(ndo,  param_int, ind_grad, rop_ssiter)
           !call  correct_coins(ndo,  param_int, ind_sdm, rop_ssiter)
+
 
            IF(nitcfg.eq.1) then
 
@@ -143,7 +143,7 @@ c         endif
              ! Calcul du pas de temps
              call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
      &                   flagCellN, param_int, param_real,
-     &                   ind_sdm, ind_grad,
+     &                   ind_ssa, ind_grad,
      &                   cfl, xmut,rop_ssiter, cellN, coe,
      &                   ti,tj,tk, vol,venti)
 
@@ -290,5 +290,5 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
 
 #include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
-
+#include "FastS/HPC_LAYER/check_split3.for"
       end
