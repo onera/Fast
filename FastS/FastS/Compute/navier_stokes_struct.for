@@ -290,5 +290,4 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
 
 #include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
-#include "FastS/HPC_LAYER/check_split3.for"
       end
