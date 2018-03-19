@@ -2,15 +2,17 @@
 # include "param_solver.h"
 # include "connector.h"
 # include <string.h>
-# include <CMP/include/pending_message_container>
+//# include <CMP/include/pending_message_container>
 #ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #ifdef _MPI
 #include <mpi.h>
 #endif
+
 #include <iostream>
-#endif
+
 using namespace K_FLD;
 using namespace std;
 using namespace K_CONNECTOR;
@@ -341,7 +343,7 @@ E_Int lrhs=0; E_Int lcorner=0;
 #endif
 
 E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
-if( Nbre_thread_actif < Nbre_socket) Nbre_socket;
+if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
 
 E_Int Nbre_thread_actif_loc, ithread_loc;
 if( omp_mode == 1) { Nbre_thread_actif_loc = 1;                 ithread_loc = 1;}

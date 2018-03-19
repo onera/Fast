@@ -16,6 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include "connector.h"
 #include "fastS.h"
 
@@ -26,6 +27,7 @@
 #include "CMP/include/send_buffer.hpp"
 #include "setInterpTransfersD.h"
 #endif
+
 #include <utility>
 
 using namespace std;

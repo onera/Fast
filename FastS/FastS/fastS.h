@@ -16,7 +16,6 @@
     You should have received a copy of the GNU General Public License
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 # ifndef _FASTS_FASTS_H_
 # define _FASTS_FASTS_H_
 
@@ -148,6 +147,11 @@ namespace K_FASTS
   //==============================
   // - Transfer with CMP library -
   //==============================
+
+  /* Call to transfers from FastS */
+  void setInterpTransfersFastS(
+  E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
+  E_Int*& param_bci, E_Float*& param_bcf, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount);
   
   /* Transferts FastS Intra process */
   void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
@@ -155,11 +159,6 @@ namespace K_FASTS
                               E_Int& NoTransfert, E_Float*& ipt_timecount);
 
   #ifdef _MPI
-  /* Call to transfers from FastS */
-  void setInterpTransfersFastS(
-  E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
-  E_Int*& param_bci, E_Float*& param_bcf, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount);
-
   /* Transferts FastS Inter process */
   void setInterpTransfersInter(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
                                 E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int& TypeTransfert, E_Int& nitrun, 

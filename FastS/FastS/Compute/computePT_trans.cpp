@@ -16,7 +16,6 @@
     You should have received a copy of the GNU General Public License
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 // Mettre a 1 pour un CPU timer
 #define TIMER 0
 
