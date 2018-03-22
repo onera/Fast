@@ -12,7 +12,6 @@ import KCore.Adim as Adim
 import KCore.test as test
 
 angle = 20.
-
 anglex = angle
 angley = 0.    
 anglez = 0.

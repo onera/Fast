@@ -71,7 +71,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
             if  nstep == 2 and itypcp == 2 : vars = PyTree.varsN  # Choix du tableau pour application transfer et BC
             timelevel_target = int(dtloc[4])
             _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, hook1, graphID, graphIBCD, procDict)
-            if(Cmpi.rank ==0): print " nstep is :",nstep," skip:",skip," nidom_loc:",nidom_loc, " ,hook13 :",hook1[13]
+
     # data update for unsteady joins
     dtloc[3] +=1   #time_level_motion
     dtloc[4] +=1   #time_level_target
@@ -113,9 +113,7 @@ def _compute_c(t, metrics, nitrun, tc=None, graph=None):
         if tc_compact is not None:
 
             param_real_tc= tc_compact[1]
-            if param_real_tc == None:
-                print "Parameter_real is none"+str(Cmpi.rank)
-
+            
             param_int_tc = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]      
 
             parambci[1]=PyTree.HOOKIBC[0]; parambcf[0]=PyTree.HOOKIBC[1]; parambcf[1]=PyTree.HOOKIBC[2]; 
@@ -155,18 +153,14 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1, gr
    
    #timecount = numpy.zeros(4, dtype=numpy.float64)
    timecount = []
-   if (Cmpi.rank == 0): print "lskip_lu :",hook1[12]
-
+   
    if hook1[12] ==0:
 
        #transfert
-       if tc is not None :
+       if tc is not None:
            tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
            if tc_compact is not None:
-
-              param_real= tc_compact[1]
-              if param_real == None:
-                  print "Parameter_real is none",Cmpi.rank
+              param_real = tc_compact[1]
                 
               param_int = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
               zonesD    = Internal.getZones(tc)
@@ -265,7 +259,7 @@ def warmup(t, tc, graph=None, infos_ale=None, tmy=None):
     #
     # mise a jour vitesse entrainememnt
     #
-    if(ale == True and infos_ale is not None):
+    if ale == True and infos_ale is not None:
         print "ale actif. Teta et tetap=", infos_ale
         teta = infos_ale[0];  tetap = infos_ale[1]
         _motionlaw(t, teta, tetap)
@@ -385,7 +379,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
            g = graph['procDict']
            l = graph['procList']
        else: 
-           print "Error: true graph is missing in _UpdateUnsteadyJoinParam"
+           print "Error: true graph is missing in _UpdateUnsteadyJoinParam."
            import sys; sys.exit()
 
        zones=Internal.getZones(t)

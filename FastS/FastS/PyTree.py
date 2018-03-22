@@ -282,7 +282,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     # mise a jour vitesse entrainememnt
     #
     #t0=timeit.default_timer()
-    if(ale == True and infos_ale is not None):
+    if (ale == True and infos_ale is not None):
         print "ale actif. Teta et tetap=", infos_ale
         teta = infos_ale[0];  tetap = infos_ale[1]
         _motionlaw(t, teta, tetap)
@@ -1578,12 +1578,13 @@ def _buildOwnData(t):
     #==== Check if padding file exists (potential cache associativity issue)
     try:
         f       = open('padding.bin','rb')
-        pad     = 1
+        pad     = True
     except IOError as e:
-        print('Padding file not found, using default values')
-        pad   = 0
-    if(pad == 1): padding = numpy.fromfile(f,dtype='int32')        
-
+        print('Padding file not found, using default values.')
+        pad   = False
+    if pad: 
+        padding = numpy.fromfile(f, dtype='int32')        
+        f.close()
 
     bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
     
@@ -1595,10 +1596,10 @@ def _buildOwnData(t):
             shiftvar   = 0
             #=== check for a padding file  (cache associativity issue)
             dims = Internal.getZoneDim(z)
-            if(pad == 1):
+            if pad:
                 if ((dims[1] < 20) or (dims[2] < 20) or (dims[1] > 200) or (dims[2] > 200)):
                     shiftvar=0
-                else:shiftvar=padding[(dims[2]-20)*padding[0]+(dims[1]-20)+2]
+                else: shiftvar=padding[(dims[2]-20)*padding[0]+(dims[1]-20)+2]
 
             # zone ownData (generated)
             o = Internal.createUniqueChild(z, '.Solver#ownData', 
@@ -1912,7 +1913,6 @@ def _buildOwnData(t):
             Internal.createUniqueChild(o, 'type_zone'    , 'DataArray_t',  0)
             Internal.createUniqueChild(o, 'model', 'DataArray_t', model)
             Internal.createUniqueChild(o, 'temporal_scheme', 'DataArray_t', temporal_scheme)
-    if(pad==1):f.close()
     return None
 
 
