@@ -57,13 +57,6 @@ Preparation
 
 .. py:function:: FastS.PyTree.warmup(t, tc, graph=None, infos_ale=None)
 
-
-   **CAUTION!!!**
-
-   **MUST be called before compute or everytime the solution tree is modified by a non in place function**
-
-   **CAUTION!!!**
-
     Compute all necessary pre-requisites for solver:
 
         1. Metrics (face normales, volume)
@@ -88,6 +81,13 @@ Preparation
     :return: (t, tc, metrics)
     :rtype: tuple
 
+    **CAUTION!!!**
+
+    **MUST be called before compute or everytime the solution tree is modified by a non in place function**
+
+    **CAUTION!!!**
+
+
     *Example of use:*
 
     * `Warming up (PyTree) <Examples/FastS/warmupPT.py>`_:
@@ -99,15 +99,15 @@ Preparation
 
 .. py:function:: FastS.PyTree.createConvergenceHistory(t, nrec)
 
-     Create a node in each zone with convergence information (residuals)
-     MUST be called before display_temporal_criteria() and only for steady case.
-     t is a pyTree, nrec is the size of the data arrays to store the residuals.
-     The data arrays are stored during the call to  **FastS.display_temporal_criteria**
+    Create a node in each zone with convergence information (residuals)
+    MUST be called before display_temporal_criteria() and only for steady case.
+    t is a pyTree, nrec is the size of the data arrays to store the residuals.
+    The data arrays are stored during the call to  **FastS.display_temporal_criteria**
 
-     :param t: input pyTRee
-     :type t: pyTree
-     :param nrec: ??
-     :type nrec: ??
+    :param t: input pyTRee
+    :type t: pyTree
+    :param nrec: ??
+    :type nrec: ??
 
     *Example of use:*
 
@@ -142,7 +142,7 @@ Preparation
         13. MomentumY * MomentumZ / Density
 
     Return a new tree in tmy:
-        
+
     :param t: input pyTree
     :type t: pyTree
     :param dir: input to determine homogeneous direction in a block structured sense 
