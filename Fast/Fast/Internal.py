@@ -61,36 +61,35 @@ def _reorder(t, tc=None, omp_mode=0):
     if tc is not None: 
        bases_tc = Internal.getNodesFromType1(tc,'CGNSBase_t')
        bases    = Internal.getNodesFromType1(t, 'CGNSBase_t')
-       zones_tc = Internal.getNodesFromType2(tc,'Zone_t')
-       zones    = Internal.getNodesFromType2(t, 'Zone_t')
  
-       for base_tc in bases_tc: 
+       for base in bases: 
 
-           zones_tc = Internal.getNodesFromType1(base_tc,'Zone_t')
+           zones = Internal.getNodesFromType1(base,'Zone_t')
  
            #on cherche le matching entre base t et tc
            c  =0
            ctg=0
-           for base in bases: 
+           for base_tc in bases_tc: 
               if base[0] == base_tc[0]: ctg=c
               c+=1  
 
-           zones    = Internal.getNodesFromType1(bases[ctg], 'Zone_t')
+           zones_tc  = Internal.getNodesFromType1(bases_tc[ctg], 'Zone_t')
 
-           zname_tc = []
-           for zc in zones_tc: zname_tc.append( zc[0] )
+           zname = []
+           for zc in zones: zname.append( zc[0] )
 
-           new_zones_tc = []
-           for z in zones:
-              pos = zname_tc.index( z[0] )
-              new_zones_tc.append( zones_tc[pos] )
+           new_zones = []
+           for z in zones_tc:
+              pos = zname.index( z[0] )
+              new_zones.append( zones[pos] )
 
-           l = base_tc[2]
+           l = base[2]
            orig = []
            for i in l:
 	        if i[3] != 'Zone_t': orig.append(i)
-                base_tc[2] = new_zones_tc + orig
+                base[2] = new_zones + orig
 
+    '''
     # reorder_zone pour equilibrage omp
     if omp_mode != 0:
        zones = Internal.getNodesFromType2(t, 'Zone_t')
@@ -154,12 +153,11 @@ def _reorder(t, tc=None, omp_mode=0):
          tc[2][1][2]= new_zones_tc + orig
 
        for th in range(OMP_NUM_THREADS): print "count th=",equi[th] , th+1
-
-
+    '''
 #==============================================================================
 # Init/create primitive Variable 
 #==============================================================================
-def _createPrimVars(base, zone, FIRST_IT, omp_mode, rmConsVars=True, adjoint=False):
+def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     import timeit
     # Get model
     model = "Euler"
@@ -467,6 +465,8 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
     verrou      = MX_SSZONE*c*MX_SYNCHRO*mx_thread
 
+    #distrib_omp = MX_SSZONE*c*(mx_thread*7+4)
+
 #    wig   = KCore.empty(ndimwig, CACHELINE)
 #    coe   = KCore.empty(ndimcoe, CACHELINE)
 #    drodm = KCore.empty(ndimt  , CACHELINE)
@@ -497,11 +497,30 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #    drodm1 = drodm1.reshape((132*132*132*5), order='Fortran')
 #    print drodm1.shape
 
+    #omp      = numpy.empty(distrib_omp, dtype=numpy.int32)
     lok      = numpy.empty(verrou     , dtype=numpy.int32  )
     iskip_lu = numpy.empty(dtloc[0]*2 , dtype=numpy.int32  )   # (dtloc[0] = nitmax
 
-    
-    hook = [wig, coe, drodm, lok, iskip_lu, dtloc, lssiter_loc, MX_SSZONE, MX_SYNCHRO, FIRST_IT, neq_max]
+    #tableau pour ibc from C function
+    param_int_ibc  = numpy.empty((2), numpy.int32)         
+    param_real_ibc = numpy.empty((5), numpy.float64)
+
+    hook = {}
+    hook['wiggle']        = wig
+    hook['coe']           = coe
+    hook['rhs']           = drodm
+    hook['verrou_omp']    = lok
+    hook['skip_lu']       = iskip_lu
+    hook['dtloc']         = dtloc
+    hook['lssiter_loc']   = lssiter_loc
+    hook['MX_SSZONE']     = MX_SSZONE
+    hook['MX_SYNCHRO']    = MX_SYNCHRO
+    hook['FIRST_IT']      = FIRST_IT
+    hook['neq_max']       = neq_max
+    hook['param_int_ibc' ]= param_int_ibc
+    hook['param_real_ibc']= param_real_ibc
+    hook['param_int_tc'  ]= None
+    hook['param_real_tc' ]= None
     
     return hook
 

@@ -204,16 +204,17 @@ Actions
 .. :return: a, metrics
 .. * `Compute metric for zones (pyTree) <Examples/Fast/metricPT.py>`_:
 .. .. literalinclude:: ../build/Examples/Fast/metricPT.py
-------------------------------------------------------------------
 
+------------------------------------------------------------------
 
 .. py:function:: Fast.PyTree.save(t, fileName='restart.cgns', split='single', temporal_scheme='implicit', NP=0)
     
-    Save computation tree t in file. If you run in
-    mpi, NP must be the number of processor. If you run in seq mode, 
-    NP must be 0 or a negative number. If split='single', a single file
-    is written. If split='multiple', different files are created
-    depending on the proc number of each zone (restart/restart_0.cgns, ...):
+    Save computation tree t in file. 
+    If you run in mpi, NP must be the number of processor.
+    If you run in seq mode, NP must be 0 or a negative number.
+    If split='single', a single file is written.
+    If split='multiple', different files are created
+    depending on the proc number of each zone (restart/restart_0.cgns, ...).
     
     :param a: input data
     :type a: pyTree
@@ -254,7 +255,6 @@ Actions
     * `Load pyTree (pyTree) <Examples/Fast/loadPT.py>`_:
 
     .. literalinclude:: ../build/Examples/Fast/loadPT.py
-
 
 .. toctree::
    :maxdepth: 2   
