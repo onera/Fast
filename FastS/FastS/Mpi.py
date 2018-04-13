@@ -1,7 +1,7 @@
 # FastS + MPI
 import PyTree
 import fasts
-from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, metric, createPrimVars, _createPrimVars, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _buildOwnData,  metric, _BCcompact, _computeVelocityAle, checkBalance, itt
+from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createPrimVars, _createPrimVars, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _buildOwnData, _init_metric, allocate_metric, _BCcompact, _motionlaw, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp
 import timeit
 
 import numpy
@@ -16,12 +16,14 @@ try:
     import Connector.PyTree as X
     import Connector
     import Fast.Internal as FastI
-    import Converter.Mpi as Cmpi
+    import os
+    import math
 except:
     raise ImportError("FastS: requires Converter and Connector modules.")
 
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None):
+#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python"):
+def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
     if graph is not None:
         procDict  = graph['procDict']
         graphID   = graph['graphID']
@@ -45,32 +47,36 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
     itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
     #### a blinder...
 
-    for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
-        # determination taille des zones a integrer (implicit ou explicit local)
-        hook1 = PyTree.HOOK + fasts.souszones_list(zones, metrics, PyTree.HOOK, nitrun, nstep)
-        nidom_loc = hook1[11]
+    if layer == "Python": 
 
-        # hook1[10] = nombre equations
-        # hook1[11] = nidom_lu
-        # hook1[12] = lskip_lu
-        # hook1[13] = lssiter_verif
+      for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
 
-        skip = 0
-        if (hook1[13] == 0 and nstep == nitmax and itypcp ==1): skip = 1
+         hook1 = PyTree.HOOK.copy()
+         hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, nitrun, nstep) )
+         nidom_loc = hook1["nidom_tot"]
 
-        # calcul Navier Stokes + appli CL
-        
+         skip = 0
+         if (hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1): skip = 1
 
-        if nidom_loc > 0 and skip ==0:
-
+         # calcul Navier Stokes + appli CL
+         if nidom_loc > 0 and skip ==0:
             # Navier-Stokes
-            fasts._computePT(zones, metrics, nitrun, nstep, omp_mode, hook1)
+            nstep_deb = nstep
+            nstep_fin = nstep
+            layer_mode= 0
+            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, hook1)
 
             # Ghostcell
             vars = PyTree.varsP
             if  nstep == 2 and itypcp == 2 : vars = PyTree.varsN  # Choix du tableau pour application transfer et BC
             timelevel_target = int(dtloc[4])
-            _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, hook1, graphID, graphIBCD, procDict)
+            _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict)
+
+    else: 
+      nstep_deb = 1
+      nstep_fin = nitmax
+      layer_mode= 1
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, PyTree.HOOK)
 
     # data update for unsteady joins
     dtloc[3] +=1   #time_level_motion
@@ -79,82 +85,18 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
     # switch pointers
     FastI.switchPointers__(zones, orderRk)
     # flag pour derivee temporelle 1er pas de temps implicit
-    PyTree.HOOK[9]  = 1
-    PyTree.FIRST_IT = 1
+    PyTree.HOOK["FIRST_IT"]  = 1
+    PyTree.FIRST_IT          = 1
     return None
-
 #==============================================================================
-def _compute_c(t, metrics, nitrun, tc=None, graph=None):
-    rank=Cmpi.rank       
-
-    base = Internal.getNodeFromType1(t,"CGNSBase_t")
-    own   = Internal.getNodeFromName1(base, '.Solver#ownData')  
-    dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')
-    zones = Internal.getZones(t)
-    node = Internal.getNodeFromName(t, '.Solver#define')
-    node = Internal.getNodeFromName1(node, 'omp_mode')
-    omp_mode = 0
-    if node is not None: omp_mode = Internal.getValue(node)
-    dtloc   = Internal.getValue(dtloc) # tab numpy
-    nitmax  = int(dtloc[0])
-    orderRk = int(dtloc[len(dtloc)-1])
-
-    #### a blinder...
-    itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
-    #### a blinder...
-
-    # #  #transfert
-    parambci = numpy.empty((2), numpy.int32)         
-    parambcf = numpy.empty((5), numpy.float64) 
-    parambc  = []
-    
-    if tc is not None :
-        tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
-        if tc_compact is not None:
-
-            param_real_tc= tc_compact[1]
-            
-            param_int_tc = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]      
-
-            parambci[1]=PyTree.HOOKIBC[0]; parambcf[0]=PyTree.HOOKIBC[1]; parambcf[1]=PyTree.HOOKIBC[2]; 
-            parambcf[2]=PyTree.HOOKIBC[3]; parambcf[3]=PyTree.HOOKIBC[4]; parambcf[4]=PyTree.HOOKIBC[5];
-  
-
-    hook1 = PyTree.HOOK    
-
-    if hook1[10] == 5: varType = 2
-    else             : varType = 21
-    parambci[0]=varType
-    # if(nstep==1):
-    parambc.append(parambci)
-    parambc.append(parambcf)
-
-    fasts.computePT_trans(zones, metrics, nitrun, nitmax, omp_mode, hook1,
-                          param_int_tc,  param_real_tc,parambc)  
-    
-    # data update for unsteady joins
-    dtloc[3] +=1   #time_level_motion
-    dtloc[4] +=1   #time_level_target
-    # switch pointers
-    FastI.switchPointers__(zones, orderRk)
-    # flag pour derivee temporelle 1er pas de temps implicit
-    PyTree.HOOK[9]  = 1
-    PyTree.FIRST_IT = 1
-    return None
-
-#==============================================================================
-def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1, graphID, graphIBCD, procDict): 
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict): 
 
    rank=Cmpi.rank 
-   # hook1[10] = nombre equations max
-   # hook1[11] = nidom_lu
-   # hook1[12] = lskip_lu
-   # hook1[13] = lssiter_verif
-   
+
    #timecount = numpy.zeros(4, dtype=numpy.float64)
    timecount = []
    
-   if hook1[12] ==0:
+   if hook1['lexit_lu'] ==0:
 
        #transfert
        if tc is not None:
@@ -165,8 +107,8 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1, gr
               param_int = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
               zonesD    = Internal.getZones(tc)
 
-              if hook1[10] == 5: varType = 2
-              else             : varType = 21
+              if hook1['neq_max'] == 5: varType = 2
+              else                    : varType = 21
 
               bcType = PyTree.HOOKIBC[0]; Gamma=PyTree.HOOKIBC[1]; Cv=PyTree.HOOKIBC[2]; Mus=PyTree.HOOKIBC[3]; Cs=PyTree.HOOKIBC[4]; Ts=PyTree.HOOKIBC[5]
 
@@ -189,16 +131,15 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1, gr
        #     print "Time in getTransfersInter ","%.6f"%timecount[3]
        # if (rank == 0 ): t0=timeit.default_timer()
        #apply BC
-       c = 0    
-       for z in zones: fasts._applyBC(z, metrics[c], vars[0]); c += 1
+       _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        # if (rank == 0 ):
        #     t1=timeit.default_timer()
        #     print "time/it (s) BC only (=t_RK X 1.0): ",(t1-t0)
 
    return None
 #==============================================================================
-def warmup(t, tc, graph=None, infos_ale=None, tmy=None):
-    #global FIRST_IT, HOOK, HOOKIBC
+def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
+    #global PyTree.FIRST_IT, PyTree.HOOK, PyTree.HOOKIBC
 
     rank = Cmpi.rank
 
@@ -221,26 +162,54 @@ def warmup(t, tc, graph=None, infos_ale=None, tmy=None):
 
     # Construction param_int et param_real des zones
     _buildOwnData(t)
-    # Calul de la metric: tijk, ventijk, ssiter_loc
-    metrics = metric(t)
-    # Contruction BC_int et BC_real pour CL
-    _BCcompact(t) 
-    # compact + align + init numa
-    t = createPrimVars(t, omp_mode)
 
     # determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
     zones = Internal.getZones(t)
-
-    #Allocation HOOK
     f_it = PyTree.FIRST_IT
     if PyTree.HOOK is None: PyTree.HOOK = FastI.createWorkArrays__(zones, dtloc, f_it ); PyTree.FIRST_IT = f_it
-    for nstep in xrange(1, int(dtloc[0])+1): hook1 = PyTree.HOOK + fasts.souszones_list(zones, metrics, PyTree.HOOK, 1, nstep)
+
+    # allocation d espace dans param_int pour stockage info openmp
+    _build_omp(t) 
+
+    # alloue metric: tijk, ventijk, ssiter_loc
+    # init         : ssiter_loc
+    metrics = allocate_metric(t)
+
+    # Contruction BC_int et BC_real pour CL
+    _BCcompact(t) 
+
+    #determination taille des zones a integrer (implicit ou explicit local)
+    #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)
+    for nstep in xrange(1, int(dtloc[0])+1):
+        hook1 = PyTree.HOOK.copy()
+        hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, 1, nstep) )
+        distributeThreads(t, metrics, PyTree.HOOK, nstep, int(dtloc[0]) )
+
+    _init_metric(t, metrics, hook1, omp_mode)
+
+    # compact + align + init numa
+    rmConsVars=True
+    adjoint   =Adjoint
+    t = createPrimVars(t, omp_mode, rmConsVars, adjoint)
+
+    zones = Internal.getZones(t) # car create primvar rend zones caduc
 
     #Allocation HOOKIBC
     if PyTree.HOOKIBC is None: PyTree.HOOKIBC = FastI.getIBCInfo__(t)
+
+    if PyTree.HOOK["neq_max"] == 5: varType = 2
+    else                          : varType = 21
+
+    PyTree.HOOK['param_int_ibc'][0] = varType
+    PyTree.HOOK['param_int_ibc'][1] = PyTree.HOOKIBC[0]
+    PyTree.HOOK['param_real_ibc'][0]= PyTree.HOOKIBC[1]
+    PyTree.HOOK['param_real_ibc'][1]= PyTree.HOOKIBC[2]
+    PyTree.HOOK['param_real_ibc'][2]= PyTree.HOOKIBC[3]
+    PyTree.HOOK['param_real_ibc'][3]= PyTree.HOOKIBC[4]
+    PyTree.HOOK['param_real_ibc'][4]= PyTree.HOOKIBC[5]
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     c   = 0
@@ -269,8 +238,13 @@ def warmup(t, tc, graph=None, infos_ale=None, tmy=None):
     #
     if tc is not None:      
        X.miseAPlatDonnorTree__(zones, tc, graph=graph)
-       # if Cmpi.rank == 0:
-       #    print"graphinwarmup",graph['graphIBCD']
+
+       PyTree.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int')[1]
+       param_real_tc               = Internal.getNodeFromName1( tc, 'Parameter_real')
+       if param_real_tc is not None: PyTree.HOOK['param_real_tc']= param_real_tc[1]
+    else:
+        PyTree.HOOK['param_real_tc'] = None
+        PyTree.HOOK['param_int_tc']  = None 
 
     #
     # Compactage arbre moyennes stat
@@ -285,12 +259,12 @@ def warmup(t, tc, graph=None, infos_ale=None, tmy=None):
     #
     # remplissage ghostcells
     #
-    hook1[12] = 0
-    nstep     = 1
-    nitrun    = 0
+    hook1['skip_lu'] = 0
+    nstep            = 1
+    nitrun           = 0
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4]) 
-    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, hook1,graphID, graphIBCD, procDict)
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, omp_mode, hook1,graphID, graphIBCD, procDict)
 
     #
     # initialisation Mut
@@ -315,15 +289,15 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
     TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget'] 
     for opt in TimeLevelOpts:
        tmp = Internal.getNodeFromName1(t, opt)
-       Internal.createUniqueChild(t, opt, 'DataArray_t', value=0)
+       if tmp is None: Internal.createUniqueChild(t, opt, 'DataArray_t', value=0)
 
     if dtloc is not None:
       dtloc            = Internal.getValue(dtloc) # tab numpy
       timelevel_motion = dtloc[3]
       timelevel_target = dtloc[4]
     else:
-      timelevel_motion = 0
-      timelevel_target = 0
+      timelevel_motion = Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0]
+      timelevel_target = Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0]
 
     timelevel_period = timelevelInfos["TimeLevelPeriod"]
     timelevel_360    = timelevelInfos["TimeLevel360"]
@@ -334,8 +308,9 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
     #
     #target in no more in tc; need need data in a new file
     #
-    if timelevel_target == timelevel_perfile+1: 
+    if timelevel_target == timelevel_perfile or tc is None: 
 
+       rank = Cmpi.rank
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
 
@@ -343,13 +318,27 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        if os.access(FILE, os.F_OK): 
           tc = Cmpi.convertFile2SkeletonTree(FILE)
           tc = Cmpi.readZones(tc, FILE, rank=rank)
-          tc = Cmpi.convert2PartialTree(tc)
 
        FILE = directory+'/tc_'+str(root)+'.cgns'
        if os.access(FILE, os.F_OK): 
           tc_inst = Cmpi.convertFile2SkeletonTree(FILE)
           tc_inst = Cmpi.readZones(tc_inst, FILE, rank=rank)
-          tc_inst = Cmpi.convert2PartialTree(tc_inst)
+
+       #
+       #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
+       #
+       if timelevel_motion >= timelevel_period: 
+          bases  = Internal.getNodesFromType1(tc_inst , 'CGNSBase_t')       # noeud
+
+          sign =-1
+          if omega > 0: sign = 1
+          for base in bases:
+            if   base[0]=='Rotor': teta = -2*math.pi*timelevel_period/timelevel_360*No_period*sign
+            elif base[0]=='Stator':teta =  2*math.pi*timelevel_period/timelevel_360*No_period*sign
+            zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
+            for z in zones:
+              angles = Internal.getNodesFromName2(z, 'RotationAngle')
+              for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
 
        tc = Internal.merge( [tc, tc_inst] )
 
@@ -359,7 +348,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        procList  = D2.getProcList(tc)
        graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
 
-       #UnsteadyConnectInfos  = X.getUnsteadyConnectInfos(tc_inst)
+       tc = Cmpi.convert2PartialTree(tc, rank=rank)
 
        #
        #Compactage tc
@@ -375,39 +364,18 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        FastI._reorder(t, tc, omp_mode)
 
        # Compactage arbre transfert
-       if graph is not None: 
-           g = graph['procDict']
-           l = graph['procList']
-       else: 
-           print "Error: true graph is missing in _UpdateUnsteadyJoinParam."
-           import sys; sys.exit()
-
-       zones=Internal.getZones(t)
-       # X.miseAPlatDonnorTree__(zones, tc, procDict=g, procList=l)
+       zones = Internal.getZones(t)
+       g     = graph['procDict']
+       l     = graph['procList']
+       
        X.miseAPlatDonnorTree__(zones, tc, graph=graph)
 
        #Remise zero target
        if dtloc is not None: dtloc[4] = 0
-    #
-    #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
-    #
-    if timelevel_motion == timelevel_period+1: 
-       bases  = Internal.getNodesFromType1(tc    , 'CGNSBase_t')       # noeud
-
-       sign =-1
-       if omega > 0: sign = 1
-       for base in bases:
-         if   base[0]=='Rotor': teta = -math.pi*timelevel_period/timelevel_360*No_period*sign
-         elif base[0]=='Stator':teta =  math.pi*timelevel_period/timelevel_360*No_period*sign
-         zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
-         for z in zones:
-           angles = Internal.getNodesFromName2(z, 'RotationAngle')
-           for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
-
        
     #
     #timelevel_motion larger than number of timelevels for 360degre 
     #
     if timelevel_motion > timelevel_360: dtloc[3] = 0  # remise a zero du compteur si 360degres 
 
-    return tc
+    return tc, graph

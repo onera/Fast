@@ -84,7 +84,7 @@ PyObject* K_FASTS::compute_dpJ_dpW(PyObject* self, PyObject* args)
 
 
   /// Tableau pour stockage senseur oscillation
-  PyObject* wigArray = PyList_GetItem(work,0); FldArrayF* wig; FldArrayF* eff;
+  PyObject* wigArray = PyDict_GetItemString(work,"wiggle"); FldArrayF* wig; FldArrayF* eff;
   K_NUMPY::getFromNumpyArray(wigArray, wig, true); E_Float* iptwig = wig->begin();
 //  K_NUMPY::getFromNumpyArray(effarray, eff, true); E_Float* ipteff = eff->begin();
 

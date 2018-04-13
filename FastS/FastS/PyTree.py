@@ -42,8 +42,9 @@ varsP    = ['Density_P1']
 # compute in place
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None):
-    global FIRST_IT, HOOK, HOOKIBC
+#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python"):
+def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
+    global FIRST_IT, HOOK
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -58,40 +59,45 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
     omp_mode = 0
     if  node is not None: omp_mode = Internal.getValue(node)
 
-    dtloc = Internal.getValue(dtloc) # tab numpy
-    nitmax = int(dtloc[0])                 
+    dtloc   = Internal.getValue(dtloc) # tab numpy
+    nitmax  = int(dtloc[0])                 
     orderRk = int(dtloc[len(dtloc)-1])
 
-    bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
-    
     #### a blinder...
     itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
     #### a blinder...
 
-    for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
-       	# determination taille des zones a integrer (implicit ou explicit local)
-    	hook1 = HOOK + fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep)
-        nidom_loc = hook1[11]
-        
-        # hook1[10] = nombre equations max
-        # hook1[11] = nidom_lu
-        # hook1[12] = lskip_lu
-        # hook1[13] = lssiter_verif
-        skip      = 0
-        if (hook1[13] == 0 and nstep == nitmax and itypcp ==1): skip = 1
+    if layer == "Python": 
 
-        # calcul Navier_stokes + appli CL
-    	if nidom_loc > 0 and skip == 0:
+      for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
+
+         hook1 = HOOK.copy()
+         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep) )
+         nidom_loc = hook1["nidom_tot"]
+        
+         skip      = 0
+         if (hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1): skip = 1
+
+         # calcul Navier_stokes + appli CL
+      	 if nidom_loc > 0 and skip == 0:
             # Navier-Stokes
-            fasts._computePT(zones, metrics, nitrun, nstep, omp_mode, hook1)
-              
+            nstep_deb = nstep
+            nstep_fin = nstep
+            layer_mode= 0
+            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, hook1)
+            #fasts._computePT(zones, metrics, nitrun, nstep, omp_mode, hook1)
+
             #Ghostcell
             vars=  varsP
-
             if  nstep == 2 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
             timelevel_target = int(dtloc[4])
-            _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1) 
-            
+            _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1)
+
+    else: 
+      nstep_deb = 1
+      nstep_fin = nitmax
+      layer_mode= 1
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, HOOK)
 
     # data update for unsteady joins
     dtloc[3] +=1   #time_level_motion
@@ -100,88 +106,18 @@ def _compute(t, metrics, nitrun, tc=None, graph=None):
     # switch pointers
     FastI.switchPointers__(zones, orderRk)
     # flag pour derivee temporelle 1er pas de temps implicit
-    HOOK[9]  = 1
-    FIRST_IT = 1
+    HOOK["FIRST_IT"]  = 1
+    FIRST_IT          = 1
     return None
-
-#==============================================================================
-# compute in place
-# graph is a dummy argument to be compatible with mpi version 
-#==============================================================================
-def _compute_c(t, metrics, nitrun, tc=None, graph=None):
-    global FIRST_IT, HOOK, HOOKIBC
-
-    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
-    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
-    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
-
-    zones = []
-    for f in bases:
-        zones += Internal.getNodesFromType1(f, 'Zone_t') 
-
-    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
-    node = Internal.getNodeFromName1(node, 'omp_mode')
-    omp_mode = 0
-    if  node is not None: omp_mode = Internal.getValue(node)
-
-    dtloc = Internal.getValue(dtloc) # tab numpy
-    nitmax = int(dtloc[0])                 
-    orderRk = int(dtloc[len(dtloc)-1])
-    
-    #### a blinder...
-    itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
-    #### a blinder...    
-
-    #bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
-    parambci = numpy.empty((2), numpy.int32)         
-    parambcf = numpy.empty((5), numpy.float64) 
-    parambc  =[]
-    
-    if tc is not None :
-        tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
-        if tc_compact is not None:
-
-            param_real_tc= tc_compact[1]
-            param_int_tc = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
-
-            parambci[1]=HOOKIBC[0]; parambcf[0]=HOOKIBC[1]; parambcf[1]=HOOKIBC[2]; 
-            parambcf[2]=HOOKIBC[3]; parambcf[3]=HOOKIBC[4]; parambcf[4]=HOOKIBC[5];
-            
-    else:
-        param_int_tc = None
-        param_real_tc= None  
-
-    if HOOK[10] == 5: varType = 2
-    else             : varType = 21
-    parambci[0]=varType
-    
-    # if(nstep==1):
-    parambc.append(parambci)
-    parambc.append(parambcf)
-
-    fasts.computePT_trans(zones, metrics, nitrun, nitmax, omp_mode, HOOK,
-                          param_int_tc,  param_real_tc,parambc)    
-    # data update for unsteady joins
-    dtloc[3] +=1   #time_level_motion
-    dtloc[4] +=1   #time_level_target
-    
-    # switch pointers
-    FastI.switchPointers__(zones, orderRk)
-    # flag pour derivee temporelle 1er pas de temps implicit
-    HOOK[9]  = 1
-    FIRST_IT = 1
-    return None    
 #
 #==============================================================================
-# Calcul et retourne la metrique
+# alloue retourne la metrique
 #==============================================================================
-def metric(t):
-    #global FIRST_IT
+def allocate_metric(t):
     zones        = Internal.getZones(t)
     dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
     nssiter      = int(dtloc_numpy[0])
-    #FIRST_IT     = int(dtloc_numpy[2])
 
     metrics=[]; motion ='none'
     for z in zones:
@@ -196,8 +132,21 @@ def metric(t):
                grid_init = Internal.copyTree(grids[0])
                grid_init[0] = 'GridCoordinates#Init'
                Internal.addChild(z, grid_init, pos=1) # first
-        metrics.append(fasts.metric(z, nssiter))   
+        metrics.append(fasts.allocate_metric(z, nssiter))   
     return metrics
+
+#
+#==============================================================================
+# alloue retourne la metrique
+#==============================================================================
+def _init_metric(t, metrics, hook, omp_mode):
+    zones        = Internal.getZones(t)
+
+    fasts.init_metric(zones, metrics, hook, omp_mode)
+    
+    for metric in metrics: del metric[7]
+
+    return None
 
 #==============================================================================
 # Initialisation parametre calcul: calcul metric + var primitive + compactage 
@@ -212,58 +161,63 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
         node = Internal.getNodeFromName1(node, 'omp_mode')
         if  node is not None: omp_mode = Internal.getValue(node)
 
-#    # Distribute amongst OMP THREADS    
-#    t    = T.splitSizeUpR_OMP__(t,0,OMP_NUM_THREADS,0,[3,2],1) # Minmum size per direction 1, 
-#                                                               # split in j,k only ([2,3]), 
-#                                                               # no specified averaged cells/threads (first 0),
-#                                                               # no multigrid (second 0)
-#                                                                
-#    node = Internal.getNodeFromName3(t, '.Solver#Param')    
-#    if node is not None:
-#        node = Internal.getNodeFromName1(node, 'omp_threads')
-#    if node is not None:
-#        for nbth in xrange(1,OMP_NUM_THREADS+1):    
-#            nodeth = Internal.getNodeFromName1(node,str(nbth))
-#            subz   = Internal.getChildren(nodeth)
-#            nbsz   = len(subz)
-#            for nb in xrange(0,nbsz):
-#                print nbth,nb,Internal.getValue(subz[nb])
-#        
-#
-
     # Reordone les zones pour garantir meme ordre entre t et tc
     FastI._reorder(t, tc, omp_mode)
+
     # Construction param_int et param_real des zones
     _buildOwnData(t)
-    # Calul de la metric: tijk, ventijk, ssiter_loc
-    metrics = metric(t)
-    # Contruction BC_int et BC_real pour CL
-    _BCcompact(t) 
-    # compact + align + init numa
-    rmConsVars=True
-    adjoint=Adjoint
-    #t0=timeit.default_timer()
-    t = createPrimVars(t, omp_mode, rmConsVars, adjoint)
-    #t1=timeit.default_timer()
-    #print "cout createprimvars= ", t1-t0
 
-    # determination taille des zones a integrer (implicit ou explicit local)
-    #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)
+    #init hook necessaire pour info omp
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
     zones = Internal.getZones(t)
-
-    #Allocation HOOK
     f_it = FIRST_IT
     if HOOK is None: HOOK = FastI.createWorkArrays__(zones, dtloc, f_it ); FIRST_IT = f_it
-    for nstep in xrange(1, int(dtloc[0])+1): hook1 = HOOK + fasts.souszones_list(zones, metrics, HOOK, 1, nstep)
 
+    # allocation d espace dans param_int pour stockage info openmp
+    _build_omp(t) 
 
+    # alloue metric: tijk, ventijk, ssiter_loc
+    # init         : ssiter_loc
+    metrics = allocate_metric(t)
 
-    #Allocation HOOKIBC
+    # Contruction BC_int et BC_real pour CL
+    _BCcompact(t) 
+
+    #determination taille des zones a integrer (implicit ou explicit local)
+    #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)
+    for nstep in xrange(1, int(dtloc[0])+1):
+        hook1 = HOOK.copy()
+        hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep) )
+        display  = False
+        if nstep == 1 : display=True
+        distributeThreads(t, metrics, HOOK, nstep, int(dtloc[0]), Display=display )
+
+    _init_metric(t, metrics, hook1, omp_mode)
+
+    # compact + align + init numa
+    rmConsVars=True
+    adjoint=Adjoint
+    t = createPrimVars(t, omp_mode, rmConsVars, adjoint)
+
+    zones = Internal.getZones(t) # car create primvar rend zones caduc
+
+    #Allocation HOOKIBC et mise a jour des infos pour IBC depuis fonction C
     if HOOKIBC is None: HOOKIBC = FastI.getIBCInfo__(t)
-    #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
 
+    if HOOK["neq_max"] == 5: varType = 2
+    else                   : varType = 21
+
+    HOOK['param_int_ibc'][0] = varType
+    HOOK['param_int_ibc'][1] = HOOKIBC[0]
+    HOOK['param_real_ibc'][0]= HOOKIBC[1]
+    HOOK['param_real_ibc'][1]= HOOKIBC[2]
+    HOOK['param_real_ibc'][2]= HOOKIBC[3]
+    HOOK['param_real_ibc'][3]= HOOKIBC[4]
+    HOOK['param_real_ibc'][4]= HOOKIBC[5]
+    
+
+    #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     c   = 0
     ale = False
     for z in zones:
@@ -291,10 +245,17 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     #print "cout mise a jour vitesse entr= ", t1-t0
 
     #
-    # Compactage arbre transfert
+    # Compactage arbre transfert et mise a jour HOOK
     #
     if tc is not None:
        X.miseAPlatDonnorTree__(zones, tc, graph=graph) 
+    
+       HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
+       param_real_tc        = Internal.getNodeFromName1( tc, 'Parameter_real')
+       if param_real_tc is not None: HOOK['param_real_tc']= param_real_tc[1]
+    else:
+        HOOK['param_real_tc'] = None
+        HOOK['param_int_tc']  = None  
 
     #
     # Compactage arbre moyennes stat
@@ -309,19 +270,20 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     #
     # remplissage ghostcells
     #
-    hook1[12] = 0
-    nstep     = 1
-    nitrun    = 0
+    hook1["skip_lu"]= 0
+    nstep           = 1
+    nitrun          = 0
     
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4]) 
-    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, hook1) 
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  omp_mode, hook1) 
    
     
     #
     # initialisation Mut
     #
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
+    #print "warning mut init"
     fasts._computePT_mut(zones, metrics, hook1)
 
     if tmy is None: return (t, tc, metrics)
@@ -332,12 +294,11 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
     #global  CACHELINE
     if  mode is not None:
       if mode == -1: 
-        thread_numa = -1
+        thread_numa = 0
       else:
-        thread_numa = mode%(OMP_NUM_THREADS)
-        if thread_numa ==0: thread_numa = OMP_NUM_THREADS
+        thread_numa = 1
     else:                    
-      thread_numa = -1
+      thread_numa = 0
 
     zones = Internal.getZones(t)
     for z in zones:
@@ -398,15 +359,15 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
     TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget'] 
     for opt in TimeLevelOpts:
        tmp = Internal.getNodeFromName1(t, opt)
-       Internal.createUniqueChild(t, opt, 'DataArray_t', value=0)
+       if tmp is None: Internal.createUniqueChild(t, opt, 'DataArray_t', value=0)
 
     if dtloc is not None:
       dtloc            = Internal.getValue(dtloc) # tab numpy
       timelevel_motion = dtloc[3]
       timelevel_target = dtloc[4]
     else:
-      timelevel_motion = 1
-      timelevel_target = 1
+      timelevel_motion = Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0]
+      timelevel_target = Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0]
 
     timelevel_period = timelevelInfos["TimeLevelPeriod"]
     timelevel_360    = timelevelInfos["TimeLevel360"]
@@ -414,8 +375,6 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
     timelevel_axeRot = timelevelInfos["TimeLevelRotationAxis"]
 
     No_period = timelevel_motion//timelevel_period 
-
-    #print 'mjr=', timelevel_target, timelevel_perfile+1
     #
     #target in no more in tc; need need data in a new file
     #
@@ -433,7 +392,22 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        if os.access(FILE, os.F_OK): tc_inst  = C.convertFile2PyTree(FILE)
        else: print "error reading", FILE
 
-       #UnsteadyConnectInfos  = X.getUnsteadyConnectInfos(tc_inst)
+       #
+       #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
+       #
+       if timelevel_motion >= timelevel_period: 
+          bases  = Internal.getNodesFromType1(tc_inst , 'CGNSBase_t')       # noeud
+
+          sign =-1
+          if omega > 0: sign = 1
+          for base in bases:
+            if   base[0]=='Rotor': teta = -2*math.pi*timelevel_period/timelevel_360*No_period*sign
+            elif base[0]=='Stator':teta =  2*math.pi*timelevel_period/timelevel_360*No_period*sign
+            zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
+            for z in zones:
+              angles = Internal.getNodesFromName2(z, 'RotationAngle')
+              for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
+
        tc = Internal.merge( [tc, tc_inst] )
 
        # Get omp_mode
@@ -455,28 +429,11 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        if dtloc is not None: dtloc[4] = 0
 
     #
-    #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
-    #
-    if timelevel_motion == timelevel_period+1: 
-       bases  = Internal.getNodesFromType1(tc    , 'CGNSBase_t')       # noeud
-
-       sign =-1
-       if omega > 0: sign = 1
-       for base in bases:
-         if   base[0]=='Rotor': teta = -math.pi*timelevel_period/timelevel_360*No_period*sign
-         elif base[0]=='Stator':teta =  math.pi*timelevel_period/timelevel_360*No_period*sign
-         zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
-         for z in zones:
-           angles = Internal.getNodesFromName2(z, 'RotationAngle')
-           for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
-
-       
-    #
     #timelevel_motion larger than number of timelevels for 360degre 
     #
     if timelevel_motion > timelevel_360: dtloc[3] = 0  # remise a zero du compteur si 360degres 
 
-    return tc
+    return tc, graph
 
 #==============================================================================
 # Converti les variables conservatives de l'arbre en variables primitives
@@ -494,13 +451,14 @@ def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
 def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
     global FIRST_IT
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
-    for b in bases:
+    for b in bases:  
         zones = Internal.getNodesFromType1(b, 'Zone_t')
         count = -1
         if omp_mode == 1: count = 0
         for z in zones:
             if omp_mode == 1: count += 1
-            sa,FIRST_IT  = FastI._createPrimVars(b, z, FIRST_IT, omp_mode, rmConsVars,Adjoint)
+            sa,FIRST_IT     = FastI._createPrimVars(b, z, omp_mode, rmConsVars,Adjoint)
+            HOOK['FIRST_IT']= FIRST_IT
             sfd = 0
             a = Internal.getNodeFromName2(z, 'sfd')
             if a is not None: sfd = Internal.getValue(a)
@@ -509,11 +467,11 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             if a is not None: extract_res = Internal.getValue(a)
             if sa:
                 t0=timeit.default_timer()
-                _compact(z, fields=['centers:Density'   , 'centers:VelocityX'   , 'centers:VelocityY'   ,'centers:VelocityZ'   , 'centers:Temperature'   , 'centers:TurbulentSANuTilde']   , mode=count)
+                _compact(z, fields=['centers:Density'   , 'centers:VelocityX'   , 'centers:VelocityY'   ,'centers:VelocityZ'   , 'centers:Temperature'   , 'centers:TurbulentSANuTilde']   ,  mode=count)
                 t1=timeit.default_timer()
                 #print "cout compact D= ", t1-t0, z[0]
                 t0=timeit.default_timer()
-                _compact(z, fields=['centers:Density_M1', 'centers:VelocityX_M1', 'centers:VelocityY_M1','centers:VelocityZ_M1', 'centers:Temperature_M1', 'centers:TurbulentSANuTilde_M1'], mode=count)
+                _compact(z, fields=['centers:Density_M1', 'centers:VelocityX_M1', 'centers:VelocityY_M1','centers:VelocityZ_M1', 'centers:Temperature_M1', 'centers:TurbulentSANuTilde_M1'],  mode=count)
                 t1=timeit.default_timer()
                 #print "cout compact M= ", t1-t0, z[0]
                 t0=timeit.default_timer()
@@ -567,34 +525,6 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
 
     return None
 #==============================================================================
-# Compact les solutions primitives ro,u,T (doivent exister dans t)
-# Cree si necessaire les M1 et P1
-#==============================================================================
-def compactPrimVars(t):
-    tp = Internal.copyRef(t)
-    _compactPrimVars(tp)
-    return tp
-
-def _compactPrimVars(t):
-    vars = C.getVarNames(t, excludeXYZ=True, loc='centers')
-    if 'centers:Density_M1' not in vars:
-        C._cpVars(t, 'centers:Density', t, 'centers:Density_M1')
-        C._cpVars(t, 'centers:VelocityX', t, 'centers:VelocityX_M1')
-        C._cpVars(t, 'centers:VelocityY', t, 'centers:VelocityY_M1')
-        C._cpVars(t, 'centers:VelocityZ', t, 'centers:VelocityZ_M1')
-        C._cpVars(t, 'centers:Temperature', t, 'centers:Temperature_M1')
-    if 'centers:Density_P1' not in vars:
-        C._cpVars(t, 'centers:Density', t, 'centers:Density_P1')
-        C._cpVars(t, 'centers:VelocityX', t, 'centers:VelocityX_P1')
-        C._cpVars(t, 'centers:VelocityY', t, 'centers:VelocityY_P1')
-        C._cpVars(t, 'centers:VelocityZ', t, 'centers:VelocityZ_P1')
-        C._cpVars(t, 'centers:Temperature', t, 'centers:Temperature_P1')
-    _compact(t, fields=['centers:Density', 'centers:VelocityX', 'centers:VelocityY','centers:VelocityZ', 'centers:Temperature'])
-    _compact(t, fields=['centers:Density_M1', 'centers:VelocityX_M1', 'centers:VelocityY_M1','centers:VelocityZ_M1', 'centers:Temperature_M1'])
-    _compact(t, fields=['centers:Density_P1', 'centers:VelocityX_P1', 'centers:VelocityY_P1','centers:VelocityZ_P1', 'centers:Temperature_P1'])
-    return None
-
-#==============================================================================
 def checkBalance(t):
     zones = Internal.getZones(t)
 
@@ -622,24 +552,20 @@ def itt(var):
     fasts.itt(ivar)
     return None
 #==============================================================================
-def _applyBC(t, metrics, var="Density"):
+def _applyBC(t, metrics, hook1, nstep, omp_mode, var="Density"):
     zones = Internal.getZones(t)
     c = 0
     
-    for z in zones: fasts._applyBC(z, metrics[c], var); c += 1
+    #for z in zones: fasts._applyBC(z, metrics[c], var); c += 1
+    fasts._applyBC(zones, metrics, hook1, nstep, omp_mode, var)
     return None
 
 #==============================================================================
-def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1): 
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1): 
 
-    # hook1[10] = nombre equations max
-    # hook1[11] = nidom_lu
-    # hook1[12] = lskip_lu
-    # hook1[13] = lssiter_verif
-   
    timecount = numpy.zeros(4, dtype=numpy.float64)
 
-   if hook1[12] ==0:
+   if hook1['lexit_lu'] ==0:
 
        #transfert
        if tc is not None :
@@ -651,8 +577,8 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1):
               param_int = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
               zonesD    = Internal.getZones(tc)
 
-              if hook1[10] == 5: varType = 2
-              else             : varType = 21
+              if hook1["neq_max"] == 5: varType = 2
+              else                    : varType = 21
 
               bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
 
@@ -670,9 +596,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, hook1):
 
        #apply BC
        #t0=timeit.default_timer()
-       _applyBC(zones, metrics, var=vars[0])
-       # c = 0    
-       # for z in zones: fasts._applyBC(z, metrics[c], vars[0]); c += 1
+       _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        #t1=timeit.default_timer()
        #print "Time BC",(t1-t0)
             
@@ -1085,7 +1009,8 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
 
     Internal._rmNodesByType(b,'ZoneBC_t')
     Internal._rmNodesByType(b,'ZoneGridConnectivity_t')
-    _compact(tmy, fields=varmy)
+
+    _compact(tmy, fields=varmy) 
 
     return tmy
 
@@ -1110,7 +1035,7 @@ def initStats(filename):
     varmy=[]
     for v in var: varmy.append('centers:'+v[0])
 
-    _compact(tmy, fields=varmy)
+    _compact(tmy, fields=varmy) 
 
     return tmy
 
@@ -1186,10 +1111,10 @@ def _computeVariables(t, metrics, varlist, order=2):
                  Internal.createChild(solution, var, 'DataArray_t', tmp)
 
     if (var_loc != []):
-       if (lcompact_Q):     _compact(t, fields=['centers:QCriterion'])
-       if (lcompact_Enst) : _compact(t, fields=['centers:Enstrophy' ])
-       if (lcompact_Rotx) : _compact(t, fields=['centers:RotX' ])
-       if (lcompact_drodt): _compact(t, fields=['centers:dDensitydt' ])
+       if (lcompact_Q):     _compact(zones, fields=['centers:QCriterion'])
+       if (lcompact_Enst) : _compact(zones, fields=['centers:Enstrophy' ])
+       if (lcompact_Rotx) : _compact(zones, fields=['centers:RotX' ])
+       if (lcompact_drodt): _compact(zones, fields=['centers:dDensitydt' ])
 
        dtloc = Internal.getNodeFromName3(t , '.Solver#dtloc')  # noeud
        dtloc = Internal.getValue(dtloc)                       # tab numpy
@@ -1214,6 +1139,7 @@ def _computeGrad(t, metrics, varlist, order=2):
 
     ##verifie si les noeuds existent dans l'arbre
     zones = Internal.getZones(t)
+    nd =0
     for z in zones:
         #
         dim   = Internal.getZoneDim(z)
@@ -1240,7 +1166,8 @@ def _computeGrad(t, metrics, varlist, order=2):
                       Internal.createChild(solution, grad, 'DataArray_t', tmp)
                       lcompact = True
 
-               if(lcompact): _compact(t, fields=['centers:'+vargrad[0],'centers:'+vargrad[1],'centers:'+vargrad[2]])
+               if(lcompact): _compact(z, fields=['centers:'+vargrad[0],'centers:'+vargrad[1],'centers:'+vargrad[2]])
+        nd+=1
       
     if(var_loc !=[]):
        dtloc = Internal.getNodeFromName3(t , '.Solver#dtloc')  # noeud
@@ -1301,6 +1228,35 @@ def checkKeys(d, keys):
     for i in d[2]:
         if i[0] not in keys:
             print 'Warning: FastS: keyword %s is invalid.'%i[0]
+
+
+#==============================================================================
+# Construit les donnees compactees pour traiter les BC
+#==============================================================================
+def _build_omp(t):
+    # Data for each Base
+    bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
+
+    #dimensionnememnt tableau
+    size_param_int =[]
+    size_int       = HOOK['MX_SSZONE']*(OMP_NUM_THREADS*7+4)
+    for b in bases:
+        zones = Internal.getZones(b)
+        for z in zones:
+            
+            o = Internal.getNodeFromName1( z, '.Solver#ownData')
+
+            #on concatene les donnes omp dans param_int
+            param_int = Internal.getNodeFromName1( o, 'Parameter_int')
+            size = numpy.shape(param_int[1])
+            c = 1
+            for s in size: c=c*s
+            size_param_int.append(c)
+
+            datap = numpy.zeros(size_int+c, numpy.int32)
+            datap[0:c]   = param_int[1][0:c]
+            datap[69]    = c     # debut tableau omp dans param_int
+            param_int[1] = datap
 
 #==============================================================================
 # Construit les donnees compactees pour traiter les BC
@@ -1375,7 +1331,9 @@ def _BCcompact(t):
 
             #pt_bcs_int = 64
             #pt_bcs_real= 37
-            pt_bcs_int =  size_param_int[no]
+            pt_bcs_int   =  size_param_int[no]
+            param_int[70]=  pt_bcs_int
+
             pt_bcs_real=  size_param_real[no] 
             param_int[ pt_bcs_int ] = Nb_bc
             i         = 1
@@ -1385,6 +1343,7 @@ def _BCcompact(t):
             for bc in bcs:
                 param_int[ pt_bcs_int +i       ] = size_int  + pt_bcs_int
                 param_int[ pt_bcs_int +i +Nb_bc] = size_real + pt_bcs_real
+
                 pt_bc                            =  param_int[ pt_bcs_int +i ] 
 
                 param_int[pt_bc] = FastI.tagBC( Internal.getValue(bc) )
@@ -1398,7 +1357,9 @@ def _BCcompact(t):
                 ind_bc[3] = indrange[1][1]
                 ind_bc[4] = indrange[2][0]
                 ind_bc[5] = indrange[2][1]
+
                 fasts.PygetRange( ind_bc,  param_int, pt_bc+ 1)
+
                 bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
                 Nb_data = len(bcdata)
                 param_int[pt_bc + 8] = Nb_data
@@ -1423,15 +1384,22 @@ def _BCcompact(t):
 # Construit les datas possedees par FastS
 #==============================================================================
 def _buildOwnData(t):
+    global FIRST_IT, HOOK
     # Data for each Base
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
 
     #init time et No iteration
-    it0 =0; temps=0.
+    it0 =0; temps=0.; timelevel_motion= 0; timelevel_target= 0
     first = Internal.getNodeFromName1(t, 'Iteration')
     if first is not None: it0 = Internal.getValue(first)
     first = Internal.getNodeFromName1(t, 'Time')
     if first is not None: temps = Internal.getValue(first)
+    first = Internal.getNodeFromName1(t, 'TimeLevelMotion')
+    if first is not None: timelevel_motion = Internal.getValue(first)
+    print 'timmotion', first, timelevel_motion
+    first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
+    if first is not None: timelevel_target = Internal.getValue(first)
+
 
     # Ecriture d un vecteur contenant le niveau en temps de chaque zone
     # Determination du niveau en temps le plus grand 
@@ -1513,9 +1481,6 @@ def _buildOwnData(t):
         restart_fields  = 1
         exploc          = 0
         t_init_ale      = temps
-
-        timelevel_motion= 0
-        timelevel_target= 0
         timelevel_prfile= 0
 
         if d is not None:
@@ -1540,10 +1505,6 @@ def _buildOwnData(t):
             a = Internal.getNodeFromName1(d, 'time_begin_ale')
             if a is not None: t_init_ale = Internal.getValue(a)  
 
-        a = Internal.getNodeFromName1(t, 'TimeLevelMotion')
-        if a is not None: timelevel_motion = Internal.getValue(a)
-        a = Internal.getNodeFromName1(t, 'TimeLevelTarget')
-        if a is not None: timelevel_target = Internal.getValue(a)
           
         # Base ownData (generated)
         o = Internal.createUniqueChild(b, '.Solver#ownData', 
@@ -1569,10 +1530,11 @@ def _buildOwnData(t):
         datap[2] = restart_fields-1
         datap[3] = timelevel_motion
         datap[4] = timelevel_target 
-        datap[5] = timelevel_prfile 
+        datap[5] = timelevel_prfile
         datap[6:dtdim-1] = 1
         datap[dtdim-1] = rk
         Internal.createUniqueChild(o, '.Solver#dtloc', 'DataArray_t', datap)
+
 
     # Data for each zone
     #==== Check if padding file exists (potential cache associativity issue)
@@ -1604,7 +1566,6 @@ def _buildOwnData(t):
             # zone ownData (generated)
             o = Internal.createUniqueChild(z, '.Solver#ownData', 
                                            'UserDefinedData_t')
-
             # - defaults -
             model    = "Euler"
             ransmodel= 'SA'
@@ -1811,7 +1772,7 @@ def _buildOwnData(t):
             # creation noeud parametre integer
             # Determination de levelg et leveld             
 
-            datap = numpy.empty(69, numpy.int32)
+            datap = numpy.empty(71, numpy.int32)
             datap[0:25]= -1
             datap[25]  = 0     # zone 3D curvi par defaut
             datap[26]  = 0     # Vent 3D par defaut
@@ -1913,9 +1874,8 @@ def _buildOwnData(t):
             Internal.createUniqueChild(o, 'type_zone'    , 'DataArray_t',  0)
             Internal.createUniqueChild(o, 'model', 'DataArray_t', model)
             Internal.createUniqueChild(o, 'temporal_scheme', 'DataArray_t', temporal_scheme)
+
     return None
-
-
 #==============================================================================
 # init veloty (ALE)
 #==============================================================================
@@ -1931,7 +1891,13 @@ def _computeVelocityAle(t, metrics):
     f_it = FIRST_IT
     if HOOK is None: HOOK = FastI.createWorkArrays__(zones, dtloc, f_it ); FIRST_IT = f_it;
     
-    fasts.computePT_velocity_ale(zones,  metrics, HOOK)
+    bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
+    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(node, 'omp_mode')
+    omp_mode = 0
+    if  node is not None: omp_mode = Internal.getValue(node)
+
+    fasts.computePT_velocity_ale(zones,  metrics, HOOK, omp_mode)
     return None
 
 #==============================================================================
@@ -2238,7 +2204,10 @@ def _computeStress(t, teff, metrics):
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
             HOOK   = FastI.createWorkArrays__(zones, dtloc, FIRST_IT); 
             nitrun =0; nstep =1;
-    	    hook1  = HOOK + fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep)
+
+            hook1  = HOOK.copy()
+            hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep) )
+
     else:  hook1  = HOOK
 
     effort = numpy.empty(8, numpy.float64)
@@ -2246,6 +2215,484 @@ def _computeStress(t, teff, metrics):
     fasts.compute_effort(zones, zones_eff, metrics, hook1, effort)
 
     return effort
+
+
+#==============================================================================
+#
+# Calcul des effort (in place)
+#
+#==============================================================================
+def distributeThreads(t, metrics, work, nstep, nssiter, Display=False):
+
+    zones     = Internal.getZones(t)
+
+    nzone =len(zones)
+    size_zone =[]
+    parent_zone =[]
+    c = 0
+    for z in zones:
+        param_int  = Internal.getNodeFromName2(z, 'Parameter_int')[1]  # noeud
+        MXSSDOM_LU = param_int[ 24 ]
+        nb_subzone = metrics[c][5][  MXSSDOM_LU*6*nssiter + nssiter + nstep-1 ]
+        dim        = Internal.getZoneDim(z)
+        for nd_subzone in range(nb_subzone):
+
+            shift  = (nstep-1)*6*MXSSDOM_LU  + 6*nd_subzone
+	    inddm  = metrics[c][5]
+
+            if dim[0]=='Structured':
+
+              nijk   = numpy.ones((3), numpy.int32) 
+              nijk[0]= inddm[1+shift]
+              nijk[1]= inddm[3+shift]
+              nijk[2]= inddm[5+shift]
+              ndimdx = nijk[0]*nijk[1]*nijk[2]
+            else: ndimdx = dim[2]
+
+            size_zone.append(ndimdx)
+            parent_zone.append([c,nd_subzone,ndimdx, nijk] )
+        c+=1
+         
+    new_zones       =[]
+    for z in xrange( len(size_zone) ):
+       vmax = max( size_zone )
+       pos_max = size_zone.index( vmax )
+       new_zones.append( parent_zone[pos_max])
+       del size_zone[pos_max]
+       del parent_zone[pos_max]
+
+    cells_tg = 0
+    flui_tg  = 0
+    fluj_tg  = 0
+    fluk_tg  = 0
+    nijk_zones =[]
+    inddm_zones=[]
+    for z in new_zones:
+
+        ind_dm = numpy.ones((6), numpy.int32) 
+        nijk   = z[3]
+
+        ind_dm[1]= nijk[0]; ind_dm[3]= nijk[1]; ind_dm[5]= nijk[2]
+
+	size_c = nijk[0]*nijk[1]*nijk[2]
+	size_i =(nijk[0]+1)*nijk[1]*nijk[2]
+	size_j =(nijk[1]+1)*nijk[0]*nijk[2]
+	size_k = 0
+        if nijk[2] != 1: size_k = (nijk[2]+1)*nijk[0]*nijk[1]
+
+        cells_tg += size_c
+        flui_tg  += size_i
+        fluj_tg  += size_j
+        fluk_tg  += size_k
+
+        nijk_zones.append(nijk)
+        inddm_zones.append(ind_dm)
+
+    cells_tg /= OMP_NUM_THREADS
+    flui_tg  /= OMP_NUM_THREADS
+    fluj_tg  /= OMP_NUM_THREADS
+    fluk_tg  /= OMP_NUM_THREADS
+
+    #print 'Target', cells_tg, flui_tg, fluj_tg, fluk_tg
+    remaind= {}
+    for th in range(OMP_NUM_THREADS):
+       remaind[str(th)] = cells_tg
+
+    #omp =work['distrib_omp']  #numpi contenant les infos
+    marge=1.04
+    c    = 0
+    infos= {}
+    for z in new_zones:
+        No_zone    = z[0]
+        No_subzone = z[1]
+        param_int  = Internal.getNodeFromName2(zones[No_zone], 'Parameter_int')[1]  # noeud
+        #omp        = Internal.getNodeFromName2(zones[No_zone], 'omp')[1]  # noeud
+        MX_SSZONE  = work['MX_SSZONE']
+        #shift_omp  =  MX_SSZONE*No_zone*(OMP_NUM_THREADS*7+4)
+        shift_omp  =  param_int[69]
+
+        #print 'nozone=', No_zone, No_subzone, shift_omp
+
+        infoZone ={}
+        nijk   = nijk_zones[c]
+	size_c = nijk[0]*nijk[1]*nijk[2]
+	size_i =(nijk[0]+1)*nijk[1]*nijk[2]
+	size_j =(nijk[1]+1)*nijk[0]*nijk[2]
+	size_k = 0
+        if nijk[2] != 1: size_k = (nijk[2]+1)*nijk[0]*nijk[1]
+
+        if size_c <= cells_tg*marge:
+	    th_current = 0
+            lgo = True
+	    while lgo:
+                #print 'th_current',th_current,remaind[str(th_current)],size_c/marge, size_c
+
+                if size_c/marge <=  remaind[str(th_current)]: lgo = False
+                if lgo and th_current == OMP_NUM_THREADS-1:
+                     lgo = False
+                     #on cerche le thread le moins charge pour attribuer le residu
+                     th_max =-100000
+                     for th in range(OMP_NUM_THREADS):
+                        if remaind[str(th)] > th_max:
+                           th_max     = remaind[str(th)]
+                           th_current = th
+                     #print 'traitememnt residu affecte au thread', th_current, remaind[str(th)], th
+                if lgo: th_current +=1
+                
+            remaind[str(th_current)] =  remaind[str(th_current)] - size_c 
+             
+            #Carte threads actifs       
+            param_int[ shift_omp: shift_omp + OMP_NUM_THREADS ] = -2 #Thread inactif
+            param_int[ shift_omp + th_current                 ] =  0 #le Thread "0" (pas au sens omp: indirection entre omp_numthread et ithread)) prend le job
+            #Nb threads actifs 
+            param_int[shift_omp + OMP_NUM_THREADS ] = 1 
+            #topology omp
+            param_int[shift_omp + OMP_NUM_THREADS +1:  shift_omp + OMP_NUM_THREADS +4] =  1
+            #indice sous-domaine omp
+            param_int[shift_omp + OMP_NUM_THREADS +4 ] =  inddm_zones[c][0]
+            param_int[shift_omp + OMP_NUM_THREADS +5 ] =  inddm_zones[c][1]
+            param_int[shift_omp + OMP_NUM_THREADS +6 ] =  inddm_zones[c][2]
+            param_int[shift_omp + OMP_NUM_THREADS +7 ] =  inddm_zones[c][3]
+            param_int[shift_omp + OMP_NUM_THREADS +8 ] =  inddm_zones[c][4]
+            param_int[shift_omp + OMP_NUM_THREADS +9 ] =  inddm_zones[c][5]
+
+
+            infoZone['Nthread']  = 1
+            infoZone['threadIds']= [th_current]
+            infoZone['ind_dm_th']= [ inddm_zones[c] ]
+
+        else:
+            Nthreads =  size_c/cells_tg
+            if size_c%cells_tg != 0: Nthreads +=1
+            Nthreads = min( Nthreads,  OMP_NUM_THREADS )
+            #if (Nthreads-1)*cells_tg > 0.95*size_c: Nthreads -=1
+
+            itypcp = param_int[29]
+            if itypcp == 2 : lmin =  4
+            else:            lmin = 10
+
+            topo_lu   = numpy.ones((3), numpy.int32) 
+            ind_dm_th = numpy.ones((6), numpy.int32) 
+
+            dim_ijk   = numpy.ones((3*Nthreads), numpy.int32) 
+            res_ijk   = numpy.ones((3*Nthreads), numpy.int32) 
+
+            search = True
+            while search == True:
+
+              search = False
+              #if search: 
+              #     print "N passes pour Optim balance, Nthreads=", Nthreads
+
+              fasts.work_thread_distribution( inddm_zones[c], topo_lu, ind_dm_th, c, Nthreads, lmin) 
+              #print 'topo_LU=', topo_lu, Nthreads, z[0]
+              for th in range(Nthreads):
+
+                 if topo_lu[0] == 1 : #then !dom 3d: decoupe direction k (et j eventuellement)
+                    k = 1 +(th)/topo_lu[1]
+                    j = th+1 -(k-1)*topo_lu[1]
+                    i = 1
+                 else:
+                    k = 1
+                    j = 1 +(th)/topo_lu[0]
+                    i = th+1 -(j-1)*topo_lu[0]
+
+
+                 #distrib omp fast classic
+                 if Nthreads == OMP_NUM_THREADS:
+              
+                   if topo_lu[0] == 1 : #then !dom 3d: decoupe direction k (et j eventuellement)
+
+                      dim_ijk[0+3*th] =  nijk[0]
+                      res_ijk[0+3*th] =  0
+                      #dir J
+                      if j <= nijk[1]%topo_lu[1]: # then !test pour repartir le residu sur les 1er sous-doamine
+                        dim_ijk[1+3*th] =  nijk[1]/topo_lu[1] + 1
+                        res_ijk[1+3*th] =  0
+                      else:
+                        dim_ijk[1+3*th] =  nijk[1]/topo_lu[1]
+                        res_ijk[1+3*th] =  nijk[1]%topo_lu[1]
+                      #dir K
+                      if k <= nijk[2]%topo_lu[2]: # then !test pour repartir le residu sur les 1er sous-doamine
+                        dim_ijk[2+3*th] =  nijk[2]/topo_lu[2] + 1
+                        res_ijk[0+3*th] =  0
+                      else:
+                        dim_ijk[2+3*th] =  nijk[2]/topo_lu[2]
+                        res_ijk[2+3*th] =  nijk[2]%topo_lu[2]
+                   else:
+                      dim_ijk[2+3*th] =  nijk[2]
+                      res_ijk[2+3*th] =  0
+                      #dir I
+                      if i <= nijk[0]%topo_lu[0]: # then !test pour repartir le residu sur les 1er sous-doamine
+                        dim_ijk[0+3*th] =  nijk[0]/topo_lu[0] + 1
+                        res_ijk[0+3*th] =  0
+                      else:
+                        dim_ijk[0+3*th] =  nijk[0]/topo_lu[0]
+                        res_ijk[0+3*th] =  nijk[0]%topo_lu[0]
+                      #dir J
+                      if j <= nijk[1]%topo_lu[1]: # then !test pour repartir le residu sur les 1er sous-doamine
+                        dim_ijk[1+3*th] =  nijk[1]/topo_lu[1] + 1
+                        res_ijk[1+3*th] =  0
+                      else:
+                        dim_ijk[1+3*th] =  nijk[1]/topo_lu[1]
+                        res_ijk[1+3*th] =  nijk[1]%topo_lu[1]
+
+                 else:
+
+                   if k==1: kdeb = inddm_zones[c][4]
+                   if j==1: jdeb = inddm_zones[c][2]
+                   if i==1: ideb = inddm_zones[c][0]
+             
+                   #Pas de decoupe
+                   if topo_lu[0]*topo_lu[1]*topo_lu[2] == 1: 
+                        dim_ijk[0+3*th] = nijk[0]
+                        dim_ijk[1+3*th] = nijk[1]
+                        dim_ijk[2+3*th] = nijk[2]
+                        res_ijk[0+3*th] =  0
+                        res_ijk[1+3*th] =  0
+                        res_ijk[2+3*th] =  0
+                   #decoupe K uniquememnt
+                   elif topo_lu[0]*topo_lu[1] == 1: 
+                        dim_ijk[0+3*th] = nijk[0]
+                        dim_ijk[1+3*th] = nijk[1]
+                        dim_ijk[2+3*th] = cells_tg/( nijk[0]*nijk[1] )
+                        res_ijk[0+3*th] =  0
+                        res_ijk[1+3*th] =  0
+                        res_ijk[2+3*th] =  0
+
+                        if th == Nthreads-1: 
+                           dim_ijk[2+3*th] = inddm_zones[c][5] -kdeb +1
+                           res_ijk[2+3*th] =  kdeb -  inddm_zones[c][4] - dim_ijk[2+3*th]*(k-1)
+
+                        if dim_ijk[2+3*th] < lmin and Nthreads > 1 and not search:
+                          Nthreads   -=1
+                          search = True
+                        else:
+                          kdeb += dim_ijk[2+3*th]
+                          #print 'topo K'
+                   #decoupe J uniquememnt
+                   elif topo_lu[0]*topo_lu[2] == 1: 
+                        dim_ijk[0+3*th] = nijk[0]
+                        dim_ijk[2+3*th] = nijk[2]
+                        dim_ijk[1+3*th] = cells_tg/( nijk[0]*nijk[2] )
+                        res_ijk[0+3*th] =  0
+                        res_ijk[1+3*th] =  0
+                        res_ijk[2+3*th] =  0
+
+                        res = nijk[1]%dim_ijk[1+3*th]
+                        if res != 0:
+                           if j <= res: dim_ijk[1+3*th] +=1
+                           else       : res_ijk[1+3*th] += res
+                           #dirJ
+                        if j == topo_lu[1]: 
+                          dim_ijk[1+3*th] = inddm_zones[c][3] -jdeb +1
+                          res_ijk[1+3*th] =  jdeb -  inddm_zones[c][2] - dim_ijk[1+3*th]*(j-1)
+
+                        if dim_ijk[1+3*th] < lmin and Nthreads > 1 and not search:
+                          Nthreads   -=1
+                          search = True
+			  #print 'redo J', j,Nthreads, search 
+                        else:
+                          jdeb += dim_ijk[1+3*th]
+			  #print 'topo J'
+                   #decoupe I uniquememnt
+                   elif topo_lu[1]*topo_lu[2] == 1: 
+                        dim_ijk[1+3*th] = nijk[1]
+                        dim_ijk[2+3*th] = nijk[2]
+                        dim_ijk[0+3*th] = cells_tg/( nijk[1]*nijk[2] )
+                        res_ijk[0+3*th] =  0
+                        res_ijk[1+3*th] =  0
+                        res_ijk[2+3*th] =  0
+
+                        if th == Nthreads-1: 
+                          dim_ijk[0+3*th] = inddm_zones[c][1] -ideb +1
+                          res_ijk[0+3*th] =  ideb -  inddm_zones[c][0] - dim_ijk[0+3*th]*(i-1)
+
+                        if dim_ijk[0+3*th] < lmin and Nthreads > 1 and not search:
+                          Nthreads   -=1
+                          search = True
+                        else:
+                          ideb += dim_ijk[0+3*th]
+                          #print 'topo I'
+
+                   #decoupe K et J
+                   elif topo_lu[0] == 1: 
+               	        dim_ijk[0+3*th]  = nijk[0]
+                        dim_ijk[1+3*th]  = nijk[1]
+                        dim_ijk[2+3*th]  = nijk[2]
+                        res_ijk[0+3*th] =  0
+                        res_ijk[1+3*th] =  0
+                        res_ijk[2+3*th] =  0
+
+                        dim_ijtg    = cells_tg/dim_ijk[0+3*th]
+
+                        res     = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[2+3*th]
+                        #if res < 0: print "warning distrib: residu negatif"
+
+                        while res > dim_ijk[2+3*th] or res > dim_ijk[1+3*th]:
+                           if res//dim_ijk[2+3*th] > 1:
+                       	     dim_ijk[1+3*th] +=1
+                             res    = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[2+3*th]
+                           if res//dim_ijk[1+3*th] > 1:
+                             dim_ijk[2+3*th] +=1
+                             res    = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[2+3*th]
+                           #dirJ
+                           if j == topo_lu[1]: 
+                             dim_ijk[1+3*th] = inddm_zones[c][3] -jdeb +1
+                             res_ijk[1+3*th] =  jdeb -  inddm_zones[c][2] - dim_ijk[1+3*th]*(j-1)
+
+                           if dim_ijk[1+3*th] < lmin and Nthreads > 1 and not search:
+                             search    = True
+                             Nthreads -=1
+                           else:
+                             jdeb  += dim_ijk[1+3*th]
+
+                           #dirK
+                           if k == topo_lu[2]: 
+                             dim_ijk[2+3*th] = inddm_zones[c][5] -kdeb +1
+                             res_ijk[2+3*th] =  kdeb -  inddm_zones[c][4] - dim_ijk[2+3*th]*(k-1)
+ 
+                           if dim_ijk[2+3*th] < lmin and Nthreads > 1 and not search:
+                             search    = True
+                             Nthreads -=1
+                           else:
+                             kdeb += dim_ijk[2+3*th]
+
+		        #print 'topo K et J'
+
+                   #decoupe I et J
+                   elif topo_lu[0] == 1: 
+                        dim_ijk[0+3*th]  = nijk[0]
+                        dim_ijk[1+3*th]  = nijk[1]
+                        dim_ijk[2+3*th]  = nijk[2]
+                        res_ijk[0+3*th] =  0
+                        res_ijk[1+3*th] =  0
+                        res_ijk[2+3*th] =  0
+
+                        dim_ijtg    = cells_tg/dim_ijk[2+3*th]
+
+                        res     = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[0+3*th]
+                        #if res < 0: print "warning distrib: residu negatif"
+
+                        while res > dim_ijk[0+3*th] or res > dim_ijk[1+3*th]:
+                           if res//dim_ijk[0+3*th] > 1:
+                             dim_ijk[1+3*th] +=1
+                             res    = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[0+3*th]
+                           if res//dim_ijk[1+3*th] > 1:
+                             dim_ijk[0+3*th] +=1
+                             res    = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[0+3*th]
+
+                           #dirJ
+                           if j == topo_lu[1]: 
+                             dim_ijk[1+3*th] = inddm_zones[c][3] -jdeb +1
+                             res_ijk[1+3*th] =  jdeb -  inddm_zones[c][2] - dim_ijk[1+3*th]*(j-1)
+
+                           if dim_ijk[1+3*th] < lmin and Nthreads > 1 and not search:
+                             search    = True
+                             Nthreads -=1
+                           else:
+                             jdeb  += dim_ijk[1+3*th]
+
+                           #dirI
+                           if i == topo_lu[0]: 
+                             dim_ijk[0+3*th] = inddm_zones[c][1] -ideb +1
+                             res_ijk[0+3*th] =  ideb -  inddm_zones[c][0] - dim_ijk[0+3*th]*(i-1)
+
+                           if dim_ijk[0+3*th] < lmin and Nthreads > 1 and not search:
+                             search    = True
+                             Nthreads -=1
+                           else:
+                             ideb  += dim_ijk[0+3*th]
+
+                        #print 'topo I et J'
+
+
+
+            #Carte threads actifs       
+            param_int[ shift_omp: shift_omp + OMP_NUM_THREADS ] = -2 #Thread inactif
+
+            thread_list=[]
+            dim_list   =[]
+            for th in range(Nthreads):
+		th_current = 0
+                size_th    = dim_ijk[0+3*th]*dim_ijk[1+3*th]*dim_ijk[2+3*th]
+                size_loc = size_th
+
+                #print 'szloc',  dim_ijk[0+3*th],dim_ijk[1+3*th],dim_ijk[2+3*th], remaind[str(th_current)], th_current
+		#while size_loc/marge > remaind[str(th_current)] and th_current < OMP_NUM_THREADS: 
+		while size_loc/marge > remaind[str(th_current)] and th_current < OMP_NUM_THREADS-1: 
+                   #print 'szloc',  size_loc/marge, remaind[str(th_current)], th_current
+                   th_current +=1
+                
+                if th_current == OMP_NUM_THREADS-1:
+                   blind = -100000
+                   for i in range(OMP_NUM_THREADS):
+                        #print 'blind', remaind[str(i)], blind, i
+                        if remaind[str(i)] > blind:
+                          blind = remaind[str(i)]
+                          th_current = i
+
+                remaind[str(th_current)] =  remaind[str(th_current)] - size_loc
+
+                #print 'thread=', th, size_loc, remaind[str(th_current)], th_current
+
+                param_int[ shift_omp + th_current ] = th #Thread actif
+
+                thread_list.append(th_current)
+
+            #Nb threads actifs 
+            param_int[shift_omp + OMP_NUM_THREADS ] = len(thread_list)
+
+            #topology omp
+            param_int[shift_omp + OMP_NUM_THREADS +1 ] =  topo_lu[0]
+            param_int[shift_omp + OMP_NUM_THREADS +2 ] =  topo_lu[1]
+            param_int[shift_omp + OMP_NUM_THREADS +3 ] =  topo_lu[2]
+
+            th = 0
+            #print "topo_LLLUUU", topo_lu
+            for k in range( topo_lu[2]):
+              for j in range( topo_lu[1]):
+                for i in range( topo_lu[0]):
+                   inddm_omp   = numpy.ones((6), numpy.int32)
+ 
+                   inddm_omp[0]  = inddm_zones[c][0]    + dim_ijk[0+3*th]*(i  ) + res_ijk[0+3*th]
+                   inddm_omp[1]  = inddm_zones[c][0] -1 + dim_ijk[0+3*th]*(i+1) + res_ijk[0+3*th]
+                   inddm_omp[2]  = inddm_zones[c][2]    + dim_ijk[1+3*th]*(j  ) + res_ijk[1+3*th]
+                   inddm_omp[3]  = inddm_zones[c][2] -1 + dim_ijk[1+3*th]*(j+1) + res_ijk[1+3*th]
+                   inddm_omp[4]  = inddm_zones[c][4]    + dim_ijk[2+3*th]*(k  ) + res_ijk[2+3*th]
+                   inddm_omp[5]  = inddm_zones[c][4] -1 + dim_ijk[2+3*th]*(k+1) + res_ijk[2+3*th]
+                   dim_list.append( inddm_omp )
+
+                   #indice sous-domaine omp
+                   param_int[shift_omp + OMP_NUM_THREADS +4 +th*6] = inddm_omp[0]
+                   param_int[shift_omp + OMP_NUM_THREADS +5 +th*6] = inddm_omp[1]
+                   param_int[shift_omp + OMP_NUM_THREADS +6 +th*6] = inddm_omp[2]
+                   param_int[shift_omp + OMP_NUM_THREADS +7 +th*6] = inddm_omp[3]
+                   param_int[shift_omp + OMP_NUM_THREADS +8 +th*6] = inddm_omp[4]
+                   param_int[shift_omp + OMP_NUM_THREADS +9 +th*6] = inddm_omp[5]
+
+                   th +=1
+
+            #parent_zone.append([c,nd_subzone,ndimdx, nijk] )
+
+            infoZone['Nthread']  = Nthreads
+            infoZone['threadIds']= thread_list
+            infoZone['ind_dm_th']= dim_list
+
+            if Display: print 'size_target= ', cells_tg, 'size_zone= ', size_c, 'Nbr thread mis en oeuvre= ', Nthreads
+
+        if Display: print infoZone
+
+        infos[z[0]] = infoZone
+        c+=1
+
+    if Display:
+       print "OMP balancing: positive values --> slow thread" 
+       for key, value in remaind.iteritems():
+          print 'desequilibre thread ', key, ': ', (float(-value)/cells_tg)*100, 'percent'
+       #print remaind
+
+    return None
 
 #==============================================================================
 # compute guillaume
@@ -2275,10 +2722,11 @@ def _computeguillaume1(t, metrics, nitrun, tc=None):
     for nstep in xrange(1, nitmax+1): # Etape explicit local
              
 	# determination taille des zones a integrer (implicit ou explicit local)
-    	hook1 = HOOK + fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep)#+ WorkArraysexploc__(t,zones)
-	nidom_loc = hook1[11]
+        hook1  = HOOK.copy()
+        hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep) )
+	nidom_loc = hook1["nidom_tot"]
         
-        if (hook1[13] == 0 and nstep == nitmax and nitmax > nitmax ):nidom_loc = 0          
+        if (hook1["lssiter_verif"] == 0 and nstep == nitmax and nitmax > nitmax ):nidom_loc = 0          
           
         #print 'nstep' , nstep,nidom_loc,nitmax
                   
@@ -2291,10 +2739,9 @@ def _computeguillaume1(t, metrics, nitrun, tc=None):
         
         # apply transfers
         if tc is not None:
-                # hook1[10] = nombre equations
-                if   (hook1[10] == 5 and nstep%2 == 1): vars = varsP; varType = 2                                       
-                elif (hook1[10] == 5 and nstep%2 == 0): vars = varsN; varType = 2                    
-                elif (hook1[10] == 6 and nstep == 2)  : vars = varsN_SA; varType = 21
+                if   (hook1["neq_max"] == 5 and nstep%2 == 1): vars = varsP; varType = 2                                       
+                elif (hook1["neq_max"] == 5 and nstep%2 == 0): vars = varsN; varType = 2                    
+                elif (hook1["neq_max"] == 6 and nstep == 2)  : vars = varsN_SA; varType = 21
                 else                                  : vars = varsP_SA; varType = 21
                 for v in vars: C._cpVars(t, 'centers:'+v, tc, v)                            
                      
@@ -2336,7 +2783,8 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
             HOOK   = FastI.createWorkArrays__(zones, dtloc, FIRST_IT); 
             nitrun =0; nstep =1;
-    	    hook1  = HOOK + fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep)
+            hook1  = HOOK.copy()
+            hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep) )
     else:   hook1  = HOOK
 
     fasts.compute_dpJ_dpW(zones, zones_eff, metrics, hook1, cosAoA, sinAoA, surfinv)
@@ -2383,8 +2831,9 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
                     tmp = Internal.getNodesFromType1(f, 'Zone_t') 
                     zonesD += tmp
 
-    nstep=1
-    hook1  = HOOK + fasts.souszones_list(zones, metrics, HOOK, nit_adjoint, nstep)
+#    nstep=1
+#    hook1  = HOOK.copy()
+#    hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nit_adjoint, nstep) )
 #    hook1  = HOOK
     
 

@@ -106,7 +106,7 @@ PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
  
      E_Int shiftvar = ivar* (ipt_param_int[NIJK]*ipt_param_int[NIJK+1]*ipt_param_int[NIJK+2] + ipt_param_int[SHIFTVAR]) ;
 
-  if(thread_numa == -1)
+  if(thread_numa == 0)
   { 
      E_Int* ipt_thread_topology   = thread_topology.begin()   + 3*(ithread-1);
      E_Int* ipt_ind_dm_socket     = ind_dm_socket.begin()     + 6*(ithread-1);
@@ -203,6 +203,30 @@ PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
   else //omp_mode=1           
   {
 
+    FldArrayI ind_dm(6); E_Int* inddm  = ind_dm.begin();
+
+    E_Int shift_omp = ipt_param_int[ PT_OMP ];
+
+    E_Int Nbre_thread_actif_loc = ipt_param_int[ shift_omp  + Nbre_thread_actif ];
+    E_Int ithread_loc           = ipt_param_int[ shift_omp  +  ithread -1       ] +1 ;
+
+
+    E_Int* inddm_omp = ipt_param_int + shift_omp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+
+    inddm[0] = inddm_omp[0];
+    inddm[1] = inddm_omp[1];
+    inddm[2] = inddm_omp[2];
+    inddm[3] = inddm_omp[3];
+    inddm[4] = inddm_omp[4];
+    inddm[5] = inddm_omp[5];
+
+    E_Int iloop1 = K_FUNC::E_max(1, inddm[0] );              //prise en compte moyenne tmy dir I homogene
+    E_Int jloop1 = K_FUNC::E_max(1, inddm[2] );              //prise en compte moyenne tmy dir I homogene
+    E_Int kloop1 = K_FUNC::E_max(1, inddm[4] );              //prise en compte moyenne tmy dir I homogene
+    E_Int iloop2 = K_FUNC::E_min(ipt_ind_dm[1], inddm[1] );  //prise en compte moyenne tmy dir I homogene
+    E_Int jloop2 = K_FUNC::E_min(ipt_ind_dm[3], inddm[3] );  //prise en compte moyenne tmy dir I homogene
+    E_Int kloop2 = K_FUNC::E_min(ipt_ind_dm[5], inddm[5] );  //prise en compte moyenne tmy dir I homogene
+
      E_Int ific   = ipt_param_int[ NIJK +3];
      if(ipt_ind_dm[1]==1) ific = 0;   // prise en compte moyenne tmy dir I homogene
      E_Int jfic   = ipt_param_int[ NIJK +3];
@@ -210,19 +234,18 @@ PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
      E_Int kfic   = ipt_param_int[ NIJK +4];
      if(ipt_ind_dm[5]==1) kfic = 0;   // prise en compte moyenne tmy dir K homogene
 
-     E_Int iloop1 = ipt_ind_dm[0]-ific;
-     E_Int jloop1 = ipt_ind_dm[2]-ific;
-     E_Int kloop1 = ipt_ind_dm[4]-kfic;
-
-     E_Int iloop2 = ipt_ind_dm[1]+ific;
-     E_Int jloop2 = ipt_ind_dm[3]+ific;
-     E_Int kloop2 = ipt_ind_dm[5]+kfic;
+     if(iloop1 ==1) iloop1 = iloop1 -ific;
+     if(jloop1 ==1) jloop1 = jloop1 -ific;
+     if(kloop1 ==1) kloop1 = kloop1 -kfic;
+     if(iloop2 ==ipt_ind_dm[1]) iloop2 = iloop2 +ific;
+     if(jloop2 ==ipt_ind_dm[3]) jloop2 = jloop2 +ific;
+     if(kloop2 ==ipt_ind_dm[5]) kloop2 = kloop2 +kfic;
 
      E_Int ni_loc = ipt_param_int[ NIJK   ];
      E_Int nj_loc = ipt_param_int[ NIJK +1];
   
-  //printf("ni =%d %d %d \n", ithread, thread_numa, ivar);
-     if(ithread == thread_numa)
+     //printf("ific =%d %d  %d %d %d  % d %d %d \n", iloop1, iloop2, jloop1, jloop2,  kloop1, kloop2, ific,kfic  );
+     if(ithread_loc != -1)
      {
       for ( E_Int k = kloop1; k <= kloop2; k++)
         {

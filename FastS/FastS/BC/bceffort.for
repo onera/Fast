@@ -92,7 +92,8 @@ C Var loc
 
 c         ndf    = param_int_eff(EFF_NDF)
 c
-c         pt_bc  = param_int(BC_NBBC + 1 + ndf)
+c         pt_bcs = param_int(PT_BC)
+c         pt_bc  = param_int(pt_bcs  + 1 + ndf)
 c         bc_type= param_int(pt_bc + BC_TYPE)
 c
 c#include "FastS/BC/CL_correction_flu.for"

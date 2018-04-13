@@ -6,7 +6,7 @@
      &      .or.bc_type.eq.BCWALLVISCOUS_TRANSITION) Then
 
             mobile_coef = 1.
-            iptdata = param_int(BC_NBBC + 1 + ndf + nb_bc)
+            iptdata = param_int( param_int(PT_BC) + 1 + ndf + nb_bc)
             if (nbdata.ne.0) mobile_coef = param_real( iptdata )
 
             if(idir.le.2) THEN

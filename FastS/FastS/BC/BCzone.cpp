@@ -123,9 +123,9 @@ E_Int K_FASTS::getRange( E_Int* in_bc, E_Int* ind_fen, E_Int* param_int ) {
         ind_fen[2] = max( in_bc[2] - param_int[NIJK + 3], 1 );
         ind_fen[3] = min( in_bc[3] - param_int[NIJK + 3] - 1, param_int[IJKV + 1] );
     }
-    // printf("fen  %d %d %d %d %d %d  \n", ind_fen[0], ind_fen[1],ind_fen[2],ind_fen[3],ind_fen[4],ind_fen[5] );
-    // printf("nijk  %d %d  \n", param_int[NIJK+3], param_int[NIJK+4] );
-    // printf("ijkv  %d %d  %d\n", param_int[IJKV], param_int[IJKV+1], param_int[IJKV+2] );
+     //printf("fen  %d %d %d %d %d %d  \n", ind_fen[0], ind_fen[1],ind_fen[2],ind_fen[3],ind_fen[4],ind_fen[5] );
+     //printf("nijk  %d %d  \n", param_int[NIJK+3], param_int[NIJK+4] );
+     //printf("ijkv  %d %d  %d\n", param_int[IJKV], param_int[IJKV+1], param_int[IJKV+2] );
     return 0;
 }
 //
@@ -155,23 +155,26 @@ E_Int K_FASTS::BCzone(
     E_Float* iptijk;
     E_Float* ipventijk;
 
-    E_Int nb_bc = param_int[BC_NBBC];
+    E_Int pt_bcs = param_int[PT_BC];
+    E_Int nb_bc  = param_int[ pt_bcs ];
+
 
     for ( E_Int ndf = 0; ndf < nb_bc; ndf++ ) {
-        E_Int pt_bc = param_int[BC_NBBC + 1 + ndf];
+        E_Int pt_bc = param_int[ pt_bcs + 1 + ndf];
         E_Int idir  = param_int[pt_bc + BC_IDIR];
+
         E_Int ipara = idir - 1;
         // on test si le sous domaine touche le bord du domaine et si la CL est bonne candidate a implicitation
         if ( lrhs == 1 ) {
-            if ( ( ipt_ind_dm_thread[ipara] == itest[ipara] ) &&
-                 ( ( param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7 ) ||
-                   param_int[pt_bc + BC_TYPE] == 12 ) ) {
-                lskip[ipara] = 0;
-                lcorner      = 0;
-            }
-        } else {
-            lskip[ipara] = 1;
-        }
+                          if ( ( ipt_ind_dm_thread[ipara] == itest[ipara] ) &&
+                             ( ( param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7 ) ||
+                                 param_int[pt_bc + BC_TYPE] == 12 ) ) 
+                           {
+                             lskip[ipara] = 0;
+                             lcorner      = 0;
+                           }
+                         }
+        else {lskip[ipara] = 1;}
 
     }  // fin loop CL warmup
 
@@ -277,9 +280,13 @@ E_Int K_FASTS::BCzone(
     */
 
     for ( E_Int ndf = 0; ndf < nb_bc; ndf++ ) {
-        E_Int pt_bc  = param_int[BC_NBBC + 1 + ndf];
+        E_Int pt_bc  = param_int[pt_bcs+ 1 + ndf];
+
         E_Int idir   = param_int[pt_bc + BC_IDIR];
         E_Int nbdata = param_int[pt_bc + BC_NBDATA];
+        E_Int bc_type= param_int[pt_bc + BC_TYPE];
+
+        //printf("ptbc= %d , idir= %d , nbdat= %d , bctype=  %d \n", pt_bc, idir,nbdata,  bc_type );
 
         E_Int* iptsize_data = param_int + pt_bc + BC_NBDATA + 1;
 
@@ -310,7 +317,7 @@ E_Int K_FASTS::BCzone(
             E_Int bc_type = param_int[pt_bc + BC_TYPE];
 
             E_Float* ipt_data;
-            if ( nbdata != 0 ) ipt_data = param_real + param_int[BC_NBBC + 1 + ndf + nb_bc];
+            if ( nbdata != 0 ) ipt_data = param_real + param_int[pt_bcs + 1 + ndf + nb_bc];
 
             if ( lskip_loc == 0 ) {
                 // RANS:LES extrapolation

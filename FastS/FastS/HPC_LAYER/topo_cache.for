@@ -9,11 +9,11 @@
       cache(3)       = param_int(CACHEBLCKK)
 
 !DIR$ ATTRIBUTES FORCEINLINE :: topo_scater
-      call topo_scater(ndo, ithread, socket, lmin,
+      call topo_scater(ndo, ithread, socket, omp_mode, lmin,
      &                  param_int(KFLUDOM),
      &                  thread_parsock, thread_parsock_actif,
      &                  ithread_sock, socket_topology,
-     &                  size_target, ind_dm_zone, 
+     &                  size_target, ind_dm_zone, topo_omp,
      &                  topo_s, ijkvloc, thread_pos, socket_pos,
      &                  thread_topology, size_thread, ijkv_thread)
            

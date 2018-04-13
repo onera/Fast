@@ -33,8 +33,12 @@ using namespace K_FLD;
 PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
 {
     PyObject* zones; PyObject* metrics; PyObject* work;
-    if (!PyArg_ParseTuple(args, "OOO", &zones , &metrics, &work)) 
-      return NULL;
+    E_Int omp_mode;
+#if defined E_DOUBLEINT
+  if (!PyArg_ParseTuple(args, "OOOl", &zones , &metrics, &work, &omp_mode)) return NULL; 
+#else 
+  if (!PyArg_ParseTuple(args, "OOOi", &zones , &metrics, &work, &omp_mode)) return NULL;
+#endif
 
     /* tableau pour stocker dimension sous-domaine omp */
     E_Int threadmax_sdm = 1;
@@ -42,7 +46,8 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
     threadmax_sdm  = omp_get_max_threads();
 #endif
 
-    PyObject* tmp = PyList_GetItem(work, 8); E_Int mx_synchro    = PyLong_AsLong(tmp); 
+  PyObject* tmp = PyDict_GetItemString(work,"MX_SYNCHRO"); E_Int mx_synchro = PyLong_AsLong(tmp); 
+            tmp = PyDict_GetItemString(work,"MX_SSZONE");  E_Int mx_sszone  = PyLong_AsLong(tmp);
 
   E_Int nidom        = PyList_Size(zones);
   E_Int ndimdx       = 0;
@@ -144,6 +149,11 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
   PyObject* lokArray = PyList_GetItem(work,3); FldArrayI* lok;
   K_NUMPY::getFromNumpyArray(lokArray, lok, true); E_Int* ipt_lok  = lok->begin();
 
+  // Tableau distribution omp
+  PyObject* distompArray = PyDict_GetItemString(work,"distrib_omp"); FldArrayI* dist_omp;
+  K_NUMPY::getFromNumpyArray(distompArray,dist_omp, true); E_Int* ipt_distomp  = dist_omp->begin();
+
+
 #pragma omp parallel default(shared)
   {
 #ifdef _OPENMP
@@ -188,11 +198,25 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
                               ipt_ind_dm_loc, 
                               ipt_topology_socket, ipt_ind_dm_socket );
 
-             init_ventijk_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro,
+            E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
+            E_Int Nbre_thread_actif_loc, ithread_loc;
+            if (omp_mode == 1)
+            { 
+              Nbre_thread_actif_loc = ipt_distomp[ mx_sszone*nd*(Nbre_thread_actif*7+4) + Nbre_thread_actif ];
+              ithread_loc           = ipt_distomp[ mx_sszone*nd*(Nbre_thread_actif*7+4) +  ithread -1       ] +1 ;
+
+              ipt_topo_omp   = ipt_distomp + mx_sszone*nd*(Nbre_thread_actif*7+4) + Nbre_thread_actif + 1;
+              ipt_inddm_omp  = ipt_distomp + mx_sszone*nd*(Nbre_thread_actif*7+4) + Nbre_thread_actif + 4 + ithread_loc*6;
+
+              if (ithread_loc == -1) { continue;}
+            }
+
+
+             init_ventijk_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, omp_mode,
                           ipt_param_int[nd], ipt_param_real[nd],
                           ipt_ijkv_sdm_thread,
                           ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
-                          ipt_topology_socket, ipt_lok_thread ,
+                          ipt_topology_socket, ipt_lok_thread , ipt_topo_omp, ipt_inddm_omp,
                           ipti[nd]    , iptj[nd]    , iptk[nd]    , iptvol[nd]  ,
                           ipti_df[nd] , iptj_df[nd] , iptk_df[nd] ,
                           iptventi[nd], iptventj[nd], iptventk[nd], iptx[nd], ipty[nd], iptz[nd] );
@@ -204,7 +228,8 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
   delete [] ipt_param_real;
   delete [] ipt_param_int;
 
-  RELEASESHAREDN( lokArray  , lok  );
+  RELEASESHAREDN( lokArray    , lok  );
+  RELEASESHAREDN( distompArray, dist_omp);
   RELEASEHOOK(hook)
 
   Py_INCREF(Py_None);

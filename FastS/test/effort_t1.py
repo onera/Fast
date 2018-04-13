@@ -16,8 +16,6 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
-FastS._applyBC(t, metrics)
-
 teff = FastS.createStressNodes(t, BC=['BCWall'])
 
 effort = FastS._computeStress(t, teff, metrics)

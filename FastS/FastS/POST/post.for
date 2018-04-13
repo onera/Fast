@@ -47,12 +47,16 @@ c***********************************************************************
 
 C Var loc 
       INTEGER_E nitrun
+      INTEGER_E omp_mode, topo_omp(3), inddm_omp(6)
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
       REAL_E c1,c2
 
 #include "FastS/param_solver.h"
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
+
+      !On force le mode 0 pour le Post. A supprimer quand mode 1 !stabiliser
+      omp_mode = 0
 
       !coefficient pour calcul gradient ordre4 - c1=7./12 c2=1./12 ordre 4 - c1=0.5 c2=0 ordre 2
       c1 = 7./12

@@ -4,13 +4,14 @@ c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine navier_stokes_struct( ndo, nidom, Nbre_thread_actif,
-     &        ithread, Nbre_socket, socket, mx_synchro, lssiter_verif,
+     &        ithread, omp_mode, Nbre_socket, socket, mx_synchro, 
+     &        lssiter_verif,
      &        nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN,
      &        param_int, param_real,
      &        temps, tot,
      &        ijkv_sdm,
      &        ind_dm_zone, ind_dm_socket, ind_dm_omp,
-     &        socket_topology, lok ,
+     &        socket_topology, lok , topo_omp, inddm_omp,
      &        cfl,
      &        x , y , z, cellN,
      &        rop , rop_m1     , rop_tmp , rop_ssiter,
@@ -47,11 +48,11 @@ c***********************************************************************
 
       INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, first_it,
      & ithread, Nbre_socket, socket, nitrun, nptpsi, nitcfg, nb_pulse,
-     & lssiter_verif,flagCellN
+     & lssiter_verif,flagCellN,omp_mode
 c
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
      & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
-     & param_int(0:*), lok(*)
+     & param_int(0:*), topo_omp(3), inddm_omp(6), lok(*)
 
       REAL_E rop(*),rop_m1(*),rop_tmp(*),rop_ssiter(*),xmut(*),drodm(*),
      & coe(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
@@ -68,7 +69,7 @@ C Var loc
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
-     & ind_loop(6),neq_rot,depth
+     & ind_loop(6),neq_rot,depth,nb_bc
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -78,6 +79,7 @@ C Var loc
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
 
+
 c         if(ithread.eq.param_int( IO_THREAD).and.nitcfg.le.1) then
 c           write(*,'(a,7i6)')'ijkv_sdm  =',ijkv_sdm,icache,jcache,
 c     &                                     kcache,ithread
@@ -86,16 +88,23 @@ c     &    ithread,jbloc,jcache
 c           write(*,'(a,3i6)')'loop_patern=',shift
 c           write(*,'(a,f20.10)')'dtc        =',param_real(DTC);
 c           write(*,'(a,6i6)')'ind_dm_soc=',ind_dm_socket
+c           write(*,'(a,6i6)')'inddm_omp =',inddm_omp
 c           write(*,'(a,6i6)')'ind_dm_thr=',ind_dm_omp
 c           write(*,'(a,6i6)')'ind_sdm   =',ind_sdm
+c           write(*,'(a,6i6)')'ind_ssa   =',ind_ssa
 c           write(*,'(a,6i6)')'ind_coe   =',ind_coe
 c           write(*,'(a,6i6)')'ind_grad  =',ind_grad
 c           write(*,'(a,6i6)')'ind_rhs   =',ind_rhs
 c           write(*,'(a,6i6)')'ind_mjr   =',ind_mjr
 c         endif
 
-          call  correct_coins(ndo,  param_int, ind_grad, rop_ssiter)
-          !call  correct_coins(ndo,  param_int, ind_sdm, rop_ssiter)
+            call  correct_coins(ndo,  param_int, ind_grad, rop_ssiter)
+          !!!!call  correct_coins(ndo,  param_int, ind_sdm, rop_ssiter)
+
+
+c         if(ndo.eq.1.and.ithread.eq.2) then
+c        write(*,*) 'apcoi', rop( inddm(27,134,6) + 2*param_int(NDIMDX))
+c         endif
 
 
            IF(nitcfg.eq.1) then
@@ -222,7 +231,8 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
 #include "FastS/HPC_LAYER/SYNCHRO_GO.for"
 
            !correction flux roe au CL si pas de mvt ALE,....
-           if(param_int(KFLUDOM).eq.5.and.param_int(BC_NBBC).ne.0) then
+           nb_bc = param_int( param_int(PT_BC) )
+           if(param_int(KFLUDOM).eq.5.and.nb_bc.ne.0) then
 
               call bfl3(ndo, ithread, param_int, param_real, 
      &                  ind_dm_zone, ind_sdm,

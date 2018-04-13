@@ -38,10 +38,17 @@ using namespace K_FLD;
 
 namespace K_FASTS
 { 
+  // Structures
+  // ==========
+//  struct tuple_implicit_local
+//  {
+//     E_Int nidom_tot, lexit_lu, lssiter_verif;
+//  };
+  // Fonctions
+  // =========
   PyObject* itt(                     PyObject* self, PyObject* args);
   PyObject* compute(                 PyObject* self, PyObject* args);
   PyObject* _computePT(              PyObject* self, PyObject* args);
-  PyObject* computePT_trans(         PyObject* self, PyObject* args);
   PyObject* _computePT_mut(          PyObject* self, PyObject* args);
   PyObject* _applyBC(                PyObject* self, PyObject* args);
   PyObject* PygetRange(              PyObject* self, PyObject* args);
@@ -57,13 +64,15 @@ namespace K_FASTS
   PyObject* _movegrid(               PyObject* self, PyObject* args);
   PyObject* _motionlaw(              PyObject* self, PyObject* args);
   PyObject* compute_dpJ_dpW(         PyObject* self, PyObject* args);
+  PyObject* work_thread_distribution(PyObject* self, PyObject* args);
  // PyObject* compute_RhsIterAdjoint(  PyObject* self, PyObject* args);
  // PyObject* compute_LhsIterAdjoint(  PyObject* self, PyObject* args);
 
   //===========
   // - Metric -
   //===========
-  PyObject* metric(PyObject* self, PyObject* args);
+  PyObject* allocate_metric(PyObject* self, PyObject* args);
+  PyObject*     init_metric(PyObject* self, PyObject* args);
 
   //===========
   // - Vtune -
@@ -90,43 +99,23 @@ namespace K_FASTS
   // - State -
   //==========
 
+  void souszones_list_c( E_Int**& ipt_param_int, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom, PyObject* work ,
+                         E_Int* dtloc          , E_Int* ipt_iskip_lu, E_Int lssiter_loc       , E_Int nidom    , 
+                         E_Int nitrun          , E_Int nstep        , E_Int& nidom_tot        , E_Int& lexit_lu, E_Int& lssiter_verif);
+
   //=============
   // - compute -
   //=============
   // Compute t=n+1
   E_Int gsdr3(
     E_Int**& ipt_param_int , E_Float**& ipt_param_real, 
-    E_Int& nidom        , E_Int& nitrun    , E_Int& nstep     , E_Int& nssiter      ,  E_Int& first_it    ,E_Int& kimpli       , E_Int& lssiter_verif,  E_Int& lexit_lu  ,  E_Int& omp_mode,
+    E_Int& nidom        , E_Int& nitrun    , E_Int& nstep     , E_Int& nssiter ,  E_Int& it_target     ,  E_Int& first_it    ,E_Int& kimpli       , E_Int& lssiter_verif,  E_Int& lexit_lu  ,
+    E_Int& omp_mode     , E_Int& layer_mode,
     E_Int& nisdom_lu_max, E_Int& mx_nidom  , E_Int& ndimt_flt , E_Int& threadmax_sdm, E_Int& mx_synchro   , 
     E_Int& nb_pulse     ,
     E_Float& temps,
     E_Int* ipt_ijkv_sdm       , 
-    E_Int* ipt_ind_dm_omp     , E_Int* ipt_topology      , E_Int* ipt_ind_CL     , E_Int* ipt_ind_CL119     , E_Int* ipt_lok       ,
-    E_Int* iptludic, E_Int* iptlumax, 
-    E_Int** ipt_ind_dm, E_Int** ipt_it_lu_ssdom,
-    E_Float* ipt_cfl,
-    E_Float**  iptx, E_Float**  ipty, E_Float** iptz,
-    E_Float**  iptCellN, 
-    E_Float**& iptro, E_Float**& iptro_m1, E_Float**&  iptrotmp,  E_Float**& iptro_sfd,
-    E_Float**  iptmut,
-    E_Float**  ipti, E_Float**  iptj, E_Float** iptk, E_Float** iptvol, 
-    E_Float**  ipti0, E_Float**  iptj0, E_Float** iptk0,     
-    E_Float**  ipti_df, E_Float**  iptj_df, E_Float** iptk_df, 
-    E_Float**  iptvol_df, 
-    E_Float**  iptventi, E_Float**  iptventj, E_Float** iptventk,  
-    E_Float**& iptrdm,
-    E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*   iptwig, E_Float* iptstat_wig,
-    E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res );
-
-  //Including transfers 
-  E_Int gsdr3_trans(
-    E_Int**& ipt_param_int , E_Float**& ipt_param_real, 
-    E_Int& nidom        , E_Int& nitrun    , E_Int& nstep     , E_Int& nssiter ,  E_Int& it_target     ,  E_Int& first_it    ,E_Int& kimpli       , E_Int& lssiter_verif,  E_Int& lexit_lu  ,  E_Int& omp_mode,
-    E_Int& nisdom_lu_max, E_Int& mx_nidom  , E_Int& ndimt_flt , E_Int& threadmax_sdm, E_Int& mx_synchro   , 
-    E_Int& nb_pulse     ,
-    E_Float& temps,
-    E_Int* ipt_ijkv_sdm       , 
-    E_Int* ipt_ind_dm_omp     , E_Int* ipt_topology      , E_Int* ipt_ind_CL     , E_Int* ipt_ind_CL119     , E_Int* ipt_lok       ,
+    E_Int* ipt_ind_dm_omp     , E_Int* ipt_topology      , E_Int* ipt_ind_CL     , E_Int* ipt_ind_CL119     , E_Int* ipt_lok       , 
     E_Int* iptludic, E_Int* iptlumax, 
     E_Int** ipt_ind_dm, E_Int** ipt_it_lu_ssdom,
     E_Float* ipt_cfl,

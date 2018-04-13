@@ -10,21 +10,40 @@
 
                      E_Int* ipt_ind_dm_loc         = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;      //ind_dm(6, < ssdom_lu,nssiter)
 
-                    // Distribution de la sous-zone sur les threads
-                    indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, lmin,
+
+                    E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
+                    if (omp_mode == 1)
+                    { 
+                      E_Int mx_sszone = mx_nidom/nidom;
+                      E_Int shift_omp = param_int[nd][ PT_OMP ] + mx_sszone*nd_subzone*(Nbre_thread_actif*7+4);
+
+                      Nbre_thread_actif_loc = param_int[nd][ shift_omp  + Nbre_thread_actif ];
+                      ithread_loc           = param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
+                      if (ithread_loc == -1) {nd_current++; continue;}
+
+                      ipt_topo_omp          = param_int[nd] + shift_omp +  Nbre_thread_actif + 1;
+                      ipt_inddm_omp         = param_int[nd] + shift_omp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+                      
+                      ipt_ind_dm_omp_thread[0] = ipt_inddm_omp[0];
+                      ipt_ind_dm_omp_thread[1] = ipt_inddm_omp[1];
+                      ipt_ind_dm_omp_thread[2] = ipt_inddm_omp[2];
+                      ipt_ind_dm_omp_thread[3] = ipt_inddm_omp[3];
+                      ipt_ind_dm_omp_thread[4] = ipt_inddm_omp[4];
+                      ipt_ind_dm_omp_thread[5] = ipt_inddm_omp[5];
+                     }
+                     else
+                     {
+                     // Distribution de la sous-zone sur les threads
+                     indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, lmin,
                                       ipt_ind_dm_loc,
                                       ipt_topology_socket, ipt_ind_dm_omp_thread );
-
+                     }
                     //if(ithread == param_int[nd][ IO_THREAD ]) { balance = balance +  (1+ipt_ind_dm_loc[1]-ipt_ind_dm_loc[0])*(1+ipt_ind_dm_loc[3]-ipt_ind_dm_loc[2])*(1+ipt_ind_dm_loc[5]-ipt_ind_dm_loc[4]);}
 
                     //if(nd==2 && ithread==1) printf(" dom %d %d %d %d %d %d \n", ipt_ind_dm_loc[0],ipt_ind_dm_loc[1],ipt_ind_dm_loc[2],ipt_ind_dm_loc[3],ipt_ind_dm_loc[4],ipt_ind_dm_loc[5]  );
-                     //sortie de la carte d residu du Newton
-                     //if( kimpli == 1)
-                     // {
-
-                         //if(ithread== param_int[nd][ IO_THREAD ]&& nd_subzone==nb_subzone-1  && nd==nidom-1) printf("balance %d %d \n", balance, nitcfg); 
 
 
+                         //sortie de la carte d residu du Newton
                          if(lssiter_verif ==1  && nd_subzone ==0 && ( param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
                           {
                             E_Int ijkv_lu[3];
@@ -45,15 +64,19 @@
 
 			    //                           if(ithread== param_int[nd][ IO_THREAD ] && nd_subzone==nb_subzone-1  && nd==nidom-1) printf("balance %d %d \n", balance, nitcfg); 
  
+                            //
                             cprdu3s1_(nd,nitcfg, nssiter          , param_int[nd][ NEQ ], param_int[nd][ NDIMDX ], ndim_rdm , nitrun,
-                                      param_int[nd][ IFLOW ]      , param_int[nd][ ILES ] , ithread_loc          , omp_mode,
+                                      param_int[nd][ IFLOW ]      , param_int[nd][ ILES ] ,
+                                      ithread_loc                 , Nbre_thread_actif_loc , omp_mode,
                                       param_int[nd][ MXSSDOM_LU ] , ipt_it_bloc[0]        , param_real[nd][ EPSI_NEWTON ] ,
                                       param_int[nd]+ SIZE_SSDOM   , ipt_nisdom_residu     ,
-                                      param_int[nd]+ NIJK         , param_int[nd]+ IJKV     ,ijkv_lu     ,
+                                      param_int[nd]+ NIJK         , param_int[nd]+ IJKV   , ijkv_lu     ,
                                       ipt_ind_dm_loc       ,
                                       ipt_it_lu_ssdom_loc  , ipt_it_target_ssdom  , ipt_it_target_old     ,
                                       ipt_it_temp_ssdom    , ipt_no_lu            ,
                                       iptdrodm + shift_zone   , iptrdm[nd]); 
+
+                           //
                           }
 
                      if( kimpli == 1 )
@@ -82,19 +105,6 @@
                       } //fin kimpli
 
 
-                     //
-                     //
-                     // CL sur var primitive
-/*                     E_Int lrhs=0; E_Int lcorner=0;
-                     BCzone( nd, lrhs, lcorner,
-                             param_int[nd], param_real[nd],
-                             npass,
-                             ipt_ind_dm_loc         , ipt_ind_dm_omp_thread      ,
-                             ipt_ind_CL_thread      , ipt_ind_CL119_thread       ,  ipt_ind_coe_thread,
-                             ipt_CL                 , ipti[nd]                   , iptj[nd]                 , iptk[nd]       ,
-                             iptx[nd]               , ipty[nd]                   , iptz[nd]                 ,
-                             iptventi[nd]           , iptventj[nd]               , iptventk[nd]             );
-*/
                      // Selective Frequency Damping
                      if(( (nitcfg == nssiter && lssiter_verif==1) || (nitcfg == nssiter-1 && lssiter_verif==0)) && param_int[nd][SFD] == 1)
                      {

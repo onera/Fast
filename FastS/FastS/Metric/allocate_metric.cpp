@@ -33,7 +33,7 @@ extern int __activation__;
 // IN: arrays: les coords des zones
 // IN: num: le dictionnaires numerics
 //=============================================================================
-PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
+PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
 {
   if (__activation__ == 0) { PyErr_SetString(PyExc_NotImplementedError, STUBMSG); return NULL; }
 
@@ -103,9 +103,6 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
        ro        = PyList_GetItem(t, 1);                                   //Objet python= tableau numpy du noeud CGNS
       }
 
-//    E_Float* iptro = K_PYTREE::getValueAF(ro, hook);
-//    printf("ptro   = %p \n", iptro);
-   
     //
     // On recupere taille zone et dimensionne tableau
     //
@@ -138,7 +135,6 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
     ipt_param_int[ IJKV +2]  = ipt_param_int[ NIJK+2 ]-2*ipt_param_int[ NIJK +4];
     
     ipt_param_int[ NDIMDX      ] =  ipt_param_int[ NIJK     ]*ipt_param_int[ NIJK+1     ]*ipt_param_int[ NIJK+2     ] + ipt_param_int[SHIFTVAR]; 
-    //*ipt_param_int[ NDIMDX      ] =  ipt_param_int[ NIJK     ]*ipt_param_int[ NIJK+1     ]*ipt_param_int[ NIJK+2     ];
     ipt_param_int[ NDIMDX_XYZ  ] =  ipt_param_int[ NIJK_XYZ ]*ipt_param_int[ NIJK_XYZ+1 ]*ipt_param_int[ NIJK_XYZ+2 ];
 
     //
@@ -147,6 +143,7 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
     E_Int neq_ij = 0; E_Int neq_k = 0; 
     E_Int typ_zone, ndimdx_mtr ; 
 
+    
     FldArrayI  degener(ipt_param_int[ NDIMDX_XYZ ]); E_Int* ipt_degener = degener.begin();
 
     nature_geom_dom_(ipt_param_int+NIJK_XYZ, ipt_param_int[ NDIMDX_XYZ ], iptx, ipty, iptz , ipt_degener, lale, ipt_param_real, // IN
@@ -369,45 +366,6 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
          E_Int nd =0;
          E_Int lmin = 10;
          if (ipt_param_int[ ITYPCP ] == 2) lmin = 4;
-
-         indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
-                              ipt_ind_dm_loc, 
-                              ipt_topology_socket, ipt_ind_dm_socket );
-
-	skmtr_( nd, ipt_param_int, ipt_param_real, ipt_rot_ale_thread,
-		iptx, ipty, iptz, ipt_degener, 
-                ti, tj, tk, ti0, tj0, tk0, vol, venti, ventj, ventk,
-                ipt_ijkv_sdm_thread,
-                ipt_ind_sdm_thread , ipt_ind_coe_thread, ipt_ind_grad_thread    , 
-                ipt_ind_dm_loc     , ipt_ind_dm_socket , ipt_ind_dm_omp_thread  ,
-                ipt_topology_socket, 
-                ithread_sock       , thread_parsock    , Nbre_thread_actif, Nbre_socket, socket,
-                ithread);
-	if(kfludom == 3)
-	{
-
-       	   #pragma omp single
-     	   {
-            E_Float* tmpi = iptmpi.begin();
-            E_Float* tmpj = iptmpj.begin();
-            E_Float* tmpk = iptmpk.begin();
-            E_Float* tmpi2= iptmpi2.begin();
-            E_Float* tmpj2= iptmpj2.begin();
-            E_Float* tmpk2= iptmpk2.begin();
-            E_Float* mtr  = iptmtr.begin();
-
-            skmtr_df_( ipt_param_int+NIJK_XYZ, ipt_param_int+NIJK_MTR,
-	               ipt_param_int[ NDIMDX_XYZ ], iptx, ipty, iptz, 
-	               tmpi,tmpj,tmpk,tmpi2,tmpj2,tmpk2, mtr,
-	               neq_ij, neq_k,
-		       ndimdx_mtr, ti_df,tj_df,tk_df, vol_df);
-           } //omp single
-	} // if kflu=DF
-
-     // cutoff vol
-     #pragma omp for
-     for (E_Int i = 0; i < ndimdx_mtr; i++) { vol[i] = K_FUNC::E_max(vol[i], 1.e-30);}
-
      } //* fin zone parallele  *//
 
 
@@ -494,6 +452,9 @@ PyObject* K_FASTS::metric(PyObject* self, PyObject* args)
   PyList_Append(metrics , rdm);         Py_DECREF(rdm);
   PyList_Append(metrics , ind_dm);      Py_DECREF(ind_dm );
   PyList_Append(metrics , it_lu_ssdom); Py_DECREF(it_lu_ssdom);
+
+  PyObject* degen  = K_NUMPY::buildNumpyArray(  degener, 1);
+  PyList_Append(metrics , degen);     Py_DECREF(degen);
 
   if (lale==1)   { Py_DECREF(ipti0); Py_DECREF(iptventi); }
   if (kfludom==3){ Py_DECREF(ipti_df); }

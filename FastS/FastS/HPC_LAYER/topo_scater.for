@@ -3,10 +3,11 @@ c     $Date: 2010-11-04 13:25:50 +0100 (Thu, 04 Nov 2010) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine topo_scater(ndo, ithread, socket, lmin,kfludom,
+      subroutine topo_scater(ndo, ithread, socket, omp_mode, lmin,
+     &                       kfludom,
      &                       thread_parsock, thread_parsock_actif,
      &                       ithread_sock, socket_topology,
-     &                       size_target, ind_dm_zone, 
+     &                       size_target, ind_dm_zone, topo_omp,
      &                       topo_s, ijkvloc, thread_pos, socket_pos, 
      &                       thread_topology, size_thread, ijkv_thread)
 
@@ -14,9 +15,9 @@ c***********************************************************************
 
       INTEGER_E ndo,ithread, socket,thread_parsock, lmin,
      & ithread_sock, socket_topology(3),thread_parsock_actif,
-     & size_target(3), ind_dm_zone(6), topo_s(3),
+     & size_target(3), ind_dm_zone(6), topo_s(3),topo_omp(3),
      & ijkvloc(3), thread_pos(3), socket_pos(3), thread_topology(3),
-     & size_thread(3), ijkv_thread(3),kfludom
+     & size_thread(3), ijkv_thread(3),kfludom, omp_mode
 
 C Var loc 
       logical new_try,lskip,lpair
@@ -34,9 +35,14 @@ C Var loc
       if(kfludom.eq.7) i=2
       If(i.eq.1) then
 
+         if(omp_mode.eq.0) then
            call indice_boucle_lu(ndo, ithread, thread_parsock, lmin,
      &                           ind_dm_zone, 
      &                           topo_s, ind_dm_loc )
+         else
+             topo_s(1:3)     = topo_omp(1:3)
+             !ind_dm_loc[1:6] = inddm_omp[1:6] tableau local: affectation inutile. voir indice_boucle_scater
+         endif
 
          thread_parsock_actif = topo_s(1)*topo_s(2)*topo_s(3)
 

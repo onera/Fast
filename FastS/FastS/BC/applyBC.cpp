@@ -32,8 +32,47 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
 {
-  PyObject *zone; PyObject *metric; char* var;
-  if (!PyArg_ParseTuple(args, "OOs", &zone, &metric, &var )) return NULL;
+  PyObject *zones; PyObject *metrics; PyObject *work; char* var; E_Int nstep; E_Int omp_mode;
+#if defined E_DOUBLEINT
+  if (!PyArg_ParseTuple(args, "OOOlls", &zones, &metrics, &work, &nstep, &omp_mode, &var )) return NULL;
+#else 
+  if (!PyArg_ParseTuple(args, "OOOiis", &zones, &metrics, &work, &nstep, &omp_mode, &var )) return NULL;
+#endif
+
+  //* tableau pour stocker dimension sous-domaine omp *//
+  E_Int threadmax_sdm  = __NUMTHREADS__;
+
+  PyObject* tmp = PyDict_GetItemString(work,"MX_SSZONE");  E_Int mx_sszone = PyLong_AsLong(tmp);
+
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+
+
+  E_Int nidom    = PyList_Size(zones);
+
+  E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; 
+  
+  E_Float** ipt_param_real  ;
+  E_Float** iptx;       E_Float** ipty;     E_Float** iptz;    E_Float** iptro;
+  E_Float** ipti;       E_Float** iptj;     E_Float** iptk;    E_Float** iptvol;
+  E_Float** iptventi;   E_Float** iptventj; E_Float** iptventk;
+
+  ipt_param_int     = new E_Int*[nidom*2];
+  ipt_ind_dm        = ipt_param_int   + nidom;
+
+  iptx              = new E_Float*[nidom*12];
+  ipty              = iptx            + nidom;
+  iptz              = ipty            + nidom;
+  iptro             = iptz            + nidom;
+  ipti              = iptro           + nidom;
+  iptj              = ipti            + nidom;
+  iptk              = iptj            + nidom;
+  iptvol            = iptk            + nidom;
+  iptventi          = iptvol          + nidom;
+  iptventj          = iptventi        + nidom;
+  iptventk          = iptventj        + nidom;
+  ipt_param_real    = iptventk        + nidom;
 
 
   /*------*/
@@ -41,32 +80,47 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   /*------*/
   vector<PyArrayObject*> hook;
 
-  /* Get numerics from zone */
-  PyObject* numerics      = K_PYTREE::getNodeFromName1(zone, ".Solver#ownData");
-  PyObject*          t    = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"); 
-  E_Int* ipt_param_int    = K_PYTREE::getValueAI(t, hook);
-                     t    = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
-  E_Float* ipt_param_real = K_PYTREE::getValueAF(t, hook);
+  for (E_Int nd = 0; nd < nidom; nd++)
+  { 
+    // check zone
+    PyObject* zone = PyList_GetItem(zones, nd); // domaine i
 
-  /*-------------------------------------*/
-  /* Extraction des variables a modifier */
-  /*-------------------------------------*/
-  PyObject* sol_center  = K_PYTREE::getNodeFromName1(zone, "FlowSolution#Centers");
-                    t   = K_PYTREE::getNodeFromName1(sol_center, var);
-  E_Float*     iptro    = K_PYTREE::getValueAF(t, hook);
 
-  /*-------------------------------------*/
-  /* Extraction (x,y,z): pour forcage spatia */
-  /*-------------------------------------*/
-  E_Float* iptx; E_Float* ipty; E_Float* iptz;
-  GET_XYZ( "GridCoordinates", zone, iptx, ipty, iptz)
+    /* Get numerics from zone */
+    PyObject* numerics    = K_PYTREE::getNodeFromName1(zone, ".Solver#ownData");
+    PyObject*          t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"); 
+    ipt_param_int[nd]     = K_PYTREE::getValueAI(t, hook);
+                       t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
+    ipt_param_real[nd]    = K_PYTREE::getValueAF(t, hook);
 
-  /* get metric */
-  E_Float* ipti;  E_Float* iptj; E_Float* iptk; E_Float* iptvol;
-  GET_TI( METRIC_TI, metric, ipt_param_int, ipti, iptj, iptk, iptvol )
+    PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
 
-  E_Float* iptventi; E_Float* iptventj; E_Float* iptventk; 
-  GET_VENT( METRIC_VENT, metric, ipt_param_int, iptventi, iptventj, iptventk )
+
+    /*-------------------------------------*/
+    /* Extraction des variables a modifier */
+    /*-------------------------------------*/
+    PyObject* sol_center;
+    sol_center   = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
+    t            = K_PYTREE::getNodeFromName1(sol_center, var);
+    iptro[nd]    = K_PYTREE::getValueAF(t, hook);
+
+    /*-------------------------------------*/
+    /* Extraction (x,y,z): pour forcage spatia */
+    /*-------------------------------------*/
+    GET_XYZ( "GridCoordinates", zone, iptx[nd], ipty[nd], iptz[nd]) 
+
+    /* get metric */
+    E_Float* dummy;
+    GET_TI(METRIC_TI  , metric, ipt_param_int[nd], ipti [nd]  , iptj [nd]  , iptk [nd]  , iptvol[nd]   )
+
+    GET_VENT( METRIC_VENT, metric, ipt_param_int[nd], iptventi[nd], iptventj[nd], iptventk[nd] )
+
+    ipt_ind_dm[ nd ]      =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
+
+  } // boucle zone
+
+
+
   /*----------------------------------*/
   /* Extraction des CL de la zone  */
   /*----------------------------------*/
@@ -76,14 +130,6 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   E_Int npass  = 0;
   if(lrhs == 1)  npass = 0;
 
-  //fenetre du domaine sans les ghostcells
-  FldArrayI ind_dm(6)  ; E_Int* ipt_ind_dm   = ind_dm.begin();
-  ipt_ind_dm[0] = 1;
-  ipt_ind_dm[1] = ipt_param_int[ IJKV];
-  ipt_ind_dm[2] = 1;
-  ipt_ind_dm[3] = ipt_param_int[ IJKV +1];
-  ipt_ind_dm[4] = 1;
-  ipt_ind_dm[5] = ipt_param_int[ IJKV +2];
 
   E_Int  Nbre_thread_max = 1;
 #ifdef _OPENMP
@@ -108,43 +154,66 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
        E_Int ithread = 1;
        E_Int Nbre_thread_actif = 1;
 #endif
-       E_Int ndo  = 1;
 
-       E_Int* ipt_thread_topology = thread_topology.begin() + (ithread-1)*3;
-       E_Int* ipt_ind_dm_thread   = ind_dm_thread.begin()   + (ithread-1)*6;
-       E_Int* ipt_ind_CL          = ind_CL.begin()          + (ithread-1)*6;
-       E_Int* ipt_ind_CL119       = ind_CL119.begin()       + (ithread-1)*6;
-       E_Int* ipt_shift_lu        = shift_lu.begin( )       + (ithread-1)*6;
-//       E_Float* ipt_vteta         = vteta.begin( );
-//       E_Float* ipt_roteta        = roteta.begin( );
+   E_Int Nbre_thread_actif_loc, ithread_loc;
+   if( omp_mode == 0){ Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
 
-        //calcul du sous domaine a traiter par le thread 
-        E_Int lmin = 10;
-        if (ipt_param_int[ ITYPCP ] == 2) lmin = 4;
+       E_Int nd_current =0;
+       for (E_Int nd = 0; nd < nidom; nd++)
+          {
+           E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
+           E_Int nb_subzone     = ipt_nidom_loc [nstep -1];
 
-        indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, lmin,
-                           ipt_ind_dm,
-                           ipt_thread_topology, ipt_ind_dm_thread);
+           E_Int* ipt_ind_CL          = ind_CL.begin()          + (ithread-1)*6;
+           E_Int* ipt_ind_CL119       = ind_CL119.begin()       + (ithread-1)*6;
+           E_Int* ipt_shift_lu        = shift_lu.begin( )       + (ithread-1)*6;
 
-        ierr[ithread-1] = BCzone(nd, lrhs , lcorner, ipt_param_int, ipt_param_real, npass,
-//                                 ithread, Nbre_thread_actif, ipt_thread_topology, ipt_vteta,ipt_roteta,
-                                 ipt_ind_dm , ipt_ind_dm_thread, 
-                                 ipt_ind_CL , ipt_ind_CL119    , ipt_shift_lu,
-                                 iptro,  ipti, iptj, iptk, iptx, ipty, iptz,
-                                 iptventi, iptventj, iptventk); 
-  } // Fin zone // omp
+          for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
+          {
+            E_Int ndo   = nd;
 
-    // si pointerange foireux dans BCzone, on stop
-    E_Int error = ierr[0];
-    for (E_Int i = 1; i < Nbre_thread_max; i++) {error = error*ierr[i];}
-    if (error == 0) 
-    {
-      RELEASEHOOK(hook)
-      PyErr_SetString(PyExc_TypeError, "applyBC: point range is invalid.");
-      return NULL; 
-    }
-  // sortie
+            E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nstep-1)*6*ipt_param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
+
+            E_Int* ipt_ind_dm_thread;
+            if (omp_mode == 1)
+            { 
+              E_Int shift_omp = ipt_param_int[nd][ PT_OMP ] + mx_sszone*nd_subzone*(Nbre_thread_actif*7+4);
+
+              Nbre_thread_actif_loc = ipt_param_int[nd][ shift_omp  + Nbre_thread_actif ];
+              ithread_loc           = ipt_param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
+              ipt_ind_dm_thread     = ipt_param_int[nd] + shift_omp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+
+              if (ithread_loc == -1) {nd_current++; continue;}
+            }
+            else
+            { 
+             E_Int* ipt_thread_topology = thread_topology.begin() + (ithread-1)*3;
+                    ipt_ind_dm_thread   = ind_dm_thread.begin()   + (ithread-1)*6;
+
+             E_Int lmin = 10;
+             if (ipt_param_int[nd][ITYPCP] == 2) lmin = 4;
+
+             indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, lmin,
+                               ipt_ind_dm_loc,
+                               ipt_thread_topology, ipt_ind_dm_thread);
+            }
+  
+            ierr[ithread-1] = BCzone(nd, lrhs , lcorner, ipt_param_int[nd], ipt_param_real[nd], npass,
+                                     ipt_ind_dm_loc, ipt_ind_dm_thread, 
+                                     ipt_ind_CL    , ipt_ind_CL119   , ipt_shift_lu,
+                                     iptro[nd]     , ipti[nd]        , iptj[nd]   , iptk[nd]       ,
+                                     iptx[nd]      , ipty[nd]        , iptz[nd]   ,
+                                     iptventi[nd]  , iptventj[nd]    , iptventk[nd]);
+
+            //correct_coins_(nd,  ipt_param_int[nd], ipt_ind_dm_thread , iptro[nd]);
+          }//loop souszone
+       }//loop zone
+  }//fin zone omp
+
+  delete [] iptx; delete [] ipt_param_int;
+
   RELEASEHOOK(hook)
+  RELEASESHAREDN( dtlocArray  , dtloc);
 
   Py_INCREF(Py_None);
   return Py_None;

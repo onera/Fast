@@ -81,7 +81,9 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 
 (t, tc, metrics) = FastS.warmup(t, tc)
-#(t, metrics) = FastS.warmup(t)
+import sys
+#sys.exit()
+
 nit = 250
 
 for it in xrange(nit):

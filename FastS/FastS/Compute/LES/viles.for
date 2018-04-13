@@ -49,6 +49,7 @@ c***********************************************************************
 
 C Var loc 
       INTEGER_E nitrun, depth, ind_flt(6), ind_extrap(6)
+      INTEGER_E omp_mode, topo_omp(3), inddm_omp(6)
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
 
@@ -56,7 +57,10 @@ C Var loc
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 
-      nitrun =0
+      !On force le mode omp=0 pour init visco les. A supprimer quand mode 1 !stabiliser
+      omp_mode = 0
+      nitrun   = 0
+
 #include "FastS/HPC_LAYER/SIZE_MIN.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"

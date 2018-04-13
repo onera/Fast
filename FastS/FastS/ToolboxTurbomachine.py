@@ -9,7 +9,7 @@ from itertools import takewhile, dropwhile
 #import matplotlib.pyplot as plt
 import Transform.PyTree   as T
 import Converter   as CV
-from scipy import interpolate
+#from scipy import interpolate
 #~ ====================
 #~ from etc.post  import AzimutalAverage2D, AzimutalAverage3D 
 #~ from   mpi4py import MPI 
@@ -1244,8 +1244,10 @@ def interpolationAzim(t, tinit, interpolation):
 			n+=1
 	
 	# Interpolation 'r*' -> 'r'
-	f_dpdr = interpolate.interp1d(ray_star, dpdr_star, kind=interpolation) #interpolation function generator
-	dpdr   = f_dpdr(ray_c)
+        print 'interpolate not available'
+	#f_dpdr = interpolate.interp1d(ray_star, dpdr_star, kind=interpolation) #interpolation function generator
+	#dpdr   = f_dpdr(ray_c)
+	dpdr   = 0
 	dpdr_c = CI.getNodeFromName(bc_1d,'dpdr_c')  
 	CI.setValue(dpdr_c,dpdr)
 	
@@ -1755,8 +1757,10 @@ def interpolationAzimUpdate(radius_star, dpdr_star, radius_real, interpolation='
 
 # dpdr          : return         [1D numpy array] real derivative of the pressure with respect to the real radius distribution
 
-	f_dpdr = interpolate.interp1d(radius_star, dpdr_star, kind=interpolation) #interpolation function generator
-	dpdr   = f_dpdr(radius_real)
+        print 'interpolate not available'
+	#f_dpdr = interpolate.interp1d(radius_star, dpdr_star, kind=interpolation) #interpolation function generator
+	#dpdr   = f_dpdr(radius_real)
+	dpdr   = 0
 	
 	return dpdr	
 

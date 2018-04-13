@@ -21,6 +21,25 @@
             E_Int ndo   = nd;
 
 
+            E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
+            if (omp_mode == 1)
+            { 
+              E_Int mx_sszone = mx_nidom/nidom;
+              E_Int shift_omp = param_int[nd][ PT_OMP ] + mx_sszone*nd_subzone*(Nbre_thread_actif*7+4);
+
+              Nbre_thread_actif_loc = param_int[nd][ shift_omp  + Nbre_thread_actif ];
+              ithread_loc           = param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
+              ipt_topo_omp          = param_int[nd] + shift_omp +  Nbre_thread_actif + 1;
+              ipt_inddm_omp         = param_int[nd] + shift_omp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+
+             //if (ithread == param_int[nd][IO_THREAD] && nitrun == 0 && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
+             //if (nd == 0 && nitrun == 0 && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
+             // printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
+             // ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5] );
+
+              if (ithread_loc == -1) {nd_current++; continue;}
+            }
+
             E_Int* ipt_lok_thread;
             //  Revoir cet adressage si scater et  socket>1 et ou nidom >1
             ipt_lok_thread   = ipt_lok   + nd_current*mx_synchro*Nbre_thread_actif;
@@ -44,27 +63,12 @@
                               ipt_ind_dm_loc,
                               ipt_topology_socket, ipt_ind_dm_socket );
 
-                     // CL sur var primitive
-/*                     E_Int lrhs=0; E_Int lcorner=0;E_Int npass_loc =0;
-                     E_Float* ipt_CL = iptro_CL[nd];
-
-
-                     BCzone( nd, lrhs, lcorner,
-                             param_int[nd], param_real[nd],
-                             npass_loc,
-                             ipt_ind_dm_loc         , ipt_ind_dm_omp_thread      ,
-                             ipt_ind_CL_thread      , ipt_ind_CL119_thread       , ipt_ind_coe_thread,
-                             iptro_ssiter[nd]       , ipti[nd]                   , iptj[nd]                 , iptk[nd]       ,
-                             //iptro_CL[nd]       , ipti[nd]                   , iptj[nd]                 , iptk[nd]       ,
-                             iptx[nd]               , ipty[nd]                   , iptz[nd]                 ,
-                             iptventi[nd]           , iptventj[nd]               , iptventk[nd]             );
-*/
             //if(nd==2 && ithread==1) printf(" nd_ssz %d  %d \n",nd_subzone , nitcfg);
-
-            navier_stokes_struct_( ndo, nidom, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro , lssiter_verif, nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN,
+            //
+            navier_stokes_struct_( ndo, nidom, Nbre_thread_actif_loc, ithread_loc, omp_mode, Nbre_socket, socket, mx_synchro , lssiter_verif, nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN,
                                   param_int[nd] , param_real[nd] ,
-                                  temps               , ipt_tot                 ,
-                                  ipt_ijkv_sdm_thread , ipt_ind_dm_loc      , ipt_ind_dm_socket       , ipt_ind_dm_omp_thread  ,  ipt_topology_socket , ipt_lok_thread       ,
+                                  temps               , ipt_tot       ,
+                                  ipt_ijkv_sdm_thread , ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread, ipt_topology_socket, ipt_lok_thread, ipt_topo_omp, ipt_inddm_omp,
                                   ipt_cfl_thread      ,
                                   iptx[nd]                , ipty[nd]                , iptz[nd]            , iptCellN_loc     ,
                                   iptro[nd]               , iptro_m1[nd]            , iptrotmp[nd]        , iptro_ssiter[nd] ,

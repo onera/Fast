@@ -5,7 +5,7 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine cprdu3s1(ndom,nitcfg,nssiter,
      &                    neq, ndimdx,ndim_rdm, nitrun,
-     &                    iflw, les, ithread, omp_mode,
+     &                    iflw, les, ithread,Nbre_thread_actif,omp_mode,
      &                    mx_ssdom_lu, it_bloc, epsi,
      &                    size_ssdom, nisdom_residu,
      &                    nijk, ijkv, ijkv_lu, 
@@ -32,7 +32,7 @@ c***********************************************************************
       implicit none
 
       INTEGER_E ndom,nssiter,neq, ndimdx ,ndim_rdm,nitcfg,nitrun,
-     & iflw, les, mx_ssdom_lu, ithread, omp_mode,
+     & iflw, les, mx_ssdom_lu, ithread, Nbre_thread_actif, omp_mode,
      & size_ssdom(3), nijk(5), ijkv(3), ijkv_lu(3), ind_loop(6)
 
       REAL_E drodm(ndimdx,neq)
@@ -47,7 +47,8 @@ c***********************************************************************
 c Var loc
       logical lcomput
       INTEGER_E l,i,j,k,ne,no_rdm,nd_rdm,i_lu,j_lu,k_lu,it,iunit,
-     & ind_loop_lu(6),imin_lu,jmin_lu,kmin_lu,imax_lu,jmax_lu,kmax_lu
+     & ind_loop_lu(6),imin_lu,jmin_lu,kmin_lu,imax_lu,jmax_lu,kmax_lu,
+     & size_rdm, no_start,no_end 
 c     & ii,jj,kk
       REAL_E xinterm(6,2),xp,rmax,rmoy,xro1,xrou1,xrov1,xrow1,xroe1,
      & conv_loo, cut0x
@@ -60,17 +61,7 @@ c     & ii,jj,kk
 
       cut0x = 1e-20
 
-      if(nisdom_residu(nitcfg).ne.0) then
-        if(omp_mode .eq.0) then
-!$OMP SINGLE
-          it_bloc= it_bloc+1
-!$OMP END SINGLE
-        else
-          it_bloc= it_bloc+1
-        endif
-      else
-        goto 1000
-      endif
+      if(nisdom_residu(nitcfg).eq.0) goto 1000
 
       conv_loo = ALOG10(epsi)
 
@@ -88,14 +79,24 @@ c     & imax_lu,jmax_lu,kmax_lu,ndo,nitcfg,nisdom_residu(nitcfg)
       if(omp_mode .eq.0) then
 !$OMP DO SCHEDULE(DYNAMIC,1)
         DO no_rdm=1,ndim_rdm
-
 #include "FastS/Compute/cprdu3s1_incl.for"
-
         ENDDO
 !$OMP END  DO
       
       else
-        DO no_rdm=1,ndim_rdm
+        if(ndim_rdm.lt.Nbre_thread_actif) then
+           no_start = ithread
+           no_end   = ithread
+           !if(ithread.gt.ndim_rdm) no_end = no_start -1 !on skippe
+           if(ithread.gt.ndim_rdm) goto 1000
+        else
+           size_rdm = ndim_rdm/Nbre_thread_actif
+           no_start = 1+ (ithread-1)*size_rdm
+           no_end   = 1+ (ithread)*size_rdm
+           if(ithread.eq.Nbre_thread_actif) no_end = ndim_rdm
+        endif
+        ! write(*,*) ithread, no_start,no_end,ndim_rdm,Nbre_thread_actif
+        DO no_rdm=no_start,no_end
 #include "FastS/Compute/cprdu3s1_incl.for"
         ENDDO
       endif

@@ -31,7 +31,7 @@ extern "C"
                          E_Int*   ipt_it_lu_ssdom, E_Int*   ipt_it_target_ssdom, E_Int*   ipt_it_target_old , E_Int*   ipt_no_lu, E_Int*   param_int );
 
   void cprdu3s1_(E_Int& nd               , E_Int& nitcfg     , E_Int& nssiter            , E_Int& neq              ,  E_Int& ndimdx       , E_Int& ndim_rdm  , E_Int& nitrun, 
-                 E_Int& iflw             , E_Int& iles       , E_Int& ithread            , E_Int& omp_mode         ,  E_Int& mx_ssdom_lu  ,
+                 E_Int& iflw             , E_Int& iles       , E_Int& ithread            , E_Int& Nbre_thread_actif,  E_Int& omp_mode     ,  E_Int& mx_ssdom_lu  ,
                  E_Int& it_bloc          , E_Float& epsi     , E_Int*  size_ssdom        , E_Int* ipt_nisdom_residu,
                  E_Int*  nijk            , E_Int* ijkv       , E_Int*  ijkv_lu           , 
                  E_Int* ind_loop         ,
@@ -53,10 +53,10 @@ extern "C"
 
   void copyflux_(E_Int& idir , E_Int* ipt_param_int , E_Int* ind_loop,   E_Float*drodm, E_Float* stock, E_Int& ind, E_Int& nzone);
 
-  void init_ventijk_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   ,
+  void init_ventijk_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& omp_mode,
                       E_Int* ipt_param_int      , E_Float* ipt_param_real  , 
                       E_Int* ipt_ijkv_sdm       ,
-                      E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
+                      E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok, E_Int* ipt_topo_omp, E_Int* ipt_inddm_omp,
                       E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , 
                       E_Float* ipti_df          , E_Float* iptj_df     , E_Float* iptk_df        , 
                       E_Float* iptventi         , E_Float* iptventj    , E_Float* iptventk       ,  
@@ -130,12 +130,12 @@ extern "C"
               E_Float* iptro            ,
               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol          ,  E_Float* iptmut, E_Float* iptdist, E_Float* iptrot   );
 
-  void navier_stokes_struct_( E_Int& ndo    , E_Int& nidom            , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , 
-                              E_Int& lssiter_verif  , E_Int& nptpsi            , E_Int& nitcfg  , E_Int& nitrun     , E_Int& first_it   ,  E_Int& nb_pulse  , E_Int&   flagCellN  ,
+  void navier_stokes_struct_( E_Int& ndo    , E_Int& nidom            , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& omp_mode   ,  E_Int& Nbre_socket, E_Int& socket       , E_Int& mx_synchro   , 
+                              E_Int& lssiter_verif  , E_Int& nptpsi            , E_Int& nitcfg  , E_Int& nitrun     , E_Int& first_it   ,  E_Int& nb_pulse   , E_Int&   flagCellN  ,
                               E_Int* ipt_param_int  , E_Float* ipt_param_real  ,
                               E_Float& temps        , E_Int* ipt_tot,   
                               E_Int* ipt_ijkv_sdm       ,
-                              E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
+                              E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp  , E_Int* ipt_topo_thread  , E_Int* ipt_lok,  E_Int* ipt_topo_omp, E_Int* ipt_inddm_omp,
                               E_Float* ipt_cfl        ,
                               E_Float* iptx             , E_Float* ipty         , E_Float* iptz          , E_Float* iptCellN       ,
                               E_Float* iptro            , E_Float* iptro_m1    , E_Float* iptrotmp       , E_Float* iptro_ssiter   ,
@@ -220,6 +220,19 @@ extern "C"
                         E_Int* ind_CL , E_Int* ind_CL119);
 
    void     correct_coins_( E_Int& ndo ,  E_Int* param_int, E_Int* ind_loop, E_Float* iptro);
+
+   void     cp_tijk_( E_Int* param_int, E_Float* iptx , E_Float* ipty , E_Float* iptz,
+                      E_Float* ipti   , E_Float* iptj , E_Float* iptk ,
+                      E_Float* iptx0  , E_Float* ipty0, E_Float* iptz0, E_Int* ind_loop );
+
+   void     cp_vol_( E_Int* param_int, E_Float* iptx , E_Float* ipty , E_Float* iptz,
+                     E_Float* ipti   , E_Float* iptj , E_Float* iptk ,
+                     E_Float* iptx0  , E_Float* ipty0, E_Float* iptz0, E_Float* iptvol,  E_Int* ind_loop );
+
+   void     tijk_extrap_( E_Int ndimdx_mtr, E_Int ndimdx_xyz,  E_Int nijk_xyz,  E_Int nijk_mtr, E_Int neq_ij, E_Int neq_k,
+                          E_Int* ind_zone , E_Int*  degen   , 
+                          E_Float* ipti   , E_Float* iptj , E_Float* iptk ,
+                          E_Float* iptx0  , E_Float* ipty0, E_Float* iptz0,  E_Float* iptvol);
 
 
    void     move_domx_( E_Int& ndo ,  E_Int* param_int, E_Float* param_real, E_Int* ind_loop, 

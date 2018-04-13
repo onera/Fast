@@ -58,7 +58,7 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
   K_NUMPY::getFromNumpyArray(drodmstock,drodmstk, true); E_Float* iptdrodmstk = drodmstk->begin();
 
   /// Recuperation du tableau des flux (drodm)
-  PyObject* drodmArray = PyList_GetItem(work,2); FldArrayF* drodm;
+  PyObject* drodmArray = PyDict_GetItemString(work,"rhs"); FldArrayF* drodm;
   K_NUMPY::getFromNumpyArray(drodmArray, drodm, true); E_Float* iptdrodm = drodm->begin();
    
   /// Recuperation de param_int, param_real,rop et rop_tmp

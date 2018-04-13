@@ -102,8 +102,8 @@
 #define DTLOC        46   
 #define SA_INT       47
                                                   
-#define RK	         52
-#define LEVEL	       53
+#define RK	     52
+#define LEVEL	     53
 #define EXPLOC       54
 #define ITEXPLOC     55
 #define LEVELG	     56
@@ -120,7 +120,9 @@
 #define SHIFTVAR     66
 #define EXTRACT_RES  67
 #define SA_DEBUG     68
-#define BC_NBBC	     69
+#define PT_OMP       69
+#define PT_BC	     70
+#define BC_NBBC	     71
 
 #define BC_TYPE	      0
 #define BC_IDIR       1
@@ -195,4 +197,5 @@
 #define METRIC_RDM   4   
 #define METRIC_INDM  5   
 #define METRIC_ITLU  6   
+#define METRIC_DEGEN 7   
 

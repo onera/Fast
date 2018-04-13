@@ -46,8 +46,7 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
   threadmax_sdm  = omp_get_max_threads();
 #endif
 
-
-  PyObject* tmp = PyList_GetItem(work, 8); E_Int mx_synchro    = PyLong_AsLong(tmp); 
+  PyObject* tmp = PyDict_GetItemString(work, "MX_SYNCHRO"); E_Int mx_synchro    = PyLong_AsLong(tmp); 
 
   E_Int nidom        = PyList_Size(zones);
   E_Int ndimdx       = 0;
@@ -177,7 +176,7 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
   //printf("flag = %d \n", flag);
 
   // Tableau de travail verrou omp
-  PyObject* lokArray = PyList_GetItem(work,3); FldArrayI* lok;
+  PyObject* lokArray = PyDict_GetItemString(work,"verrou_omp"); FldArrayI* lok;
   K_NUMPY::getFromNumpyArray(lokArray, lok, true); E_Int* ipt_lok  = lok->begin();
 
 #pragma omp parallel default(shared)
