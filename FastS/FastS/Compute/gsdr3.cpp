@@ -335,7 +335,8 @@ for (E_Int nd = 0; nd < nidom; nd++)
                                 iptx[nd]     , ipty[nd]            , iptz[nd]    ,
                                 iptventi[nd] , iptventj[nd]        , iptventk[nd]);
 
-            //correct_coins_(nd,  ipt_param_int[nd], ipt_ind_dm_thread , iptro[nd]);
+            correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptro_CL[nd]);
+
           }//loop souszone
        }//loop zone
   }//fin zone omp

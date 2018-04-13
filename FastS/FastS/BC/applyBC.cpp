@@ -205,7 +205,8 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
                                      iptx[nd]      , ipty[nd]        , iptz[nd]   ,
                                      iptventi[nd]  , iptventj[nd]    , iptventk[nd]);
 
-            //correct_coins_(nd,  ipt_param_int[nd], ipt_ind_dm_thread , iptro[nd]);
+            correct_coins_(nd,  ipt_param_int[nd], ipt_ind_dm_thread , iptro[nd]);
+
           }//loop souszone
        }//loop zone
   }//fin zone omp

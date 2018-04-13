@@ -98,13 +98,7 @@ c           write(*,'(a,6i6)')'ind_rhs   =',ind_rhs
 c           write(*,'(a,6i6)')'ind_mjr   =',ind_mjr
 c         endif
 
-            call  correct_coins(ndo,  param_int, ind_grad, rop_ssiter)
-          !!!!call  correct_coins(ndo,  param_int, ind_sdm, rop_ssiter)
-
-
-c         if(ndo.eq.1.and.ithread.eq.2) then
-c        write(*,*) 'apcoi', rop( inddm(27,134,6) + 2*param_int(NDIMDX))
-c         endif
+          !!!call  correct_coins(ndo,  param_int, ind_grad, rop_ssiter)
 
 
            IF(nitcfg.eq.1) then
