@@ -19,8 +19,7 @@ try:
     import Fast.Internal as FastI
     import KCore
     import math
-#   import Transform.PyTree as T
-    import timeit
+    #import timeit
     #import KCore.Dist as Dist
 except:
     raise ImportError("FastS: requires Converter, Connector, Fast modules.")
@@ -248,7 +247,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     # Compactage arbre transfert et mise a jour HOOK
     #
     if tc is not None:
-       X.miseAPlatDonnorTree__(zones, tc, graph=graph) 
+       X.miseAPlatDonorTree__(zones, tc, graph=graph) 
     
        HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
        param_real_tc        = Internal.getNodeFromName1( tc, 'Parameter_real')
@@ -423,7 +422,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        # Compactage arbre transfert
        g = None; l = None
        zones=Internal.getZones(t)
-       X.miseAPlatDonnorTree__(zones, tc, procDict=g, procList=l)
+       X.miseAPlatDonorTree__(zones, tc, procDict=g, procList=l)
 
        #Remise zero target
        if dtloc is not None: dtloc[4] = 0
@@ -466,19 +465,19 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             a = Internal.getNodeFromName2(z, 'extract_res')
             if a is not None: extract_res = Internal.getValue(a)
             if sa:
-                t0=timeit.default_timer()
+                #t0=timeit.default_timer()
                 _compact(z, fields=['centers:Density'   , 'centers:VelocityX'   , 'centers:VelocityY'   ,'centers:VelocityZ'   , 'centers:Temperature'   , 'centers:TurbulentSANuTilde']   ,  mode=count)
-                t1=timeit.default_timer()
+                #t1=timeit.default_timer()
                 #print "cout compact D= ", t1-t0, z[0]
-                t0=timeit.default_timer()
+                #t0=timeit.default_timer()
                 _compact(z, fields=['centers:Density_M1', 'centers:VelocityX_M1', 'centers:VelocityY_M1','centers:VelocityZ_M1', 'centers:Temperature_M1', 'centers:TurbulentSANuTilde_M1'],  mode=count)
-                t1=timeit.default_timer()
+                #t1=timeit.default_timer()
                 #print "cout compact M= ", t1-t0, z[0]
-                t0=timeit.default_timer()
+                #t0=timeit.default_timer()
                 _compact(z, fields=['centers:Density_P1', 'centers:VelocityX_P1', 'centers:VelocityY_P1','centers:VelocityZ_P1', 'centers:Temperature_P1', 'centers:TurbulentSANuTilde_P1'], mode=count)
-                t1=timeit.default_timer()
+                #t1=timeit.default_timer()
                 #print "cout compact P= ", t1-t0, z[0]
-                t0=timeit.default_timer()
+                #t0=timeit.default_timer()
                 if sfd == 1:
                    _compact(z, fields=['centers:Density_f','centers:VelocityX_f','centers:VelocityY_f','centers:VelocityZ_f','centers:Temperature_f', 'centers:TurbulentSANuTilde_f'],mode=count)
                 if extract_res == 1:

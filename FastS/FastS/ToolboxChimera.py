@@ -157,7 +157,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
        theta_perioDonor[name]= [      -theta_abs      , 0.        ,       theta_abs        ]
        theta_meanDonor[name] = [ thetameanD- theta_abs, thetameanD, thetameanD+ theta_abs, ]
        donorBases[name] = tmp
-       print name, ' is Donor.  <angle>= ', theta_meanDonor[name][1]/math.pi*180,' <angle> donnorGD=', theta_meanDonor[name][0]/math.pi*180, theta_meanDonor[name][2]/math.pi*180
+       print name, ' is Donor.  <angle>= ', theta_meanDonor[name][1]/math.pi*180,' <angle> donorGD=', theta_meanDonor[name][0]/math.pi*180, theta_meanDonor[name][2]/math.pi*180
 
 
        #calcul theta_meanRecepteur
@@ -209,7 +209,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                 #angle moyen donneur
                 theta_meanDonorD= theta_meanDonor[donor][2]
                 theta_meanDonorG= theta_meanDonor[donor][0]
-                print 'Rcpt  rotor.  <angle> receveur=', theta_meanR*180/math.pi, '<angle> donnorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi
+                print 'Rcpt  rotor.  <angle> receveur=', theta_meanR*180/math.pi, '<angle> donorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi
            else:
                 zones2translateR =  donorBases['Rotor']
                 donor            = 'Rotor'
@@ -218,7 +218,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                 #angle moyen donneur
                 theta_meanDonorD= theta_meanDonor[donor][2] +it*DTHETA
                 theta_meanDonorG= theta_meanDonor[donor][0] +it*DTHETA
-                print 'Rcpt stator. <angle> receveur=', theta_meanR*180/math.pi, '<angle> donnorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi
+                print 'Rcpt stator. <angle> receveur=', theta_meanR*180/math.pi, '<angle> donorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi
 
            Internal._rmNodesByName( donorBases[donor],'ID_*')
 
@@ -249,7 +249,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                       theta_perioDonor[donor][2] =   theta_perioDonor[donor][1]
                       theta_perioDonor[donor][1] =   tmp3
 
-                      print 'Donnor_D du ', rcpt, ' moved by', -3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor D=',theta_meanDonorD*180/math.pi
+                      print 'Donor_D du ', rcpt, ' moved by', -3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor D=',theta_meanDonorD*180/math.pi
 
                 elif theta_meanR -theta_abs*coef_secure >  theta_meanDonorG:
 
@@ -273,7 +273,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                       theta_perioDonor[donor][0] =   theta_perioDonor[donor][1]
                       theta_perioDonor[donor][1] =   tmp3
 
-                      print 'Donnor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi
+                      print 'Donor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi
                       
            elif AXISY > 0.: 
 
@@ -303,7 +303,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                       theta_perioDonor[donor][2] =   theta_perioDonor[donor][1]
                       theta_perioDonor[donor][1] =   tmp3
 
-                      print 'Donnor_D du ', rcpt, ' moved by', -3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor D=',theta_meanDonorD*180/math.pi
+                      print 'Donor_D du ', rcpt, ' moved by', -3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor D=',theta_meanDonorD*180/math.pi
 
                 elif theta_meanR -theta_abs*coef_secure >  theta_meanDonorG:
 
@@ -327,7 +327,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                       theta_perioDonor[donor][0] =   theta_perioDonor[donor][1]
                       theta_perioDonor[donor][1] =   tmp3
 
-                      print 'Donnor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi
+                      print 'Donor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi
 
            RD = [ ReceptCyl[rcpt] , donorBases[donor]] 
 

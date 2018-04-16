@@ -237,7 +237,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     # Compactage arbre transfert
     #
     if tc is not None:      
-       X.miseAPlatDonnorTree__(zones, tc, graph=graph)
+       X.miseAPlatDonorTree__(zones, tc, graph=graph)
 
        PyTree.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int')[1]
        param_real_tc               = Internal.getNodeFromName1( tc, 'Parameter_real')
@@ -368,7 +368,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        g     = graph['procDict']
        l     = graph['procList']
        
-       X.miseAPlatDonnorTree__(zones, tc, graph=graph)
+       X.miseAPlatDonorTree__(zones, tc, graph=graph)
 
        #Remise zero target
        if dtloc is not None: dtloc[4] = 0

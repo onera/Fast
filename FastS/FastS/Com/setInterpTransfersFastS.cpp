@@ -448,7 +448,7 @@ void K_FASTS::setInterpTransfersIntra(
           E_Int ideb = 0;
           E_Int ifin = 0;
           E_Int shiftCoef = 0;
-          E_Int shiftDonnor = 0;
+          E_Int shiftDonor = 0;
 
           for (E_Int ndtyp = 0; ndtyp < ntype[0]; ndtyp++) {
             type = types[ifin];
@@ -522,7 +522,7 @@ void K_FASTS::setInterpTransfersIntra(
             // %d  %d \n", irac, NoR,NoD, ntype[ 1 + ndtyp],pt_deb,pt_fin  ,
             // type, ithread );
 
-                      noi       = shiftDonnor;                             // compteur sur le tableau d indices donneur
+                      noi       = shiftDonor;                             // compteur sur le tableau d indices donneur
                       indCoef   = (pt_deb-ideb)*sizecoefs +  shiftCoef;
                       if     (nvars_loc==5)
                       {
@@ -587,7 +587,7 @@ void K_FASTS::setInterpTransfersIntra(
               //*/
                       ideb       = ideb + ifin;
                       shiftCoef  = shiftCoef   +  ntype[1+ndtyp]*sizecoefs; //shift coef   entre 2 types successif
-                      shiftDonnor= shiftDonnor +  ntype[1+ndtyp];           //shift donnor entre 2 types successif
+                      shiftDonor= shiftDonor +  ntype[1+ndtyp];           //shift donor entre 2 types successif
                    }// type 
                 }//irac
                }//pass_inst
@@ -935,7 +935,7 @@ void K_FASTS::setInterpTransfersInter(
                    E_Int ideb = 0;
                    E_Int ifin = 0;
                    E_Int shiftCoef = 0;
-                   E_Int shiftDonnor = 0;
+                   E_Int shiftDonor = 0;
          
                    for (E_Int ndtyp = 0; ndtyp < ntype[0]; ndtyp++) {
                      type = types[ifin];
@@ -972,7 +972,7 @@ void K_FASTS::setInterpTransfersInter(
                      }
          
          
-                  noi     = shiftDonnor;  // compteur sur le tableau d indices donneur
+                  noi     = shiftDonor;  // compteur sur le tableau d indices donneur
                   indCoef = ( pt_deb - ideb ) * sizecoefs + shiftCoef;
                   E_Int NoR = ipt_param_int[shift_rac + nrac * 11 + 1];
                   //if (ipt_param_int[ech]==0) printf("No rac= %d , NoR= %d, NoD= %d, Ntype= %d, ptdeb= %d, ptfin= %d, NptD= %d, neq= %d, skip= %d, rank= %d, dest= %d,  thread= %d\n",
@@ -1026,7 +1026,7 @@ void K_FASTS::setInterpTransfersInter(
                   //        } //chunk
                   ideb        = ideb + ifin;
                   shiftCoef   = shiftCoef + ntype[1 + ndtyp] * sizecoefs;  // shift coef   entre 2 types successif
-                  shiftDonnor = shiftDonnor + ntype[1 + ndtyp];            // shift donnor entre 2 types successif
+                  shiftDonor = shiftDonor + ntype[1 + ndtyp];            // shift donor entre 2 types successif
                   }                                                        // type
                     count_rac += 1;
                 }  // irac

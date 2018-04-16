@@ -30,10 +30,13 @@ def metric(t):
     metrics = []
     for z in zones:
         solver = getValueFromTag(z, 'solver')
-        if solver == 'FastP' and FastP == True: 
-            FastP._metricZone(z); metrics.append(None)
-        elif solver == 'FastS' and FastS == True: 
-            metric = FastS._metricZone(z); metrics.append(metric)
+        if solver == 'FastP' and FASTP: 
+            #metric = FastP.metric(z); 
+            metrics.append(None)
+        elif solver == 'FastS' and FASTS: 
+            #metric = FastS.metric(z); 
+            #metrics.append(metric)
+            metrics.append(None)
         else: metrics.append(None)
     return t, metrics
 
@@ -51,10 +54,12 @@ def _compute(t, metrics):
     for z in zones:
         solver = getValueFromTag(z, 'solver')
         metric = metrics[i]
-        if solver == 'FastP' and FastP == True: 
-            FastP._computeZone(z)
-        elif solver == 'FastS' and FastS == True: 
-            FastS._computeZone(z, metric)
+        if solver == 'FastP' and FASTP: 
+            #FastP._computeZone(z)
+            pass
+        elif solver == 'FastS' and FASTS: 
+            #FastS._computeZone(z, metric)
+            pass
         i += 1
     return None
 
@@ -75,10 +80,12 @@ def _applyBC(t, metrics, topTree=None):
     for z in zones:
         solver = getValueFromTag(z, 'solver')
         metric = metrics[i]
-        if solver == 'FastP' and FastP == True: 
-          FastP._applyBCZone(z, state)
-        elif solver == 'FastS' and FastS == True: 
-          FastS._applyBCZone(z, metric, state)
+        if solver == 'FastP' and FASTP: 
+          #FastP._applyBCZone(z, state)
+          pass
+        elif solver == 'FastS' and FASTS: 
+          #FastS._applyBCZone(z, metric, state)
+          pass
         i += 1
     return None
 
