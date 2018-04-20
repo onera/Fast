@@ -5,6 +5,7 @@ import FastS
 __version__ = FastS.__version__
 
 FIRST_IT = 0
+OMP_MODE = 0
 HOOK     = None
 HOOKIBC  = None
 
@@ -55,8 +56,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
 
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
-    omp_mode = 0
-    if  node is not None: omp_mode = Internal.getValue(node)
+    ompmode = OMP_MODE
+    if  node is not None: ompmode = Internal.getValue(node)
 
     dtloc   = Internal.getValue(dtloc) # tab numpy
     nitmax  = int(dtloc[0])                 
@@ -65,6 +66,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
     #### a blinder...
     itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
     #### a blinder...
+
+    if nitrun == 1: print 'layer trans=', layer, ompmode
 
     if layer == "Python": 
 
@@ -83,20 +86,19 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
             nstep_deb = nstep
             nstep_fin = nstep
             layer_mode= 0
-            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, hook1)
-            #fasts._computePT(zones, metrics, nitrun, nstep, omp_mode, hook1)
+            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, hook1)
 
             #Ghostcell
             vars=  varsP
             if  nstep == 2 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
             timelevel_target = int(dtloc[4])
-            _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1)
+            _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
 
     else: 
       nstep_deb = 1
       nstep_fin = nitmax
       layer_mode= 1
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, HOOK)
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, HOOK)
 
     # data update for unsteady joins
     dtloc[3] +=1   #time_level_motion
@@ -154,14 +156,14 @@ def _init_metric(t, metrics, hook, omp_mode):
 def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     global FIRST_IT, HOOK, HOOKIBC
     # Get omp_mode
-    omp_mode = 0
+    ompmode = OMP_MODE
     node = Internal.getNodeFromName2(t, '.Solver#define')
     if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
-        if  node is not None: omp_mode = Internal.getValue(node)
+        if  node is not None: ompmode = Internal.getValue(node)
 
     # Reordone les zones pour garantir meme ordre entre t et tc
-    FastI._reorder(t, tc, omp_mode)
+    FastI._reorder(t, tc, ompmode)
 
     # Construction param_int et param_real des zones
     _buildOwnData(t)
@@ -189,15 +191,15 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
         hook1 = HOOK.copy()
         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep) )
         display  = False
-        if nstep == 1 : display=True
+        #if nstep == 1 : display=True
         distributeThreads(t, metrics, HOOK, nstep, int(dtloc[0]), Display=display )
-
-    _init_metric(t, metrics, hook1, omp_mode)
+    
+    _init_metric(t, metrics, hook1, ompmode)
 
     # compact + align + init numa
     rmConsVars=True
     adjoint=Adjoint
-    t = createPrimVars(t, omp_mode, rmConsVars, adjoint)
+    t = createPrimVars(t, ompmode, rmConsVars, adjoint)
 
     zones = Internal.getZones(t) # car create primvar rend zones caduc
 
@@ -269,13 +271,12 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     #
     # remplissage ghostcells
     #
-    hook1["skip_lu"]= 0
-    nstep           = 1
-    nitrun          = 0
-    
+    hook1["lexit_lu"]= 0
+    nstep            = 1
+    nitrun           = 0
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4]) 
-    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  omp_mode, hook1) 
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1) 
    
     
     #
@@ -410,14 +411,14 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        tc = Internal.merge( [tc, tc_inst] )
 
        # Get omp_mode
-       omp_mode = 0
+       ompmode = OMP_MODE
        node = Internal.getNodeFromName2(t, '.Solver#define')
        if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
-        if  node is not None: omp_mode = Internal.getValue(node)
+        if  node is not None: ompmode = Internal.getValue(node)
 
        # Reordone les zones pour garantir meme ordre entre t et tc
-       FastI._reorder(t, tc, omp_mode)
+       FastI._reorder(t, tc, ompmode)
 
        # Compactage arbre transfert
        g = None; l = None
@@ -1893,10 +1894,10 @@ def _computeVelocityAle(t, metrics):
     bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
-    omp_mode = 0
-    if  node is not None: omp_mode = Internal.getValue(node)
+    ompmode = OMP_MODE
+    if  node is not None: ompmode = Internal.getValue(node)
 
-    fasts.computePT_velocity_ale(zones,  metrics, HOOK, omp_mode)
+    fasts.computePT_velocity_ale(zones,  metrics, HOOK, ompmode)
     return None
 
 #==============================================================================
@@ -2292,22 +2293,25 @@ def distributeThreads(t, metrics, work, nstep, nssiter, Display=False):
     fluj_tg  /= OMP_NUM_THREADS
     fluk_tg  /= OMP_NUM_THREADS
 
-    #print 'Target', cells_tg, flui_tg, fluj_tg, fluk_tg
+    if Display: print 'Target', cells_tg, flui_tg, fluj_tg, fluk_tg, 'nstep=', nstep
+
     remaind= {}
     for th in range(OMP_NUM_THREADS):
        remaind[str(th)] = cells_tg
 
-    #omp =work['distrib_omp']  #numpi contenant les infos
-    marge=1.04
+    #
+    cells_tg_save = cells_tg
+    marge=1.005
     c    = 0
     infos= {}
+    dim_i= numpy.empty((OMP_NUM_THREADS), numpy.int32) 
+    dim_j= numpy.empty((OMP_NUM_THREADS), numpy.int32) 
+    dim_k= numpy.empty((OMP_NUM_THREADS), numpy.int32) 
     for z in new_zones:
         No_zone    = z[0]
         No_subzone = z[1]
         param_int  = Internal.getNodeFromName2(zones[No_zone], 'Parameter_int')[1]  # noeud
-        #omp        = Internal.getNodeFromName2(zones[No_zone], 'omp')[1]  # noeud
         MX_SSZONE  = work['MX_SSZONE']
-        #shift_omp  =  MX_SSZONE*No_zone*(OMP_NUM_THREADS*7+4)
         shift_omp  =  param_int[69]
 
         #print 'nozone=', No_zone, No_subzone, shift_omp
@@ -2361,14 +2365,34 @@ def distributeThreads(t, metrics, work, nstep, nssiter, Display=False):
             infoZone['ind_dm_th']= [ inddm_zones[c] ]
 
         else:
+            cells_tg = cells_tg_save
             Nthreads =  size_c/cells_tg
             if size_c%cells_tg != 0: Nthreads +=1
             Nthreads = min( Nthreads,  OMP_NUM_THREADS )
-            #if (Nthreads-1)*cells_tg > 0.95*size_c: Nthreads -=1
+
+            #verif place dispo sur les dernier threads
+            
+            cells_tg     = 0
+            cells_tg_min =10000000
+            for th_check in range(OMP_NUM_THREADS-1,OMP_NUM_THREADS-Nthreads-1,-1):
+               cells_tg  +=  remaind[str(th_check)]
+               if remaind[str(th_check)] <  cells_tg_min: 
+                    cells_tg_min = remaind[str(th_check)]
+                    th_min = th_check
+
+            cells_tg  /=  Nthreads
+
+            if cells_tg == cells_tg_min: th_min =-1
+            #cells_tg  =  0.5*(cells_tg_min+cells_tg)*marge
+            cells_tg  =  cells_tg_min*marge
+
+
 
             itypcp = param_int[29]
             if itypcp == 2 : lmin =  4
             else:            lmin = 10
+
+            #print "cell-tg", cells_tg, cells_tg_save, cells_tg_min, lmin
 
             topo_lu   = numpy.ones((3), numpy.int32) 
             ind_dm_th = numpy.ones((6), numpy.int32) 
@@ -2379,265 +2403,148 @@ def distributeThreads(t, metrics, work, nstep, nssiter, Display=False):
             search = True
             while search == True:
 
+              #verif place dispo sur les dernier threads
+              #for th_check in range(OMP_NUM_THREADS-1,OMP_NUM_THREADS-Nthreads-1,-1):
+              #   print 'remain', remaind[str(th_check)], th_check
+
               search = False
-              #if search: 
-              #     print "N passes pour Optim balance, Nthreads=", Nthreads
+              #if search:   print "N passes pour Optim balance, Nthreads=", Nthreads
 
+              #print 'ind_zone', inddm_zones[c], Nthreads
               fasts.work_thread_distribution( inddm_zones[c], topo_lu, ind_dm_th, c, Nthreads, lmin) 
-              #print 'topo_LU=', topo_lu, Nthreads, z[0]
-              for th in range(Nthreads):
+              #print "topo_LLLUUU", topo_lu
 
-                 if topo_lu[0] == 1 : #then !dom 3d: decoupe direction k (et j eventuellement)
-                    k = 1 +(th)/topo_lu[1]
-                    j = th+1 -(k-1)*topo_lu[1]
-                    i = 1
-                 else:
-                    k = 1
-                    j = 1 +(th)/topo_lu[0]
-                    i = th+1 -(j-1)*topo_lu[0]
+              dims=[ dim_i, dim_j, dim_k]
+              for dir in range(3):
+                 for l in range(topo_lu[dir]):
 
+                      dims[dir][l] =  nijk[dir]/topo_lu[dir]
 
-                 #distrib omp fast classic
-                 if Nthreads == OMP_NUM_THREADS:
+                      if l < nijk[dir]%topo_lu[dir]:  dims[dir][l] += 1
               
-                   if topo_lu[0] == 1 : #then !dom 3d: decoupe direction k (et j eventuellement)
+              #print 'ddims0',  dims[0][0], dims[1][0],  dims[2][0]
+              #test residu sur la bloc du premier thread
+              res = dims[0][0]*dims[1][0]*dims[2][0] - cells_tg
+              sign = 1.
+              if res < 0: sign = -1. #block trop petit % la cible
 
-                      dim_ijk[0+3*th] =  nijk[0]
-                      res_ijk[0+3*th] =  0
-                      #dir J
-                      if j <= nijk[1]%topo_lu[1]: # then !test pour repartir le residu sur les 1er sous-doamine
-                        dim_ijk[1+3*th] =  nijk[1]/topo_lu[1] + 1
-                        res_ijk[1+3*th] =  0
-                      else:
-                        dim_ijk[1+3*th] =  nijk[1]/topo_lu[1]
-                        res_ijk[1+3*th] =  nijk[1]%topo_lu[1]
-                      #dir K
-                      if k <= nijk[2]%topo_lu[2]: # then !test pour repartir le residu sur les 1er sous-doamine
-                        dim_ijk[2+3*th] =  nijk[2]/topo_lu[2] + 1
-                        res_ijk[0+3*th] =  0
-                      else:
-                        dim_ijk[2+3*th] =  nijk[2]/topo_lu[2]
-                        res_ijk[2+3*th] =  nijk[2]%topo_lu[2]
-                   else:
-                      dim_ijk[2+3*th] =  nijk[2]
-                      res_ijk[2+3*th] =  0
-                      #dir I
-                      if i <= nijk[0]%topo_lu[0]: # then !test pour repartir le residu sur les 1er sous-doamine
-                        dim_ijk[0+3*th] =  nijk[0]/topo_lu[0] + 1
-                        res_ijk[0+3*th] =  0
-                      else:
-                        dim_ijk[0+3*th] =  nijk[0]/topo_lu[0]
-                        res_ijk[0+3*th] =  nijk[0]%topo_lu[0]
-                      #dir J
-                      if j <= nijk[1]%topo_lu[1]: # then !test pour repartir le residu sur les 1er sous-doamine
-                        dim_ijk[1+3*th] =  nijk[1]/topo_lu[1] + 1
-                        res_ijk[1+3*th] =  0
-                      else:
-                        dim_ijk[1+3*th] =  nijk[1]/topo_lu[1]
-                        res_ijk[1+3*th] =  nijk[1]%topo_lu[1]
+              #print 'size bloc=', dims[0][0]*dims[1][0]*dims[2][0], 'sizetg=', cells_tg
+            
+              if res*sign > 0:  #sous bloc trop grand
 
-                 else:
+                compteur =0
+                go = False
+                while res*sign > 0. and not go and compteur < 6:
+                  go      = True
+                  deriv_i= min(1, (topo_lu[0]-1) )
+                  deriv_j= min(1, (topo_lu[1]-1) )
+                  deriv_k= min(1, (topo_lu[2]-1) )
 
-                   if k==1: kdeb = inddm_zones[c][4]
-                   if j==1: jdeb = inddm_zones[c][2]
-                   if i==1: ideb = inddm_zones[c][0]
-             
-                   #Pas de decoupe
-                   if topo_lu[0]*topo_lu[1]*topo_lu[2] == 1: 
-                        dim_ijk[0+3*th] = nijk[0]
-                        dim_ijk[1+3*th] = nijk[1]
-                        dim_ijk[2+3*th] = nijk[2]
-                        res_ijk[0+3*th] =  0
-                        res_ijk[1+3*th] =  0
-                        res_ijk[2+3*th] =  0
-                   #decoupe K uniquememnt
-                   elif topo_lu[0]*topo_lu[1] == 1: 
-                        dim_ijk[0+3*th] = nijk[0]
-                        dim_ijk[1+3*th] = nijk[1]
-                        dim_ijk[2+3*th] = cells_tg/( nijk[0]*nijk[1] )
-                        res_ijk[0+3*th] =  0
-                        res_ijk[1+3*th] =  0
-                        res_ijk[2+3*th] =  0
+                  cout_i = dims[1][0]*dims[2][0]*deriv_i
+                  cout_j = dims[0][0]*dims[2][0]*deriv_j
+                  cout_k = dims[1][0]*dims[0][0]*deriv_k
+                  #print 'couts', cout_i, cout_j, cout_k, res*sign, go
+                  if   cout_i+cout_j+cout_k < res*sign :
+                          #print 'IJK', cout_j, res*sign
+                          dims[0][0] -=deriv_i*sign; dims[1][0] -=deriv_j*sign; dims[2][0] -=deriv_k*sign
+                          res -=  (cout_i+cout_j+cout_k)*sign
+                          go   = False
 
-                        if th == Nthreads-1: 
-                           dim_ijk[2+3*th] = inddm_zones[c][5] -kdeb +1
-                           res_ijk[2+3*th] =  kdeb -  inddm_zones[c][4] - dim_ijk[2+3*th]*(k-1)
+                  elif cout_j+cout_k < res*sign :
+                          #print 'JK', cout_j, res*sign
+                          dims[1][0] -=deriv_j*sign; dims[2][0] -=deriv_k*sign
+                          res -=  (cout_j+cout_k)*sign
+                          if cout_j+cout_k != 0: go = False
+                  elif cout_j+cout_i < res*sign :
+                          #print 'JI', cout_j, res*sign
+                          dims[1][0] -=deriv_j*sign; dims[0][0] -=deriv_i*sign
+                          res -=  (cout_j+cout_i)*sign
+                          if cout_j+cout_i != 0: go = False
+                  elif cout_k+cout_i < res*sign :
+                          #print 'KI', cout_j, res*sign
+                          dims[2][0] -=deriv_k*sign; dims[0][0] -=deriv_i*sign
+                          res -=  (cout_k+cout_i)*sign
+                          if cout_k+cout_i != 0: go = False
+                  elif cout_k < res*sign :
+                          #print 'KK', cout_j, res*sign
+                          dims[2][0] -=deriv_k*sign
+                          res -=  cout_k*sign
+                          if cout_k != 0: go = False
+                  elif cout_j < res*sign :
+                          #print 'JJ', cout_j, res*sign
+                          dims[1][0] +=deriv_j*sign
+                          res -=  cout_j*sign
+                          if cout_j != 0: go = False
+                  elif cout_i < res*sign :
+                          #print 'II', cout_j, res*sign
+                          dims[0][0] +=deriv_i*sign
+                          res -=  cout_i*sign
+                          if cout_i != 0: go = False
+                  compteur +=1
+                #print 'ddims1',  dims[0][0], dims[1][0],  dims[2][0], dims[0][0]*dims[1][0]*dims[2][0], go, compteur
 
-                        if dim_ijk[2+3*th] < lmin and Nthreads > 1 and not search:
-                          Nthreads   -=1
-                          search = True
-                        else:
-                          kdeb += dim_ijk[2+3*th]
-                          #print 'topo K'
-                   #decoupe J uniquememnt
-                   elif topo_lu[0]*topo_lu[2] == 1: 
-                        dim_ijk[0+3*th] = nijk[0]
-                        dim_ijk[2+3*th] = nijk[2]
-                        dim_ijk[1+3*th] = cells_tg/( nijk[0]*nijk[2] )
-                        res_ijk[0+3*th] =  0
-                        res_ijk[1+3*th] =  0
-                        res_ijk[2+3*th] =  0
+              for dir in range(3):
+                 if topo_lu[dir] != 1:
+                     #on repartie la place restante entre les thread restant
+                     if th_min != -1:
+                        dim_loc = (nijk[dir]-dims[dir][0])/(topo_lu[dir]-1)
+                        res_loc = (nijk[dir]-dims[dir][0])%(topo_lu[dir]-1)
+                        for l in range(1, topo_lu[dir]):
+                            dims[dir][l] = dim_loc
+                            if l <= res_loc:  dims[dir][l] += 1
+                     #on affecte la taille du premier bloc thraed a tous les autres bloc
+                     else:
+                        for l in range(1, topo_lu[dir]):
+                             dims[dir][l] = dims[dir][0]
+                        #on determine la taille du dernier bloc 
+                        dims[dir][topo_lu[dir]-1] = nijk[dir] - (topo_lu[dir]-1)*dims[dir][0]
 
-                        res = nijk[1]%dim_ijk[1+3*th]
-                        if res != 0:
-                           if j <= res: dim_ijk[1+3*th] +=1
-                           else       : res_ijk[1+3*th] += res
-                           #dirJ
-                        if j == topo_lu[1]: 
-                          dim_ijk[1+3*th] = inddm_zones[c][3] -jdeb +1
-                          res_ijk[1+3*th] =  jdeb -  inddm_zones[c][2] - dim_ijk[1+3*th]*(j-1)
+              for dir in range(3):
+                 for l in range(topo_lu[dir]):
 
-                        if dim_ijk[1+3*th] < lmin and Nthreads > 1 and not search:
-                          Nthreads   -=1
-                          search = True
-			  #print 'redo J', j,Nthreads, search 
-                        else:
-                          jdeb += dim_ijk[1+3*th]
-			  #print 'topo J'
-                   #decoupe I uniquememnt
-                   elif topo_lu[1]*topo_lu[2] == 1: 
-                        dim_ijk[1+3*th] = nijk[1]
-                        dim_ijk[2+3*th] = nijk[2]
-                        dim_ijk[0+3*th] = cells_tg/( nijk[1]*nijk[2] )
-                        res_ijk[0+3*th] =  0
-                        res_ijk[1+3*th] =  0
-                        res_ijk[2+3*th] =  0
-
-                        if th == Nthreads-1: 
-                          dim_ijk[0+3*th] = inddm_zones[c][1] -ideb +1
-                          res_ijk[0+3*th] =  ideb -  inddm_zones[c][0] - dim_ijk[0+3*th]*(i-1)
-
-                        if dim_ijk[0+3*th] < lmin and Nthreads > 1 and not search:
-                          Nthreads   -=1
-                          search = True
-                        else:
-                          ideb += dim_ijk[0+3*th]
-                          #print 'topo I'
-
-                   #decoupe K et J
-                   elif topo_lu[0] == 1: 
-               	        dim_ijk[0+3*th]  = nijk[0]
-                        dim_ijk[1+3*th]  = nijk[1]
-                        dim_ijk[2+3*th]  = nijk[2]
-                        res_ijk[0+3*th] =  0
-                        res_ijk[1+3*th] =  0
-                        res_ijk[2+3*th] =  0
-
-                        dim_ijtg    = cells_tg/dim_ijk[0+3*th]
-
-                        res     = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[2+3*th]
-                        #if res < 0: print "warning distrib: residu negatif"
-
-                        while res > dim_ijk[2+3*th] or res > dim_ijk[1+3*th]:
-                           if res//dim_ijk[2+3*th] > 1:
-                       	     dim_ijk[1+3*th] +=1
-                             res    = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[2+3*th]
-                           if res//dim_ijk[1+3*th] > 1:
-                             dim_ijk[2+3*th] +=1
-                             res    = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[2+3*th]
-                           #dirJ
-                           if j == topo_lu[1]: 
-                             dim_ijk[1+3*th] = inddm_zones[c][3] -jdeb +1
-                             res_ijk[1+3*th] =  jdeb -  inddm_zones[c][2] - dim_ijk[1+3*th]*(j-1)
-
-                           if dim_ijk[1+3*th] < lmin and Nthreads > 1 and not search:
-                             search    = True
-                             Nthreads -=1
-                           else:
-                             jdeb  += dim_ijk[1+3*th]
-
-                           #dirK
-                           if k == topo_lu[2]: 
-                             dim_ijk[2+3*th] = inddm_zones[c][5] -kdeb +1
-                             res_ijk[2+3*th] =  kdeb -  inddm_zones[c][4] - dim_ijk[2+3*th]*(k-1)
- 
-                           if dim_ijk[2+3*th] < lmin and Nthreads > 1 and not search:
-                             search    = True
-                             Nthreads -=1
-                           else:
-                             kdeb += dim_ijk[2+3*th]
-
-		        #print 'topo K et J'
-
-                   #decoupe I et J
-                   elif topo_lu[0] == 1: 
-                        dim_ijk[0+3*th]  = nijk[0]
-                        dim_ijk[1+3*th]  = nijk[1]
-                        dim_ijk[2+3*th]  = nijk[2]
-                        res_ijk[0+3*th] =  0
-                        res_ijk[1+3*th] =  0
-                        res_ijk[2+3*th] =  0
-
-                        dim_ijtg    = cells_tg/dim_ijk[2+3*th]
-
-                        res     = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[0+3*th]
-                        #if res < 0: print "warning distrib: residu negatif"
-
-                        while res > dim_ijk[0+3*th] or res > dim_ijk[1+3*th]:
-                           if res//dim_ijk[0+3*th] > 1:
-                             dim_ijk[1+3*th] +=1
-                             res    = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[0+3*th]
-                           if res//dim_ijk[1+3*th] > 1:
-                             dim_ijk[0+3*th] +=1
-                             res    = dim_ijtg - dim_ijk[1+3*th]*dim_ijk[0+3*th]
-
-                           #dirJ
-                           if j == topo_lu[1]: 
-                             dim_ijk[1+3*th] = inddm_zones[c][3] -jdeb +1
-                             res_ijk[1+3*th] =  jdeb -  inddm_zones[c][2] - dim_ijk[1+3*th]*(j-1)
-
-                           if dim_ijk[1+3*th] < lmin and Nthreads > 1 and not search:
-                             search    = True
-                             Nthreads -=1
-                           else:
-                             jdeb  += dim_ijk[1+3*th]
-
-                           #dirI
-                           if i == topo_lu[0]: 
-                             dim_ijk[0+3*th] = inddm_zones[c][1] -ideb +1
-                             res_ijk[0+3*th] =  ideb -  inddm_zones[c][0] - dim_ijk[0+3*th]*(i-1)
-
-                           if dim_ijk[0+3*th] < lmin and Nthreads > 1 and not search:
-                             search    = True
-                             Nthreads -=1
-                           else:
-                             ideb  += dim_ijk[0+3*th]
-
-                        #print 'topo I et J'
-
-
+                      if not search and (dims[dir][l] < lmin and nijk[dir] != dims[dir][l]):
+                        search = True
+                        if   dir ==0 : Nthreads -=  topo_lu[1]*topo_lu[2]
+                        elif dir ==1 : Nthreads -=  topo_lu[0]*topo_lu[2]
+                        elif dir ==2 : Nthreads -=  topo_lu[0]*topo_lu[1]
+          
+              #affinememnt pour cibler la target
 
             #Carte threads actifs       
             param_int[ shift_omp: shift_omp + OMP_NUM_THREADS ] = -2 #Thread inactif
 
             thread_list=[]
             dim_list   =[]
-            for th in range(Nthreads):
-		th_current = 0
-                size_th    = dim_ijk[0+3*th]*dim_ijk[1+3*th]*dim_ijk[2+3*th]
-                size_loc = size_th
+            th = 0
+            for k in range(topo_lu[2]):
+              for j in range(topo_lu[1]):
+                for i in range(topo_lu[0]):
+		  th_current = 0
+                  size_th    = dim_i[i]*dim_j[j]*dim_k[k]
+                  size_loc = size_th
 
-                #print 'szloc',  dim_ijk[0+3*th],dim_ijk[1+3*th],dim_ijk[2+3*th], remaind[str(th_current)], th_current
-		#while size_loc/marge > remaind[str(th_current)] and th_current < OMP_NUM_THREADS: 
-		while size_loc/marge > remaind[str(th_current)] and th_current < OMP_NUM_THREADS-1: 
-                   #print 'szloc',  size_loc/marge, remaind[str(th_current)], th_current
-                   th_current +=1
+	          while size_loc/marge > remaind[str(th_current)] and th_current < OMP_NUM_THREADS-1: 
+                     #print 'szloc',  size_loc/marge, remaind[str(th_current)], th_current
+                     th_current +=1
                 
-                if th_current == OMP_NUM_THREADS-1:
-                   blind = -100000
-                   for i in range(OMP_NUM_THREADS):
+                  if th_current == OMP_NUM_THREADS-1:
+                     blind = -100000
+                     for i in range(OMP_NUM_THREADS):
                         #print 'blind', remaind[str(i)], blind, i
                         if remaind[str(i)] > blind:
                           blind = remaind[str(i)]
                           th_current = i
 
-                remaind[str(th_current)] =  remaind[str(th_current)] - size_loc
-
-                #print 'thread=', th, size_loc, remaind[str(th_current)], th_current
-
-                param_int[ shift_omp + th_current ] = th #Thread actif
-
-                thread_list.append(th_current)
+                  #tentative optim distrib
+                  if th_min != -1: 
+                      th_current = th_min
+                      th_min     = -1
+                 
+                  remaind[str(th_current)]            =  remaind[str(th_current)] - size_loc
+                  param_int[ shift_omp + th_current ] = th                                    #Thread actif
+                  thread_list.append(th_current)
+                  th +=1
+                  #print 'thread=', th, size_loc, remaind[str(th_current)], th_current
 
             #Nb threads actifs 
             param_int[shift_omp + OMP_NUM_THREADS ] = len(thread_list)
@@ -2648,29 +2555,38 @@ def distributeThreads(t, metrics, work, nstep, nssiter, Display=False):
             param_int[shift_omp + OMP_NUM_THREADS +3 ] =  topo_lu[2]
 
             th = 0
-            #print "topo_LLLUUU", topo_lu
-            for k in range( topo_lu[2]):
-              for j in range( topo_lu[1]):
-                for i in range( topo_lu[0]):
-                   inddm_omp   = numpy.ones((6), numpy.int32)
- 
-                   inddm_omp[0]  = inddm_zones[c][0]    + dim_ijk[0+3*th]*(i  ) + res_ijk[0+3*th]
-                   inddm_omp[1]  = inddm_zones[c][0] -1 + dim_ijk[0+3*th]*(i+1) + res_ijk[0+3*th]
-                   inddm_omp[2]  = inddm_zones[c][2]    + dim_ijk[1+3*th]*(j  ) + res_ijk[1+3*th]
-                   inddm_omp[3]  = inddm_zones[c][2] -1 + dim_ijk[1+3*th]*(j+1) + res_ijk[1+3*th]
-                   inddm_omp[4]  = inddm_zones[c][4]    + dim_ijk[2+3*th]*(k  ) + res_ijk[2+3*th]
-                   inddm_omp[5]  = inddm_zones[c][4] -1 + dim_ijk[2+3*th]*(k+1) + res_ijk[2+3*th]
-                   dim_list.append( inddm_omp )
+            kstart = inddm_zones[c][4]
+            for k in range(topo_lu[2]):
+              jstart = inddm_zones[c][2]
+              for j in range(topo_lu[1]):
+                istart = inddm_zones[c][0]
+                for i in range(topo_lu[0]):
 
-                   #indice sous-domaine omp
-                   param_int[shift_omp + OMP_NUM_THREADS +4 +th*6] = inddm_omp[0]
-                   param_int[shift_omp + OMP_NUM_THREADS +5 +th*6] = inddm_omp[1]
-                   param_int[shift_omp + OMP_NUM_THREADS +6 +th*6] = inddm_omp[2]
-                   param_int[shift_omp + OMP_NUM_THREADS +7 +th*6] = inddm_omp[3]
-                   param_int[shift_omp + OMP_NUM_THREADS +8 +th*6] = inddm_omp[4]
-                   param_int[shift_omp + OMP_NUM_THREADS +9 +th*6] = inddm_omp[5]
+                    inddm_omp    = numpy.empty((6), numpy.int32)
 
-                   th +=1
+                    inddm_omp[0] = istart
+                    inddm_omp[1] = istart + dims[0][i] - 1
+                    istart       = inddm_omp[1] + 1
+
+                    inddm_omp[2] = jstart
+                    inddm_omp[3] = jstart + dims[1][j] - 1
+
+                    inddm_omp[4] = kstart
+                    inddm_omp[5] = kstart + dims[2][k] - 1
+
+                    param_int[shift_omp + OMP_NUM_THREADS +4 + th*6] = inddm_omp[0]
+                    param_int[shift_omp + OMP_NUM_THREADS +5 + th*6] = inddm_omp[1]
+                    param_int[shift_omp + OMP_NUM_THREADS +6 + th*6] = inddm_omp[2]
+                    param_int[shift_omp + OMP_NUM_THREADS +7 + th*6] = inddm_omp[3]
+                    param_int[shift_omp + OMP_NUM_THREADS +8 + th*6] = inddm_omp[4]
+                    param_int[shift_omp + OMP_NUM_THREADS +9 + th*6] = inddm_omp[5]
+
+                    dim_list.append( inddm_omp )
+
+                    th +=1
+
+                jstart = inddm_omp[3] + 1
+              kstart = inddm_omp[5] + 1
 
             #parent_zone.append([c,nd_subzone,ndimdx, nijk] )
 
@@ -2808,8 +2724,8 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
-    omp_mode = 0
-    if  node is not None: omp_mode = Internal.getValue(node)
+    ompmode = OMP_MODE
+    if  node is not None: ompmode = Internal.getValue(node)
 
     dtloc = Internal.getValue(dtloc) # tab numpy
     nitmax = int(dtloc[0])                 

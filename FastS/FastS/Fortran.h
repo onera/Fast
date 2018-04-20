@@ -229,7 +229,7 @@ extern "C"
                      E_Float* ipti   , E_Float* iptj , E_Float* iptk ,
                      E_Float* iptx0  , E_Float* ipty0, E_Float* iptz0, E_Float* iptvol,  E_Int* ind_loop );
 
-   void     tijk_extrap_( E_Int ndimdx_mtr, E_Int ndimdx_xyz,  E_Int nijk_xyz,  E_Int nijk_mtr, E_Int neq_ij, E_Int neq_k,
+   void     tijk_extrap_( E_Int& ndimdx_mtr, E_Int& ndimdx_xyz, E_Int* nijk_xyz,  E_Int* nijk_mtr, E_Int& neq_ij , E_Int& neq_k,
                           E_Int* ind_zone , E_Int*  degen   , 
                           E_Float* ipti   , E_Float* iptj , E_Float* iptk ,
                           E_Float* iptx0  , E_Float* ipty0, E_Float* iptz0,  E_Float* iptvol);

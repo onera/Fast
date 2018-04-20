@@ -149,7 +149,6 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
   FldArrayF rot_ale(12*threadmax_sdm);         E_Float* ipt_rot_ale       = rot_ale.begin();
 
-
 #pragma omp parallel default(shared) 
      {
 	//* variable declaree dans zone parallele = private *//
@@ -178,8 +177,8 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
         E_Float*  ipt_rot_ale_thread = ipt_rot_ale  + (ithread-1)*12;
 
-         E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp; E_Int ithread_loc; E_Int Nbre_thread_actif_loc;
-         if (omp_mode == 1)
+        E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp; E_Int ithread_loc; E_Int Nbre_thread_actif_loc;
+        if (omp_mode == 1)
             { 
               // loop calcul normale
               for (E_Int nd = 0; nd < nidom; nd++)
@@ -187,40 +186,73 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 #              include "Metric/indice_omp1.h" 
                cp_tijk_( ipt_param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], ind_mtr);
               }
+       	      #pragma omp barrier
               // loop calcul volume
               for (E_Int nd = 0; nd < nidom; nd++)
               {
 #              include "Metric/indice_omp1.h" 
                cp_vol_(  ipt_param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], ind_mtr);
-              }
-              // loop extrapolation
-              for (E_Int nd = 0; nd < nidom; nd++)
-              {
-#              include "Metric/indice_omp1.h" 
-               for (E_Int k = ind_mtr[4]; k < ind_mtr[5]; k++){ 
-                for (E_Int j = ind_mtr[2]; k < ind_mtr[3]; j++){ 
-                 for (E_Int i = ind_mtr[0]; k < ind_mtr[1]; i++){ 
+
+               for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
+                for (E_Int j = ind_mtr[2]; j <= ind_mtr[3]; j++){ 
+                 for (E_Int i = ind_mtr[0]; i <= ind_mtr[1]; i++){ 
 
                    E_Int l =  (i+ ipt_param_int[nd][NIJK_MTR+3]-1)*ipt_param_int[nd][NIJK_MTR]
                             + (j+ ipt_param_int[nd][NIJK_MTR+3]-1)*ipt_param_int[nd][NIJK_MTR+1]
                             + (k+ ipt_param_int[nd][NIJK_MTR+4]-1)*ipt_param_int[nd][NIJK_MTR+2];
-
-                   iptvol[nd][l] = K_FUNC::E_max(iptvol[nd][i], 1.e-30);
+                   iptvol[nd][l] = K_FUNC::E_max(iptvol[nd][l], 1.e-30);
                  }
                 }
                }
+              }
+       	      #pragma omp barrier
+              // loop extrapolation
+              for (E_Int nd = 0; nd < nidom; nd++)
+              {
+
+#              include "Metric/indice_omp1.h" 
                if (ipt_param_int[nd][ ITYPZONE ] != 2  && ithread_loc == 1)
                 {
-                 tijk_extrap_(ipt_param_int[nd][ NDIMDX_MTR ],ipt_param_int[nd][NDIMDX_XYZ ],
-                         ipt_param_int[nd][ NIJK_XYZ ], ipt_param_int[nd][ NIJK_MTR ],
-                         ipt_param_int[nd][ NEQ_IJ ],ipt_param_int[nd][ NEQ_K ],
-                         ind_mtr,
-                         ipt_degen[nd],
-                         ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd]);
+                 ipt_ind_dm_loc[0]   = 1; 
+                 ipt_ind_dm_loc[2]   = 1; 
+                 ipt_ind_dm_loc[4]   = 1; 
+                 if(ipt_param_int[nd][ ITYPZONE ] == 0) 
+                   {
+                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[5]   = ipt_param_int[nd][ IJKV+2 ];
+                   }
+                 else if(ipt_param_int[nd][ ITYPZONE ] == 1) 
+                   {
+                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[5]   = 1;
+                   }
+                 else if(ipt_param_int[nd][ ITYPZONE ] == 2) 
+                   {
+                    ipt_ind_dm_loc[1]   = 1 ;
+                    ipt_ind_dm_loc[3]   = 1; 
+                    ipt_ind_dm_loc[5]   = 1; 
+                   }
+                 else
+                   {
+                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[5]   = 1 ;
+                   }
+
+                 E_Int* ipt_nijk_xyz = ipt_param_int[nd]+ NIJK_XYZ;
+                 E_Int* ipt_nijk_mtr = ipt_param_int[nd]+ NIJK_MTR;
+
+                 tijk_extrap_( ipt_param_int[nd][ NDIMDX_MTR ], ipt_param_int[nd][ NDIMDX_XYZ ] , ipt_nijk_xyz, ipt_nijk_mtr,
+                               ipt_param_int[nd][ NEQ_IJ ]    , ipt_param_int[nd][ NEQ_K ],
+                               ipt_ind_dm_loc,
+                               ipt_degen[nd] ,
+                               ipti[nd]      , iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd]);
                 }
               }
             }
-         else
+        else
             { //omp_mode 0
               for (E_Int nd = 0; nd < nidom; nd++)
               {
@@ -231,30 +263,29 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                 ipt_ind_dm_loc[2]   = 1; 
                 ipt_ind_dm_loc[4]   = 1; 
                 if(ipt_param_int[nd][ ITYPZONE ] == 0) 
-                  {
-                   ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
-                   ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
-                   ipt_ind_dm_loc[5]   = ipt_param_int[nd][ IJKV+2 ];
-                  }
-                 else if(ipt_param_int[nd][ ITYPZONE ] == 1) 
-                  {
-                   ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
-                   ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
-                   ipt_ind_dm_loc[5]   = 1;
-                  }
-                 else if(ipt_param_int[nd][ ITYPZONE ] == 2) 
-                  {
-                   ipt_ind_dm_loc[1]   = 1 ;
-                   ipt_ind_dm_loc[3]   = 1; 
-                   ipt_ind_dm_loc[5]   = 1; 
-                  }
-                 else
-                  {
-                   ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
-                   ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
-                   ipt_ind_dm_loc[5]   = 1 ;
-                  }
-
+                   {
+                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[5]   = ipt_param_int[nd][ IJKV+2 ];
+                   }
+                else if(ipt_param_int[nd][ ITYPZONE ] == 1) 
+                   {
+                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[5]   = 1;
+                   }
+                else if(ipt_param_int[nd][ ITYPZONE ] == 2) 
+                   {
+                    ipt_ind_dm_loc[1]   = 1 ;
+                    ipt_ind_dm_loc[3]   = 1; 
+                    ipt_ind_dm_loc[5]   = 1; 
+                   }
+                else
+                   {
+                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[5]   = 1 ;
+                   }
 
                  indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
                                    ipt_ind_dm_loc, 

@@ -144,7 +144,10 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     E_Int typ_zone, ndimdx_mtr ; 
 
     
-    FldArrayI  degener(ipt_param_int[ NDIMDX_XYZ ]); E_Int* ipt_degener = degener.begin();
+    //FldArrayI  degener(ipt_param_int[ NDIMDX_XYZ ]); E_Int* ipt_degener = degener.begin();
+    PyObject* degener    = K_NUMPY::buildNumpyArray(  ipt_param_int[ NDIMDX_XYZ ]             , 1, 1, 1);
+    E_Int*   ipt_degener = K_NUMPY::getNumpyPtrI( degener );
+
 
     nature_geom_dom_(ipt_param_int+NIJK_XYZ, ipt_param_int[ NDIMDX_XYZ ], iptx, ipty, iptz , ipt_degener, lale, ipt_param_real, // IN
                      ipt_param_int+NIJK_MTR, ndimdx_mtr, neq_ij, neq_k, typ_zone);                             // OUT
@@ -453,8 +456,9 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
   PyList_Append(metrics , ind_dm);      Py_DECREF(ind_dm );
   PyList_Append(metrics , it_lu_ssdom); Py_DECREF(it_lu_ssdom);
 
-  PyObject* degen  = K_NUMPY::buildNumpyArray(  degener, 1);
-  PyList_Append(metrics , degen);     Py_DECREF(degen);
+  //PyObject* degen  = K_NUMPY::buildNumpyArray(  degener, 1);
+  //PyList_Append(metrics , degen);     Py_DECREF(degen);
+  PyList_Append(metrics , degener);     Py_DECREF(degener);
 
   if (lale==1)   { Py_DECREF(ipti0); Py_DECREF(iptventi); }
   if (kfludom==3){ Py_DECREF(ipti_df); }

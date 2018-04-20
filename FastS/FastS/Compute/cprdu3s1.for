@@ -57,7 +57,8 @@ c     & ii,jj,kk
 
 #include "FastS/formule.h"
 
-      !write(*,'(a,7i7)')'ssdom=',ind_loop,ndom
+c      if (ithread.eq.1) write(*,'(a,8i7)')'ssdom=',ind_loop,ndom,
+c     & ndim_rdm
 
       cut0x = 1e-20
 
@@ -84,18 +85,16 @@ c     & imax_lu,jmax_lu,kmax_lu,ndo,nitcfg,nisdom_residu(nitcfg)
 !$OMP END  DO
       
       else
-        if(ndim_rdm.lt.Nbre_thread_actif) then
+        if(ndim_rdm.le.Nbre_thread_actif) then
            no_start = ithread
            no_end   = ithread
-           !if(ithread.gt.ndim_rdm) no_end = no_start -1 !on skippe
-           if(ithread.gt.ndim_rdm) goto 1000
+           if(ithread.gt.ndim_rdm) goto 1000       !on skippe
         else
            size_rdm = ndim_rdm/Nbre_thread_actif
            no_start = 1+ (ithread-1)*size_rdm
            no_end   = 1+ (ithread)*size_rdm
            if(ithread.eq.Nbre_thread_actif) no_end = ndim_rdm
         endif
-        ! write(*,*) ithread, no_start,no_end,ndim_rdm,Nbre_thread_actif
         DO no_rdm=no_start,no_end
 #include "FastS/Compute/cprdu3s1_incl.for"
         ENDDO

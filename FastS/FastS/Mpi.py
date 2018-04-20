@@ -37,8 +37,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
     zones = Internal.getZones(t)
     node = Internal.getNodeFromName(t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
-    omp_mode = 0
-    if node is not None: omp_mode = Internal.getValue(node)
+    ompmode = PyTree.OMP_MODE
+    if node is not None: ompmode = Internal.getValue(node)
     dtloc   = Internal.getValue(dtloc) # tab numpy
     nitmax  = int(dtloc[0])
     orderRk = int(dtloc[len(dtloc)-1])
@@ -64,19 +64,19 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
             nstep_deb = nstep
             nstep_fin = nstep
             layer_mode= 0
-            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, hook1)
+            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, hook1)
 
             # Ghostcell
             vars = PyTree.varsP
             if  nstep == 2 and itypcp == 2 : vars = PyTree.varsN  # Choix du tableau pour application transfer et BC
             timelevel_target = int(dtloc[4])
-            _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict)
+            _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict)
 
     else: 
       nstep_deb = 1
       nstep_fin = nitmax
       layer_mode= 1
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, PyTree.HOOK)
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, PyTree.HOOK)
 
     # data update for unsteady joins
     dtloc[3] +=1   #time_level_motion
@@ -151,14 +151,14 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
         procDict=None; graphID=None; graphIBCD=None
 
     # Get omp_mode
-    omp_mode = 0
+    ompmode = PyTree.OMP_MODE
     node = Internal.getNodeFromName2(t, '.Solver#define')
     if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
-        if  node is not None: omp_mode = Internal.getValue(node)
+        if  node is not None: ompmode = Internal.getValue(node)
 
     # Reordone les zones pour garantir meme ordre entre t et tc
-    FastI._reorder(t, tc, omp_mode)
+    FastI._reorder(t, tc, ompmode)
 
     # Construction param_int et param_real des zones
     _buildOwnData(t)
@@ -188,12 +188,12 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
         hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, 1, nstep) )
         distributeThreads(t, metrics, PyTree.HOOK, nstep, int(dtloc[0]) )
 
-    _init_metric(t, metrics, hook1, omp_mode)
+    _init_metric(t, metrics, hook1, ompmode)
 
     # compact + align + init numa
     rmConsVars=True
     adjoint   =Adjoint
-    t = createPrimVars(t, omp_mode, rmConsVars, adjoint)
+    t = createPrimVars(t, ompmode, rmConsVars, adjoint)
 
     zones = Internal.getZones(t) # car create primvar rend zones caduc
 
@@ -259,12 +259,12 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     #
     # remplissage ghostcells
     #
-    hook1['skip_lu'] = 0
-    nstep            = 1
-    nitrun           = 0
+    hook1['lexit_lu'] = 0
+    nstep             = 1
+    nitrun            = 0
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4]) 
-    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, omp_mode, hook1,graphID, graphIBCD, procDict)
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, ompmode, hook1,graphID, graphIBCD, procDict)
 
     #
     # initialisation Mut
@@ -354,14 +354,14 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        #Compactage tc
        # 
        # Get omp_mode
-       omp_mode = 0
+       ompmode = PyTree.OMP_MODE
        node = Internal.getNodeFromName2(t, '.Solver#define')
        if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
-        if  node is not None: omp_mode = Internal.getValue(node)
+        if  node is not None: ompmode = Internal.getValue(node)
 
        # Reordone les zones pour garantir meme ordre entre t et tc
-       FastI._reorder(t, tc, omp_mode)
+       FastI._reorder(t, tc, ompmode)
 
        # Compactage arbre transfert
        zones = Internal.getZones(t)
