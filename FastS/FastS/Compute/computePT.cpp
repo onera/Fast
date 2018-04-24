@@ -34,6 +34,8 @@ using namespace K_FLD;
 #include <mpi.h>
 #endif
 
+#include <iostream>
+
 //=============================================================================
 // Compute pour l'interface pyTree
 //=============================================================================
@@ -49,13 +51,6 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "OOiiiiiO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &omp_mode, &work)) return NULL;
 #endif
 
-  E_Int rank=0;
-#ifdef _MPI
-  MPI_Comm_rank (MPI_COMM_WORLD, &rank);
-#endif
-  
-
-
 #if TIMER == 1
   clock_t c_start,c_end;
   c_start = clock();
@@ -68,6 +63,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   PyObject* tmp = PyDict_GetItemString(work,"MX_SSZONE");     E_Int mx_sszone     = PyLong_AsLong(tmp);  
             tmp = PyDict_GetItemString(work,"MX_SYNCHRO");    E_Int mx_synchro    = PyLong_AsLong(tmp);  
             tmp = PyDict_GetItemString(work,"FIRST_IT");      E_Int first_it      = PyLong_AsLong(tmp);
+            tmp = PyDict_GetItemString(work,"mpi");           E_Int mpi           = PyLong_AsLong(tmp);
 
 
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
@@ -374,13 +370,6 @@ else
   E_Int mx_nidom   = mx_sszone*nidom; // nombre maximale de domaine une fois la partition Lu local active
 
 // SOUS PAS
-#ifdef TIMER
-// TMP compute nb point for current process
-  E_Int nbpointsTot =0;
-  for (E_Int nd = 0; nd < nidom; nd++)
-      { nbpointsTot = nbpointsTot + ipt_param_int[nd][ IJKV    ]*ipt_param_int[nd][ IJKV +1 ]*ipt_param_int[nd][ IJKV +2 ]; }
-#endif
-
   // 
   // 
   // 
@@ -408,7 +397,7 @@ else
 
       gsdr3(ipt_param_int, ipt_param_real   ,
             nidom              , nitrun           , nstep             , nssiter       , it_target, first_it,
-            kimpli             , lssiter_verif    , lexit_lu          , omp_mode      , layer_mode,
+            kimpli             , lssiter_verif    , lexit_lu          , omp_mode      , layer_mode, mpi,
             nisdom_lu_max      ,  mx_nidom        , ndimt_flt         , threadmax_sdm , mx_synchro,
             nb_pulse           ,                
             temps              ,
@@ -487,16 +476,8 @@ else
 
 #if TIMER == 1
   c_end = clock();
-  timeout = omp_get_wtime();
   E_Float duree  = (float)(c_end-c_start) / CLOCKS_PER_SEC/threadmax_sdm;
-  E_Float duree2 = timeout - timein;
-
-  E_Float cpuadim = duree2/nbpointsTot/3.0*threadmax_sdm;
-
-  std::cout << "ThreadMAx = " << threadmax_sdm << std::endl;
-
-  //printf("nitrun =%d, temps =%g, cpu =%g \n",nitrun_loc,temps,duree);
-  printf("rank=%d, nitrun =%d, nbpointsTot =%d, cpuadim=%e \n",rank,nitrun,nbpointsTot,cpuadim);
+  printf("nitrun =%d, temps =%g, cpu =%g \n",nitrun_loc,temps,duree);
 #endif
 
   Py_INCREF(Py_None);

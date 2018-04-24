@@ -122,6 +122,7 @@ if f77compiler == 'ifort':
 
    if version[0] >= 17:
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -O3 -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
+      #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -O3 -no-prec-sqrt -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
    elif version[0] >= 15:
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -qopt-report5 -qopt-report-phase=vec,loop -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'-override-limit -qopt-report5 -qopt-report-phase=vec,loop -unroll0 -c -o $TARGET $SOURCE')

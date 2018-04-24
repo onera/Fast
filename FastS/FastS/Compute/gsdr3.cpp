@@ -11,8 +11,6 @@
 #include <mpi.h>
 #endif
 
-#include <iostream>
-
 using namespace K_FLD;
 using namespace std;
 using namespace K_CONNECTOR;
@@ -21,6 +19,13 @@ using namespace K_CONNECTOR;
 // #define TimeShow
 
 #ifdef TimeShow
+
+#include <iostream>
+#include <fstream>
+#include <string> 
+#include <iomanip>
+#include <sstream>
+
 E_Float time_COM=0.0;
 E_Float time_init;
 #endif
@@ -28,7 +33,7 @@ E_Float time_init;
 E_Int K_FASTS::gsdr3(
   E_Int**& param_int  , E_Float**& param_real ,
   E_Int& nidom        , E_Int& nitrun         , E_Int&  nitcfg    , E_Int&  nssiter, E_Int& it_target , E_Int&  first_it,
-  E_Int& kimpli       , E_Int& lssiter_verif  , E_Int& lexit_lu   , E_Int& omp_mode, E_Int& layer_mode,
+  E_Int& kimpli       , E_Int& lssiter_verif  , E_Int& lexit_lu   , E_Int& omp_mode, E_Int& layer_mode, E_Int& mpi,
   E_Int& nisdom_lu_max, E_Int& mx_nidom       , E_Int& ndimt_flt  ,
   E_Int& threadmax_sdm, E_Int& mx_synchro,
   E_Int& nb_pulse     , 
@@ -52,27 +57,46 @@ E_Int K_FASTS::gsdr3(
   E_Int*&    param_int_ibc   , E_Float*&  param_real_ibc  , E_Int*&   param_int_tc , E_Float*& param_real_tc)
 
  {
-    E_Int rank =0;
-    E_Int dest =0;
-    int init   =0;
+   
 
-#ifdef _MPI
-  // Check if MPI_Init has been called by converter...
-  MPI_Initialized( &init ); 
-  // ( init == 1 ) => it is an MPI run
-  if(init) { MPI_Comm_rank (MPI_COMM_WORLD, &rank);           }
-  else     { std::cout << "MPI not initialised" << std::endl; }
-#endif
+#ifdef TimeShow  
+  E_Int rank =0; 
+  E_Float* ipt_timecount = new E_Float[5];
+  ipt_timecount[0:4] = 0.0;
 
-#ifdef TimeShow
-    // if ( rank == 0 ) //   {
-        time_init = omp_get_wtime();
-      // }
-  E_Float* ipt_timecount = new E_Float[4];
-  ipt_timecount[0:3] = 0.0;
+  E_Int nbpointsTot =0;
+
+  for (E_Int nd = 0; nd < nidom; nd++)
+      {
+        nbpointsTot = nbpointsTot + param_int[nd][ IJKV    ]*param_int[nd][ IJKV +1 ]*param_int[nd][ IJKV +2 ];
+      }
 #else
   E_Float* ipt_timecount = NULL;        
 #endif
+
+#ifdef TimeShow
+
+#ifdef _MPI
+  // Check if MPI_Init has been called by converter...
+  // MPI_Initialized( &mpi ); 
+  // ( init == 1 ) => it is an MPI run
+  if(mpi)
+  {
+    MPI_Comm_rank (MPI_COMM_WORLD, &rank);  
+  }
+#endif
+
+  ofstream outputfile;
+  std::ostringstream tmp;
+
+  tmp << "Output" << std::setw(4) << std::setfill('0') << std::to_string(rank);
+  std::string filename = tmp.str();
+
+  outputfile.open(filename, ios::app);
+  time_init = omp_get_wtime();
+    
+#endif
+
 
       E_Int npass         = 0;
       E_Int ibord_ale     = 1;      // on autorise un calcul optimisee des vitesse entrainement en explicit
@@ -233,22 +257,18 @@ E_Int K_FASTS::gsdr3(
 } // Fin zone // omp
 
 #ifdef TimeShow
- if(rank == 0)
-   {
-     E_Int nbpointsTot =0;
      time_COM = omp_get_wtime();
-     std::cout << " sizes (ni,nj,nk):" << std::endl;
-     for (E_Int nd = 0; nd < nidom; nd++)
-          {
-          nbpointsTot = nbpointsTot + param_int[nd][ IJKV    ]*param_int[nd][ IJKV +1 ]*param_int[nd][ IJKV +2 ];
-          std::cout << param_int[nd][ IJKV    ] << "," << param_int[nd][ IJKV +1 ] << "," << param_int[nd][ IJKV  +2  ] << std::endl;
-          } 
-     std::cout << "Time in compute (gsdr3 omp//) " << time_COM - time_init << std::endl;
-     std::cout << "Time adim: " <<  (time_COM - time_init)/nbpointsTot << " nidom " << nidom << std::endl;
-
+     outputfile << "Time in compute (gsdr3 omp//) " << time_COM - time_init << std::endl;
+     outputfile << "Time adim: " <<  (time_COM - time_init)/nbpointsTot << " nidom " << nidom << std::endl;
+     // std::cout << " sizes (ni,nj,nk):" << std::endl;
+     // for (E_Int nd = 0; nd < nidom; nd++)
+     //      {
+     //      std::cout << param_int[nd][ IJKV    ] << "," << param_int[nd][ IJKV +1 ] << "," << param_int[nd][ IJKV  +2  ] << std::endl;
+     //      } 
+     outputfile.close();
      time_init = omp_get_wtime();
-   }
-#endif   
+#endif 
+
 
 //FillGhostcell si mise a jour necessaire et transfer dans C layer 
 if(lexit_lu ==0 && layer_mode==1)
@@ -261,7 +281,7 @@ if(lexit_lu ==0 && layer_mode==1)
       ipt_ndimdx_trans[nd + nidom*2]= param_int[nd][ NIJK +1 ];
     }
   setInterpTransfersFastS(iptro_CL, ipt_ndimdx_trans, param_int_tc, param_real_tc ,
-                          param_int_ibc, param_real_ibc, it_target, nidom, ipt_timecount);
+                          param_int_ibc, param_real_ibc, it_target, nidom, ipt_timecount,mpi);
 
   delete [] ipt_ndimdx_trans;
 

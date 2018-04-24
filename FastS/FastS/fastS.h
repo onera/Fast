@@ -110,7 +110,7 @@ namespace K_FASTS
   E_Int gsdr3(
     E_Int**& ipt_param_int , E_Float**& ipt_param_real, 
     E_Int& nidom        , E_Int& nitrun    , E_Int& nstep     , E_Int& nssiter ,  E_Int& it_target     ,  E_Int& first_it    ,E_Int& kimpli       , E_Int& lssiter_verif,  E_Int& lexit_lu  ,
-    E_Int& omp_mode     , E_Int& layer_mode,
+    E_Int& omp_mode     , E_Int& layer_mode, E_Int& mpi,
     E_Int& nisdom_lu_max, E_Int& mx_nidom  , E_Int& ndimt_flt , E_Int& threadmax_sdm, E_Int& mx_synchro   , 
     E_Int& nb_pulse     ,
     E_Float& temps,
@@ -140,7 +140,7 @@ namespace K_FASTS
   /* Call to transfers from FastS */
   void setInterpTransfersFastS(
   E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
-  E_Int*& param_bci, E_Float*& param_bcf, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount);
+  E_Int*& param_bci, E_Float*& param_bcf, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi);
   
   /* Transferts FastS Intra process */
   void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,

@@ -35,7 +35,20 @@ using namespace K_FLD;
 
 E_Float time_in;
 E_Float time_out;
-E_Int timeShowFastS = 0;
+
+
+//#define TimeShow
+
+#ifdef TimeShow
+
+#include <iostream>
+#include <fstream>
+#include <string> 
+#include <iomanip>
+#include <sstream>
+
+E_Int timeShowFastS = 1;
+#endif
 
 #ifdef _MPI
 
@@ -69,25 +82,28 @@ void K_FASTS::del_TransferInter(
 //=============================================================================
 void K_FASTS::setInterpTransfersFastS(
   E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
-  E_Int*& param_bci, E_Float*& param_bcf, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount)
+  E_Int*& param_bci, E_Float*& param_bcf, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi)
 
 {
   E_Int rank = 0;
   E_Int dest = 0;
-  int init   = 0;
+  
 #ifdef _MPI
-  // Check if MPI_Init has been called by converter...
-  MPI_Initialized( &init ); 
-  // ( init == 1 ) => it is an MPI run
-  if(init)
+  if(mpi)
   {
     MPI_Comm_rank (MPI_COMM_WORLD, &rank);  
   }
 #endif
 
-  if (rank == 0 and timeShowFastS) {
+  #ifdef TimeShow
+    ofstream outputfile;
+    std::ostringstream tmp;
+    tmp << "Output" << std::setw(4) << std::setfill('0') << std::to_string(rank);
+    std::string filename = tmp.str();
+    outputfile.open(filename, ios::app);
+
     time_in = omp_get_wtime();
-  }
+  #endif
 
  //Swap (call to setInterpTransfer)
   if ( (param_int_tc != NULL) && (param_real_tc != NULL))
@@ -101,23 +117,18 @@ void K_FASTS::setInterpTransfersFastS(
 
 std::pair<RecvQueue*, SendQueue*>* pair_of_queue;
 
-if (init)
+if (mpi)
 {
 #ifdef TimeShow
-  if ( rank == 0)
-  {
-    time_init = omp_get_wtime();
-  }
+    time_in = omp_get_wtime();
 #endif 
 
   K_FASTS::init_TransferInter(pair_of_queue);
 
 #ifdef TimeShow
-  if(rank == 0)
-  {
-   time_init = omp_get_wtime();
-  }
+   time_in = omp_get_wtime();
 #endif
+}
 
   RecvQueue* pt_rcv_queue = pair_of_queue->first;
   
@@ -129,11 +140,10 @@ if (init)
   }
 
 #ifdef TimeShow
-  if(rank == 0)
-  {
-    time_COM = omp_get_wtime();
-    ipt_timecount[0] = ipt_timecount[0] + time_COM -time_init;
-  }
+    time_out = omp_get_wtime();
+    ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;
+#endif
+// _MPI
 #endif
 
   for (E_Int ip2p = 1; ip2p < param_int_tc[0] +1; ++ip2p)
@@ -142,9 +152,11 @@ if (init)
     dest       = param_int_tc[ech];
     if (dest != rank)  // Inter Process
     {
-      TypeTransfert = 1;        
+      TypeTransfert = 1;  
+      #ifdef _MPI      
       K_FASTS::setInterpTransfersInter(iptro_tmp,     ipt_ndimdx_trans,  param_int_tc,  param_real_tc ,
                                            param_bci, param_bcf, TypeTransfert , it_target, nidom, ip2p, pair_of_queue, ipt_timecount); 
+      #endif
     }
     else
     {
@@ -156,22 +168,19 @@ if (init)
   }
 
 #ifdef TimeShow
-  if( rank == 0 )
-  {
-    time_init = omp_get_wtime();
-  }
+    time_in = omp_get_wtime();
 #endif
 
+
+#ifdef _MPI
+if (mpi)
+{
   K_FASTS::getTransfersInter(iptro_tmp, ipt_ndimdx_trans, param_int_tc ,
                                  pair_of_queue);                               
-
 #ifdef TimeShow
-  if( rank == 0 )
-  {
-    time_COM = omp_get_wtime();
-    ipt_timecount[4] = ipt_timecount[4] + time_COM -time_init;
-    time_init= omp_get_wtime();
-  }
+    time_out = omp_get_wtime();
+    ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
+    time_in= omp_get_wtime();
 #endif
 
   for (E_Int ircv = 1; ircv < nbcomID +1; ++ircv)
@@ -182,12 +191,8 @@ if (init)
   }
 
 #ifdef TimeShow
-
-if( rank == 0 )
-  {
-    time_COM = omp_get_wtime();
-    ipt_timecount[0] = ipt_timecount[0] + time_COM -time_init;  
-  }
+    time_out = omp_get_wtime();
+    ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;  
 
 #endif
 
@@ -201,14 +206,9 @@ if( rank == 0 )
       K_FASTS::setInterpTransfersInter(iptro_tmp,     ipt_ndimdx_trans,  param_int_tc,  param_real_tc ,
                                            param_bci, param_bcf, TypeTransfert , it_target, nidom, ip2p, pair_of_queue, ipt_timecount);   
     }
-    // else
-    // {
-    // TypeTransfert = 0;
-    // K_FASTS::setInterpTransfersIntra(iptro_tmp,     ipt_ndimdx_trans,  param_int_tc,  param_real_tc ,
-    //                                    param_bci, param_bcf, TypeTransfert , it_target, nidom, ip2p, ipt_timecount); 
-    // }
   }
 }
+
 // Endif MPI
 #endif 
 
@@ -224,33 +224,32 @@ if( rank == 0 )
     }    
   }
 
-// #ifdef TimeShow
-//   if(rank == 0)
-//   {
-//     time_init = omp_get_wtime();
-//   }
-// #endif
+#ifdef TimeShow
+    time_in = omp_get_wtime();
+#endif
 
   #ifdef _MPI
 
-  if (init)
+  if (mpi)
   {
       K_FASTS::getTransfersInter(iptro_tmp, ipt_ndimdx_trans, param_int_tc ,
                                      pair_of_queue);
 
 #ifdef TimeShow
-  if( rank == 0 )
-  {
-    time_COM = omp_get_wtime();
-    ipt_timecount[4] = ipt_timecount[4] + time_COM -time_init;
 
-    std::cout << "Time in getTransfersInter "     << ipt_timecount[4] << std::endl;
-    std::cout << "Time InterpTransfert (Intra)  " << ipt_timecount[1] << std::endl;
-    std::cout << "Time in MPI send_buffer, irecv "<< ipt_timecount[0] << std::endl;
-    std::cout << "Time InterpTransfert (Inter)  " << ipt_timecount[2] << std::endl;
-    std::cout << std::endl << std::endl;
-    time_init = omp_get_wtime();
-  }    
+    time_out = omp_get_wtime();
+    ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
+
+    outputfile << "Time in getTransfersInter "     << ipt_timecount[4] << std::endl;
+    outputfile << "Time InterpTransfert (Intra)  " << ipt_timecount[1] << std::endl;
+    outputfile << "Time in MPI send_buffer, irecv "<< ipt_timecount[0] << std::endl;
+    outputfile << "Time InterpTransfert (Inter)  " << ipt_timecount[2] << std::endl;
+    outputfile << "Nb com. p2p " << param_int_tc[0] +1 << std::endl;
+    outputfile << std::endl << std::endl;
+    outputfile.close();
+
+    time_in = omp_get_wtime();
+  
 #endif
 
       K_FASTS::del_TransferInter(pair_of_queue);
@@ -271,14 +270,10 @@ void K_FASTS::setInterpTransfersIntra(
     E_Float*& ipt_timecount)
 
 {
-  E_Int rank = 0;
-#ifdef _MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-#endif
 
-  if (rank == 0 and timeShowFastS) {
+#ifdef TimeShow
     time_in = omp_get_wtime();
-  }
+#endif
 
   // Unpack Data
   E_Int varType = ipt_parambci[0];
@@ -595,11 +590,11 @@ void K_FASTS::setInterpTransfersIntra(
     }  // ipass
   }    // omp
 
-  if (rank == 0 and timeShowFastS) {
+  #ifdef TimeShow
     time_out = omp_get_wtime();
     ipt_timecount[1] = ipt_timecount[1] + time_out - time_in;
     time_in = omp_get_wtime();
-  }
+  #endif
 
   delete[] ipt_cnd;
   // return varType;
@@ -619,12 +614,10 @@ void K_FASTS::setInterpTransfersInter(
     std::pair<RecvQueue*, SendQueue*>*& pair_of_queue, E_Float*& ipt_timecount)
 
 {
-  E_Int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  if (rank == 0 and timeShowFastS) {
+#ifdef TimeShow
     time_in = omp_get_wtime();
-  }
+#endif    
 
   // Unpack Data
   E_Int varType = ipt_parambci[0];
@@ -677,9 +670,10 @@ void K_FASTS::setInterpTransfersInter(
   E_Int pass_inst_deb=0; 
   E_Int pass_inst_fin=1;
   E_Int nrac_inst_level = 0;
-  if (rank == 0 and timeShowFastS ) {
+
+#ifdef TimeShow
     time_in = omp_get_wtime();
-  }
+#endif
 
   if (nrac_inst > 0) {
    pass_inst_fin=2;
@@ -741,11 +735,11 @@ void K_FASTS::setInterpTransfersInter(
     }   
 
   if (has_data_to_send) {
-    if (rank == 0 and timeShowFastS) {
+#ifdef TimeShow
     time_out = omp_get_wtime();
     ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
     time_in  = omp_get_wtime();
-  }
+#endif
     
     send_buffer << count_rac;
 
@@ -819,11 +813,11 @@ void K_FASTS::setInterpTransfersInter(
   }
 
 
-  if (rank == 0 and timeShowFastS) {
+#ifdef TimeShow
     time_out = omp_get_wtime();
     ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
     time_in  = omp_get_wtime();
-  }
+#endif    
 
   E_Int size = (nbRcvPts_mx / threadmax_sdm) + 1;  // on prend du gras pour gerer le residus
   E_Int r = size % 8;
@@ -1035,11 +1029,11 @@ void K_FASTS::setInterpTransfersInter(
     }  // ipass
   }    // omp
 
-  if (rank == 0 and timeShowFastS) {
+ #ifdef TimeShow
     time_out = omp_get_wtime();
     ipt_timecount[2] = ipt_timecount[2] + time_out - time_in;
     time_in = omp_get_wtime();
-  }
+ #endif
 
     // send_buffer_time
 #if defined(PROFILE_TRANSFERT)
@@ -1056,10 +1050,10 @@ void K_FASTS::setInterpTransfersInter(
     send_buffer.isend();
   }
   
-  if (rank == 0 and timeShowFastS) {
+#ifdef TimeShow
     time_out = omp_get_wtime();
     ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
-  }
+#endif
 
 
 
@@ -1081,15 +1075,6 @@ void K_FASTS::getTransfersInter(
     E_Float**& ipt_roD, E_Int*& ipt_ndimdxD, E_Int*& ipt_param_int,
     std::pair<RecvQueue*, SendQueue*>*& pair_of_queue) {
   
-  E_Int rank;
-
-  #ifdef _MPI
-  int init = 0;
-  if (init) {
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  }
-  #endif
-
   // Attente finalisation de la réception :
   assert(pair_of_queue != NULL);
 

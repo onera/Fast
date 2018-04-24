@@ -521,7 +521,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['param_real_ibc']= param_real_ibc
     hook['param_int_tc'  ]= None
     hook['param_real_tc' ]= None
-    
+    hook['mpi']           = 0 
     return hook
 
 #==============================================================================

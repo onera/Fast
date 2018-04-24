@@ -76,6 +76,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
       nstep_deb = 1
       nstep_fin = nitmax
       layer_mode= 1
+      PyTree.HOOK["mpi"] = 1
       fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, PyTree.HOOK)
 
     # data update for unsteady joins
@@ -95,15 +96,14 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
    #timecount = numpy.zeros(4, dtype=numpy.float64)
    timecount = []
-   
+
    if hook1['lexit_lu'] ==0:
 
        #transfert
        if tc is not None:
            tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
            if tc_compact is not None:
-              param_real = tc_compact[1]
-                
+              param_real= tc_compact[1]              
               param_int = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
               zonesD    = Internal.getZones(tc)
 
