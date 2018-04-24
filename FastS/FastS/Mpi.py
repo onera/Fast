@@ -52,7 +52,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
       for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
 
          hook1 = PyTree.HOOK.copy()
-         hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, nitrun, nstep) )
+         distrib_omp = 0
+         hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, nitrun, nstep, distrib_omp) )
          nidom_loc = hook1["nidom_tot"]
 
          skip = 0
@@ -185,8 +186,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)
     for nstep in xrange(1, int(dtloc[0])+1):
         hook1 = PyTree.HOOK.copy()
-        hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, 1, nstep) )
-        distributeThreads(t, metrics, PyTree.HOOK, nstep, int(dtloc[0]) )
+        distrib_omp = 1
+        hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, 1, nstep, distrib_omp) )
+        #distributeThreads(t, metrics, PyTree.HOOK, nstep, int(dtloc[0]) )
 
     _init_metric(t, metrics, hook1, ompmode)
 

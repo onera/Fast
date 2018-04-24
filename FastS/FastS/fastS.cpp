@@ -43,6 +43,7 @@ static PyMethodDef Pyfasts [] =
   {"compute_effort"          , K_FASTS::compute_effort        ,  METH_VARARGS},
   {"souszones_list"          , K_FASTS::souszones_list          ,  METH_VARARGS},
   {"work_thread_distribution", K_FASTS::work_thread_distribution,  METH_VARARGS},
+  {"distributeThreads"       , K_FASTS::distributeThreads       ,  METH_VARARGS},
   {"stockrecup"              , K_FASTS::stockrecup              ,  METH_VARARGS},
   {"display_ss_iteration"    , K_FASTS::display_ss_iteration    ,  METH_VARARGS},
   {"_applyBC"                , K_FASTS::_applyBC              ,  METH_VARARGS},

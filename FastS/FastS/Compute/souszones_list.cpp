@@ -101,11 +101,11 @@ void K_FASTS::souszones_list_c( E_Int**& param_int, E_Int**& ipt_ind_dm, E_Int**
 PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* work;
-  E_Int nitrun; E_Int nstep;
+  E_Int nitrun; E_Int nstep; E_Int distrib_omp;
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOll", &zones , &metrics, &work, &nitrun, &nstep)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOlll", &zones , &metrics, &work, &nitrun, &nstep, &distrib_omp)) return NULL; 
 #else 
-  if (!PyArg_ParseTuple(args, "OOOii", &zones , &metrics, &work, &nitrun, &nstep)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOiii", &zones , &metrics, &work, &nitrun, &nstep, &distrib_omp)) return NULL; 
 #endif
   
   E_Int lexit_lu, nidom_tot, lssiter_verif;
@@ -120,6 +120,11 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
   E_Int lssiter_loc;
   if (PyLong_Check(tmp) == true) lssiter_loc = PyLong_AsLong(tmp);
   else lssiter_loc = PyInt_AsLong(tmp);
+
+  tmp = PyDict_GetItemString(work,"MX_SSZONE"); 
+  E_Int mx_sszone;
+  if (PyLong_Check(tmp) == true) mx_sszone = PyLong_AsLong(tmp);
+  else mx_sszone = PyInt_AsLong(tmp);
 
   PyObject* iskipArray = PyDict_GetItemString(work,"skip_lu"); FldArrayI* iskip_lu;
   K_NUMPY::getFromNumpyArray(iskipArray, iskip_lu, true); E_Int* ipt_iskip_lu = iskip_lu->begin();
@@ -149,6 +154,14 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
   }
 
   souszones_list_c( ipt_param_int , ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun, nstep, nidom_tot, lexit_lu, lssiter_verif);
+
+  //calcul distri si implicit ou explicit local + modulo verif
+  if( distrib_omp==1 || (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun%iptdtloc[1] == 0 || nitrun == 1) )
+  {
+    E_Int display =1;
+    if(nstep==1) display =1;
+    distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , iptdtloc[0] , mx_sszone  , nstep, nitrun, display );
+  }
 
   PyObject* dico = PyDict_New();
   tmp = Py_BuildValue("i", nidom_tot);

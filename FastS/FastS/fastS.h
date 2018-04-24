@@ -55,6 +55,7 @@ namespace K_FASTS
   PyObject* display_ss_iteration(    PyObject* self, PyObject* args);
   PyObject* stockrecup(              PyObject* self, PyObject* args);
   PyObject* souszones_list(          PyObject* self, PyObject* args);
+  PyObject* distributeThreads(       PyObject* self, PyObject* args);
   PyObject* computePT_enstrophy(     PyObject* self, PyObject* args);
   PyObject* computePT_variables(     PyObject* self, PyObject* args);
   PyObject* computePT_gradient(      PyObject* self, PyObject* args);
@@ -102,6 +103,9 @@ namespace K_FASTS
   void souszones_list_c( E_Int**& ipt_param_int, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom, PyObject* work ,
                          E_Int* dtloc          , E_Int* ipt_iskip_lu, E_Int lssiter_loc       , E_Int nidom    , 
                          E_Int nitrun          , E_Int nstep        , E_Int& nidom_tot        , E_Int& lexit_lu, E_Int& lssiter_verif);
+
+  void distributeThreads_c( E_Int**& ipt_param_int, E_Int**& ipt_ind_dm, E_Int& nidom,  E_Int& nssiter, 
+                            E_Int& mx_sszone      , E_Int& nstep       , E_Int& nitrun, E_Int& display);
 
   //=============
   // - compute -

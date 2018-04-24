@@ -32,9 +32,12 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
 {
-  PyObject* zones; PyObject* zones_my;  PyObject* metrics; 
-  if (!PyArg_ParseTuple(args, "OOO", &zones , &zones_my, &metrics)) 
-    return NULL;
+  PyObject* zones; PyObject* zones_my;  PyObject* metrics; E_Int omp_mode;
+#if defined E_DOUBLEINT
+  if (!PyArg_ParseTuple(args, "OOOl", &zones , &zones_my, &metrics, &omp_mode)) return NULL;
+#else
+  if (!PyArg_ParseTuple(args, "OOOi", &zones , &zones_my, &metrics, &omp_mode)) return NULL;
+#endif
 
   /* tableau pour stocker dimension sous-domaine omp */
   E_Int threadmax_sdm = 1;
@@ -160,7 +163,21 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
 
              // Distribution de la sous-zone sur les threads
              E_Int lmin =4;
-             indice_boucle_lu_(nd, ithread, Nbre_thread_actif, lmin,
+
+             E_Int Nbre_thread_actif_loc; E_Int ithread_loc;
+
+             if(omp_mode == 1)
+              { E_Int shift_omp      = ipt_param_int[nd][ PT_OMP ];
+                Nbre_thread_actif_loc = ipt_param_int[nd][ shift_omp  + Nbre_thread_actif ];
+                ithread_loc           = ipt_param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
+                if (ithread_loc == -1) {continue;}
+              }
+             else 
+              { Nbre_thread_actif_loc = Nbre_thread_actif;
+                ithread_loc = ithread;
+              }
+
+             indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, lmin,
                                iptmoy_param[nd]+11, 
                                ipt_topology_thread, ipt_ind_dm_omp_thread );
 

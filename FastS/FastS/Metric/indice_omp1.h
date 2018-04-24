@@ -19,7 +19,8 @@
                 //tableau metric d'epaisseur k =1 si 3Dhomogene, cartesien ou 2D
                 if      (ipt_param_int[nd][ITYPZONE ] == 1 )
                 {    ind_mtr[4]= 1; ind_mtr[5]= 1;
-                     if (ipt_topo_omp[2] == 1 && ithread_loc !=1 ) continue; 
+                     E_Int ssblk_ktranche = ipt_topo_omp[0]*ipt_topo_omp[1];//seul les thraed du bloc K=1 calculent
+                     if (ithread_loc > ssblk_ktranche ) continue; 
                 }
                 else if(ipt_param_int[nd][ ITYPZONE ] == 2 )
                 { 

@@ -33,8 +33,12 @@ using namespace K_FLD;
 PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 {
   PyObject *zones; PyObject *zones_eff; PyObject *metrics; PyObject* work;  PyObject* effarray;
-  if (!PyArg_ParseTuple(args, "OOOOO", &zones, &zones_eff, &metrics, &work, &effarray)) return NULL;
-
+  E_Int omp_mode;
+#if defined E_DOUBLEINT
+  if (!PyArg_ParseTuple(args, "OOOOOl", &zones, &zones_eff, &metrics, &work, &effarray, &omp_mode)) return NULL;
+#else
+  if (!PyArg_ParseTuple(args, "OOOOOi", &zones, &zones_eff, &metrics, &work, &effarray, &omp_mode)) return NULL;
+#endif
 
 
   E_Int**   ipt_param_int;
@@ -198,7 +202,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-       for (E_Int nd = 0; nd < nidom; nd++)
+     for (E_Int nd = 0; nd < nidom; nd++)
        { 
 
        E_Int nd_ns  = ipt_param_int_eff[nd][EFF_NONZ];
@@ -213,19 +217,29 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 
        if(nd==0) for (E_Int i = 0; i < 8; i++) effort_omp[i]=0;
 
-        //calcul du sous domaine a traiter par le thread 
+       E_Int Nbre_thread_actif_loc; E_Int ithread_loc;
 
-        indice_boucle_lu_(nd, ithread, Nbre_thread_actif, lmin,
+       if(omp_mode == 1)
+        { E_Int shift_omp      = ipt_param_int[nd][ PT_OMP ];
+          Nbre_thread_actif_loc = ipt_param_int[nd][ shift_omp  + Nbre_thread_actif ];
+          ithread_loc           = ipt_param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
+          if (ithread_loc == -1) {continue;}
+        }
+       else 
+        { Nbre_thread_actif_loc = Nbre_thread_actif;
+          ithread_loc = ithread;
+        }
+
+       indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, lmin,
                            ipt_param_int_eff[nd]+EFF_LOOP,
                            ipt_thread_topology, ind_loop);
 
-          bceffort_( nd, ithread, ipt_param_int[nd_ns], ipt_param_real[nd_ns], ipt_param_int_eff[nd],
-                     ind_loop, effort_omp, ipt_xyz_ref,
-                     iptro[nd_ns]   , iptflu[nd]     , iptwig +shift_wig, iptmut[nd_ns]  ,   
-                     iptx[nd_ns]    , ipty[nd_ns]    , iptz[nd_ns]      ,
-                     ipti[nd_ns]    , iptj[nd_ns]    , iptk[nd_ns]      , iptvol[nd_ns]  ,
-                     iptventi[nd_ns], iptventj[nd_ns], iptventk[nd_ns]);
-
+       bceffort_( nd, ithread, ipt_param_int[nd_ns], ipt_param_real[nd_ns], ipt_param_int_eff[nd],
+                  ind_loop, effort_omp, ipt_xyz_ref,
+                  iptro[nd_ns]   , iptflu[nd]     , iptwig +shift_wig, iptmut[nd_ns]  ,   
+                  iptx[nd_ns]    , ipty[nd_ns]    , iptz[nd_ns]      ,
+                  ipti[nd_ns]    , iptj[nd_ns]    , iptk[nd_ns]      , iptvol[nd_ns]  ,
+                  iptventi[nd_ns], iptventj[nd_ns], iptventk[nd_ns]);
 
        } // fin loop zone
   } // Fin zone // omp

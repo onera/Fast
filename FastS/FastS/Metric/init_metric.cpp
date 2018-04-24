@@ -248,7 +248,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                                ipt_param_int[nd][ NEQ_IJ ]    , ipt_param_int[nd][ NEQ_K ],
                                ipt_ind_dm_loc,
                                ipt_degen[nd] ,
-                               ipti[nd]      , iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd]);
+                               ipti[nd]      , iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd]); 
                 }
               }
             }

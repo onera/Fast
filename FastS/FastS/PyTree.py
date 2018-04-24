@@ -74,7 +74,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
       for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
 
          hook1 = HOOK.copy()
-         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep) )
+         distrib_omp = 0
+         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
          nidom_loc = hook1["nidom_tot"]
         
          skip      = 0
@@ -188,12 +189,15 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)
     for nstep in xrange(1, int(dtloc[0])+1):
-        hook1 = HOOK.copy()
-        hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep) )
-        display  = False
+        hook1       = HOOK.copy()
+        distrib_omp = 1
+        hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep, distrib_omp) )
+        #display  = False
         #if nstep == 1 : display=True
-        distributeThreads(t, metrics, HOOK, nstep, int(dtloc[0]), Display=display )
+        #nitrun = 1
+        #distributeThreads(t, metrics, HOOK, nstep, int(dtloc[0]), nitrun, Display=display )
     
+    #init metric
     _init_metric(t, metrics, hook1, ompmode)
 
     # compact + align + init numa
@@ -588,7 +592,6 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
               Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)#,timecount)
-              # Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)
               # print "Time in MPI send_buffer, irecv ","%.6f"%timecount[0]
               # print "Time InterpTransfert (Inter)  ","%.6f"%timecount[1]
               # print "Time InterpTransfert (Intra)  ","%.6f"%timecount[2]
@@ -1020,7 +1023,14 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
 def _computeStats(t, tmy, metrics):
     zones    = Internal.getZones(t)
     zones_my = Internal.getZones(tmy)
-    fasts.computePT_my(zones, zones_my, metrics)
+
+    bases= Internal.getNodesFromType1(t,'CGNSBase_t')
+    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(node, 'omp_mode')
+    ompmode = OMP_MODE
+    if  node is not None: ompmode = Internal.getValue(node)
+
+    fasts.computePT_my(zones, zones_my, metrics, ompmode)
     return None
 
 #==============================================================================
@@ -1987,7 +1997,6 @@ def extractConvergenceHistory(t, fileout):
 # IN: window: ou range de window
 # OUT: return arbre stress
 #==============================================================================
-#def createStressNodes(t, BC=['BCWall']):
 def createStressNodes(t, BC=None, window=None):
 
     import Converter.GhostCells as Ghost
@@ -2197,6 +2206,12 @@ def _computeStress(t, teff, metrics):
     zones     = Internal.getZones(t)
     zones_eff = Internal.getZones(teff)
     
+    bases= Internal.getNodesFromType1(t,'CGNSBase_t')
+    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(node, 'omp_mode')
+    ompmode = OMP_MODE
+    if  node is not None: ompmode = Internal.getValue(node)
+
     
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     if HOOK is None: 
@@ -2205,409 +2220,34 @@ def _computeStress(t, teff, metrics):
             HOOK   = FastI.createWorkArrays__(zones, dtloc, FIRST_IT); 
             nitrun =0; nstep =1;
 
-            hook1  = HOOK.copy()
-            hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep) )
+            distrib_omp = 0
+            hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
 
     else:  hook1  = HOOK
 
     effort = numpy.empty(8, numpy.float64)
 
-    fasts.compute_effort(zones, zones_eff, metrics, hook1, effort)
+    print 'ompmode=', ompmode
+    fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, ompmode)
 
     return effort
 
 
 #==============================================================================
 #
-# Calcul des effort (in place)
+# Calcul distributiona threads
 #
 #==============================================================================
-def distributeThreads(t, metrics, work, nstep, nssiter, Display=False):
+def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
 
-    zones     = Internal.getZones(t)
+  zones     = Internal.getZones(t)
+  mx_sszone = work["MX_SSZONE"]
+  display   = 0
+  if Display: display =1
 
-    nzone =len(zones)
-    size_zone =[]
-    parent_zone =[]
-    c = 0
-    for z in zones:
-        param_int  = Internal.getNodeFromName2(z, 'Parameter_int')[1]  # noeud
-        MXSSDOM_LU = param_int[ 24 ]
-        nb_subzone = metrics[c][5][  MXSSDOM_LU*6*nssiter + nssiter + nstep-1 ]
-        dim        = Internal.getZoneDim(z)
-        for nd_subzone in range(nb_subzone):
+  fasts.distributeThreads( zones , metrics, nstep, nssiter , nitrun, mx_sszone, display );
 
-            shift  = (nstep-1)*6*MXSSDOM_LU  + 6*nd_subzone
-	    inddm  = metrics[c][5]
-
-            if dim[0]=='Structured':
-
-              nijk   = numpy.ones((3), numpy.int32) 
-              nijk[0]= inddm[1+shift]
-              nijk[1]= inddm[3+shift]
-              nijk[2]= inddm[5+shift]
-              ndimdx = nijk[0]*nijk[1]*nijk[2]
-            else: ndimdx = dim[2]
-
-            size_zone.append(ndimdx)
-            parent_zone.append([c,nd_subzone,ndimdx, nijk] )
-        c+=1
-         
-    new_zones       =[]
-    for z in xrange( len(size_zone) ):
-       vmax = max( size_zone )
-       pos_max = size_zone.index( vmax )
-       new_zones.append( parent_zone[pos_max])
-       del size_zone[pos_max]
-       del parent_zone[pos_max]
-
-    cells_tg = 0
-    flui_tg  = 0
-    fluj_tg  = 0
-    fluk_tg  = 0
-    nijk_zones =[]
-    inddm_zones=[]
-    for z in new_zones:
-
-        ind_dm = numpy.ones((6), numpy.int32) 
-        nijk   = z[3]
-
-        ind_dm[1]= nijk[0]; ind_dm[3]= nijk[1]; ind_dm[5]= nijk[2]
-
-	size_c = nijk[0]*nijk[1]*nijk[2]
-	size_i =(nijk[0]+1)*nijk[1]*nijk[2]
-	size_j =(nijk[1]+1)*nijk[0]*nijk[2]
-	size_k = 0
-        if nijk[2] != 1: size_k = (nijk[2]+1)*nijk[0]*nijk[1]
-
-        cells_tg += size_c
-        flui_tg  += size_i
-        fluj_tg  += size_j
-        fluk_tg  += size_k
-
-        nijk_zones.append(nijk)
-        inddm_zones.append(ind_dm)
-
-    cells_tg /= OMP_NUM_THREADS
-    flui_tg  /= OMP_NUM_THREADS
-    fluj_tg  /= OMP_NUM_THREADS
-    fluk_tg  /= OMP_NUM_THREADS
-
-    if Display: print 'Target', cells_tg, flui_tg, fluj_tg, fluk_tg, 'nstep=', nstep
-
-    remaind= {}
-    for th in range(OMP_NUM_THREADS):
-       remaind[str(th)] = cells_tg
-
-    #
-    cells_tg_save = cells_tg
-    marge=1.005
-    c    = 0
-    infos= {}
-    dim_i= numpy.empty((OMP_NUM_THREADS), numpy.int32) 
-    dim_j= numpy.empty((OMP_NUM_THREADS), numpy.int32) 
-    dim_k= numpy.empty((OMP_NUM_THREADS), numpy.int32) 
-    for z in new_zones:
-        No_zone    = z[0]
-        No_subzone = z[1]
-        param_int  = Internal.getNodeFromName2(zones[No_zone], 'Parameter_int')[1]  # noeud
-        MX_SSZONE  = work['MX_SSZONE']
-        shift_omp  =  param_int[69]
-
-        #print 'nozone=', No_zone, No_subzone, shift_omp
-
-        infoZone ={}
-        nijk   = nijk_zones[c]
-	size_c = nijk[0]*nijk[1]*nijk[2]
-	size_i =(nijk[0]+1)*nijk[1]*nijk[2]
-	size_j =(nijk[1]+1)*nijk[0]*nijk[2]
-	size_k = 0
-        if nijk[2] != 1: size_k = (nijk[2]+1)*nijk[0]*nijk[1]
-
-        if size_c <= cells_tg*marge:
-	    th_current = 0
-            lgo = True
-	    while lgo:
-                #print 'th_current',th_current,remaind[str(th_current)],size_c/marge, size_c
-
-                if size_c/marge <=  remaind[str(th_current)]: lgo = False
-                if lgo and th_current == OMP_NUM_THREADS-1:
-                     lgo = False
-                     #on cerche le thread le moins charge pour attribuer le residu
-                     th_max =-100000
-                     for th in range(OMP_NUM_THREADS):
-                        if remaind[str(th)] > th_max:
-                           th_max     = remaind[str(th)]
-                           th_current = th
-                     #print 'traitememnt residu affecte au thread', th_current, remaind[str(th)], th
-                if lgo: th_current +=1
-                
-            remaind[str(th_current)] =  remaind[str(th_current)] - size_c 
-             
-            #Carte threads actifs       
-            param_int[ shift_omp: shift_omp + OMP_NUM_THREADS ] = -2 #Thread inactif
-            param_int[ shift_omp + th_current                 ] =  0 #le Thread "0" (pas au sens omp: indirection entre omp_numthread et ithread)) prend le job
-            #Nb threads actifs 
-            param_int[shift_omp + OMP_NUM_THREADS ] = 1 
-            #topology omp
-            param_int[shift_omp + OMP_NUM_THREADS +1:  shift_omp + OMP_NUM_THREADS +4] =  1
-            #indice sous-domaine omp
-            param_int[shift_omp + OMP_NUM_THREADS +4 ] =  inddm_zones[c][0]
-            param_int[shift_omp + OMP_NUM_THREADS +5 ] =  inddm_zones[c][1]
-            param_int[shift_omp + OMP_NUM_THREADS +6 ] =  inddm_zones[c][2]
-            param_int[shift_omp + OMP_NUM_THREADS +7 ] =  inddm_zones[c][3]
-            param_int[shift_omp + OMP_NUM_THREADS +8 ] =  inddm_zones[c][4]
-            param_int[shift_omp + OMP_NUM_THREADS +9 ] =  inddm_zones[c][5]
-
-
-            infoZone['Nthread']  = 1
-            infoZone['threadIds']= [th_current]
-            infoZone['ind_dm_th']= [ inddm_zones[c] ]
-
-        else:
-            cells_tg = cells_tg_save
-            Nthreads =  size_c/cells_tg
-            if size_c%cells_tg != 0: Nthreads +=1
-            Nthreads = min( Nthreads,  OMP_NUM_THREADS )
-
-            #verif place dispo sur les dernier threads
-            
-            cells_tg     = 0
-            cells_tg_min =10000000
-            for th_check in range(OMP_NUM_THREADS-1,OMP_NUM_THREADS-Nthreads-1,-1):
-               cells_tg  +=  remaind[str(th_check)]
-               if remaind[str(th_check)] <  cells_tg_min: 
-                    cells_tg_min = remaind[str(th_check)]
-                    th_min = th_check
-
-            cells_tg  /=  Nthreads
-
-            if cells_tg == cells_tg_min: th_min =-1
-            #cells_tg  =  0.5*(cells_tg_min+cells_tg)*marge
-            cells_tg  =  cells_tg_min*marge
-
-
-
-            itypcp = param_int[29]
-            if itypcp == 2 : lmin =  4
-            else:            lmin = 10
-
-            #print "cell-tg", cells_tg, cells_tg_save, cells_tg_min, lmin
-
-            topo_lu   = numpy.ones((3), numpy.int32) 
-            ind_dm_th = numpy.ones((6), numpy.int32) 
-
-            dim_ijk   = numpy.ones((3*Nthreads), numpy.int32) 
-            res_ijk   = numpy.ones((3*Nthreads), numpy.int32) 
-
-            search = True
-            while search == True:
-
-              #verif place dispo sur les dernier threads
-              #for th_check in range(OMP_NUM_THREADS-1,OMP_NUM_THREADS-Nthreads-1,-1):
-              #   print 'remain', remaind[str(th_check)], th_check
-
-              search = False
-              #if search:   print "N passes pour Optim balance, Nthreads=", Nthreads
-
-              #print 'ind_zone', inddm_zones[c], Nthreads
-              fasts.work_thread_distribution( inddm_zones[c], topo_lu, ind_dm_th, c, Nthreads, lmin) 
-              #print "topo_LLLUUU", topo_lu
-
-              dims=[ dim_i, dim_j, dim_k]
-              for dir in range(3):
-                 for l in range(topo_lu[dir]):
-
-                      dims[dir][l] =  nijk[dir]/topo_lu[dir]
-
-                      if l < nijk[dir]%topo_lu[dir]:  dims[dir][l] += 1
-              
-              #print 'ddims0',  dims[0][0], dims[1][0],  dims[2][0]
-              #test residu sur la bloc du premier thread
-              res = dims[0][0]*dims[1][0]*dims[2][0] - cells_tg
-              sign = 1.
-              if res < 0: sign = -1. #block trop petit % la cible
-
-              #print 'size bloc=', dims[0][0]*dims[1][0]*dims[2][0], 'sizetg=', cells_tg
-            
-              if res*sign > 0:  #sous bloc trop grand
-
-                compteur =0
-                go = False
-                while res*sign > 0. and not go and compteur < 6:
-                  go      = True
-                  deriv_i= min(1, (topo_lu[0]-1) )
-                  deriv_j= min(1, (topo_lu[1]-1) )
-                  deriv_k= min(1, (topo_lu[2]-1) )
-
-                  cout_i = dims[1][0]*dims[2][0]*deriv_i
-                  cout_j = dims[0][0]*dims[2][0]*deriv_j
-                  cout_k = dims[1][0]*dims[0][0]*deriv_k
-                  #print 'couts', cout_i, cout_j, cout_k, res*sign, go
-                  if   cout_i+cout_j+cout_k < res*sign :
-                          #print 'IJK', cout_j, res*sign
-                          dims[0][0] -=deriv_i*sign; dims[1][0] -=deriv_j*sign; dims[2][0] -=deriv_k*sign
-                          res -=  (cout_i+cout_j+cout_k)*sign
-                          go   = False
-
-                  elif cout_j+cout_k < res*sign :
-                          #print 'JK', cout_j, res*sign
-                          dims[1][0] -=deriv_j*sign; dims[2][0] -=deriv_k*sign
-                          res -=  (cout_j+cout_k)*sign
-                          if cout_j+cout_k != 0: go = False
-                  elif cout_j+cout_i < res*sign :
-                          #print 'JI', cout_j, res*sign
-                          dims[1][0] -=deriv_j*sign; dims[0][0] -=deriv_i*sign
-                          res -=  (cout_j+cout_i)*sign
-                          if cout_j+cout_i != 0: go = False
-                  elif cout_k+cout_i < res*sign :
-                          #print 'KI', cout_j, res*sign
-                          dims[2][0] -=deriv_k*sign; dims[0][0] -=deriv_i*sign
-                          res -=  (cout_k+cout_i)*sign
-                          if cout_k+cout_i != 0: go = False
-                  elif cout_k < res*sign :
-                          #print 'KK', cout_j, res*sign
-                          dims[2][0] -=deriv_k*sign
-                          res -=  cout_k*sign
-                          if cout_k != 0: go = False
-                  elif cout_j < res*sign :
-                          #print 'JJ', cout_j, res*sign
-                          dims[1][0] +=deriv_j*sign
-                          res -=  cout_j*sign
-                          if cout_j != 0: go = False
-                  elif cout_i < res*sign :
-                          #print 'II', cout_j, res*sign
-                          dims[0][0] +=deriv_i*sign
-                          res -=  cout_i*sign
-                          if cout_i != 0: go = False
-                  compteur +=1
-                #print 'ddims1',  dims[0][0], dims[1][0],  dims[2][0], dims[0][0]*dims[1][0]*dims[2][0], go, compteur
-
-              for dir in range(3):
-                 if topo_lu[dir] != 1:
-                     #on repartie la place restante entre les thread restant
-                     if th_min != -1:
-                        dim_loc = (nijk[dir]-dims[dir][0])/(topo_lu[dir]-1)
-                        res_loc = (nijk[dir]-dims[dir][0])%(topo_lu[dir]-1)
-                        for l in range(1, topo_lu[dir]):
-                            dims[dir][l] = dim_loc
-                            if l <= res_loc:  dims[dir][l] += 1
-                     #on affecte la taille du premier bloc thraed a tous les autres bloc
-                     else:
-                        for l in range(1, topo_lu[dir]):
-                             dims[dir][l] = dims[dir][0]
-                        #on determine la taille du dernier bloc 
-                        dims[dir][topo_lu[dir]-1] = nijk[dir] - (topo_lu[dir]-1)*dims[dir][0]
-
-              for dir in range(3):
-                 for l in range(topo_lu[dir]):
-
-                      if not search and (dims[dir][l] < lmin and nijk[dir] != dims[dir][l]):
-                        search = True
-                        if   dir ==0 : Nthreads -=  topo_lu[1]*topo_lu[2]
-                        elif dir ==1 : Nthreads -=  topo_lu[0]*topo_lu[2]
-                        elif dir ==2 : Nthreads -=  topo_lu[0]*topo_lu[1]
-          
-              #affinememnt pour cibler la target
-
-            #Carte threads actifs       
-            param_int[ shift_omp: shift_omp + OMP_NUM_THREADS ] = -2 #Thread inactif
-
-            thread_list=[]
-            dim_list   =[]
-            th = 0
-            for k in range(topo_lu[2]):
-              for j in range(topo_lu[1]):
-                for i in range(topo_lu[0]):
-		  th_current = 0
-                  size_th    = dim_i[i]*dim_j[j]*dim_k[k]
-                  size_loc = size_th
-
-	          while size_loc/marge > remaind[str(th_current)] and th_current < OMP_NUM_THREADS-1: 
-                     #print 'szloc',  size_loc/marge, remaind[str(th_current)], th_current
-                     th_current +=1
-                
-                  if th_current == OMP_NUM_THREADS-1:
-                     blind = -100000
-                     for i in range(OMP_NUM_THREADS):
-                        #print 'blind', remaind[str(i)], blind, i
-                        if remaind[str(i)] > blind:
-                          blind = remaind[str(i)]
-                          th_current = i
-
-                  #tentative optim distrib
-                  if th_min != -1: 
-                      th_current = th_min
-                      th_min     = -1
-                 
-                  remaind[str(th_current)]            =  remaind[str(th_current)] - size_loc
-                  param_int[ shift_omp + th_current ] = th                                    #Thread actif
-                  thread_list.append(th_current)
-                  th +=1
-                  #print 'thread=', th, size_loc, remaind[str(th_current)], th_current
-
-            #Nb threads actifs 
-            param_int[shift_omp + OMP_NUM_THREADS ] = len(thread_list)
-
-            #topology omp
-            param_int[shift_omp + OMP_NUM_THREADS +1 ] =  topo_lu[0]
-            param_int[shift_omp + OMP_NUM_THREADS +2 ] =  topo_lu[1]
-            param_int[shift_omp + OMP_NUM_THREADS +3 ] =  topo_lu[2]
-
-            th = 0
-            kstart = inddm_zones[c][4]
-            for k in range(topo_lu[2]):
-              jstart = inddm_zones[c][2]
-              for j in range(topo_lu[1]):
-                istart = inddm_zones[c][0]
-                for i in range(topo_lu[0]):
-
-                    inddm_omp    = numpy.empty((6), numpy.int32)
-
-                    inddm_omp[0] = istart
-                    inddm_omp[1] = istart + dims[0][i] - 1
-                    istart       = inddm_omp[1] + 1
-
-                    inddm_omp[2] = jstart
-                    inddm_omp[3] = jstart + dims[1][j] - 1
-
-                    inddm_omp[4] = kstart
-                    inddm_omp[5] = kstart + dims[2][k] - 1
-
-                    param_int[shift_omp + OMP_NUM_THREADS +4 + th*6] = inddm_omp[0]
-                    param_int[shift_omp + OMP_NUM_THREADS +5 + th*6] = inddm_omp[1]
-                    param_int[shift_omp + OMP_NUM_THREADS +6 + th*6] = inddm_omp[2]
-                    param_int[shift_omp + OMP_NUM_THREADS +7 + th*6] = inddm_omp[3]
-                    param_int[shift_omp + OMP_NUM_THREADS +8 + th*6] = inddm_omp[4]
-                    param_int[shift_omp + OMP_NUM_THREADS +9 + th*6] = inddm_omp[5]
-
-                    dim_list.append( inddm_omp )
-
-                    th +=1
-
-                jstart = inddm_omp[3] + 1
-              kstart = inddm_omp[5] + 1
-
-            #parent_zone.append([c,nd_subzone,ndimdx, nijk] )
-
-            infoZone['Nthread']  = Nthreads
-            infoZone['threadIds']= thread_list
-            infoZone['ind_dm_th']= dim_list
-
-            if Display: print 'size_target= ', cells_tg, 'size_zone= ', size_c, 'Nbr thread mis en oeuvre= ', Nthreads
-
-        if Display: print infoZone
-
-        infos[z[0]] = infoZone
-        c+=1
-
-    if Display:
-       print "OMP balancing: positive values --> slow thread" 
-       for key, value in remaind.iteritems():
-          print 'desequilibre thread ', key, ': ', (float(-value)/cells_tg)*100, 'percent'
-       #print remaind
-
-    return None
+  return None
 
 #==============================================================================
 # compute guillaume
@@ -2638,7 +2278,8 @@ def _computeguillaume1(t, metrics, nitrun, tc=None):
              
 	# determination taille des zones a integrer (implicit ou explicit local)
         hook1  = HOOK.copy()
-        hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep) )
+        distrib_omp = 0
+        hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
 	nidom_loc = hook1["nidom_tot"]
         
         if (hook1["lssiter_verif"] == 0 and nstep == nitmax and nitmax > nitmax ):nidom_loc = 0          
@@ -2699,7 +2340,8 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
             HOOK   = FastI.createWorkArrays__(zones, dtloc, FIRST_IT); 
             nitrun =0; nstep =1;
             hook1  = HOOK.copy()
-            hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep) )
+            distrib_omp = 0
+            hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
     else:   hook1  = HOOK
 
     fasts.compute_dpJ_dpW(zones, zones_eff, metrics, hook1, cosAoA, sinAoA, surfinv)
