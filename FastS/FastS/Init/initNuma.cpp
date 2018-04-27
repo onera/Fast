@@ -96,7 +96,8 @@ PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
        E_Int  ithread           = 1;
        E_Int  Nbre_thread_actif = 1; // !nombre de thread actif dans cette zone
 #endif
-     E_Int Nbre_socket   = NBR_SOCKET;     // nombre socket sur le noeud a memoire partagee
+     //E_Int Nbre_socket   = NBR_SOCKET;     // nombre socket sur le noeud a memoire partagee
+     E_Int Nbre_socket   = 1;     // nombre socket sur le noeud a memoire partagee
      if( Nbre_thread_actif < Nbre_socket ) Nbre_socket = 1;
 
      E_Int thread_parsock  =  Nbre_thread_actif/Nbre_socket;
@@ -205,13 +206,15 @@ PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
 
     FldArrayI ind_dm(6); E_Int* inddm  = ind_dm.begin();
 
-    E_Int shift_omp = ipt_param_int[ PT_OMP ];
+    E_Int       Ptomp = ipt_param_int[PT_OMP];
+    E_Int  PtrIterOmp = ipt_param_int[Ptomp ];   
+    E_Int  PtZoneomp  = ipt_param_int[PtrIterOmp ];
 
-    E_Int Nbre_thread_actif_loc = ipt_param_int[ shift_omp  + Nbre_thread_actif ];
-    E_Int ithread_loc           = ipt_param_int[ shift_omp  +  ithread -1       ] +1 ;
+    E_Int Nbre_thread_actif_loc = ipt_param_int[ PtZoneomp  + Nbre_thread_actif ];
+    E_Int ithread_loc           = ipt_param_int[ PtZoneomp  +  ithread -1       ] +1 ;
 
 
-    E_Int* inddm_omp = ipt_param_int + shift_omp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+    E_Int* inddm_omp = ipt_param_int + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
 
     inddm[0] = inddm_omp[0];
     inddm[1] = inddm_omp[1];

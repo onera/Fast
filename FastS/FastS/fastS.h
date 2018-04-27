@@ -104,8 +104,8 @@ namespace K_FASTS
                          E_Int* dtloc          , E_Int* ipt_iskip_lu, E_Int lssiter_loc       , E_Int nidom    , 
                          E_Int nitrun          , E_Int nstep        , E_Int& nidom_tot        , E_Int& lexit_lu, E_Int& lssiter_verif);
 
-  void distributeThreads_c( E_Int**& ipt_param_int, E_Int**& ipt_ind_dm, E_Int& nidom,  E_Int& nssiter, 
-                            E_Int& mx_sszone      , E_Int& nstep       , E_Int& nitrun, E_Int& display);
+  void distributeThreads_c( E_Int**& ipt_param_int, E_Int**& ipt_ind_dm, 
+                            E_Int& nidom          ,  E_Int& nssiter    , E_Int& mx_sszone      , E_Int& nstep       , E_Int& nitrun, E_Int& display);
 
   //=============
   // - compute -

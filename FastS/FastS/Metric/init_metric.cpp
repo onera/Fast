@@ -159,7 +159,8 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 	E_Int  ithread           = 1;
         E_Int  Nbre_thread_actif = 1;
 #endif
-        E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
+        //E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
+        E_Int Nbre_socket   = 1;                       // nombre de proc (socket) sur le noeud a memoire partagee
         if( Nbre_thread_actif < Nbre_socket ) Nbre_socket = 1;
 
         E_Int thread_parsock  =  Nbre_thread_actif/Nbre_socket;

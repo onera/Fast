@@ -14,15 +14,16 @@
                     E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
                     if (omp_mode == 1)
                     { 
-                      E_Int mx_sszone = mx_nidom/nidom;
-                      E_Int shift_omp = param_int[nd][ PT_OMP ] + mx_sszone*nd_subzone*(Nbre_thread_actif*7+4);
+                      E_Int       Ptomp = param_int[nd][PT_OMP];
+                      E_Int  PtrIterOmp = param_int[nd][Ptomp +nitcfg -1];   
+                      E_Int  PtZoneomp  = param_int[nd][PtrIterOmp + nd_subzone];
 
-                      Nbre_thread_actif_loc = param_int[nd][ shift_omp  + Nbre_thread_actif ];
-                      ithread_loc           = param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
+                      Nbre_thread_actif_loc = param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
+                      ithread_loc           = param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
                       if (ithread_loc == -1) {nd_current++; continue;}
 
-                      ipt_topo_omp          = param_int[nd] + shift_omp +  Nbre_thread_actif + 1;
-                      ipt_inddm_omp         = param_int[nd] + shift_omp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+                      ipt_topo_omp          = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 1;
+                      ipt_inddm_omp         = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
                       
                       ipt_ind_dm_omp_thread[0] = ipt_inddm_omp[0];
                       ipt_ind_dm_omp_thread[1] = ipt_inddm_omp[1];

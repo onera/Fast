@@ -121,10 +121,10 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
   if (PyLong_Check(tmp) == true) lssiter_loc = PyLong_AsLong(tmp);
   else lssiter_loc = PyInt_AsLong(tmp);
 
-  tmp = PyDict_GetItemString(work,"MX_SSZONE"); 
-  E_Int mx_sszone;
-  if (PyLong_Check(tmp) == true) mx_sszone = PyLong_AsLong(tmp);
-  else mx_sszone = PyInt_AsLong(tmp);
+  tmp = PyDict_GetItemString(work,"MX_OMP_SIZE_INT"); 
+  E_Int mx_omp_size_int;
+  if (PyLong_Check(tmp) == true) mx_omp_size_int = PyLong_AsLong(tmp);
+  else mx_omp_size_int = PyInt_AsLong(tmp);
 
   PyObject* iskipArray = PyDict_GetItemString(work,"skip_lu"); FldArrayI* iskip_lu;
   K_NUMPY::getFromNumpyArray(iskipArray, iskip_lu, true); E_Int* ipt_iskip_lu = iskip_lu->begin();
@@ -160,7 +160,7 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
   {
     E_Int display =1;
     if(nstep==1) display =1;
-    distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , iptdtloc[0] , mx_sszone  , nstep, nitrun, display );
+    distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , iptdtloc[0] , mx_omp_size_int , nstep, nitrun, display );
   }
 
   PyObject* dico = PyDict_New();

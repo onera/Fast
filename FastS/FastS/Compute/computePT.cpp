@@ -60,10 +60,11 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   //* tableau pour stocker dimension sous-domaine omp *//
   E_Int threadmax_sdm  = __NUMTHREADS__;
 
-  PyObject* tmp = PyDict_GetItemString(work,"MX_SSZONE");     E_Int mx_sszone     = PyLong_AsLong(tmp);  
-            tmp = PyDict_GetItemString(work,"MX_SYNCHRO");    E_Int mx_synchro    = PyLong_AsLong(tmp);  
-            tmp = PyDict_GetItemString(work,"FIRST_IT");      E_Int first_it      = PyLong_AsLong(tmp);
-            tmp = PyDict_GetItemString(work,"mpi");           E_Int mpi           = PyLong_AsLong(tmp);
+  PyObject* tmp = PyDict_GetItemString(work,"MX_SSZONE");      E_Int mx_sszone       = PyLong_AsLong(tmp);  
+            tmp = PyDict_GetItemString(work,"MX_SYNCHRO");     E_Int mx_synchro      = PyLong_AsLong(tmp);  
+            tmp = PyDict_GetItemString(work,"MX_OMP_SIZE_INT");E_Int mx_omp_size_int  = PyLong_AsLong(tmp);  
+            tmp = PyDict_GetItemString(work,"FIRST_IT");       E_Int first_it        = PyLong_AsLong(tmp);
+            tmp = PyDict_GetItemString(work,"mpi");            E_Int mpi             = PyLong_AsLong(tmp);
 
 
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
@@ -385,11 +386,11 @@ else
     {
        souszones_list_c( ipt_param_int , ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun, nstep, nidom_tot, lexit_lu, lssiter_verif);
 
-       E_Int display=1;
+       E_Int display=2;
        //calcul distri si implicit ou explicit local + modulo verif
        if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun%iptdtloc[1] == 0 || nitrun == 1) )
        {
-         distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , nssiter , mx_sszone  , nstep, nitrun, display );
+         distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun, display );
        }
 
        E_Int skip = 0;
@@ -401,7 +402,6 @@ else
     //calcul Navier Stokes + appli CL
     if (skip_navier ==1)
     {
-
       gsdr3(ipt_param_int, ipt_param_real   ,
             nidom              , nitrun           , nstep             , nssiter       , it_target, first_it,
             kimpli             , lssiter_verif    , lexit_lu          , omp_mode      , layer_mode, mpi,

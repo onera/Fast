@@ -13,6 +13,7 @@
           ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
           nb_subzone    = ipt_nidom_loc [nitcfg-1];                                            //nbre sous-zone a la sousiter courante
 
+            //if(ithread==1)printf("hum %d %d %d \n", nb_subzone, nd, nitcfg);
           //---------------------------------------------------------------------
           // -----Boucle sur param_int[nd][ ILES ] sous-zones ( //on skippe param_int[nd][ ILES ] parties qui converge + vite (Daude)
           // ---------------------------------------------------------------------
@@ -24,18 +25,24 @@
             E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
             if (omp_mode == 1)
             { 
-              E_Int mx_sszone = mx_nidom/nidom;
-              E_Int shift_omp = param_int[nd][ PT_OMP ] + mx_sszone*nd_subzone*(Nbre_thread_actif*7+4);
+              E_Int       Ptomp = param_int[nd][PT_OMP];
+              E_Int  PtrIterOmp = param_int[nd][Ptomp +nitcfg -1];   
+              E_Int  PtZoneomp  = param_int[nd][PtrIterOmp + nd_subzone];
 
-              Nbre_thread_actif_loc = param_int[nd][ shift_omp  + Nbre_thread_actif ];
-              ithread_loc           = param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
-              ipt_topo_omp          = param_int[nd] + shift_omp +  Nbre_thread_actif + 1;
-              ipt_inddm_omp         = param_int[nd] + shift_omp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+              Nbre_thread_actif_loc = param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
+              ithread_loc           = param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
+              ipt_topo_omp          = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 1;
+              ipt_inddm_omp         = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+
 
              //if (ithread == param_int[nd][IO_THREAD] && nitrun == 0 && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
              //if (nd == 0 && nitrun == 0 && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
              // printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
-             // ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5] );
+             //if (ithread == param_int[nd][IO_THREAD] && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
+              //ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5] );
+             //if (ithread == 5 && ithread_loc != -1 && nitrun ==21)  printf("thread loc %d, Nthreads= %d, ithread= %d, zone= %d,  %d %d %d %d %d %d, iv= %d, jv= %d, nstep= %d, nitrun= %d \n",
+             //ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
+              //ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5], PtrIterOmp , PtZoneomp , nitcfg , PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6);
 
               if (ithread_loc == -1) {nd_current++; continue;}
             }

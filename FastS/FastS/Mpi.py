@@ -140,7 +140,6 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
    return None
 #==============================================================================
 def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
-    #global PyTree.FIRST_IT, PyTree.HOOK, PyTree.HOOKIBC
 
     rank = Cmpi.rank
 
@@ -188,7 +187,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
         hook1 = PyTree.HOOK.copy()
         distrib_omp = 1
         hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, 1, nstep, distrib_omp) )
-        #distributeThreads(t, metrics, PyTree.HOOK, nstep, int(dtloc[0]) )
 
     _init_metric(t, metrics, hook1, ompmode)
 

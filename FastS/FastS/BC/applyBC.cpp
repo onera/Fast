@@ -177,11 +177,13 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
             E_Int* ipt_ind_dm_thread;
             if (omp_mode == 1)
             { 
-              E_Int shift_omp = ipt_param_int[nd][ PT_OMP ] + mx_sszone*nd_subzone*(Nbre_thread_actif*7+4);
+              E_Int       Ptomp = ipt_param_int[nd][PT_OMP];
+              E_Int  PtrIterOmp = ipt_param_int[nd][Ptomp +nstep -1];   
+              E_Int  PtZoneomp  = ipt_param_int[nd][PtrIterOmp + nd_subzone];
 
-              Nbre_thread_actif_loc = ipt_param_int[nd][ shift_omp  + Nbre_thread_actif ];
-              ithread_loc           = ipt_param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
-              ipt_ind_dm_thread     = ipt_param_int[nd] + shift_omp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+              Nbre_thread_actif_loc = ipt_param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
+              ithread_loc           = ipt_param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
+              ipt_ind_dm_thread     = ipt_param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
 
               if (ithread_loc == -1) {nd_current++; continue;}
             }

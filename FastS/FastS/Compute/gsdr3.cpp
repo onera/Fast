@@ -162,7 +162,8 @@ E_Int K_FASTS::gsdr3(
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-   E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
+   //E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
+   E_Int Nbre_socket   = 1;                       // nombre de proc (socket) sur le noeud a memoire partagee
    if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
 
    E_Int Nbre_thread_actif_loc, ithread_loc;
@@ -187,7 +188,8 @@ E_Int K_FASTS::gsdr3(
 
         //initialisation verrou omp
         //
-        //if( nitrun ==0 && nitcfg==1)
+      //if( nitrun ==0 && nitcfg==1)
+      // {
         for (E_Int nd = 0; nd < mx_nidom; nd++)
           {
              E_Int l =  nd*mx_synchro*Nbre_thread_actif  + (ithread-1)*mx_synchro;
@@ -195,6 +197,7 @@ E_Int K_FASTS::gsdr3(
              for (E_Int i = 0;  i < mx_synchro ; i++)
                 { ipt_lok[ l + i ]  = 0; }
           }
+      // }
 
         if( nitcfg == 1)
                   {
@@ -214,8 +217,11 @@ E_Int K_FASTS::gsdr3(
                    }
          //}
 
-         #pragma omp barrier
 
+      //if( nitrun ==0 && nitcfg==1){
+         //modifier mjr_ale_3dhomocart_ pour faire sauter barrier
+         #pragma omp barrier
+      //}
         //---------------------------------------------------------------------
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
@@ -253,7 +259,11 @@ E_Int K_FASTS::gsdr3(
 
            shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
            shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-          }
+
+           //Reinitialisation verrou omp
+           //E_Int l =  nd*mx_synchro*Nbre_thread_actif  + (ithread-1)*mx_synchro;
+           //for (E_Int i = 0;  i < mx_synchro ; i++) { ipt_lok[ l + i ]  = 0; }
+          }//loop lhs
 } // Fin zone // omp
 
 #ifdef TimeShow
@@ -298,7 +308,8 @@ if(lexit_lu ==0 && layer_mode==1)
        E_Int Nbre_thread_actif = 1;
 #endif
 
-E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
+//E_Int Nbre_socket   = NBR_SOCKET;             
+  E_Int Nbre_socket   = 1;                       // nombre de proc (socket) sur le noeud a memoire partagee
 if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
 
 E_Int Nbre_thread_actif_loc, ithread_loc;
@@ -325,12 +336,13 @@ for (E_Int nd = 0; nd < nidom; nd++)
             E_Int* ipt_ind_dm_thread;
             if (omp_mode == 1)
             { 
-              E_Int mx_sszone = mx_nidom/nidom;
-              E_Int shift_omp = param_int[nd][ PT_OMP ] + mx_sszone*nd_subzone*(Nbre_thread_actif*7+4);
+              E_Int       Ptomp = param_int[nd][PT_OMP];
+              E_Int  PtrIterOmp = param_int[nd][Ptomp +nitcfg -1];   
+              E_Int  PtZoneomp  = param_int[nd][PtrIterOmp + nd_subzone];
 
-              Nbre_thread_actif_loc = param_int[nd][ shift_omp  + Nbre_thread_actif ];
-              ithread_loc           = param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
-              ipt_ind_dm_thread     = param_int[nd] + shift_omp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+              Nbre_thread_actif_loc = param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
+              ithread_loc           = param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
+              ipt_ind_dm_thread     = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
 
               if (ithread_loc == -1) { continue;}
             }

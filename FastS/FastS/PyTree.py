@@ -192,10 +192,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
         hook1       = HOOK.copy()
         distrib_omp = 1
         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep, distrib_omp) )
-        #display  = False
-        #if nstep == 1 : display=True
-        #nitrun = 1
-        #distributeThreads(t, metrics, HOOK, nstep, int(dtloc[0]), nitrun, Display=display )
     
     #init metric
     _init_metric(t, metrics, hook1, ompmode)
@@ -287,7 +283,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     # initialisation Mut
     #
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
-    #print "warning mut init"
     fasts._computePT_mut(zones, metrics, hook1)
 
     if tmy is None: return (t, tc, metrics)
@@ -1249,7 +1244,8 @@ def _build_omp(t):
 
     #dimensionnememnt tableau
     size_param_int =[]
-    size_int       = HOOK['MX_SSZONE']*(OMP_NUM_THREADS*7+4)
+    #size_int       = HOOK['MX_SSZONE']*(OMP_NUM_THREADS*7+4)
+    size_int       = HOOK['MX_OMP_SIZE_INT']
     for b in bases:
         zones = Internal.getZones(b)
         for z in zones:
@@ -2240,12 +2236,13 @@ def _computeStress(t, teff, metrics):
 #==============================================================================
 def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
 
-  zones     = Internal.getZones(t)
-  mx_sszone = work["MX_SSZONE"]
-  display   = 0
+  zones          = Internal.getZones(t)
+  mx_omp_size_int= work["MX_OMP_SIZE_INT"]
+  print 'mx_omp_size_int', mx_omp_size_int
+  display = 0
   if Display: display =1
 
-  fasts.distributeThreads( zones , metrics, nstep, nssiter , nitrun, mx_sszone, display );
+  fasts.distributeThreads( zones , metrics, nstep, nssiter , nitrun, mx_omp_size_int, display );
 
   return None
 

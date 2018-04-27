@@ -220,9 +220,12 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
        E_Int Nbre_thread_actif_loc; E_Int ithread_loc;
 
        if(omp_mode == 1)
-        { E_Int shift_omp      = ipt_param_int[nd][ PT_OMP ];
-          Nbre_thread_actif_loc = ipt_param_int[nd][ shift_omp  + Nbre_thread_actif ];
-          ithread_loc           = ipt_param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
+        { E_Int       Ptomp = ipt_param_int[nd_ns][PT_OMP];
+          E_Int  PtrIterOmp = ipt_param_int[nd_ns][Ptomp];
+          E_Int  PtZoneomp  = ipt_param_int[nd_ns][PtrIterOmp]; 
+
+          Nbre_thread_actif_loc = ipt_param_int[nd_ns][ PtZoneomp + Nbre_thread_actif ];
+          ithread_loc           = ipt_param_int[nd_ns][ PtZoneomp +  ithread -1       ] +1 ;
           if (ithread_loc == -1) {continue;}
         }
        else 
