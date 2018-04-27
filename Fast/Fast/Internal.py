@@ -17,6 +17,7 @@ except: OMP_NUM_THREADS = 1
 
 MX_SYNCHRO = 1000
 MX_SSZONE  = 10
+MX_OMP_SIZE_INT = 250*OMP_NUM_THREADS
 
 #==============================================================================
 # Met un dictionnaire de numerics dans une/des zones
@@ -427,7 +428,7 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
 #==============================================================================
 def createWorkArrays__(zones, dtloc, FIRST_IT):
     ndimt = 0 ; ndimcoe = 0 ; ndimwig = 0 ; c = 0;
-    #global  CACHELINE
+    global  MX_OMP_SIZE_INT
     # on check sur 1ere zone si implicite: mixte impli/expli impossible pour le moment
     scheme = "implicit"
     a = Internal.getNodeFromName2(zones[0], 'temporal_scheme')
@@ -506,22 +507,23 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     param_real_ibc = numpy.empty((5), numpy.float64)
 
     hook = {}
-    hook['wiggle']        = wig
-    hook['coe']           = coe
-    hook['rhs']           = drodm
-    hook['verrou_omp']    = lok
-    hook['skip_lu']       = iskip_lu
-    hook['dtloc']         = dtloc
-    hook['lssiter_loc']   = lssiter_loc
-    hook['MX_SSZONE']     = MX_SSZONE
-    hook['MX_SYNCHRO']    = MX_SYNCHRO
-    hook['FIRST_IT']      = FIRST_IT
-    hook['neq_max']       = neq_max
-    hook['param_int_ibc' ]= param_int_ibc
-    hook['param_real_ibc']= param_real_ibc
-    hook['param_int_tc'  ]= None
-    hook['param_real_tc' ]= None
-    hook['mpi']           = 0 
+    hook['wiggle']         = wig
+    hook['coe']            = coe
+    hook['rhs']            = drodm
+    hook['verrou_omp']     = lok
+    hook['skip_lu']        = iskip_lu
+    hook['dtloc']          = dtloc
+    hook['lssiter_loc']    = lssiter_loc
+    hook['MX_SSZONE']      = MX_SSZONE
+    hook['MX_SYNCHRO']     = MX_SYNCHRO
+    hook['MX_OMP_SIZE_INT']= MX_OMP_SIZE_INT
+    hook['FIRST_IT']       = FIRST_IT
+    hook['neq_max']        = neq_max
+    hook['param_int_ibc' ] = param_int_ibc
+    hook['param_real_ibc'] = param_real_ibc
+    hook['param_int_tc'  ] = None
+    hook['param_real_tc' ] = None
+    hook['mpi']            = 0 
     return hook
 
 #==============================================================================
