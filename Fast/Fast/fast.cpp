@@ -32,8 +32,8 @@ static PyMethodDef Pyfast [] =
 // ============================================================================
 extern "C"
 {
-  void initfast();
-  void initfast()
+  PyMODINIT_FUNC initfast();
+  PyMODINIT_FUNC initfast()
   {
     Py_InitModule("fast", Pyfast);
     import_array();

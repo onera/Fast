@@ -31,9 +31,7 @@ using namespace K_FLD;
 void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm, 
                                    E_Int& nidom  , E_Int& nssiter , E_Int& mx_omp_size_int  , E_Int& nstep, E_Int& nitrun, E_Int& display)
 {
-
-
-//calcul  nombre souszone
+  // calcul  nombre souszone
   E_Int mxzone=0;
   for (E_Int nd = 0; nd < nidom; nd++)
      {  
@@ -708,7 +706,6 @@ PyObject* K_FASTS::distributeThreads(PyObject* self, PyObject* args)
 
   vector<PyArrayObject*> hook;
 
-
   for (E_Int nd = 0; nd < nidom; nd++)
   {    
     PyObject* zone = PyList_GetItem(zones, nd);
@@ -720,10 +717,10 @@ PyObject* K_FASTS::distributeThreads(PyObject* self, PyObject* args)
 
     // get metric
     PyObject* metric     = PyList_GetItem(metrics, nd); // metric du domaine i
-    ipt_ind_dm[nd]       =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
+    ipt_ind_dm[nd]       = K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
   }
 
-  distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun, display );
+  distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom, nssiter, mx_omp_size_int, nstep, nitrun, display );
 
   delete [] ipt_param_int;
 

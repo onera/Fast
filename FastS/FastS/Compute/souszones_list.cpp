@@ -158,8 +158,8 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
   //calcul distri si implicit ou explicit local + modulo verif
   if( distrib_omp==1 || (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun%iptdtloc[1] == 0 || nitrun == 1) )
   {
-    E_Int display =1;
-    if(nstep==1) display =1;
+    E_Int display = 0;
+    //if(nstep==1) display =1;
     distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , iptdtloc[0] , mx_omp_size_int , nstep, nitrun, display );
   }
 

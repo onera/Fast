@@ -67,7 +67,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
     itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
     #### a blinder...
 
-    if nitrun == 1: print 'layer trans=', layer, ompmode
+    if nitrun == 1: print 'Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode)
 
     if layer == "Python": 
 
@@ -1402,7 +1402,7 @@ def _buildOwnData(t):
     if first is not None: temps = Internal.getValue(first)
     first = Internal.getNodeFromName1(t, 'TimeLevelMotion')
     if first is not None: timelevel_motion = Internal.getValue(first)
-    print 'timmotion', first, timelevel_motion
+    #print 'timemotion', first, timelevel_motion
     first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
     if first is not None: timelevel_target = Internal.getValue(first)
 
@@ -1548,7 +1548,7 @@ def _buildOwnData(t):
         f       = open('padding.bin','rb')
         pad     = True
     except IOError as e:
-        print('Padding file not found, using default values.')
+        #print('Padding file not found, using default values.')
         pad   = False
     if pad: 
         padding = numpy.fromfile(f, dtype='int32')        
@@ -2213,8 +2213,8 @@ def _computeStress(t, teff, metrics):
     if HOOK is None: 
             dtloc  = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
-            HOOK   = FastI.createWorkArrays__(zones, dtloc, FIRST_IT); 
-            nitrun =0; nstep =1;
+            HOOK   = FastI.createWorkArrays__(zones, dtloc, FIRST_IT)
+            nitrun =0; nstep =1
 
             distrib_omp = 0
             hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
@@ -2223,7 +2223,7 @@ def _computeStress(t, teff, metrics):
 
     effort = numpy.empty(8, numpy.float64)
 
-    print 'ompmode=', ompmode
+    #print 'ompmode=', ompmode
     fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, ompmode)
 
     return effort
@@ -2238,11 +2238,11 @@ def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
 
   zones          = Internal.getZones(t)
   mx_omp_size_int= work["MX_OMP_SIZE_INT"]
-  print 'mx_omp_size_int', mx_omp_size_int
+  #print 'mx_omp_size_int', mx_omp_size_int
   display = 0
   if Display: display =1
 
-  fasts.distributeThreads( zones , metrics, nstep, nssiter , nitrun, mx_omp_size_int, display );
+  fasts.distributeThreads(zones , metrics, nstep, nssiter , nitrun, mx_omp_size_int, display)
 
   return None
 

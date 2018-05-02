@@ -61,8 +61,8 @@ static PyMethodDef Pyfasts [] =
 // ============================================================================
 extern "C"
 {
-  void initfasts();
-  void initfasts()
+  PyMODINIT_FUNC initfasts();
+  PyMODINIT_FUNC initfasts()
   {
     __activation__ = K_KCORE::activation();
     Py_InitModule("fasts", Pyfasts);

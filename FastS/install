@@ -36,7 +36,8 @@ if [ $? -eq 0 ]; then
     fi
     scons install prefix="$INSTALLPATH" "$SCONSOPT"
     [ $? != 0 ] && exit;
-    touch FastS/fastS.cpp
+    #touch FastS/fastS.cpp
+    rm build/lib.*/FastS/fasts.*
     python setupScons.py install --prefix="$INSTALLPATH"
 else
     python setup.py install --prefix="$INSTALLPATH"
