@@ -498,8 +498,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #    drodm1 = drodm1.reshape((132*132*132*5), order='Fortran')
 #    print drodm1.shape
 
-    #omp      = numpy.empty(distrib_omp, dtype=numpy.int32)
-    lok      = numpy.empty(verrou     , dtype=numpy.int32  )
+    lok      = numpy.zeros(verrou     , dtype=numpy.int32  )
     iskip_lu = numpy.empty(dtloc[0]*2 , dtype=numpy.int32  )   # (dtloc[0] = nitmax
 
     #tableau pour ibc from C function

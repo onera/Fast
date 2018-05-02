@@ -188,9 +188,7 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-
-# include "HPC_LAYER/INIT_LOCK.h"
-
+# include "HPC_LAYER/INFO_SOCKET.h"
       //
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
@@ -298,6 +296,9 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
 
              //else{ printf("flag inconnu %d \n", flag);}
           }// boucle zone 
+
+# include "HPC_LAYER/INIT_LOCK.h"
+
   }  // zone OMP
 
 

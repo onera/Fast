@@ -150,6 +150,9 @@ E_Int K_FASTS::gsdr3(
           }
       }
 
+  FldArrayI tab_verrou_lhs(mx_nidom*threadmax_sdm); E_Int*  verrou_lhs  =  tab_verrou_lhs.begin();
+
+
 /****************************************************
 ----- Debut zone // omp
 ****************************************************/
@@ -185,20 +188,6 @@ E_Int K_FASTS::gsdr3(
      /****************************************************
       -----Boucle sous-iteration
      ****************************************************/
-
-        //initialisation verrou omp
-        //
-      //if( nitrun ==0 && nitcfg==1)
-      // {
-        for (E_Int nd = 0; nd < mx_nidom; nd++)
-          {
-             E_Int l =  nd*mx_synchro*Nbre_thread_actif  + (ithread-1)*mx_synchro;
-
-             for (E_Int i = 0;  i < mx_synchro ; i++)
-                { ipt_lok[ l + i ]  = 0; }
-          }
-      // }
-
         if( nitcfg == 1)
                   {
                      for (E_Int nd = 0; nd < nidom; nd++) //mise a jour metric et vent ale zone cart et 3dhom(3dfull et 2d a la volee)
@@ -212,16 +201,12 @@ E_Int K_FASTS::gsdr3(
                                                   ipti[nd]           , iptj[nd]           , iptk[nd]            ,
                                                   ipti0[nd]          , iptj0[nd]          , iptk0[nd]           , iptvol[nd] ,
                                                   iptventi[nd]       , iptventj[nd]       , iptventk[nd]        );
+                       //modifier mjr_ale_3dhomocart_ pour faire sauter barrier
+                       #pragma omp barrier
                              } //ale
                           }    //zone
                    }
-         //}
 
-
-      //if( nitrun ==0 && nitcfg==1){
-         //modifier mjr_ale_3dhomocart_ pour faire sauter barrier
-         #pragma omp barrier
-      //}
         //---------------------------------------------------------------------
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
@@ -232,38 +217,28 @@ E_Int K_FASTS::gsdr3(
            E_Int lmin = 10;
            if (param_int[nd][ITYPCP] == 2) lmin = 4;
 
-           //double beg = omp_get_wtime();
 #include "Compute/rhs.cpp"
-           //double fin = omp_get_wtime()- beg;
-           //if(ithread==1) printf(" cpu rhs %d %.17g \n ", nd, fin/float(param_int[nd][NDIMDX])*Nbre_thread_actif);
- 
           shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
           shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
           shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
           } //Fin boucle sur zones pour calcul RHS
 
 
-          // Phase LU pour implicite  ou CL si scater =0
-          #pragma omp barrier
-
-          shift_zone=0; shift_coe=0; nd_current=0;
+          //
+          // VERROU LHS
+          //#pragma omp barrier
           //Parcours des zones pour LUSGS
+          shift_zone=0; shift_coe=0; nd_current=0;
           for (E_Int nd = 0; nd < nidom; nd++)
           {
            E_Int lmin = 10;
            if (param_int[nd][ITYPCP] == 2) lmin = 4;
-           //double beg = omp_get_wtime();
 # include "Compute/lhs.cpp"
-           //double fin = omp_get_wtime()- beg;
-           //if(ithread==1) printf(" cpu lhs %d %.17g \n", nd, fin/float(param_int[nd][NDIMDX])*Nbre_thread_actif);
 
            shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
            shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-
-           //Reinitialisation verrou omp
-           //E_Int l =  nd*mx_synchro*Nbre_thread_actif  + (ithread-1)*mx_synchro;
-           //for (E_Int i = 0;  i < mx_synchro ; i++) { ipt_lok[ l + i ]  = 0; }
           }//loop lhs
+
 } // Fin zone // omp
 
 #ifdef TimeShow
@@ -279,8 +254,11 @@ E_Int K_FASTS::gsdr3(
      time_init = omp_get_wtime();
 #endif 
 
-
-//FillGhostcell si mise a jour necessaire et transfer dans C layer 
+  //
+  //
+  //FillGhostcell si mise a jour necessaire et transfer dans C layer 
+  //
+  //
 if(lexit_lu ==0 && layer_mode==1)
 {   
   //Swap (call to setInterpTransfer)
@@ -295,11 +273,15 @@ if(lexit_lu ==0 && layer_mode==1)
 
   delete [] ipt_ndimdx_trans;
 
-  //Apply BC (parcour Zones)
+
+  //
+  //
+  //Apply BC (parcour Zones) + reinitialisation verrou pour calcul rhs
+  //
+  //
   E_Int lrhs=0; E_Int lcorner=0; 
 #pragma omp parallel default(shared)
    {
-
 #ifdef _OPENMP
        E_Int  ithread           = omp_get_thread_num() +1;
        E_Int  Nbre_thread_actif = omp_get_num_threads();
@@ -318,7 +300,7 @@ else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = it
 
 E_Int ipt_shift_lu[6];
 E_Int* ipt_ind_dm_thread; 
-
+E_Int nd_current =0;
 for (E_Int nd = 0; nd < nidom; nd++)
           {
           E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
@@ -368,6 +350,12 @@ for (E_Int nd = 0; nd < nidom; nd++)
                                 iptventi[nd] , iptventj[nd]        , iptventk[nd]);
 
             correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptro_CL[nd]);
+
+           //Reinitialisation verrou omp
+           //
+           E_Int l =  nd_current*mx_synchro*Nbre_thread_actif  + (ithread_loc-1)*mx_synchro;
+           for (E_Int i = 0;  i < mx_synchro ; i++) { ipt_lok[ l + i ]  = 0; }
+          nd_current +=1;
 
           }//loop souszone
        }//loop zone

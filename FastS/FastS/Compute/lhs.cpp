@@ -11,6 +11,7 @@
                      E_Int* ipt_ind_dm_loc         = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;      //ind_dm(6, < ssdom_lu,nssiter)
 
 
+
                     E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
                     if (omp_mode == 1)
                     { 
@@ -39,9 +40,29 @@
                                       ipt_ind_dm_loc,
                                       ipt_topology_socket, ipt_ind_dm_omp_thread );
                      }
-                    //if(ithread == param_int[nd][ IO_THREAD ]) { balance = balance +  (1+ipt_ind_dm_loc[1]-ipt_ind_dm_loc[0])*(1+ipt_ind_dm_loc[3]-ipt_ind_dm_loc[2])*(1+ipt_ind_dm_loc[5]-ipt_ind_dm_loc[4]);}
 
-                    //if(nd==2 && ithread==1) printf(" dom %d %d %d %d %d %d \n", ipt_ind_dm_loc[0],ipt_ind_dm_loc[1],ipt_ind_dm_loc[2],ipt_ind_dm_loc[3],ipt_ind_dm_loc[4],ipt_ind_dm_loc[5]  );
+                    //if(nd_current==25 && ithread==1) printf("dom %d %d %d %d %d %d \n", ipt_ind_dm_loc[0],ipt_ind_dm_loc[1],ipt_ind_dm_loc[2],ipt_ind_dm_loc[3],ipt_ind_dm_loc[4],ipt_ind_dm_loc[5]);
+                      //
+                      //verrou rhs
+                      //
+                      E_Int type = 2;
+                      for (E_Int th = 0; th < Nbre_thread_actif_loc; th++) 
+                      { 
+                           E_Int* verrou_lhs_thread= verrou_lhs + nd_current*Nbre_thread_actif +th;
+                           verrou_c_( verrou_lhs_thread, type );
+                      }
+
+                      //#pragma omp flush
+                      E_Int size = param_int[nd][NEQ]*param_int[nd][NDIMDX];
+                      //flush_real_( size , iptdrodm + shift_zone);
+                      if(nitcfg==1)
+                      {
+                        size = param_int[nd][NEQ_COE]*param_int[nd][NDIMDX];
+                        flush_real_( size , iptcoe + shift_coe);
+                      }
+                      //size       = param_int[nd][NDIMDX];
+                      //flush_real_( size , iptmut[nd]);
+
 
 
                          //sortie de la carte d residu du Newton
@@ -76,7 +97,6 @@
                                       ipt_it_lu_ssdom_loc  , ipt_it_target_ssdom  , ipt_it_target_old     ,
                                       ipt_it_temp_ssdom    , ipt_no_lu            ,
                                       iptdrodm + shift_zone   , iptrdm[nd]); 
-
                            //
                           }
 
@@ -94,9 +114,9 @@
                                  iptdrodm + shift_zone  , ipti[nd]                   , iptj[nd]                 , iptk[nd]       ,
                                  iptx[nd]               , ipty[nd]                   , iptz[nd]                 ,
                                  iptventi[nd]           , iptventj[nd]               , iptventk[nd]             );
-
+                 
                          if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_ind_coe_thread , iptdrodm + shift_zone );
-
+                  
                          if(lexit_lu == 0 ) invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
                                                    ipt_ind_coe_thread     ,
                                                    iptrotmp[nd]           , iptro_ssiter[nd]        , iptdrodm + shift_zone ,
@@ -112,4 +132,6 @@
                        sfd_(param_int[nd], param_real[nd], nitrun, ipt_ind_dm_omp_thread, ipt_CL, iptrof[nd], iptcoe + shift_coe, iptvol[nd]);
                      }
 
+                   nd_current +=1;
+                     
                    } //fin boucle sous-zone

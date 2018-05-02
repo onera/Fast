@@ -176,6 +176,8 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
         E_Int* ipt_ind_dm_socket     = ipt_ind_dm_omp  + (ithread-1)*12;
         E_Int* ipt_ind_dm_omp_thread = ipt_ind_dm_socket  + 6;
 
+        E_Int* ipt_topology_socket_thread =  ipt_topology_socket + (ithread-1)*3;
+
         E_Float*  ipt_rot_ale_thread = ipt_rot_ale  + (ithread-1)*12;
 
         E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp; E_Int ithread_loc; E_Int Nbre_thread_actif_loc;
@@ -290,7 +292,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
                  indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
                                    ipt_ind_dm_loc, 
-                                   ipt_topology_socket, ipt_ind_dm_socket );
+                                   ipt_topology_socket_thread, ipt_ind_dm_socket );
 
                  skmtr_( nd, ipt_param_int[nd], ipt_param_real[nd], ipt_rot_ale_thread,
 	                iptx[nd], ipty[nd], iptz[nd], ipt_degen[nd], 
@@ -298,7 +300,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                         ipt_ijkv_sdm_thread,
                         ipt_ind_sdm_thread , ipt_ind_coe_thread, ipt_ind_grad_thread    , 
                         ipt_ind_dm_loc     , ipt_ind_dm_socket , ipt_ind_dm_omp_thread  ,
-                        ipt_topology_socket, 
+                        ipt_topology_socket_thread, 
                         ithread_sock       , thread_parsock    , Nbre_thread_actif, Nbre_socket, socket,
                         ithread);
 

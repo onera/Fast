@@ -150,8 +150,7 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-
-# include "HPC_LAYER/INIT_LOCK.h"
+# include "HPC_LAYER/INFO_SOCKET.h"
 
       //
       //---------------------------------------------------------------------
@@ -191,6 +190,7 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
                     iptvar[nv+nd*nivar] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptgra[nv+nd*nivar]);
               }// boucle var  
           }// boucle zone 
+# include "HPC_LAYER/INIT_LOCK.h"
   }  // zone OMP
 
 

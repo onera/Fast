@@ -42,10 +42,16 @@
               //ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5] );
              //if (ithread == 5 && ithread_loc != -1 && nitrun ==21)  printf("thread loc %d, Nthreads= %d, ithread= %d, zone= %d,  %d %d %d %d %d %d, iv= %d, jv= %d, nstep= %d, nitrun= %d \n",
              //ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
-              //ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5], PtrIterOmp , PtZoneomp , nitcfg , PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6);
+              //ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5], PtrIterOmp , PtZoneomp,nitcfg,PtZoneomp+Nbre_thread_actif+4+(ithread_loc-1)*6);
 
               if (ithread_loc == -1) {nd_current++; continue;}
             }
+
+
+            //Init verrou rhs pour chaque sous zone et chaque thread actif:  init val to zero
+            E_Int type = 4;
+            E_Int* verrou_lhs_thread= verrou_lhs + nd_current*Nbre_thread_actif + ithread_loc -1; 
+            verrou_c_( verrou_lhs_thread, type);
 
             E_Int* ipt_lok_thread;
             //  Revoir cet adressage si scater et  socket>1 et ou nidom >1
@@ -85,6 +91,23 @@
                                   iptventi[nd]            , iptventj[nd]            , iptventk[nd]        ,
                                   iptwig   + shift_wig    , iptstat_wig + shift_wig , iptrot+ shift_wig   ,
 				  iptdrodm + shift_zone   , iptcoe  + shift_coe     , iptdelta[nd]        , iptro_res[nd]     );
+
+            //Flush Rhs
+            E_Int size = param_int[nd][NEQ]*param_int[nd][NDIMDX];
+            //flush_real_( size , iptdrodm + shift_zone);
+            if(nitcfg==1)
+            {
+              size = param_int[nd][NEQ_COE]*param_int[nd][NDIMDX];
+              flush_real_( size , iptcoe + shift_coe);
+            }
+            //size = param_int[nd][NDIMDX];
+            //flush_real_( size , iptmut[nd]);
+            //#pragma omp flush
+            //Go verrou rhs pour chaque sous zone et chaque thread actif: valeur mise a un
+            type             = 1;
+            verrou_lhs_thread= verrou_lhs + nd_current*Nbre_thread_actif + ithread_loc -1; 
+            verrou_c_( verrou_lhs_thread, type );
+
 
             nd_current++;
 

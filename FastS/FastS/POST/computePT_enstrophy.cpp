@@ -139,9 +139,7 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-
-# include "HPC_LAYER/INIT_LOCK.h"
-
+# include "HPC_LAYER/INFO_SOCKET.h"
       //
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
@@ -189,6 +187,7 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
                ipt_tke[0] =  ipt_tke[0]/ float( ipt_compteur[0]);
            }
           }// boucle zone 
+# include "HPC_LAYER/INIT_LOCK.h"
   }  // zone OMP
 
 

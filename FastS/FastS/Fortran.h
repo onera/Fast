@@ -44,7 +44,10 @@ extern "C"
 
   void copy_(E_Int& idir , E_Int* ipt_param_int , E_Int* ind_loop,   E_Float* iptro, E_Float* stock, E_Int& ind, E_Int& nzone);
 
-  
+  void verrou_c_(E_Int* lok , E_Int& type );
+
+  void flush_real_(  E_Int& size, E_Float* tab);
+
   void interpolation_(E_Int& idir , E_Int* ipt_param_int , E_Float* ipt_param_real ,E_Int* ind_loop, E_Float* iptro_tmp , E_Float* iptro);
 
    
