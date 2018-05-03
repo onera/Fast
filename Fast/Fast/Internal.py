@@ -215,8 +215,8 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     '''
 
     if (sa and C.isNamePresent(zone, 'centers:TurbulentSANuTilde') != 1): 
-        if C.isNamePresent(zone, 'centers:TurbulentSANuTildeDensity') != 1: C._initVars(zone, 'centers:TurbulentSANuTilde= %20.16g/{centers:Density}'%adim[14])
-        else: C._initVars(zone, 'centers:TurbulentSANuTilde= {centers:TurbulentSANuTildeDensity}/{centers:Density}')
+        if C.isNamePresent(zone, 'centers:TurbulentSANuTildeDensity') != 1: C._initVars(zone, '{centers:TurbulentSANuTilde}= %20.16g/{centers:Density}'%adim[14])
+        else: C._initVars(zone, '{centers:TurbulentSANuTilde}= {centers:TurbulentSANuTildeDensity}/{centers:Density}')
     '''
     t1=timeit.default_timer()
     print "cout calcul Nu = ", t1-t0, zone[0]
