@@ -116,6 +116,7 @@ void K_FASTS::setInterpTransfersFastS(
 #ifdef _MPI
 
 std::pair<RecvQueue*, SendQueue*>* pair_of_queue;
+RecvQueue* pt_rcv_queue = NULL;
 
 if (mpi)
 {
@@ -128,10 +129,10 @@ if (mpi)
 #ifdef TimeShow
    time_in = omp_get_wtime();
 #endif
-}
 
-  RecvQueue* pt_rcv_queue = pair_of_queue->first;
-  
+  pt_rcv_queue = pair_of_queue->first;
+
+}  
   for (E_Int ircv = 1; ircv < nbcomIBC +1; ++ircv)
   {
    pt_rcv_queue->emplace_back(param_int_tc[ircv+1], 404);
