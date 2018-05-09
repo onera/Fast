@@ -466,7 +466,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
     verrou      = MX_SSZONE*c*MX_SYNCHRO*mx_thread
 
-    #distrib_omp = MX_SSZONE*c*(mx_thread*7+4)
+    timerOmp = numpy.zeros(  mx_thread*2*dtloc[0] , dtype=numpy.float64)
 
 #    wig   = KCore.empty(ndimwig, CACHELINE)
 #    coe   = KCore.empty(ndimcoe, CACHELINE)
@@ -505,6 +505,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     param_int_ibc  = numpy.empty((2), numpy.int32)         
     param_real_ibc = numpy.empty((5), numpy.float64)
 
+
     hook = {}
     hook['wiggle']         = wig
     hook['coe']            = coe
@@ -516,6 +517,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['MX_SSZONE']      = MX_SSZONE
     hook['MX_SYNCHRO']     = MX_SYNCHRO
     hook['MX_OMP_SIZE_INT']= MX_OMP_SIZE_INT
+    hook['TIMER_OMP']      = timerOmp
     hook['FIRST_IT']       = FIRST_IT
     hook['neq_max']        = neq_max
     hook['param_int_ibc' ] = param_int_ibc

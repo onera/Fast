@@ -25,7 +25,7 @@
 
                       ipt_topo_omp          = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 1;
                       ipt_inddm_omp         = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
-                      
+
                       ipt_ind_dm_omp_thread[0] = ipt_inddm_omp[0];
                       ipt_ind_dm_omp_thread[1] = ipt_inddm_omp[1];
                       ipt_ind_dm_omp_thread[2] = ipt_inddm_omp[2];

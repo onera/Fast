@@ -39,7 +39,7 @@ E_Int K_FASTS::gsdr3(
   E_Int& nb_pulse     , 
   E_Float& temps,
   E_Int* ipt_ijkv_sdm  ,
-  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_ind_CL119   , E_Int* ipt_lok,
+  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_ind_CL119   , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Float* timer_omp,
   E_Int*     iptludic        , E_Int*   iptlumax       ,
   E_Int** ipt_ind_dm         , E_Int** ipt_it_lu_ssdom  ,
   E_Float*   ipt_cfl,
@@ -150,9 +150,6 @@ E_Int K_FASTS::gsdr3(
           }
       }
 
-  FldArrayI tab_verrou_lhs(mx_nidom*threadmax_sdm); E_Int*  verrou_lhs  =  tab_verrou_lhs.begin();
-
-
 /****************************************************
 ----- Debut zone // omp
 ****************************************************/
@@ -176,6 +173,8 @@ E_Int K_FASTS::gsdr3(
    E_Int thread_parsock  =  Nbre_thread_actif/Nbre_socket;
    E_Int socket          = (ithread-1)/thread_parsock +1;
    E_Int  ithread_sock   = ithread-(socket-1)*thread_parsock;
+
+   E_Float rhs_begin = omp_get_wtime();
 
    E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3;
    E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3;
@@ -225,9 +224,14 @@ E_Int K_FASTS::gsdr3(
 
 
           //
-          // VERROU LHS
-          //#pragma omp barrier
+          //timer pour omp "dynamique"
+          //
+          E_Float rhs_end = omp_get_wtime();
+          timer_omp[(ithread-1)*2 +(nitcfg-1)*Nbre_thread_actif] += rhs_end - rhs_begin;
+
+          //
           //Parcours des zones pour LUSGS
+          //
           shift_zone=0; shift_coe=0; nd_current=0;
           for (E_Int nd = 0; nd < nidom; nd++)
           {
@@ -239,6 +243,12 @@ E_Int K_FASTS::gsdr3(
            shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
           }//loop lhs
 
+          //
+          //finalisation timer pour omp "dynamique"
+          //
+          E_Float lhs_end = omp_get_wtime();
+          timer_omp[(ithread-1)*2 +1 +(nitcfg-1)*Nbre_thread_actif] += lhs_end- rhs_end;
+          
 } // Fin zone // omp
 
 #ifdef TimeShow
@@ -362,7 +372,14 @@ for (E_Int nd = 0; nd < nidom; nd++)
   }//fin zone omp
 }//test exit_lu
 
+    //
+    //omp "dynamic" balance
+    //
+    if(nitrun%1==0)
+    {  
+#    include "HPC_LAYER/OPTIMIZE_DISTRIB_OMP.h"
+    }
+
    delete [] ipt_timecount;
    return ibord_ale;
   }
-

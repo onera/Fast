@@ -76,6 +76,14 @@ f77CppArgs = '-D_NOOPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'
 cacheLine = Dist.getCacheLine()
 if cacheLine == 1: f77CppArgs += ' -DCACHELINE=16'
 else: f77CppArgs += ' -DCACHELINE=%d'%cacheLine
+nbsocket = Dist.getNbSocket()
+if nbsocket == 1: f77CppArgs += ' -DNB_SOCKET=1'
+else: f77CppArgs += ' -DNB_SOCKET=%d'%nbsocket
+
+corePerSock = Dist.getCorePerSocket()
+if  corePerSock== 1: f77CppArgs += ' -DCORE_PER_SOCK=1'
+else: f77CppArgs += ' -DCORE_PER_SOCK=%d'%corePerSock
+
 action = PP+'\"'+kcoreIncDir+'\" -I. '+f77CppArgs+' $SOURCES $TARGETS'
 bld = Builder(action=action, suffix='.f', src_suffix='.for')
 #emitter=addSourceScannerToTargets)

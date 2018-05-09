@@ -133,7 +133,8 @@ extern "C"
               E_Float* iptro            ,
               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol          ,  E_Float* iptmut, E_Float* iptdist, E_Float* iptrot   );
 
-  void navier_stokes_struct_( E_Int& ndo    , E_Int& nidom            , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& omp_mode   ,  E_Int& Nbre_socket, E_Int& socket       , E_Int& mx_synchro   , 
+  void navier_stokes_struct_( E_Int& ndo    , E_Int& nidom            , E_Int& Nbre_thread_actif,
+                              E_Int& ithread        ,  E_Int& ithread_io       ,E_Int& omp_mode   ,  E_Int& Nbre_socket, E_Int& socket       , E_Int& mx_synchro   , 
                               E_Int& lssiter_verif  , E_Int& nptpsi            , E_Int& nitcfg  , E_Int& nitrun     , E_Int& first_it   ,  E_Int& nb_pulse   , E_Int&   flagCellN  ,
                               E_Int* ipt_param_int  , E_Float* ipt_param_real  ,
                               E_Float& temps        , E_Int* ipt_tot,   

@@ -4,7 +4,8 @@ c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine navier_stokes_struct( ndo, nidom, Nbre_thread_actif,
-     &        ithread, omp_mode, Nbre_socket, socket, mx_synchro, 
+     &        ithread, ithread_io, 
+     &        omp_mode, Nbre_socket, socket, mx_synchro, 
      &        lssiter_verif,
      &        nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN,
      &        param_int, param_real,
@@ -47,7 +48,8 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, first_it,
-     & ithread, Nbre_socket, socket, nitrun, nptpsi, nitcfg, nb_pulse,
+     & ithread, ithread_io, Nbre_socket, socket, nitrun, nptpsi, nitcfg,
+     & nb_pulse,
      & lssiter_verif,flagCellN,omp_mode
 c
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
@@ -80,11 +82,13 @@ C Var loc
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
 
 
+c         if(ithread_io.eq.24.and.nitcfg.le.1.and.icache.eq.1
+c     &    .and.jcache.eq.1) then
 c         if(ithread.eq.param_int( IO_THREAD).and.nitcfg.le.1) then
 c           write(*,'(a,7i6)')'ijkv_sdm  =',ijkv_sdm,icache,jcache,
 c     &                                     kcache,ithread
 c           write(*,'(a,9i6)')'ind_dm_zone=',ind_dm_zone,
-c     &    ithread,jbloc,jcache
+c     &    ithread,jbloc,ndo
 c           write(*,'(a,3i6)')'loop_patern=',shift
 c           write(*,'(a,f20.10)')'dtc        =',param_real(DTC);
 c           write(*,'(a,6i6)')'ind_dm_soc=',ind_dm_socket

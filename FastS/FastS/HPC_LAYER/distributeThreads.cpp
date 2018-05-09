@@ -31,6 +31,29 @@ using namespace K_FLD;
 void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm, 
                                    E_Int& nidom  , E_Int& nssiter , E_Int& mx_omp_size_int  , E_Int& nstep, E_Int& nitrun, E_Int& display)
 {
+
+#ifdef NB_SOCKET
+  E_Int nb_socket=NB_SOCKET;
+#else
+  E_Int nb_socket=1;
+#endif
+#ifdef CORE_PER_SOCK
+  E_Int core_per_socket=CORE_PER_SOCK;
+#else
+  E_Int core_per_socket=__NUMTHREADS__;
+#endif
+  
+  if( __NUMTHREADS__ <= core_per_socket)  nb_socket=1;
+
+  
+  FldArrayI tab_activ_core_per_socket(nb_socket);   E_Int* activ_core_per_socket = tab_activ_core_per_socket.begin();
+
+  E_Int count = __NUMTHREADS__;
+  for (E_Int s = 0; s < nb_socket; s++)
+     {   if (count >= core_per_socket) {activ_core_per_socket[s]=  core_per_socket; count -= core_per_socket;}
+         else activ_core_per_socket[s] = count;
+     }
+          
   // calcul  nombre souszone
   E_Int mxzone=0;
   for (E_Int nd = 0; nd < nidom; nd++)
@@ -204,6 +227,10 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 
   // creation et initialisation remainder
   FldArrayI tab_remaind(__NUMTHREADS__);   E_Int* remaind  = tab_remaind.begin();
+  FldArrayI tab_flu_i(__NUMTHREADS__);   E_Int* flu_i  = tab_flu_i.begin();
+  FldArrayI tab_flu_j(__NUMTHREADS__);   E_Int* flu_j  = tab_flu_j.begin();
+  FldArrayI tab_flu_k(__NUMTHREADS__);   E_Int* flu_k  = tab_flu_k.begin();
+  FldArrayI tab_grain(__NUMTHREADS__);   E_Int* grain  = tab_grain.begin();
 
   FldArrayI tab_topo_lu(3);   E_Int* topo_lu  = tab_topo_lu.begin();
   FldArrayI tab_ind_dm_th(6); E_Int* ind_dm_th= tab_ind_dm_th.begin();
@@ -214,7 +241,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 
   FldArrayI tab_numa_socket(NBR_SOCKET);   E_Int* numa_socket  = tab_numa_socket.begin();
 
-  for (E_Int th = 0; th < __NUMTHREADS__ ; th++){ remaind[th] = cells_tg;}
+  for (E_Int th = 0; th < __NUMTHREADS__ ; th++){ remaind[th] = cells_tg; flu_i[th]=0;  flu_j[th]=0;  flu_k[th]=0; grain[th]=0;}
 
   //
   E_Int cells_tg_save = cells_tg;
@@ -268,13 +295,19 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 
         if(size_c <= cells_tg*marge)
         {
-	    E_Int th_current = 0;
+            E_Int socket_tg = c%nb_socket;
+
+	    E_Int th_count = 0;
+	    //E_Int th_current = 0;
+	    E_Int th_current = socket_tg*core_per_socket;
             E_Int lgo = 1;
 	    while(lgo==1)
               { //print 'th_current',th_current,remaind[str(th_current)],size_c/marge, size_c
 
                 if(size_c/marge <=  remaind[th_current]) lgo = 0;
-                if(lgo==1 && th_current == __NUMTHREADS__-1)
+
+                //if(lgo==1 && th_current == __NUMTHREADS__-1)
+                if(lgo==1 && th_count == __NUMTHREADS__-1)
                    {
                      lgo = 0;
                      //on cherche le thread le moins charge pour attribuer le residu
@@ -285,10 +318,19 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                         //print 'traitememnt residu affecte au thread', th_current, remaind[str(th)], th
                        }
                    }
-                if(lgo==1) th_current +=1;
+                if(lgo==1)
+                { th_current +=1;
+                  th_count   +=1;
+                  if(th_current==__NUMTHREADS__-1) th_current = 0;
+                }
               }// while go
   
             remaind[th_current] =  remaind[th_current] - size_c; 
+            flu_i[th_current] +=  size_i; 
+            flu_j[th_current] +=  size_j; 
+            flu_k[th_current] +=  size_k; 
+
+            grain[th_current] +=1;
              
             //Carte threads actifs       
             for (E_Int th = 0; th < __NUMTHREADS__; th++) { param_int[No_zone][ PtZoneomp + th ] = -2;} //Thread inactif
@@ -327,12 +369,16 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
             if(size_c%cells_tg != 0) Nthreads +=1;
             Nthreads = K_FUNC::E_min( Nthreads,  __NUMTHREADS__ );
 
-            //verif place dispo sur les dernier threads
-            
+            //verif place dispo sur les dernier threads du socket
+            E_Int socket_tg  = c%nb_socket;
+	    E_Int th_count   = 0;
+	    E_Int th_current = socket_tg*core_per_socket;
+
             cells_tg     = 0;
             E_Int cells_tg_min =10000000; E_Int th_min;
 
-            for (E_Int th_check = __NUMTHREADS__-1; th_check > __NUMTHREADS__ -Nthreads-1; th_check--)
+            //for (E_Int th_check = __NUMTHREADS__-1; th_check > __NUMTHREADS__ -Nthreads-1; th_check--)
+            for (E_Int th_check = th_current+ activ_core_per_socket[socket_tg]-1; th_check >  th_current+ activ_core_per_socket[socket_tg]-1 -Nthreads; th_check--)
                { cells_tg  +=  remaind[th_check];
                  if(remaind[th_check] <  cells_tg_min)
                     { 
@@ -451,7 +497,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 
               for (E_Int dir = 0; dir < 3; dir++){
                    if(topo_lu[dir] != 1)
-                   {
+                   { 
                       //on repartie la place restante entre les thread restant
                       if(th_min != -1)
                       {
@@ -509,13 +555,20 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
             for (E_Int k = 0; k < topo_lu[2]; k++){
               for (E_Int j = 0; j < topo_lu[1]; j++){
                 for (E_Int i = 0; i < topo_lu[0]; i++){
-		  E_Int th_current = 0;
+
+                  E_Int socket_tg  = c%nb_socket;
+                  E_Int th_count   = 0;
+	          E_Int th_current = socket_tg*core_per_socket;
+
+		  //E_Int th_current = 0;
                   E_Int size_th    = dim_i[i]*dim_j[j]*dim_k[k];
                   E_Int size_loc   = size_th;
 
-	          while(size_loc/marge > remaind[th_current] && th_current < __NUMTHREADS__-1) th_current +=1;
+	          //while(size_loc/marge > remaind[th_current] && th_current < __NUMTHREADS__-1) th_current +=1;
+	          while(size_loc/marge > remaind[th_current] && th_count < __NUMTHREADS__-1) {th_current +=1; th_count +=1; if(th_current==__NUMTHREADS__-1) th_current = 0;}
                 
-                  if(th_current == __NUMTHREADS__-1)
+                  //if(th_current == __NUMTHREADS__-1)
+                  if(th_count == __NUMTHREADS__-1)
                   {
                      E_Int blind = -100000;
                      for (E_Int l = 0; l < __NUMTHREADS__; l++){
@@ -529,15 +582,27 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                   if(th_min != -1) { th_current = th_min; th_min = -1; }
 
                   //on estime a quelle socket Numa la zone appartient  ( a blinder...)
-                  E_Int thread_parsoc = __NUMTHREADS__/NBR_SOCKET;
-                  if (thread_parsoc==0) thread_parsoc=1;
-                  E_Int socket = th_current/thread_parsoc;
-                  if (socket >= NBR_SOCKET) socket=0;
+                  E_Int socket = th_current/core_per_socket;
+
+                  if (socket >= nb_socket) socket=0;
                   numa_socket[socket] += size_loc;
 
                   //printf("th_current %d %d %d %d %d %d \n", th_current, remaind[th_current], i,j,k, nstep  );
 
-                  remaind[th_current]                          =  remaind[th_current] - size_loc;
+                  remaind[th_current] -=  size_loc;
+                  E_Int size_i =  size_loc;
+                  E_Int size_j =  size_loc;
+                  E_Int size_k =  size_loc;
+                  if(i == topo_lu[0]) size_i =  (dim_i[i]+1)*dim_j[j]*dim_k[k];
+                  if(j == topo_lu[1]) size_j =  dim_i[i]*(dim_j[j]+1)*dim_k[k];
+                  if(k == topo_lu[2]) size_k =  dim_i[i]*dim_j[j]*(dim_k[k]+1);
+                  if(nijk[2] == 1) size_k = 0;
+                  flu_i[th_current]   +=  size_i; 
+                  flu_j[th_current]   +=  size_j; 
+                  flu_k[th_current]   +=  size_k; 
+
+                  grain[th_current] +=1;
+
                   param_int[No_zone][ PtZoneomp + th_current ] = th;                                    //Thread actif
                   th +=1;
                   //print 'thread=', th, size_loc, remaind[str(th_current)], th_current
@@ -675,7 +740,10 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
   if ( (display==1 && nitrun ==1 && nstep == 1) || display ==2)
   {  printf("OMP balancing: positive values --> slow thread. Target cells per Thread: %d Nitrun= %d, nstep= %d \n", cells_tg_save, nitrun , nstep);
      for (E_Int th_current = 0; th_current < __NUMTHREADS__; th_current++){
-        printf("desequilibre thread, %d, : %f percent \n", th_current, (float(-remaind[th_current])/cells_tg)*100.);
+        //printf("desequilibre thread, %d, : %f percent. Nb flui= %d  %d,   Nb fluj= %d %d,  Nb fluk= %d \n", th_current, (float(-remaind[th_current])/cells_tg)*100., 
+        //flu_i[th_current],flui_tg, flu_j[th_current],fluj_tg, flu_k[th_current] );
+        printf("desequilibre thread, %d, : %f percent. Nb flui= %f,   Nb fluj= %f,  Nb fluk= %d, Nb zones= %d \n", th_current, (float(-remaind[th_current])/cells_tg)*100., 
+        float(flu_i[th_current]-flui_tg)/flui_tg*100, float(flu_j[th_current]-fluj_tg)/fluj_tg*100, flu_k[th_current], grain[th_current] );
      }
   }
  

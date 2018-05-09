@@ -344,6 +344,10 @@ else
   PyObject* lokArray = PyDict_GetItemString(work,"verrou_omp"); FldArrayI* lok;
   K_NUMPY::getFromNumpyArray(lokArray, lok, true); E_Int* ipt_lok  = lok->begin();
 
+  // Tableau de travail verrou omp
+  PyObject*  timer_omp_Array= PyDict_GetItemString(work,"TIMER_OMP"); FldArrayF* tab_timer_omp;
+  K_NUMPY::getFromNumpyArray(timer_omp_Array, tab_timer_omp, true); E_Float* timer_omp = tab_timer_omp->begin();
+
   //
   // On recupere ipt_param_int[nd][ ILES ] infos memoire  pour vectorisation du LU (inutile et pas present dans la base en scalaire)
   //
@@ -353,6 +357,9 @@ else
         E_Int* iptludic = NULL; E_Int* iptlumax =NULL;
     #endif
 
+  //revoir dimension nisdom_lu_max: trop gros
+  E_Int mx_nidom   = mx_sszone*nidom; // nombre maximale de domaine une fois la partition Lu local active
+
   //printf("thread =%d\n",threadmax_sdm);
   FldArrayI ijkv_sdm(         3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(         3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
@@ -360,15 +367,14 @@ else
   FldArrayI ind_CL119(        6*threadmax_sdm); E_Int* ipt_ind_CL119  =  ind_CL119.begin();
   FldArrayI ind_dm_omp(      12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
+  FldArrayI tab_verrou_lhs(mx_nidom*threadmax_sdm); E_Int* verrou_lhs =  tab_verrou_lhs.begin();
+
   FldArrayF cfl( nidom*3*threadmax_sdm); E_Float* ipt_cfl    = cfl.begin();
 
   if(lcfl ==1 && nstep_deb == 1)
   { 
     for (E_Int i = 0;  i <  nidom*threadmax_sdm; i++){ ipt_cfl[ i*3 ] = 0;  ipt_cfl[ i*3 +1] = 100000000; ipt_cfl[ i*3 +2] = 0; }
   }
-
-  //revoir dimension nisdom_lu_max: trop gros
-  E_Int mx_nidom   = mx_sszone*nidom; // nombre maximale de domaine une fois la partition Lu local active
 
 // SOUS PAS
   // 
@@ -409,7 +415,7 @@ else
             nb_pulse           ,                
             temps              ,
             ipt_ijkv_sdm       , 
-            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_ind_CL119, ipt_lok,
+            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_ind_CL119, ipt_lok, verrou_lhs, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
             ipt_cfl            ,
@@ -461,11 +467,12 @@ else
   delete [] iptx; delete [] ipt_param_int;
 
   
-  RELEASESHAREDN( wigArray    , wig  );
-  RELEASESHAREDN( drodmArray  , drodm);
-  RELEASESHAREDN( coeArray    , coe  );
-  RELEASESHAREDN( lokArray    , lok  );
-  RELEASESHAREDN( dtlocArray  , dtloc);
+  RELEASESHAREDN( wigArray       , wig  );
+  RELEASESHAREDN( drodmArray     , drodm);
+  RELEASESHAREDN( coeArray       , coe  );
+  RELEASESHAREDN( lokArray       , lok  );
+  RELEASESHAREDN( timer_omp_Array, tab_timer_omp);
+  RELEASESHAREDN( dtlocArray     , dtloc);
  
   if(layer_mode==1)
   {

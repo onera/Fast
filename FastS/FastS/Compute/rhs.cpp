@@ -40,11 +40,11 @@
              // printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
              //if (ithread == param_int[nd][IO_THREAD] && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
               //ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5] );
-             //if (ithread == 5 && ithread_loc != -1 && nitrun ==21)  printf("thread loc %d, Nthreads= %d, ithread= %d, zone= %d,  %d %d %d %d %d %d, iv= %d, jv= %d, nstep= %d, nitrun= %d \n",
+             //if (ithread == 24 && ithread_loc != -1 && nitrun%5==0 && nitcfg==nssiter-1)  printf("thread loc %d, Nthreads= %d, ithread= %d, zone= %d,  %d %d %d %d %d %d \n",
              //ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
-              //ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5], PtrIterOmp , PtZoneomp,nitcfg,PtZoneomp+Nbre_thread_actif+4+(ithread_loc-1)*6);
+              //ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5]);
 
-              if (ithread_loc == -1) {nd_current++; continue;}
+              if (ithread_loc == -1) { nd_current++; continue;}
             }
 
 
@@ -76,9 +76,7 @@
                               ipt_ind_dm_loc,
                               ipt_topology_socket, ipt_ind_dm_socket );
 
-            //if(nd==2 && ithread==1) printf(" nd_ssz %d  %d \n",nd_subzone , nitcfg);
-            //
-            navier_stokes_struct_( ndo, nidom, Nbre_thread_actif_loc, ithread_loc, omp_mode, Nbre_socket, socket, mx_synchro , lssiter_verif, nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN,
+            navier_stokes_struct_( ndo, nidom, Nbre_thread_actif_loc, ithread_loc, ithread, omp_mode, Nbre_socket, socket, mx_synchro , lssiter_verif, nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN,
                                   param_int[nd] , param_real[nd] ,
                                   temps               , ipt_tot       ,
                                   ipt_ijkv_sdm_thread , ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread, ipt_topology_socket, ipt_lok_thread, ipt_topo_omp, ipt_inddm_omp,
