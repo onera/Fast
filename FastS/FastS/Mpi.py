@@ -22,8 +22,8 @@ except:
     raise ImportError("FastS: requires Converter and Connector modules.")
 
 #==============================================================================
-#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python"):
-def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
+#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
+def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     if graph is not None:
         procDict  = graph['procDict']
         graphID   = graph['graphID']
@@ -65,7 +65,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
             nstep_deb = nstep
             nstep_fin = nstep
             layer_mode= 0
-            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, hook1)
+            nit_c     = 1
+            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
 
             # Ghostcell
             vars = PyTree.varsP
@@ -77,15 +78,13 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
       nstep_deb = 1
       nstep_fin = nitmax
       layer_mode= 1
+      nit_c     = NIT
       PyTree.HOOK["mpi"] = 1
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, PyTree.HOOK)
-
-    # data update for unsteady joins
-    dtloc[3] +=1   #time_level_motion
-    dtloc[4] +=1   #time_level_target
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, PyTree.HOOK)
 
     # switch pointers
-    FastI.switchPointers__(zones, orderRk)
+    case = NIT%3
+    if case != 0: FastI.switchPointers__(zones, case, order=orderRk)
     # flag pour derivee temporelle 1er pas de temps implicit
     PyTree.HOOK["FIRST_IT"]  = 1
     PyTree.FIRST_IT          = 1

@@ -588,7 +588,7 @@ def getIBCInfo__(t):
 #==============================================================================
 # echange M1 <- current, current <- P1, P1 <- M1
 #==============================================================================
-def switchPointers__(zones, order=3):
+def switchPointers__(zones, case, order=3):
     
     if order == 1 or order == 3:
         for z in zones:
@@ -612,29 +612,49 @@ def switchPointers__(zones, order=3):
             cdP1 = Internal.getNodeFromName1(sol, 'VelocityZ_P1')
             ceP1 = Internal.getNodeFromName1(sol, 'Temperature_P1')
 
-            # sauvegarde M1
-            ta = caM1[1]; tb = cbM1[1]; tc = ccM1[1]; td = cdM1[1]; te = ceM1[1]
-
-            # M1 <- current
-            caM1[1] = ca[1]; cbM1[1] = cb[1]; ccM1[1] = cc[1]; cdM1[1] = cd[1]; ceM1[1] = ce[1]
-
-            # current <- P1
-            ca[1] = caP1[1]; cb[1] = cbP1[1]; cc[1] = ccP1[1]; cd[1] = cdP1[1]; ce[1] = ceP1[1]
-
-            # P1 <- temp
-            caP1[1] = ta; cbP1[1] = tb; ccP1[1] = tc; cdP1[1] = td; ceP1[1] = te
-
             model  = Internal.getNodeFromName1(own, 'model')
             model  = Internal.getValue(model)
 
-            if model == 'nsspalart' or model=='NSTurbulent': 
+            if case ==1:
+              # sauvegarde M1
+              ta = caM1[1]; tb = cbM1[1]; tc = ccM1[1]; td = cdM1[1]; te = ceM1[1]
+
+              # M1 <- current
+              caM1[1] = ca[1]; cbM1[1] = cb[1]; ccM1[1] = cc[1]; cdM1[1] = cd[1]; ceM1[1] = ce[1]
+
+              # current <- P1
+              ca[1] = caP1[1]; cb[1] = cbP1[1]; cc[1] = ccP1[1]; cd[1] = cdP1[1]; ce[1] = ceP1[1]
+
+              # P1 <- temp
+              caP1[1] = ta; cbP1[1] = tb; ccP1[1] = tc; cdP1[1] = td; ceP1[1] = te
+
+              if model == 'nsspalart' or model=='NSTurbulent': 
                 cf   =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde')
                 cfM1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_M1')
                 cfP1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_P1')
                 tf   = cfM1[1]; cfM1[1] = cf[1]; cf[1] = cfP1[1]; cfP1[1] = tf
 
+            elif case ==2:
+              # sauvegarde  P1
+              ta = caP1[1]; tb = cbP1[1]; tc = ccP1[1]; td = cdP1[1]; te = ceP1[1]
+
+              # P1 <-  current    
+              caP1[1] = ca[1]; cbP1[1] = cb[1]; ccP1[1] = cc[1]; cdP1[1] = cd[1]; ceP1[1] = ce[1]
+
+              # current <- M1
+              ca[1] = caM1[1]; cb[1] = cbM1[1]; cc[1] = ccM1[1]; cd[1] = cdM1[1]; ce[1] = ceM1[1]
+
+              # M1 <- temp
+              caM1[1] = ta; cbM1[1] = tb; ccM1[1] = tc; cdM1[1] = td; ceM1[1] = te
+
+              if model == 'nsspalart' or model=='NSTurbulent': 
+                cf   =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde')
+                cfM1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_M1')
+                cfP1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_P1')
+                tf   = cfP1[1]; cfP1[1] = cf[1];  cf[1]= cfM1[1]; cfM1[1] = tf
 
     elif order == 2:
+        print 'adapter switch poinyer'
         for z in zones:
             caP1 = Internal.getNodeFromName2(z, 'Density_P1')
             cbP1 = Internal.getNodeFromName2(z, 'VelocityX_P1')

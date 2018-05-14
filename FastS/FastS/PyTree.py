@@ -43,7 +43,7 @@ varsP    = ['Density_P1']
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
 #def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python"):
-def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
+def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     global FIRST_IT, HOOK
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
@@ -87,7 +87,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
             nstep_deb = nstep
             nstep_fin = nstep
             layer_mode= 0
-            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, hook1)
+            nit_c     = 1
+            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
 
             #Ghostcell
             vars=  varsP
@@ -99,14 +100,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c"):
       nstep_deb = 1
       nstep_fin = nitmax
       layer_mode= 1
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, HOOK)
+      nit_c     = NIT
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , HOOK)
 
-    # data update for unsteady joins
-    dtloc[3] +=1   #time_level_motion
-    dtloc[4] +=1   #time_level_target
-    
     # switch pointers
-    FastI.switchPointers__(zones, orderRk)
+    case = NIT%3
+    if case != 0: FastI.switchPointers__(zones, case, order=orderRk)
     # flag pour derivee temporelle 1er pas de temps implicit
     HOOK["FIRST_IT"]  = 1
     FIRST_IT          = 1
@@ -2314,7 +2313,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None):
                                                                 
                            
     # switch pointers
-    switchPointers__(zones,2)
+    switchPointers__(zones, 1, 2)
     # flag pour derivee temporelle 1er pas de temps implicit
     HOOK[9]  = 1
     FIRST_IT = 1

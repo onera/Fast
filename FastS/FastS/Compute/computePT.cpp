@@ -43,12 +43,12 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* work; 
 
-  E_Int nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode; 
+  E_Int nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, nit_c; 
   
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOlllllO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &omp_mode, &work)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOllllllO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &omp_mode, &nit_c, &work)) return NULL;
 #else 
-  if (!PyArg_ParseTuple(args, "OOiiiiiO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &omp_mode, &work)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOiiiiiiO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &omp_mode, &nit_c, &work)) return NULL;
 #endif
 
 #if TIMER == 1
@@ -376,40 +376,55 @@ else
     for (E_Int i = 0;  i <  nidom*threadmax_sdm; i++){ ipt_cfl[ i*3 ] = 0;  ipt_cfl[ i*3 +1] = 100000000; ipt_cfl[ i*3 +2] = 0; }
   }
 
-// SOUS PAS
+// Iteration C level
   // 
   // 
   // 
-  // loop sur les sous pas
+  // loop sur les iteration demander au niveau C
   // 
   // 
   // 
-  E_Int nidom_tot;
-  for (E_Int nstep = nstep_deb; nstep < nstep_fin+1; ++nstep)
+  for (E_Int it = 0; it < nit_c; ++it)
   {
-    E_Int skip_navier = 1; //layer_mode 0: on calcul tout le temps gsdr3
-    if (layer_mode ==1)
-    {
-       souszones_list_c( ipt_param_int , ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun, nstep, nidom_tot, lexit_lu, lssiter_verif);
+   // SOUS PAS
+   // 
+   // 
+   // 
+   // loop sur les sous pas
+   // 
+   // 
+   // 
+   E_Int nitrun_loc = nitrun*nit_c + it;
+   //printf("nitrun= %d \n", nitrun_loc);
+   //
+   //E_Float** roN = iptro; E_Float** roM1 = iptro_m1;  E_Float** roP1 = iptro_p1;
+
+   E_Int nidom_tot;
+   for (E_Int nstep = nstep_deb; nstep < nstep_fin+1; ++nstep)
+   {
+     E_Int skip_navier = 1; //layer_mode 0: on calcul tout le temps gsdr3
+     if (layer_mode ==1)
+     {
+       souszones_list_c( ipt_param_int , ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, nidom_tot, lexit_lu, lssiter_verif);
 
        E_Int display=0;
        //calcul distri si implicit ou explicit local + modulo verif
-       if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun%iptdtloc[1] == 0 || nitrun == 1) )
+       if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1) )
        {
-         distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun, display );
+         distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
        }
 
        E_Int skip = 0;
        if ( lssiter_verif == 0 && nstep == nstep_fin && ipt_param_int[0][ ITYPCP ] ==1){skip = 1;}
        skip_navier = 0;
        if (nidom_tot > 0 && skip ==0) skip_navier = 1;
-    }
+     }
 
-    //calcul Navier Stokes + appli CL
-    if (skip_navier ==1)
-    {
+     //calcul Navier Stokes + appli CL
+     if (skip_navier ==1)
+     {
       gsdr3(ipt_param_int, ipt_param_real   ,
-            nidom              , nitrun           , nstep             , nssiter       , it_target, first_it,
+            nidom              , nitrun_loc       , nstep             , nssiter       , it_target, first_it,
             kimpli             , lssiter_verif    , lexit_lu          , omp_mode      , layer_mode, mpi,
             nisdom_lu_max      ,  mx_nidom        , ndimt_flt         , threadmax_sdm , mx_synchro,
             nb_pulse           ,                
@@ -422,6 +437,7 @@ else
             iptx               , ipty             , iptz              ,
             iptCellN           ,
             iptro              , iptro_m1         , iptro_p1          , iptro_sfd     ,
+            //roN                , roM1             , roP1              , iptro_sfd     ,
             iptmut             , 
             ipti               , iptj             , iptk              , iptvol        , 
             ipti0              , iptj0            , iptk0             ,     
@@ -432,8 +448,8 @@ else
             iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res,
             ipt_param_int_ibc       , ipt_param_real_ibc     , ipt_param_int_tc  , ipt_param_real_tc);
 
-      if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
-      {
+       if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
+       {
 
          for (E_Int nd = 0; nd < nidom ; nd++) 
          {
@@ -453,16 +469,31 @@ else
            ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]/scale;
            //printf("cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[0],ipt_cfl_zones[1],ipt_cfl_zones[2]);
          }
-      }//test mise a jour cfl
+       }//test mise a jour cfl
 
 
-      if((nstep == nssiter && lssiter_verif==1) || (nstep == nssiter-1 && lssiter_verif==0))  // mise a jour  du temps courant
-      {
-       for (E_Int nd = 0; nd < nidom ; nd++) { ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]; }
-      }
-    }//test calcul NS
+       if((nstep == nssiter && lssiter_verif==1) || (nstep == nssiter-1 && lssiter_verif==0))  // mise a jour  du temps courant
+       {
+        for (E_Int nd = 0; nd < nidom ; nd++) { ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]; }
+       }
+     }//test calcul NS
 
-  }//loop nstep
+   }//loop nstep
+
+   //data update for unsteady joins
+   iptdtloc[3] +=1;  //time_level_motion
+   iptdtloc[4] +=1;  //time_level_target
+
+   first_it = 1;
+   //switch pointer
+   //E_Float** ptsav = roM1; roM1 = roN; roN = roP1; roP1 = ptsav;
+   for (E_Int nd = 0; nd < nidom ; nd++)
+   { E_Float* ptsave  = iptro_m1[nd]; 
+          iptro_m1[nd]= iptro[nd]; 
+          iptro[nd]   = iptro_p1[nd];
+          iptro_p1[nd]= ptsave;}
+
+  }//loop nit_c
 
   delete [] iptx; delete [] ipt_param_int;
 
