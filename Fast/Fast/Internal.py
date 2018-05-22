@@ -58,11 +58,41 @@ def _setNum2Base(a, num):
 #==============================================================================
 def _reorder(t, tc=None, omp_mode=0):
 
-    # reordone les zones pour garantir meme ordre entre t et tc
     if tc is not None: 
+
+       #reordone les zones de tc par taille decroissante dans chaque base pour optim openmp
        bases_tc = Internal.getNodesFromType1(tc,'CGNSBase_t')
+       for base_tc in bases_tc: 
+         zones = Internal.getNodesFromType1(base_tc,'Zone_t')
+         #calcul taille de la zone
+         size_zone =[]
+         for z in zones:
+           dim = Internal.getZoneDim(z)
+           if dim[0]=='Structured':
+              if dim[3] == 1: kfic = 0
+              else          : kfic = 2
+              ndimdx = (dim[1]-4)*(dim[2]-4)*(dim[3]-kfic) 
+           else: ndimdx = dim[2]
+           size_zone.append(ndimdx)
+
+       #Tri les zone par taille decroissante
+       new_zones =[]
+       for z in xrange(len(size_zone)):
+           vmax = max( size_zone )
+           pos_max = size_zone.index( vmax )
+           new_zones.append( zones[pos_max])
+           del size_zone[pos_max]
+           del zones[pos_max]
+
+       l = base_tc[2]
+       orig = []
+       for i in l:
+	  if i[3] != 'Zone_t': orig.append(i)
+       base_tc[2]=  orig+new_zones
+
+
+       # reordone les zones de t pour garantir meme ordre entre t et tc
        bases    = Internal.getNodesFromType1(t, 'CGNSBase_t')
- 
        for base in bases: 
 
            zones = Internal.getNodesFromType1(base,'Zone_t')
@@ -88,73 +118,8 @@ def _reorder(t, tc=None, omp_mode=0):
            orig = []
            for i in l:
 	        if i[3] != 'Zone_t': orig.append(i)
-                base[2] = new_zones + orig
+           base[2] = new_zones + orig
 
-    '''
-    # reorder_zone pour equilibrage omp
-    if omp_mode != 0:
-       zones = Internal.getNodesFromType2(t, 'Zone_t')
-       if tc is not None: zones_tc = Internal.getNodesFromType2(tc, 'Zone_t')
-
-       nzone =len(zones)
-       size_zone =[]
-       for z in zones:
-            dim = Internal.getZoneDim(z)
-            if dim[0]=='Structured':
-               if dim[3] == 2: kfic = 1
-               else          : kfic = 5
-               ndimdx = (dim[1]-5)*(dim[2]-5)*(dim[3]-kfic) 
-            else: ndimdx = dim[2]
-
-            size_zone.append(ndimdx)
-          
-       target = sum(size_zone)/OMP_NUM_THREADS + 1
-
-       new_zones       =[]
-       new_zones_tc    =[]
-       equi            = numpy.zeros((OMP_NUM_THREADS), numpy.int32)
-       zone_par_thread = nzone/OMP_NUM_THREADS
-       for z in xrange(nzone):
-             th = z%OMP_NUM_THREADS
-             vmax = max( size_zone )
-             vmin = min( size_zone)
-             pos_max = size_zone.index( vmax )
-             pos_min = size_zone.index( vmin )
-             if equi[th]+vmax > target*1.00:
-                 equi[th] =  equi[th] + vmin
-                 #print "vmin", vmin, equi[th], th
-                 new_zones.append( zones[pos_min])
-                 if tc is not None: 
-                    new_zones_tc.append( zones_tc[pos_min])
-                    del zones_tc[pos_min]
-                 del size_zone[pos_min]
-                 del zones[pos_min]
-             else:
-                 #print "vmax", vmax, equi[th], th
-                 equi[th] =  equi[th] + vmax
-                 new_zones.append( zones[pos_max])
-                 if tc is not None:
-                    new_zones_tc.append( zones_tc[pos_max])
-                    del zones_tc[pos_max]
-                 del size_zone[pos_max]
-                 del zones[pos_max]
-
-       l = t[2][1][2]
-       orig = []
-       for i in l:
-	  if i[3] != 'Zone_t': orig.append(i)
-
-       t[2][1][2]=  orig+new_zones
-
-       if tc is not None: 
-         l = tc[2][1][2]
-         orig = []
-         for i in l:
-	    if i[3] != 'Zone_t': orig.append(i)
-         tc[2][1][2]= new_zones_tc + orig
-
-       for th in range(OMP_NUM_THREADS): print "count th=",equi[th] , th+1
-    '''
 #==============================================================================
 # Init/create primitive Variable 
 #==============================================================================
