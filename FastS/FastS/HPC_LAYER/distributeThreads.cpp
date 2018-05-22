@@ -302,11 +302,10 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 	    E_Int th_current = socket_tg*core_per_socket;
             E_Int lgo = 1;
 	    while(lgo==1)
-              { //print 'th_current',th_current,remaind[str(th_current)],size_c/marge, size_c
+              { //printf("th_current mono th %d %d \n", lgo, c);
 
                 if(size_c/marge <=  remaind[th_current]) lgo = 0;
 
-                //if(lgo==1 && th_current == __NUMTHREADS__-1)
                 if(lgo==1 && th_count == __NUMTHREADS__-1)
                    {
                      lgo = 0;
@@ -399,19 +398,24 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
             FldArrayI tab_res_ijk(3*Nthreads);   E_Int* res_ijk  = tab_res_ijk.begin();
 
 
-            E_Int search = 1;
+            E_Int search      = 1;
+            E_Int search_topo = 0;
+            E_Int adapt_thread= 0;
             while(search == 1)
               {
-                //#verif place dispo sur les dernier threads
-                //#for th_check in range(OMP_NUM_THREADS-1,OMP_NUM_THREADS-Nthreads-1,-1):
-                //#   print 'remain', remaind[str(th_check)], th_check
+               //printf("th_current multi th %d %d \n", search, c);
+               //
+                //verif place dispo sur les dernier threads
+                //for th_check in range(OMP_NUM_THREADS-1,OMP_NUM_THREADS-Nthreads-1,-1):
+                //   print 'remain', remaind[str(th_check)], th_check
 
                 search = 0;
 
-                //#print 'ind_zone', inddm_zones[c], Nthreads
+                //print 'ind_zone', inddm_zones[c], Nthreads
                 E_Int ithread = 1;
-                indice_boucle_lu_(c, ithread, Nthreads, lmin, ind_dm, topo_lu, ind_dm_th );
-                //#print "topo_LLLUUU", topo_lu
+                if(search_topo==0) indice_boucle_lu_(c, ithread, Nthreads, lmin, ind_dm, topo_lu, ind_dm_th );
+                //printf("nijk      a %d %d %d  \n", nijk[0], nijk[1],nijk[2]);
+                //printf("topo_LLLUUU %d %d %d %d \n", topo_lu[0], topo_lu[1],topo_lu[2], search_topo);
 
                 
                 for (E_Int dir = 0; dir < 3; dir++){
@@ -423,6 +427,16 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                     }
                   }
 
+                /*for (E_Int dir = 0; dir < 3; dir++){
+                  for (E_Int l = 0; l < topo_lu[dir]; l++){
+
+                        if     (dir==0){printf("dim i %d  \n", dim_i[l]);  }
+                        else if(dir==1){printf("dim j %d  \n", dim_j[l]);  }
+                        else           {printf("dim k %d  \n", dim_k[l]);  }
+                    }
+                  }
+                */
+
                 E_Int res = dim_i[0]*dim_j[0]*dim_k[0] - cells_tg;
                 E_Float sign = 1.;
                 if(res < 0) sign = -1.; //block trop petit % la cible
@@ -430,7 +444,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                 //#print 'size bloc=',dims_i[0]*dim_j[0]*dim_k[0 , 'sizetg=', cells_tg
             
                 //sous bloc trop grand
-                if(res*sign > 0)
+                if(res*sign > 0 && adapt_thread ==0)
                   {
                     E_Int compteur =0;
                     E_Int go = 0;
@@ -495,6 +509,8 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                        }//while go
                   } // if res
 
+              //printf("topo dim0 %d %d %d  \n",dim_i[0], dim_j[0],dim_k[0] );
+
               for (E_Int dir = 0; dir < 3; dir++){
                    if(topo_lu[dir] != 1)
                    { 
@@ -530,21 +546,50 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                    }
                  } // loop dir
 
-              for (E_Int dir = 0; dir < 3; dir++){
+              //En priorite, on cherche si un changement de topo est possible
+              if(search_topo == 0)
+              {
+                 E_Int change_topo=0;
+                 for (E_Int dir = 0; dir < 3; dir++){
+                  for( E_Int l=0; l < topo_lu[dir]; l++){
+                       E_Int test;
+                       if     (dir==0) test = dim_i[l];
+                       else if(dir==1) test = dim_j[l];
+                       else            test = dim_k[l];
+                       if(search==0 && test < lmin &&  nijk[dir] != test) {change_topo=1;}  
+                     }//loop topo
+                   } // loop dir
+
+                 if (change_topo==1)
+                 { 
+                  search_topo = topo_test( topo_lu, nijk, cells_tg, lmin, dim_i[0], dim_j[0], dim_k[0] );
+                  search = 1;
+                  //printf("change topo %d %d %d %d \n", topo_lu[0], topo_lu[1],topo_lu[2], search_topo);
+                 }
+                 //search_topo = 1;  
+              }
+              //Sinon on reduit le nb de threads
+              else
+              {
+               for (E_Int dir = 0; dir < 3; dir++){
                 for( E_Int l=0; l < topo_lu[dir]; l++){
                       E_Int test;
                       if     (dir==0) test = dim_i[l];
                       else if(dir==1) test = dim_j[l];
                       else            test = dim_k[l];
-                      if(search==0 && test < lmin &&  nijk[dir] != test)
-                      {  
-                        search = 1;
-                        if     (dir ==0 ) Nthreads -=  topo_lu[1]*topo_lu[2];
-                        else if(dir ==1 ) Nthreads -=  topo_lu[0]*topo_lu[2];
-                        else if(dir ==2 ) Nthreads -=  topo_lu[0]*topo_lu[1];
+                      if(search==0 && test < lmin &&  nijk[dir] != test) 
+                      {
+                          if     (dir ==0 ) Nthreads -=  topo_lu[1]*topo_lu[2];
+                          else if(dir ==1 ) Nthreads -=  topo_lu[0]*topo_lu[2];
+                          else if(dir ==2 ) Nthreads -=  topo_lu[0]*topo_lu[1];
+                          search = 1;
+                          adapt_thread =1;
+                          //printf("change th   %d \n", Nthreads);
                       }
                     }//loop topo
-                 } // loop dir
+                  } // loop dir
+               search_topo = 0;  
+               }
               }// while search
 
             //Carte threads actifs       
@@ -797,3 +842,128 @@ PyObject* K_FASTS::distributeThreads(PyObject* self, PyObject* args)
   Py_INCREF(Py_None);
   return Py_None;
 }
+
+// -----------------------------------------------------------------------------------
+// 
+// optimisation topo thraed pour balancing
+// 
+// -----------------------------------------------------------------------------------
+E_Int K_FASTS::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k)
+{
+  E_Int test =1;
+   E_Int dim_loc, res;
+  //
+  // decoupe K
+  //
+  if (topo[0]*topo[1] == 1) 
+  { //on test si on peut intervertir la direction K vers J
+    dim_loc = cells_tg/(nijk[0]*nijk[2]);
+    res     = nijk[1]-(topo[2]-1)*dim_loc;
+    if(res >= lmin){ topo[0]=1; topo[1]=topo[2]; topo[2]=1; return test=1;}
+
+    //on test si on peut intervertir la direction K vers I
+    dim_loc = cells_tg/(nijk[1]*nijk[2]);
+    res     = nijk[0]-(topo[2]-1)*dim_loc;
+    if(res >= lmin){ topo[0]=topo[2]; topo[1]=1; topo[2]=1; return test=1;}
+  }
+  //
+  // decoupe J
+  //
+  else if(topo[0]*topo[2] == 1)
+  { //on test si on peut intervertir la direction J vers K
+    dim_loc = cells_tg/(nijk[0]*nijk[1]);
+    res     = nijk[2]-(topo[1]-1)*dim_loc;
+    if(res >= lmin){ topo[2]=topo[1]; topo[0]=1; topo[1]=1; return test=1;}
+
+    //on test si on peut intervertir la direction J vers I
+    dim_loc = cells_tg/(nijk[1]*nijk[2]);
+    res     = nijk[0]-(topo[1]-1)*dim_loc;
+    if(res >= lmin){ topo[0]=topo[1]; topo[1]=1; topo[2]=1; return test=1;}
+  }
+  //
+  // decoupe I
+  //
+  else if(topo[1]*topo[2] == 1)
+  { //on test si on peut intervertir la direction I vers K
+    dim_loc = cells_tg/(nijk[0]*nijk[1]);
+    res     = nijk[2]-(topo[0]-1)*dim_loc;
+    if(res >= lmin){ topo[2]=topo[0]; topo[0]=1; topo[1]=1; return test=1;}
+
+    //on test si on peut intervertir la direction I vers J
+    dim_loc = cells_tg/(nijk[0]*nijk[2]);
+    res     = nijk[1]-(topo[0]-1)*dim_loc;
+    if(res >= lmin){ topo[1]=topo[0]; topo[0]=1; topo[2]=1; return test=1;}
+  }
+  //
+  // decoupe KJ
+  //
+  else if(topo[2] != 1)
+  { //on test si on peut intervertir la direction J vers K et K vers J
+    //J vers K
+    dim_loc = cells_tg/(nijk[0]*nijk[1]);
+    res     = nijk[2]-(topo[1]-1)*dim_loc;
+    if(res >= lmin){ //K vers J 
+                    dim_loc = cells_tg/(nijk[0]*nijk[2]);
+                    res     = nijk[1]-(topo[2]-1)*dim_loc;
+                    if(res >= lmin){ E_Int tmp=topo[2]; topo[2]=topo[1]; topo[1]=tmp; topo[1]=1; return test=1;}
+                   }
+    
+    //on test si on peut intervertir la direction J vers I et K vers J
+    //J vers I
+    dim_loc = cells_tg/(nijk[2]*nijk[1]);
+    res     = nijk[0]-(topo[1]-1)*dim_loc;
+    if(res >= lmin){ //K vers J 
+                    dim_loc = cells_tg/(nijk[0]*nijk[2]);
+                    res     = nijk[1]-(topo[2]-1)*dim_loc;
+                    if(res >= lmin){ topo[0]=topo[1]; topo[1]=topo[2]; topo[2]=1; return test=1;}
+                   }
+
+    //on test si on peut intervertir la direction J vers J et K vers I
+    //J vers J
+    dim_loc = cells_tg/(nijk[2]*nijk[0]);
+    res     = nijk[1]-(topo[1]-1)*dim_loc;
+    if(res >= lmin){ //K vers I 
+                    dim_loc = cells_tg/(nijk[1]*nijk[2]);
+                    res     = nijk[0]-(topo[2]-1)*dim_loc;
+                    if(res >= lmin){ topo[0]=topo[2]; topo[2]=1; return test=1;}
+                   }
+  }
+  //
+  // decoupe IJ
+  //
+  else if(topo[0] != 1)
+  { //on test si on peut intervertir la direction J vers I et I vers J
+    //J vers I
+    dim_loc = cells_tg/(nijk[2]*nijk[1]);
+    res     = nijk[0]-(topo[1]-1)*dim_loc;
+    if(res >= lmin){ //I vers J 
+                    dim_loc = cells_tg/(nijk[0]*nijk[2]);
+                    res     = nijk[1]-(topo[0]-1)*dim_loc;
+                    if(res >= lmin){ E_Int tmp=topo[0]; topo[0]=topo[1]; topo[1]=tmp; topo[2]=1; return test=1;}
+                   }
+    
+    //on test si on peut intervertir la direction I vers J et J vers K
+    //I vers J
+    dim_loc = cells_tg/(nijk[2]*nijk[0]);
+    res     = nijk[1]-(topo[0]-1)*dim_loc;
+    if(res >= lmin){ //J vers K 
+                    dim_loc = cells_tg/(nijk[0]*nijk[1]);
+                    res     = nijk[2]-(topo[1]-1)*dim_loc;
+                    if(res >= lmin){ topo[2]=topo[1]; topo[1]=topo[0]; topo[0]=1; return test=1;}
+                   }
+
+    //on test si on peut intervertir la direction J vers J et I vers K
+    //J vers J
+    dim_loc = cells_tg/(nijk[2]*nijk[0]);
+    res     = nijk[1]-(topo[1]-1)*dim_loc;
+    if(res >= lmin){ //I vers K 
+                    dim_loc = cells_tg/(nijk[1]*nijk[0]);
+                    res     = nijk[2]-(topo[0]-1)*dim_loc;
+                    if(res >= lmin){ topo[2]=topo[0]; topo[0]=1; return test=1;}
+                   }
+  }
+
+ return test;
+
+}
+

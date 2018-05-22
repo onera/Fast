@@ -191,6 +191,9 @@ else
   E_Int neq_max       = 5;
   E_Int iorder_flt    =10;
   E_Float temps;
+
+  FldArrayI tab_ndimdx_transfer(nidom*3);  E_Int* ndimdx_transfer=  tab_ndimdx_transfer.begin();
+
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
     // check zone
@@ -295,6 +298,10 @@ else
     if (ipt_param_int[nd][ IFLAGFLT ]    == 1     ) kfiltering = 1;
     if (ipt_param_int[nd][ IFLOW ] >= 2 &&  ipt_param_int[nd][ ILES ] == 1 && ipt_param_int[nd][ IJKV+ 2] > 1) kles = 1;
 
+    //initialisation tableau de travail pour transfert
+    ndimdx_transfer[nd]          = ipt_param_int[nd][ NDIMDX  ];
+    ndimdx_transfer[nd + nidom]  = ipt_param_int[nd][ NIJK    ];
+    ndimdx_transfer[nd + nidom*2]= ipt_param_int[nd][ NIJK +1 ];
 
      //Recherche domaine a filtrer
      if (ipt_param_int[nd][ IFLAGFLT ] == 1) 
@@ -369,7 +376,7 @@ else
 
   FldArrayI tab_verrou_lhs(mx_nidom*threadmax_sdm); E_Int* verrou_lhs =  tab_verrou_lhs.begin();
 
-  FldArrayF cfl( nidom*3*threadmax_sdm); E_Float* ipt_cfl    = cfl.begin();
+  FldArrayF cfl( nidom*3*threadmax_sdm); E_Float* ipt_cfl = cfl.begin();
 
   if(lcfl ==1 && nstep_deb == 1)
   { 
@@ -430,7 +437,7 @@ else
             nb_pulse           ,                
             temps              ,
             ipt_ijkv_sdm       , 
-            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_ind_CL119, ipt_lok, verrou_lhs, timer_omp,
+            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_ind_CL119, ipt_lok, verrou_lhs, ndimdx_transfer, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
             ipt_cfl            ,

@@ -107,6 +107,8 @@ namespace K_FASTS
   void distributeThreads_c( E_Int**& ipt_param_int, E_Int**& ipt_ind_dm, 
                             E_Int& nidom          ,  E_Int& nssiter    , E_Int& mx_sszone      , E_Int& nstep       , E_Int& nitrun, E_Int& display);
 
+  E_Int topo_test( E_Int* topo, E_Int* nijk, E_Int& cell_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k);
+
   //=============
   // - compute -
   //=============
@@ -119,7 +121,7 @@ namespace K_FASTS
     E_Int& nb_pulse     ,
     E_Float& temps,
     E_Int* ipt_ijkv_sdm       , 
-    E_Int* ipt_ind_dm_omp     , E_Int* ipt_topology      , E_Int* ipt_ind_CL     , E_Int* ipt_ind_CL119     , E_Int* ipt_lok       , E_Int* verrou_lhs, E_Float* timer_omp,
+    E_Int* ipt_ind_dm_omp     , E_Int* ipt_topology      , E_Int* ipt_ind_CL     , E_Int* ipt_ind_CL119     , E_Int* ipt_lok       , E_Int* verrou_lhs, E_Int* ndimdx_trans, E_Float* timer_omp,
     E_Int* iptludic, E_Int* iptlumax, 
     E_Int** ipt_ind_dm, E_Int** ipt_it_lu_ssdom,
     E_Float* ipt_cfl,

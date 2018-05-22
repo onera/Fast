@@ -39,7 +39,7 @@ E_Int K_FASTS::gsdr3(
   E_Int& nb_pulse     , 
   E_Float& temps,
   E_Int* ipt_ijkv_sdm  ,
-  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_ind_CL119   , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Float* timer_omp,
+  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_ind_CL119   , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int* ndimdx_transfer, E_Float* timer_omp,
   E_Int*     iptludic        , E_Int*   iptlumax       ,
   E_Int** ipt_ind_dm         , E_Int** ipt_it_lu_ssdom  ,
   E_Float*   ipt_cfl,
@@ -272,17 +272,8 @@ E_Int K_FASTS::gsdr3(
 if(lexit_lu ==0 && layer_mode==1)
 {   
   //Swap (call to setInterpTransfer)
-  E_Int* ipt_ndimdx_trans = new E_Int[nidom*3];
-  for (E_Int nd = 0; nd < nidom; ++nd)
-    { ipt_ndimdx_trans[nd]          = param_int[nd][ NDIMDX  ];
-      ipt_ndimdx_trans[nd + nidom]  = param_int[nd][ NIJK    ];
-      ipt_ndimdx_trans[nd + nidom*2]= param_int[nd][ NIJK +1 ];
-    }
-  setInterpTransfersFastS(iptro_CL, ipt_ndimdx_trans, param_int_tc, param_real_tc ,
+  setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,
                           param_int_ibc, param_real_ibc, it_target, nidom, ipt_timecount,mpi);
-
-  delete [] ipt_ndimdx_trans;
-
 
   //
   //
