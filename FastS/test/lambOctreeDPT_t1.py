@@ -3,7 +3,6 @@
 import Connector.PyTree as X
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
-import FastS.Mpi as FastSmpi
 import Converter.PyTree as C
 import Distributor2.PyTree as D2
 import Converter.Mpi as Cmpi
@@ -59,7 +58,9 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 #Initialisation parametre calcul: calcul metric + var primitive + compactage + alignement + placement DRAM
 graph1 ={'graphID':graph, 'graphIBCD':None, 'procDict':procDict}
-(t, tc, metrics) = FastS.warmup(t, tc, graph=graph)
+#(t, tc, metrics) = FastS.warmup(t, tc, graph=graph)
+(t, tc, metrics) = FastS.warmup(t, tc, graph=None)
+#sys.exit()
 
 if rank==0:
   print 'graph', graph['graphID'],  graph['graphIBCD']
@@ -68,15 +69,16 @@ if rank==0:
 #C.convertPyTree2File(tc, 'tc_test'+str(rank)+'.cgns')
 #sys.exit()
 
+C.convertPyTree2File(tc, 'out_tc.cgns')
+C.convertPyTree2File(t, 'out.cgns')
 nit = 1000; time = 0.
 for it in xrange(nit):
-    #FastSmpi._compute(t, metrics, it, tc, graph)
     FastS._compute(t, metrics, it, tc)
     if (rank == 0 and it%100 == 0):
         print '- %d - %g -'%(it, time); sys.stdout.flush()
     time += numz['time_step']
 
-#Cmpi.convertPyTree2File(t, 'out.cgns')
+C.convertPyTree2File(t, 'out.cgns')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)
