@@ -38,8 +38,8 @@ tc = Cmpi.readZones(tc, FILED, rank=rank)
 t = Cmpi.convert2PartialTree(t)
 tc = Cmpi.convert2PartialTree(tc)
 
-Cmpi.convertPyTree2File(t, 't1.cgns')
-Cmpi.convertPyTree2File(tc, 't1c.cgns')
+#Cmpi.convertPyTree2File(t, 't1.cgns')
+#Cmpi.convertPyTree2File(tc, 't1c.cgns')
 #sys.exit()
 Cmpi.barrier()
 t,tc,ts,graph=Fast.load('t1.cgns','t1c.cgns', split='single', restart=False , NP=size)
@@ -69,8 +69,6 @@ if rank==0:
 #C.convertPyTree2File(tc, 'tc_test'+str(rank)+'.cgns')
 #sys.exit()
 
-C.convertPyTree2File(tc, 'out_tc.cgns')
-C.convertPyTree2File(t, 'out.cgns')
 nit = 1000; time = 0.
 for it in xrange(nit):
     FastS._compute(t, metrics, it, tc)
@@ -78,7 +76,6 @@ for it in xrange(nit):
         print '- %d - %g -'%(it, time); sys.stdout.flush()
     time += numz['time_step']
 
-C.convertPyTree2File(t, 'out.cgns')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)

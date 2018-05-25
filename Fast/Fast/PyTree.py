@@ -202,7 +202,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             graphID = Cmpi.computeGraph(tc, type='ID')
             graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
             procDict = D2.getProcDict(tc)
-            procList = D2.getProcList(tc)
+            procList = D2.getProcList(tc, sort=True)
             graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
             tc = Cmpi.convert2PartialTree(tc, rank=rank )
             # Load data (t)
@@ -238,7 +238,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
                 graphID = Cmpi.computeGraph(tc, type='ID',reduction=False)
                 graphIBCD = Cmpi.computeGraph(tc, type='IBCD',reduction=False)
                 procDict = D2.getProcDict(tc)
-                procList = D2.getProcList(tc)
+                procList = D2.getProcList(tc, sort=True)
                 graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
                 tc = Cmpi.convert2PartialTree(tc)
             # Load data (t)

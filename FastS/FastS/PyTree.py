@@ -288,7 +288,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     else: return (t, tc, metrics, tmy)
 
 #==============================================================================
-def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolutionCenters__], fields=None, mode=None):
+def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolutionCenters__], fields=None, mode=None, init=True):
     #global  CACHELINE
     if  mode is not None:
       if mode == -1: 
@@ -323,7 +323,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
                 #print 'a0',a[0],a[1].shape
                 # Copy elements
                 ptr = a1.reshape((size), order='Fortran') # no copy I hope
-                fasts.initNuma( ptr, eq, param_int, c, thread_numa )
+                if init: fasts.initNuma( ptr, eq, param_int, c, thread_numa )
                 #fasts.initNuma( ptr, eq, param_int, c )
                 ## marc ptr = a1.reshape((size), order='Fortran') # no copy I hope
                 ## marc fasts.initNuma( ptr, eq, param_int, c )
@@ -2034,7 +2034,6 @@ def createStressNodes(t, BC=None, window=None):
                  if (bc is not None): list_bc = bc[2]
               else:
                  list_bc =['window']
-              compact = 0
               ific    = 2
               param_int = Internal.getNodeFromName2(z, 'Parameter_int')
               if param_int is not None: ific = param_int[1][3]
@@ -2063,7 +2062,6 @@ def createStressNodes(t, BC=None, window=None):
                    dim = Internal.getValue(ptrg)
                    #print 'ptrg',ptrg
                    #print 'dim ', dim
-                   compact = 1
 
                    #dir=0,...5
                    idir = Ghost.getDirection__(dimbase, [ptrg])
@@ -2149,6 +2147,7 @@ def createStressNodes(t, BC=None, window=None):
                    param_int[1][22] = 1
                    param_int[1][36] = len(varc)             #NEQ    
                    param_int[1][41] = ni1*nj1               #NDIMDX
+                   param_int[1][66] = 0                     #SHIFTVAR
                    #fenetre calcul flux dans arbre NS
                    param_int[1][23] = imin
                    param_int[1][24] = imax
@@ -2170,12 +2169,14 @@ def createStressNodes(t, BC=None, window=None):
                    #print 'dim1=',imin,imax,jmin,jmax,kmin,kmax
                    #print 'idir=',idir+1
 
+                   _compact(zp, fields=varc, init=False) #allocation compact uniquememnt; init dans er calcul effort
+
                    b[0][2].append(zp)
+
 
               no_z +=1
               ndf  +=1
 
-              if compact==1: _compact(zp, fields=varc)
 
     Internal._rmNodesByType(b,'ZoneGridConnectivity_t')
     Internal._rmNodesByType(b,'ZoneBC_t')

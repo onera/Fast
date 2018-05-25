@@ -63,33 +63,32 @@ def _reorder(t, tc=None, omp_mode=0):
        #reordone les zones de tc par taille decroissante dans chaque base pour optim openmp
        bases_tc = Internal.getNodesFromType1(tc,'CGNSBase_t')
        for base_tc in bases_tc: 
-         zones = Internal.getNodesFromType1(base_tc,'Zone_t')
-         #calcul taille de la zone
-         size_zone =[]
-         for z in zones:
-           dim = Internal.getZoneDim(z)
-           if dim[0]=='Structured':
-              if dim[3] == 1: kfic = 0
-              else          : kfic = 2
-              ndimdx = (dim[1]-4)*(dim[2]-4)*(dim[3]-kfic) 
-           else: ndimdx = dim[2]
-           size_zone.append(ndimdx)
+          zones = Internal.getNodesFromType1(base_tc,'Zone_t')
+          #calcul taille de la zone
+          size_zone =[]
+          for z in zones:
+             dim = Internal.getZoneDim(z)
+             if dim[0]=='Structured':
+                if dim[3] == 1: kfic = 0
+                else          : kfic = 2
+                ndimdx = (dim[1]-4)*(dim[2]-4)*(dim[3]-kfic) 
+             else: ndimdx = dim[2]
+             size_zone.append(ndimdx)
 
-       #Tri les zone par taille decroissante
-       new_zones =[]
-       for z in xrange(len(size_zone)):
-           vmax = max( size_zone )
-           pos_max = size_zone.index( vmax )
-           new_zones.append( zones[pos_max])
-           del size_zone[pos_max]
-           del zones[pos_max]
+          #Tri les zone par taille decroissante
+          new_zones =[]
+          for z in xrange(len(size_zone)):
+              vmax    = max( size_zone )
+              pos_max = size_zone.index( vmax )
+              new_zones.append( zones[pos_max])
+              size_zone.pop( pos_max) 
+              zones.pop(     pos_max) 
 
-       l = base_tc[2]
-       orig = []
-       for i in l:
-	  if i[3] != 'Zone_t': orig.append(i)
-       base_tc[2]=  orig+new_zones
-
+          l = base_tc[2]
+          orig = []
+          for i in l:
+	     if i[3] != 'Zone_t': orig.append(i)
+          base_tc[2]=  orig+new_zones
 
        # reordone les zones de t pour garantir meme ordre entre t et tc
        bases    = Internal.getNodesFromType1(t, 'CGNSBase_t')

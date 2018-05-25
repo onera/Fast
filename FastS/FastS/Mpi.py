@@ -19,7 +19,7 @@ try:
     import os
     import math
 except:
-    raise ImportError("FastS: requires Converter and Connector modules.")
+    raise ImportError("FastS: requires Converter, Connector and Distributor2 modules.")
 
 #==============================================================================
 #def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
@@ -32,9 +32,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
         procDict=None; graphID=None; graphIBCD=None
 
     base = Internal.getNodeFromType1(t,"CGNSBase_t")
-    own   = Internal.getNodeFromName1(base, '.Solver#ownData')  
-    dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')
-    zones = Internal.getZones(t)
+    own  = Internal.getNodeFromName1(base, '.Solver#ownData')  
+    dtloc= Internal.getNodeFromName1(own, '.Solver#dtloc')
+    zones= Internal.getZones(t)
     node = Internal.getNodeFromName(t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = PyTree.OMP_MODE
@@ -244,7 +244,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     else:
         PyTree.HOOK['param_real_tc'] = None
         PyTree.HOOK['param_int_tc']  = None 
-
     #
     # Compactage arbre moyennes stat
     #
