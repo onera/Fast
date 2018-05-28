@@ -5,7 +5,7 @@ import os, shutil
 import platform
 system = platform.uname()[0]
 
-if (system == 'Windows'):
+if system == 'Windows':
     __EXTMODULE__ = '.pyd'
     __EXTSHARED__ = '.dll'
 else:
@@ -18,11 +18,11 @@ installPathLocal = K.installPath
 
 # La librarie statique existe?
 a = os.access(installPathLocal+"/Fast/libfast.a", os.F_OK)
-if (a == True):
+if a:
     shutil.copy(installPathLocal+"/Fast/libfast.a", libPath+"/libfast.a")
 else: # Essai en dynamique
     a = os.access(installPathLocal+"/Fast/fast"+__EXTMODULE__, os.F_OK)
-    if (a == True):
+    if a:
         shutil.copy(installPathLocal+"/Fast/fast"+__EXTMODULE__,
                     libPath+"/libfast"+__EXTSHARED__) 
     else:

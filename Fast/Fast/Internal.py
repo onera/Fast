@@ -637,7 +637,7 @@ def switchPointers__(zones, case, order=3):
             model  = Internal.getNodeFromName2(z, 'model')
             model  = Internal.getValue(model)
 
-            if (model == 'nsspalart' or model=='NSTurbulent'): 
+            if model == 'nsspalart' or model == 'NSTurbulent': 
                 cfM1 =  Internal.getNodeFromName2(z, 'TurbulentSANuTilde_M1')
                 cfP1 =  Internal.getNodeFromName2(z, 'TurbulentSANuTilde_P1')
                 cfP1[1] = cfM1[1]
