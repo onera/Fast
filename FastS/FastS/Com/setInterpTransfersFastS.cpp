@@ -82,7 +82,7 @@ void K_FASTS::del_TransferInter(
 //=============================================================================
 void K_FASTS::setInterpTransfersFastS(
   E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
-  E_Int*& param_bci, E_Float*& param_bcf, E_Float*& linelets, E_Float& Pr, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi)
+  E_Int*& param_bci, E_Float*& param_bcf, E_Float& Pr, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi)
 
 {
   E_Int rank = 0;
@@ -156,14 +156,14 @@ if (mpi)
       TypeTransfert = 1;  
       #ifdef _MPI      
       K_FASTS::setInterpTransfersInter(iptro_tmp,     ipt_ndimdx_trans,  param_int_tc,  param_real_tc ,
-                                           param_bci, param_bcf, linelets, Pr, TypeTransfert , it_target, nidom, ip2p, pair_of_queue, ipt_timecount); 
+                                           param_bci, param_bcf, Pr, TypeTransfert , it_target, nidom, ip2p, pair_of_queue, ipt_timecount); 
       #endif
     }
     else
     {
 		TypeTransfert = 1;
     K_FASTS::setInterpTransfersIntra(iptro_tmp,     ipt_ndimdx_trans,  param_int_tc,  param_real_tc ,
-                                             param_bci, param_bcf, linelets, Pr, TypeTransfert , it_target, nidom, ip2p, ipt_timecount); 
+                                             param_bci, param_bcf, Pr, TypeTransfert , it_target, nidom, ip2p, ipt_timecount); 
     }
     
   }
@@ -205,7 +205,7 @@ if (mpi)
     {             
       TypeTransfert = 0;
       K_FASTS::setInterpTransfersInter(iptro_tmp,     ipt_ndimdx_trans,  param_int_tc,  param_real_tc ,
-                                           param_bci, param_bcf, linelets, Pr, TypeTransfert , it_target, nidom, ip2p, pair_of_queue, ipt_timecount);   
+                                           param_bci, param_bcf, Pr, TypeTransfert , it_target, nidom, ip2p, pair_of_queue, ipt_timecount);   
     }
   }
 }
@@ -220,8 +220,8 @@ if (mpi)
     if (dest == rank)  // Intra Process
     {        
         TypeTransfert = 0;
-        K_FASTS::setInterpTransfersIntra(iptro_tmp,     ipt_ndimdx_trans,  param_int_tc,  param_real_tc ,
-                                             param_bci, param_bcf, linelets, Pr, TypeTransfert , it_target, nidom, ip2p, ipt_timecount); 
+        K_FASTS::setInterpTransfersIntra(iptro_tmp, ipt_ndimdx_trans, param_int_tc, param_real_tc ,
+                                         param_bci, param_bcf, Pr, TypeTransfert , it_target, nidom, ip2p, ipt_timecount); 
     }    
   }
 
@@ -266,7 +266,7 @@ if (mpi)
 //=============================================================================
 void K_FASTS::setInterpTransfersIntra(
     E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int_tc,
-    E_Float*& ipt_param_real_tc, E_Int*& ipt_parambci, E_Float*& ipt_parambcf, E_Float*& ipt_linelets, E_Float& Pr,
+    E_Float*& ipt_param_real_tc, E_Int*& ipt_parambci, E_Float*& ipt_parambcf, E_Float& Pr,
     E_Int& TypeTransfert, E_Int& it_target, E_Int& nidom, E_Int& NoTransfert,
     E_Float*& ipt_timecount)
 
@@ -610,7 +610,7 @@ void K_FASTS::setInterpTransfersIntra(
 //=============================================================================
 void K_FASTS::setInterpTransfersInter(
     E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int_tc,
-    E_Float*& ipt_param_real_tc, E_Int*& ipt_parambci, E_Float*& ipt_parambcf, E_Float*& ipt_linelets, E_Float& Pr,
+    E_Float*& ipt_param_real_tc, E_Int*& ipt_parambci, E_Float*& ipt_parambcf, E_Float& Pr,
     E_Int& TypeTransfert, E_Int& it_target, E_Int& nidom, E_Int& NoTransfert,
     std::pair<RecvQueue*, SendQueue*>*& pair_of_queue, E_Float*& ipt_timecount)
 

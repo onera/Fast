@@ -70,7 +70,7 @@ cd build
 if test ! -e Examples
 then
     mkdir Examples
-    ln -s $CASSIOPEE/Apps/Modules/FastS/test Examples/FastS
+    ln -s $CASSIOPEE/Apps/PModules/FastS/test Examples/FastS
 fi
 cd ..
 
