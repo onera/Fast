@@ -137,7 +137,7 @@ namespace K_FASTS
     E_Float**& iptrdm,
     E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*   iptwig, E_Float* iptstat_wig,
     E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res,
-    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc);
+    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Float*& ipt_linelets );
 
   //==============================
   // - Transfer with CMP library -
@@ -146,17 +146,17 @@ namespace K_FASTS
   /* Call to transfers from FastS */
   void setInterpTransfersFastS(
   E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
-  E_Int*& param_bci, E_Float*& param_bcf, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi);
+  E_Int*& param_bci, E_Float*& param_bcf, E_Float*& linelets, E_Float& Pr, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi);
   
   /* Transferts FastS Intra process */
   void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
-                              E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
+                              E_Int*&    ipt_parambci, E_Float*& ipt_parambcf,  E_Float*& ipt_linelets, E_Float& Pr, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
                               E_Int& NoTransfert, E_Float*& ipt_timecount);
 
   #ifdef _MPI
   /* Transferts FastS Inter process */
   void setInterpTransfersInter(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
-                                E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int& TypeTransfert, E_Int& nitrun, 
+                                E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Float*& ipt_linelets, E_Float& Pr, E_Int& TypeTransfert, E_Int& nitrun, 
                                 E_Int& nidom, E_Int& NoTransfert,std::pair<RecvQueue*, SendQueue*>*& pair_of_queue, E_Float*& ipt_timecount);
 
   /* Get Transfert Inter process */
@@ -170,6 +170,10 @@ namespace K_FASTS
   void del_TransferInter(std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
   #endif
 
+
+  //===== Distrib OMP Test
+  
+  E_Int topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k);
 
   //=======
   // - BC -
