@@ -25,8 +25,10 @@ List of functions
 
    Fast.PyTree.setNum2Base
    Fast.PyTree.setNum2Zones
-   Fast.PyTree.save
    Fast.PyTree.load
+   Fast.PyTree.save
+   Fast.PyTree.loadFile
+   Fast.PyTree.saveFile
 .. Fast.metric ..
 
 

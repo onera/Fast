@@ -272,7 +272,7 @@ E_Int K_FASTS::gsdr3(
 if(lexit_lu ==0 && layer_mode==1)
 {   
   //Swap (call to setInterpTransfer)
-  E_Float Pr = param_int[0][10];
+  E_Float Pr = param_real[0][PRANDT];
   setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,
                           param_int_ibc, param_real_ibc, Pr, it_target, nidom, ipt_timecount,mpi);
 
