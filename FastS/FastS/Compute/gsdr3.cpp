@@ -30,7 +30,7 @@ E_Float time_COM=0.0;
 E_Float time_init;
 #endif
 
-E_Int K_FASTS::gsdr3(
+E_Int K_FASTS::gsdr3( 
   E_Int**& param_int  , E_Float**& param_real ,
   E_Int& nidom        , E_Int& nitrun         , E_Int&  nitcfg    , E_Int&  nssiter, E_Int& it_target , E_Int&  first_it,
   E_Int& kimpli       , E_Int& lssiter_verif  , E_Int& lexit_lu   , E_Int& omp_mode, E_Int& layer_mode, E_Int& mpi,
@@ -39,9 +39,11 @@ E_Int K_FASTS::gsdr3(
   E_Int& nb_pulse     , 
   E_Float& temps,
   E_Int* ipt_ijkv_sdm  ,
-  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_ind_CL119   , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int* ndimdx_transfer, E_Float* timer_omp,
-  E_Int*     iptludic        , E_Int*   iptlumax       ,
-  E_Int** ipt_ind_dm         , E_Int** ipt_it_lu_ssdom  ,
+  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int* ndimdx_transfer, E_Float* timer_omp,
+  E_Int*     iptludic         , E_Int*   iptlumax       ,
+  E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom  ,
+  E_Float* ipt_testVectG      , E_Float* ipt_testVectY   , E_Float* ipt_ssor           , E_Float* ipt_drodmd,
+  E_Float* ipt_test_Hessenberg, E_Float** iptkrylov      , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry,
   E_Float*   ipt_cfl,
   E_Float**  iptx            , E_Float**  ipty            , E_Float**    iptz      ,
   E_Float**  iptCellN        ,
@@ -150,9 +152,11 @@ E_Int K_FASTS::gsdr3(
           }
       }
 
+
 /****************************************************
 ----- Debut zone // omp
 ****************************************************/
+
 #pragma omp parallel default(shared)
   {
 #ifdef _OPENMP
@@ -179,7 +183,9 @@ E_Int K_FASTS::gsdr3(
    E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3;
    E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3;
    E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
-   E_Int* ipt_ind_CL119_thread   = ipt_ind_CL119      + (ithread-1)*6;
+   E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
+   E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
+   E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
    E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
    E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
 
@@ -210,6 +216,9 @@ E_Int K_FASTS::gsdr3(
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
         E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int nd_current=0;
+
+        if (param_int[0][LINEARSOLVER] == 0 && layer_mode == 1) { ipt_norm_kry[ithread-1]=0.; }
+
         //calcul du sous domaine a traiter par le thread 
         for (E_Int nd = 0; nd < nidom; nd++)
           {
@@ -229,19 +238,16 @@ E_Int K_FASTS::gsdr3(
           E_Float rhs_end = omp_get_wtime();
           timer_omp[(ithread-1)*2 +(nitcfg-1)*Nbre_thread_actif] += rhs_end - rhs_begin;
 
-          //
-          //Parcours des zones pour LUSGS
-          //
-          shift_zone=0; shift_coe=0; nd_current=0;
-          for (E_Int nd = 0; nd < nidom; nd++)
-          {
-           E_Int lmin = 10;
-           if (param_int[nd][ITYPCP] == 2) lmin = 4;
-# include "Compute/lhs.cpp"
 
-           shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-           shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-          }//loop lhs
+          if (param_int[0][LINEARSOLVER] == 0 && layer_mode == 1)
+	  {
+#include   "Compute/Linear_solver/lhs.cpp"
+          }
+          // LUSGS
+          else
+	  { 
+#include   "Compute/lhs.cpp"
+          }
 
           //
           //finalisation timer pour omp "dynamique"
@@ -250,6 +256,7 @@ E_Int K_FASTS::gsdr3(
           timer_omp[(ithread-1)*2 +1 +(nitcfg-1)*Nbre_thread_actif] += lhs_end- rhs_end;
           
 } // Fin zone // omp
+
 
 #ifdef TimeShow
      time_COM = omp_get_wtime();
@@ -264,6 +271,8 @@ E_Int K_FASTS::gsdr3(
      time_init = omp_get_wtime();
 #endif 
 
+
+ 
   //
   //
   //FillGhostcell si mise a jour necessaire et transfer dans C layer 
@@ -300,7 +309,7 @@ E_Int Nbre_thread_actif_loc, ithread_loc;
 if( omp_mode == 1) { Nbre_thread_actif_loc = 1;                 ithread_loc = 1;}
 else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
 
-E_Int ipt_shift_lu[6];
+
 E_Int* ipt_ind_dm_thread; 
 E_Int nd_current =0;
 for (E_Int nd = 0; nd < nidom; nd++)
@@ -308,8 +317,10 @@ for (E_Int nd = 0; nd < nidom; nd++)
           E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
           E_Int  nb_subzone    = ipt_nidom_loc [nitcfg-1];                                           //nbre sous-zone a la sousiter courante
 
-           E_Int* ipt_ind_CL_thread   = ipt_ind_CL          + (ithread-1)*6;
-           E_Int* ipt_ind_CL119_thread= ipt_ind_CL119       + (ithread-1)*6;
+           E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
+           E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
+           E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
+           E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
 
           for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
           {
@@ -336,6 +347,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
              E_Int* ipt_ind_dm_socket   = ipt_ind_dm_omp     + (ithread-1)*12;
                     ipt_ind_dm_thread   = ipt_ind_dm_socket  +6;
 
+
              E_Int lmin = 10;
              if (param_int[nd][ITYPCP] == 2) lmin = 4;
 
@@ -346,10 +358,10 @@ for (E_Int nd = 0; nd < nidom; nd++)
   
             E_Int ierr = BCzone(nd, lrhs , lcorner, param_int[nd], param_real[nd], npass,
                                 ipt_ind_dm_loc, ipt_ind_dm_thread, 
-                                ipt_ind_CL_thread, ipt_ind_CL119_thread, ipt_shift_lu,
+                                ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
                                 iptro_CL[nd] , ipti[nd]            , iptj[nd]    , iptk[nd]       ,
                                 iptx[nd]     , ipty[nd]            , iptz[nd]    ,
-                                iptventi[nd] , iptventj[nd]        , iptventk[nd]);
+                                iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd]);
 
             correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptro_CL[nd]);
 
@@ -361,6 +373,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
 
           }//loop souszone
        }//loop zone
+
   }//fin zone omp
 }//test exit_lu
 
@@ -372,6 +385,8 @@ for (E_Int nd = 0; nd < nidom; nd++)
 #    include "HPC_LAYER/OPTIMIZE_DISTRIB_OMP.h"
     }
 
+
    delete [] ipt_timecount;
    return ibord_ale;
+
   }

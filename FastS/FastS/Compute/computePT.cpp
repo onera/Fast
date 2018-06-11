@@ -88,11 +88,11 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
  E_Int lssiter_loc; E_Int lexit_lu;  E_Int lssiter_verif;
  E_Int it_target = iptdtloc[4];
 
+ lssiter_verif = 0; // par defaut, pas de calcul cfl , ni residu Newton
+ if(nitrun % iptdtloc[1] == 0 || nitrun == 1) lcfl =1;
+
  if( layer_mode ==1)
  {
-    lssiter_verif = 0; // par defaut, pas de calcul cfl , ni residu Newton
-    if(nitrun % iptdtloc[1] == 0 || nitrun == 1) lcfl =1;
-
     pyParam_int_ibc = PyDict_GetItemString(work,"param_int_ibc");
     pyParam_real_ibc = PyDict_GetItemString(work,"param_real_ibc");
 
@@ -140,15 +140,15 @@ else
   E_Float** ipti0;      E_Float** iptj0;    E_Float** iptk0;
   E_Float** ipti_df;    E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
   E_Float** iptdist;    E_Float** iptventi; E_Float** iptventj; E_Float** iptventk;
-  E_Float** iptrdm;
-  E_Float** iptCellN  ; E_Float** ipt_cfl_zones;
+  E_Float** iptrdm;     E_Float** iptkrylov; E_Float** iptkrylov_transfer;
+  E_Float** iptCellN  ; E_Float** ipt_cfl_zones; 
   E_Float** iptro_sfd; E_Float** iptdelta; E_Float** iptfd; E_Float** iptro_zgris; E_Float** iptro_res;
 
   ipt_param_int     = new E_Int*[nidom*3];
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
 
-  iptx              = new E_Float*[nidom*28];
+  iptx              = new E_Float*[nidom*30];
   ipty              = iptx            + nidom;
   iptz              = ipty            + nidom;
   iptro             = iptz            + nidom;
@@ -175,7 +175,9 @@ else
   iptrdm            = iptventk        + nidom;
   iptCellN          = iptrdm          + nidom; 
   ipt_param_real    = iptCellN        + nidom;
-  ipt_cfl_zones     = ipt_param_real  + nidom;   //3composants: attention a la prochaine addition
+  iptkrylov         = ipt_param_real  + nidom;
+  iptkrylov_transfer= iptkrylov       + nidom;
+  ipt_cfl_zones     = iptkrylov       + nidom;   //3composants: attention a la prochaine addition
 
   vector<PyArrayObject*> hook;
 
@@ -184,6 +186,7 @@ else
   E_Int ndimdx_sa     = 0;
   E_Int nisdom_lu_max = 0;
   E_Int ndimt         = 0;
+  E_Int ndim_drodm    = 0;
   E_Int ndimt_flt     = 0;
   E_Int kles          = 0;
   E_Int kimpli        = 0;
@@ -235,6 +238,14 @@ else
     t            = K_PYTREE::getNodeFromName1(sol_center, "cellN");
     if (t == NULL) iptCellN[nd] = NULL;
     else iptCellN[nd] = K_PYTREE::getValueAF(t, hook);
+
+    //Pointeur Vect Krylov
+    iptkrylov[nd]= NULL;
+    if (ipt_param_int[nd][ LINEARSOLVER ] == 0) // 0 = gmres
+    {
+      t            = K_PYTREE::getNodeFromName1(sol_center, "Krylov_0_Density");
+      iptkrylov[nd]= K_PYTREE::getValueAF(t, hook);
+    }
 
     //Pointeur sfd
     if (ipt_param_int[nd][ SFD ] == 1)
@@ -292,7 +303,8 @@ else
 
     if( ipt_param_int[ nd ][ MXSSDOM_LU ] > nisdom_lu_max) nisdom_lu_max = ipt_param_int[ nd ][ MXSSDOM_LU ];
 
-    ndimt = ndimt + ipt_param_int[nd][ NDIMDX ];
+    ndimt      += ipt_param_int[nd][ NDIMDX ];
+    ndim_drodm += ipt_param_int[nd][ NDIMDX ]*ipt_param_int[nd][ NEQ ];
 
     if (ipt_param_int[nd][ ITYPCP ]      <= 1     ) kimpli     = 1;
     if (ipt_param_int[nd][ IFLAGFLT ]    == 1     ) kfiltering = 1;
@@ -334,10 +346,35 @@ else
   if (kwig_stat ==  1) neq_wig_stat = 3; 
   FldArrayF  stat_wig(ndimt*neq_wig_stat); E_Float* iptstat_wig = stat_wig.begin();
 
+  /// Tableau pour GMRES (on test la premiere zone 
+  //
+  E_Float* ipt_testVectG      = NULL;
+  E_Float* ipt_testVectY      = NULL;
+  E_Float* ipt_test_Hessenberg= NULL;
+  E_Float* ipt_ssor           = NULL;
+  E_Float* ipt_drodmd         = NULL;
+  E_Float* ipt_norm_kry       = NULL;
+  E_Int num_max_vect = 2;
+  E_Int size_hessenb = 1;
+  if (ipt_param_int[0][LINEARSOLVER] == 0 && layer_mode == 1 )
+  { num_max_vect = ipt_param_int[0][NB_KRYLOV];
+    size_hessenb = num_max_vect*(num_max_vect-1);
+  }
+  else{ndim_drodm =1; }
+
+  FldArrayF  testVectG(num_max_vect  ); ipt_testVectG = testVectG.begin();
+  FldArrayF  testVectY(num_max_vect-1); ipt_testVectY = testVectY.begin();
+
+  FldArrayF  test_Hessenberg(size_hessenb); ipt_test_Hessenberg = test_Hessenberg.begin();
+  FldArrayF  drodmd(ndim_drodm); ipt_drodmd = drodmd.begin();
+  FldArrayF    ssor(ndim_drodm); ipt_ssor   = ssor.begin();
+  FldArrayF norm_kry(threadmax_sdm); ipt_norm_kry = norm_kry.begin();
+  
 
   /// Tableau pour stockage senseur oscillation
   PyObject* wigArray = PyDict_GetItemString(work,"wiggle"); FldArrayF* wig;
   K_NUMPY::getFromNumpyArray(wigArray, wig, true); E_Float* iptwig = wig->begin();
+
 
   /// Tableau de travail communs explicite/implicite
   PyObject* drodmArray = PyDict_GetItemString(work,"rhs"); FldArrayF* drodm;
@@ -370,8 +407,7 @@ else
   //printf("thread =%d\n",threadmax_sdm);
   FldArrayI ijkv_sdm(         3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(         3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
-  FldArrayI ind_CL(           6*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
-  FldArrayI ind_CL119(        6*threadmax_sdm); E_Int* ipt_ind_CL119  =  ind_CL119.begin();
+  FldArrayI ind_CL(          24*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
   FldArrayI ind_dm_omp(      12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
   FldArrayI tab_verrou_lhs(mx_nidom*threadmax_sdm); E_Int* verrou_lhs =  tab_verrou_lhs.begin();
@@ -409,6 +445,7 @@ else
    E_Int nidom_tot;
    for (E_Int nstep = nstep_deb; nstep < nstep_fin+1; ++nstep)
    {
+   //printf("nstep= %d \n", nstep);
      E_Int skip_navier = 1; //layer_mode 0: on calcul tout le temps gsdr3
      if (layer_mode ==1)
      {
@@ -427,19 +464,22 @@ else
        if (nidom_tot > 0 && skip ==0) skip_navier = 1;
      }
 
+   //printf("skip = %d \n", skip_navier);
      //calcul Navier Stokes + appli CL
      if (skip_navier ==1)
      {
-      gsdr3(ipt_param_int, ipt_param_real   ,
+      gsdr3( 
+            ipt_param_int, ipt_param_real   ,
             nidom              , nitrun_loc       , nstep             , nssiter       , it_target, first_it,
             kimpli             , lssiter_verif    , lexit_lu          , omp_mode      , layer_mode, mpi,
             nisdom_lu_max      ,  mx_nidom        , ndimt_flt         , threadmax_sdm , mx_synchro,
             nb_pulse           ,                
             temps              ,
             ipt_ijkv_sdm       , 
-            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_ind_CL119, ipt_lok, verrou_lhs, ndimdx_transfer, timer_omp,
+            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, ndimdx_transfer, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
+            ipt_testVectG      , ipt_testVectY    , ipt_ssor, ipt_drodmd, ipt_test_Hessenberg, iptkrylov, iptkrylov_transfer, ipt_norm_kry,
             ipt_cfl            ,
             iptx               , ipty             , iptz              ,
             iptCellN           ,
@@ -465,7 +505,17 @@ else
            ipt_cfl_zones[nd][2] =  ipt_cfl[2 +nd*3*threadmax_sdm];
            E_Int size_dom   = ipt_param_int[nd][ IJKV ]*ipt_param_int[nd][ IJKV +1]*ipt_param_int[nd][ IJKV +2];
            E_Float scale    = size_dom;
-           for (E_Int ithread = 1; ithread < threadmax_sdm ; ithread++) 
+
+           E_Int Nbre_thread_actif_loc = threadmax_sdm;
+           if(omp_mode == 1) 
+              { E_Int  Ptomp     = ipt_param_int[nd][PT_OMP];
+                E_Int PtrIterOmp = ipt_param_int[nd][Ptomp];
+                E_Int PtZoneomp  = ipt_param_int[nd][PtrIterOmp];
+
+                Nbre_thread_actif_loc  = ipt_param_int[nd][ PtZoneomp  +  threadmax_sdm];
+              }
+
+           for (E_Int ithread = 0; ithread < Nbre_thread_actif_loc ; ithread++) 
               {
                E_Float* ipt_cfl_thread  = ipt_cfl + ithread*3+ nd*3*threadmax_sdm;
 
@@ -474,7 +524,7 @@ else
                ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]+ ipt_cfl_thread[2];
               }
            ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]/scale;
-           //printf("cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[0],ipt_cfl_zones[1],ipt_cfl_zones[2]);
+           //printf("cpPT cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[nd][0],ipt_cfl_zones[nd][1],ipt_cfl_zones[nd][2]);
          }
        }//test mise a jour cfl
 

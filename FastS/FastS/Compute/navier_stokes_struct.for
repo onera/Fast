@@ -5,7 +5,7 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine navier_stokes_struct( ndo, nidom, Nbre_thread_actif,
      &        ithread, ithread_io, 
-     &        omp_mode, Nbre_socket, socket, mx_synchro, 
+     &        omp_mode, layer_mode, Nbre_socket, socket, mx_synchro, 
      &        lssiter_verif,
      &        nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN,
      &        param_int, param_real,
@@ -13,6 +13,7 @@ c***********************************************************************
      &        ijkv_sdm,
      &        ind_dm_zone, ind_dm_socket, ind_dm_omp,
      &        socket_topology, lok , topo_omp, inddm_omp,
+     &        krylov, norm_kry,
      &        cfl,
      &        x , y , z, cellN,
      &        rop , rop_m1     , rop_tmp , rop_ssiter,
@@ -50,7 +51,7 @@ c***********************************************************************
       INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, first_it,
      & ithread, ithread_io, Nbre_socket, socket, nitrun, nptpsi, nitcfg,
      & nb_pulse,
-     & lssiter_verif,flagCellN,omp_mode
+     & lssiter_verif,flagCellN,omp_mode,layer_mode
 c
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
      & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
@@ -59,13 +60,13 @@ c
       REAL_E rop(*),rop_m1(*),rop_tmp(*),rop_ssiter(*),xmut(*),drodm(*),
      & coe(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
      & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*), rot(*), celln(*),
-     & ti_df(*),tj_df(*),tk_df(*),vol_df(*)
+     & ti_df(*),tj_df(*),tk_df(*),vol_df(*), krylov(*)
       REAL_E delta(*),ro_res(*)
 
       REAL_E psi(nptpsi)
 
-      REAL_E temps, cfl(3), param_real(0:*),rostk(20000,param_int(NEQ))
-      REAL_E drodmstk(20000,param_int(NEQ))
+      REAL_E temps, norm_kry, cfl(3), param_real(0:*)
+      REAL_E drodmstk(20000,param_int(NEQ)), rostk(20000,param_int(NEQ))
 
 C Var loc
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
@@ -245,8 +246,27 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                         ind_mjr,
      &                         drodm, vol, ro_res)
            endif
-              
-           if(param_int(ITYPCP).le.1) then
+ 
+           !! impicit krylov             
+           if(param_int(ITYPCP).le.1.and.
+     &        ( param_int(LINEARSOLVER).eq.0.and.layer_mode.eq.1)   ) then
+              !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
+              if(flagCellN.eq.0) then
+               call core3as2_kry(ndo,nitcfg, first_it,
+     &                           param_int,param_real,
+     &                           ind_mjr,
+     &                           krylov, norm_kry,
+     &                           rop_ssiter, rop, rop_m1, drodm, coe)
+               else
+               call core3as2_chim_kry(ndo,nitcfg, first_it, 
+     &                                param_int,param_real,
+     &                                ind_mjr, cellN,
+     &                                krylov, norm_kry,
+     &                                rop_ssiter, rop, rop_m1,drodm,coe)
+               endif
+
+           !! implicit Lu                 
+           elseif(param_int(ITYPCP)) then
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
               if(flagCellN.eq.0) then
                call core3as2(ndo,nitcfg, first_it, param_int,param_real,
@@ -258,6 +278,7 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                            ind_mjr, cellN,
      &                            rop_ssiter, rop, rop_m1, drodm, coe)
                endif
+           !! explicit Lu                 
            else
              !c--------------------------------------------------
              !calcul param_int( IO_THREAD)uveau champ en explicite rk3

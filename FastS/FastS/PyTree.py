@@ -460,6 +460,14 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             sfd = 0
             a = Internal.getNodeFromName2(z, 'sfd')
             if a is not None: sfd = Internal.getValue(a)
+            linear_solver = 'none'
+            a = Internal.getNodeFromName2(z, 'linear_solver')
+            if a is not None: linear_solver = Internal.getValue(a)
+            if linear_solver != 'none':
+                nbr_krylov = 20
+                a = Internal.getNodeFromName2(z, 'nb_krylov')
+                if a is not None: nbr_krylov = Internal.getValue(a)
+
             extract_res = 0
             a = Internal.getNodeFromName2(z, 'extract_res')
             if a is not None: extract_res = Internal.getValue(a)
@@ -507,6 +515,18 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
 
             # on compacte seulement pour recuperer le bon numa      
             if  C.isNamePresent(z, 'centers:cellN') == 1: _compact(z, fields=['centers:cellN'], mode=count)
+
+            #COMPACT KRYLOV SUBSPACE VECTOR
+            fields2compact = []
+            if (linear_solver == 'gmres'):
+                for Vector in range(nbr_krylov):
+                    fields2compact.append('centers:Krylov_' + str(Vector) + '_Density')
+                    fields2compact.append('centers:Krylov_' + str(Vector) + '_MomentumX')
+                    fields2compact.append('centers:Krylov_' + str(Vector) + '_MomentumY')
+                    fields2compact.append('centers:Krylov_' + str(Vector) + '_MomentumZ')
+                    fields2compact.append('centers:Krylov_' + str(Vector) + '_EnergyStagDens')
+                    if sa: fields2compact.append('centers:Krylov_' + str(Vector) + '_TurbSANuTildeDens')
+                _compact(z, fields=fields2compact, mode=count, init=False)
 
             #  adjoint 
             if  C.isNamePresent(z, 'centers:dpCLp_dpDensity') == 1: 
@@ -1444,6 +1464,9 @@ def _buildOwnData(t):
     }
     keys4Zone = {
     'scheme':['ausmpred', 'senseur', 'roe_min', 'roe', 'roe_nul', 'roe_kap'],
+    'linear_solver':['gmres'],
+    'nb_krylov':0,
+    'nb_restart':0,
     'motion':['none', 'rigid', 'deformation'],
     'rotation':4,
     'time_step':1,
@@ -1576,17 +1599,20 @@ def _buildOwnData(t):
             ransmodel= 'SA'
             sgsmodel = "Miles"
             des      = "none"
+            linear_solver = "none"
+            nbr_krylov    = 20
+            nbr_restart   = 1
             temporal_scheme = "implicit"
-            scheme  = "ausmpred"
-            slope   = "o3"
-            motion = "none"
-            filtrage = "off"
-            io_th = 0
+            scheme          = "ausmpred"
+            slope           = "o3"
+            motion          = "none"
+            filtrage        = "off"
+            io_th      = 0
             cacheblckI = 2048
             cacheblckJ = 3
             cacheblckK = 2
-            dtnature = "global"
-            dtc      = -0.000001
+            dtnature   = "global"
+            dtc        = -0.000001
             epsi_newton  = 0.1 
             psiroe       = 0.1
             cfl          = 1.
@@ -1637,6 +1663,12 @@ def _buildOwnData(t):
                 FastI.checkKeys(d, keys4Zone)
                 a = Internal.getNodeFromName2(b, 'temporal_scheme')
                 if a is not None: temporal_scheme = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'linear_solver')
+                if a is not None: linear_solver = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'nb_krylov')
+                if a is not None: nbr_krylov = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'nb_restart')
+                if a is not None: nbr_restart = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'scheme')
                 if a is not None: scheme = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'slope')
@@ -1774,10 +1806,13 @@ def _buildOwnData(t):
             elif dtnature == "local": dtloc = 1
             else: print 'Warning: FastS: time_step_nature %s is invalid.'%dtnature
 
+            if linear_solver == "gmres": LinearSolverNum = 0
+            else: LinearSolverNum = -1
+
             # creation noeud parametre integer
             # Determination de levelg et leveld             
 
-            datap = numpy.empty(71, numpy.int32)
+            datap = numpy.empty(74, numpy.int32)
             datap[0:25]= -1
             datap[25]  = 0     # zone 3D curvi par defaut
             datap[26]  = 0     # Vent 3D par defaut
@@ -1814,8 +1849,10 @@ def _buildOwnData(t):
             datap[65]  = nit_inflow
             datap[66]  = shiftvar
             datap[67]  = extract_res
-            datap[68]  = DES_debug
-
+            datap[68]  = DES_debug         #index 69 et 70 pour PT_BC et PT_OMP
+            datap[71]  = LinearSolverNum
+            datap[72]  = nbr_restart
+            datap[73]  = nbr_krylov
 
             i += 1
          

@@ -138,9 +138,9 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   FldArrayI err(Nbre_thread_max);  E_Int* ierr  = err.begin();
   FldArrayI thread_topology(3*Nbre_thread_max); 
   FldArrayI   ind_dm_thread(6*Nbre_thread_max);  
-  FldArrayI          ind_CL(6*Nbre_thread_max);        
-  FldArrayI        shift_lu(6*Nbre_thread_max);        
-  FldArrayI       ind_CL119(6*Nbre_thread_max);    
+  //FldArrayI        shift_lu(6*Nbre_thread_max);        
+  //FldArrayI       ind_CL119(6*Nbre_thread_max);    
+  FldArrayI          ind_CL(24*Nbre_thread_max);        
 //  FldArrayF       vteta(4000);    
 //  FldArrayF      roteta(4000);    
 
@@ -164,9 +164,13 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
            E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
            E_Int nb_subzone     = ipt_nidom_loc [nstep -1];
 
-           E_Int* ipt_ind_CL          = ind_CL.begin()          + (ithread-1)*6;
-           E_Int* ipt_ind_CL119       = ind_CL119.begin()       + (ithread-1)*6;
-           E_Int* ipt_shift_lu        = shift_lu.begin( )       + (ithread-1)*6;
+           E_Int* ipt_ind_CL          = ind_CL.begin() + (ithread-1)*6;
+           E_Int* ipt_ind_CL119       = ind_CL.begin() + (ithread-1)*6 + Nbre_thread_max*6 ;
+           E_Int* ipt_ind_CLgmres     = ind_CL.begin() + (ithread-1)*6 + Nbre_thread_max*12;
+           E_Int* ipt_shift_lu        = ind_CL.begin() + (ithread-1)*6 + Nbre_thread_max*18;
+           //E_Int* ipt_ind_CL119       = ind_CL119.begin()       + (ithread-1)*6;
+           //E_Int* ipt_ind_CL119       = ind_CL119.begin()       + (ithread-1)*6;
+           //E_Int* ipt_shift_lu        = shift_lu.begin( )       + (ithread-1)*6;
 
           for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
           {
@@ -202,10 +206,10 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   
             ierr[ithread-1] = BCzone(nd, lrhs , lcorner, ipt_param_int[nd], ipt_param_real[nd], npass,
                                      ipt_ind_dm_loc, ipt_ind_dm_thread, 
-                                     ipt_ind_CL    , ipt_ind_CL119   , ipt_shift_lu,
-                                     iptro[nd]     , ipti[nd]        , iptj[nd]   , iptk[nd]       ,
-                                     iptx[nd]      , ipty[nd]        , iptz[nd]   ,
-                                     iptventi[nd]  , iptventj[nd]    , iptventk[nd]);
+                                     ipt_ind_CL    , ipt_ind_CL119   , ipt_ind_CLgmres, ipt_shift_lu,
+                                     iptro[nd]     , ipti[nd]        , iptj[nd]       , iptk[nd]    ,
+                                     iptx[nd]      , ipty[nd]        , iptz[nd]     ,
+                                     iptventi[nd]  , iptventj[nd]    , iptventk[nd], iptro[nd]);
 
             correct_coins_(nd,  ipt_param_int[nd], ipt_ind_dm_thread , iptro[nd]);
 

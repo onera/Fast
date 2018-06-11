@@ -135,11 +135,15 @@ E_Int K_FASTS::BCzone(
     E_Int& nd, E_Int& lrhs, E_Int& lcorner,
     // E_Int& ithread,  E_Int& Nbre_thread_actif, E_Int* ipt_thread_topology, E_Float* vteta, E_Float* roteta,
     E_Int* param_int, E_Float* param_real, E_Int& npass, E_Int* ipt_ind_dm, E_Int* ipt_ind_dm_thread, E_Int* ipt_ind_CL,
-    E_Int* ipt_ind_CL119, E_Int* ishift_lu, E_Float* iptrop, E_Float* ipti, E_Float* iptj, E_Float* iptk, E_Float* iptx,
-    E_Float* ipty, E_Float* iptz, E_Float* iptventi, E_Float* iptventj, E_Float* iptventk ) {
+    E_Int* ipt_ind_CL119, E_Int* ipt_ind_CLgmres, E_Int* ishift_lu, E_Float* iptrop, E_Float* ipti, E_Float* iptj, E_Float* iptk, E_Float* iptx,
+    E_Float* ipty, E_Float* iptz, E_Float* iptventi, E_Float* iptventj, E_Float* iptventk, E_Float* iptrop_gmres ) {
     E_Int err = 1;
     E_Int neq_mtr;
     E_Int itest[6], lskip[6], ind_rhs[6], ind_avg[6], ind_avg_thread[6], ind_mjr[6], ind_mjr_thread[6];
+
+    E_Int lrhs_loc = 0;
+    if (lrhs == 1) lrhs_loc = 1;
+
     itest[0] = 1;
     itest[1] = param_int[IJKV];
     itest[2] = 1;
@@ -165,7 +169,7 @@ E_Int K_FASTS::BCzone(
 
         E_Int ipara = idir - 1;
         // on test si le sous domaine touche le bord du domaine et si la CL est bonne candidate a implicitation
-        if ( lrhs == 1 ) {
+        if ( lrhs_loc == 1 ) {
                           if ( ( ipt_ind_dm_thread[ipara] == itest[ipara] ) &&
                              ( ( param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7 ) ||
                                  param_int[pt_bc + BC_TYPE] == 12 ) ) 
@@ -173,12 +177,12 @@ E_Int K_FASTS::BCzone(
                              lskip[ipara] = 0;
                              lcorner      = 0;
                            }
-                         }
+	}
         else {lskip[ipara] = 1;}
 
     }  // fin loop CL warmup
 
-    if ( lrhs == 1 ) {
+    if ( lrhs_loc == 1 ) {
         E_Int ificmax = 1;
         ishift_lu[0]  = ipt_ind_dm_thread[0] - ( 1 - lskip[0] ) * ificmax;
         ishift_lu[1]  = ipt_ind_dm_thread[1] + ( 1 - lskip[1] ) * ificmax;
@@ -220,7 +224,7 @@ E_Int K_FASTS::BCzone(
 
                 E_Int eq_deb = 1;
                 if ( lskip_loc == 0 )
-                    bvbs_extrapolate_( idir_loc, lrhs, eq_deb, param_int, ipt_ind_CL119, param_real[RONUTILDEINF],
+                    bvbs_extrapolate_( idir_loc, lrhs_loc, eq_deb, param_int, ipt_ind_CL119, param_real[RONUTILDEINF],
                                        iptrop );
             }
         }
@@ -292,7 +296,7 @@ E_Int K_FASTS::BCzone(
 
         E_Int ipara = idir - 1;
 
-        if ( lskip[ipara] == 0 || lrhs == 0 )  // test pour savoir si face ipara est skipper en LU pour le rhs
+        if ( lskip[ipara] == 0 || lrhs_loc == 0 )  // test pour savoir si face ipara est skipper en LU pour le rhs
         {
             if ( idir <= 2 ) {
                 iptijk    = ipti;
@@ -315,22 +319,49 @@ E_Int K_FASTS::BCzone(
                             ipt_ind_CL, ipt_ind_CL119 );                                                   // OUT
 
             E_Int bc_type = param_int[pt_bc + BC_TYPE];
-
             E_Float* ipt_data;
+	    
+	    if (lrhs == 2)
+	      {
+		E_Int range         = 2;
+		E_Int without_ghost = 1;
+                E_Float signe       = 1.;
+		//E_Int ipt_ind_CLgmres[6];
+
+		for (E_Int i = 0; i < 6; i++)
+		  ipt_ind_CLgmres[i] = ipt_ind_CL[i];
+
+		if (idir % 2 == 1)
+		  {
+		    ipt_ind_CLgmres[idir - 1] += range * without_ghost;
+		    ipt_ind_CLgmres[idir    ] += range;
+
+		  }
+		else
+		  {
+                    //printf("idir2   %d \n", idir);
+		    ipt_ind_CLgmres[idir - 2] -= range;
+		    ipt_ind_CLgmres[idir - 1] -= range * without_ghost;
+		  }
+                 //printf("idir  %d %d %d %d  %d %d %d\n", idir,  ipt_ind_CLgmres[0], ipt_ind_CLgmres[1], ipt_ind_CLgmres[2],  ipt_ind_CLgmres[3], ipt_ind_CLgmres[4], ipt_ind_CLgmres[5]);
+
+		pre_bc_(param_int, signe, ipt_ind_CLgmres, iptrop, iptrop_gmres);
+	      }
+
             if ( nbdata != 0 ) ipt_data = param_real + param_int[pt_bcs + 1 + ndf + nb_bc];
 
             if ( lskip_loc == 0 ) {
                 // RANS:LES extrapolation
                 E_Int eq_deb                             = 1;
-                if ( bc_type == 14 && lrhs == 0 ) eq_deb = 6;
+                if ( bc_type == 14 && lrhs_loc == 0 ) eq_deb = 6;
 
-                if ( lrhs == 1 && ( bc_type == 0 || bc_type == 1 || bc_type == 2 || bc_type == 10 || bc_type == 11 ||
+                if ( lrhs_loc == 1 && ( bc_type == 0 || bc_type == 1 || bc_type == 2 || bc_type == 10 || bc_type == 11 ||
                                     bc_type == 14 || bc_type == 16 || bc_type == 17 ) )
                     bc_type = 0;  // si rhs, on extrapole sauf si wall
 
                 if ( bc_type == 0 ) {
-                    bvbs_extrapolate_( idir, lrhs, eq_deb, param_int, ipt_ind_CL119, param_real[RONUTILDEINF], iptrop );
-                } else if ( bc_type == 1 ) {
+                    bvbs_extrapolate_( idir, lrhs_loc, eq_deb, param_int, ipt_ind_CL119, param_real[RONUTILDEINF], iptrop );
+                } else if ( bc_type == 1) {
                     DEFAULT_STATE( "BCFarfield" )
                     // MUSCL
                     E_Float c4, c5, c6;
@@ -338,7 +369,7 @@ E_Int K_FASTS::BCzone(
                     c5 = 2. / 6.;
                     c6 = -1. / 6.;
 
-                    bvbs_farfield_( idir, lrhs, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
+                    bvbs_farfield_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                     iptijk, iptrop, ipt_data );
 
                 } else if ( bc_type == 10 ) {
@@ -349,7 +380,7 @@ E_Int K_FASTS::BCzone(
                     c5 = 2. / 6.;
                     c6 = -1. / 6.;
 
-                    bvbs_outflow_( idir, lrhs, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
+                    bvbs_outflow_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                    iptijk, iptrop, ipt_data );
                 } else if ( bc_type == 13 ) {
                     DEFAULT_STATE( "BCInflow" )
@@ -361,7 +392,7 @@ E_Int K_FASTS::BCzone(
 
                     if (iptsize_data[0] <=6)
                      {
-                      bvbs_inflow_( idir, lrhs, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk, iptijk,
+                      bvbs_inflow_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk, iptijk,
                                    iptrop, ipt_data );
                      }
                     else
@@ -379,7 +410,7 @@ E_Int K_FASTS::BCzone(
                        E_Float* ipt_data5 = ipt_data4 + iptsize_data[0];
                        E_Float* ipt_data6 = ipt_data5 + iptsize_data[0];
 
-                       bvbs_inflow_fich_( idir, lrhs, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
+                       bvbs_inflow_fich_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                           iptijk, iptrop, ipt_data1, ipt_data2, ipt_data3, ipt_data4, ipt_data5,
                                          ipt_data6, iptsize_data[0], inc_bc, size_work );
                      }
@@ -392,30 +423,30 @@ E_Int K_FASTS::BCzone(
                     c5 = 2. / 6.;
                     c6 = -1. / 6.;
 
-                    bvbs_inflow_supersonic_( idir, lrhs, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6,
+                    bvbs_inflow_supersonic_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6,
                                              ipventijk, iptijk, iptrop, ipt_data );
                 } else if ( bc_type == 3 || ( bc_type == 4 && param_int[IFLOW] == 1 ) || bc_type == 5 ) {
                     E_Float mobile_coef            = 1.;
                     if ( nbdata != 0 ) mobile_coef = ipt_data[0];
 
-                    bvbs_wall_inviscid_( idir, lrhs, neq_mtr, mobile_coef, param_int, ipt_ind_CL, ipventijk, iptijk,
+                    bvbs_wall_inviscid_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, ipventijk, iptijk,
                                          iptrop );
                 } else if ( ( bc_type == 6 || bc_type == 4 ) && param_int[IFLOW] > 1 ) {
                     E_Float mobile_coef            = 1.;
                     if ( nbdata != 0 ) mobile_coef = ipt_data[0];
 
-                    bvbs_wall_viscous_adia_( idir, lrhs, neq_mtr, mobile_coef, param_int, ipt_ind_CL, ipventijk, iptijk,
+                    bvbs_wall_viscous_adia_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, ipventijk, iptijk,
                                              iptrop );
                 } else if ( bc_type == 12 && param_int[IFLOW] > 1 ) {
                     E_Float mobile_coef            = 1.;
                     if ( nbdata != 0 ) mobile_coef = ipt_data[0];
 
-                    bvbs_wall_viscous_transition_( idir, lrhs, neq_mtr, mobile_coef, param_int, ipt_ind_CL, param_real,
+                    bvbs_wall_viscous_transition_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, param_real,
                                                    iptx, ipty, iptz, ipventijk, iptijk, iptrop );
                 }
 
                 else if ( bc_type == 11 ) {
-                    bvbs_periodique_( idir, lrhs, param_int, ipt_ind_CL119, iptrop );
+                    bvbs_periodique_( idir, lrhs_loc, param_int, ipt_ind_CL119, iptrop );
                 }
 
                 /*else if (bc_type == 15 )
@@ -445,10 +476,10 @@ E_Int K_FASTS::BCzone(
                         inc_bc = ind_fen[1] - ind_fen[0] + 1;
                     }  // nombre element de la fenetre dans la direction I
 
-                    bvbs_outpres_( idir, lrhs, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
+                    bvbs_outpres_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                    iptijk, iptrop, ipt_data, iptsize_data[0], inc_bc );
 
-                } else if ( bc_type == 17 && lrhs == 0 ) {
+                } else if ( bc_type == 17 && lrhs_loc == 0 ) {
                     // MUSCL
                     E_Float c4, c5, c6;
                     c4 = 5. / 6.;
@@ -473,12 +504,38 @@ E_Int K_FASTS::BCzone(
                     E_Float* ipt_data5 = ipt_data4 + iptsize_data[0];
                     E_Float* ipt_data6 = ipt_data5 + iptsize_data[0];
 
-                    bvbs_inflow_newton_( idir, lrhs, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
+                    bvbs_inflow_newton_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                          iptijk, iptrop, ipt_data1, ipt_data2, ipt_data3, ipt_data4, ipt_data5,
                                          ipt_data6, iptsize_data[0], inc_bc, size_work );
 
                 } 
             }  // if skip_loc
+
+	    if (lrhs == 2)
+	      {
+		E_Int         range = 2;
+		E_Int without_ghost = 0;
+                E_Float signe       =-1.;
+		//E_Int ipt_ind_CLgmres[6];
+
+		for (E_Int i = 0; i < 6; i++)
+		  ipt_ind_CLgmres[i] = ipt_ind_CL[i];
+
+		if (idir % 2 == 1)
+		  {
+		    ipt_ind_CLgmres[idir - 1] += range * without_ghost;
+		    ipt_ind_CLgmres[idir] += range;
+		  }
+		else
+		  {
+		    range *= - 1;
+		    ipt_ind_CLgmres[idir - 2] += range;
+		    ipt_ind_CLgmres[idir - 1] += range * without_ghost;
+		  }
+
+		pre_bc_(param_int, signe, ipt_ind_CLgmres, iptrop, iptrop_gmres);
+	      }
+
         }      // if skip_ipara
     }          // fin boucle CL
 

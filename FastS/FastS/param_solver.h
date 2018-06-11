@@ -122,6 +122,9 @@
 #define SA_DEBUG     68
 #define PT_OMP       69
 #define PT_BC	     70
+#define LINEARSOLVER 71
+#define NB_RESTART   72
+#define NB_KRYLOV    73
 
 #define BC_TYPE	      0
 #define BC_IDIR       1

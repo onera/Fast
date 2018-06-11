@@ -249,11 +249,12 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
      o = K_PYTREE::getNodeFromName1(numerics, "type_zone");
      if (o == NULL) { PyErr_SetString(PyExc_ValueError, "metric: type zone is missing or is invalid."); return 0; }
      E_Int* d = K_PYTREE::getValueAI(o, hook); d[0] = typ_zone;
+     PyObject* zname_py = PyList_GetItem(zone, 0); char* zname = PyString_AsString(zname_py);
 
-     if      (typ_zone == 0) {printf("zone 3D curvilinear: %d %d %d \n", ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
-     else if (typ_zone == 1) {printf("zone 3D, homogenous k direction with constant step: %d %d %d\n", ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
-     else if (typ_zone == 2) {printf("zone 3D cartesian with constant step: %d %d %d \n", ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
-     else if (typ_zone == 3) {printf("zone 2D curvilinear: %d %d %d \n", ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
+     if      (typ_zone == 0) {printf("typezone: 3D curvilinear, %s (%d, %d, %d) \n", zname, ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
+     else if (typ_zone == 1) {printf("typezone: 3D, homogenous k direction with constant step,  %s(%d, %d, %d) \n",  zname,ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
+     else if (typ_zone == 2) {printf("typezone: 3D cartesian with constant step,  %s(%d, %d, %d) \n",  zname,ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
+     else if (typ_zone == 3) {printf("typezone: 2D curvilinear, %s (%d, %d, %d) \n",  zname,ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
 
      //
      //* Declare memoire pour metric: normales + volume)

@@ -596,10 +596,8 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, NP=0
                 graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
             t = Cmpi.readZones(t, FILE, rank=rank)
             zones=Internal.getZones(t)
-            print "nb zone avt tri", len(zones), Cmpi.rank, FILE
             t = Cmpi.convert2PartialTree(t, rank=rank)
             zones=Internal.getZones(t)
-            print "nb zone apr tri", len(zones), Cmpi.rank, FILE
 
         else: # load 1 fichier par proc
             if graph:
