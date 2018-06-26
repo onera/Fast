@@ -3,7 +3,7 @@ c     $Date: 2018-11-04 13:25:50 +0100 (Thu, 04 Nov 2018) $
 c     $Revision: 64 $
 c     $Author: Thibaut $
 c***********************************************************************
-      subroutine precond_select(param_int, param_real, ind_loop, norm,
+      subroutine precond_select(param_int, param_real, ind_loop,
      &     step, nb_prec,
      &     rop, coe, ti, tj,
      &     vectin, vectout, ssor)
@@ -43,7 +43,7 @@ c     &        nobl, vectin, vectout, rop, coe, ti, tj)
 
          nobl = min(ind_loop(2), ind_loop(4))
          call LDURelaxScal(param_int, param_real, ind_loop,
-     &                     step, nobl, norm, 
+     &                     step, nobl, 
      &                     vectin, vectout, rop, coe, ti, tj, ssor)
 
       endif

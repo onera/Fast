@@ -116,15 +116,15 @@
 #define SFD_INIT_IT  63
 #define SLOPE        64
 #define NIT_INFLOW   65
-
 #define SHIFTVAR     66
 #define EXTRACT_RES  67
 #define SA_DEBUG     68
 #define PT_OMP       69
 #define PT_BC	     70
-#define LINEARSOLVER 71
+#define NB_RELAX     71
 #define NB_RESTART   72
 #define NB_KRYLOV    73
+#define IMPLICITSOLVER 74
 
 #define BC_TYPE	      0
 #define BC_IDIR       1

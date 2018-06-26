@@ -42,8 +42,8 @@ E_Int K_FASTS::gsdr3(
   E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int* ndimdx_transfer, E_Float* timer_omp,
   E_Int*     iptludic         , E_Int*   iptlumax       ,
   E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom  ,
-  E_Float* ipt_testVectG      , E_Float* ipt_testVectY   , E_Float* ipt_ssor           , E_Float* ipt_drodmd,
-  E_Float* ipt_test_Hessenberg, E_Float** iptkrylov      , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry,
+  E_Float* ipt_testVectG      , E_Float* ipt_testVectY   , E_Float** iptssor       , E_Float** iptssortmp    , E_Float* ipt_drodmd,
+  E_Float* ipt_test_Hessenberg, E_Float** iptkrylov      , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp,
   E_Float*   ipt_cfl,
   E_Float**  iptx            , E_Float**  ipty            , E_Float**    iptz      ,
   E_Float**  iptCellN        ,
@@ -79,9 +79,6 @@ E_Int K_FASTS::gsdr3(
 #ifdef TimeShow
 
 #ifdef _MPI
-  // Check if MPI_Init has been called by converter...
-  // MPI_Initialized( &mpi ); 
-  // ( init == 1 ) => it is an MPI run
   if(mpi)
   {
     MPI_Comm_rank (MPI_COMM_WORLD, &rank);  
@@ -217,14 +214,12 @@ E_Int K_FASTS::gsdr3(
         // ---------------------------------------------------------------------
         E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int nd_current=0;
 
-        if (param_int[0][LINEARSOLVER] == 0 && layer_mode == 1) { ipt_norm_kry[ithread-1]=0.; }
-
+        if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1) { ipt_norm_kry[ithread-1]=0.; }
         //calcul du sous domaine a traiter par le thread 
         for (E_Int nd = 0; nd < nidom; nd++)
           {
            E_Int lmin = 10;
            if (param_int[nd][ITYPCP] == 2) lmin = 4;
-
 #include "Compute/rhs.cpp"
           shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
           shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
@@ -238,11 +233,11 @@ E_Int K_FASTS::gsdr3(
           E_Float rhs_end = omp_get_wtime();
           timer_omp[(ithread-1)*2 +(nitcfg-1)*Nbre_thread_actif] += rhs_end - rhs_begin;
 
-
-          if (param_int[0][LINEARSOLVER] == 0 && layer_mode == 1)
+          if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1)
 	  {
 #include   "Compute/Linear_solver/lhs.cpp"
           }
+
           // LUSGS
           else
 	  { 
@@ -280,6 +275,7 @@ E_Int K_FASTS::gsdr3(
   //
 if(lexit_lu ==0 && layer_mode==1)
 {   
+
   //Swap (call to setInterpTransfer)
   E_Float Pr = param_real[0][PRANDT];
   setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,

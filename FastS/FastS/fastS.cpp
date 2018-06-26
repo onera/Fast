@@ -27,6 +27,7 @@ int __activation__;
 static PyMethodDef Pyfasts [] =
 {
   {"allocate_metric"     , K_FASTS::allocate_metric     ,  METH_VARARGS},
+  {"allocate_ssor"       , K_FASTS::allocate_ssor       ,  METH_VARARGS},
   {"init_metric"         , K_FASTS::init_metric         ,  METH_VARARGS},
   {"_motionlaw"          , K_FASTS::_motionlaw          ,  METH_VARARGS},
   {"_movegrid"           , K_FASTS::_movegrid           ,  METH_VARARGS},

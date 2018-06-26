@@ -1,7 +1,7 @@
 # FastS + MPI
 import PyTree
 import fasts
-from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createPrimVars, _createPrimVars, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _buildOwnData, _init_metric, allocate_metric, _BCcompact, _motionlaw, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp
+from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createPrimVars, _createPrimVars, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _buildOwnData, _init_metric, allocate_metric, _BCcompact, _motionlaw, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp, allocate_ssor
 import timeit
 
 import numpy
@@ -189,6 +189,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
 
     _init_metric(t, metrics, hook1, ompmode)
 
+    ssors = allocate_ssor(t, metrics, hook1, ompmode)
+
     # compact + align + init numa
     rmConsVars=True
     adjoint   =Adjoint
@@ -244,6 +246,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     else:
         PyTree.HOOK['param_real_tc'] = None
         PyTree.HOOK['param_int_tc']  = None 
+
+    if ssors is not []:
+        PyTree.HOOK['ssors'] = ssors
+
     #
     # Compactage arbre moyennes stat
     #

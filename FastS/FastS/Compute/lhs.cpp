@@ -31,7 +31,7 @@
                      if( kimpli == 1 )
                       {  //
                          // CL sur rhs pour implicitation
-                         E_Int lrhs=1; E_Int lcorner=1;
+			 E_Int lrhs=1; E_Int lcorner=1; E_Int mjrnewton=1;
                          BCzone( nd, lrhs, lcorner,
                                  param_int[nd], param_real[nd],
                                  npass,
@@ -42,13 +42,13 @@
                                  iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd]);
                  
                          if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu , iptdrodm + shift_zone );
-                  
+
                          if(lexit_lu == 0 ) invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
-                                                   ipt_shift_lu           ,
-                                                   iptrotmp[nd]           , iptro_ssiter[nd]        , iptdrodm + shift_zone ,
+                                                   ipt_shift_lu           , mjrnewton               ,
+                                                   iptrotmp[nd]           , iptro_ssiter[nd]        , iptdrodm + shift_zone , iptdrodm + shift_zone ,
                                                    ipti[nd]               , iptj[nd]                , iptk[nd]              ,
                                                    iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-                                                   iptcoe  + shift_coe   );
+                                                   iptcoe  + shift_coe    , iptssor[nd]             , iptssortmp[nd]);
                       } //fin kimpli
 
 

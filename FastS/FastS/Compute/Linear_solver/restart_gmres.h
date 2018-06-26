@@ -1,17 +1,5 @@
   E_Float value = 0., sum_value = 0.; E_Float normL2 = 0., normL2_sum = 0.;
-/*
-  // 1) Preparation du V0
-  normL2_sum = 0.;
-  for (E_Int nd = 0; nd < nidom; nd++)
-  {
-    //Copie de drodm init dans V0 + calcul de la norme L2^2
-    // iptkrylov[nd] = iptdrodm[nd] 
-	    init_gram_schmidt_(param_int[nd], ipt_ind_dm[nd],
-		       iptdrodm + nd * param_int[nd][NEQ] * param_int[nd][NDIMDX],
-		       iptkrylov[nd], normL2);
-    normL2_sum += normL2;
-  }
-*/
+E_Int mjrnewton = 0;
  
   // norm L2 krylov pour openmp
   for (E_Int th = 0; th < Nbre_thread_actif; th++) { normL2_sum += ipt_norm_kry[th];}
@@ -20,9 +8,9 @@
   normL2_sum = sqrt(normL2_sum);
   ipt_testVectG[0] = normL2_sum;
 
-  //Si pas de preconditionneur, on normalise. Sinon normalisation dans le precond.
-  if(nb_precond ==0)
-  {
+// Pour verif Ax-b
+//E_Float save = normL2_sum;
+
     //iptkrylov[nd] = iptkrylov[nd] / normL2_sum
     nd_current =0;
     for (E_Int nd = 0; nd < nidom; nd++)
@@ -34,7 +22,6 @@
           nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
       }
-  }
 
 //
 //
@@ -45,23 +32,26 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
   {
 #pragma omp barrier
     // 2.1) Calcul de V_kr = A * V_kr-1
-    for (E_Int step = 1; step < nb_relax + 1; step++)
-      {
         shift_coe=0; nd_current=0;
 	for (E_Int nd = 0; nd < nidom; nd++)
 	  {
 	   //A*V_kr-1 tapenade soon   //sur ind_sdm
 	   E_Float* krylov_in = iptkrylov[nd] +  kr     *param_int[nd][NEQ] * param_int[nd][NDIMDX];
 	   E_Float* krylov_out= iptkrylov[nd] + (kr + 1)*param_int[nd][NEQ] * param_int[nd][NDIMDX];
-	   E_Float*       ssor=  ipt_ssor     +     nd * shift_coe;
 
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 
-	     precond_select_(param_int[nd], param_real[nd], ipt_ind_dm_thread, normL2_sum, step, nb_precond,
-	    		    iptro_ssiter[nd], iptcoe + shift_coe , ipti[nd], iptj[nd],
-                              krylov_in,  krylov_out, ssor);
+	   invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
+	   	  ipt_ind_dm_thread      , mjrnewton               ,
+	   	  iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , ipt_gmrestmp[nd],
+	   	  ipti[nd]               , iptj[nd]                , iptk[nd]              ,
+	   	  iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
+	   	  iptcoe  + shift_coe    , iptssor[nd]             , iptssortmp[nd]);
+
+	   if (param_int[nd][NB_RELAX] != 0)
+	     krylov_in = ipt_gmrestmp[nd];
 			    
-             if (step == nb_relax){ dp_dw_vect_(param_int[nd], param_real[nd],ipt_ind_dm_thread , iptro_ssiter[nd], krylov_in,  krylov_out);}
+             dp_dw_vect_(param_int[nd], param_real[nd],ipt_ind_dm_thread , iptro_ssiter[nd], krylov_in,  krylov_out);
 
              nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
@@ -71,8 +61,8 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
 	   iptkrylov_transfer[nd] = krylov_out;
 
 	  }//loop zone
-      }// loop step
 
+#pragma omp barrier
     //Reinitialisation verrou omp
     //
     nd_current=0;
@@ -109,14 +99,14 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
        E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
 #include  "HPC_LAYER/OMP_MODE_BEGIN.h"
 
-            E_Int ierr = BCzone(nd, lrhs , lcorner, param_int[nd], param_real[nd], npass,
+            E_Int ierr = BCzone_d(nd, lrhs , lcorner, param_int[nd], param_real[nd], npass,
 	           		 ipt_ind_dm_loc, ipt_ind_dm_thread, 
 			         ipt_ind_CL_thread, ipt_ind_CL119 ,  ipt_ind_CLgmres, ipt_shift_lu,
-			         iptkrylov_transfer[nd],
+			         iptro_ssiter[nd],
 		    	         ipti[nd]     , iptj[nd]            , iptk[nd],
 			         iptx[nd]     , ipty[nd]            , iptz[nd],
 			         iptventi[nd] , iptventj[nd]        , iptventk[nd],
-			         iptro_ssiter[nd]);
+			         iptkrylov_transfer[nd]);
 
             correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptkrylov_transfer[nd]);
 
@@ -159,6 +149,8 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
       {
         E_Float* krylov_in = iptkrylov[nd] +  kr    * param_int[nd][NEQ] * param_int[nd][NDIMDX];
         E_Float* krylov_out= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
+	/* if (param_int[nd][NB_RELAX] != 0) */
+	/*   krylov_in = ipt_gmrestmp[nd]; */
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
              id_vect_(param_int[nd], ipt_ind_dm_thread, ipt_drodmd + shift_zone, krylov_out, krylov_in);
              nd_current +=1;
@@ -340,7 +332,7 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
 
 
   //Calcul de X solution du GMRES, stockage dans drodm
-  shift_coe =0; nd_current =0;
+  shift_zone =0; nd_current =0;
   for (E_Int nd = 0; nd < nidom; nd++)
     {
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
@@ -348,35 +340,32 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
        // inverser les loop et vectoriser avec simd reduction
        // 
        prod_mat_vect_(param_int[nd], ipt_ind_dm_thread, iptkrylov[nd],
-                      ipt_testVectY, iptdrodm + shift_coe, num_max_vect);
+                      ipt_testVectY, iptdrodm + shift_zone, num_max_vect);
        nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
-     shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
+     shift_zone  = shift_zone  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
     }//loop zone
 
-  for (E_Int step = 1; step < nb_relax + 1; step++)
-    {
-      shift_coe =0; nd_current =0;
+      shift_coe =0; shift_zone =0; nd_current =0;
       for (E_Int nd  = 0; nd < nidom; nd++)
         {
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
-
-            E_Float* kryout = ipt_drodmd;
-            if (step == nb_relax) kryout = iptdrodm;
  
-            E_Float* krylov_in = iptdrodm + shift_coe;
-	    E_Float* krylov_out= kryout   + shift_coe;
-            E_Float*       ssor= ipt_ssor + shift_coe;
+            E_Float* krylov_in = iptdrodm + shift_zone;
+	    E_Float* krylov_out= iptdrodm + shift_zone;
 
-            E_Float normL2_sum =1.;
-            precond_select_(param_int[nd], param_real[nd], ipt_ind_dm_thread, normL2_sum, step, nb_precond,
-	    		 iptro_ssiter[nd], iptcoe + shift_coe , ipti[nd], iptj[nd],
-                            krylov_in,  krylov_out, ssor);
+	    invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
+	    	   ipt_ind_dm_thread      , mjrnewton               ,
+	    	   iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , krylov_out            ,
+	    	   ipti[nd]               , iptj[nd]                , iptk[nd]              ,
+	    	   iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
+	    	   iptcoe  + shift_coe    , iptssor[nd]             , iptssortmp[nd]);
+
             nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
+	  shift_zone  = shift_zone  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
           shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
          }//loop zone
-    }//loop step ssor
 
   //
   //
@@ -385,3 +374,5 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
   //
   //
   //Include de print de verif
+
+//#include "verif_Ax-b.cpp"

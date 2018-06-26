@@ -133,8 +133,23 @@ def allocate_metric(t):
                grid_init = Internal.copyTree(grids[0])
                grid_init[0] = 'GridCoordinates#Init'
                Internal.addChild(z, grid_init, pos=1) # first
-        metrics.append(fasts.allocate_metric(z, nssiter))   
+        metrics.append(fasts.allocate_metric(z, nssiter))
     return metrics
+
+#
+#==============================================================================
+# alloue retourne tableau ssor
+#==============================================================================
+def allocate_ssor(t, metrics, hook, ompmode):
+    zones = Internal.getZones(t)
+    dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')
+    dtloc_numpy = Internal.getValue(dtloc)
+    nssiter = int(dtloc_numpy[0])
+
+    ssors = []
+    ssors = fasts.allocate_ssor(zones, metrics, nssiter, hook, ompmode)
+
+    return ssors
 
 #
 #==============================================================================
@@ -195,6 +210,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     #init metric
     _init_metric(t, metrics, hook1, ompmode)
 
+    ssors = allocate_ssor(t, metrics, hook1, ompmode)
+
     # compact + align + init numa
     rmConsVars=True
     adjoint=Adjoint
@@ -230,7 +247,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
             metrics[c][2] = ro[1]
         else: ale = True
         c += 1
-    
 
     #
     # mise a jour vitesse entrainememnt
@@ -256,6 +272,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     else:
         HOOK['param_real_tc'] = None
         HOOK['param_int_tc']  = None  
+
+    if ssors is not []:
+        HOOK['ssors'] = ssors
 
     #
     # Compactage arbre moyennes stat
@@ -460,10 +479,10 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             sfd = 0
             a = Internal.getNodeFromName2(z, 'sfd')
             if a is not None: sfd = Internal.getValue(a)
-            linear_solver = 'none'
-            a = Internal.getNodeFromName2(z, 'linear_solver')
-            if a is not None: linear_solver = Internal.getValue(a)
-            if linear_solver != 'none':
+            implicit_solver = 'none'
+            a = Internal.getNodeFromName2(z, 'implicit_solver')
+            if a is not None: implicit_solver = Internal.getValue(a)
+            if implicit_solver == 'gmres':
                 nbr_krylov = 20
                 a = Internal.getNodeFromName2(z, 'nb_krylov')
                 if a is not None: nbr_krylov = Internal.getValue(a)
@@ -518,7 +537,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
 
             #COMPACT KRYLOV SUBSPACE VECTOR
             fields2compact = []
-            if (linear_solver == 'gmres'):
+            if (implicit_solver == 'gmres'):
                 for Vector in range(nbr_krylov):
                     fields2compact.append('centers:Krylov_' + str(Vector) + '_Density')
                     fields2compact.append('centers:Krylov_' + str(Vector) + '_MomentumX')
@@ -1454,7 +1473,7 @@ def _buildOwnData(t):
     # 3: requires array/list of ints, 4: requires array/list of floats,
     # []: requires given strings
     keys4Base = {
-    'temporal_scheme':['explicit', 'implicit', 'implicit_local'], 
+    'temporal_scheme':['explicit', 'implicit', 'implicit_local'],
     'ss_iteration':0,
     'rk':0, 
     'modulo_verif':0,
@@ -1464,7 +1483,8 @@ def _buildOwnData(t):
     }
     keys4Zone = {
     'scheme':['ausmpred', 'senseur', 'roe_min', 'roe', 'roe_nul', 'roe_kap'],
-    'linear_solver':['gmres'],
+    'implicit_solver':['lussor', 'gmres'],
+    'nb_relax':0,
     'nb_krylov':0,
     'nb_restart':0,
     'motion':['none', 'rigid', 'deformation'],
@@ -1599,7 +1619,8 @@ def _buildOwnData(t):
             ransmodel= 'SA'
             sgsmodel = "Miles"
             des      = "none"
-            linear_solver = "none"
+            implicit_solver = "lussor"
+            nbr_relax = 1
             nbr_krylov    = 20
             nbr_restart   = 1
             temporal_scheme = "implicit"
@@ -1663,8 +1684,10 @@ def _buildOwnData(t):
                 FastI.checkKeys(d, keys4Zone)
                 a = Internal.getNodeFromName2(b, 'temporal_scheme')
                 if a is not None: temporal_scheme = Internal.getValue(a)
-                a = Internal.getNodeFromName1(d, 'linear_solver')
-                if a is not None: linear_solver = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'implicit_solver')
+                if a is not None: implicit_solver = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'nb_relax')
+                if a is not None: nbr_relax = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'nb_krylov')
                 if a is not None: nbr_krylov = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'nb_restart')
@@ -1806,13 +1829,15 @@ def _buildOwnData(t):
             elif dtnature == "local": dtloc = 1
             else: print 'Warning: FastS: time_step_nature %s is invalid.'%dtnature
 
-            if linear_solver == "gmres": LinearSolverNum = 0
-            else: LinearSolverNum = -1
+            ImplicitSolverNum = 0
+            if implicit_solver == "lussor": ImplicitSolverNum = 0
+            elif implicit_solver == "gmres": ImplicitSolverNum = 1
+            else: print 'Warning: FastS: implicit_solver %s is invalid.'%implicit_solver
 
             # creation noeud parametre integer
             # Determination de levelg et leveld             
 
-            datap = numpy.empty(74, numpy.int32)
+            datap = numpy.empty(75, numpy.int32)
             datap[0:25]= -1
             datap[25]  = 0     # zone 3D curvi par defaut
             datap[26]  = 0     # Vent 3D par defaut
@@ -1849,10 +1874,11 @@ def _buildOwnData(t):
             datap[65]  = nit_inflow
             datap[66]  = shiftvar
             datap[67]  = extract_res
-            datap[68]  = DES_debug         #index 69 et 70 pour PT_BC et PT_OMP
-            datap[71]  = LinearSolverNum
+            datap[68]  = DES_debug        #index 69 et 70 pour PT_BC et PT_OMP
+            datap[71]  = nbr_relax
             datap[72]  = nbr_restart
             datap[73]  = nbr_krylov
+            datap[74]  = ImplicitSolverNum
 
             i += 1
          

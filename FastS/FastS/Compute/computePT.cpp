@@ -140,15 +140,17 @@ else
   E_Float** ipti0;      E_Float** iptj0;    E_Float** iptk0;
   E_Float** ipti_df;    E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
   E_Float** iptdist;    E_Float** iptventi; E_Float** iptventj; E_Float** iptventk;
-  E_Float** iptrdm;     E_Float** iptkrylov; E_Float** iptkrylov_transfer;
+  E_Float** iptrdm;     E_Float** iptkrylov;E_Float** iptkrylov_transfer;
   E_Float** iptCellN  ; E_Float** ipt_cfl_zones; 
-  E_Float** iptro_sfd; E_Float** iptdelta; E_Float** iptfd; E_Float** iptro_zgris; E_Float** iptro_res;
+  E_Float** iptro_sfd;  E_Float** iptdelta; E_Float** iptfd; E_Float** iptro_zgris; E_Float** iptro_res;
+  E_Float** iptssor;    E_Float** iptssortmp;
+  E_Float** ipt_gmrestmp;
 
   ipt_param_int     = new E_Int*[nidom*3];
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
 
-  iptx              = new E_Float*[nidom*30];
+  iptx              = new E_Float*[nidom*33];
   ipty              = iptx            + nidom;
   iptz              = ipty            + nidom;
   iptro             = iptz            + nidom;
@@ -177,10 +179,14 @@ else
   ipt_param_real    = iptCellN        + nidom;
   iptkrylov         = ipt_param_real  + nidom;
   iptkrylov_transfer= iptkrylov       + nidom;
-  ipt_cfl_zones     = iptkrylov       + nidom;   //3composants: attention a la prochaine addition
+  ipt_gmrestmp      = iptkrylov_transfer+ nidom;
+  iptssor           = ipt_gmrestmp    + nidom;
+  iptssortmp        = iptssor         + nidom;
+  ipt_cfl_zones     = iptssortmp      + nidom;   //3composants: attention a la prochaine addition
 
   vector<PyArrayObject*> hook;
-
+  PyObject* ssorArray = PyDict_GetItemString(work,"ssors");
+    
   E_Int nb_pulse      = 0;                  // =1 => pulse acoustic centree a l'origine
   E_Int ndimdx_max    = 0;
   E_Int ndimdx_sa     = 0;
@@ -240,13 +246,17 @@ else
     else iptCellN[nd] = K_PYTREE::getValueAF(t, hook);
 
     //Pointeur Vect Krylov
-    iptkrylov[nd]= NULL;
-    if (ipt_param_int[nd][ LINEARSOLVER ] == 0) // 0 = gmres
+    iptkrylov[nd] = NULL;
+    if (ipt_param_int[nd][ IMPLICITSOLVER ] == 1) // 1 = gmres
     {
       t            = K_PYTREE::getNodeFromName1(sol_center, "Krylov_0_Density");
       iptkrylov[nd]= K_PYTREE::getValueAF(t, hook);
     }
 
+    iptssor[nd] = NULL;
+    if (ipt_param_int[nd][ NB_RELAX ] > 1) // 1 = LUSSOR
+      iptssor[nd] = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, nd));
+  
     //Pointeur sfd
     if (ipt_param_int[nd][ SFD ] == 1)
     {
@@ -324,11 +334,7 @@ else
           }
   } // boucle zone
   
-
- 
 //  // Reservation tableau travail temporaire pour calcul du champ N+1
-
-
 
   /// Tableau pour filtrage Visbal
   if (kfiltering == 0) neq_max = 0;
@@ -346,30 +352,52 @@ else
   if (kwig_stat ==  1) neq_wig_stat = 3; 
   FldArrayF  stat_wig(ndimt*neq_wig_stat); E_Float* iptstat_wig = stat_wig.begin();
 
+  // INIT du LUSSORTMP
+  E_Int size_tot = 0;
+
+  if (ipt_param_int[0][NB_RELAX] > 1 || (ipt_param_int[0][IMPLICITSOLVER] == 1 && ipt_param_int[0][NB_RELAX] != 0))
+    for (E_Int nd = 0; nd < nidom; nd++)
+      size_tot += ipt_param_int[nd][NDIMDX] * ipt_param_int[nd][NEQ];
+
+  FldArrayF ssortmp(size_tot * (ipt_param_int[0][NB_RELAX] > 1)); E_Float* ipt_ssortmp = ssortmp.begin();
+
+  if (ipt_param_int[0][NB_RELAX] > 1)
+    {
+      iptssortmp[0] = ipt_ssortmp;
+      for (E_Int nd = 1; nd < nidom; nd++)
+	iptssortmp[nd] = iptssortmp[nd - 1] + ipt_param_int[nd - 1][NDIMDX] * ipt_param_int[nd - 1][NEQ];
+    }
+
   /// Tableau pour GMRES (on test la premiere zone 
   //
   E_Float* ipt_testVectG      = NULL;
   E_Float* ipt_testVectY      = NULL;
   E_Float* ipt_test_Hessenberg= NULL;
-  E_Float* ipt_ssor           = NULL;
   E_Float* ipt_drodmd         = NULL;
   E_Float* ipt_norm_kry       = NULL;
   E_Int num_max_vect = 2;
   E_Int size_hessenb = 1;
-  if (ipt_param_int[0][LINEARSOLVER] == 0 && layer_mode == 1 )
-  { num_max_vect = ipt_param_int[0][NB_KRYLOV];
-    size_hessenb = num_max_vect*(num_max_vect-1);
-  }
+
+  FldArrayF gmrestmp(size_tot); E_Float* iptgmrestmp = gmrestmp.begin();
+
+  if (ipt_param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1 )
+    { 
+      num_max_vect = ipt_param_int[0][NB_KRYLOV];
+      size_hessenb = num_max_vect*(num_max_vect-1);
+      if (ipt_param_int[0][NB_RELAX] != 0)
+      	{
+      	  ipt_gmrestmp[0] = iptgmrestmp;
+      	  for (E_Int nd = 1; nd < nidom; nd++)
+      	    ipt_gmrestmp[nd] = ipt_gmrestmp[nd - 1] + ipt_param_int[nd - 1][NDIMDX] * ipt_param_int[nd - 1][NEQ];
+      	}
+    }
   else{ndim_drodm =1; }
 
   FldArrayF  testVectG(num_max_vect  ); ipt_testVectG = testVectG.begin();
   FldArrayF  testVectY(num_max_vect-1); ipt_testVectY = testVectY.begin();
-
   FldArrayF  test_Hessenberg(size_hessenb); ipt_test_Hessenberg = test_Hessenberg.begin();
   FldArrayF  drodmd(ndim_drodm); ipt_drodmd = drodmd.begin();
-  FldArrayF    ssor(ndim_drodm); ipt_ssor   = ssor.begin();
   FldArrayF norm_kry(threadmax_sdm); ipt_norm_kry = norm_kry.begin();
-  
 
   /// Tableau pour stockage senseur oscillation
   PyObject* wigArray = PyDict_GetItemString(work,"wiggle"); FldArrayF* wig;
@@ -479,7 +507,8 @@ else
             ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, ndimdx_transfer, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
-            ipt_testVectG      , ipt_testVectY    , ipt_ssor, ipt_drodmd, ipt_test_Hessenberg, iptkrylov, iptkrylov_transfer, ipt_norm_kry,
+            ipt_testVectG      , ipt_testVectY    , iptssor           , iptssortmp    , ipt_drodmd, 
+	    ipt_test_Hessenberg, iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp,
             ipt_cfl            ,
             iptx               , ipty             , iptz              ,
             iptCellN           ,
@@ -493,7 +522,7 @@ else
             iptrdm             ,
             iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res,
-            ipt_param_int_ibc       , ipt_param_real_ibc     , ipt_param_int_tc  , ipt_param_real_tc);
+            ipt_param_int_ibc  , ipt_param_real_ibc     , ipt_param_int_tc  , ipt_param_real_tc);
 
        if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
        {
@@ -528,7 +557,6 @@ else
          }
        }//test mise a jour cfl
 
-
        if((nstep == nssiter && lssiter_verif==1) || (nstep == nssiter-1 && lssiter_verif==0))  // mise a jour  du temps courant
        {
         for (E_Int nd = 0; nd < nidom ; nd++) { ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]; }
@@ -549,7 +577,6 @@ else
           iptro_m1[nd]= iptro[nd]; 
           iptro[nd]   = iptro_p1[nd];
           iptro_p1[nd]= ptsave;}
-
   }//loop nit_c
 
   delete [] iptx; delete [] ipt_param_int;

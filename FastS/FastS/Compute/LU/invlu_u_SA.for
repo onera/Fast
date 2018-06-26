@@ -6,9 +6,9 @@ c***********************************************************************
       subroutine invlu_u_SA(ndom,  param_int, param_real,
      &                      visco,sa_real,
      &                      ind_loop,
-     &                      drodm,rop,rop_1,
+     &                      drodm_out,rop,rop_1,
      &                      ti,tj,tk,
-     &                      coe)
+     &                      coe, mjrnewton)
 c***********************************************************************
 c                              O N E R A
 c
@@ -34,13 +34,13 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndom, ind_loop(6), param_int(0:*)
+      INTEGER_E ndom, ind_loop(6), param_int(0:*), mjrnewton
  
 
       REAL_E visco(5),sa_real(3)
 
       REAL_E  param_real(0:*)
-      REAL_E drodm(param_int(NDIMDX),param_int(NEQ)),
+      REAL_E drodm_out(param_int(NDIMDX)  ,param_int(NEQ)),
      &       coe(param_int(NDIMDX)  ,param_int(NEQ_COE)),
      &       rop(param_int(NDIMDX)  ,param_int(NEQ)),
      &       rop_1(param_int(NDIMDX),param_int(NEQ))
@@ -125,6 +125,7 @@ c Var loc
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_i_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
         enddo
 
@@ -138,6 +139,7 @@ c Var loc
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_j_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
           do i= ideb+ipas,ifin,ipas
@@ -148,7 +150,9 @@ c Var loc
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_j_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
           enddo
@@ -156,15 +160,16 @@ c Var loc
         !!! plan kdeb termine
 
        !!mise a jour Newton 1er plan k
-       do j= jdeb,jfin,ipas
-CDIR$ IVDEP
-           do  i= ideb,ifin,ipas
+        if (mjrnewton == 1) then
+           do j= jdeb,jfin,ipas
+C     DIR$ IVDEP
+              do  i= ideb,ifin,ipas
 
-             l  = inddm(i, j, kdeb)
+                 l  = inddm(i, j, kdeb)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
+              enddo
            enddo
-        enddo
-
+        endif
 
         !!! le domaine sans les mailles du bord
         do  k= kdeb+ipas,kfin,ipas
@@ -183,6 +188,7 @@ CDIR$ IVDEP
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_k_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
           !!! Fin plan jdeb 
@@ -194,7 +200,9 @@ CDIR$ IVDEP
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
@@ -205,7 +213,9 @@ CDIR$ IVDEP
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_j_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
              do  i= ideb+ipas,ifin,ipas
@@ -216,19 +226,25 @@ CDIR$ IVDEP
                 xal    = coe(l,1)*signe
 
 #include       "FastS/Compute/LU/lu_i_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_j_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_k_3dfull_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
              enddo
           enddo
-          do j= jfin,jdeb
-CDIR$ IVDEP
-           do  i= ifin, ideb
 
-             l  = inddm(i, j, k)
+          if (mjrnewton == 1) then
+             do j= jfin,jdeb
+C     DIR$ IVDEP
+                do  i= ifin, ideb
+
+                   l  = inddm(i, j, k)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
-           enddo
-          enddo
+                enddo
+             enddo
+          endif
 
         enddo
 
@@ -260,6 +276,7 @@ CDIR$ IVDEP
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_i_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
         enddo
 
@@ -274,6 +291,7 @@ CDIR$ IVDEP
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_j_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
           do i= ideb+ipas,ifin,ipas
@@ -284,23 +302,26 @@ CDIR$ IVDEP
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_j_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
           enddo
         enddo
         !!! plan kdeb termine
 
-       !!mise a jour Newton 1er plan k
-       do j= jdeb,jfin,ipas
-CDIR$ IVDEP
-           do  i= ideb,ifin,ipas
+        if (mjrnewton == 1) then
+!!mise a jour Newton 1er plan k
+           do j= jdeb,jfin,ipas
+C     DIR$ IVDEP
+              do  i= ideb,ifin,ipas
 
-             l  = inddm(i, j, kdeb)
+                 l  = inddm(i, j, kdeb)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
+              enddo
            enddo
-        enddo
-
+        endif
 
         !!! le domaine sans les mailles du bord
         do  k= kdeb+ipas,kfin,ipas
@@ -319,6 +340,7 @@ CDIR$ IVDEP
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_k_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
           !!! Fin plan jdeb 
@@ -330,7 +352,9 @@ CDIR$ IVDEP
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
@@ -341,7 +365,9 @@ CDIR$ IVDEP
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_j_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
              do  i= ideb+ipas,ifin,ipas
@@ -352,19 +378,25 @@ CDIR$ IVDEP
                 xal    = coe(l,1)*signe
 
 #include       "FastS/Compute/LU/lu_i_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_j_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_k_3dhomogene_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
              enddo
           enddo
-          do j= jfin,jdeb
-CDIR$ IVDEP
-           do  i= ifin, ideb
 
-             l  = inddm(i, j, k)
+          if (mjrnewton == 1) then
+             do j= jfin,jdeb
+C     DIR$ IVDEP
+                do  i= ifin, ideb
+
+                   l  = inddm(i, j, k)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
-           enddo
-          enddo
+                enddo
+             enddo
+          endif
 
         enddo
 
@@ -401,6 +433,7 @@ CDIR$ IVDEP
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_i_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
         enddo
 
@@ -415,6 +448,7 @@ CDIR$ IVDEP
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_j_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
           do i= ideb+ipas,ifin,ipas
@@ -425,23 +459,26 @@ CDIR$ IVDEP
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_j_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
           enddo
         enddo
         !!! plan kdeb termine
 
-       !!mise a jour Newton 1er plan k
-       do j= jdeb,jfin,ipas
-CDIR$ IVDEP
-           do  i= ideb,ifin,ipas
+        if (mjrnewton == 1) then
+!!mise a jour Newton 1er plan k
+           do j= jdeb,jfin,ipas
+C     DIR$ IVDEP
+              do  i= ideb,ifin,ipas
 
-             l  = inddm(i, j, kdeb)
+                 l  = inddm(i, j, kdeb)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
+              enddo
            enddo
-        enddo
-
+        endif
 
         !!! le domaine sans les mailles du bord
         do  k= kdeb+ipas,kfin,ipas
@@ -460,6 +497,7 @@ CDIR$ IVDEP
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_k_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
           !!! Fin plan jdeb 
@@ -471,7 +509,9 @@ CDIR$ IVDEP
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
@@ -482,7 +522,9 @@ CDIR$ IVDEP
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_j_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
              do  i= ideb+ipas,ifin,ipas
@@ -493,21 +535,26 @@ CDIR$ IVDEP
                 xal    = coe(l,1)*signe
 
 #include       "FastS/Compute/LU/lu_i_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_j_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_k_3dcart_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
              enddo
           enddo
-   
-          !! mise a jour newton
-          do j= jfin,jdeb
-CDIR$ IVDEP
-           do  i= ifin, ideb
+          
+          if (mjrnewton == 1) then
+!     ! mise a jour newton
+             do j= jfin,jdeb
+C     DIR$ IVDEP
+                do  i= ifin, ideb
 
-             l  = inddm(i, j, k)
+                   l  = inddm(i, j, k)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
-           enddo
-          enddo
+                enddo
+             enddo
+          endif
 
         enddo
 
@@ -537,6 +584,7 @@ CDIR$ IVDEP
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_i_2d_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_2d_SA.for"
 #include "FastS/Compute/LU/lu_dinv_2d_SA.for"
        enddo
 
@@ -548,6 +596,7 @@ CDIR$ IVDEP
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_j_2d_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_2d_SA.for"
 #include "FastS/Compute/LU/lu_dinv_2d_SA.for"
        enddo
        do j= jdeb+ipas,jfin,ipas
@@ -559,21 +608,24 @@ CDIR$ IVDEP
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_2d_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_2d_SA.for"
 #include    "FastS/Compute/LU/lu_j_2d_SA.for"
+#include "FastS/Compute/LU/mjr_drodm_2d_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_2d_SA.for"
           enddo
        enddo
 
-          !! mise a jour newton
-        do j= jdeb,jfin,ipas
-CDIR$ IVDEP
-           do  i= ifin, ideb
+       if (mjrnewton == 1) then
+!! mise a jour newton
+          do j= jdeb,jfin,ipas
+C     DIR$ IVDEP
+             do  i= ifin, ideb
 
-             l  = inddm(i, j, 1)
+                l  = inddm(i, j, 1)
 #include     "FastS/Compute/LU/mjr_newton_2d_SA.for"
-           enddo
-        enddo
-
+             enddo
+          enddo
+       endif
 
 
       ENDIF

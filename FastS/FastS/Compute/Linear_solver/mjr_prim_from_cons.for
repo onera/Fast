@@ -5,7 +5,7 @@ c     $Author: Thibaut $
 c***********************************************************************
       subroutine mjr_prim_from_cons( param_int, param_real,
      &                               ind_loop,
-     &                               rop_1, rop, drodm)
+     &                               rop_1, rop, drodm_out)
 c***********************************************************************
 c_U   USER : GUEGAN
 c
@@ -26,7 +26,7 @@ c***********************************************************************²
       INTEGER_E ind_loop(6), param_int(0:*)
       REAL_E rop_1(param_int(NDIMDX), param_int(NEQ)), 
      &     rop(param_int(NDIMDX), param_int(NEQ)), 
-     &     drodm(param_int(NDIMDX), param_int(NEQ)), param_real(0:*)
+     &     drodm_out(param_int(NDIMDX), param_int(NEQ)), param_real(0:*)
 
       INTEGER_E k, j, lij, l,v1, v2, v3,v4,v5,v6,ltij,lt,lvo
 

@@ -51,17 +51,17 @@ if(lexit_lu == 0 )
     }//loop restart
 
    //mise a jour nouvelle solution
-   shift_coe =0; nd_current =0;
+   shift_zone =0; nd_current =0;
    for (E_Int nd = 0; nd < nidom; nd++)
      {
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
-	 E_Float* increment = iptdrodm + shift_coe;
+	 E_Float* increment = iptdrodm + shift_zone;
 
          mjr_prim_from_cons_(param_int[nd], param_real[nd], ipt_ind_dm_thread, iptro_CL[nd], iptro_ssiter[nd], increment);
          nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
 
-     shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
+     shift_zone  = shift_zone  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
      }//loop zone
  }//if lexit_lu
 

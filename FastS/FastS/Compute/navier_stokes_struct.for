@@ -249,7 +249,7 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
  
            !! impicit krylov             
            if(param_int(ITYPCP).le.1.and.
-     &        ( param_int(LINEARSOLVER).eq.0.and.layer_mode.eq.1)   ) then
+     &        (param_int(IMPLICITSOLVER).eq.1.and.layer_mode.eq.1)) then
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
               if(flagCellN.eq.0) then
                call core3as2_kry(ndo,nitcfg, first_it,
@@ -266,7 +266,7 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
                endif
 
            !! implicit Lu                 
-           elseif(param_int(ITYPCP)) then
+           elseif(param_int(ITYPCP) .LE. 1) then
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
               if(flagCellN.eq.0) then
                call core3as2(ndo,nitcfg, first_it, param_int,param_real,

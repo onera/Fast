@@ -1,6 +1,6 @@
             diag = 1./coe(l,5)
-            drodm(l,1)=drodm(l,1)*diag     
-            drodm(l,2)=drodm(l,2)*diag     
-            drodm(l,3)=drodm(l,3)*diag     
-            drodm(l,4)=drodm(l,4)*diag     
-            drodm(l,5)=drodm(l,5)*diag     
+            drodm_out(l,1)=drodm_out(l,1)*diag     
+            drodm_out(l,2)=drodm_out(l,2)*diag     
+            drodm_out(l,3)=drodm_out(l,3)*diag     
+            drodm_out(l,4)=drodm_out(l,4)*diag     
+            drodm_out(l,5)=drodm_out(l,5)*diag     

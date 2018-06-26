@@ -152,18 +152,12 @@ extern "C"
                               E_Float* iptdrodm         , E_Float* iptcoe      , E_Float* iptdelta       ,  E_Float* iptro_res );
 
   void invlu_(                E_Int& ndo      , E_Int& nitcfg      , E_Int& nitrun   , E_Int*  param_int , E_Float* param_real,
-                              E_Int* ipt_sdm            ,
-                              E_Float* iptrotmp         , E_Float* iptro_ssiter   ,
-                              E_Float* iptdrodm         , 
+                              E_Int* ipt_sdm            , E_Int& mjrnewton     ,
+                              E_Float* iptrotmp         , E_Float* iptro_ssiter,
+                              E_Float* iptdrodmin       , E_Float* iptdrodmout ,
                               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , 
                               E_Float* iptventi         , E_Float* iptventj    , E_Float* iptventk       ,  
-                              E_Float* iptcoe    );
-
-
-  void precond_select_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int* ind_loop,
-		       E_Float& norm  , E_Int& step , E_Int& precond   , 
-                       E_Float* vectin, E_Float* vectout,  E_Float* iptssor,
-		       E_Float* ropssiter, E_Float* ipt_coe, E_Float* ipti, E_Float* iptj);
+                              E_Float* iptcoe           , E_Float* iptssor     , E_Float* iptssortmp);
 
   void dp_dw_vect_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int* ind_loop,
 		   E_Float* iptrop, E_Float* iptvectin, E_Float* iptvectout);
@@ -221,6 +215,9 @@ extern "C"
    void     bvbs_wall_inviscid_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
                                  E_Float* iptventi  , E_Float* iptijk  , E_Float* iptro);
 
+   void     bvbs_wall_inviscid_d_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
+                                 E_Float* iptventi  , E_Float* iptijk  , E_Float* iptro, E_Float* iptkrylov);
+
    void     bvbs_wall_viscous_adia_( E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
                                      E_Float* iptventi, E_Float* iptijk  , E_Float* iptro);
 
@@ -237,6 +234,10 @@ extern "C"
    void     bvbs_farfield_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
                             E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
                             E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* state);
+
+  void     bvbs_farfield_d_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+			     E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+			     E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptkrylov, E_Float* state);
 
    void     bvbs_outflow_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
                             E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,

@@ -38,16 +38,10 @@
        b53=(tcy*h-gamm1*v*qn)
        b55=(gam1*qn)+coe(l1,3)*signe -qen
 
-      b1= b11*drodm(l1,1)+b12*drodm(l1,2)+b13*drodm(l1,3)
-      b2= b21*drodm(l1,1)+b22*drodm(l1,2)+b23*drodm(l1,3)
-     1   +b25*drodm(l1,5)
-      b3= b31*drodm(l1,1)+b32*drodm(l1,2)+b33*drodm(l1,3)
-     1   +b35*drodm(l1,5)
-      b5= b51*drodm(l1,1)+b52*drodm(l1,2)+b53*drodm(l1,3)
-     1   +b55*drodm(l1,5)
-
-      drodm(l,1) = drodm(l,1)+b1*xal 
-      drodm(l,2) = drodm(l,2)+b2*xal 
-      drodm(l,3) = drodm(l,3)+b3*xal 
-      drodm(l,5) = drodm(l,5)+b5*xal 
-
+      b1= b11*drodm_out(l1,1)+b12*drodm_out(l1,2)+b13*drodm_out(l1,3)
+      b2= b21*drodm_out(l1,1)+b22*drodm_out(l1,2)+b23*drodm_out(l1,3)
+     1   +b25*drodm_out(l1,5)
+      b3= b31*drodm_out(l1,1)+b32*drodm_out(l1,2)+b33*drodm_out(l1,3)
+     1   +b35*drodm_out(l1,5)
+      b5= b51*drodm_out(l1,1)+b52*drodm_out(l1,2)+b53*drodm_out(l1,3)
+     1   +b55*drodm_out(l1,5)

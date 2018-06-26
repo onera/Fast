@@ -111,7 +111,7 @@ C Var loc
 
           endif
           if(param_int(ITYPCP).le.1.and.
-     &        ( param_int(LINEARSOLVER).eq.0.and.layer_mode.eq.1)   ) then
+     &        (param_int(IMPLICITSOLVER).eq.1.and.layer_mode.eq.1)) then
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
               if(flagCellN.eq.0) then
 
@@ -119,7 +119,8 @@ C Var loc
      
               else
                  if (ithread.eq.1)write(*, *) 
-     &        'Unknown temporal scheme navier_d',param_int(LINEARSOLVER)
+     &                'Unknown temporal scheme navier_d',
+     &                param_int(IMPLICITSOLVER)
                  continue 
 c               call core3as2_chim_kry(ndo,nitcfg, first_it, 
 c     &                                param_int,param_real,

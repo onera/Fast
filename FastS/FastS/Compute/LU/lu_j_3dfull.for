@@ -53,19 +53,13 @@ c----- Evaluatjon de  dt/vol * [- A+(i-1) - Bi ] : normale entrante
 c----- Evaluatjon de  [- A+(i-1) - Bi ]*dW(i-1) ; normale entrante
 
 
-      b1= b11*drodm(l1,1)+b12*drodm(l1,2)+b13*drodm(l1,3)
-     1   +b14*drodm(l1,4)
-      b2= b21*drodm(l1,1)+b22*drodm(l1,2)+b23*drodm(l1,3)
-     1   +b24*drodm(l1,4)+b25*drodm(l1,5)
-      b3= b31*drodm(l1,1)+b32*drodm(l1,2)+b33*drodm(l1,3)
-     1   +b34*drodm(l1,4)+b35*drodm(l1,5)
-      b4= b41*drodm(l1,1)+b42*drodm(l1,2)+b43*drodm(l1,3)
-     1   +b44*drodm(l1,4)+b45*drodm(l1,5)
-      b5= b51*drodm(l1,1)+b52*drodm(l1,2)+b53*drodm(l1,3)
-     1   +b54*drodm(l1,4)+b55*drodm(l1,5)
-
-      drodm(l,1) = drodm(l,1)+b1*xal 
-      drodm(l,2) = drodm(l,2)+b2*xal 
-      drodm(l,3) = drodm(l,3)+b3*xal 
-      drodm(l,4) = drodm(l,4)+b4*xal 
-      drodm(l,5) = drodm(l,5)+b5*xal 
+      b1= b11*drodm_out(l1,1)+b12*drodm_out(l1,2)+b13*drodm_out(l1,3)
+     1   +b14*drodm_out(l1,4)
+      b2= b21*drodm_out(l1,1)+b22*drodm_out(l1,2)+b23*drodm_out(l1,3)
+     1   +b24*drodm_out(l1,4)+b25*drodm_out(l1,5)
+      b3= b31*drodm_out(l1,1)+b32*drodm_out(l1,2)+b33*drodm_out(l1,3)
+     1   +b34*drodm_out(l1,4)+b35*drodm_out(l1,5)
+      b4= b41*drodm_out(l1,1)+b42*drodm_out(l1,2)+b43*drodm_out(l1,3)
+     1   +b44*drodm_out(l1,4)+b45*drodm_out(l1,5)
+      b5= b51*drodm_out(l1,1)+b52*drodm_out(l1,2)+b53*drodm_out(l1,3)
+     1   +b54*drodm_out(l1,4)+b55*drodm_out(l1,5)

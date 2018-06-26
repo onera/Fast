@@ -33,20 +33,13 @@ c-----Metrque au centre en + ou - 1 :
        b54=(-gamm1*w*qn)
        b55=(gam1*qn)+coe(l1,2)*signe
 
-      b6 = (qn+coe(l1,2)*signe)*drodm(l1,6)
+      b6 = (qn+coe(l1,2)*signe)*drodm_out(l1,6)
 
-      b1= b11*drodm(l1,1)+b12*drodm(l1,2)
-      b2= b21*drodm(l1,1)+b22*drodm(l1,2)+b23*drodm(l1,3)
-     1   +b24*drodm(l1,4)+b25*drodm(l1,5)
-      b3= b31*drodm(l1,1)+b32*drodm(l1,2)+b33*drodm(l1,3)
-      b4= b41*drodm(l1,1)+b42*drodm(l1,2)
-     1   +b44*drodm(l1,4)
-      b5= b51*drodm(l1,1)+b52*drodm(l1,2)+b53*drodm(l1,3)
-     1   +b54*drodm(l1,4)+b55*drodm(l1,5)
-
-      drodm(l,1) = drodm(l,1)+b1*xal 
-      drodm(l,2) = drodm(l,2)+b2*xal 
-      drodm(l,3) = drodm(l,3)+b3*xal 
-      drodm(l,4) = drodm(l,4)+b4*xal 
-      drodm(l,5) = drodm(l,5)+b5*xal 
-      drodm(l,6) = drodm(l,6)+b6*xal
+      b1= b11*drodm_out(l1,1)+b12*drodm_out(l1,2)
+      b2= b21*drodm_out(l1,1)+b22*drodm_out(l1,2)+b23*drodm_out(l1,3)
+     1   +b24*drodm_out(l1,4)+b25*drodm_out(l1,5)
+      b3= b31*drodm_out(l1,1)+b32*drodm_out(l1,2)+b33*drodm_out(l1,3)
+      b4= b41*drodm_out(l1,1)+b42*drodm_out(l1,2)
+     1   +b44*drodm_out(l1,4)
+      b5= b51*drodm_out(l1,1)+b52*drodm_out(l1,2)+b53*drodm_out(l1,3)
+     1   +b54*drodm_out(l1,4)+b55*drodm_out(l1,5)

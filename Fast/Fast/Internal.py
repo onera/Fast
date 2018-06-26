@@ -143,7 +143,7 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
 
     if (not (model == 'Euler' or model == 'euler')):
         if C.isNamePresent(zone, 'centers:ViscosityEddy') != 1: 
-            C._initVars(zone, 'centers:ViscosityEddy', 0.)
+            C._initVars(zone, 'centers:ViscosityEddy', 1e-15)
 
     if (not (model == 'NSTurbulent' or model == 'nsspalart')): sa = False
     else: 
@@ -330,20 +330,20 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
        if (sa and  C.isNamePresent(zone, 'centers:Res_TurbulentSANuTildeDensity') != 1): C._initVars(zone, 'centers:Res_TurbulentSANuTildeDensity', 0.)
 
     #KRYLOV SUBSPACE VECTOR ALLOCATION
-    linear_solver = "none"
-    a = Internal.getNodeFromName2(zone, 'linear_solver')
-    if a is not None: linear_solver = Internal.getValue(a)
-    if (linear_solver == 'gmres'):
+    implicit_solver = 'none'
+    a = Internal.getNodeFromName2(zone, 'implicit_solver')
+    if a is not None: implicit_solver = Internal.getValue(a)
+    if (implicit_solver == 'gmres'):
         nbr_krylov = 20
         a = Internal.getNodeFromName2(zone, 'nb_krylov')
         if a is not None: nbr_krylov = Internal.getValue(a)
         for Vector in range(nbr_krylov):
-            if C.isNamePresent(zone, linear_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_Density', 0.)
-            if C.isNamePresent(zone, linear_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_MomentumX', 0.)
-            if C.isNamePresent(zone, linear_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_MomentumY', 0.)
-            if C.isNamePresent(zone, linear_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_MomentumZ', 0.)
-            if C.isNamePresent(zone, linear_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_EnergyStagDens', 0.)
-            if (sa and C.isNamePresent(zone, linear_solver) != 1): C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_TurbSANuTildeDens', 0.)
+            if C.isNamePresent(zone, implicit_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_Density', 0.)
+            if C.isNamePresent(zone, implicit_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_MomentumX', 0.)
+            if C.isNamePresent(zone, implicit_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_MomentumY', 0.)
+            if C.isNamePresent(zone, implicit_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_MomentumZ', 0.)
+            if C.isNamePresent(zone, implicit_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_EnergyStagDens', 0.)
+            if (sa and C.isNamePresent(zone, implicit_solver) != 1): C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_TurbSANuTildeDens', 0.)
 
    # TEST PYTHON CONTEXTE ADJOINT ? (dpCLp, dpCDp)  -----------------------------
     if (adjoint==True): 
