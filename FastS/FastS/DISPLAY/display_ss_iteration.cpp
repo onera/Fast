@@ -53,6 +53,7 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
 
   vector<PyArrayObject*> hook;
 
+  E_Float resLi[2]; resLi[1]=-1.e15; 
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
     PyObject* zone = PyList_GetItem(zones, nd);
@@ -141,6 +142,8 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
              rdm_glob[ind1] = sqrt(rmoy*xpt_1)/ipt_param_real[nd][ DTC ];
              rdm_glob[ind2] = rmax/ipt_param_real[nd][ DTC ];
 
+             resLi[0]  += rdm_glob[ind1];
+             if ( rdm_glob[ind2] > resLi[1]) resLi[1] =  rdm_glob[ind2];
           } //iteration
        }   // neq
 
@@ -172,7 +175,14 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
 
   RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL);
 
+  PyObject* dico = PyDict_New();
+  PyObject* tmp = Py_BuildValue("f", resLi[0]);
+  PyDict_SetItemString(dico , "L2", tmp);
+  tmp = Py_BuildValue("f", resLi[1]);
+  PyDict_SetItemString(dico , "Loo", tmp);
 
-  Py_INCREF(Py_None);
-  return Py_None;
+  //Py_INCREF(Py_None);
+  //return Py_None;
+  return dico; 
+  
 }

@@ -4,6 +4,7 @@ c     $Revision: 64 $
 c     $Author: Thibaut $
 c***********************************************************************
       subroutine mjr_prim_from_cons( param_int, param_real,
+     &                               visco,sa_real,
      &                               ind_loop,
      &                               rop_1, rop, drodm_out)
 c***********************************************************************
@@ -24,6 +25,8 @@ c***********************************************************************²
 #include "FastS/param_solver.h"
 
       INTEGER_E ind_loop(6), param_int(0:*)
+
+      REAL_E visco(5),sa_real(3)
       REAL_E rop_1(param_int(NDIMDX), param_int(NEQ)), 
      &     rop(param_int(NDIMDX), param_int(NEQ)), 
      &     drodm_out(param_int(NDIMDX), param_int(NEQ)), param_real(0:*)
@@ -38,6 +41,11 @@ c***********************************************************************²
 
       cvinv = 1. / param_real(CVINF)
       cvinv2 = 0.5 * cvinv
+
+      cmus1  = visco(5)
+      temp01 = 1./visco(4)
+      coesut = visco(3) * (1.+cmus1*temp01)
+      ratiom = sa_real(SA_RATIOM)
 
       !zone 2D
       IF(param_int(ITYPZONE).eq.3) THEN
@@ -63,6 +71,8 @@ c***********************************************************************²
 #include  "FastS/Compute/loopI_begin.for"
 
 #include  "FastS/Compute/LU/mjr_newton_2d_SA.for"
+c           if (j.le.80.and.l-lij.eq.100)
+c     &         write(*,*)ro_old*nu_old , drodm(l,6), rop_1(l,6)
           enddo
         enddo
         enddo

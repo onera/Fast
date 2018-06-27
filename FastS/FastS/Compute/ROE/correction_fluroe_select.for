@@ -8,7 +8,7 @@ c***********************************************************************
      &                        ind_loop, 
      &                        rop, drodm  , wig,
      &                        venti, ventj, ventk,
-     &                        ti,tj,tk,vol, xmut)
+     &                        ti,tj,tk,vol)
 c***********************************************************************
 c_U   USER : PECHIER
 c
@@ -38,7 +38,7 @@ c***********************************************************************
       INTEGER_E ndom, ithread, idir, ind_loop(6), param_int(0:*)
 
 
-      REAL_E rop(*),xmut(*),drodm(*), ti(*),tj(*),tk(*),vol(*),
+      REAL_E rop(*),drodm(*), ti(*),tj(*),tk(*),vol(*),
      & venti(*),ventj(*),ventk(*), wig(*)
 
       REAL_E param_real(0:*)
@@ -65,7 +65,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.321) THEN
                                                
@@ -74,7 +74,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.322) THEN
                                                
@@ -83,7 +83,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.323) THEN
                                                
@@ -92,7 +92,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.220) THEN
                                                
@@ -101,7 +101,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.221) THEN
                                                
@@ -110,7 +110,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.222) THEN
                                                
@@ -119,7 +119,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.223) THEN
                                                
@@ -128,7 +128,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.330) THEN
                                                
@@ -137,7 +137,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.331) THEN
                                                
@@ -146,7 +146,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.332) THEN
                                                
@@ -155,7 +155,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.333) THEN
                                                
@@ -164,7 +164,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.230) THEN
                                                
@@ -173,7 +173,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.231) THEN
                                                
@@ -182,7 +182,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.232) THEN
                                                
@@ -191,7 +191,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.233) THEN
                                                
@@ -200,7 +200,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.310) THEN
                                                
@@ -209,7 +209,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.311) THEN
                                                
@@ -218,7 +218,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.312) THEN
                                                
@@ -227,7 +227,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.313) THEN
                                                
@@ -236,7 +236,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.210) THEN
                                                
@@ -245,7 +245,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.211) THEN
                                                
@@ -254,7 +254,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.212) THEN
                                                
@@ -263,7 +263,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.213) THEN
                                                
@@ -272,7 +272,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1320) THEN
                                                
@@ -281,7 +281,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1321) THEN
                                                
@@ -290,7 +290,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1322) THEN
                                                
@@ -299,7 +299,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1323) THEN
                                                
@@ -308,7 +308,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1220) THEN
                                                
@@ -317,7 +317,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1221) THEN
                                                
@@ -326,7 +326,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1222) THEN
                                                
@@ -335,7 +335,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1223) THEN
                                                
@@ -344,7 +344,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1330) THEN
                                                
@@ -353,7 +353,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1331) THEN
                                                
@@ -362,7 +362,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1332) THEN
                                                
@@ -371,7 +371,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1333) THEN
                                                
@@ -380,7 +380,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1230) THEN
                                                
@@ -389,7 +389,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1231) THEN
                                                
@@ -398,7 +398,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1232) THEN
                                                
@@ -407,7 +407,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1233) THEN
                                                
@@ -416,7 +416,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1310) THEN
                                                
@@ -425,7 +425,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1311) THEN
                                                
@@ -434,7 +434,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1312) THEN
                                                
@@ -443,7 +443,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1313) THEN
                                                
@@ -452,7 +452,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1210) THEN
                                                
@@ -461,7 +461,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1211) THEN
                                                
@@ -470,7 +470,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1212) THEN
                                                
@@ -479,7 +479,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
        ELSEIF (option.eq.1213) THEN
                                                
@@ -488,7 +488,7 @@ C Var loc
      &                 ind_loop,
      &                 rop, drodm , wig,
      &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
+     &                 ti, tj, tk, vol)
                                                
       ELSE
          write(*,*) ' option = ' , option 

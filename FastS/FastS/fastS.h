@@ -131,13 +131,13 @@ namespace K_FASTS
     E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int* ndimdx_trans, E_Float* timer_omp,
     E_Int* iptludic             , E_Int* iptlumax, 
     E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom,
-    E_Float* ipt_VectG      , E_Float* ipt_VectY, E_Float** ipt_ssor           , E_Float** ipt_ssortmp   ,E_Float* ipt_drodmd,
-    E_Float* ipt_Hessenberg, E_Float** iptkrylov   , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
-    E_Float*           ipt_cfl,
+    E_Float* ipt_VectG          , E_Float* ipt_VectY     , E_Float** ipt_ssor          , E_Float** ipt_ssortmp, E_Float* ipt_drodmd,
+    E_Float* ipt_Hessenberg     , E_Float** iptkrylov    , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
+    E_Float*   ipt_cfl          ,
     E_Float**  iptx, E_Float**  ipty, E_Float** iptz,
     E_Float**  iptCellN, 
     E_Float**& iptro, E_Float**& iptro_m1, E_Float**&  iptrotmp,  E_Float**& iptro_sfd,
-    E_Float**  iptmut,
+    E_Float**  iptmut, E_Float*  ipt_mutd,
     E_Float**  ipti, E_Float**  iptj, E_Float** iptk, E_Float** iptvol, 
     E_Float**  ipti0, E_Float**  iptj0, E_Float** iptk0,     
     E_Float**  ipti_df, E_Float**  iptj_df, E_Float** iptk_df, 
@@ -208,11 +208,11 @@ namespace K_FASTS
                E_Float* iptventi  , E_Float* iptventj   , E_Float* iptventk, E_Float* iptro_gmres);
 
   E_Int BCzone_d(E_Int& nd, E_Int& lrhs, E_Int& lcorner,
-		 E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int& npass ,
-		 E_Int* ipt_ind_dm, E_Int* ipt_ind_dm_thread,
-		 E_Int* ipt_ind_CL  , E_Int* ipt_ind_CL119, E_Int* ipt_ind_CLgmres, E_Int* ishift_lu,
-		 E_Float*   iptrop  , E_Float*   ipti     , E_Float*  iptj        , E_Float* iptk   , E_Float* iptx, E_Float* ipty, E_Float* iptz,
-		 E_Float* iptventi  , E_Float* iptventj   , E_Float* iptventk, E_Float* iptro_gmres);
+               E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int& npass ,
+               E_Int* ipt_ind_dm, E_Int* ipt_ind_dm_thread,
+               E_Int* ipt_ind_CL  , E_Int* ipt_ind_CL119, E_Int* ipt_ind_CLgmres, E_Int* ishift_lu,
+               E_Float*   iptrop  , E_Float*   ipti     , E_Float*  iptj        , E_Float* iptk   , E_Float* iptx, E_Float* ipty, E_Float* iptz,
+               E_Float* iptventi  , E_Float* iptventj   , E_Float* iptventk, E_Float* iptro_gmres);
 
   void __applyBC(E_Float**& iptro,E_Int& nidom, E_Int**& ipt_param_int, E_Float**& ipt_param_real,
                  E_Float** iptx,  E_Float** ipty, E_Float** iptz,

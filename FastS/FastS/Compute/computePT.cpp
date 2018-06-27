@@ -151,38 +151,38 @@ else
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
 
   iptx              = new E_Float*[nidom*33];
-  ipty              = iptx            + nidom;
-  iptz              = ipty            + nidom;
-  iptro             = iptz            + nidom;
-  iptro_m1          = iptro           + nidom;
-  iptro_p1          = iptro_m1        + nidom;
-  iptro_sfd         = iptro_p1        + nidom;
-  iptdelta          = iptro_sfd       + nidom;
-  iptro_res         = iptdelta        + nidom;
-  iptmut            = iptro_res       + nidom;
-  ipti              = iptmut          + nidom;
-  iptj              = ipti            + nidom;
-  iptk              = iptj            + nidom;
-  iptvol            = iptk            + nidom;
-  ipti0             = iptvol          + nidom;
-  iptj0             = ipti0           + nidom;
-  iptk0             = iptj0           + nidom;
-  ipti_df           = iptk0           + nidom;
-  iptj_df           = ipti_df         + nidom;
-  iptk_df           = iptj_df         + nidom;
-  iptvol_df         = iptk_df         + nidom;
-  iptventi          = iptvol_df       + nidom;
-  iptventj          = iptventi        + nidom;
-  iptventk          = iptventj        + nidom;
-  iptrdm            = iptventk        + nidom;
-  iptCellN          = iptrdm          + nidom; 
-  ipt_param_real    = iptCellN        + nidom;
-  iptkrylov         = ipt_param_real  + nidom;
-  iptkrylov_transfer= iptkrylov       + nidom;
-  ipt_gmrestmp      = iptkrylov_transfer+ nidom;
-  iptssor           = ipt_gmrestmp    + nidom;
-  iptssortmp        = iptssor         + nidom;
-  ipt_cfl_zones     = iptssortmp      + nidom;   //3composants: attention a la prochaine addition
+  ipty              = iptx               + nidom;
+  iptz              = ipty               + nidom;
+  iptro             = iptz               + nidom;
+  iptro_m1          = iptro              + nidom;
+  iptro_p1          = iptro_m1           + nidom;
+  iptro_sfd         = iptro_p1           + nidom;
+  iptdelta          = iptro_sfd          + nidom;
+  iptro_res         = iptdelta           + nidom;
+  iptmut            = iptro_res          + nidom;
+  ipti              = iptmut             + nidom;
+  iptj              = ipti               + nidom;
+  iptk              = iptj               + nidom;
+  iptvol            = iptk               + nidom;
+  ipti0             = iptvol             + nidom;
+  iptj0             = ipti0              + nidom;
+  iptk0             = iptj0              + nidom;
+  ipti_df           = iptk0              + nidom;
+  iptj_df           = ipti_df            + nidom;
+  iptk_df           = iptj_df            + nidom;
+  iptvol_df         = iptk_df            + nidom;
+  iptventi          = iptvol_df          + nidom;
+  iptventj          = iptventi           + nidom;
+  iptventk          = iptventj           + nidom;
+  iptrdm            = iptventk           + nidom;
+  iptCellN          = iptrdm             + nidom; 
+  ipt_param_real    = iptCellN           + nidom;
+  iptkrylov         = ipt_param_real     + nidom;
+  iptkrylov_transfer= iptkrylov          + nidom;
+  ipt_gmrestmp      = iptkrylov_transfer + nidom;
+  iptssor           = ipt_gmrestmp       + nidom;   //ndimdx+2rangee ghost par thread
+  iptssortmp        = iptssor            + nidom;   //ndimdx
+  ipt_cfl_zones     = iptssortmp         + nidom;   //3composants: attention a la prochaine addition
 
   vector<PyArrayObject*> hook;
   PyObject* ssorArray = PyDict_GetItemString(work,"ssors");
@@ -359,13 +359,15 @@ else
     for (E_Int nd = 0; nd < nidom; nd++)
       size_tot += ipt_param_int[nd][NDIMDX] * ipt_param_int[nd][NEQ];
 
-  FldArrayF ssortmp(size_tot * (ipt_param_int[0][NB_RELAX] > 1)); E_Float* ipt_ssortmp = ssortmp.begin();
+  E_Int size_ssortmp = 0;
+  if (ipt_param_int[0][NB_RELAX] > 1) size_ssortmp =1;
+  FldArrayF ssortmp(size_tot * size_ssortmp); E_Float* ipt_ssortmp = ssortmp.begin();
 
   if (ipt_param_int[0][NB_RELAX] > 1)
     {
       iptssortmp[0] = ipt_ssortmp;
       for (E_Int nd = 1; nd < nidom; nd++)
-	iptssortmp[nd] = iptssortmp[nd - 1] + ipt_param_int[nd - 1][NDIMDX] * ipt_param_int[nd - 1][NEQ];
+	iptssortmp[nd] = iptssortmp[ nd-1 ] + ipt_param_int[ nd-1 ][NDIMDX] * ipt_param_int[ nd-1 ][NEQ];
     }
 
   /// Tableau pour GMRES (on test la premiere zone 
@@ -374,10 +376,12 @@ else
   E_Float* ipt_VectY          = NULL;
   E_Float* ipt_Hessenberg     = NULL;
   E_Float* ipt_drodmd         = NULL;
+  E_Float* ipt_xmutd          = NULL;
   E_Float* ipt_norm_kry       = NULL;
   E_Float* ipt_givens         = NULL;
   E_Int num_max_vect = 2;
   E_Int size_hessenb = 1;
+  E_Int ndim_xmutd   = 1; 
 
   FldArrayF gmrestmp(size_tot); E_Float* iptgmrestmp = gmrestmp.begin();
 
@@ -385,6 +389,7 @@ else
     { 
       num_max_vect = ipt_param_int[0][NB_KRYLOV];
       size_hessenb = num_max_vect*(num_max_vect-1);
+      if (ipt_param_int[0][IFLOW   ] == 3) ndim_xmutd = ndimt;
       if (ipt_param_int[0][NB_RELAX] != 0)
       	{
       	  ipt_gmrestmp[0] = iptgmrestmp;
@@ -398,7 +403,9 @@ else
   FldArrayF  VectY(num_max_vect-1); ipt_VectY = VectY.begin();
   FldArrayF  Hessenberg(size_hessenb); ipt_Hessenberg = Hessenberg.begin();
   FldArrayF  drodmd(ndim_drodm); ipt_drodmd = drodmd.begin();
-  FldArrayF  norm_kry(threadmax_sdm); ipt_norm_kry = norm_kry.begin();
+  FldArrayF   xmutd(ndim_xmutd); ipt_xmutd  = xmutd.begin();
+
+  FldArrayF norm_kry(threadmax_sdm); ipt_norm_kry = norm_kry.begin();
   FldArrayF  givens(2 * (num_max_vect - 1)); ipt_givens = givens.begin();
 
   /// Tableau pour stockage senseur oscillation
@@ -516,7 +523,7 @@ else
             iptCellN           ,
             iptro              , iptro_m1         , iptro_p1          , iptro_sfd     ,
             //roN                , roM1             , roP1              , iptro_sfd     ,
-            iptmut             , 
+            iptmut             , ipt_xmutd        ,
             ipti               , iptj             , iptk              , iptvol        , 
             ipti0              , iptj0            , iptk0             ,     
             ipti_df            , iptj_df          , iptk_df           , iptvol_df     , 

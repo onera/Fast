@@ -169,7 +169,8 @@
 #define SFD_DELTA   36
 #define EPSI_INFLOW 37  
 #define PRANDT_TUR  38  
-#define BC_DATA     39
+#define EPSI_LINEAR 39  
+#define BC_DATA     40
 
 
 #define SA_CKARM    0.41 

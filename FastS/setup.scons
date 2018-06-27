@@ -129,7 +129,9 @@ if f77compiler == 'ifort':
    else:  f77Args += ' -xHost '
 
    if version[0] >= 17:
-      env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -O3 -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
+      #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 -r8 -i4 -traceback -fpe-all=0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
+      #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -fp-model=strict  -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
+      env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'  -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -O3 -no-prec-sqrt -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
       if Dist.DEBUG == True:
          env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 -r8 -i4 -traceback -fpe-all=0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
@@ -154,7 +156,8 @@ env.Append(BUILDERS={'Fortran' : fortran_builder})
 for_srcs1 = srcs.for_srcs[0:100]
 for_srcs2 = srcs.for_srcs[100:200]
 for_srcs3 =  srcs.for_srcs[200:300]
-for_srcs4 =  srcs.for_srcs[300:]
+for_srcs4 =  srcs.for_srcs[300:400]
+for_srcs5 =  srcs.for_srcs[400:]
 
 ppf1 = []
 for f in for_srcs1:
@@ -176,17 +179,24 @@ for f in for_srcs4:
     ffile = env.FPROC(target=f)
     ofile = env.Fortran(target=ffile)
     ppf4.append(ofile[0])
+ppf5 = []
+for f in for_srcs5:
+    ffile = env.FPROC(target=f)
+    ofile = env.Fortran(target=ffile)
+    ppf5.append(ofile[0])
 
 #==============================================================================
 myMod1 = env.StaticLibrary('fastS1', srcs.cpp_srcs+ppf1)
 myMod2 = env.StaticLibrary('fastS2', ppf2)
 myMod3 = env.StaticLibrary('fastS3', ppf3)
 myMod4 = env.StaticLibrary('fastS4', ppf4)
+myMod5 = env.StaticLibrary('fastS5', ppf5)
 modDir = installPath+'/FastS/'
 dp1 = env.Install(modDir, myMod1)
 dp2 = env.Install(modDir, myMod2)
 dp3 = env.Install(modDir, myMod3)
 dp4 = env.Install(modDir, myMod4)
-dp5 = env.Install(modDir, Glob('FastS/*.py'))
+dp5 = env.Install(modDir, myMod5)
+dp6 = env.Install(modDir, Glob('FastS/*.py'))
 
-env.Alias(target="install", source=[dp1,dp2,dp3,dp4,dp5])
+env.Alias(target="install", source=[dp1,dp2,dp3,dp4,dp5,dp6])

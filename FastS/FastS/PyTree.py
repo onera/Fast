@@ -1224,7 +1224,7 @@ def _computeGrad(t, metrics, varlist, order=2):
 #==============================================================================
 # Display
 #==============================================================================
-def display_temporal_criteria(t, metrics, nitrun, format=None):
+def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
     zones        = Internal.getZones(t)
     dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
@@ -1248,10 +1248,10 @@ def display_temporal_criteria(t, metrics, nitrun, format=None):
     elif format == "ascii": lft = -2
     # enregistrement dans l'arbre uniquement
     elif format == "store": lft = 3
-    fasts.display_ss_iteration( zones, metrics, cvg_numpy, nitrun, 
-                                nssiter, lft)
+    residu = fasts.display_ss_iteration( zones, metrics, cvg_numpy, nitrun, nssiter, lft)
 
-    return None
+    if gmres == None: return None
+    else: return residu
 #==============================================================================
 # Interface for Vtune/Advisor collection control
 #==============================================================================
@@ -1500,6 +1500,7 @@ def _buildOwnData(t):
     'time_step_nature':['local', 'global'],
     'ssdom_IJK':3,
     'epsi_newton':1,
+    'epsi_linear':1,
     'inj1_newton_tol':1,
     'inj1_newton_nit':0,
     'cfl':1, 
@@ -1635,6 +1636,7 @@ def _buildOwnData(t):
             dtnature   = "global"
             dtc        = -0.000001
             epsi_newton  = 0.1 
+            epsi_linear  = 0.01 
             psiroe       = 0.1
             cfl          = 1.
             rotation     = [ 0.,0.,0., 0.,0.,0.,0.,0.]
@@ -1724,6 +1726,8 @@ def _buildOwnData(t):
                 if a is not None: nit_inflow = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'epsi_newton')
                 if a is not None: epsi_newton = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'epsi_linear')
+                if a is not None: epsi_linear = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'cfl')
                 if a is not None: cfl = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'ssdom_IJK')
@@ -1886,7 +1890,7 @@ def _buildOwnData(t):
             
             # creation noeud parametre real 
             #size_real = 23 +  size_ale   
-            size_real = 39
+            size_real = 40
             datap = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
                 print 'Warning: time_step set to default value (0.0001).'
@@ -1934,6 +1938,7 @@ def _buildOwnData(t):
             datap[36]=  sfd_delta
             datap[37]=  epsi_inflow
             datap[38]=  prandtltb
+            datap[39]=  epsi_linear
 
             Internal.createUniqueChild(o, 'Parameter_real', 'DataArray_t', datap)
 

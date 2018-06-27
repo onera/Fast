@@ -164,6 +164,9 @@ extern "C"
 
   void bvbs_wall_inviscid_jacob_(E_Int* ipt_param_int, E_Int* ind_loop, E_Int& idir, E_Int& neq_mtr, E_Float* ipttijk, E_Float* iptvect);
 
+  void bvbs_wall_inviscid_d_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
+                                 E_Float* iptventi  , E_Float* iptijk  , E_Float* iptro, E_Float* iptrod);
+
   void pre_bc_(E_Int* param_int, E_Float& signe, E_Int*ind_loop, E_Float* krylov, E_Float* rop);
 
   void normalisation_vect_( E_Float& normL2, E_Int* param_int, E_Int* ind_loop, E_Float* krylov);
@@ -184,7 +187,7 @@ extern "C"
 				E_Float* ipt_cfl        ,
 				E_Float* iptx             , E_Float* ipty         , E_Float* iptz          , E_Float* iptCellN       ,
 				E_Float* iptro_ssiter     , E_Float* iptro_ssiterd, E_Float* krylov_in     ,
-				E_Float* iptmut           ,
+				E_Float* iptmut           , E_Float* iptmutd     ,
 				E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , 
 				E_Float* ipti_df          , E_Float* iptj_df     , E_Float* iptk_df        , E_Float* iptvol_df      , 
 				E_Float* iptventi         , E_Float* iptventj    , E_Float* iptventk       ,  
@@ -201,73 +204,103 @@ extern "C"
   void prod_mat_vect_(E_Int* ipt_param_int, E_Int* ind_loop, E_Float* iptkrylov,
 		      E_Float* iptvecty, E_Float* iptdrodm, E_Int& num_krylov);
 
-  void mjr_prim_from_cons_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int* ind_loop, 
+  void mjr_prim_from_cons_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Float* visco, E_Float* sa_real, E_Int* ind_loop, 
 		   E_Float* roptmp, E_Float* ropssiter, E_Float* drodm);
   
 
 
    void     bvbs_extrapolate_( E_Int& idir , E_Int& lrhs    , E_Int& eq_deb     ,E_Int* param_int , E_Int* ind_loop  , E_Float& nutildeinf,  E_Float* iptro);
+   void     bvbs_extrapolate_d_( E_Int& idir , E_Int& lrhs    , E_Int& eq_deb     ,E_Int* param_int , E_Int* ind_loop  , E_Float& nutildeinf,  E_Float* iptro, E_Float* iptrod );
 
-   void     bvbs_periodique_( E_Int& idir  , E_Int& lrhs    , E_Int* param_int  , E_Int* ind_loop, E_Float* iptro);
+   void     bvbs_periodique_(   E_Int& idir  , E_Int& lrhs    , E_Int* param_int  , E_Int* ind_loop, E_Float* iptro);
+   void     bvbs_periodique_d_( E_Int& idir  , E_Int& lrhs    , E_Int* param_int  , E_Int* ind_loop, E_Float* iptro, E_Float* iptrod);
 
-   void     bvbs_periodique_azimuthal_( E_Int& idir  , E_Int& lrhs    , E_Int* param_int  , E_Int* ind_loop, E_Float* iptro, E_Float* iptdata);
+   void     bvbs_periodique_azimuthal_(   E_Int& idir  , E_Int& lrhs    , E_Int* param_int  , E_Int* ind_loop, E_Float* iptro, E_Float* iptdata);
+   void     bvbs_periodique_azimuthal_d_( E_Int& idir  , E_Int& lrhs    , E_Int* param_int  , E_Int* ind_loop, E_Float* iptro,  E_Float* iptrod, E_Float* iptdata);
 
-   void     bvbs_wall_inviscid_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
-                                 E_Float* iptventi  , E_Float* iptijk  , E_Float* iptro);
-
+   void     bvbs_wall_inviscid_(   E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
+                                   E_Float* iptventi  , E_Float* iptijk  , E_Float* iptro);
    void     bvbs_wall_inviscid_d_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
-                                 E_Float* iptventi  , E_Float* iptijk  , E_Float* iptro, E_Float* iptkrylov);
+                                   E_Float* iptventi  , E_Float* iptijk  , E_Float* iptro, E_Float* iptrod);
 
-   void     bvbs_wall_viscous_adia_( E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
-                                     E_Float* iptventi, E_Float* iptijk  , E_Float* iptro);
+   void     bvbs_wall_viscous_adia_(   E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
+                                       E_Float* iptventi, E_Float* iptijk  , E_Float* iptro);
+   void     bvbs_wall_viscous_adia_d_( E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
+                                       E_Float* iptventi, E_Float* iptijk  , E_Float* iptro, E_Float* iptrod);
 
-   void     bvbs_wall_viscous_transition_( E_Int& idir      , E_Int& lrhs      ,   E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
-                                           E_Float* param_real,
-                                           E_Float* iptx    , E_Float* ipty     , E_Float* iptz  ,
-                                           E_Float* iptventi, E_Float* iptijk   , E_Float* iptro);
-
-
-   void     bvbs_inflow_supersonic_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
-                                     E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
-                                     E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* state);
-
-   void     bvbs_farfield_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
-                            E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
-                            E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* state);
-
-  void     bvbs_farfield_d_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
-			     E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
-			     E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptkrylov, E_Float* state);
-
-   void     bvbs_outflow_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
-                            E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
-                            E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* state);
-
-   void     bvbs_inflow_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
-                           E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
-                           E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* state);
+   void     bvbs_wall_viscous_transition_(   E_Int& idir      , E_Int& lrhs      ,   E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
+                                             E_Float* param_real,
+                                             E_Float* iptx    , E_Float* ipty     , E_Float* iptz  ,
+                                             E_Float* iptventi, E_Float* iptijk   , E_Float* iptro);
+   void     bvbs_wall_viscous_transition_d_( E_Int& idir      , E_Int& lrhs      ,   E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
+                                             E_Float* param_real,
+                                             E_Float* iptx    , E_Float* ipty     , E_Float* iptz  ,
+                                             E_Float* iptventi, E_Float* iptijk   , E_Float* iptro, E_Float* iptrod);
 
 
-   void     bvbs_outpres_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr,  E_Int* param_int ,E_Int* ind_loop  ,
-                            E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
-                            E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* data_pres,
-			    E_Int& size_data, E_Int& inc_bc);
+   void     bvbs_inflow_supersonic_(   E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                                       E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                                       E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* state);
+   void     bvbs_inflow_supersonic_d_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                                       E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                                       E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptrod, E_Float* state);
+
+   void     bvbs_farfield_(   E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                              E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                              E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* state);
+   void     bvbs_farfield_d_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                              E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                              E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptrod, E_Float* state);
+
+   void     bvbs_outflow_(    E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                              E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                              E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* state);
+   void     bvbs_outflow_d_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                              E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                              E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptrod, E_Float* state);
+
+   void     bvbs_inflow_(    E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                             E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                             E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* state);
+   void     bvbs_inflow_d_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                             E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                             E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptrod, E_Float* state);
+
+
+   void     bvbs_outpres_(    E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr,  E_Int* param_int ,E_Int* ind_loop  ,
+                              E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                              E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* data_pres,
+			      E_Int& size_data, E_Int& inc_bc);
+   void     bvbs_outpres_d_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr,  E_Int* param_int ,E_Int* ind_loop  ,
+                              E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                              E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptrod, E_Float* data_pres,
+			      E_Int& size_data, E_Int& inc_bc);
 
 //   void     bvbs_updatepressure_(  E_Int& idir  , E_Int& ithread, E_Int* ind_avg, E_Int* ind_mjr, E_Int* param_in ,E_Int* ind_loop ,
 //                            E_Float* param_real, E_Float* ipty   , E_Float* iptz  , E_Float* iptro, E_Float* data_pres,
 //			    E_Int& size_data, E_Float* vteta, E_Float* roteta, E_Int& inc_bc);
 
-   void     bvbs_inflow_newton_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+   void     bvbs_inflow_newton_(    E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                                    E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                                    E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, 
+                                    E_Float* state1    , E_Float* state2   , E_Float* state3, E_Float* state4, E_Float* state5, E_Float* state6, 
+	         	            E_Int& size_data   , E_Int& inc_bc     , E_Int& size_work);
+   void     bvbs_inflow_newton_d_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                                    E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                                    E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptrod,
+                                    E_Float* state1    , E_Float* state2   , E_Float* state3, E_Float* state4, E_Float* state5, E_Float* state6, 
+	         	            E_Int& size_data   , E_Int& inc_bc     , E_Int& size_work);
+
+   void     bvbs_inflow_fich_(    E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
                                   E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
                                   E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, 
                                   E_Float* state1    , E_Float* state2   , E_Float* state3, E_Float* state4, E_Float* state5, E_Float* state6, 
 	         	          E_Int& size_data   , E_Int& inc_bc     , E_Int& size_work);
-
-   void     bvbs_inflow_fich_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
-                                E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
-                                E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, 
-                                E_Float* state1    , E_Float* state2   , E_Float* state3, E_Float* state4, E_Float* state5, E_Float* state6, 
-	         	        E_Int& size_data   , E_Int& inc_bc     , E_Int& size_work);
+   void     bvbs_inflow_fich_d_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                                  E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                                  E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptrod,
+                                  E_Float* state1    , E_Float* state2   , E_Float* state3, E_Float* state4, E_Float* state5, E_Float* state6, 
+	         	          E_Int& size_data   , E_Int& inc_bc     , E_Int& size_work);
 
 
    void indice_cl_sdm_( E_Int& dir    , E_Int& npass  , E_Int& lskip , E_Int& typbc,

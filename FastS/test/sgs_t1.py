@@ -124,6 +124,8 @@ tc=None
 (t, tc, metrics) = FastS.warmup(t, tc, graph=None)
 
 #t = Internal.rmGhostCells(t, t, 1 )
+Internal._rmNodesByName(t, '.Solver#Param')
+Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)
 import sys;sys.exit()
 

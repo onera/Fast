@@ -16,7 +16,8 @@ c***********************************************************************
      &                   socket_topology, lok, topo_omp, inddm_omp,
      &                   cfl, x, y, z, celln, rop_ssiter,
      &                   rop_ssiterd, krylov_in,
-     &                   xmut, ti, tj, tk,vol,ti_df,tj_df,tk_df,vol_df,
+     &                   xmut, xmutd, 
+     &                   ti, tj, tk,vol,ti_df,tj_df,tk_df,vol_df,
      &                   venti, ventj, ventk, wig, stat_wig, rot,
      &                   drodm, drodmd, coe, delta, ro_res)
 c***********************************************************************
@@ -44,7 +45,7 @@ c
      & coe(*), ti(*), tj(*), tk(*), vol(*), x(*), y(*), 
      & z(*), venti(*), ventj(*), ventk(*), wig(*), stat_wig(*), 
      & rot(*), celln(*), ti_df(*), tj_df(*), tk_df(*), vol_df(*),
-     & rop_ssiterd(*), krylov_in(*), drodm(*), drodmd(*)
+     & rop_ssiterd(*), krylov_in(*), drodm(*), drodmd(*),xmutd(*)
 
       REAL_E delta(*),ro_res(*)
 
@@ -69,11 +70,12 @@ C Var loc
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
 
            !! a modifier pour generaliser
-           call src_term(ndo, nitcfg, nb_pulse, param_int, param_real,
-     &                   ind_sdm, ind_rhs, ind_ssa,
-     &                   temps,
-     &                   rop_ssiter, xmut, drodmd, coe, x,y,z,
-     &                   ti,tj,tk,vol, delta)
+           call src_term_d(ndo, nitcfg, nb_pulse, param_int, param_real,
+     &                     ind_sdm, ind_rhs, ind_ssa,
+     &                     temps,
+     &                     rop_ssiter, rop_ssiterd, xmut, drodm, drodmd,
+     &                     coe, x,y,z,
+     &                     ti,tj,tk,vol, delta)
 
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
 
@@ -90,7 +92,7 @@ C Var loc
      &                        rop_ssiter, rop_ssiterd,
      &                        drodm, drodmd,
      &                        ti, ti_df, tj, tj_df, tk,tk_df,vol,vol_df,
-     &                        venti, ventj, ventk, xmut)
+     &                        venti, ventj, ventk, xmut, xmutd)
 
           elseif (ithread .eq. 1) then
               write(*, *) 'Unknown flux', param_int(KFLUDOM)
@@ -107,7 +109,7 @@ C Var loc
      &                  psi, wig, stat_wig, rop_ssiter,
      &                  rop_ssiterd, drodm, drodmd,
      &                  ti, ti_df, tj, tj_df, tk, tk_df, 
-     &                  vol, vol_df, venti, ventj, ventk , xmut)
+     &                  vol, vol_df, venti, ventj, ventk , xmut, xmutd)
 
           endif
           if(param_int(ITYPCP).le.1.and.

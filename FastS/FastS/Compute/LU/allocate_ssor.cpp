@@ -117,9 +117,6 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 					ipt_ind_dm_loc,
 					ipt_topology_socket, ipt_ind_dm_thread);
 
-		      for (E_Int j =0; j < 6; j++)
-			cout << ipt_ind_dm_thread[j] << endl;
-
 		      if (ipt_param_int[ ITYPZONE ] == 3) //2d
 			sizessor += (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic) *
 			  (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic);

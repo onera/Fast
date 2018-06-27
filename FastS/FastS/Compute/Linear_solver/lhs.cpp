@@ -32,10 +32,11 @@
 
 if(lexit_lu == 0 )
  {
-    E_Int num_max_vect = param_int[0][NB_KRYLOV];
-    E_Int nb_restart   = param_int[0][NB_RESTART];
-    E_Int nb_precond   = 0;
-    E_Int nb_relax     = 4;
+    //E_Int num_max_vect = param_int[0][NB_KRYLOV];
+    //E_Int nb_restart   = param_int[0][NB_RESTART];
+    E_Int num_max_vect = param_int[0][NB_RESTART];
+    if ( num_max_vect > param_int[0][NB_KRYLOV]) num_max_vect = param_int[0][NB_KRYLOV];
+    E_Int nb_restart   = 1;
 
     //Voir https://web.stanford.edu/class/cme324/saad.pdf pour les notations
 
@@ -57,11 +58,12 @@ if(lexit_lu == 0 )
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 	 E_Float* increment = iptdrodm + shift_zone;
 
-         mjr_prim_from_cons_(param_int[nd], param_real[nd], ipt_ind_dm_thread, iptro_CL[nd], iptro_ssiter[nd], increment);
+         mjr_prim_from_cons_(param_int[nd], param_real[nd], param_real[nd]+VISCO, param_real[nd]+SA_REAL, ipt_ind_dm_thread, iptro_CL[nd], iptro_ssiter[nd], increment);
          nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
 
      shift_zone  = shift_zone  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
      }//loop zone
  }//if lexit_lu
+
 

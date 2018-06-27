@@ -3,12 +3,17 @@ c     $Date: 2013-08-26 16:00:23 +0200 (lun. 26 aout 2013) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine template_correction_select(ndom, ithread, idir,
+      subroutine template_flu_select_d(ndom, nitcfg, ithread, nptpsi, 
      &                        param_int, param_real,
-     &                        ind_loop, 
-     &                        rop, drodm  , wig,
-     &                        venti, ventj, ventk,
-     &                        ti,tj,tk,vol)
+     &                        ind_dm, ind_loop, ijkv_thread,ijkv_sdm,
+     &                        synchro_send_sock, synchro_send_th, 
+     &                        synchro_receive_sock,synchro_receive_th,
+     &                        ibloc , jbloc , kbloc ,
+     &                        icache, jcache, kcache,
+     &                        psi, wig, stat_wig,
+     &                        rop, ropd, drodm, drodmd,
+     &                        ti, ti_df,tj,tj_df,tk,tk_df,vol,vol_df,
+     &                        venti, ventj, ventk, xmut, xmutd)
 c***********************************************************************
 c_U   USER : PECHIER
 c
@@ -35,33 +40,39 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndom, ithread, idir, ind_loop(6), param_int(0:*)
+      INTEGER_E ndom, nitcfg,ithread, nptpsi,
+     & icache, jcache, kcache,ibloc, jbloc, kbloc,
+     & ijkv_thread(3), ijkv_sdm(3), ind_loop(6),ind_dm(6),
+     & synchro_send_sock(3),synchro_send_th(3),
+     & synchro_receive_sock(3), synchro_receive_th(3), param_int(0:*)
 
 
-      REAL_E rop(*),drodm(*), ti(*),tj(*),tk(*),vol(*),
-     & venti(*),ventj(*),ventk(*), wig(*)
+      REAL_E rop(*),xmut(*),drodm(*), ti(*),tj(*),tk(*),vol(*),
+     & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*),
+     & ti_df(*),tj_df(*),tk_df(*),vol_df(*)
+
+      REAL_E drodmd(*), ropd(*), xmutd(*)
 
       REAL_E param_real(0:*)
+      REAL_E psi(nptpsi)
 
 C Var loc
-      INTEGER_E option, iflow_loc
+      INTEGER_E option
 
       if(ind_loop(1).gt.ind_loop(2)) return 
       if(ind_loop(3).gt.ind_loop(4)) return 
       if(ind_loop(5).gt.ind_loop(6)) return
 
-      iflow_loc = param_int(IFLOW)
-      if(iflow_loc.eq.2) iflow_loc = 1
-
-       option =1000*param_int(LALE)
-     &        + 100*param_int(SLOPE)
-     &        +  10*iflow_loc
+      option =  1000*param_int(LALE)
+     &        +  100*param_int(SLOPE)
+     &        +   10*param_int(IFLOW)
      &        +      param_int(ITYPZONE)
+
 
       ELSE
          write(*,*) ' option = ' , option 
             write(*,*)'Unknown flux options'
-           call error('correction_flu$',70,1)
+           call error('fluselect_d$',70,1)
 
       ENDIF
  

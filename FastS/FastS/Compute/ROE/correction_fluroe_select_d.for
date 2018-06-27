@@ -3,10 +3,10 @@ c     $Date: 2013-08-26 16:00:23 +0200 (lun. 26 aout 2013) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine template_correction_select(ndom, ithread, idir,
+      subroutine corr_fluroe_select_d(ndom, ithread, idir,
      &                        param_int, param_real,
      &                        ind_loop, 
-     &                        rop, drodm  , wig,
+     &                        rop, ropd, drodm, drodmd , wig,
      &                        venti, ventj, ventk,
      &                        ti,tj,tk,vol)
 c***********************************************************************
@@ -43,6 +43,7 @@ c***********************************************************************
 
       REAL_E param_real(0:*)
 
+      REAL_E ropd(*),drodmd(*)
 C Var loc
       INTEGER_E option, iflow_loc
 
@@ -58,6 +59,33 @@ C Var loc
      &        +  10*iflow_loc
      &        +      param_int(ITYPZONE)
 
+       IF  (option.eq.223) THEN
+                                               
+         call corr_fluroe_lamin_o3_2d_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
+       ELSEIF (option.eq.233) THEN
+                                               
+         call corr_fluroe_SA_o3_2d_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
+       ELSEIF (option.eq.213) THEN
+                                               
+         call corr_fluroe_euler_o3_2d_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
       ELSE
          write(*,*) ' option = ' , option 
             write(*,*)'Unknown flux options'
@@ -66,4 +94,3 @@ C Var loc
       ENDIF
  
       end
-

@@ -18,7 +18,6 @@
       if(ind_loop(3).gt.ind_loop(4)) return 
       if(ind_loop(5).gt.ind_loop(6)) return 
 
-
       !zone 2D
       IF(param_int(ITYPZONE).eq.3) THEN
 

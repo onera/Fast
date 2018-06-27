@@ -36,7 +36,7 @@ if prod is None: prod = 'xx'
 # Setting libraryDirs, include dirs and libraries =============================
 libraryDirs = ["build/"+prod, kcoreLibDir, connectorLibDir, '.']
 includeDirs = [numpyIncDir, kcoreIncDir, connectorIncDir]
-libraries = ["fastS1", "fastS2", "fastS3","fastS4","fastS1", "fastS2", "fastS3", "fastS4", "connector", "kcore"]
+libraries = ["fastS1", "fastS2", "fastS3","fastS4", "fastS5", "fastS1", "fastS2", "fastS3", "fastS4", "fastS5", "fastS1", "fastS2", "fastS3", "fastS4", "fastS5",  "connector", "kcore"]
 
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs

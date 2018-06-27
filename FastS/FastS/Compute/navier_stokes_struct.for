@@ -265,19 +265,21 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                                rop_ssiter, rop, rop_m1,drodm,coe)
                endif
 
+
            !! implicit Lu                 
-           elseif(param_int(ITYPCP) .LE. 1) then
+           elseif(param_int(ITYPCP).le.1) then
+
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
               if(flagCellN.eq.0) then
                call core3as2(ndo,nitcfg, first_it, param_int,param_real,
      &                        ind_mjr,
      &                       rop_ssiter, rop, rop_m1, drodm, coe)
-               else
+              else
                call core3as2_chim(ndo,nitcfg, first_it, 
      &                            param_int,param_real,
      &                            ind_mjr, cellN,
      &                            rop_ssiter, rop, rop_m1, drodm, coe)
-               endif
+              endif
            !! explicit Lu                 
            else
              !c--------------------------------------------------
