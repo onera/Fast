@@ -370,11 +370,12 @@ else
 
   /// Tableau pour GMRES (on test la premiere zone 
   //
-  E_Float* ipt_testVectG      = NULL;
-  E_Float* ipt_testVectY      = NULL;
-  E_Float* ipt_test_Hessenberg= NULL;
+  E_Float* ipt_VectG          = NULL;
+  E_Float* ipt_VectY          = NULL;
+  E_Float* ipt_Hessenberg     = NULL;
   E_Float* ipt_drodmd         = NULL;
   E_Float* ipt_norm_kry       = NULL;
+  E_Float* ipt_givens         = NULL;
   E_Int num_max_vect = 2;
   E_Int size_hessenb = 1;
 
@@ -393,11 +394,12 @@ else
     }
   else{ndim_drodm =1; }
 
-  FldArrayF  testVectG(num_max_vect  ); ipt_testVectG = testVectG.begin();
-  FldArrayF  testVectY(num_max_vect-1); ipt_testVectY = testVectY.begin();
-  FldArrayF  test_Hessenberg(size_hessenb); ipt_test_Hessenberg = test_Hessenberg.begin();
+  FldArrayF  VectG(num_max_vect  ); ipt_VectG = VectG.begin();
+  FldArrayF  VectY(num_max_vect-1); ipt_VectY = VectY.begin();
+  FldArrayF  Hessenberg(size_hessenb); ipt_Hessenberg = Hessenberg.begin();
   FldArrayF  drodmd(ndim_drodm); ipt_drodmd = drodmd.begin();
-  FldArrayF norm_kry(threadmax_sdm); ipt_norm_kry = norm_kry.begin();
+  FldArrayF  norm_kry(threadmax_sdm); ipt_norm_kry = norm_kry.begin();
+  FldArrayF  givens(2 * (num_max_vect - 1)); ipt_givens = givens.begin();
 
   /// Tableau pour stockage senseur oscillation
   PyObject* wigArray = PyDict_GetItemString(work,"wiggle"); FldArrayF* wig;
@@ -507,8 +509,8 @@ else
             ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, ndimdx_transfer, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
-            ipt_testVectG      , ipt_testVectY    , iptssor           , iptssortmp    , ipt_drodmd, 
-	    ipt_test_Hessenberg, iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp,
+            ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_drodmd, 
+	    ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp, ipt_givens,
             ipt_cfl            ,
             iptx               , ipty             , iptz              ,
             iptCellN           ,

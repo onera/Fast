@@ -1,12 +1,11 @@
   E_Float value = 0., sum_value = 0.; E_Float normL2 = 0., normL2_sum = 0.;
 E_Int mjrnewton = 0;
- 
   // norm L2 krylov pour openmp
   for (E_Int th = 0; th < Nbre_thread_actif; th++) { normL2_sum += ipt_norm_kry[th];}
 
   //Normalisation de V0 + initialisation de G = Beta x e1
   normL2_sum = sqrt(normL2_sum);
-  ipt_testVectG[0] = normL2_sum;
+  ipt_VectG[0] = normL2_sum;
 
 // Pour verif Ax-b
 //E_Float save = normL2_sum;
@@ -149,8 +148,8 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
       {
         E_Float* krylov_in = iptkrylov[nd] +  kr    * param_int[nd][NEQ] * param_int[nd][NDIMDX];
         E_Float* krylov_out= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
-	/* if (param_int[nd][NB_RELAX] != 0) */
-	/*   krylov_in = ipt_gmrestmp[nd]; */
+	if (param_int[nd][NB_RELAX] != 0)
+	  krylov_in = ipt_gmrestmp[nd];
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
              id_vect_(param_int[nd], ipt_ind_dm_thread, ipt_drodmd + shift_zone, krylov_out, krylov_in);
              nd_current +=1;
@@ -193,8 +192,8 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
         //Affectation des produits scalaires dans la matrice d'Hessenberg
 #pragma omp single
         {
-  	 E_Float* test_Hessenberg_i = ipt_test_Hessenberg + i * (num_max_vect - 1);
-	 test_Hessenberg_i[kr]= sum_value;
+  	 E_Float* Hessenberg_i = ipt_Hessenberg + i * (num_max_vect - 1);
+	 Hessenberg_i[kr]= sum_value;
         }
 
         //A chaque produit scalaire (V_kr, V_i) on fait
@@ -233,8 +232,37 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
     //Normalisation de V_kr + affectation de la norme sur la sous diagonale d'Hessenberg
 #pragma omp single
     {
-     E_Float* test_Hessenberg_krp1 = ipt_test_Hessenberg + (kr + 1) *(num_max_vect - 1);
-     test_Hessenberg_krp1[kr] = normL2_sum;
+      E_Float tmp;
+      E_Float* Hessenberg_i   = ipt_Hessenberg +  kr     * (num_max_vect - 1);
+      E_Float* Hessenberg_ip1 = ipt_Hessenberg + (kr+1)  * (num_max_vect - 1);
+
+      Hessenberg_ip1[ kr ] = normL2_sum;
+
+      for (E_Int i = 0; i < kr; i++)
+      	{
+      	  Hessenberg_i   = ipt_Hessenberg + i     * (num_max_vect - 1);
+      	  Hessenberg_ip1 = ipt_Hessenberg + (i+1) * (num_max_vect - 1);
+      	  tmp =  Hessenberg_i[ kr ];
+
+      	  Hessenberg_i[ kr ]   =   ipt_givens[ i ] * tmp + ipt_givens[ i+ num_max_vect - 1 ] * Hessenberg_ip1[ kr ];
+      	  Hessenberg_ip1[ kr ] = - ipt_givens[ i+ num_max_vect - 1 ] * tmp + ipt_givens[ i ] * Hessenberg_ip1[ kr ];
+      	}
+
+      Hessenberg_i   = ipt_Hessenberg +  kr    * (num_max_vect - 1);
+      Hessenberg_ip1 = ipt_Hessenberg + (kr+1) * (num_max_vect - 1);
+
+      tmp = sqrt(Hessenberg_ip1[ kr ]*Hessenberg_ip1[ kr ] + Hessenberg_i[ kr ]*Hessenberg_i[ kr ]);
+      ipt_givens[ kr ]  =   Hessenberg_i[ kr ] / tmp;
+      ipt_givens[ kr + num_max_vect - 1 ]  = Hessenberg_ip1[ kr ] / tmp;
+
+      tmp =  Hessenberg_i[kr];
+      Hessenberg_i[ kr ]   =   ipt_givens[ kr ] * tmp + ipt_givens[ kr + num_max_vect - 1 ] * Hessenberg_ip1[ kr ];
+      Hessenberg_ip1[ kr ] = - ipt_givens[ kr + num_max_vect - 1 ] * tmp + ipt_givens[ kr ] * Hessenberg_ip1[ kr ];
+
+      ipt_VectG[ kr + 1 ] = - ipt_givens[ kr + num_max_vect - 1 ] * ipt_VectG[ kr ];
+      ipt_VectG[ kr ]     =   ipt_givens[ kr ]                    * ipt_VectG[ kr ];
+
+      //cout << "Residu GMRES = " << abs(ipt_VectG[kr + 1]) << endl;
     }
 
     nd_current =0;
@@ -271,60 +299,34 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
     
     for (E_Int i = 0; i < num_max_vect ; i++)
       {
-       E_Float* test_Hessenberg_i   = ipt_test_Hessenberg + i*(num_max_vect - 1);
+       E_Float* Hessenberg_i   = ipt_Hessenberg + i*(num_max_vect - 1);
        printf("hess avt \n " );
-       for (E_Int j = 0; j < num_max_vect - 1; j++) { printf(" %f %d %d ", test_Hessenberg_i[j], i,j ); }
-       printf("G0 %f \n",  ipt_testVectG[0] );
+       for (E_Int j = 0; j < num_max_vect - 1; j++) { printf(" %f %d %d ", Hessenberg_i[j], i,j ); }
+       printf("G0 %f \n",  ipt_VectG[0] );
       }
 
   }
 */
 
-//Rotation de Givens apres assemblage complet d'Hessenberg
 #pragma omp single
   {
-   for (E_Int i = 0; i < num_max_vect - 1; i++)
-     {
-       E_Float ci, si, tmp;
-       E_Float* test_Hessenberg_i   = ipt_test_Hessenberg + i     * (num_max_vect - 1);
-       E_Float* test_Hessenberg_ip1 = ipt_test_Hessenberg + (i+1) * (num_max_vect - 1);
-
-       tmp = sqrt(pow(test_Hessenberg_ip1[i], 2) + pow(test_Hessenberg_i[i], 2));
-       ci  =   test_Hessenberg_i[i] / tmp;
-       si  = test_Hessenberg_ip1[i] / tmp;
-
-       for (E_Int j = 0; j < num_max_vect - 1; j++)
-         {
-    	  tmp =  test_Hessenberg_i[j];
-
-	    test_Hessenberg_i[ j ] =   ci * test_Hessenberg_i[ j ] + si * test_Hessenberg_ip1[ j ];
-	  test_Hessenberg_ip1[ j ] = - si * tmp                    + ci * test_Hessenberg_ip1[ j ];
-	 }
-
-	 ipt_testVectG[i + 1] = - si * ipt_testVectG[i];
-	 ipt_testVectG[i    ] =   ci * ipt_testVectG[i];
-     }
-
-/*
-   for (E_Int i = 0; i < num_max_vect ; i++)
-     {
-      E_Float* test_Hessenberg_i   = ipt_test_Hessenberg + i     * (num_max_vect - 1);
-      printf("hess apr \n " );
-      for (E_Int j = 0; j < num_max_vect - 1; j++) { printf(" %f %d %d ", test_Hessenberg_i[j], i,j ); }
-      printf("\n" );
-     }
-    cout << "Residu GMRES = " << abs(ipt_testVectG[num_max_vect - 1]) << endl;
-*/
+   /* for (E_Int i = 0; i < num_max_vect ; i++) */
+   /*   { */
+   /*    E_Float* Hessenberg_i   = ipt_Hessenberg + i     * (num_max_vect - 1); */
+   /*    printf("hess apr \n " ); */
+   /*    for (E_Int j = 0; j < num_max_vect - 1; j++) { printf(" %f %d %d ", Hessenberg_i[j], i,j ); } */
+   /*    printf("\n" ); */
+   /*   } */
 
   //Resolution de Y par remontee
   for (E_Int i = num_max_vect - 2; i >= 0; i--)
     {
-     E_Float* test_Hessenberg_i   = ipt_test_Hessenberg + i     * (num_max_vect - 1);
+     E_Float* Hessenberg_i   = ipt_Hessenberg + i     * (num_max_vect - 1);
      value = 0.;
-     for (E_Int j = num_max_vect - 2; j > i; j--) { value -= ipt_testVectY[j] * test_Hessenberg_i[ j ]; }
+     for (E_Int j = num_max_vect - 2; j > i; j--) { value -= ipt_VectY[j] * Hessenberg_i[ j ]; }
 
-     ipt_testVectY[i] = (ipt_testVectG[i] + value) / test_Hessenberg_i[ i ];
-     //printf("VecY  %f %d  \n", ipt_testVectY[i], i );
+     ipt_VectY[i] = (ipt_VectG[i] + value) / Hessenberg_i[ i ];
+     //printf("VecY  %f %d  \n", ipt_VectY[i], i );
     }
 
   }//end omp single
@@ -340,7 +342,7 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
        // inverser les loop et vectoriser avec simd reduction
        // 
        prod_mat_vect_(param_int[nd], ipt_ind_dm_thread, iptkrylov[nd],
-                      ipt_testVectY, iptdrodm + shift_zone, num_max_vect);
+                      ipt_VectY, iptdrodm + shift_zone, num_max_vect);
        nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
      shift_zone  = shift_zone  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
@@ -366,7 +368,6 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
 	  shift_zone  = shift_zone  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
           shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
          }//loop zone
-
   //
   //
   //init_gramm schmidt again normL2
