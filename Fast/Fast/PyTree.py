@@ -328,9 +328,10 @@ def save(t, fileName='restart', split='single',
     zones = Internal.getZones(t2)
 
     flowsol = Internal.getNodeFromName1(zones[0], 'FlowSolution#Centers')
-    vars    = Internal.getNodesFromType1(flowsol, 'DataArray_t')
-    for var in vars:
-         if 'Krylov' in var[0]: C._rmVars(t2, 'centers:'+var[0])
+    if flowsol is not None:
+         vars    = Internal.getNodesFromType1(flowsol, 'DataArray_t')
+         for var in vars:
+              if 'Krylov' in var[0]: C._rmVars(t2, 'centers:'+var[0])
 
     for z in zones:
         node = Internal.getNodeFromName1(z, '.Solver#define')
@@ -366,7 +367,7 @@ def save(t, fileName='restart', split='single',
             graphID = Cmpi.computeGraph(t2, type='ID')
             graphIBCD = Cmpi.computeGraph(t2, type='IBCD')
             procDict = D2.getProcDict(t2)
-            procList = D2.getProcList(t2)
+            procList = D2.getProcList(t2,  sort=True)
             objet = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList}
 
             # Rebuild local trees
@@ -432,7 +433,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False, mpirun=False):
                 graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
                 graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
                 procDict  = D2.getProcDict(t)
-                procList  = D2.getProcList(t)
+                procList  = D2.getProcList(t,  sort=True)
                 graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
             t = Cmpi.readZones(t, FILE, rank=rank)
             t = Cmpi.convert2PartialTree(t, rank=rank)
@@ -459,7 +460,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False, mpirun=False):
                         graphID  = Cmpi.computeGraph(t, type='ID'  , reduction=False)
                         graphIBCD= Cmpi.computeGraph(t, type='IBCD', reduction=False)
                         procDict = D2.getProcDict(t)
-                        procList = D2.getProcList(t)
+                        procList = D2.getProcList(t,  sort=True)
                         graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
                     else: print 'graph non calculable: manque de fichiers connectivite'
 
@@ -598,7 +599,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, NP=0
                 graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
                 graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
                 procDict  = D2.getProcDict(t)
-                procList  = D2.getProcList(t)
+                procList  = D2.getProcList(t,  sort=True)
                 graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
             t = Cmpi.readZones(t, FILE, rank=rank)
             zones=Internal.getZones(t)
@@ -627,7 +628,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, NP=0
                         graphID  = Cmpi.computeGraph(t, type='ID'  , reduction=False)
                         graphIBCD= Cmpi.computeGraph(t, type='IBCD', reduction=False)
                         procDict = D2.getProcDict(t)
-                        procList = D2.getProcList(t)
+                        procList = D2.getProcList(t,  sort=True)
                         graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
                     else: print 'graph non calculable: manque de fichiers connectivite'
 
