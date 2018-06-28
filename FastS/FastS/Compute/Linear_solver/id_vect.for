@@ -30,29 +30,33 @@ c***********************************************************************
 
 C Var loc
       INTEGER_E k, j, lij, l,ltij,lt,lvo
+      REAL_E poid_sa,poid_ns
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
+
+      poid_sa =1.
+      poid_ns =1.
 
       !zone 2D
       IF(param_int(ITYPZONE).eq.3) THEN
 
         if(param_int(NEQ).eq.5) then
 #include   "FastS/Compute/loop_begin.for"
-               krylov_out(l, 1) = drodmd(l, 1) + krylov_in(l, 1)
-               krylov_out(l, 2) = drodmd(l, 2) + krylov_in(l, 2)
-               krylov_out(l, 3) = drodmd(l, 3) + krylov_in(l, 3)
-               krylov_out(l, 4) = 0.
-               krylov_out(l, 5) = drodmd(l, 5) + krylov_in(l, 5)
+             krylov_out(l, 1) = drodmd(l, 1) + krylov_in(l, 1)
+             krylov_out(l, 2) = drodmd(l, 2) + krylov_in(l, 2)
+             krylov_out(l, 3) = drodmd(l, 3) + krylov_in(l, 3)
+             krylov_out(l, 4) = 0.
+             krylov_out(l, 5) = drodmd(l, 5) + krylov_in(l, 5)
 #include   "FastS/Compute/loop_end.for"
         else
 #include   "FastS/Compute/loop_begin.for"
-               krylov_out(l, 1) = drodmd(l, 1) + krylov_in(l, 1)
-               krylov_out(l, 2) = drodmd(l, 2) + krylov_in(l, 2)
-               krylov_out(l, 3) = drodmd(l, 3) + krylov_in(l, 3)
-               krylov_out(l, 4) = 0.
-               krylov_out(l, 5) = drodmd(l, 5) + krylov_in(l, 5)
-               krylov_out(l, 6) = drodmd(l, 6) + krylov_in(l, 6)
+             krylov_out(l, 1) = (drodmd(l, 1) + krylov_in(l, 1))*poid_ns
+             krylov_out(l, 2) = (drodmd(l, 2) + krylov_in(l, 2))*poid_ns
+             krylov_out(l, 3) = (drodmd(l, 3) + krylov_in(l, 3))*poid_ns
+             krylov_out(l, 4) = 0.
+             krylov_out(l, 5) = (drodmd(l, 5) + krylov_in(l, 5))*poid_ns
+             krylov_out(l, 6) = (drodmd(l, 6) + krylov_in(l, 6))*poid_sa
 #include   "FastS/Compute/loop_end.for"
         endif
 

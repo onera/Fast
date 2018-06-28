@@ -14,7 +14,7 @@
   //if (ithread==1) printf(" norm Vo %g \n", normL2_sum);
 
   // Pour verif Ax-b
-  //E_Float save = normL2_sum;
+  E_Float save = normL2_sum;
 
     //iptkrylov[nd] = iptkrylov[nd] / normL2_sum
     nd_current =0;
@@ -37,6 +37,8 @@ E_Int kr = 0;
 while ((kr < num_max_vect - 1) && continue_gmres)
   {
 #pragma omp barrier
+     printf("iter krylov =  %d  \n" , kr);
+
     // 2.1) Calcul de V_kr = A * V_kr-1
         shift_coe=0; shift_zone=0; nd_current=0;
 	for (E_Int nd = 0; nd < nidom; nd++)
@@ -60,12 +62,6 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 	   else if (param_int[nd][NB_RELAX] > 1) krylov_in = iptssortmp[nd];
 	   
              dp_dw_vect_(param_int[nd], param_real[nd],ipt_ind_dm_thread , iptro_ssiter[nd], krylov_in,  krylov_out);
-
-             /*if (step == nb_relax)
-               { E_Float* vecin= krylov_in;
-                 if (nb_precond !=0) vecin = krylov_out;
-                 dp_dw_vect_(param_int[nd], param_real[nd], ipt_ind_dm_thread, iptro_ssiter[nd], vecin,  krylov_out);
-               }*/
 
              nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
@@ -293,18 +289,26 @@ while ((kr < num_max_vect - 1) && continue_gmres)
       ipt_VectG[ kr + 1 ] = - ipt_givens[ kr + num_max_vect - 1 ] * ipt_VectG[ kr ];
       ipt_VectG[ kr ]     =   ipt_givens[ kr ]                    * ipt_VectG[ kr ];
 
-      //cout << "Residu GMRES = " << abs(ipt_VectG[kr + 1]) << endl;
+      cout << "Residu GMRES = " << abs(ipt_VectG[kr + 1]) << endl;
 
     }// end single
 
     nd_current =0;
-    ipt_norm_kry[ithread_loc-1]= 0.;
     for (E_Int nd = 0; nd < nidom; nd++)
       {
        E_Float* krylov_krp1= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 	       normalisation_vect_(normL2_sum, param_int[nd], ipt_ind_dm_thread , krylov_krp1);
 
+             /*
+               for ( E_Int i=0 ; i< kr+1; i++) 
+               {
+                  E_Float* krylov_i   = iptkrylov[nd] + i* param_int[nd][NEQ] * param_int[nd][NDIMDX];
+
+                  ipt_norm_kry[ithread_loc-1]= 0.;
+	          scal_prod_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, ipt_norm_kry[ithread_loc-1]);
+                  printf("normvect   %g %d  \n", ipt_norm_kry[ithread_loc-1] , i);
+               }*/
                nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
       }
@@ -317,6 +321,9 @@ while ((kr < num_max_vect - 1) && continue_gmres)
     printf("normvect   %f %d  \n",normL2_sum , ithread);
 */
     kr++;
+
+//#include  "Compute/Linear_solver/verif_vectkrylov.cpp"
+
     continue_gmres = abs(ipt_VectG[kr]) > epsi_linear;
   }//loop kr
    // fin loop vecteur krylov
@@ -360,7 +367,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
      for (E_Int j = kr - 1; j > i; j--) { value -= ipt_VectY[j] * Hessenberg_i[ j ]; }
 
      ipt_VectY[i] = (ipt_VectG[i] + value) / Hessenberg_i[ i ];
-     //printf("VecY  %f %d  \n", ipt_VectY[i], i );
+     //printf("VecY  %g %d  \n", ipt_VectY[i], i );
     }
 
   }//end omp single

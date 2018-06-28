@@ -28,17 +28,11 @@ C
 CDIR$ IVDEP
             DO l=lij,lij+ind_loop(2)-ind_loop(1)
               drodmd(l, 1) = - coe(l, 1)*drodmd(l, 1)
-              !drodm(l, 1) = - coe(l, 1)*drodm(l, 1)
               drodmd(l, 2) = - coe(l, 1)*drodmd(l, 2)
-              !drodm(l, 2) = - coe(l, 1)*drodm(l, 2)
               drodmd(l, 3) = - coe(l, 1)*drodmd(l, 3)
-              !drodm(l, 3) = - coe(l, 1)*drodm(l, 3)
               drodmd(l, 4) = - coe(l, 1)*drodmd(l, 4)
-              !drodm(l, 4) = - coe(l, 1)*drodm(l, 4)
               drodmd(l, 5) = - coe(l, 1)*drodmd(l, 5)
-              !drodm(l, 5) = - coe(l, 1)*drodm(l, 5)
               drodmd(l, 6) = - coe(l, 1)*drodmd(l, 6)
-              !drodm(l, 6) = - coe(l, 1)*drodm(l, 6)
             ENDDO
           ENDDO
         ENDDO
@@ -51,15 +45,10 @@ CDIR$ IVDEP
 CDIR$ IVDEP
             DO l=lij,lij+ind_loop(2)-ind_loop(1)
               drodmd(l,1) = - coe(l, 1)*drodmd(l, 1)
-              !drodm(l, 1) = - coe(l, 1)*drodm(l, 1)
               drodmd(l,2) = - coe(l, 1)*drodmd(l, 2)
-              !drodm(l, 2) = - coe(l, 1)*drodm(l, 2)
               drodmd(l,3) = - coe(l, 1)*drodmd(l, 3)
-              !drodm(l, 3) = - coe(l, 1)*drodm(l, 3)
               drodmd(l,4) = - coe(l, 1)*drodmd(l, 4)
-              !drodm(l, 4) = - coe(l, 1)*drodm(l, 4)
               drodmd(l,5) = - coe(l, 1)*drodmd(l, 5)
-              !drodm(l, 5) = - coe(l, 1)*drodm(l, 5)
             ENDDO
           ENDDO
         ENDDO

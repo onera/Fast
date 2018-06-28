@@ -68,6 +68,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
     shift_wig =0;
     shift_coe =0;
     nd_current=0;
+    E_Int shift_mu=0;
     for (E_Int nd = 0; nd < nidom; nd++)
       {
        E_Float* krylov_in    = iptkrylov[nd] +  3    * param_int[nd][NEQ] * param_int[nd][NDIMDX];
@@ -78,6 +79,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
 
 #include "Compute/Linear_solver/dRdp_tapenade_test.cpp"
 
+	shift_mu   = shift_mu   + param_int[nd][ NDIMDX ];
 	shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
 	shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
 	shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];

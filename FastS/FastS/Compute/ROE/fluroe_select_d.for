@@ -82,19 +82,6 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
                                                
-       ELSEIF (option.eq.323) THEN
-                                               
-           call fluroe_lamin_minmod_2d_d(ndom, ithread,
-     &                 param_int, param_real,
-     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
-     &                 synchro_send_sock, synchro_send_th,
-     &                 synchro_receive_sock, synchro_receive_th,
-     &                 ibloc , jbloc , kbloc ,
-     &                 icache, jcache, kcache,
-     &                 rop, ropd, drodm, drodmd, wig,
-     &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
-                                               
        ELSEIF (option.eq.233) THEN
                                                
            call fluroe_SA_o3_2d_d(ndom, ithread,
@@ -108,35 +95,9 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut, xmutd)
                                                
-       ELSEIF (option.eq.333) THEN
-                                               
-           call fluroe_SA_minmod_2d_d(ndom, ithread,
-     &                 param_int, param_real,
-     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
-     &                 synchro_send_sock, synchro_send_th,
-     &                 synchro_receive_sock, synchro_receive_th,
-     &                 ibloc , jbloc , kbloc ,
-     &                 icache, jcache, kcache,
-     &                 rop, ropd, drodm, drodmd, wig,
-     &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut, xmutd)
-                                               
        ELSEIF (option.eq.213) THEN
                                                
            call fluroe_euler_o3_2d_d(ndom, ithread,
-     &                 param_int, param_real,
-     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
-     &                 synchro_send_sock, synchro_send_th,
-     &                 synchro_receive_sock, synchro_receive_th,
-     &                 ibloc , jbloc , kbloc ,
-     &                 icache, jcache, kcache,
-     &                 rop, ropd, drodm, drodmd, wig,
-     &                 venti, ventj, ventk,
-     &                 ti, tj, tk, vol, xmut)
-                                               
-       ELSEIF (option.eq.313) THEN
-                                               
-           call fluroe_euler_minmod_2d_d(ndom, ithread,
      &                 param_int, param_real,
      &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
      &                 synchro_send_sock, synchro_send_th,

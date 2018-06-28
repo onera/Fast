@@ -44,7 +44,7 @@ for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
 			     ipt_cfl_thread      ,
 			     iptx[nd]                , ipty[nd]                , iptz[nd]            , iptCellN_loc     ,
 			     iptro_ssiter[nd]        , rop_ssiter_d            , krylov_in           ,
-			     iptmut[nd]              , 
+			     iptmut[nd]              ,  ipt_mutd  + shift_mu   , 
 			     ipti[nd]                , iptj[nd]                , iptk[nd]            , iptvol[nd]       ,
 			     ipti0[nd]               , iptj0[nd]               , iptk0[nd]           , iptvol_df[nd]    ,
 			     iptventi[nd]            , iptventj[nd]            , iptventk[nd]        ,

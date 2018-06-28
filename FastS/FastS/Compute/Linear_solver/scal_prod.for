@@ -34,7 +34,7 @@ c***********************************************************************
 #include "FastS/formule_mtr_param.h"
 
       !zone 2D
-      IF(param_int(ITYPZONE).eq.2) THEN
+      IF(param_int(ITYPZONE).eq.3) THEN
 
         if(param_int(NEQ).eq.5) then
 #include   "FastS/Compute/loop_begin.for"

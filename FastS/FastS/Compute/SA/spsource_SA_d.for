@@ -2474,6 +2474,7 @@ C
               tsourced = prodd + anviscd - destrucd
               tsource = prod + anvisc - destruc
               drodmd(l, 6) = drodmd(l, 6) + vol(lvo)*tsourced
+              !drodmd(l, 6) = 0.
             ENDDO
           ENDDO
         ENDDO

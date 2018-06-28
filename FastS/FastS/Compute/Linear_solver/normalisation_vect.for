@@ -7,25 +7,60 @@
       INTEGER_E ind_loop(6), param_int(0:*)
       REAL_E normL2, krylov(param_int(NDIMDX), param_int(NEQ))
 
-      INTEGER_E k, j, lij, l
+C Var loc
+      INTEGER_E k, j, lij, l,ltij,lt,lvo
+      REAL_E norm_i
 
 #include "FastS/formule_param.h"
+#include "FastS/formule_mtr_param.h"
 
-      do k = ind_loop(5), ind_loop(6)
-         do j = ind_loop(3), ind_loop(4)
+      norm_i = 1./normL2
 
-            lij = inddm(ind_loop(1), j, k)
+      !zone 2D
+      IF(param_int(ITYPZONE).eq.3) THEN
 
-            do l = lij, lij + ind_loop(2) - ind_loop(1)
+        if(param_int(NEQ).eq.5) then
+#include   "FastS/Compute/loop_begin.for"
+             krylov(l, 1) = krylov(l, 1) * norm_i
+             krylov(l, 2) = krylov(l, 2) * norm_i
+             krylov(l, 3) = krylov(l, 3) * norm_i
+             krylov(l, 4) = 0.
+             krylov(l, 5) = krylov(l, 5) * norm_i
+#include   "FastS/Compute/loop_end.for"
+        else
+#include   "FastS/Compute/loop_begin.for"
+             krylov(l, 1) = krylov(l, 1) * norm_i
+             krylov(l, 2) = krylov(l, 2) * norm_i
+             krylov(l, 3) = krylov(l, 3) * norm_i
+             krylov(l, 4) = 0.
+             krylov(l, 5) = krylov(l, 5) * norm_i
+             krylov(l, 6) = krylov(l, 6) * norm_i
+#include   "FastS/Compute/loop_end.for"
+        endif
 
-               krylov(l, 1) = krylov(l, 1) / normL2
-               krylov(l, 2) = krylov(l, 2) / normL2
-               krylov(l, 3) = krylov(l, 3) / normL2
-               krylov(l, 4) = 0.0
-               krylov(l, 5) = krylov(l, 5) / normL2
-               
-            enddo
-         enddo
-      enddo
+      !!
+      !!zone 3d
+      !!
+      ELSE
+
+        if(param_int(NEQ).eq.5) then
+#include   "FastS/Compute/loop_begin.for"
+             krylov(l, 1) = krylov(l, 1) * norm_i
+             krylov(l, 2) = krylov(l, 2) * norm_i
+             krylov(l, 3) = krylov(l, 3) * norm_i
+             krylov(l, 4) = krylov(l, 4) * norm_i
+             krylov(l, 5) = krylov(l, 5) * norm_i
+#include   "FastS/Compute/loop_end.for"
+        else
+#include   "FastS/Compute/loop_begin.for"
+             krylov(l, 1) = krylov(l, 1) * norm_i
+             krylov(l, 2) = krylov(l, 2) * norm_i
+             krylov(l, 3) = krylov(l, 3) * norm_i
+             krylov(l, 4) = krylov(l, 4) * norm_i
+             krylov(l, 5) = krylov(l, 5) * norm_i
+             krylov(l, 6) = krylov(l, 6) * norm_i
+#include   "FastS/Compute/loop_end.for"
+        endif
+      ENDIF
 
       end
