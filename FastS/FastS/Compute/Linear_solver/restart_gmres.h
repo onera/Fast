@@ -33,7 +33,8 @@
 // Loop sur vectuer krylov
 //
 //
-for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
+E_Int kr = 0;
+while ((kr < num_max_vect - 1) && continue_gmres)
   {
 #pragma omp barrier
     // 2.1) Calcul de V_kr = A * V_kr-1
@@ -55,8 +56,9 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
 	   	  iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
 	   	  iptcoe  + shift_coe    , iptssor[nd]             , iptssortmp[nd]);
 
-	   if (param_int[nd][NB_RELAX] != 0) krylov_in = ipt_gmrestmp[nd];
-			    
+	   if (param_int[nd][NB_RELAX] == 1) krylov_in = ipt_gmrestmp[nd];
+	   else if (param_int[nd][NB_RELAX] > 1) krylov_in = iptssortmp[nd];
+	   
              dp_dw_vect_(param_int[nd], param_real[nd],ipt_ind_dm_thread , iptro_ssiter[nd], krylov_in,  krylov_out);
 
              /*if (step == nb_relax)
@@ -175,9 +177,8 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
       {
         E_Float* krylov_in = iptkrylov[nd] +  kr    * param_int[nd][NEQ] * param_int[nd][NDIMDX];
         E_Float* krylov_out= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
-
-	if (param_int[nd][NB_RELAX] != 0) krylov_in = ipt_gmrestmp[nd]; 
-
+	if (param_int[nd][NB_RELAX] == 1) krylov_in = ipt_gmrestmp[nd];
+	else if (param_int[nd][NB_RELAX] > 1) krylov_in = iptssortmp[nd];
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
              id_vect_(param_int[nd], ipt_ind_dm_thread, ipt_drodmd + shift_zone, krylov_out, krylov_in);
              nd_current +=1;
@@ -315,13 +316,13 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
     normL2_sum = sqrt(normL2_sum);
     printf("normvect   %f %d  \n",normL2_sum , ithread);
 */
-
+    kr++;
+    continue_gmres = abs(ipt_VectG[kr]) > epsi_linear;
   }//loop kr
    // fin loop vecteur krylov
    //  
    //
    //
-
 
 #pragma omp single
   {
@@ -348,24 +349,25 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
     if ( param_int[0][NB_RESTART] <  2 ) param_int[0][NB_RESTART] = 2;
 */
 
-    printf("Residu GMRES =  %g, target= %g,  Nit_kry= %d \n",abs(ipt_VectG[num_max_vect - 1]), epsi_linear, param_int[0][NB_RESTART] );
+    printf("Residu GMRES =  %g, target= %g,  Nit_kry= %d, Nb_restart= %d \n",abs(ipt_VectG[ kr ]), epsi_linear, kr, restart );
 
 
   //Resolution de Y par remontee
-  for (E_Int i = num_max_vect - 2; i >= 0; i--)
+  for (E_Int i = kr - 1; i >= 0; i--)
     {
      E_Float* Hessenberg_i   = ipt_Hessenberg + i     * (num_max_vect - 1);
      value = 0.;
-     for (E_Int j = num_max_vect - 2; j > i; j--) { value -= ipt_VectY[j] * Hessenberg_i[ j ]; }
+     for (E_Int j = kr - 1; j > i; j--) { value -= ipt_VectY[j] * Hessenberg_i[ j ]; }
 
      ipt_VectY[i] = (ipt_VectG[i] + value) / Hessenberg_i[ i ];
      //printf("VecY  %f %d  \n", ipt_VectY[i], i );
     }
 
   }//end omp single
+  //continue_gmres = abs(ipt_VectG[kr]) > epsi_linear;
+  //cout << "continue_gmres = " << continue_gmres << endl;
 
-
-
+  kr++;
   //Calcul de X solution du GMRES, stockage dans drodm
   shift_zone =0; nd_current =0;
   for (E_Int nd = 0; nd < nidom; nd++)
@@ -375,7 +377,7 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
        // inverser les loop et vectoriser avec simd reduction
        // 
        prod_mat_vect_(param_int[nd], ipt_ind_dm_thread, iptkrylov[nd],
-                      ipt_VectY, iptdrodm + shift_zone, num_max_vect);
+                      ipt_VectY, iptdrodm + shift_zone, kr);
        nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
      shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
@@ -392,7 +394,7 @@ for (E_Int kr = 0; kr < num_max_vect - 1; kr++)
             //E_Float*       ssor= ipt_ssor + shift_zone;
             E_Float* krylov_in = iptdrodm + shift_zone;
 	    E_Float* krylov_out= iptdrodm + shift_zone;
-
+	    mjrnewton = 1;
 	    invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
 	    	   ipt_ind_dm_thread      , mjrnewton               ,
 	    	   iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , krylov_out            ,

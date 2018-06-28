@@ -53,7 +53,7 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
 
   vector<PyArrayObject*> hook;
 
-  E_Float resLi[2]; resLi[1]=-1.e15; 
+  E_Float resLi[2]; resLi[0]=0.; resLi[1]=-1.e15; 
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
     PyObject* zone = PyList_GetItem(zones, nd);

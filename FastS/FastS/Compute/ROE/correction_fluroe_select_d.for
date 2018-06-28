@@ -68,6 +68,15 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol)
                                                
+       ELSEIF (option.eq.323) THEN
+                                               
+         call corr_fluroe_lamin_minmod_2d_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
        ELSEIF (option.eq.233) THEN
                                                
          call corr_fluroe_SA_o3_2d_d(ndom, ithread, idir,
@@ -77,9 +86,27 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol)
                                                
+       ELSEIF (option.eq.333) THEN
+                                               
+         call corr_fluroe_SA_minmod_2d_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
        ELSEIF (option.eq.213) THEN
                                                
          call corr_fluroe_euler_o3_2d_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
+       ELSEIF (option.eq.313) THEN
+                                               
+         call corr_fluroe_euler_minmod_2d_d(ndom, ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
      &                 rop, ropd, drodm, drodmd, wig,

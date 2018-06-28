@@ -124,22 +124,7 @@ c
          v5 = 4 * param_int(NDIMDX)
          v6 = 5 * param_int(NDIMDX)
 
-         do k = ind_loop_lu(5), ind_loop_lu(6)
-            do j = ind_loop_lu(3) - 1, ind_loop_lu(4) + 1
-
-               lij = indssor(ind_loop_lu(1), j, k)
-
-               do l = lij-1, lij + ind_loop_lu(2) - ind_loop_lu(1)+1
-
-                  ssor(l) = 0.
-                  ssor(l + v2) = 0.
-                  ssor(l + v3) = 0.
-                  ssor(l + v4) = 0.
-                  ssor(l + v5) = 0.
-
-               enddo
-            enddo
-         enddo
+#include "FastS/Compute/LU/lussor_initssor.for"
 
          do i = 1, param_int(NB_RELAX)
 

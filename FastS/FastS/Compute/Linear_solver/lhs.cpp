@@ -32,11 +32,10 @@
 
 if(lexit_lu == 0 )
  {
-    //E_Int num_max_vect = param_int[0][NB_KRYLOV];
-    //E_Int nb_restart   = param_int[0][NB_RESTART];
-    E_Int num_max_vect = param_int[0][NB_RESTART];
-    if ( num_max_vect > param_int[0][NB_KRYLOV]) num_max_vect = param_int[0][NB_KRYLOV];
-    E_Int nb_restart   = 1;
+    E_Int num_max_vect = param_int[0][NB_KRYLOV];
+    E_Int nb_restart   = param_int[0][NB_RESTART];
+    bool  continue_gmres(true);
+    E_Int restart = 0;
 
     //Voir https://web.stanford.edu/class/cme324/saad.pdf pour les notations
 
@@ -46,24 +45,31 @@ if(lexit_lu == 0 )
     //de Hessengerg + VectG
     //Taille d'Hessenberg = (num_max_vect, num_max_vect - 1)
     //
-    for (E_Int restart = 0; restart < nb_restart; restart++)
+
+    //while (continue_gmres && (restart < nb_restart))
+    while (restart < nb_restart)
     {
 #include  "Compute/Linear_solver/restart_gmres.h"
+      restart++;
     }//loop restart
 
    //mise a jour nouvelle solution
-   shift_zone =0; nd_current =0;
-   for (E_Int nd = 0; nd < nidom; nd++)
-     {
+    if (param_int[0][NB_RELAX] == 0)
+      {
+        shift_zone =0; nd_current =0;
+        for (E_Int nd = 0; nd < nidom; nd++)
+          {
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
-	 E_Float* increment = iptdrodm + shift_zone;
+	    E_Float* increment = iptdrodm + shift_zone;
+	    if (param_int[nd][NB_RELAX] > 1) increment = iptssortmp[nd];
 
-         mjr_prim_from_cons_(param_int[nd], param_real[nd], param_real[nd]+VISCO, param_real[nd]+SA_REAL, ipt_ind_dm_thread, iptro_CL[nd], iptro_ssiter[nd], increment);
-         nd_current +=1;
+            mjr_prim_from_cons_(param_int[nd], param_real[nd], param_real[nd]+VISCO, param_real[nd]+SA_REAL, ipt_ind_dm_thread, iptro_CL[nd], iptro_ssiter[nd], increment);
+            nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
 
-     shift_zone  = shift_zone  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-     }//loop zone
+            shift_zone  = shift_zone  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
+          }//loop zone
+      }
  }//if lexit_lu
 
 
