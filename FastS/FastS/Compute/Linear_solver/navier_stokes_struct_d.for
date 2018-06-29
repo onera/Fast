@@ -69,6 +69,14 @@ C Var loc
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
 
+      IF(nitcfg.eq.1) then
+
+         if(param_int(IFLOW).eq.3) then
+           call vispalart_d(ndo, param_int, param_real, ind_grad,
+     &                      xmut, xmutd, rop_ssiter, rop_ssiterd)
+         endif
+
+      ENDIF
            !! a modifier pour generaliser
            call src_term_d(ndo, nitcfg, nb_pulse, param_int, param_real,
      &                     ind_sdm, ind_rhs, ind_ssa,

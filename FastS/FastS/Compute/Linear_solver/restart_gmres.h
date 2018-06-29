@@ -14,7 +14,7 @@
   //if (ithread==1) printf(" norm Vo %g \n", normL2_sum);
 
   // Pour verif Ax-b
-  E_Float save = normL2_sum;
+  //E_Float save = normL2_sum;
 
     //iptkrylov[nd] = iptkrylov[nd] / normL2_sum
     nd_current =0;
@@ -37,7 +37,7 @@ E_Int kr = 0;
 while ((kr < num_max_vect - 1) && continue_gmres)
   {
 #pragma omp barrier
-     printf("iter krylov =  %d  \n" , kr);
+    //printf("iter krylov =  %d  \n" , kr);
 
     // 2.1) Calcul de V_kr = A * V_kr-1
         shift_coe=0; shift_zone=0; nd_current=0;
@@ -264,6 +264,14 @@ while ((kr < num_max_vect - 1) && continue_gmres)
       E_Float* Hessenberg_ip1 = ipt_Hessenberg + (kr+1)  * (num_max_vect - 1);
 
       Hessenberg_ip1[ kr ] = normL2_sum;
+      
+      /* for (E_Int i = 0; i < kr + 2 ; i++) */
+      /* 	{ */
+      /* 	  E_Float* Hessenberg_i   = ipt_Hessenberg + i * (num_max_vect - 1); */
+      /* 	  printf("hess AVANT \n " ); */
+      /* 	  for (E_Int j = 0; j < kr + 1; j++) { printf(" %f %d %d ", Hessenberg_i[j], i,j ); } */
+      /* 	  printf("\n" ); */
+      /* 	} */
 
       for (E_Int i = 0; i < kr; i++)
       	{
@@ -289,8 +297,15 @@ while ((kr < num_max_vect - 1) && continue_gmres)
       ipt_VectG[ kr + 1 ] = - ipt_givens[ kr + num_max_vect - 1 ] * ipt_VectG[ kr ];
       ipt_VectG[ kr ]     =   ipt_givens[ kr ]                    * ipt_VectG[ kr ];
 
-      cout << "Residu GMRES = " << abs(ipt_VectG[kr + 1]) << endl;
+      /* for (E_Int i = 0; i < kr + 2 ; i++) */
+      /* 	{ */
+      /* 	  E_Float* Hessenberg_i   = ipt_Hessenberg + i * (num_max_vect - 1); */
+      /* 	  printf("hess APRES \n " ); */
+      /* 	  for (E_Int j = 0; j < kr + 1; j++) { printf(" %f %d %d ", Hessenberg_i[j], i,j ); } */
+      /* 	  printf("\n" ); */
+      /* 	} */
 
+      //cout << "Residu GMRES = " << K_FUNC::E_abs(ipt_VectG[kr + 1]) << endl;
     }// end single
 
     nd_current =0;
@@ -324,7 +339,8 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 
 //#include  "Compute/Linear_solver/verif_vectkrylov.cpp"
 
-    continue_gmres = abs(ipt_VectG[kr]) > epsi_linear;
+    continue_gmres = K_FUNC::E_abs(ipt_VectG[kr]) > epsi_linear;
+    //#include "Compute/Linear_solver/verif_vectkrylov.cpp"
   }//loop kr
    // fin loop vecteur krylov
    //  
@@ -350,14 +366,21 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 	 ipt_testVectG[i + 1] = - si * ipt_testVectG[i];
 	 ipt_testVectG[i    ] =   ci * ipt_testVectG[i];
      }
-    if ( abs(ipt_testVectG[num_max_vect - 1]) <= epsi_linear) param_int[0][NB_RESTART] -= 1;
+    if ( K_FUNC::E_abs(ipt_testVectG[num_max_vect - 1]) <= epsi_linear) param_int[0][NB_RESTART] -= 1;
     else param_int[0][NB_RESTART] += 5;
     if ( param_int[0][NB_RESTART] >  param_int[0][NB_KRYLOV]) param_int[0][NB_RESTART] = param_int[0][NB_KRYLOV];
     if ( param_int[0][NB_RESTART] <  2 ) param_int[0][NB_RESTART] = 2;
 */
 
-    printf("Residu GMRES =  %g, target= %g,  Nit_kry= %d, Nb_restart= %d \n",abs(ipt_VectG[ kr ]), epsi_linear, kr, restart );
+    /* for (E_Int i = 0; i < kr ; i++) */
+    /*   { */
+    /* 	E_Float* Hessenberg_i   = ipt_Hessenberg + i * (num_max_vect - 1); */
+    /* 	printf("hess apr \n " ); */
+    /* 	for (E_Int j = 0; j < kr - 1; j++) { printf(" %f %d %d ", Hessenberg_i[j], i,j ); } */
+    /* 	printf("\n" ); */
+    /*   } */
 
+    printf("Residu GMRES =  %14.12g, target= %14.12g,  Nit_kry= %d, Nb_restart= %d \n",K_FUNC::E_abs(ipt_VectG[ kr ]), epsi_linear, kr, restart );
 
   //Resolution de Y par remontee
   for (E_Int i = kr - 1; i >= 0; i--)
@@ -371,7 +394,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
     }
 
   }//end omp single
-  //continue_gmres = abs(ipt_VectG[kr]) > epsi_linear;
+  //continue_gmres = K_FUNC::E_abs(ipt_VectG[kr]) > epsi_linear;
   //cout << "continue_gmres = " << continue_gmres << endl;
 
   kr++;
