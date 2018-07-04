@@ -4,26 +4,31 @@ nb_subzone    = ipt_nidom_loc [nitcfg-1];
 for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
   {
     E_Int ndo   = nd;
+    E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
+
+    E_Float* ipt_cfl_thread= ipt_cfl         + (ithread-1)*3+ ndo*3*Nbre_thread_actif;
+
     E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
 
     if (omp_mode == 1)
       { 
-	E_Int mx_sszone = mx_nidom/nidom;
-	E_Int shift_omp = param_int[nd][ PT_OMP ] + mx_sszone*nd_subzone*(Nbre_thread_actif*7+4);
+        E_Int       Ptomp = param_int[nd][PT_OMP];
+        E_Int  PtrIterOmp = param_int[nd][Ptomp +nitcfg -1];   
+        E_Int  PtZoneomp  = param_int[nd][PtrIterOmp + nd_subzone];
 
-	Nbre_thread_actif_loc = param_int[nd][ shift_omp  + Nbre_thread_actif ];
-	ithread_loc           = param_int[nd][ shift_omp  +  ithread -1       ] +1 ;
-	ipt_topo_omp          = param_int[nd] + shift_omp +  Nbre_thread_actif + 1;
-	ipt_inddm_omp         = param_int[nd] + shift_omp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+        Nbre_thread_actif_loc = param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
+        ithread_loc           = param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
+        ipt_topo_omp          = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 1;
+        ipt_inddm_omp         = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
 
-	if (ithread_loc == -1) {continue;}
+        if (ithread_loc == -1) { nd_current++; continue;}
       }
+
+
 
     E_Int* ipt_lok_thread;
     ipt_lok_thread   = ipt_lok   + nd_current*mx_synchro*Nbre_thread_actif;
 
-    E_Int* ipt_ind_dm_loc         = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
-    E_Float* ipt_cfl_thread       = ipt_cfl         + (ithread-1)*3+ ndo*3*Nbre_thread_actif;
     E_Float* iptCellN_loc; E_Int flagCellN;
     if (iptCellN[nd] == NULL) { flagCellN = 0; iptCellN_loc = iptro[nd];}
     else                      { flagCellN = 1; iptCellN_loc = iptCellN[nd]; }

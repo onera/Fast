@@ -27,7 +27,6 @@
           nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
       }
-
 //
 //
 // Loop sur vectuer krylov
@@ -37,7 +36,7 @@ E_Int kr = 0;
 while ((kr < num_max_vect - 1) && continue_gmres)
   {
 #pragma omp barrier
-    //printf("iter krylov =  %d  \n" , kr);
+     //if( ithread==1) printf("iter krylov =  %d  \n" , kr);
 
     // 2.1) Calcul de V_kr = A * V_kr-1
         shift_coe=0; shift_zone=0; nd_current=0;
@@ -148,6 +147,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
     shift_coe =0;
     E_Int shift_mu=0;
     nd_current=0;
+    ipt_norm_kry[ithread-1]=0;
     for (E_Int nd = 0; nd < nidom; nd++)
       {
        E_Float* krylov_in    = iptkrylov[nd] +  kr    * param_int[nd][NEQ] * param_int[nd][NDIMDX];
@@ -163,8 +163,14 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 	shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
 	shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
       }
-
 #pragma omp barrier
+
+/*
+    // norm L2 pour verrif bug
+    for (E_Int th = 0; th < Nbre_thread_actif; th++) { normL2_sum += ipt_norm_kry[th];}
+    normL2_sum = sqrt(normL2_sum);
+    if(ithread==1) printf("tapenade   %f %d  \n",normL2_sum , ithread);
+*/
 
     // kry(kr+1) = kry(kr) + drodmd
     shift_zone=0;
@@ -195,7 +201,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
         //
 	sum_value                  = 0.;
 	normL2_sum                 = 0.;
-        ipt_norm_kry[ithread_loc-1]= 0.;
+        ipt_norm_kry[ithread-1]= 0.;
         nd_current                 = 0;
 	for (E_Int nd = 0; nd < nidom; nd++)
 	  {
@@ -204,7 +210,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 
-	       scal_prod_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, ipt_norm_kry[ithread_loc-1]);
+	       scal_prod_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, ipt_norm_kry[ithread-1]);
 
                nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
@@ -214,7 +220,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
         // norm L2 krylov pour openmp
         for (E_Int th = 0; th < Nbre_thread_actif; th++) { sum_value += ipt_norm_kry[th];}
 
-     //printf("orthonorm  %g %d  \n",sum_value , ithread);
+     //if(ithread==1)printf("orthonorm  %g %d  \n",sum_value , ithread);
 
         //Affectation des produits scalaires dans la matrice d'Hessenberg
 #pragma omp single
@@ -309,6 +315,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
     }// end single
 
     nd_current =0;
+    ipt_norm_kry[ithread-1]= 0.;
     for (E_Int nd = 0; nd < nidom; nd++)
       {
        E_Float* krylov_krp1= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
@@ -321,8 +328,8 @@ while ((kr < num_max_vect - 1) && continue_gmres)
                   E_Float* krylov_i   = iptkrylov[nd] + i* param_int[nd][NEQ] * param_int[nd][NDIMDX];
 
                   ipt_norm_kry[ithread_loc-1]= 0.;
-	          scal_prod_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, ipt_norm_kry[ithread_loc-1]);
-                  printf("normvect   %g %d  \n", ipt_norm_kry[ithread_loc-1] , i);
+	          scal_prod_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, ipt_norm_kry[ithread-1]);
+                  printf("normvect   %g %d  \n", ipt_norm_kry[ithread-1] , i);
                }*/
                nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
@@ -331,16 +338,17 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 /*
     // norm L2 pour verrif bug
     for (E_Int th = 0; th < Nbre_thread_actif; th++) { normL2_sum += ipt_norm_kry[th];}
-
     normL2_sum = sqrt(normL2_sum);
     printf("normvect   %f %d  \n",normL2_sum , ithread);
 */
+
     kr++;
 
 //#include  "Compute/Linear_solver/verif_vectkrylov.cpp"
 
     continue_gmres = K_FUNC::E_abs(ipt_VectG[kr]) > epsi_linear;
     //#include "Compute/Linear_solver/verif_vectkrylov.cpp"
+
   }//loop kr
    // fin loop vecteur krylov
    //  
@@ -349,29 +357,6 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 
 #pragma omp single
   {
-/*
-<<<<<<< .mine
-       tmp = sqrt(pow(test_Hessenberg_ip1[i], 2) + pow(test_Hessenberg_i[i], 2));
-       ci  =   test_Hessenberg_i[i] / tmp;
-       si  = test_Hessenberg_ip1[i] / tmp;
-
-       for (E_Int j = 0; j < num_max_vect - 1; j++)
-         {
-    	  tmp =  test_Hessenberg_i[j];
-
-	    test_Hessenberg_i[ j ] =   ci * test_Hessenberg_i[ j ] + si * test_Hessenberg_ip1[ j ];
-	  test_Hessenberg_ip1[ j ] = - si * tmp                    + ci * test_Hessenberg_ip1[ j ];
-	 }
-
-	 ipt_testVectG[i + 1] = - si * ipt_testVectG[i];
-	 ipt_testVectG[i    ] =   ci * ipt_testVectG[i];
-     }
-    if ( K_FUNC::E_abs(ipt_testVectG[num_max_vect - 1]) <= epsi_linear) param_int[0][NB_RESTART] -= 1;
-    else param_int[0][NB_RESTART] += 5;
-    if ( param_int[0][NB_RESTART] >  param_int[0][NB_KRYLOV]) param_int[0][NB_RESTART] = param_int[0][NB_KRYLOV];
-    if ( param_int[0][NB_RESTART] <  2 ) param_int[0][NB_RESTART] = 2;
-*/
-
     /* for (E_Int i = 0; i < kr ; i++) */
     /*   { */
     /* 	E_Float* Hessenberg_i   = ipt_Hessenberg + i * (num_max_vect - 1); */

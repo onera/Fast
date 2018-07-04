@@ -24,6 +24,11 @@
 #include  "Compute/residus_navier.h"
           nd_current +=1;
 
+          if(lssiter_verif ==1  && nd_subzone ==0 && omp_mode==1 && ( param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
+          {
+#pragma omp barrier
+          }
+
 #include  "HPC_LAYER/OMP_MODE_END.h"
      shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
      shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];

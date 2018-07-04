@@ -69,14 +69,12 @@ C Var loc
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
 
-      IF(nitcfg.eq.1) then
-
          if(param_int(IFLOW).eq.3) then
+
            call vispalart_d(ndo, param_int, param_real, ind_grad,
      &                      xmut, xmutd, rop_ssiter, rop_ssiterd)
          endif
 
-      ENDIF
            !! a modifier pour generaliser
            call src_term_d(ndo, nitcfg, nb_pulse, param_int, param_real,
      &                     ind_sdm, ind_rhs, ind_ssa,
@@ -126,17 +124,17 @@ C Var loc
               if(flagCellN.eq.0) then
 
                call core3as2_kry_d(param_int, ind_mjr,drodm,drodmd, coe)
-     
+    
               else
                  if (ithread.eq.1)write(*, *) 
      &                'Unknown temporal scheme navier_d',
      &                param_int(IMPLICITSOLVER)
                  continue 
-c               call core3as2_chim_kry(ndo,nitcfg, first_it, 
-c     &                                param_int,param_real,
-c     &                                ind_mjr, cellN,
-c     &                                krylov, norm_kry,
-c     &                                rop_ssiter, rop, rop_m1,drodm,coe)
+cc               call core3as2_chim_kry(ndo,nitcfg, first_it, 
+cc     &                                param_int,param_real,
+cc     &                                ind_mjr, cellN,
+cc     &                                krylov, norm_kry,
+cc     &                                rop_ssiter, rop, rop_m1,drodm,coe)
               endif
           endif
 

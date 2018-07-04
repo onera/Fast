@@ -155,8 +155,8 @@ C
                 min1d = xmuprovd
                 min1 = xmuprov
               END IF
-              !xmutd(l) = amulamd + min1d
-              xmutd(l) = 0.
+              xmutd(l) = amulamd + min1d
+              !xmutd(l) = 0.
             ENDDO
           ENDDO
         ENDDO

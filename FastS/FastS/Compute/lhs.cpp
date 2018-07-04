@@ -43,6 +43,11 @@
                  
                          if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu , iptdrodm + shift_zone );
 
+                         if(lssiter_verif ==1  && nd_subzone ==0 && omp_mode==1 && ( param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
+                         {
+#pragma omp barrier
+                         } //sinon residu pas bon en omp_mode=1
+
                          if(lexit_lu == 0 ) invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
                                                    ipt_shift_lu           , mjrnewton               ,
                                                    iptrotmp[nd]           , iptro_ssiter[nd]        , iptdrodm + shift_zone , iptdrodm + shift_zone ,

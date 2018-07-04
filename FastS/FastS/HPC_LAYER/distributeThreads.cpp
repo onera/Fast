@@ -42,9 +42,11 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 #else
   E_Int core_per_socket=__NUMTHREADS__;
 #endif
+
   
   if( __NUMTHREADS__ <= core_per_socket)  nb_socket=1;
 
+  //printf(" socket core %d %d \n", nb_socket, core_per_socket);
   
   FldArrayI tab_activ_core_per_socket(nb_socket);   E_Int* activ_core_per_socket = tab_activ_core_per_socket.begin();
 
@@ -525,9 +527,9 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                           E_Int dim_loc = (nijk[dir]-test)/(topo_lu[dir]-1);
                           E_Int res_loc = (nijk[dir]-test)%(topo_lu[dir]-1);
                           for( E_Int l=1; l < topo_lu[dir]; l++){
-                              if     (dir==0){dim_i[l] =  dim_loc; if(l < res_loc){dim_i[l] += 1;}  }
-                              else if(dir==1){dim_j[l] =  dim_loc; if(l < res_loc){dim_j[l] += 1;}  }
-                              else           {dim_k[l] =  dim_loc; if(l < res_loc){dim_k[l] += 1;}  }
+                              if     (dir==0){dim_i[l] =  dim_loc; if(l <= res_loc){dim_i[l] += 1;}  }
+                              else if(dir==1){dim_j[l] =  dim_loc; if(l <= res_loc){dim_j[l] += 1;}  }
+                              else           {dim_k[l] =  dim_loc; if(l <= res_loc){dim_k[l] += 1;}  }
                             }
                       }
                       //#on affecte la taille du premier bloc thraed a tous les autres bloc
@@ -535,12 +537,12 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                       {
                           for( E_Int l=1; l < topo_lu[dir]; l++){ 
                               if     (dir==0)dim_i[l] =  dim_i[0]; 
-                              else if(dir==1)dim_j[l] =  dim_j[0];
+                              else if(dir==1)dim_j[l] =  dim_j[0]; 
                               else           dim_k[l] =  dim_k[0];
                             }
                           //on determine la taille du dernier bloc 
                           if     (dir==0) dim_i[ topo_lu[dir]-1 ] = nijk[dir] - (topo_lu[dir]-1)*dim_i[0];
-                          else if(dir==1) dim_j[ topo_lu[dir]-1 ] = nijk[dir] - (topo_lu[dir]-1)*dim_j[0];
+                          else if(dir==1) dim_j[ topo_lu[dir]-1 ] = nijk[dir] - (topo_lu[dir]-1)*dim_j[0]; 
                           else            dim_k[ topo_lu[dir]-1 ] = nijk[dir] - (topo_lu[dir]-1)*dim_k[0];
                       }
                    }
@@ -592,8 +594,9 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                }
               }// while search
 
+            E_Int list_affected[__NUMTHREADS__];
             //Carte threads actifs       
-            for (E_Int th = 0; th < __NUMTHREADS__; th++) { param_int[No_zone][ PtZoneomp + th ] = -2;} //Thread inactif
+            for (E_Int th = 0; th < __NUMTHREADS__; th++) { param_int[No_zone][ PtZoneomp + th ] = -2; list_affected[th]=-1;} //Thread inactif
 
             //Recherche thread disponible
             E_Int th = 0;
@@ -617,14 +620,17 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                   {
                      E_Int blind = -100000;
                      for (E_Int l = 0; l < __NUMTHREADS__; l++){
-                        if(remaind[l] > blind)
+                        if(remaind[l] > blind && list_affected[l]==-1)
                         { blind = remaind[l];
                           th_current = l;
                         }
                      }
                   }
                   //tentative optim distrib
-                  if(th_min != -1) { th_current = th_min; th_min = -1; }
+                  if(th_min != -1) { if(list_affected[th_min]==-1){ th_current = th_min; th_min = -1;} }   
+
+                  //on exclut le thread our ne pas avoir 2 souszone traite par le meme thread
+                  list_affected[th_current]=0;
 
                   //on estime a quelle socket Numa la zone appartient  ( a blinder...)
                   E_Int socket = th_current/core_per_socket;
@@ -682,6 +688,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 
                     ind_dm_th[2] = jstart;
                     ind_dm_th[3] = jstart + dim_j[j] - 1;
+                    //printf(" start= %d , dim_j= %d , l= %d \n", jstart, dim_j[j], j);
 
                     ind_dm_th[4] = kstart;
                     ind_dm_th[5] = kstart + dim_k[k] - 1;
