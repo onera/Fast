@@ -69,7 +69,46 @@ C Var loc
      &        +      param_int(ITYPZONE)
 
 
-       IF  (option.eq.223) THEN
+       IF  (option.eq.320) THEN
+                                               
+           call fluroe_lamin_minmod_3dfull_d(ndom, ithread,
+     &                 param_int, param_real,
+     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
+     &                 synchro_send_sock, synchro_send_th,
+     &                 synchro_receive_sock, synchro_receive_th,
+     &                 ibloc , jbloc , kbloc ,
+     &                 icache, jcache, kcache,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.323) THEN
+                                               
+           call fluroe_lamin_minmod_2d_d(ndom, ithread,
+     &                 param_int, param_real,
+     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
+     &                 synchro_send_sock, synchro_send_th,
+     &                 synchro_receive_sock, synchro_receive_th,
+     &                 ibloc , jbloc , kbloc ,
+     &                 icache, jcache, kcache,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.220) THEN
+                                               
+           call fluroe_lamin_o3_3dfull_d(ndom, ithread,
+     &                 param_int, param_real,
+     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
+     &                 synchro_send_sock, synchro_send_th,
+     &                 synchro_receive_sock, synchro_receive_th,
+     &                 ibloc , jbloc , kbloc ,
+     &                 icache, jcache, kcache,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.223) THEN
                                                
            call fluroe_lamin_o3_2d_d(ndom, ithread,
      &                 param_int, param_real,
@@ -81,6 +120,45 @@ C Var loc
      &                 rop, ropd, drodm, drodmd, wig,
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.330) THEN
+                                               
+           call fluroe_SA_minmod_3dfull_d(ndom, ithread,
+     &                 param_int, param_real,
+     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
+     &                 synchro_send_sock, synchro_send_th,
+     &                 synchro_receive_sock, synchro_receive_th,
+     &                 ibloc , jbloc , kbloc ,
+     &                 icache, jcache, kcache,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut, xmutd)
+                                               
+       ELSEIF (option.eq.333) THEN
+                                               
+           call fluroe_SA_minmod_2d_d(ndom, ithread,
+     &                 param_int, param_real,
+     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
+     &                 synchro_send_sock, synchro_send_th,
+     &                 synchro_receive_sock, synchro_receive_th,
+     &                 ibloc , jbloc , kbloc ,
+     &                 icache, jcache, kcache,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut, xmutd)
+                                               
+       ELSEIF (option.eq.230) THEN
+                                               
+           call fluroe_SA_o3_3dfull_d(ndom, ithread,
+     &                 param_int, param_real,
+     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
+     &                 synchro_send_sock, synchro_send_th,
+     &                 synchro_receive_sock, synchro_receive_th,
+     &                 ibloc , jbloc , kbloc ,
+     &                 icache, jcache, kcache,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut, xmutd)
                                                
        ELSEIF (option.eq.233) THEN
                                                
@@ -94,6 +172,45 @@ C Var loc
      &                 rop, ropd, drodm, drodmd, wig,
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut, xmutd)
+                                               
+       ELSEIF (option.eq.310) THEN
+                                               
+           call fluroe_euler_minmod_3dfull_d(ndom, ithread,
+     &                 param_int, param_real,
+     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
+     &                 synchro_send_sock, synchro_send_th,
+     &                 synchro_receive_sock, synchro_receive_th,
+     &                 ibloc , jbloc , kbloc ,
+     &                 icache, jcache, kcache,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.313) THEN
+                                               
+           call fluroe_euler_minmod_2d_d(ndom, ithread,
+     &                 param_int, param_real,
+     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
+     &                 synchro_send_sock, synchro_send_th,
+     &                 synchro_receive_sock, synchro_receive_th,
+     &                 ibloc , jbloc , kbloc ,
+     &                 icache, jcache, kcache,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.210) THEN
+                                               
+           call fluroe_euler_o3_3dfull_d(ndom, ithread,
+     &                 param_int, param_real,
+     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
+     &                 synchro_send_sock, synchro_send_th,
+     &                 synchro_receive_sock, synchro_receive_th,
+     &                 ibloc , jbloc , kbloc ,
+     &                 icache, jcache, kcache,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
                                                
        ELSEIF (option.eq.213) THEN
                                                

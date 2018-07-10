@@ -31,12 +31,9 @@ c***********************************************************************
  
 C Var loc
       INTEGER_E incmax,l,i,j,k,lij
-      REAL_E c1,c2,c3,c4,roe,roe_n,roe_n1,cv, poid_sa, poid_ns
+      REAL_E c1,c2,c3,c4,roe,roe_n,roe_n1,cv
 
 #include "FastS/formule_param.h"
-
-      poid_sa = 1.
-      poid_ns = 1.
 
       cv = param_real( CVINF )
 
@@ -136,11 +133,11 @@ C Var loc
 
            if(param_int(DTLOC).eq.1) then
 #include  "FastS/Compute/loop_core_begin.for"
-            drodm(l,1)= coe(l,1)*drodm(l,1)*poid_ns 
-            drodm(l,2)= coe(l,1)*drodm(l,2)*poid_ns 
-            drodm(l,3)= coe(l,1)*drodm(l,3)*poid_ns 
-            drodm(l,5)= coe(l,1)*drodm(l,5)*poid_ns 
-            drodm(l,6)= coe(l,1)*drodm(l,6)*poid_sa 
+            drodm(l,1)= coe(l,1)*drodm(l,1)
+            drodm(l,2)= coe(l,1)*drodm(l,2)
+            drodm(l,3)= coe(l,1)*drodm(l,3)
+            drodm(l,5)= coe(l,1)*drodm(l,5)
+            drodm(l,6)= coe(l,1)*drodm(l,6)
 
             kry(l,1) = drodm(l,1)
             norm_kry = norm_kry + kry(l,1)*kry(l,1)

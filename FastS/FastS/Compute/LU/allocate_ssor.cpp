@@ -51,7 +51,7 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
   E_Int mx_sszone = PyLong_AsLong(tmp);
   E_Int sizessor;
   E_Int neq;
-  E_Int nfic = 2;
+  E_Int nfic_ij, nfic_k;
 
 #ifdef _OPENMP
     E_Int Nbre_thread_actif = __NUMTHREADS__;
@@ -72,6 +72,8 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 	{
 	  sizessor = 0;
 	  neq = ipt_param_int[NEQ];
+	  nfic_ij = ipt_param_int[NIJK + 3];
+	  nfic_k = ipt_param_int[NIJK + 4];
 	  ipt_ind_dm = K_NUMPY::getNumpyPtrI(PyList_GetItem(metric, METRIC_INDM));
 
 	  ipt_nidom_loc = ipt_ind_dm + ipt_param_int[MXSSDOM_LU] * 6 * nssiter + nssiter;
@@ -85,21 +87,15 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 		  E_Int  PtrIterOmp = ipt_param_int[Ptomp];   
 		  E_Int  PtZoneomp  = ipt_param_int[PtrIterOmp + nd_subzone];
 
-		  E_Int Nbre_thread_actif_loc = ipt_param_int[ PtZoneomp  + Nbre_thread_actif ];
-
 		  for (E_Int i = 0; i < Nbre_thread_actif; i++)
 		    {
 		      if (ipt_param_int[PtZoneomp + i] != - 2)
 			{
-			  E_Int* ipt_inddm_omp = ipt_param_int + PtZoneomp +  Nbre_thread_actif + 4 + (ipt_param_int[PtZoneomp + i]) * 6;
+			  E_Int* ipt_ind_dm_thread = ipt_param_int + PtZoneomp +  Nbre_thread_actif + 4 + (ipt_param_int[PtZoneomp + i]) * 6;
 
-			  if (ipt_param_int[ ITYPZONE ] == 3) //2d
-			    sizessor += (ipt_inddm_omp[1] - ipt_inddm_omp[0] + 1 + 2 * nfic) *
-			      (ipt_inddm_omp[3] - ipt_inddm_omp[2] + 1 + 2 * nfic);
-			  else //3d
-			    sizessor += (ipt_inddm_omp[1] - ipt_inddm_omp[0] + 1 + 2 * nfic) *
-			      (ipt_inddm_omp[3] - ipt_inddm_omp[2] + 1 + 2 * nfic) *
-			      (ipt_inddm_omp[5] - ipt_inddm_omp[4] + 1 + 2 * nfic);
+			  sizessor += (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic_ij) *
+			    (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic_ij) *
+			    (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
 			}
 		    }
 		}
@@ -117,13 +113,12 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 					ipt_ind_dm_loc,
 					ipt_topology_socket, ipt_ind_dm_thread);
 
-		      if (ipt_param_int[ ITYPZONE ] == 3) //2d
-			sizessor += (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic) *
-			  (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic);
-		      else //3d
-			sizessor += (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic) *
-			  (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic) *
-			  (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic);
+		      if (i > ipt_topology_socket[0]*ipt_topology_socket[1]*ipt_topology_socket[2])
+			break;
+
+		      sizessor += (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic_ij) *
+			(ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic_ij) *
+			(ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
 		    }
 		}
 	    }

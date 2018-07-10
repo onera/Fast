@@ -51,7 +51,6 @@ C
 C
 C
 C
-C
       INTEGER*4 ndom, ithread, idir, ind_loop(6), param_int(0:*)
 C
       REAL*8 xmut(param_int(41))

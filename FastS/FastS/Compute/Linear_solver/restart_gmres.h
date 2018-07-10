@@ -1,4 +1,5 @@
   E_Float value = 0., sum_value = 0.; E_Float normL2 = 0., normL2_sum = 0.; E_Int mjrnewton = 0;
+  E_Float* ipt_ssor_shift;
   // norm L2 krylov pour openmp
   for (E_Int th = 0; th < Nbre_thread_actif; th++) { normL2_sum += ipt_norm_kry[th];}
 
@@ -11,10 +12,11 @@
   }
 
   E_Float epsi_linear = normL2_sum*param_real[0][EPSI_LINEAR];
+//E_Float epsi_linear = param_real[0][EPSI_LINEAR];
   //if (ithread==1) printf(" norm Vo %g \n", normL2_sum);
 
   // Pour verif Ax-b
-  //E_Float save = normL2_sum;
+  E_Float save = normL2_sum;
 
     //iptkrylov[nd] = iptkrylov[nd] / normL2_sum
     nd_current =0;
@@ -50,12 +52,14 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 
+#include "Compute/LU/prep_lussor.h"
+
 	   invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
-	   	  ipt_ind_dm_thread      , mjrnewton               ,
+	   	  ipt_ind_dm_thread      , ipt_ind_dm_thread       , mjrnewton             ,
 	   	  iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , ipt_gmrestmp[nd],
 	   	  ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 	   	  iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-	   	  iptcoe  + shift_coe    , iptssor[nd]             , iptssortmp[nd]);
+	   	  iptcoe  + shift_coe    , ipt_ssor_shift          , iptssortmp[nd]        , ipt_ssor_size[ ithread - 1]);
 
 	   if (param_int[nd][NB_RELAX] == 1) krylov_in = ipt_gmrestmp[nd];
 	   else if (param_int[nd][NB_RELAX] > 1) krylov_in = iptssortmp[nd];
@@ -346,7 +350,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 
 //#include  "Compute/Linear_solver/verif_vectkrylov.cpp"
 
-    continue_gmres = K_FUNC::E_abs(ipt_VectG[kr]) > epsi_linear;
+    continue_gmres = (K_FUNC::E_abs(ipt_VectG[kr]) / save) > epsi_linear;
     //#include "Compute/Linear_solver/verif_vectkrylov.cpp"
 
   }//loop kr
@@ -365,7 +369,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
     /* 	printf("\n" ); */
     /*   } */
 
-    printf("Residu GMRES =  %14.12g, target= %14.12g,  Nit_kry= %d, Nb_restart= %d \n",K_FUNC::E_abs(ipt_VectG[ kr ]), epsi_linear, kr, restart );
+    printf("Residu GMRES =  %14.12g, target= %14.12g,  Nit_kry= %d, Nb_restart= %d \n",K_FUNC::E_abs(ipt_VectG[ kr ]) / save, epsi_linear, kr, restart );
 
   //Resolution de Y par remontee
   for (E_Int i = kr - 1; i >= 0; i--)
@@ -402,20 +406,18 @@ while ((kr < num_max_vect - 1) && continue_gmres)
       for (E_Int nd  = 0; nd < nidom; nd++)
         {
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
- 
-            //.mine
-            //E_Float* krylov_in = iptdrodm + shift_zone;
-	    //E_Float* krylov_out= kryout   + shift_zone;
-            //E_Float*       ssor= ipt_ssor + shift_zone;
+#include "Compute/LU/prep_lussor.h"
+
             E_Float* krylov_in = iptdrodm + shift_zone;
 	    E_Float* krylov_out= iptdrodm + shift_zone;
 	    mjrnewton = 1;
+
 	    invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
-	    	   ipt_ind_dm_thread      , mjrnewton               ,
+	    	   ipt_ind_dm_thread      , ipt_ind_dm_thread       , mjrnewton             ,
 	    	   iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , krylov_out            ,
 	    	   ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 	    	   iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-	    	   iptcoe  + shift_coe    , iptssor[nd]             , iptssortmp[nd]);
+	    	   iptcoe  + shift_coe    , ipt_ssor_shift          , iptssortmp[nd]        , ipt_ssor_size[ ithread - 1]);
 
             nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"

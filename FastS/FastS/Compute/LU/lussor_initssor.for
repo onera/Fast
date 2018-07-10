@@ -3,16 +3,15 @@
          if(param_int(NEQ).eq.5) then
 
             do k = ind_loop_lu(5), ind_loop_lu(6)
-               do j = ind_loop_lu(3) - 1, ind_loop_lu(4) + 1
+               do j = ind_loop_lu(3), ind_loop_lu(4)
+                  do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                  lij = indssor(ind_loop_lu(1), j, k)
+                     ls = indssor(i, j, k, i_size, j_size)
 
-                  do l = lij-1, lij + ind_loop_lu(2) - ind_loop_lu(1)+1
-
-                     ssor(l) = 0.
-                     ssor(l + v2) = 0.
-                     ssor(l + v3) = 0.
-                     ssor(l + v5) = 0.
+                     ssor(ls, 1) = 0.
+                     ssor(ls, 2) = 0.
+                     ssor(ls, 3) = 0.
+                     ssor(ls, 5) = 0.
 
                   enddo
                enddo
@@ -21,17 +20,16 @@
          else !SA
 
             do k = ind_loop_lu(5), ind_loop_lu(6)
-               do j = ind_loop_lu(3) - 1, ind_loop_lu(4) + 1
+               do j = ind_loop_lu(3), ind_loop_lu(4)
+                  do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                  lij = indssor(ind_loop_lu(1), j, k)
+                     ls = indssor(i, j, k, i_size, j_size)
 
-                  do l = lij-1, lij + ind_loop_lu(2) - ind_loop_lu(1)+1
-
-                     ssor(l) = 0.
-                     ssor(l + v2) = 0.
-                     ssor(l + v3) = 0.
-                     ssor(l + v5) = 0.
-                     ssor(l + v6) = 0.
+                     ssor(ls, 1) = 0.
+                     ssor(ls, 2) = 0.
+                     ssor(ls, 3) = 0.
+                     ssor(ls, 5) = 0.
+                     ssor(ls, 6) = 0.
 
                   enddo
                enddo
@@ -43,18 +41,17 @@
 
          if(param_int(NEQ).eq.5) then
 
-            do k = ind_loop_lu(5) - 1, ind_loop_lu(6) + 1
-               do j = ind_loop_lu(3) - 1, ind_loop_lu(4) + 1
+            do k = ind_loop_lu(5), ind_loop_lu(6)
+               do j = ind_loop_lu(3), ind_loop_lu(4)
+                  do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                  lij = indssor(ind_loop_lu(1), j, k)
+                     ls = indssor(i, j, k, i_size, j_size)
 
-                  do l = lij-1, lij + ind_loop_lu(2) - ind_loop_lu(1)+1
-
-                     ssor(l) = 0.
-                     ssor(l + v2) = 0.
-                     ssor(l + v3) = 0.
-                     ssor(l + v4) = 0.
-                     ssor(l + v5) = 0.
+                     ssor(ls, 1) = 0.
+                     ssor(ls, 2) = 0.
+                     ssor(ls, 3) = 0.
+                     ssor(ls, 4) = 0.
+                     ssor(ls, 5) = 0.
 
                   enddo
                enddo
@@ -62,19 +59,18 @@
 
          else !SA
 
-            do k = ind_loop_lu(5) - 1, ind_loop_lu(6) + 1
-               do j = ind_loop_lu(3) - 1, ind_loop_lu(4) + 1
+            do k = ind_loop_lu(5), ind_loop_lu(6)
+               do j = ind_loop_lu(3), ind_loop_lu(4)
+                  do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                  lij = indssor(ind_loop_lu(1), j, k)
+                     ls = indssor(i, j, k, i_size, j_size)
 
-                  do l = lij-1, lij + ind_loop_lu(2) - ind_loop_lu(1)+1
-
-                     ssor(l) = 0.
-                     ssor(l + v2) = 0.
-                     ssor(l + v3) = 0.
-                     ssor(l + v4) = 0.
-                     ssor(l + v5) = 0.
-                     ssor(l + v6) = 0.
+                     ssor(ls, 1) = 0.
+                     ssor(ls, 2) = 0.
+                     ssor(ls, 3) = 0.
+                     ssor(ls, 4) = 0.
+                     ssor(ls, 5) = 0.
+                     ssor(ls, 6) = 0.
 
                   enddo
                enddo

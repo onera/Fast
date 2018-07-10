@@ -152,12 +152,12 @@ extern "C"
                               E_Float* iptdrodm         , E_Float* iptcoe      , E_Float* iptdelta       ,  E_Float* iptro_res );
 
   void invlu_(                E_Int& ndo      , E_Int& nitcfg      , E_Int& nitrun   , E_Int*  param_int , E_Float* param_real,
-                              E_Int* ipt_sdm            , E_Int& mjrnewton     ,
+                              E_Int* ipt_sdm            , E_Int* ipt_sdm_thread, E_Int& mjrnewton        ,
                               E_Float* iptrotmp         , E_Float* iptro_ssiter,
                               E_Float* iptdrodmin       , E_Float* iptdrodmout ,
                               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , 
                               E_Float* iptventi         , E_Float* iptventj    , E_Float* iptventk       ,  
-                              E_Float* iptcoe           , E_Float* iptssor     , E_Float* iptssortmp);
+                              E_Float* iptcoe           , E_Float* iptssor     , E_Float* iptssortmp     , E_Int& size_ssor);
 
   void dp_dw_vect_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int* ind_loop,
 		   E_Float* iptrop, E_Float* iptvectin, E_Float* iptvectout);

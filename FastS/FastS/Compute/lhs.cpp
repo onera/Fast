@@ -1,9 +1,10 @@
-            shift_zone=0; shift_coe=0; nd_current=0;
+            shift_zone=0; shift_coe=0; nd_current=0; E_Float* ipt_ssor_shift;
             for (E_Int nd = 0; nd < nidom; nd++)
             {
                E_Float* ipt_CL = iptro_CL[nd];
 
 #include       "HPC_LAYER/OMP_MODE_BEGIN.h"
+
                       //
                       //verrou rhs
                       //
@@ -48,12 +49,18 @@
 #pragma omp barrier
                          } //sinon residu pas bon en omp_mode=1
 
-                         if(lexit_lu == 0 ) invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
-                                                   ipt_shift_lu           , mjrnewton               ,
-                                                   iptrotmp[nd]           , iptro_ssiter[nd]        , iptdrodm + shift_zone , iptdrodm + shift_zone ,
-                                                   ipti[nd]               , iptj[nd]                , iptk[nd]              ,
-                                                   iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-                                                   iptcoe  + shift_coe    , iptssor[nd]             , iptssortmp[nd]);
+                         if(lexit_lu == 0 )
+			   { 
+#include "Compute/LU/prep_lussor.h"
+
+			     invlu_(nd                     , nitcfg                  , nitrun                ,
+				    param_int[nd]          , param_real[nd]          ,
+				    ipt_shift_lu           , ipt_ind_dm_thread       , mjrnewton             ,
+				    iptrotmp[nd]           , iptro_ssiter[nd]        , iptdrodm + shift_zone , iptdrodm + shift_zone ,
+				    ipti[nd]               , iptj[nd]                , iptk[nd]              ,
+				    iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
+				    iptcoe  + shift_coe    , ipt_ssor_shift          , iptssortmp[nd]        , ipt_ssor_size[ithread - 1]);
+			   }
                       } //fin kimpli
 
 

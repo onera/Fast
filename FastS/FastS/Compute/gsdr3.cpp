@@ -42,7 +42,7 @@ E_Int K_FASTS::gsdr3(
   E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int* ndimdx_transfer, E_Float* timer_omp,
   E_Int*     iptludic  , E_Int*   iptlumax      ,
   E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom  ,
-  E_Float* ipt_VectG      , E_Float* ipt_VectY   , E_Float** iptssor       , E_Float** iptssortmp    , E_Float* ipt_drodmd,
+  E_Float* ipt_VectG      , E_Float* ipt_VectY   , E_Float** iptssor       , E_Float** iptssortmp    , E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
   E_Float* ipt_Hessenberg, E_Float** iptkrylov      , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
   E_Float*   ipt_cfl,
   E_Float**  iptx            , E_Float**  ipty            , E_Float**    iptz      ,

@@ -60,7 +60,6 @@ C
 C
 C
 C
-C
       INTEGER*4 ndom, ithread, nptpsi, icache, jcache, kcache, ibloc, 
      +          jbloc, kbloc, ijkv_bloc(3), ijkv_cache(3), ind_loop(6), 
      +          ind_dm(6), synchro_send_sock(3), synchro_send_th(3), 

@@ -5,10 +5,10 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine invlussor_ale_u_SA(ndom,  param_int, param_real,
      &                      visco,sa_real,
-     &                      ind_loop,
+     &                      ind_loop, ind_loop_sdm,
      &                      drodm_out,rop,rop_1,
      &                      ti,tj,tk,venti,ventj,ventk,
-     &                      coe,ssor,lussor_end)
+     &                      coe,ssor,lussor_end, size_ssor)
 c***********************************************************************
 c                              O N E R A
 c
@@ -34,8 +34,8 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndom, ind_loop(6), param_int(0:*),lussor_end
- 
+      INTEGER_E ndom, ind_loop(6), param_int(0:*),lussor_end, size_ssor,
+     &     ind_loop_sdm(6) 
 
       REAL_E visco(5),sa_real(3)
 
@@ -123,6 +123,11 @@ c Var loc
         jdeb  = ind_loop(4)
         ideb  = ind_loop(2)
 
+        i_size = ind_loop_sdm(2) - ind_loop_sdm(1) + 1 +
+     &       2 * param_int(NIJK + 3) !taille de la fenetre + ghostcells
+        j_size = ind_loop_sdm(4) - ind_loop_sdm(3) + 1 +
+     &       2 * param_int(NIJK + 3)
+
       IF(param_int(ITYPZONE).eq.0) THEN !domaine 3d general
 
       !!! on parcourt le domaine en 7 passes pour traiter les bord sans mettre a zero le drodm sur maille fictive
@@ -136,7 +141,7 @@ c Var loc
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
-          ls     = indssor(i,jdeb,kdeb)
+          ls     = indssor(i,jdeb,kdeb,i_size,j_size)
           lt     = indmtr(i,jdeb,kdeb)
           lv     = indven(i,jdeb,kdeb)
 
@@ -160,7 +165,7 @@ c Var loc
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
-          ls     = indssor(ideb,j,kdeb)
+          ls     = indssor(ideb,j,kdeb,i_size,j_size)
           lt     = indmtr(ideb,j,kdeb)
           lv     = indven(ideb,j,kdeb)
 
@@ -181,7 +186,7 @@ c Var loc
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
-            ls     = indssor(i,j,kdeb)
+            ls     = indssor(i,j,kdeb,i_size,j_size)
             lt     = indmtr(i,j,kdeb)
             lv     = indven(i,j,kdeb)
 
@@ -229,7 +234,7 @@ C     DIR$ IVDEP
         do  k= kdeb+ipas,kfin,ipas
 
           l      =  inddm(ideb,jdeb,k)
-          ls     = indssor(ideb,jdeb,k)
+          ls     = indssor(ideb,jdeb,k,i_size,j_size)
           lt     = indmtr(ideb,jdeb,k)
           lv     = indven(ideb,jdeb,k)
 
@@ -251,7 +256,7 @@ C     DIR$ IVDEP
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
-             ls     = indssor(i,jdeb,k)
+             ls     = indssor(i,jdeb,k,i_size,j_size)
              lt     = indmtr(i,jdeb,k)
              lv     = indven(i,jdeb,k)
 
@@ -282,7 +287,7 @@ C     DIR$ IVDEP
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
-             ls     = indssor(ideb,j,k)
+             ls     = indssor(ideb,j,k,i_size,j_size)
              lt     = indmtr(ideb,j,k)
              lv     = indven(ideb,j,k)
 
@@ -313,7 +318,7 @@ C     DIR$ IVDEP
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
-               ls     = indssor(i,j,k)
+               ls     = indssor(i,j,k,i_size,j_size)
                lt= indmtr(i,j,k)
                lv= indven(i,j,k)
 
@@ -380,7 +385,7 @@ C     DIR$ IVDEP
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
-          ls     = indssor(i,jdeb,kdeb)
+          ls     = indssor(i,jdeb,kdeb,i_size,j_size)
           lt     = indmtr(i,jdeb,kdeb)
           lv     = indven(i,jdeb,kdeb)
 
@@ -405,7 +410,7 @@ C     DIR$ IVDEP
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
-          ls     = indssor(ideb,j,kdeb)
+          ls     = indssor(ideb,j,kdeb,i_size,j_size)
           lt     = indmtr(ideb,j,kdeb)
           lv     = indven(ideb,j,kdeb)
 
@@ -426,7 +431,7 @@ C     DIR$ IVDEP
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
-            ls     = indssor(i,j,kdeb)
+            ls     = indssor(i,j,kdeb,i_size,j_size)
             lt     = indmtr(i,j,kdeb)
             lv     = indven(i,j,kdeb)
 
@@ -474,7 +479,7 @@ C     DIR$ IVDEP
         do  k= kdeb+ipas,kfin,ipas
 
           l      =  inddm(ideb,jdeb,k)
-          ls     = indssor(ideb,jdeb,k)
+          ls     = indssor(ideb,jdeb,k,i_size,j_size)
           lt     = indmtr(ideb,jdeb,k)
           lv     = indven(ideb,jdeb,k)
 
@@ -496,7 +501,7 @@ C     DIR$ IVDEP
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
-             ls     = indssor(i,jdeb,k)
+             ls     = indssor(i,jdeb,k,i_size,j_size)
              lt     = indmtr(i,jdeb,k)
              lv     = indven(i,jdeb,k)
 
@@ -527,7 +532,7 @@ C     DIR$ IVDEP
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
-             ls     = indssor(ideb,j,k)
+             ls     = indssor(ideb,j,k,i_size,j_size)
              lt     = indmtr(ideb,j,k)
              lv     = indven(ideb,j,k)
 
@@ -558,7 +563,7 @@ C     DIR$ IVDEP
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
-               ls     = indssor(i,j,k)
+               ls     = indssor(i,j,k,i_size,j_size)
                lt= indmtr(i,j,k)
                lv= indven(i,j,k)
 
@@ -628,7 +633,7 @@ C     DIR$ IVDEP
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
-          ls     = indssor(i,jdeb,kdeb)
+          ls     = indssor(i,jdeb,kdeb,i_size,j_size)
           lt     = indmtr(i,jdeb,kdeb)
           lv     = indven(i,jdeb,kdeb)
 
@@ -653,7 +658,7 @@ C     DIR$ IVDEP
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
-          ls     = indssor(ideb,j,kdeb)
+          ls     = indssor(ideb,j,kdeb,i_size,j_size)
           lt     = indmtr(ideb,j,kdeb)
           lv     = indven(ideb,j,kdeb)
 
@@ -674,7 +679,7 @@ C     DIR$ IVDEP
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
-            ls     = indssor(i,j,kdeb)
+            ls     = indssor(i,j,kdeb,i_size,j_size)
             lt     = indmtr(i,j,kdeb)
             lv     = indven(i,j,kdeb)
 
@@ -722,7 +727,7 @@ C     DIR$ IVDEP
         do  k= kdeb+ipas,kfin,ipas
 
           l      =  inddm(ideb,jdeb,k)
-          ls     = indssor(ideb,jdeb,k)
+          ls     = indssor(ideb,jdeb,k,i_size,j_size)
           lt     = indmtr(ideb,jdeb,k)
           lv     = indven(ideb,jdeb,k)
 
@@ -744,7 +749,7 @@ C     DIR$ IVDEP
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
-             ls     = indssor(i,jdeb,k)
+             ls     = indssor(i,jdeb,k,i_size,j_size)
              lt     = indmtr(i,jdeb,k)
              lv     = indven(i,jdeb,k)
 
@@ -775,7 +780,7 @@ C     DIR$ IVDEP
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
-             ls     = indssor(ideb,j,k)
+             ls     = indssor(ideb,j,k,i_size,j_size)
              lt     = indmtr(ideb,j,k)
              lv     = indven(ideb,j,k)
 
@@ -806,7 +811,7 @@ C     DIR$ IVDEP
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
-               ls     = indssor(i,j,k)
+               ls     = indssor(i,j,k,i_size,j_size)
                lt= indmtr(i,j,k)
                lv= indven(i,j,k)
 
@@ -871,7 +876,7 @@ C     DIR$ IVDEP
        do i= ideb+ipas,ifin,ipas
 
           l      =  inddm(i,jdeb,1)
-          ls     = indssor(i,jdeb,1)
+          ls     = indssor(i,jdeb,1,i_size,j_size)
           lt     = indmtr(i,jdeb,1)
           lv     = indven(i,jdeb,1)
 
@@ -892,7 +897,7 @@ C     DIR$ IVDEP
        do j= jdeb+ipas,jfin,ipas
 
           l      =  inddm(ideb,j,1)
-          ls     = indssor(ideb,j,1)
+          ls     = indssor(ideb,j,1,i_size,j_size)
           lt     = indmtr(ideb,j,1)
           lv     = indven(ideb,j,1)
 
@@ -913,7 +918,7 @@ C     DIR$ IVDEP
          do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,1)
-            ls     = indssor(i,j,1)
+            ls     = indssor(i,j,1,i_size,j_size)
             lt     = indmtr(i,j,1)
             lv     = indven(i,j,1)
 

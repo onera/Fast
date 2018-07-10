@@ -27,12 +27,12 @@ C
      +        param_int(0+1)
 CDIR$ IVDEP
             DO l=lij,lij+ind_loop(2)-ind_loop(1)
-              drodmd(l, 1) = - coe(l, 1)*drodmd(l, 1)
-              drodmd(l, 2) = - coe(l, 1)*drodmd(l, 2)
-              drodmd(l, 3) = - coe(l, 1)*drodmd(l, 3)
-              drodmd(l, 4) = - coe(l, 1)*drodmd(l, 4)
-              drodmd(l, 5) = - coe(l, 1)*drodmd(l, 5)
-              drodmd(l, 6) = - coe(l, 1)*drodmd(l, 6)
+              drodmd(l, 1) = coe(l, 1)*drodmd(l, 1)
+              drodmd(l, 2) = coe(l, 1)*drodmd(l, 2)
+              drodmd(l, 3) = coe(l, 1)*drodmd(l, 3)
+              drodmd(l, 4) = coe(l, 1)*drodmd(l, 4)
+              drodmd(l, 5) = coe(l, 1)*drodmd(l, 5)
+              drodmd(l, 6) = coe(l, 1)*drodmd(l, 6)
             ENDDO
           ENDDO
         ENDDO
@@ -44,11 +44,11 @@ CDIR$ IVDEP
      +        param_int(0+1)
 CDIR$ IVDEP
             DO l=lij,lij+ind_loop(2)-ind_loop(1)
-              drodmd(l,1) = - coe(l, 1)*drodmd(l, 1)
-              drodmd(l,2) = - coe(l, 1)*drodmd(l, 2)
-              drodmd(l,3) = - coe(l, 1)*drodmd(l, 3)
-              drodmd(l,4) = - coe(l, 1)*drodmd(l, 4)
-              drodmd(l,5) = - coe(l, 1)*drodmd(l, 5)
+              drodmd(l,1) = coe(l, 1)*drodmd(l, 1)
+              drodmd(l,2) = coe(l, 1)*drodmd(l, 2)
+              drodmd(l,3) = coe(l, 1)*drodmd(l, 3)
+              drodmd(l,4) = coe(l, 1)*drodmd(l, 4)
+              drodmd(l,5) = coe(l, 1)*drodmd(l, 5)
             ENDDO
           ENDDO
         ENDDO

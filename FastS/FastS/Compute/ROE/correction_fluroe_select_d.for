@@ -59,9 +59,9 @@ C Var loc
      &        +  10*iflow_loc
      &        +      param_int(ITYPZONE)
 
-       IF  (option.eq.223) THEN
+       IF  (option.eq.320) THEN
                                                
-         call corr_fluroe_lamin_o3_2d_d(ndom, ithread, idir,
+         call corr_fluroe_lamin_minmod_3dfull_d(ndom, ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
      &                 rop, ropd, drodm, drodmd, wig,
@@ -77,9 +77,27 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol)
                                                
-       ELSEIF (option.eq.233) THEN
+       ELSEIF (option.eq.220) THEN
                                                
-         call corr_fluroe_SA_o3_2d_d(ndom, ithread, idir,
+         call corr_fluroe_lamin_o3_3dfull_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
+       ELSEIF (option.eq.223) THEN
+                                               
+         call corr_fluroe_lamin_o3_2d_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
+       ELSEIF (option.eq.330) THEN
+                                               
+         call corr_fluroe_SA_minmod_3dfull_d(ndom, ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
      &                 rop, ropd, drodm, drodmd, wig,
@@ -95,9 +113,27 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol)
                                                
-       ELSEIF (option.eq.213) THEN
+       ELSEIF (option.eq.230) THEN
                                                
-         call corr_fluroe_euler_o3_2d_d(ndom, ithread, idir,
+         call corr_fluroe_SA_o3_3dfull_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
+       ELSEIF (option.eq.233) THEN
+                                               
+         call corr_fluroe_SA_o3_2d_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
+       ELSEIF (option.eq.310) THEN
+                                               
+         call corr_fluroe_euler_minmod_3dfull_d(ndom, ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
      &                 rop, ropd, drodm, drodmd, wig,
@@ -107,6 +143,24 @@ C Var loc
        ELSEIF (option.eq.313) THEN
                                                
          call corr_fluroe_euler_minmod_2d_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
+       ELSEIF (option.eq.210) THEN
+                                               
+         call corr_fluroe_euler_o3_3dfull_d(ndom, ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, ropd, drodm, drodmd, wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol)
+                                               
+       ELSEIF (option.eq.213) THEN
+                                               
+         call corr_fluroe_euler_o3_2d_d(ndom, ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
      &                 rop, ropd, drodm, drodmd, wig,

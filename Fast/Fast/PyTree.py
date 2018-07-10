@@ -329,9 +329,10 @@ def save(t, fileName='restart', split='single',
 
     flowsol = Internal.getNodeFromName1(zones[0], 'FlowSolution#Centers')
     if flowsol is not None:
-         vars    = Internal.getNodesFromType1(flowsol, 'DataArray_t')
-         for var in vars:
-              if 'Krylov' in var[0]: C._rmVars(t2, 'centers:'+var[0])
+        vars    = Internal.getNodesFromType1(flowsol, 'DataArray_t')
+        for var in vars:
+            if (('Krylov' in var[0]) and not('Krylov_0' in var[0])):
+                C._rmVars(t2, 'centers:'+var[0])
 
     for z in zones:
         node = Internal.getNodeFromName1(z, '.Solver#define')

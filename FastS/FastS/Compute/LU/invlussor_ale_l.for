@@ -4,10 +4,10 @@ c     $Revision: 40 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine invlussor_ale_l(ndom, param_int, param_real,
-     &                   ind_loop,
+     &                   ind_loop, ind_loop_sdm,
      &                   drodm_out,rop,
      &                   ti,tj,tk, venti,ventj,ventk,
-     &                   coe,ssor)
+     &                   coe,ssor, size_ssor)
 c***********************************************************************
 c                              O N E R A
 c
@@ -33,7 +33,8 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndom, ind_loop(6), param_int(0:*)
+      INTEGER_E ndom, ind_loop(6), param_int(0:*), size_ssor,
+     &     ind_loop_sdm(6)
  
       REAL_E  param_real(0:*)
       REAL_E drodm_out(param_int(NDIMDX),param_int(NEQ)),
@@ -109,6 +110,11 @@ c Var loc
         kfin  = ind_loop(6)
         jfin  = ind_loop(4)
         ifin  = ind_loop(2)
+
+        i_size = ind_loop_sdm(2) - ind_loop_sdm(1) + 1 +
+     &       2 * param_int(NIJK + 3) !taille de la fenetre + ghostcells
+        j_size = ind_loop_sdm(4) - ind_loop_sdm(3) + 1 +
+     &       2 * param_int(NIJK + 3)
  
       IF(param_int(ITYPZONE).eq.0) THEN !domaine 3d general
 
@@ -122,7 +128,7 @@ c Var loc
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
-          ls     = indssor(i,jdeb,kdeb)
+          ls     = indssor(i,jdeb,kdeb,i_size,j_size)
           lt     = indmtr(i,jdeb,kdeb)
           lv     = indven(i,jdeb,kdeb)
 
@@ -146,7 +152,7 @@ c Var loc
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
-          ls     = indssor(ideb,j,kdeb)
+          ls     = indssor(ideb,j,kdeb,i_size,j_size)
           lt     = indmtr(ideb,j,kdeb)
           lv     = indven(ideb,j,kdeb)
 
@@ -166,7 +172,7 @@ c Var loc
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
-            ls     = indssor(i,j,kdeb)
+            ls     = indssor(i,j,kdeb,i_size,j_size)
             lt     = indmtr(i,j,kdeb)
             lv     = indven(i,j,kdeb)
 
@@ -198,7 +204,7 @@ c Var loc
         do  k= kdeb+ipas,kfin,ipas
 
           l      =  inddm(ideb,jdeb,k)
-          ls     = indssor(ideb,jdeb,k)
+          ls     = indssor(ideb,jdeb,k,i_size,j_size)
           lt     = indmtr(ideb,jdeb,k)
           lv     = indven(ideb,jdeb,k)
 
@@ -219,7 +225,7 @@ c Var loc
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
-             ls     = indssor(i,jdeb,k)
+             ls     = indssor(i,jdeb,k,i_size,j_size)
              lt     = indmtr(i,jdeb,k)
              lv     = indven(i,jdeb,k)
 
@@ -248,7 +254,7 @@ c Var loc
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
-             ls     = indssor(ideb,j,k)
+             ls     = indssor(ideb,j,k,i_size,j_size)
              lt     = indmtr(ideb,j,k)
              lv     = indven(ideb,j,k)
 
@@ -277,7 +283,7 @@ c Var loc
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
-               ls     = indssor(i,j,k)
+               ls     = indssor(i,j,k,i_size,j_size)
                lt= indmtr(i,j,k)
                lv= indven(i,j,k)
 
@@ -329,7 +335,7 @@ c Var loc
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
-          ls     = indssor(i,jdeb,kdeb)
+          ls     = indssor(i,jdeb,kdeb,i_size,j_size)
           lt     = indmtr(i,jdeb,kdeb)
           lv     = indven(i,jdeb,kdeb)
   
@@ -353,7 +359,7 @@ c Var loc
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
-          ls     = indssor(ideb,j,kdeb)
+          ls     = indssor(ideb,j,kdeb,i_size,j_size)
           lt     = indmtr(ideb,j,kdeb)
           lv     = indven(ideb,j,kdeb)
 
@@ -373,7 +379,7 @@ c Var loc
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
-            ls     = indssor(i,j,kdeb)
+            ls     = indssor(i,j,kdeb,i_size,j_size)
             lt     = indmtr(i,j,kdeb)
             lv     = indven(i,j,kdeb)
 
@@ -405,7 +411,7 @@ c Var loc
         do  k= kdeb+ipas,kfin,ipas
 
           l      =  inddm(ideb,jdeb,k)
-          ls     = indssor(ideb,jdeb,k)
+          ls     = indssor(ideb,jdeb,k,i_size,j_size)
           lt     = indmtr(ideb,jdeb,k)
           lv     = indven(ideb,jdeb,k)
 
@@ -426,7 +432,7 @@ c Var loc
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
-             ls     = indssor(i,jdeb,k)
+             ls     = indssor(i,jdeb,k,i_size,j_size)
              lt     = indmtr(i,jdeb,k)
              lv     = indven(i,jdeb,k)
 
@@ -455,7 +461,7 @@ c Var loc
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
-             ls     = indssor(ideb,j,k)
+             ls     = indssor(ideb,j,k,i_size,j_size)
              lt     = indmtr(ideb,j,k)
              lv     = indven(ideb,j,k)
 
@@ -484,7 +490,7 @@ c Var loc
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
-               ls     = indssor(i,j,k)
+               ls     = indssor(i,j,k,i_size,j_size)
                lt= indmtr(i,j,k)
                lv= indven(i,j,k)
 
@@ -539,7 +545,7 @@ c Var loc
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
-          ls     = indssor(i,jdeb,kdeb)
+          ls     = indssor(i,jdeb,kdeb,i_size,j_size)
           lv     = indven(i,jdeb,kdeb)
 
           xal    = coe(l,1)*signe
@@ -562,7 +568,7 @@ c Var loc
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
-          ls     = indssor(ideb,j,kdeb)
+          ls     = indssor(ideb,j,kdeb,i_size,j_size)
           lv     =  indven(ideb,j,kdeb)
 
           xal    = coe(l,1)*signe
@@ -581,7 +587,7 @@ c Var loc
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
-            ls     = indssor(i,j,kdeb)
+            ls     = indssor(i,j,kdeb,i_size,j_size)
             lv     =  indven(i,j,kdeb)
 
             xal    = coe(l,1)*signe
@@ -612,7 +618,7 @@ c Var loc
         do  k= kdeb+ipas,kfin,ipas
 
           l      =  inddm(ideb,jdeb,k)
-          ls     = indssor(ideb,jdeb,k)
+          ls     = indssor(ideb,jdeb,k,i_size,j_size)
           lv     =  indven(ideb,jdeb,k)
 
           xal    = coe(l,1)*signe
@@ -632,7 +638,7 @@ c Var loc
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm( i,jdeb,k)
-             ls     = indssor(i,jdeb,k)
+             ls     = indssor(i,jdeb,k,i_size,j_size)
              lv     =  indven(i,jdeb,k)
 
              xal    = coe(l,1)*signe
@@ -660,7 +666,7 @@ c Var loc
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm( ideb,j,k)
-             ls     = indssor(ideb,j,k)
+             ls     = indssor(ideb,j,k,i_size,j_size)
              lv     =  indven(ideb,j,k)
 
              xal    = coe(l,1)*signe
@@ -688,7 +694,7 @@ c Var loc
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm( i,j,k)
-               ls     = indssor(i,j,k)
+               ls     = indssor(i,j,k,i_size,j_size)
                lv= indven(i,j,k)
 
                 xal    = coe(l,1)*signe
@@ -737,7 +743,7 @@ c Var loc
         do i= ideb+ipas,ifin,ipas
 
           l      =  inddm(i,jdeb,1)
-          ls     = indssor(i,jdeb,1)
+          ls     = indssor(i,jdeb,1,i_size,j_size)
           lt     = indmtr(i,jdeb,1)
           lv     = indven(i,jdeb,1)
 
@@ -757,7 +763,7 @@ c Var loc
         do j= jdeb+ipas,jfin,ipas
 
           l      =  inddm(ideb,j,1)
-          ls     = indssor(ideb,j,1)
+          ls     = indssor(ideb,j,1,i_size,j_size)
           lt     = indmtr(ideb,j,1)
           lv     = indven(ideb,j,1)
 
@@ -775,7 +781,7 @@ c Var loc
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,1)
-            ls     = indssor(i,j,1)
+            ls     = indssor(i,j,1,i_size,j_size)
             lt     = indmtr(i,j,1)
             lv     = indven(i,j,1)
 

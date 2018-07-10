@@ -354,6 +354,7 @@ else
 
   // INIT du LUSSORTMP
   E_Int size_tot = 0;
+  E_Int* ipt_ssor_size = NULL;
 
   if (ipt_param_int[0][NB_RELAX] > 1 || (ipt_param_int[0][IMPLICITSOLVER] == 1 && ipt_param_int[0][NB_RELAX] != 0))
     for (E_Int nd = 0; nd < nidom; nd++)
@@ -362,6 +363,7 @@ else
   E_Int size_ssortmp = 0;
   if (ipt_param_int[0][NB_RELAX] > 1) size_ssortmp =1;
   FldArrayF ssortmp(size_tot * size_ssortmp); E_Float* ipt_ssortmp = ssortmp.begin();
+  FldArrayI ssor_size(threadmax_sdm * size_ssortmp); ipt_ssor_size = ssor_size.begin();
 
   if (ipt_param_int[0][NB_RELAX] > 1)
     {
@@ -516,7 +518,7 @@ else
             ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, ndimdx_transfer, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
-            ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_drodmd, 
+            ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size, ipt_drodmd, 
 	    ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp, ipt_givens,
             ipt_cfl            ,
             iptx               , ipty             , iptz              ,
