@@ -72,10 +72,12 @@ C Var loc
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
-     & ind_loop(6),neq_rot,depth,nb_bc
+     & ind_loop(6),neq_rot,depth,nb_bc,thmax,th
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
+
+      include 'omp_lib.h'
 
 #include "FastS/HPC_LAYER/SIZE_MIN.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
@@ -91,7 +93,6 @@ c     &                                     kcache,ithread
 c           write(*,'(a,9i6)')'ind_dm_zone=',ind_dm_zone,
 c     &    ithread,jbloc,ndo
 c           write(*,'(a,3i6)')'loop_patern=',shift
-c           write(*,'(a,f20.10)')'dtc        =',param_real(DTC);
 c           write(*,'(a,6i6)')'ind_dm_soc=',ind_dm_socket
 c           write(*,'(a,6i6)')'inddm_omp =',inddm_omp
 c           write(*,'(a,6i6)')'ind_dm_thr=',ind_dm_omp
@@ -102,6 +103,23 @@ c           write(*,'(a,6i6)')'ind_grad  =',ind_grad
 c           write(*,'(a,6i6)')'ind_rhs   =',ind_rhs
 c           write(*,'(a,6i6)')'ind_mjr   =',ind_mjr
 c         endif
+
+c      if(ndo.eq.-9) then
+c         thmax = OMP_get_num_threads()
+c         th = OMP_get_thread_num()+1
+
+c         do i = 1, thmax
+c            if (i == th) then
+c        write(*,'(a,7i5)')'ind_dm  =',ind_dm_omp(1:4),th,icache,jcache
+c            write(*,'(a,4i5)')'ind_sdm =',ind_sdm(1:4)
+c            write(*,'(a,4i5)')'ind_coe =',ind_coe(1:4)
+c            write(*,'(a,4i5)')'ind_ssa =',ind_ssa(1:4)
+c            write(*,'(a,4i5)')'ind_gra =',ind_grad(1:4)
+c            endif
+c!$OMP BARRIER
+c         enddo 
+c       endif
+
 
           !!!call  correct_coins(ndo,  param_int, ind_grad, rop_ssiter)
 
@@ -142,7 +160,8 @@ c         endif
 
                 !! remplissage tableau xmut si SA uniquememnt. 
                 !! Pour ZDES, remplissage dans terme source 
-                call vispalart(ndo, param_int, param_real, ind_grad,
+                !call vispalart(ndo, param_int, param_real, ind_grad,
+                call vispalart(ndo, param_int, param_real, ind_coe,
      &                         xmut,rop_ssiter)
 
               endif
@@ -151,11 +170,18 @@ c         endif
              ! Calcul du pas de temps
              call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
      &                   flagCellN, param_int, param_real,
-     &                   ind_ssa, ind_grad,
+     &                   ind_ssa, ind_grad, ind_coe,
      &                   cfl, xmut,rop_ssiter, cellN, coe,
      &                   ti,tj,tk, vol,venti)
 
            ENDIF!!1ere sous-iteration
+
+           !SI SA implicit, verrou ici car dependence entre coe(5)
+           !calculee sur ind_coe dans cptst3 et coe(6) calculee sur
+           !ind_ssa dans src_term
+           IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
+#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+           ENDIF
 
            ! - Ajout d'un eventuel terme source au second membre
            ! - initialisation drodm
@@ -166,7 +192,9 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                   rop_ssiter, xmut, drodm, coe, x,y,z,
      &                   ti,tj,tk,vol, delta)
 
+           IF(param_int(IFLOW).lt.3.or.param_int(ITYPCP).eq.2) then
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+           ENDIF
 
            ! -----assemblage drodm euler+visqueux
               if(param_int(KFLUDOM).eq.1) then
