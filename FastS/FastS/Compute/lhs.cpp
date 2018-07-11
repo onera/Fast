@@ -1,3 +1,16 @@
+if( kimpli == 1  && param_int[0][LU_MATCH]==1)
+  { 
+   #pragma omp master
+    { //Raccord V0
+
+      setInterpTransfersFastS(iptdrodm_transfer, ndimdx_transfer, param_int_tc,
+                           param_real_tc, param_int_ibc, param_real_ibc, param_real[0][PRANDT],
+                           it_target, nidom, ipt_timecount, mpi);
+    }
+    #pragma omp barrier
+  }
+
+
             shift_zone=0; shift_coe=0; nd_current=0; E_Float* ipt_ssor_shift; E_Int indice;
             for (E_Int nd = 0; nd < nidom; nd++)
             {

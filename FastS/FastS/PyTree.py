@@ -1499,6 +1499,7 @@ def _buildOwnData(t):
     'shiftvar':0,
     'time_step_nature':['local', 'global'],
     'ssdom_IJK':3,
+    'lu_match':1,
     'epsi_newton':1,
     'epsi_linear':1,
     'inj1_newton_tol':1,
@@ -1623,7 +1624,8 @@ def _buildOwnData(t):
             implicit_solver = "lussor"
             nbr_relax = 1
             nbr_krylov    = 20
-            nbr_restart   = 1
+            nbr_restart   =  1
+            lu_match      =  0
             temporal_scheme = "implicit"
             scheme          = "ausmpred"
             slope           = "o3"
@@ -1694,6 +1696,8 @@ def _buildOwnData(t):
                 if a is not None: nbr_krylov = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'nb_restart')
                 if a is not None: nbr_restart = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'lu_match')
+                if a is not None: lu_match = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'scheme')
                 if a is not None: scheme = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'slope')
@@ -1841,7 +1845,7 @@ def _buildOwnData(t):
             # creation noeud parametre integer
             # Determination de levelg et leveld             
 
-            datap = numpy.empty(75, numpy.int32)
+            datap = numpy.empty(76, numpy.int32)
             datap[0:25]= -1
             datap[25]  = 0     # zone 3D curvi par defaut
             datap[26]  = 0     # Vent 3D par defaut
@@ -1883,6 +1887,7 @@ def _buildOwnData(t):
             datap[72]  = nbr_restart
             datap[73]  = nbr_krylov
             datap[74]  = ImplicitSolverNum
+            datap[75]  = lu_match          
 
             i += 1
          

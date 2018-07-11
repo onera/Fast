@@ -512,6 +512,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #==============================================================================
 def tagBC(bcname):
   if   bcname == "BCExtrapolate"    :       tag = 0;
+  elif bcname == "BCDegenerateLine":        tag = 0;
   elif bcname == "BCFarfield":              tag = 1;
   elif bcname == "BCInflowSupersonic":      tag = 2;
   elif bcname == "BCWallInviscid":          tag = 3;
@@ -530,7 +531,7 @@ def tagBC(bcname):
   elif bcname  == "BCPeriodic":             tag =15;
   elif bcname == "BCOutpres":               tag =16;
   elif bcname == "BCInj1":                  tag =17;
-  elif bcname == "BCDegenerateLine":        tag = 0;
+  elif bcname == "BCRacinf":                tag =18;
   else:
     tag = -1
     print "Warning: unknown BC type %s."%bcname

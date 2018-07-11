@@ -125,6 +125,7 @@
 #define NB_RESTART   72
 #define NB_KRYLOV    73
 #define IMPLICITSOLVER 74
+#define LU_MATCH     75
 
 #define BC_TYPE	      0
 #define BC_IDIR       1

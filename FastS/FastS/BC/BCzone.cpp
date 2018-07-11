@@ -162,20 +162,30 @@ E_Int K_FASTS::BCzone(
     E_Int pt_bcs = param_int[PT_BC];
     E_Int nb_bc  = param_int[ pt_bcs ];
 
+    E_Int ificmax[6];
+    if( param_int[LU_MATCH] != 0) param_int[LU_MATCH] =1;
+
+    for ( E_Int ipara = 0; ipara < 4; ipara++ ) { ificmax[ipara] = param_int[NIJK+3]*param_int[LU_MATCH];}
+    for ( E_Int ipara = 4; ipara < 6; ipara++ ) { ificmax[ipara] = param_int[NIJK+4]*param_int[LU_MATCH];}
 
     for ( E_Int ndf = 0; ndf < nb_bc; ndf++ ) {
         E_Int pt_bc = param_int[ pt_bcs + 1 + ndf];
         E_Int idir  = param_int[pt_bc + BC_IDIR];
 
         E_Int ipara = idir - 1;
+
         // on test si le sous domaine touche le bord du domaine et si la CL est bonne candidate a implicitation
         if ( lrhs_loc == 1 ) {
                           if ( ( ipt_ind_dm_thread[ipara] == itest[ipara] ) &&
-                             ( ( param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7 ) ||
-                                 param_int[pt_bc + BC_TYPE] == 12 ) ) 
+                               (   (  param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7 ) 
+                                 ||   param_int[pt_bc + BC_TYPE] == 12 
+                                 ||   param_int[pt_bc + BC_TYPE] == 18 
+                               )   
+                             ) 
                            {
                              lskip[ipara] = 0;
                              lcorner      = 0;
+                             if (  param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7 )  ificmax[ipara] = 1;
                            }
 	}
         else {lskip[ipara] = 1;}
@@ -183,13 +193,12 @@ E_Int K_FASTS::BCzone(
     }  // fin loop CL warmup
 
     if ( lrhs_loc == 1 ) {
-        E_Int ificmax = 1;
-        ishift_lu[0]  = ipt_ind_dm_thread[0] - ( 1 - lskip[0] ) * ificmax;
-        ishift_lu[1]  = ipt_ind_dm_thread[1] + ( 1 - lskip[1] ) * ificmax;
-        ishift_lu[2]  = ipt_ind_dm_thread[2] - ( 1 - lskip[2] ) * ificmax;
-        ishift_lu[3]  = ipt_ind_dm_thread[3] + ( 1 - lskip[3] ) * ificmax;
-        ishift_lu[4]  = ipt_ind_dm_thread[4] - ( 1 - lskip[4] ) * ificmax;
-        ishift_lu[5]  = ipt_ind_dm_thread[5] + ( 1 - lskip[5] ) * ificmax;
+        ishift_lu[0]  = ipt_ind_dm_thread[0] - ( 1 - lskip[0] ) * ificmax[0];
+        ishift_lu[1]  = ipt_ind_dm_thread[1] + ( 1 - lskip[1] ) * ificmax[1];
+        ishift_lu[2]  = ipt_ind_dm_thread[2] - ( 1 - lskip[2] ) * ificmax[2];
+        ishift_lu[3]  = ipt_ind_dm_thread[3] + ( 1 - lskip[3] ) * ificmax[3];
+        ishift_lu[4]  = ipt_ind_dm_thread[4] - ( 1 - lskip[4] ) * ificmax[4];
+        ishift_lu[5]  = ipt_ind_dm_thread[5] + ( 1 - lskip[5] ) * ificmax[5];
 
         E_Int idirmax                           = 6;
         if ( param_int[ITYPZONE] == 3 ) idirmax = 4;

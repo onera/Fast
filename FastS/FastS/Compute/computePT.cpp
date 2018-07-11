@@ -135,22 +135,22 @@ else
   E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_it_lu_ssdom;
   
   E_Float** ipt_param_real  ;
-  E_Float** iptx;       E_Float** ipty;     E_Float** iptz;    E_Float** iptro; E_Float** iptro_m1; E_Float** iptro_p1; E_Float** iptmut;
-  E_Float** ipti;       E_Float** iptj;     E_Float** iptk;    E_Float** iptvol;
-  E_Float** ipti0;      E_Float** iptj0;    E_Float** iptk0;
-  E_Float** ipti_df;    E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
-  E_Float** iptdist;    E_Float** iptventi; E_Float** iptventj; E_Float** iptventk;
-  E_Float** iptrdm;     E_Float** iptkrylov;E_Float** iptkrylov_transfer;
-  E_Float** iptCellN  ; E_Float** ipt_cfl_zones; 
-  E_Float** iptro_sfd;  E_Float** iptdelta; E_Float** iptfd; E_Float** iptro_zgris; E_Float** iptro_res;
-  E_Float** iptssor;    E_Float** iptssortmp;
-  E_Float** ipt_gmrestmp;
+  E_Float** iptx;          E_Float** ipty;         E_Float** iptz;    E_Float** iptro; E_Float** iptro_m1; E_Float** iptro_p1; E_Float** iptmut;
+  E_Float** ipti;          E_Float** iptj;         E_Float** iptk;    E_Float** iptvol;
+  E_Float** ipti0;         E_Float** iptj0;        E_Float** iptk0;
+  E_Float** ipti_df;       E_Float** iptj_df;      E_Float** iptk_df ; E_Float** iptvol_df;
+  E_Float** iptdist;       E_Float** iptventi;     E_Float** iptventj; E_Float** iptventk;
+  E_Float** iptrdm;        E_Float** iptkrylov;    E_Float** iptkrylov_transfer;
+  E_Float** iptro_sfd;     E_Float** iptdelta;     E_Float** iptfd; E_Float** iptro_zgris; E_Float** iptro_res;
+  E_Float** iptCellN  ;    E_Float** ipt_cfl_zones; 
+  E_Float** iptssor;       E_Float** iptssortmp;
+  E_Float** ipt_gmrestmp;  E_Float** iptdrodm_transfer;
 
   ipt_param_int     = new E_Int*[nidom*3];
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
 
-  iptx              = new E_Float*[nidom*33];
+  iptx              = new E_Float*[nidom*34];
   ipty              = iptx               + nidom;
   iptz              = ipty               + nidom;
   iptro             = iptz               + nidom;
@@ -183,6 +183,7 @@ else
   iptssor           = ipt_gmrestmp       + nidom;   //ndimdx+2rangee ghost par thread
   iptssortmp        = iptssor            + nidom;   //ndimdx
   ipt_cfl_zones     = iptssortmp         + nidom;   //3composants: attention a la prochaine addition
+  iptdrodm_transfer = ipt_cfl_zones      + nidom;
 
   vector<PyArrayObject*> hook;
   PyObject* ssorArray = PyDict_GetItemString(work,"ssors");
@@ -418,6 +419,8 @@ else
   /// Tableau de travail communs explicite/implicite
   PyObject* drodmArray = PyDict_GetItemString(work,"rhs"); FldArrayF* drodm;
   K_NUMPY::getFromNumpyArray(drodmArray, drodm, true); E_Float* iptdrodm = drodm->begin();
+  iptdrodm_transfer[0]= iptdrodm;
+  for (E_Int nd = 1; nd < nidom; nd++){ iptdrodm_transfer[nd]= iptdrodm_transfer[nd-1] + ipt_param_int[nd-1][NEQ]*ipt_param_int[nd-1][NDIMDX];}
   
   // Tableau de travail coe   ( dt/vol et diags LU)
   PyObject* coeArray = PyDict_GetItemString(work,"coe"); FldArrayF* coe;
@@ -533,6 +536,7 @@ else
             iptrdm             ,
             iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res,
+            iptdrodm_transfer  ,
             ipt_param_int_ibc  , ipt_param_real_ibc     , ipt_param_int_tc  , ipt_param_real_tc);
 
        if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
