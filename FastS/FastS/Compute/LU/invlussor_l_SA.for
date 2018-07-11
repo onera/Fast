@@ -40,7 +40,7 @@ c***********************************************************************
       REAL_E drodm_out(param_int(NDIMDX),param_int(NEQ))
       REAL_E rop(  param_int(NDIMDX),param_int(NEQ))
       REAL_E coe(  param_int(NDIMDX),param_int(NEQ_COE)),
-     &     ssor(param_int(NDIMDX),param_int(NEQ))
+     &     ssor(size_ssor,param_int(NEQ))
       REAL_E ti(param_int(NDIMDX_MTR),param_int(NEQ_IJ)),
      &       tj(param_int(NDIMDX_MTR),param_int(NEQ_IJ)),
      &       tk(param_int(NDIMDX_MTR),param_int(NEQ_K))

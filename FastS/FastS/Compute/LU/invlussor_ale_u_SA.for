@@ -44,7 +44,7 @@ c***********************************************************************
      &       coe(param_int(NDIMDX)  ,param_int(NEQ_COE)),
      &       rop(param_int(NDIMDX)  ,param_int(NEQ)),
      &       rop_1(param_int(NDIMDX),param_int(NEQ)),
-     &     ssor(param_int(NDIMDX),param_int(NEQ))
+     &     ssor(size_ssor,param_int(NEQ))
       REAL_E ti(param_int(NDIMDX_MTR),param_int(NEQ_IJ)),
      &       tj(param_int(NDIMDX_MTR),param_int(NEQ_IJ)),
      &       tk(param_int(NDIMDX_MTR),param_int(NEQ_K))

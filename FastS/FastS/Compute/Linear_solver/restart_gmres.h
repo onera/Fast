@@ -1,5 +1,5 @@
   E_Float value = 0., sum_value = 0.; E_Float normL2 = 0., normL2_sum = 0.; E_Int mjrnewton = 0;
-  E_Float* ipt_ssor_shift;
+  E_Float* ipt_ssor_shift; E_Int indice;
   // norm L2 krylov pour openmp
   for (E_Int th = 0; th < Nbre_thread_actif; th++) { normL2_sum += ipt_norm_kry[th];}
 
@@ -53,13 +53,14 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 
 #include "Compute/LU/prep_lussor.h"
+	   indice = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + ithread - 1;
 
 	   invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
 	   	  ipt_ind_dm_thread      , ipt_ind_dm_thread       , mjrnewton             ,
 	   	  iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , ipt_gmrestmp[nd],
 	   	  ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 	   	  iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-	   	  iptcoe  + shift_coe    , ipt_ssor_shift          , iptssortmp[nd]        , ipt_ssor_size[ ithread - 1]);
+	   	  iptcoe  + shift_coe    , ipt_ssor_shift          , iptssortmp[nd]        , ipt_ssor_size[ indice ]);
 
 	   if (param_int[nd][NB_RELAX] == 1) krylov_in = ipt_gmrestmp[nd];
 	   else if (param_int[nd][NB_RELAX] > 1) krylov_in = iptssortmp[nd];
@@ -407,6 +408,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
         {
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 #include "Compute/LU/prep_lussor.h"
+	  indice = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + ithread - 1;
 
             E_Float* krylov_in = iptdrodm + shift_zone;
 	    E_Float* krylov_out= iptdrodm + shift_zone;
@@ -417,7 +419,7 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 	    	   iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , krylov_out            ,
 	    	   ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 	    	   iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-	    	   iptcoe  + shift_coe    , ipt_ssor_shift          , iptssortmp[nd]        , ipt_ssor_size[ ithread - 1]);
+	    	   iptcoe  + shift_coe    , ipt_ssor_shift          , iptssortmp[nd]        , ipt_ssor_size[ indice ]);
 
             nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
