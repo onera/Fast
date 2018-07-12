@@ -52,7 +52,6 @@ C
 C
 C
 C
-C
       INTEGER*4 ndom, ind_loop(6), param_int(0:*)
 C
       REAL*8 xmut(param_int(41))
@@ -156,7 +155,6 @@ C
                 min1 = xmuprov
               END IF
               xmutd(l) = amulamd + min1d
-              !xmutd(l) = 0.
             ENDDO
           ENDDO
         ENDDO

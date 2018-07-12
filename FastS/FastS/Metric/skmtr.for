@@ -17,7 +17,7 @@ C    You should have received a copy of the GNU General Public License
 C    along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 C ============================================================================
       SUBROUTINE skmtr(ndom, param_int, param_real, rot,
-     &                 x, y, z, degener, 
+     &                 x, y, z, degener, dist,
      &                 ti, tj, tk,ti0, tj0, tk0, vol,venti,ventj,ventk,
      &                 ijkv_sdm,
      &                 ind_sdm, ind_mtr, ind_grad, 
@@ -51,6 +51,8 @@ C_OUT
       REAL_E  tk(param_int( NDIMDX_MTR ),param_int( NEQ_K  )) 
       REAL_E tk0(param_int( NDIMDX_MTR ),param_int( NEQ_K  )) 
       REAL_E vol(param_int( NDIMDX_MTR ))
+
+      REAL_E  dist( param_int( NDIMDX ) )
 
       REAL_E venti( param_int(NDIMDX_VENT) * param_int(NEQ_VENT) )
       REAL_E ventj( param_int(NDIMDX_VENT) * param_int(NEQ_VENT) )
@@ -301,6 +303,19 @@ C_LOCAL
         enddo 
         enddo 
         enddo
+
+        !extap distance paroi
+        if(param_int(IFLOW).eq.3) then
+
+            ind_dm_zone(2) = param_int(IJKV  )
+            ind_dm_zone(4) = param_int(IJKV+1)
+            ind_dm_zone(6) = param_int(IJKV+2)
+            call dist_extrap( param_int(NDIMDX), param_int(NDIMDX_XYZ),
+     &                        param_int(NIJK), param_int( NIJK_XYZ ),
+     &                        ind_dm_zone, degener , dist)
+        endif
+
+
 
 !$OMP END SINGLE
 

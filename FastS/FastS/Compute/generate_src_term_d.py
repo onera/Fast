@@ -18,7 +18,7 @@ if rep not in dico.keys():
 rep ='SA'
 rep_build='/stck1/stck7/stck7.3/imary/Cassiopee/Apps/PModules/FastS/build/x86_r8/FastS/Compute/'+rep
 
-models      = ['spsource_SA', 'spsource_SA_comp', 'vispalart']
+models      = ['spsource_SA', 'spsource_SA_comp', 'spsource_SA_diff','vispalart']
  
 #open file for sources compilation
 srcs= open('../../srcs.py','r')

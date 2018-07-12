@@ -85,6 +85,14 @@ c
      &                             xmut(1+param_int(NDIMDX)),       !dist
      &                             drodm)
 
+            elseif(param_int(SA_INT+ SA_IDES-1).eq.8) then !SA_comp
+
+             call spsource_SA_diff(ndom, nitcfg, param_int, param_real,
+     &                             ind_ssa,
+     &                             xmut, rop, coe, ti, tj, tk, vol,
+     &                             xmut(1+param_int(NDIMDX)),       !dist
+     &                             drodm)
+
             elseif(param_int(SA_INT+ SA_IDES-1).eq.2) then !ZDES mode 1, delta_vol
 
              if(param_int(SA_DEBUG).eq.1) then  !sauvegarde de delta

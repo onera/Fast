@@ -54,13 +54,13 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
   E_Float** ipti;       E_Float** iptj;     E_Float** iptk;    E_Float** iptvol;
   E_Float** ipti_df;    E_Float** iptj_df;  E_Float** iptk_df; E_Float** iptvol_df;
   E_Float** ipti0;      E_Float** iptj0;    E_Float** iptk0;   
-  E_Float** iptventi;   E_Float** iptventj; E_Float** iptventk;
+  E_Float** iptventi;   E_Float** iptventj; E_Float** iptventk; E_Float** iptdist;
 
   ipt_param_int     = new E_Int*[nidom*3];
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_degen         = ipt_ind_dm      + nidom;
 
-  iptx              = new E_Float*[nidom*18];
+  iptx              = new E_Float*[nidom*19];
   ipty              = iptx            + nidom;
   iptz              = ipty            + nidom;
   ipti              = iptz            + nidom;
@@ -78,6 +78,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
   iptventj          = iptventi        + nidom;
   iptventk          = iptventj        + nidom;
   ipt_param_real    = iptventk        + nidom;
+  iptdist           = ipt_param_real  + nidom;
 
   vector<PyArrayObject*> hook;
 
@@ -96,15 +97,24 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                        t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
     ipt_param_real[nd]    = K_PYTREE::getValueAF(t, hook);
 
-    PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
-
-
     /*-------------------------------------*/
     /* Extraction (x,y,z): pour forcage spatia */
     /*-------------------------------------*/
     GET_XYZ( "GridCoordinates", zone, iptx[nd], ipty[nd], iptz[nd]) 
 
+    /* get distance paroi */
+
+    //Pointeur visqeux: mut, dist, zgris sont en acces compact
+    if(ipt_param_int[nd][ IFLOW ] ==  3)
+      { PyObject* sol_center;
+        sol_center  = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
+        t           = K_PYTREE::getNodeFromName1(sol_center, "TurbulentDistance");
+        iptdist[nd] = K_PYTREE::getValueAF(t, hook);
+      }
+    else {iptdist[nd] = NULL;}
+
     /* get metric */
+    PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
 
     E_Float* dummy;
     E_Int lale, kfludom;
@@ -246,12 +256,20 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
                  E_Int* ipt_nijk_xyz = ipt_param_int[nd]+ NIJK_XYZ;
                  E_Int* ipt_nijk_mtr = ipt_param_int[nd]+ NIJK_MTR;
+                 E_Int* ipt_nijk     = ipt_param_int[nd]+ NIJK;
 
                  tijk_extrap_( ipt_param_int[nd][ NDIMDX_MTR ], ipt_param_int[nd][ NDIMDX_XYZ ] , ipt_nijk_xyz, ipt_nijk_mtr,
                                ipt_param_int[nd][ NEQ_IJ ]    , ipt_param_int[nd][ NEQ_K ],
                                ipt_ind_dm_loc,
                                ipt_degen[nd] ,
                                ipti[nd]      , iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd]); 
+
+                 if(ipt_param_int[nd][ IFLOW ] ==3)
+                   { ipt_ind_dm_loc[1]= ipt_param_int[nd][ IJKV ]; ipt_ind_dm_loc[3]= ipt_param_int[nd][ IJKV+1 ]; ipt_ind_dm_loc[5]= ipt_param_int[nd][IJKV+2];
+
+                     dist_extrap_( ipt_param_int[nd][ NDIMDX ], ipt_param_int[nd][ NDIMDX_XYZ ] , ipt_nijk, ipt_nijk_xyz,
+                                    ipt_ind_dm_loc, ipt_degen[nd] , iptdist[nd]);
+                   }
                 }
               }
             }
@@ -295,7 +313,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                                    ipt_topology_socket_thread, ipt_ind_dm_socket );
 
                  skmtr_( nd, ipt_param_int[nd], ipt_param_real[nd], ipt_rot_ale_thread,
-	                iptx[nd], ipty[nd], iptz[nd], ipt_degen[nd], 
+	                iptx[nd], ipty[nd], iptz[nd], ipt_degen[nd], iptdist[nd],
                         ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], iptventi[nd], iptventj[nd], iptventk[nd],
                         ipt_ijkv_sdm_thread,
                         ipt_ind_sdm_thread , ipt_ind_coe_thread, ipt_ind_grad_thread    , 

@@ -7,8 +7,8 @@ extern "C"
                          E_Int& neq_ij    , E_Int& neq_k     , E_Int& typ_zone);
 
   void skmtr_( E_Int& nd      , E_Int* ipt_param_int, E_Float*  ipt_param_real,  E_Float* rot_ale,
-               E_Float* x     , E_Float* y          , E_Float* z  , E_Int* degener   ,
-               E_Float* ti    , E_Float* tj         , E_Float* tk , E_Float* ti0     , E_Float* tj0, E_Float* tk0, E_Float* vol, E_Float* venti, E_Float* ventj, E_Float* ventk,
+               E_Float* x     , E_Float* y          , E_Float* z  , E_Int* degener   , E_Float* dist,
+               E_Float* ti    , E_Float* tj         , E_Float* tk , E_Float* ti0     , E_Float*  tj0, E_Float* tk0, E_Float* vol, E_Float* venti, E_Float* ventj, E_Float* ventk,
                E_Int* ijkv_sdm  , 
                E_Int* ind_sdm   , E_Int* ind_coe          , E_Int* ind_grad    , E_Int* ind_dm_zone,  E_Int* ind_dm_socket,  E_Int* ind_dm_omp,  E_Int* socket_topology,
                E_Int& ithread_sock, E_Int& thread_parsock, E_Int& Nbre_thread_actif, E_Int&  Nbre_socket, E_Int& socket     ,
@@ -322,6 +322,9 @@ extern "C"
                           E_Int* ind_zone , E_Int*  degen   , 
                           E_Float* ipti   , E_Float* iptj , E_Float* iptk ,
                           E_Float* iptx0  , E_Float* ipty0, E_Float* iptz0,  E_Float* iptvol);
+
+   void     dist_extrap_( E_Int& ndimdx   , E_Int& ndimdx_xyz, E_Int* nijk,  E_Int* nijk_xyz,
+                          E_Int* ind_zone , E_Int*  degen    , E_Float* iptdist);
 
 
    void     move_domx_( E_Int& ndo ,  E_Int* param_int, E_Float* param_real, E_Int* ind_loop, 

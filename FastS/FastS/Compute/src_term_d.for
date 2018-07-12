@@ -91,6 +91,15 @@ c
      &                             xmut, rop, ropd, coe, ti,tj,tk,vol,
      &                             xmut(1+param_int(NDIMDX)),       !dist
      &                             drodm, drodmd)
+
+            elseif(param_int(SA_INT+ SA_IDES-1).eq.8) then !SA_comp
+
+             call spsource_SA_diff_d(ndom,nitcfg_loc,
+     &                             param_int,param_real,
+     &                             ind_ssa,
+     &                             xmut, rop, ropd, coe, ti,tj,tk,vol,
+     &                             xmut(1+param_int(NDIMDX)),       !dist
+     &                             drodm, drodmd)
             else
 !$OMP SINGLE
               write(*,*)'erreur source SA: tapenade missing...'

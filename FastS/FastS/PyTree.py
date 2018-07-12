@@ -1492,7 +1492,7 @@ def _buildOwnData(t):
     'time_step':1,
     'io_thread':0,
     'sgsmodel': ['smsm','Miles'],
-    'ransmodel': ['SA','SA_comp'],
+    'ransmodel': ['SA','SA_comp','SA_diff'],
     'cache_blocking_I':0,
     'cache_blocking_J':0,
     'cache_blocking_K':0,
@@ -1766,8 +1766,11 @@ def _buildOwnData(t):
             elif model == "NSLes"     or model == "nsles":     iflow = 2
             elif model == "nsspalart" or model == "NSTurbulent": 
                 iflow = 3
-                if ransmodel == 'SA_comp':
+                if   ransmodel == 'SA_comp':
                     ides = 1
+                elif ransmodel == 'SA_diff':
+                    ides = 8
+
                 if des != 'none':
                     if   des == "ZDES1"   or des == "zdes1":   ides = 2
                     elif des == "ZDES1_w" or des == "zdes1_w": ides = 3
