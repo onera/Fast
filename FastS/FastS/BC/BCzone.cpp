@@ -41,7 +41,7 @@ using namespace K_FLD;
 
 //=============================================================================
 E_Int K_FASTS::getDir( E_Int* ijkv, E_Int* ind_fen ) {
-    // printf("%d %d %d %d %d %d\n", imin, imax, jmin, jmax, kmin, kmax);
+     //printf("%d %d %d %d %d %d %d %d %d \n", ind_fen[0],ind_fen[1],ind_fen[2],ind_fen[3],ind_fen[4],ind_fen[5],ijkv[0],ijkv[1],ijkv[2] );
     if ( ind_fen[0] == ind_fen[1] && ind_fen[0] == 1 ) return 1;
     if ( ind_fen[0] == ind_fen[1] && ind_fen[0] == ijkv[0] ) return 2;
     if ( ind_fen[2] == ind_fen[3] && ind_fen[2] == 1 ) return 3;

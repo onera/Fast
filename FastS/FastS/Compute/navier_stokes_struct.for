@@ -143,9 +143,14 @@ c       endif
               if(param_int(IFLOW).eq.2) then
 
                 if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
-
-                   call invist(ndo, param_int, param_real, ind_grad,
-     &                        rop_ssiter, xmut )
+                
+                   if(param_int(ITYPCP).le.1) then 
+                     call invist(ndo, param_int, param_real, ind_coe,
+     &                           rop_ssiter, xmut )
+                   else 
+                     call invist(ndo, param_int, param_real, ind_grad,
+     &                           rop_ssiter, xmut )
+                   endif
 
                 !LES selective mixed scale model
                 else
@@ -165,7 +170,6 @@ c       endif
      &                         xmut,rop_ssiter)
 
               endif
-
 
              ! Calcul du pas de temps
              call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,

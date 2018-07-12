@@ -36,7 +36,7 @@ c***********************************************************************
       REAL_E param_real(0:*)
 
 c     Var loc
-      INTEGER_E lSA, lussor_end, m, k, j, lij, ls, i, l
+      INTEGER_E lSA, lussor_end, m, k, j, lij, ls, i, l, depth
       logical llower
 
 #include "FastS/formule_param.h"
@@ -45,6 +45,7 @@ c     Var loc
 
       if(ind_loop_lu(2).lt.ind_loop_lu(1)) return
       lSA           = 0
+      depth         = 1
       if(param_int(IFLOW).eq.3.and.param_int(ILES).eq.0) lSA= 1
 
       if (param_int(NB_RELAX) == 1) then
@@ -54,6 +55,11 @@ c     Var loc
 
             if(lSA.eq.1) Then
 
+               !extrap coe(6) sur la 2eme rangee fictive
+               if(param_int(LU_MATCH).eq.1) then
+                 call extrap_coe(ndo, param_int, depth, 
+     &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
+               endif
 !lower
                call invlu_l_SA(ndo, param_int, param_real, ind_loop_lu,
      &              drodm_in,drodm_out,rop_ssiter,
@@ -84,6 +90,11 @@ c
          ELSE
 
             if(lSA.eq.1) Then
+
+               if(param_int(LU_MATCH).eq.1) then
+                 call extrap_coe(ndo, param_int, depth, 
+     &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
+               endif
 
                call invlu_ale_l_SA(ndo, param_int, param_real, 
      &              ind_loop_lu,
@@ -139,6 +150,10 @@ c
 
                if(lSA.eq.1) Then
 
+               if(param_int(LU_MATCH).eq.1) then
+                 call extrap_coe(ndo, param_int, depth, 
+     &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
+               endif
 !     lower
                   call invlussor_l_SA(ndo, param_int, param_real, 
      &                 ind_loop_lu, ind_loop_sdm,
@@ -177,6 +192,11 @@ c
             ELSE
 
                if(lSA.eq.1) Then
+
+               if(param_int(LU_MATCH).eq.1) then
+                 call extrap_coe(ndo, param_int, depth, 
+     &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
+               endif
 
                   call invlussor_ale_l_SA(ndo, param_int, param_real, 
      &                 ind_loop_lu, ind_loop_sdm,
