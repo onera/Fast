@@ -17,7 +17,7 @@
                            ithread_loc           = param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
                            ipt_ind_dm_thread     = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
   
-                           if (ithread_loc == -1) { continue;}
+                           if (ithread_loc == -1) { nd_current++; continue;}
                          }
                          else
                          { 

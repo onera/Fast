@@ -16,6 +16,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
             {
                E_Float* ipt_CL = iptro_CL[nd];
 
+          //printf("apr  racc %d %d \n", nd, ithread);
 #include       "HPC_LAYER/OMP_MODE_BEGIN.h"
 
                       //
@@ -59,7 +60,12 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
 
                          if(lssiter_verif ==1  && nd_subzone ==0 && omp_mode==1 && ( param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
                          {
-#pragma omp barrier
+                          E_Int type = 2;
+                          for (E_Int th = 0; th < Nbre_thread_actif_loc; th++) 
+                            { 
+                              E_Int* verrou_lhs_thread= verrou_lhs + (mx_nidom + nd_current)*Nbre_thread_actif +th;
+                              verrou_c_( verrou_lhs_thread, type );
+                            }
                          } //sinon residu pas bon en omp_mode=1
 
                          if(lexit_lu == 0 )

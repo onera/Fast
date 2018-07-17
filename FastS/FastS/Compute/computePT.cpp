@@ -430,7 +430,7 @@ else
   PyObject* lokArray = PyDict_GetItemString(work,"verrou_omp"); FldArrayI* lok;
   K_NUMPY::getFromNumpyArray(lokArray, lok, true); E_Int* ipt_lok  = lok->begin();
 
-  // Tableau de travail verrou omp
+  // Tableau de travail timer omp
   PyObject*  timer_omp_Array= PyDict_GetItemString(work,"TIMER_OMP"); FldArrayF* tab_timer_omp;
   K_NUMPY::getFromNumpyArray(timer_omp_Array, tab_timer_omp, true); E_Float* timer_omp = tab_timer_omp->begin();
 
@@ -452,7 +452,7 @@ else
   FldArrayI ind_CL(          24*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
   FldArrayI ind_dm_omp(      12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
-  FldArrayI tab_verrou_lhs(mx_nidom*threadmax_sdm); E_Int* verrou_lhs =  tab_verrou_lhs.begin();
+  FldArrayI tab_verrou_lhs(2*mx_nidom*threadmax_sdm); E_Int* verrou_lhs =  tab_verrou_lhs.begin();
 
   FldArrayF cfl( nidom*3*threadmax_sdm); E_Float* ipt_cfl = cfl.begin();
 
