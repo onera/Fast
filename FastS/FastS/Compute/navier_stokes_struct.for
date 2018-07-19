@@ -15,7 +15,7 @@ c***********************************************************************
      &        socket_topology, lok , topo_omp, inddm_omp,
      &        krylov, norm_kry,
      &        cfl,
-     &        x , y , z, cellN,
+     &        x , y , z, cellN, cellN_IBC,
      &        rop , rop_m1     , rop_tmp , rop_ssiter,
      &        xmut  ,
      &        ti, tj, tk, vol,  ti_df, tj_df, tk_df, vol_df,
@@ -60,7 +60,8 @@ c
       REAL_E rop(*),rop_m1(*),rop_tmp(*),rop_ssiter(*),xmut(*),drodm(*),
      & coe(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
      & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*), rot(*), celln(*),
-     & ti_df(*),tj_df(*),tk_df(*),vol_df(*), krylov(*)
+     & ti_df(*),tj_df(*),tk_df(*),vol_df(*), krylov(*), cellN_IBC(*)
+
       REAL_E delta(*),ro_res(*)
 
       REAL_E psi(nptpsi)
@@ -193,7 +194,7 @@ c       endif
 c     &                   ind_sdm, ind_rhs, ind_grad,
      &                   ind_sdm, ind_rhs, ind_ssa,
      &                   temps,
-     &                   rop_ssiter, xmut, drodm, coe, x,y,z,
+     &                   rop_ssiter, xmut, drodm, coe, x,y,z,cellN_IBC,
      &                   ti,tj,tk,vol, delta)
 
            IF(param_int(IFLOW).lt.3.or.param_int(ITYPCP).eq.2) then

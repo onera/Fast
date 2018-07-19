@@ -142,7 +142,7 @@ else
   E_Float** iptdist;       E_Float** iptventi;     E_Float** iptventj; E_Float** iptventk;
   E_Float** iptrdm;        E_Float** iptkrylov;    E_Float** iptkrylov_transfer;
   E_Float** iptro_sfd;     E_Float** iptdelta;     E_Float** iptfd; E_Float** iptro_zgris; E_Float** iptro_res;
-  E_Float** iptCellN  ;    E_Float** ipt_cfl_zones; 
+  E_Float** iptCellN  ;    E_Float** iptCellN_IBC; E_Float** ipt_cfl_zones; 
   E_Float** iptssor;       E_Float** iptssortmp;
   E_Float** ipt_gmrestmp;  E_Float** iptdrodm_transfer;
 
@@ -150,7 +150,7 @@ else
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
 
-  iptx              = new E_Float*[nidom*34];
+  iptx              = new E_Float*[nidom*35];
   ipty              = iptx               + nidom;
   iptz              = ipty               + nidom;
   iptro             = iptz               + nidom;
@@ -184,6 +184,7 @@ else
   iptssortmp        = iptssor            + nidom;   //ndimdx
   ipt_cfl_zones     = iptssortmp         + nidom;   //3composants: attention a la prochaine addition
   iptdrodm_transfer = ipt_cfl_zones      + nidom;
+  iptCellN_IBC      = iptdrodm_transfer  + nidom;
 
   vector<PyArrayObject*> hook;
   PyObject* ssorArray = PyDict_GetItemString(work,"ssors");
@@ -245,6 +246,9 @@ else
     t            = K_PYTREE::getNodeFromName1(sol_center, "cellN");
     if (t == NULL) iptCellN[nd] = NULL;
     else iptCellN[nd] = K_PYTREE::getValueAF(t, hook);
+
+    if(ipt_param_int[nd][ IBC ]== 1){t=K_PYTREE::getNodeFromName1(sol_center, "cellN_IBC"); iptCellN_IBC[nd] = K_PYTREE::getValueAF(t, hook); } 
+    else { iptCellN_IBC[nd] = NULL;}
 
     //Pointeur Vect Krylov
     iptkrylov[nd] = NULL;
@@ -525,7 +529,7 @@ else
 	    ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp, ipt_givens,
             ipt_cfl            ,
             iptx               , ipty             , iptz              ,
-            iptCellN           ,
+            iptCellN           , iptCellN_IBC     ,
             iptro              , iptro_m1         , iptro_p1          , iptro_sfd     ,
             //roN                , roM1             , roP1              , iptro_sfd     ,
             iptmut             , ipt_xmutd        ,

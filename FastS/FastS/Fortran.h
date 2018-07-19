@@ -142,7 +142,7 @@ extern "C"
                               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp  , E_Int* ipt_topo_thread  , E_Int* ipt_lok,  E_Int* ipt_topo_omp, E_Int* ipt_inddm_omp,
                               E_Float* krylov           , E_Float& norm_kry,
                               E_Float* ipt_cfl        ,
-                              E_Float* iptx             , E_Float* ipty         , E_Float* iptz          , E_Float* iptCellN       ,
+                              E_Float* iptx             , E_Float* ipty        , E_Float* iptz           , E_Float* iptCellN       , E_Float* iptCellN_IBC  ,
                               E_Float* iptro            , E_Float* iptro_m1    , E_Float* iptrotmp       , E_Float* iptro_ssiter   ,
                               E_Float* iptmut           ,
                               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , 

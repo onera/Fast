@@ -263,11 +263,11 @@ c Var loc
 
             if(ndsdm.gt.Imax*Jmax*Kmax) then  !thread dormant
              ind_sdm(1) = ind_dm(1)
-             ind_sdm(2) = ind_dm(1)-1
+             ind_sdm(2) = ind_dm(1)-10
              ind_sdm(3) = ind_dm(3)
-             ind_sdm(4) = ind_dm(3)-1
+             ind_sdm(4) = ind_dm(3)-10
              ind_sdm(5) = ind_dm(5)
-             ind_sdm(6) = ind_dm(5)-1
+             ind_sdm(6) = ind_dm(5)-10
             goto 1000
             endif
             !goto 1000

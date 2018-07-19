@@ -534,6 +534,8 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
 
             # on compacte seulement pour recuperer le bon numa      
             if  C.isNamePresent(z, 'centers:cellN') == 1: _compact(z, fields=['centers:cellN'], mode=count)
+            # on compacte seulement pour recuperer le bon numa      
+            if  C.isNamePresent(z, 'centers:cellN_IBC') == 1: _compact(z, fields=['centers:cellN_IBC'], mode=count)
 
             #COMPACT KRYLOV SUBSPACE VECTOR
             fields2compact = []
@@ -1516,7 +1518,8 @@ def _buildOwnData(t):
     'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3", "zdes3_w"],
     'snear': 1, # ignored
     'DES_debug':['none','active'],
-    'extract_res':0
+    'extract_res':0,
+    'IBC':3
     }
 
     for b in bases:
@@ -1651,6 +1654,7 @@ def _buildOwnData(t):
             epsi_inflow  = 1.e-5
             DES_debug    = 0
             extract_res  = 0
+            ibc          = numpy.zeros( 7, dtype=numpy.int32)
             
             a = Internal.getNodeFromName2(z, 'GoverningEquations')
             if a is not None: model = Internal.getValue(a)
@@ -1756,6 +1760,8 @@ def _buildOwnData(t):
                     if tmp == 'active': DES_debug =1
                 a = Internal.getNodeFromName1(d, 'extract_res')
                 if (a != None): extract_res = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'IBC')
+                if a is not None: ibc = a[1]
                
             iflow  = 1
             ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0;
@@ -1848,49 +1854,50 @@ def _buildOwnData(t):
             # creation noeud parametre integer
             # Determination de levelg et leveld             
 
-            datap = numpy.empty(76, numpy.int32)
-            datap[0:25]= -1
-            datap[25]  = 0     # zone 3D curvi par defaut
-            datap[26]  = 0     # Vent 3D par defaut
-            datap[27]  = iflow
-            datap[28]  = iles
-            datap[29]  = itypcp
-            datap[30]  = size_ssdom_I
-            datap[31]  = size_ssdom_J
-            datap[32]  = size_ssdom_K
-            datap[33]  = kfludom
-            datap[34]  = lale
-            datap[35]  = iflagflt
+            datap = numpy.empty(83, numpy.int32)
+            datap[0:25] = -1
+            datap[25]   = 0     # zone 3D curvi par defaut
+            datap[26]   = 0     # Vent 3D par defaut
+            datap[27]   = iflow
+            datap[28]   = iles
+            datap[29]   = itypcp
+            datap[30]   = size_ssdom_I
+            datap[31]   = size_ssdom_J
+            datap[32]   = size_ssdom_K
+            datap[33]   = kfludom
+            datap[34]   = lale
+            datap[35]   = iflagflt
             datap[36:45]= -1
-            datap[45]  = io_th    
-            datap[46]  = dtloc
-            datap[47]  = ides  
-            datap[48]  = idist 
-            datap[49]  = ispax
-            datap[50]  = izgris
-            datap[51]  = iprod
-            datap[52]  = rk
-            datap[53]  = veclevel[i]
-            datap[54]  = exploc
-            datap[55]  = itexploc
-            datap[56]  = levelg[i]
-            datap[57]  = leveld[i]
-            datap[58]  = nssiter
-            datap[59]  = cacheblckI
-            datap[60]  = cacheblckJ
-            datap[61]  = cacheblckK
-            datap[62]  = sfd
-            datap[63]  = sfd_init_iter
-            datap[64]  = islope
-            datap[65]  = nit_inflow
-            datap[66]  = shiftvar
-            datap[67]  = extract_res
-            datap[68]  = DES_debug        #index 69 et 70 pour PT_BC et PT_OMP
-            datap[71]  = nbr_relax
-            datap[72]  = nbr_restart
-            datap[73]  = nbr_krylov
-            datap[74]  = ImplicitSolverNum
-            datap[75]  = lu_match          
+            datap[45]   = io_th    
+            datap[46]   = dtloc
+            datap[47]   = ides  
+            datap[48]   = idist 
+            datap[49]   = ispax
+            datap[50]   = izgris
+            datap[51]   = iprod
+            datap[52]   = rk
+            datap[53]   = veclevel[i]
+            datap[54]   = exploc
+            datap[55]   = itexploc
+            datap[56]   = levelg[i]
+            datap[57]   = leveld[i]
+            datap[58]   = nssiter
+            datap[59]   = cacheblckI
+            datap[60]   = cacheblckJ
+            datap[61]   = cacheblckK
+            datap[62]   = sfd
+            datap[63]   = sfd_init_iter
+            datap[64]   = islope
+            datap[65]   = nit_inflow
+            datap[66]   = shiftvar
+            datap[67]   = extract_res
+            datap[68]   = DES_debug        #index 69 et 70 pour PT_BC et PT_OMP
+            datap[71]   = nbr_relax
+            datap[72]   = nbr_restart
+            datap[73]   = nbr_krylov
+            datap[74]   = ImplicitSolverNum
+            datap[75]   = lu_match          
+            datap[76:83]= ibc[0:7]          
 
             i += 1
          
@@ -2321,6 +2328,67 @@ def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
   fasts.distributeThreads(zones , metrics, nstep, nssiter , nitrun, mx_omp_size_int, display)
 
   return None
+
+#==============================================================================
+#
+# IBC ordre 0: preparation
+#
+#==============================================================================
+def setIBCData_zero(t, surf, dim=None):
+
+  zones = Internal.getZones(t)
+  for z in zones:
+     cellN = Internal.getNodeFromName2(z,'cellN')
+     if cellN is not None: cellN[0]= 'cellN_save'
+
+  C._initVars(t, 'centers:cellN', 1.)
+  bodies = [[surf]]
+  # Matrice de masquage (arbre d'assemblage)
+  BM = numpy.array([ [ 1] ] )
+
+  if dim == None:
+     nk = Internal.getNodeFromName2(z,'cellN')[1].shape[2]
+     if nk ==1 : dim = 2
+     else:       dim = 3
+
+  t = X.blankCells(t, bodies, BM, blankingType="center_in", dim= dim,delta=0.)
+
+  numz = {}
+  zones = Internal.getZones(t)
+  for z in zones:
+     cellN_node = Internal.getNodeFromName2(z,'cellN')
+     cellN_node[0]= 'cellN_IBC'
+     cellN_IBC = cellN_node[1]
+
+     if 0 in cellN_IBC:
+        ibc = numpy.ones( 7, dtype=numpy.int32)
+        itemindex = numpy.where( cellN_IBC==0 )
+        ibc[0]=1
+        ibc[1]= numpy.amin( itemindex[0] )
+        ibc[2]= numpy.amax( itemindex[0] )
+        ibc[3]= numpy.amin( itemindex[1] )
+        ibc[4]= numpy.amax( itemindex[1] )
+  
+        if cellN_IBC.shape[2]!=1:
+           #print'verifier en 3d'
+           ibc[5]= numpy.amin( itemindex[2] )
+           ibc[6]= numpy.amax( itemindex[2] )
+
+        #on retranche 1 pour avoir une bonne visu et un terme src plus compact
+        cellN_IBC[0:] -= 1
+
+        print 'zone', z[0],': plage IBC=', ibc[1:7]
+      
+        numz["IBC"]  = ibc
+
+        FastI._setNum2Zones(z, numz)
+     else:
+        C._rmVars(z, ['centers:cellN_IBC'])
+
+     cellN = Internal.getNodeFromName2(z,'cellN_save')
+     if cellN is not None: cellN[0]= 'cellN'
+
+  return t
 
 #==============================================================================
 # compute guillaume

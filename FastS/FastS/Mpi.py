@@ -1,7 +1,7 @@
 # FastS + MPI
 import PyTree
 import fasts
-from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createPrimVars, _createPrimVars, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _buildOwnData, _init_metric, allocate_metric, _BCcompact, _motionlaw, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp, allocate_ssor
+from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createPrimVars, _createPrimVars, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _buildOwnData, _init_metric, allocate_metric, _BCcompact, _motionlaw, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp, allocate_ssor, setIBCData_zero
 import timeit
 
 import numpy

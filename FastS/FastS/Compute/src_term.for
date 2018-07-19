@@ -6,7 +6,7 @@ c***********************************************************************
       subroutine src_term(ndom, nitcfg, nb_pulse, param_int, param_real,
      &                    ind_sdm, ind_rhs, ind_ssa,
      &                    temps,
-     &                    rop, xmut, drodm, coe, x,y,z,
+     &                    rop, xmut, drodm, coe, x,y,z,cellN_IBC,
      &                    ti, tj, tk, vol, delta)
 c***********************************************************************
 c_P                          O N E R A
@@ -31,7 +31,7 @@ C-----------------------------------------------------------------------
 c
       REAL_E rop(*),xmut(*),drodm(*),coe(*)
       REAL_E ti(*),tj(*),tk(*), vol(*)
-      REAL_E x(*),y(*),z(*)
+      REAL_E x(*),y(*),z(*), cellN_IBC(*)
       REAL_E param_real(0:*), temps
       REAL_E delta(*)
 
@@ -211,6 +211,17 @@ c
             endif
 
         endif
+
+c***********************************************************************
+c**         Source term IBC a la funk ordre 0
+
+        if(param_int(IBC).eq.1) then 
+
+          call ibcsource(ndom,param_int,ind_rhs,
+     &                   rop, cellN_IBC, coe, drodm )
+
+        endif
+
 c***********************************************************************
 c***********************************************************************
 c***********************************************************************

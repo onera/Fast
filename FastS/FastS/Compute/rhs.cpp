@@ -84,7 +84,7 @@
                                   ipt_ijkv_sdm_thread , ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread, ipt_topology_socket, ipt_lok_thread, ipt_topo_omp, ipt_inddm_omp,
                                   iptkrylov[nd]       , ipt_norm_kry[ithread-1],
                                   ipt_cfl_thread      ,
-                                  iptx[nd]                , ipty[nd]                , iptz[nd]            , iptCellN_loc     ,
+                                  iptx[nd]                , ipty[nd]                , iptz[nd]            , iptCellN_loc     , iptCellN_IBC[nd],
                                   iptro[nd]               , iptro_m1[nd]            , iptrotmp[nd]        , iptro_ssiter[nd] ,
                                   iptmut[nd]              , 
                                   ipti[nd]                , iptj[nd]                , iptk[nd]            , iptvol[nd]       ,
