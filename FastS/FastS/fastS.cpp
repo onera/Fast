@@ -34,6 +34,7 @@ static PyMethodDef Pyfasts [] =
   { "cart"               , K_FASTS::cartMesh            ,  METH_VARARGS},
   {"initVars"            , K_FASTS::initVars            ,  METH_VARARGS},
   {"initNuma"            , K_FASTS::initNuma            ,  METH_VARARGS},
+  {"_matvecPT"           , K_FASTS::_matvecPT           ,  METH_VARARGS},
   {"_computePT"          , K_FASTS::_computePT          ,  METH_VARARGS},
   {"_computePT_mut"      , K_FASTS::_computePT_mut      ,  METH_VARARGS},
   {"computePT_my"        , K_FASTS::computePT_my        ,  METH_VARARGS},

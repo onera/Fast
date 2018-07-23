@@ -178,7 +178,7 @@ extern "C"
   void navier_stokes_struct_d_( E_Int& ndo     , E_Int& nidom       , E_Int& Nbre_thread_actif, E_Int& ithread    ,
 				E_Int& omp_mode, E_Int& layer_mode  , E_Int& Nbre_socket      , E_Int& socket     , E_Int& mx_synchro   , 
 				E_Int& lssiter_verif  , E_Int& nptpsi            , E_Int& nitcfg  , E_Int& nitrun     ,
-				E_Int& first_it   ,  E_Int& nb_pulse  , E_Int&   flagCellN  ,
+				E_Int& first_it   ,  E_Int& nb_pulse  , E_Int&   flagCellN  , E_Int& mjr_dt,
 				E_Int* ipt_param_int  , E_Float* ipt_param_real  ,
 				E_Float& temps        , E_Int* ipt_tot,   
 				E_Int* ipt_ijkv_sdm       ,

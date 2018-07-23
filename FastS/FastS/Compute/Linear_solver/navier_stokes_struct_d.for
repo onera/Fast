@@ -10,7 +10,7 @@ c***********************************************************************
      &                   ithread, omp_mode, layer_mode, nbre_socket, 
      &                   socket , mx_synchro, lssiter_verif, nptpsi, 
      &                   nitcfg , nitrun    , first_it     , nb_pulse, 
-     &                   flagcelln, param_int, param_real,
+     &                   flagcelln, mjr_dt, param_int, param_real,
      &                   temps, tot, ijkv_sdm, 
      &                   ind_dm_zone, ind_dm_socket, ind_dm_omp,
      &                   socket_topology, lok, topo_omp, inddm_omp,
@@ -34,7 +34,7 @@ c***********************************************************************
 
       INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, first_it,
      & ithread, ithread_io, Nbre_socket, socket, nitrun, nptpsi, nitcfg,
-     & nb_pulse,
+     & nb_pulse,mjr_dt,
      & lssiter_verif,flagCellN,omp_mode,layer_mode
 c
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
@@ -74,6 +74,16 @@ C Var loc
            call vispalart_d(ndo, param_int, param_real, ind_grad,
      &                      xmut, xmutd, rop_ssiter, rop_ssiterd)
          endif
+
+
+        ! Calcul dt/vol
+        if(mjr_dt.eq.1) then
+             call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
+     &                   flagCellN, param_int, param_real,
+     &                   ind_ssa, ind_grad, ind_coe,
+     &                   cfl, xmut,rop_ssiter, cellN, coe,
+     &                   ti,tj,tk, vol,venti)
+        endif
 
            !! a modifier pour generaliser
            call src_term_d(ndo, nitcfg, nb_pulse, param_int, param_real,

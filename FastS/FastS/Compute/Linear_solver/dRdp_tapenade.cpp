@@ -42,7 +42,7 @@ for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
 		      ipt_topology_socket, ipt_ind_dm_socket );
 
     navier_stokes_struct_d_( ndo, nidom, Nbre_thread_actif_loc, ithread_loc, omp_mode, layer_mode, Nbre_socket, socket, mx_synchro , 
-                             lssiter_verif, nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN,
+                             lssiter_verif, nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN, mjr_dt,
 			     param_int[nd] , param_real[nd] ,
 			     temps               , ipt_tot       ,
 			     ipt_ijkv_sdm_thread , ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread, ipt_topology_socket, ipt_lok_thread, ipt_topo_omp, ipt_inddm_omp,

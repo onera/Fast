@@ -110,6 +110,38 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     HOOK["FIRST_IT"]  = 1
     FIRST_IT          = 1
     return None
+
+
+#==============================================================================
+# compute in place
+# graph is a dummy argument to be compatible with mpi version
+#==============================================================================
+def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
+    global FIRST_IT, HOOK
+
+    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
+    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+
+    zones = []
+    for f in bases:
+        zones += Internal.getNodesFromType1(f, 'Zone_t') 
+
+    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(node, 'omp_mode')
+    ompmode = OMP_MODE
+    if  node is not None: ompmode = Internal.getValue(node)
+
+    nstep = 1
+
+    hook1       = HOOK.copy()
+    distrib_omp = 0
+    nitrun      = 0
+    hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
+        
+    fasts._matvecPT(zones, metrics, nitrun, no_vect_test, ompmode, hook1)
+
+    return None
 #
 #==============================================================================
 # alloue retourne la metrique

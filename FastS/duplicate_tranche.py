@@ -71,8 +71,8 @@ for tranche in xrange(NbTranche):
            
         # Change le num des procs
         proc = Internal.getNodeFromName2(z,'proc')
-	if proc is not None:
-           proc[1][0,0] = proc[1][0,0]+ numberofproc*tranche
+	if proc is not None and tranche != 0:
+           proc[1][0,0] = proc[1][0,0]+ numberofproc
 
    for pr in range(numberofproc*tranche,numberofproc*(tranche+1)):
        tp = C.newPyTree(['Base'])

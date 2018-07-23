@@ -147,11 +147,12 @@ while ((kr < num_max_vect - 1) && continue_gmres)
     // produit matrice:vecteur.
     // In: rop_ssiter, rop_ssiter_d
     // Out: drodmd
-    shift_zone=0;
-    shift_wig =0;
-    shift_coe =0;
+    shift_zone    =0;
+    shift_wig     =0;
+    shift_coe     =0;
     E_Int shift_mu=0;
-    nd_current=0;
+    nd_current    =0;
+    E_Int mjr_dt  =0;
     ipt_norm_kry[ithread-1]=0;
     for (E_Int nd = 0; nd < nidom; nd++)
       {
@@ -160,7 +161,8 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 
        E_Int lmin = 10;
        if (param_int[nd][ITYPCP] == 2) lmin = 4;
-
+       
+     
 #include "Compute/Linear_solver/dRdp_tapenade.cpp"
 
 	shift_mu   = shift_mu   + param_int[nd][ NDIMDX ];
