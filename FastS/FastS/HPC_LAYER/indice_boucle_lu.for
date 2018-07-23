@@ -28,9 +28,9 @@ c***********************************************************************
 
 c Var loc
       logical l1,l2,l21,l12
-      INTEGER_E p1,p2,r1,i,j,k,ivsdm,jvsdm,kvsdm,
+      INTEGER_E p1,p2,r1,i,j,k,ivsdm,jvsdm,kvsdm,ldistrib,
 !     & lmin(3),Imin,Kmin,Jmin,ncombi,first(4),loptim,l,
-     & Imin,Kmin,Jmin,ncombi,first(7),loptim,l,
+     & Imin,Kmin,Jmin,ncombi,first(7),loptim,l,io,
      & Imax,Kmax,Jmax,ivloc,jvloc,kvloc,iseuil, iverbs
       REAL_E cost, cout, surcout
 
@@ -108,8 +108,13 @@ c Var loc
         iseuil= Kmin*Jmin
 
         !if(ndsdm.eq.12) write(*,*)'size',ivloc,jvloc,kvloc
-        !if(ndsdm.eq.1) write(*,*)'min',Imin,Jmin,Kmin
+        !if(ndsdm.eq.-10) then 
+        !   write(*,*)'min',Imin,Jmin,Kmin, nsdom_lu
+        !   ndsdm =1
+        !   io =1
+        !endif
 
+        ldistrib= 0
         IF( Kmin*Jmin.ge.nsdom_lu) THEN !dom 3d: decoupe direction k (et j eventuellement)
 
            Imax   = 1 
@@ -144,38 +149,28 @@ c Var loc
          
            enddo
 
-           if(loptim.eq.0) then
-                !pas assez de travail a partager, le thread 1 prend tout
-                 Jmax =1 
-                 Kmax =1 
-                 if(ndsdm.eq.1) then
-                     ind_sdm(1) = ind_dm(1)
-                     ind_sdm(2) = ind_dm(2)
-                     ind_sdm(3) = ind_dm(3)
-                     ind_sdm(4) = ind_dm(4)
-                     ind_sdm(5) = ind_dm(5)
-                     ind_sdm(6) = ind_dm(6)
-                 else
-                     ind_sdm(1) = ind_dm(1)
-                     ind_sdm(2) = ind_dm(1)-1
-                     ind_sdm(3) = ind_dm(3)
-                     ind_sdm(4) = ind_dm(3)-1
-                     ind_sdm(5) = ind_dm(5)
-                     ind_sdm(6) = ind_dm(5)-1
-                 endif
-                 goto 1000
-            else
-                 if(loptim.gt.0) then
-                     Kmax = first(loptim)
-                     Jmax = nsdom_lu/first(loptim)
-                 else
-                     Jmax = first(-loptim)
-                     Kmax = nsdom_lu/first(-loptim)
-                 endif
-            endif
+           if(loptim.ne.0) then
+
+             if(loptim.gt.0) then
+                  Kmax = first(loptim)
+                  Jmax = nsdom_lu/first(loptim)
+             else
+                  Jmax = first(-loptim)
+                  Kmax = nsdom_lu/first(-loptim)
+             endif
+
+             !! distribution OK
+             goto 10000
+
+           endif
+
+          ! on teste une autre topo
+          if (loptim.eq.0) ldistrib= 1
+          
+        ENDIF !KMIN*JMIN
 
 
-        ELSEIF(Imin*Jmin.ge.nsdom_lu) then !dom 2d: decoupe direction k (et j eventuellement)
+        IF(Imin*Jmin.ge.nsdom_lu) then !dom 2d: decoupe direction k (et j eventuellement)
 
 
            Kmax   = 1 
@@ -209,70 +204,74 @@ c Var loc
                 endif
              endif
            enddo
-           if(loptim.eq.0) then
-                !pas assez de travail a partager, le thread 1 prend tout
-                 Imax =1 
-                 Jmax =1 
-                 if(ndsdm.eq.1) then
-                     ind_sdm(1) = ind_dm(1)
-                     ind_sdm(2) = ind_dm(2)
-                     ind_sdm(3) = ind_dm(3)
-                     ind_sdm(4) = ind_dm(4)
-                     ind_sdm(5) = ind_dm(5)
-                     ind_sdm(6) = ind_dm(6)
-                 else
-                     ind_sdm(1) = ind_dm(1)
-                     ind_sdm(2) = ind_dm(1)-1
-                     ind_sdm(3) = ind_dm(3)
-                     ind_sdm(4) = ind_dm(3)-1
-                     ind_sdm(5) = ind_dm(5)
-                     ind_sdm(6) = ind_dm(5)-1
-                 endif
-                 goto 1000
+           
+           if(loptim.ne.0) then
+             if(loptim.gt.0) then
+                Jmax = first(loptim)
+                Imax = nsdom_lu/first(loptim)
+             else
+                Imax = first(-loptim)
+                Jmax = nsdom_lu/first(-loptim)
+             endif
+             !! distribution OK
+             goto 10000
+           endif
+
+           ldistrib= ldistrib + 1
+        ENDIF  
+
+
+       !pas assez de travail a partager, le thread 1 prend tout
+        IF(ldistrib.ge.1) then
+            Imax =1 
+            Jmax =1 
+            if(ndsdm.eq.1) then
+                ind_sdm(1) = ind_dm(1)
+                ind_sdm(2) = ind_dm(2)
+                ind_sdm(3) = ind_dm(3)
+                ind_sdm(4) = ind_dm(4)
+                ind_sdm(5) = ind_dm(5)
+                ind_sdm(6) = ind_dm(6)
             else
-                 if(loptim.gt.0) then
-                     Jmax = first(loptim)
-                     Imax = nsdom_lu/first(loptim)
-                 else
-                     Imax = first(-loptim)
-                     Jmax = nsdom_lu/first(-loptim)
-                 endif
+                ind_sdm(1) = ind_dm(1)
+                ind_sdm(2) = ind_dm(1)-10
+                ind_sdm(3) = ind_dm(3)
+                ind_sdm(4) = ind_dm(3)-10
+                ind_sdm(5) = ind_dm(5)
+                ind_sdm(6) = ind_dm(5)-10
             endif
-            !if(ndsdm.eq.12) write(*,*)'IJKMax',Imax,Jmax,Kmax
-
-        ELSE  !on blinde les 1er threads prennent tout, les autres dorment....
-
-            p1 = Imin*Jmin
-            p2 = Jmin*Kmin
-            
-            if(p1.gt.p2) Then
-              Imax =Imin
-              Jmax =Jmin
-              Kmax = 1
-            else
-              Imax = 1  
-              Jmax =Jmin
-              Kmax =Kmin
-            endif
-
-            !if(Imax.gt.Kmax) then
-            ! Kmax = 1
-            !else
-            ! Imax = 1
-            !endif
-
-            if(ndsdm.gt.Imax*Jmax*Kmax) then  !thread dormant
-             ind_sdm(1) = ind_dm(1)
-             ind_sdm(2) = ind_dm(1)-10
-             ind_sdm(3) = ind_dm(3)
-             ind_sdm(4) = ind_dm(3)-10
-             ind_sdm(5) = ind_dm(5)
-             ind_sdm(6) = ind_dm(5)-10
             goto 1000
-            endif
-            !goto 1000
          ENDIF
 
+
+        ! partie skipper par goto 10000
+        ! sauf si topo merdique
+        !on blinde les 1er threads prennent tout, les autres dorment....
+
+        p1 = Imin*Jmin
+        p2 = Jmin*Kmin
+            
+        if(p1.gt.p2) Then
+          Imax =Imin
+          Jmax =Jmin
+          Kmax = 1
+        else
+          Imax = 1  
+          Jmax =Jmin
+          Kmax =Kmin
+        endif
+
+        if(ndsdm.gt.Imax*Jmax*Kmax) then  !thread dormant
+           ind_sdm(1) = ind_dm(1)
+           ind_sdm(2) = ind_dm(1)-10
+           ind_sdm(3) = ind_dm(3)
+           ind_sdm(4) = ind_dm(3)-10
+           ind_sdm(5) = ind_dm(5)
+           ind_sdm(6) = ind_dm(5)-10
+           goto 1000
+        endif
+
+10000  continue 
 
          !if(iseuil.ge.nsdom_lu) then !dom 3d: decoupe direction k (et j eventuellement)
          if(Imax.eq.1) then !dom 3d: decoupe direction k (et j eventuellement)

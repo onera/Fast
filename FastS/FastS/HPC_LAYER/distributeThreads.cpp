@@ -65,14 +65,14 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
        mxzone +=nb_subzone;
      } // loop zone
 
-  FldArrayI tab_nijk(mxzone*3);   E_Int* ipt_nijk    = tab_nijk.begin();
+  FldArrayI tab_nijk(mxzone*3*2);   E_Int* ipt_nijk    = tab_nijk.begin();
   FldArrayI tab_ndimdx(mxzone);   E_Int* ipt_ndimdx  = tab_ndimdx.begin();
   FldArrayI tab_nozone(mxzone);   E_Int* ipt_nozone  = tab_nozone.begin();
   FldArrayI tab_nosszone(mxzone); E_Int* ipt_nosszone= tab_nosszone.begin();
 
   FldArrayI tab_size_subzone(nidom);   E_Int*  size_subzone = tab_size_subzone.begin();
 
-  FldArrayI newtab_nijk(mxzone*3);   E_Int* ipt_nijk_new    = newtab_nijk.begin();
+  FldArrayI newtab_nijk(mxzone*3*2);   E_Int* ipt_nijk_new    = newtab_nijk.begin();
   FldArrayI newtab_ndimdx(mxzone);   E_Int* ipt_ndimdx_new  = newtab_ndimdx.begin();
   FldArrayI newtab_nozone(mxzone);   E_Int* ipt_nozone_new  = newtab_nozone.begin();
   FldArrayI newtab_nosszone(mxzone); E_Int* ipt_nosszone_new= newtab_nosszone.begin();
@@ -97,13 +97,19 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
             E_Int shift  = (nstep-1)*6*param_int[nd][MXSSDOM_LU]  + 6*nd_subzone;
 
             E_Int* nijk     = ipt_nijk     + 3*c;
+            E_Int* ijk_start= ipt_nijk     + 3*c + 3*mxzone;
             E_Int* ndimdx   = ipt_ndimdx   +   c;
             E_Int* nozone   = ipt_nozone   +   c;
             E_Int* nosszone = ipt_nosszone +   c;
 
-            nijk[0]     = ipt_ind_dm[nd][1+shift];
-            nijk[1]     = ipt_ind_dm[nd][3+shift];
-            nijk[2]     = ipt_ind_dm[nd][5+shift];
+            ijk_start[0]= ipt_ind_dm[nd][0+shift];
+            ijk_start[1]= ipt_ind_dm[nd][2+shift];
+            ijk_start[2]= ipt_ind_dm[nd][4+shift];
+            nijk[0]     = ipt_ind_dm[nd][1+shift]-ipt_ind_dm[nd][0+shift]+1;
+            nijk[1]     = ipt_ind_dm[nd][3+shift]-ipt_ind_dm[nd][2+shift]+1;
+            nijk[2]     = ipt_ind_dm[nd][5+shift]-ipt_ind_dm[nd][4+shift]+1;
+
+        //printf("c NOZONE %d %d %d %d %d %d %d %d \n", c, nd, ijk_start[0], ipt_ind_dm[nd][1+shift], ijk_start[1],ipt_ind_dm[nd][3+shift], ijk_start[2], ipt_ind_dm[nd][5+shift]  );
             ndimdx[0]   = nijk[0]*nijk[1]*nijk[2];
             nozone[0]   = nd;
             nosszone[0] = nd_subzone;
@@ -173,6 +179,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 
        
        E_Int* nijk     = ipt_nijk     + 3*c_tg;
+       E_Int* ijk_start= ipt_nijk     + 3*c_tg +3*mxzone;
        E_Int* ndimdx   = ipt_ndimdx   +   c_tg;
 
        E_Int* nozone   = ipt_nozone   +   c_tg;
@@ -181,6 +188,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
        //printf("zone %d %d %d %d %d \n", c, ndimdx_max, c_tg, nozone[0],  nosszone[0]);
 
        E_Int* nijk_new     = ipt_nijk_new     + 3*c;
+       E_Int* ijk_startnew = ipt_nijk_new     + 3*c +3*mxzone;
        E_Int* ndimdx_new   = ipt_ndimdx_new   +   c;
        E_Int* nozone_new   = ipt_nozone_new   +   c;
        E_Int* nosszone_new = ipt_nosszone_new +   c;
@@ -188,6 +196,9 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
        nijk_new[0]     = nijk[0];
        nijk_new[1]     = nijk[1];
        nijk_new[2]     = nijk[2];
+       ijk_startnew[0] = ijk_start[0];
+       ijk_startnew[1] = ijk_start[1];
+       ijk_startnew[2] = ijk_start[2];
        ndimdx_new[0]   = ndimdx[0];
        nozone_new[0]   = nozone[0];
        nosszone_new[0] = nosszone[0];
@@ -204,11 +215,19 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 
   for (E_Int c = 0; c < Nbzones; c++)
      {  
-        E_Int* nijk   = ipt_nijk_new     + 3*c;
-        E_Int* ind_dm = ipt_inddm_zone   + 6*c;
+        E_Int* nijk      = ipt_nijk_new     + 3*c;
+        E_Int* ijk_start = ipt_nijk_new     + 3*c + 3*mxzone;
+        E_Int* ind_dm    = ipt_inddm_zone   + 6*c;
 
-        ind_dm[0]= 1; ind_dm[2]= 1; ind_dm[4]= 1;
-        ind_dm[1]= nijk[0]; ind_dm[3]= nijk[1]; ind_dm[5]= nijk[2];
+        //printf("start %d %d %d \n", ijk_start[0], ijk_start[1], ijk_start[2]);
+
+        ind_dm[0]= ijk_start[0];
+        ind_dm[2]= ijk_start[1];
+        ind_dm[4]= ijk_start[2];
+        ind_dm[1]= ijk_start[0] + nijk[0]-1;
+        ind_dm[3]= ijk_start[1] + nijk[1]-1;
+        ind_dm[5]= ijk_start[2] + nijk[2]-1;
+
 
 	E_Int size_c = nijk[0]*nijk[1]*nijk[2];
 	E_Int size_i =(nijk[0]+1)*nijk[1]*nijk[2];
@@ -263,7 +282,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
         E_Int* ipt_nidom_loc = ipt_ind_dm[No_zone] + param_int[No_zone][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
         E_Int nb_subzone     = ipt_nidom_loc [nstep-1];   
 
-        //printf("c Nozone %d %d %d %d %d %d %d \n", c, No_zone, ind_dm[0], ind_dm[1], ind_dm[2], ind_dm[3], ndimdx[0] );
+        //printf("c Nozone %d %d %d %d %d %d %d %d %d \n", c, No_zone, ind_dm[0], ind_dm[1], ind_dm[2], ind_dm[3], ind_dm[4], ind_dm[5], ndimdx[0] );
 
         E_Int Ptomp =  param_int[No_zone][PT_OMP];
 
@@ -293,7 +312,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
         if(nijk[2] != 1) size_k = (nijk[2]+1)*nijk[0]*nijk[1];
 
         E_Int Nthreads;
-        //printf("so %d %f%d \n ", size_c, cells_tg*marge, c);
+        //printf("so %d %f %d \n ", size_c, cells_tg*marge, c);
 
         if(size_c <= cells_tg*marge)
         {
@@ -405,7 +424,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
             E_Int adapt_thread= 0;
             while(search == 1)
               {
-               //printf("th_current multi th %d %d \n", search, c);
+               //printf("th_current multi th %d %d %d \n", search, Nthreads, c);
                //
                 //verif place dispo sur les dernier threads
                 //for th_check in range(OMP_NUM_THREADS-1,OMP_NUM_THREADS-Nthreads-1,-1):
@@ -414,7 +433,9 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                 search = 0;
 
                 //print 'ind_zone', inddm_zones[c], Nthreads
+                //E_Int ithread =-10;
                 E_Int ithread = 1;
+
                 if(search_topo==0) indice_boucle_lu_(c, ithread, Nthreads, lmin, ind_dm, topo_lu, ind_dm_th );
                 //printf("nijk      a %d %d %d  \n", nijk[0], nijk[1],nijk[2]);
                 //printf("topo_LLLUUU %d %d %d %d \n", topo_lu[0], topo_lu[1],topo_lu[2], search_topo);

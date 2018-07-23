@@ -1800,7 +1800,7 @@ def _buildOwnData(t):
 
             if temporal_scheme == "implicit_local": 
                 itypcp = 1
-                ssdom_IJK = [80,15,80]
+                #ssdom_IJK = [80,15,80]
                 a = Internal.getNodeFromName1(d, 'ssdom_IJK')
                 if a is not None: 
                     ssdom_IJK = Internal.getValue(a)
