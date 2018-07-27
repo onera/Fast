@@ -254,7 +254,7 @@ else
     iptkrylov[nd] = NULL;
     if (ipt_param_int[nd][ IMPLICITSOLVER ] == 1) // 1 = gmres
     {
-      t            = K_PYTREE::getNodeFromName1(sol_center, "Krylov_0_Density");
+      t            = K_PYTREE::getNodeFromName1(sol_center, "Kry_0_Density");
       iptkrylov[nd]= K_PYTREE::getValueAF(t, hook);
     }
 

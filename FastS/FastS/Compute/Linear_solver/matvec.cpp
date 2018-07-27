@@ -220,4 +220,19 @@ E_Float time_init;
 
   }// omp
 
+
+  for (E_Int nd = 0; nd < nidom; nd++)
+  {
+   E_Float* matvec_b = iptkrylov[nd] +  (no_vect_test+1)*param_int[nd][NEQ] * param_int[nd][NDIMDX];
+
+   iptkrylov_transfer[nd] = matvec_b;
+  }
+
+
+      //Raccord X
+      setInterpTransfersFastS(iptkrylov_transfer, ndimdx_transfer, param_int_tc,
+			      param_real_tc, param_int_ibc, param_real_ibc, param_real[0][PRANDT],
+         		      it_target, nidom, ipt_timecount, mpi);
+   
+
  }

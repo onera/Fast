@@ -573,12 +573,12 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             fields2compact = []
             if (implicit_solver == 'gmres'):
                 for Vector in range(nbr_krylov):
-                    fields2compact.append('centers:Krylov_' + str(Vector) + '_Density')
-                    fields2compact.append('centers:Krylov_' + str(Vector) + '_MomentumX')
-                    fields2compact.append('centers:Krylov_' + str(Vector) + '_MomentumY')
-                    fields2compact.append('centers:Krylov_' + str(Vector) + '_MomentumZ')
-                    fields2compact.append('centers:Krylov_' + str(Vector) + '_EnergyStagDens')
-                    if sa: fields2compact.append('centers:Krylov_' + str(Vector) + '_TurbSANuTildeDens')
+                    fields2compact.append('centers:Kry_' + str(Vector) + '_Density')
+                    fields2compact.append('centers:Kry_' + str(Vector) + '_MomentumX')
+                    fields2compact.append('centers:Kry_' + str(Vector) + '_MomentumY')
+                    fields2compact.append('centers:Kry_' + str(Vector) + '_MomentumZ')
+                    fields2compact.append('centers:Kry_' + str(Vector) + '_EnergyStagnationDensity')
+                    if sa: fields2compact.append('centers:Kry_' + str(Vector) + '_TurbulentSANuTildeDensity')
                 _compact(z, fields=fields2compact, mode=count, init=False)
 
             #  adjoint 

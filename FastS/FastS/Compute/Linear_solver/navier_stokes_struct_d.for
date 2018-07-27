@@ -95,7 +95,25 @@ C Var loc
 
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
 
-          if(param_int(KFLUDOM).eq.5) then
+          ! -----assemblage drodm euler+visqueux
+          if(param_int(KFLUDOM).eq.1) then
+
+                call fluausm_select_d(ndo, nitcfg, ithread, 
+     &                        nptpsi, param_int, param_real,ind_dm_zone,
+     &                        ind_sdm, ijkv_thread, ijkv_sdm, 
+     &                        synchro_send_sock, synchro_send_th, 
+     &                        synchro_receive_sock, synchro_receive_th, 
+     &                        ibloc, jbloc, kbloc, 
+     &                        icache, jcache, kcache, 
+     &                        psi, wig, stat_wig, 
+     &                        rop_ssiter, rop_ssiterd,
+     &                        drodm, drodmd,
+     &                        ti, ti_df, tj, tj_df, tk,tk_df,vol,vol_df,
+     &                        venti, ventj, ventk, xmut, xmutd)
+
+
+
+          elseif(param_int(KFLUDOM).eq.5) then
 
             call fluroe_select_d(ndo, nitcfg, ithread, 
      &                        nptpsi, param_int, param_real,ind_dm_zone,
