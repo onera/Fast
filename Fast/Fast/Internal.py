@@ -334,17 +334,35 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     a = Internal.getNodeFromName2(zone, 'implicit_solver')
     if a is not None: implicit_solver = Internal.getValue(a)
     if (implicit_solver == 'gmres'):
+        #on nettoie l'arbre des vecteur de krylov residuel.Evite la phase de compactage
+        flowsol = Internal.getNodeFromName1(zone, 'FlowSolution#Centers')
+        if flowsol is not None:
+            vars    = Internal.getNodesFromType1(flowsol, 'DataArray_t')
+            for var in vars:
+                if 'Kry' in var[0]:
+                     C._rmVars(t, 'centers:'+var[0])
+
+        #dimesionnement tableau krylov
         nbr_krylov = 20
         a = Internal.getNodeFromName2(zone, 'nb_krylov')
         if a is not None: nbr_krylov = Internal.getValue(a)
-        for Vector in range(nbr_krylov):
-            if C.isNamePresent(zone, implicit_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_Density', 0.)
-            if C.isNamePresent(zone, implicit_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_MomentumX', 0.)
-            if C.isNamePresent(zone, implicit_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_MomentumY', 0.)
-            if C.isNamePresent(zone, implicit_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_MomentumZ', 0.)
-            if C.isNamePresent(zone, implicit_solver) != 1: C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_EnergyStagDens', 0.)
-            if (sa and C.isNamePresent(zone, implicit_solver) != 1): C._initVars(zone, 'centers:Krylov_' + str(Vector) + '_TurbSANuTildeDens', 0.)
+        dens = Internal.getNodeFromName2(zone, 'Density')
+        ndimdx = dens[1].size
+        size   = nbr_krylov*ndimdx*5
+        if sa: size = nbr_krylov*ndimdx*6
+        kry = numpy.empty( size , dtype=numpy.float64)
 
+        sol  = Internal.getNodeFromName2(zone, 'FlowSolution#Centers')
+        vars = ['Density','MomentumX','MomentumY','MomentumZ','EnergyStagnationDensity']
+        if sa : vars.append('TurbulentSANuTildeDensity')
+        shift =0
+        VarNew = Internal.copyTree(dens)
+        for Vector in range(nbr_krylov):
+            for var in vars:
+               name='Kry_' + str(Vector) + '_'+var
+               tmp = kry[ shift + 0: shift + ndimdx ]
+               Internal.createChild(sol , name, 'DataArray_t', value=tmp, children=VarNew[2])
+               shift += ndimdx
    # TEST PYTHON CONTEXTE ADJOINT ? (dpCLp, dpCDp)  -----------------------------
     if (adjoint==True): 
        if C.isNamePresent(zone, 'centers:dpCLp_dpDensity') != 1: C._initVars(zone, 'centers:dpCLp_dpDensity', 0.)

@@ -331,7 +331,7 @@ def save(t, fileName='restart', split='single',
     if flowsol is not None:
         vars    = Internal.getNodesFromType1(flowsol, 'DataArray_t')
         for var in vars:
-            if (('Krylov' in var[0]) and not('Krylov_0' in var[0])):
+            if (('Kry' in var[0]) and not('Kry_0' in var[0])):
                 C._rmVars(t2, 'centers:'+var[0])
 
     for z in zones:
@@ -578,7 +578,7 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0, mpir
 # the communication graph for IBM transfers
 # dir is the directory containing files to be read 
 #==============================================================================
-def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, NP=0):
+def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpirun=False):
     """Load tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -587,7 +587,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, NP=0
     import Converter.PyTree as C
 
     graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
-    if NP > 0: # mpi run
+    if mpirun == True: # mpi run
         import Converter.Mpi as Cmpi
         import Distributor2.PyTree as D2
         rank = Cmpi.rank; size = Cmpi.size
@@ -619,12 +619,13 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, NP=0
                 else:
                     ret = 1; no = 0; t = []
                     while ret == 1:
-                       FILE = '%s/%s_proc%d.cgns'%(directory, fileName, no)
+                       #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, no)
+                       FILE = '%s/%s%d.cgns'%(directory, fileName, no)
                        if not os.access(FILE, os.F_OK): ret = 0
                        if ret == 1: 
                           t.append(Cmpi.convertFile2SkeletonTree(FILE))
                        no += 1
-                    if no == NP and t != []:
+                    if no == size and t != []:
                         t        = Internal.merge(t)
                         graphID  = Cmpi.computeGraph(t, type='ID'  , reduction=False)
                         graphIBCD= Cmpi.computeGraph(t, type='IBCD', reduction=False)
@@ -633,7 +634,9 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, NP=0
                         graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
                     else: print 'graph non calculable: manque de fichiers connectivite'
 
-            FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
+            #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
+            FILE = '%s/%s%d.cgns'%(directory, fileName, rank)
+            print 'filename', FILE
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
             else: tc= None
 
@@ -646,11 +649,13 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, NP=0
             # Load connectivity (tc)
             ret = 1; no = 0; tc = []
             while ret == 1:
-                FILE = '%s/%s_proc%d.cgns'%(directory, fileName, no)
+                #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, no)
+                FILE = '%s/%s%d.cgns'%(directory, fileName, no)
                 if not os.access(FILE, os.F_OK): ret = 0
                 if ret == 1: tc.append(C.convertFile2PyTree(FILE))
                 no += 1
-            if no == NP and t != []: t = Internal.merge(t)
+            #if no == NP and t != []: t = Internal.merge(t)
+            if  t != []: t = Internal.merge(t)
             else: t = None
 
     if graph: return t, graphN
@@ -667,7 +672,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, NP=0
 # the communication graph for IBM transfers
 # dir is the directory containing files to be read 
 #==============================================================================
-def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=False, NP=0):
+def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=False, mpirun=False):
     """Load tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -686,7 +691,8 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
 
     bases  = Internal.getNodesFromType1(t2    , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
-    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')[1] # numpy
+    dtloc = None
+    if own is not None: dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')[1] # numpy
 
     zones = Internal.getZones(t2)
     for z in zones:
@@ -703,23 +709,25 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
                     C._rmVars(z, 'centers:Temperature_M1')
                     C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
 
-    node =  Internal.getNodeFromName1(t, 'TimeLevelMotion')
-    if node is not None: node[1][0]= dtloc[3]
-    else: Internal.createUniqueChild(t, 'TimeLevelMotion', 'DataArray_t', value=dtloc[3])
-    node =  Internal.getNodeFromName1(t, 'TimeLevelTarget')
-    if node is not None: node[1][0]= dtloc[4]
-    else: Internal.createUniqueChild(t, 'TimeLevelTarget', 'DataArray_t', value=dtloc[4])
+    if dtloc is not None:
+       node =  Internal.getNodeFromName1(t, 'TimeLevelMotion')
+       if node is not None: node[1][0]= dtloc[3]
+       else: Internal.createUniqueChild(t, 'TimeLevelMotion', 'DataArray_t', value=dtloc[3])
+       node =  Internal.getNodeFromName1(t, 'TimeLevelTarget')
+       if node is not None: node[1][0]= dtloc[4]
+       else: Internal.createUniqueChild(t, 'TimeLevelTarget', 'DataArray_t', value=dtloc[4])
 
 
     # save
-    if NP > 0: # mpi run
+    if mpirun == True: # mpi run
         import Converter.Mpi as Cmpi
         if split == 'single':  # output in a single file
             FILE = directory+'/'+fileName+'.cgns'
             Cmpi.convertPyTree2File(t2, FILE)
         else:
             rank = Cmpi.rank
-            FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
+            #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
+            FILE = '%s/%s%d.cgns'%(directory, fileName, rank)
             C.convertPyTree2File(t2, FILE)
 
     else: # sequential run

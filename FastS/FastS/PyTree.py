@@ -569,18 +569,6 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             # on compacte seulement pour recuperer le bon numa      
             if  C.isNamePresent(z, 'centers:cellN_IBC') == 1: _compact(z, fields=['centers:cellN_IBC'], mode=count)
 
-            #COMPACT KRYLOV SUBSPACE VECTOR
-            fields2compact = []
-            if (implicit_solver == 'gmres'):
-                for Vector in range(nbr_krylov):
-                    fields2compact.append('centers:Kry_' + str(Vector) + '_Density')
-                    fields2compact.append('centers:Kry_' + str(Vector) + '_MomentumX')
-                    fields2compact.append('centers:Kry_' + str(Vector) + '_MomentumY')
-                    fields2compact.append('centers:Kry_' + str(Vector) + '_MomentumZ')
-                    fields2compact.append('centers:Kry_' + str(Vector) + '_EnergyStagnationDensity')
-                    if sa: fields2compact.append('centers:Kry_' + str(Vector) + '_TurbulentSANuTildeDensity')
-                _compact(z, fields=fields2compact, mode=count, init=False)
-
             #  adjoint 
             if  C.isNamePresent(z, 'centers:dpCLp_dpDensity') == 1: 
                 _compact(z, fields=['centers:dpCDp_dpDensity','centers:dpCDp_dpMomentumX','centers:dpCDp_dpMomentumY','centers:dpCDp_dpMomentumZ','centers:dpCDp_dpEnergyStagDens'], mode=count)

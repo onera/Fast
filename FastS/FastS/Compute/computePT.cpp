@@ -368,7 +368,7 @@ else
   E_Int size_ssortmp = 0;
   if (ipt_param_int[0][NB_RELAX] > 1) size_ssortmp =1;
   FldArrayF ssortmp(size_tot * size_ssortmp); E_Float* ipt_ssortmp = ssortmp.begin();
-  FldArrayI ssor_size(mx_sszone * threadmax_sdm * size_ssortmp); ipt_ssor_size = ssor_size.begin();
+  FldArrayI ssor_size(nidom* mx_sszone * threadmax_sdm * size_ssortmp); ipt_ssor_size = ssor_size.begin();
 
   if (ipt_param_int[0][NB_RELAX] > 1)
     {

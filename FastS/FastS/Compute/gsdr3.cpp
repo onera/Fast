@@ -204,14 +204,15 @@ E_Int K_FASTS::gsdr3(
 			if (i > ipt_topology_socket[0]*ipt_topology_socket[1]*ipt_topology_socket[2])
 			  break;
 
+                        
 			ipt_ssor_size[ indice ] = (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic_ij) *
 			  (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic_ij) *
 			  (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
 		      }
-		  }
-	      }
-	  }
-      }
+		  }// ompmode
+	      }//loop subzone
+	  }  // if relax
+      } // loop zone
 
 
 

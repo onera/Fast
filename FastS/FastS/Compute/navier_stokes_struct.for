@@ -172,10 +172,16 @@ c       endif
 
               endif
 
+             !!sinon cfl foireux
+             IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
+#include      "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+             ENDIF
+
+
              ! Calcul du pas de temps
              call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
      &                   flagCellN, param_int, param_real,
-     &                   ind_ssa, ind_grad, ind_coe,
+     &                   ind_sdm, ind_grad, ind_coe,
      &                   cfl, xmut,rop_ssiter, cellN, coe,
      &                   ti,tj,tk, vol,venti)
 
@@ -184,7 +190,8 @@ c       endif
            !SI SA implicit, verrou ici car dependence entre coe(5)
            !calculee sur ind_coe dans cptst3 et coe(6) calculee sur
            !ind_ssa dans src_term
-           IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
+           IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1
+     &                             .and.nitcfg.gt.1) then
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
            ENDIF
 
