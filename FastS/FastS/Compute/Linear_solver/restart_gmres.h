@@ -1,6 +1,5 @@
   E_Float value = 0.; E_Float sum_value = 0.; E_Float normL2 = 0., normL2_sum = 0.; E_Int mjrnewton = 0;
-
-  E_Float* ipt_ssor_shift; E_Int indice;
+  E_Float* ipt_ssor_shift; E_Float* ipt_ssortmp_shift; E_Int ssor_size;
   // norm L2 krylov pour openmp
   for (E_Int th = 0; th < Nbre_thread_actif; th++) { normL2_sum += ipt_norm_kry[th];}
 
@@ -51,30 +50,30 @@ lhs_beg = omp_get_wtime();
         shift_coe=0; shift_zone=0; nd_current=0;
 	for (E_Int nd = 0; nd < nidom; nd++)
 	  {
-	   //A*V_kr-1 tapenade soon   //sur ind_sdm
+	   //sur ind_sdm
 	   E_Float* krylov_in = iptkrylov[nd] +  kr     *param_int[nd][NEQ] * param_int[nd][NDIMDX];
 	   E_Float* krylov_out= iptkrylov[nd] + (kr + 1)*param_int[nd][NEQ] * param_int[nd][NDIMDX];
 
-	   //E_Float*       ssor=  ipt_ssor     +     shift_zone;
-
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
-
 #include "Compute/LU/prep_lussor.h"
-	   indice = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + ithread - 1;
 
 	   invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
 	   	  ipt_ind_dm_thread      , ipt_ind_dm_thread       , mjrnewton             ,
 	   	  iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , ipt_gmrestmp[nd],
 	   	  ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 	   	  iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-	   	  iptcoe  + shift_coe    , ipt_ssor_shift          , iptssortmp[nd]        , ipt_ssor_size[ indice ]);
+	   	  iptcoe  + shift_coe    , ipt_ssor_shift          , ipt_ssortmp_shift     , ssor_size);
 
-	   if (param_int[nd][NB_RELAX] == 1) krylov_in = ipt_gmrestmp[nd];
-	   else if (param_int[nd][NB_RELAX] > 1) krylov_in = iptssortmp[nd];
+	   if (param_int[nd][NB_RELAX] == 1)
+	     {
+	       krylov_in = ipt_gmrestmp[nd];
+	       ssor_size = param_int[nd][NDIMDX];
+	     }
+	   else if (param_int[nd][NB_RELAX] > 1) krylov_in = ipt_ssortmp_shift;
 	   
-             dp_dw_vect_(param_int[nd], param_real[nd],ipt_ind_dm_thread , iptro_ssiter[nd], krylov_in,  krylov_out);
+	   dp_dw_vect_(param_int[nd], param_real[nd],ipt_ind_dm_thread , iptro_ssiter[nd], krylov_in,  krylov_out, ssor_size);
 
-             nd_current +=1;
+	   nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
 	   shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
 	   shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ     ];
@@ -207,10 +206,10 @@ lhs_beg = omp_get_wtime();
         E_Float* krylov_in = iptkrylov[nd] +  kr    * param_int[nd][NEQ] * param_int[nd][NDIMDX];
         E_Float* krylov_out= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
 	if (param_int[nd][NB_RELAX] == 1) krylov_in = ipt_gmrestmp[nd];
-	else if (param_int[nd][NB_RELAX] > 1) krylov_in = iptssortmp[nd];
+	else if (param_int[nd][NB_RELAX] > 1) krylov_in = ipt_ssortmp_shift;
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
-             id_vect_(param_int[nd], ipt_ind_dm_thread, ipt_drodmd + shift_zone, krylov_out, krylov_in);
-             nd_current +=1;
+	id_vect_(param_int[nd], ipt_ind_dm_thread, ipt_drodmd + shift_zone, krylov_out, krylov_in, ssor_size);
+	nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
 
         shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
@@ -460,18 +459,17 @@ lhs_beg = omp_get_wtime();
         {
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 #include "Compute/LU/prep_lussor.h"
-	  indice = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + ithread - 1;
 
             E_Float* krylov_in = iptdrodm + shift_zone;
 	    E_Float* krylov_out= iptdrodm + shift_zone;
 	    mjrnewton = 1;
 
-	    invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
-	    	   ipt_ind_dm_thread      , ipt_ind_dm_thread       , mjrnewton             ,
-	    	   iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , krylov_out            ,
-	    	   ipti[nd]               , iptj[nd]                , iptk[nd]              ,
-	    	   iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-	    	   iptcoe  + shift_coe    , ipt_ssor_shift          , iptssortmp[nd]        , ipt_ssor_size[ indice ]);
+	   invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
+	   	  ipt_ind_dm_thread      , ipt_ind_dm_thread       , mjrnewton             ,
+	   	  iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , ipt_gmrestmp[nd],
+	   	  ipti[nd]               , iptj[nd]                , iptk[nd]              ,
+	   	  iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
+	   	  iptcoe  + shift_coe    , ipt_ssor_shift          , ipt_ssortmp_shift     , ssor_size);
 
             nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"

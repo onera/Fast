@@ -163,7 +163,7 @@ E_Int K_FASTS::BCzone(
     E_Int nb_bc  = param_int[ pt_bcs ];
 
     E_Int ificmax[6];
-    if( param_int[LU_MATCH] != 0) param_int[LU_MATCH] =1;
+    if( param_int[LU_MATCH] != 0) param_int[LU_MATCH] = 1;
 
     for ( E_Int ipara = 0; ipara < 4; ipara++ ) { ificmax[ipara] = param_int[NIJK+3]*param_int[LU_MATCH];}
     for ( E_Int ipara = 4; ipara < 6; ipara++ ) { ificmax[ipara] = param_int[NIJK+4]*param_int[LU_MATCH];}
@@ -199,6 +199,29 @@ E_Int K_FASTS::BCzone(
         ishift_lu[3]  = ipt_ind_dm_thread[3] + ( 1 - lskip[3] ) * ificmax[3];
         ishift_lu[4]  = ipt_ind_dm_thread[4] - ( 1 - lskip[4] ) * ificmax[4];
         ishift_lu[5]  = ipt_ind_dm_thread[5] + ( 1 - lskip[5] ) * ificmax[5];
+
+	if ((param_int[ LU_MATCH ] == 1) && (param_int[ NB_RELAX ] > 1))
+	  {
+	    E_Int nfic_ij = param_int[ NIJK + 3 ];
+	    
+	    if (ishift_lu[0] > 1)
+	      ishift_lu[0] -= nfic_ij;
+	    if (ishift_lu[1] < param_int[ IJKV ])
+	      ishift_lu[1] += nfic_ij;
+	    if (ishift_lu[2] > 1)
+	      ishift_lu[2] -= nfic_ij;
+	    if (ishift_lu[3] < param_int[ IJKV + 1 ])
+	      ishift_lu[3] += nfic_ij;
+	    if (param_int[ ITYPZONE ] != 3)
+	      {
+		E_Int nfic_k  = param_int[ NIJK + 4 ];
+
+		if (ishift_lu[4] > 1)
+		  ishift_lu[4] -= nfic_k;
+		if (ishift_lu[5] < param_int[ IJKV + 2 ])
+		  ishift_lu[5] += nfic_k;
+	      }
+	  }
 
         E_Int idirmax                           = 6;
         if ( param_int[ITYPZONE] == 3 ) idirmax = 4;

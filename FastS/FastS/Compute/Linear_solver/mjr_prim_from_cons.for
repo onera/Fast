@@ -31,7 +31,7 @@ c***********************************************************************²
      &     rop(param_int(NDIMDX), param_int(NEQ)), 
      &     drodm_out(param_int(NDIMDX), param_int(NEQ)), param_real(0:*)
 
-      INTEGER_E k, j, lij, l,v1, v2, v3,v4,v5,v6,ltij,lt,lvo
+      INTEGER_E k, j, lij, l,v1, v2, v3,v4,v5,v6,ltij,lt,lvo,ls
 
       REAL_E cvinv, cvinv2, ro_old, u_old, v_old, w_old,t_old, roe_old,
      &     r_1, anulam, nu_old, cmus1, temp01, coesut,ratiom
@@ -56,7 +56,7 @@ c***********************************************************************²
         do j = ind_loop(3), ind_loop(4)
 
 #include  "FastS/Compute/loopI_begin.for"
-
+           ls = l
 #include  "FastS/Compute/LU/mjr_newton_2d.for"
           enddo
 
@@ -69,7 +69,7 @@ c***********************************************************************²
         do j = ind_loop(3), ind_loop(4)
 
 #include  "FastS/Compute/loopI_begin.for"
-
+           ls = l
 #include  "FastS/Compute/LU/mjr_newton_2d_SA.for"
 c           if (j.le.80.and.l-lij.eq.100)
 c     &         write(*,*)ro_old*nu_old , drodm(l,6), rop_1(l,6)
@@ -87,7 +87,7 @@ c     &         write(*,*)ro_old*nu_old , drodm(l,6), rop_1(l,6)
         do j = ind_loop(3), ind_loop(4)
 
 #include  "FastS/Compute/loopI_begin.for"
-
+           ls = l
 #include  "FastS/Compute/LU/mjr_newton.for"
           enddo
 
@@ -100,7 +100,7 @@ c     &         write(*,*)ro_old*nu_old , drodm(l,6), rop_1(l,6)
         do j = ind_loop(3), ind_loop(4)
 
 #include  "FastS/Compute/loopI_begin.for"
-
+           ls = l
 #include  "FastS/Compute/LU/mjr_newton_SA.for"
           enddo
         enddo

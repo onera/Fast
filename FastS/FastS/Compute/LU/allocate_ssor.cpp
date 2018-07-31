@@ -42,7 +42,7 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 #endif
   
   PyObject* ssors  = PyList_New(0);
-  PyObject* ssor;
+  PyObject* ssor; PyObject* ssortmp;
   vector<PyArrayObject*> hook;
   E_Int nidom = PyList_Size(zones), nb_subzones;
   E_Int *ipt_param_int, *ipt_ind_dm, *ipt_nidom_loc;
@@ -124,9 +124,15 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 	    }
 	  ssor = K_NUMPY::buildNumpyArray(sizessor, neq, 0, 1);
 	  PyList_Append(ssors, ssor);
+	  ssortmp = K_NUMPY::buildNumpyArray(sizessor, neq, 0, 1);
+	  PyList_Append(ssors, ssortmp);
 	}
     }
   
-  if (ipt_param_int[NB_RELAX] > 1) Py_DECREF(ssor);
+  if (ipt_param_int[NB_RELAX] > 1)
+    { 
+      Py_DECREF(ssor);
+      Py_DECREF(ssortmp);
+    }
   return ssors;
 }

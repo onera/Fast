@@ -57,7 +57,8 @@ c Var loc
      & kddeb,kdfin,ipas,kfin,kdeb,jfin,jdeb,ifin,ideb,
      & l1,l2,lt,lt1,lt2,lij,lv,lv1,lv2,v2ven,v3ven,
      & inci_ven,incj_ven,inck_ven,inci2_ven,incj2_ven,inck2_ven,
-     & inci2_mtr,incj2_mtr,inck2_mtr,inci_mtr,incj_mtr,inck_mtr
+     & inci2_mtr,incj2_mtr,inck2_mtr,inci_mtr,incj_mtr,inck_mtr,
+     & ls,l1s,incis,incjs,incks
 
       REAL_E gam2,gam1,gamm1,cp,xal,diag, ratiom,
      & b11,b12,b13,b14,b15,b21,b22,b23,b24,b25,b31,b32,b33,b34,b35,b41,
@@ -121,6 +122,10 @@ c Var loc
         jdeb  = ind_loop(4)
         ideb  = ind_loop(2)
 
+        incis = inci
+        incjs = incj
+        incks = inck
+
       IF(param_int(ITYPZONE).eq.0) THEN !domaine 3d general
 
        !!Diag
@@ -128,6 +133,7 @@ c Var loc
            do  i= ideb,ifin,ipas
 
              l  = inddm(i, j, kdeb)
+             ls = l
 #include     "FastS/Compute/LU/lu_d_SA.for"
            enddo
         enddo
@@ -136,13 +142,14 @@ c Var loc
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
-
+        ls = l
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
+          ls = l
           lt     = indmtr(i,jdeb,kdeb)
           lv     = indven(i,jdeb,kdeb)
 
@@ -158,6 +165,7 @@ c Var loc
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
+          ls = l
           lt     = indmtr(ideb,j,kdeb)
           lv     = indven(ideb,j,kdeb)
 
@@ -170,6 +178,7 @@ c Var loc
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
+            ls = l
             lt     = indmtr(i,j,kdeb)
             lv     = indven(i,j,kdeb)
 
@@ -192,6 +201,7 @@ C     DIR$ IVDEP
               do  i= ideb,ifin,ipas
 
                  l  = inddm(i, j, kdeb)
+                 ls = l
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
               enddo
            enddo
@@ -204,11 +214,13 @@ C     DIR$ IVDEP
            do  i= ideb,ifin,ipas
 
              l  = inddm(i, j, k)
+             ls = l
 #include     "FastS/Compute/LU/lu_d_SA.for"
            enddo
           enddo
 
           l      =  inddm(ideb,jdeb,k)
+          ls = l
           lt     = indmtr(ideb,jdeb,k)
           lv     = indven(ideb,jdeb,k)
 
@@ -222,6 +234,7 @@ C     DIR$ IVDEP
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
+             ls = l
              lt     = indmtr(i,jdeb,k)
              lv     = indven(i,jdeb,k)
 
@@ -236,6 +249,7 @@ C     DIR$ IVDEP
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
+             ls = l
              lt     = indmtr(ideb,j,k)
              lv     = indven(ideb,j,k)
 
@@ -250,6 +264,7 @@ C     DIR$ IVDEP
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
+               ls = l
                lt= indmtr(i,j,k)
                lv= indven(i,j,k)
 
@@ -271,6 +286,7 @@ C     DIR$ IVDEP
                 do  i= ifin, ideb
 
                    l  = inddm(i, j, k)
+                   ls = l
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
                 enddo
              enddo
@@ -286,6 +302,7 @@ C     DIR$ IVDEP
            do  i= ideb,ifin,ipas
 
              l  = inddm(i, j, kdeb)
+             ls = l
 #include     "FastS/Compute/LU/lu_d_SA.for"
            enddo
         enddo
@@ -294,13 +311,14 @@ C     DIR$ IVDEP
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
-
+        ls = l
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
+          ls = l
           lt     = indmtr(i,jdeb,kdeb)
           lv     = indven(i,jdeb,kdeb)
 
@@ -317,6 +335,7 @@ C     DIR$ IVDEP
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
+          ls = l
           lt     = indmtr(ideb,j,kdeb)
           lv     = indven(ideb,j,kdeb)
 
@@ -329,6 +348,7 @@ C     DIR$ IVDEP
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
+            ls = l
             lt     = indmtr(i,j,kdeb)
             lv     = indven(i,j,kdeb)
 
@@ -351,6 +371,7 @@ C     DIR$ IVDEP
               do  i= ideb,ifin,ipas
 
                  l  = inddm(i, j, kdeb)
+                 ls = l
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
               enddo
            enddo
@@ -363,11 +384,13 @@ C     DIR$ IVDEP
            do  i= ideb,ifin,ipas
 
              l  = inddm(i, j, k)
+             ls = l
 #include     "FastS/Compute/LU/lu_d_SA.for"
            enddo
           enddo
 
           l      =  inddm(ideb,jdeb,k)
+          ls = l
           lt     = indmtr(ideb,jdeb,k)
           lv     = indven(ideb,jdeb,k)
 
@@ -381,6 +404,7 @@ C     DIR$ IVDEP
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
+             ls = l
              lt     = indmtr(i,jdeb,k)
              lv     = indven(i,jdeb,k)
 
@@ -395,6 +419,7 @@ C     DIR$ IVDEP
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
+             ls = l
              lt     = indmtr(ideb,j,k)
              lv     = indven(ideb,j,k)
 
@@ -409,6 +434,7 @@ C     DIR$ IVDEP
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
+               ls = l
                lt= indmtr(i,j,k)
                lv= indven(i,j,k)
 
@@ -430,6 +456,7 @@ C     DIR$ IVDEP
                 do  i= ifin, ideb
 
                    l  = inddm(i, j, k)
+                   ls = l
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
                 enddo
              enddo
@@ -450,6 +477,7 @@ C     DIR$ IVDEP
            do  i= ideb,ifin,ipas
 
              l  = inddm(i, j, kdeb)
+             ls = l
 #include     "FastS/Compute/LU/lu_d_SA.for"
            enddo
         enddo
@@ -458,13 +486,14 @@ C     DIR$ IVDEP
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
-
+        ls = l
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
+          ls = l
           lt     = indmtr(i,jdeb,kdeb)
           lv     = indven(i,jdeb,kdeb)
 
@@ -481,6 +510,7 @@ C     DIR$ IVDEP
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
+          ls = l
           lt     = indmtr(ideb,j,kdeb)
           lv     = indven(ideb,j,kdeb)
 
@@ -493,6 +523,7 @@ C     DIR$ IVDEP
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
+            ls = l
             lt     = indmtr(i,j,kdeb)
             lv     = indven(i,j,kdeb)
 
@@ -515,6 +546,7 @@ C     DIR$ IVDEP
               do  i= ideb,ifin,ipas
 
                  l  = inddm(i, j, kdeb)
+                 ls = l
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
               enddo
            enddo
@@ -527,11 +559,13 @@ C     DIR$ IVDEP
            do  i= ideb,ifin,ipas
 
              l  = inddm(i, j, k)
+             ls = l
 #include     "FastS/Compute/LU/lu_d_SA.for"
            enddo
           enddo
 
           l      =  inddm(ideb,jdeb,k)
+          ls = l
           lt     = indmtr(ideb,jdeb,k)
           lv     = indven(ideb,jdeb,k)
 
@@ -545,6 +579,7 @@ C     DIR$ IVDEP
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
+             ls = l
              lt     = indmtr(i,jdeb,k)
              lv     = indven(i,jdeb,k)
 
@@ -559,6 +594,7 @@ C     DIR$ IVDEP
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
+             ls = l
              lt     = indmtr(ideb,j,k)
              lv     = indven(ideb,j,k)
 
@@ -573,6 +609,7 @@ C     DIR$ IVDEP
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
+               ls = l
                lt= indmtr(i,j,k)
                lv= indven(i,j,k)
 
@@ -595,6 +632,7 @@ C     DIR$ IVDEP
                 do  i= ifin, ideb
 
                    l  = inddm(i, j, k)
+                   ls = l
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
                 enddo
              enddo
@@ -611,18 +649,21 @@ C     DIR$ IVDEP
            do  i= ideb,ifin,ipas
 
              l  = inddm(i, j, kdeb)
+             ls     = l
 #include     "FastS/Compute/LU/lu_d_2d_SA.for"
            enddo
        enddo
 
        !!! coin (ideb,jdeb,kdb)
        l = inddm(ideb,jdeb,1)
+       ls     = l
 #include "FastS/Compute/LU/lu_dinv_2d_SA.for"
 
       !!! ligne (jdeb,kdeb) dans le plan kdeb
        do i= ideb+ipas,ifin,ipas
 
-          l      =  inddm(i,jdeb,1)
+          l      = inddm(i,jdeb,1)
+          ls     = l
           lt     = indmtr(i,jdeb,1)
           lv     = indven(i,jdeb,1)
 
@@ -636,6 +677,7 @@ C     DIR$ IVDEP
        do j= jdeb+ipas,jfin,ipas
 
           l      =  inddm(ideb,j,1)
+          ls     = l
           lt     = indmtr(ideb,j,1)
           lv     = indven(ideb,j,1)
 
@@ -649,6 +691,7 @@ C     DIR$ IVDEP
          do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,1)
+            ls     = l
             lt     = indmtr(i,j,1)
             lv     = indven(i,j,1)
 
@@ -669,6 +712,7 @@ C     DIR$ IVDEP
              do  i= ifin, ideb
 
                 l  = inddm(i, j, 1)
+                ls     = l
 #include     "FastS/Compute/LU/mjr_newton_2d_SA.for"
              enddo
           enddo

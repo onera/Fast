@@ -9,7 +9,7 @@ c***********************************************************************
      &     drodm_in, drodm_out,
      &     ti,tj,tk,
      &     venti,ventj,ventk,
-     &     coe, ssor, ssortmp, size_ssor)
+     &     coe, ssor, ssortmp, ssor_size)
 c***********************************************************************
 c     _U   USER : PECHIER 
 c     _U   USER : DECK
@@ -26,12 +26,12 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E ndo, nitcfg, nitrun, ind_loop_lu(6), param_int(0:*),
-     &     mjrnewton, size_ssor, ind_loop_sdm(6)
+     &     mjrnewton, ssor_size, ind_loop_sdm(6)
 
       REAL_E rotmp(*),rop_ssiter(*),coe(*),drodm_out(*)
       REAL_E ti(*),tj(*),tk(*),venti(*), ventj(*),ventk(*)
-      REAL_E ssor(size_ssor, param_int(NEQ)), 
-     &     ssortmp(param_int(NDIMDX), param_int(NEQ)),
+      REAL_E ssor(ssor_size, param_int(NEQ)), 
+     &     ssortmp(ssor_size, param_int(NEQ)),
      &     drodm_in(param_int(NDIMDX), param_int(NEQ))
       REAL_E param_real(0:*)
 
@@ -61,6 +61,7 @@ c     Var loc
      &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
                endif
 !lower
+
                call invlu_l_SA(ndo, param_int, param_real, ind_loop_lu,
      &              drodm_in,drodm_out,rop_ssiter,
      &              ti,tj,tk,
@@ -137,7 +138,7 @@ c
 #include "FastS/Compute/LU/lussor_initssor.for"
 
          do m = 1, param_int(NB_RELAX)
-
+         !do m =1,1
             lussor_end = 0
             if ((m == param_int(NB_RELAX)) .AND. (mjrnewton == 1)) then
                lussor_end = 1
@@ -159,7 +160,7 @@ c
      &                 ind_loop_lu, ind_loop_sdm,
      &                 ssortmp,rop_ssiter,
      &                 ti,tj,tk,
-     &                 coe, ssor, size_ssor)
+     &                 coe, ssor, ssor_size)
 
 #include "FastS/Compute/LU/lussor_mjrtmp.for"
 
@@ -169,7 +170,7 @@ c
      &                 ind_loop_lu, ind_loop_sdm,
      &                 ssortmp,rop_ssiter, rotmp,
      &                 ti,tj,tk,
-     &                 coe, ssor, lussor_end, size_ssor)
+     &                 coe, ssor, lussor_end, ssor_size)
 
                else
 
@@ -177,7 +178,7 @@ c
      &                 ind_loop_lu, ind_loop_sdm,
      &                 ssortmp,rop_ssiter,
      &                 ti,tj,tk,
-     &                 coe, ssor, size_ssor)
+     &                 coe, ssor, ssor_size)
 
 #include "FastS/Compute/LU/lussor_mjrtmp.for"
 
@@ -186,7 +187,7 @@ c
      &                 ind_loop_lu, ind_loop_sdm,
      &                 ssortmp,rop_ssiter, rotmp,
      &                 ti,tj,tk,
-     &                 coe, ssor, lussor_end, size_ssor)
+     &                 coe, ssor, lussor_end, ssor_size)
 c     
                endif            !5 ou 6 Eq
             ELSE
@@ -202,7 +203,7 @@ c
      &                 ind_loop_lu, ind_loop_sdm,
      &                 ssortmp,rop_ssiter,
      &                 ti,tj,tk,venti,ventj,ventk,
-     &                 coe, ssor, size_ssor)
+     &                 coe, ssor, ssor_size)
 
 #include "FastS/Compute/LU/lussor_mjrtmp.for"
 
@@ -212,7 +213,7 @@ c
      &                 ind_loop_lu, ind_loop_sdm,
      &                 ssortmp,rop_ssiter, rotmp,
      &                 ti,tj,tk,venti,ventj,ventk,
-     &                 coe, ssor, lussor_end, size_ssor)
+     &                 coe, ssor, lussor_end, ssor_size)
 
                else
 
@@ -221,7 +222,7 @@ c
      &                 ind_loop_lu, ind_loop_sdm,
      &                 ssortmp,rop_ssiter,
      &                 ti,tj,tk,venti,ventj,ventk,
-     &                 coe, ssor, size_ssor)
+     &                 coe, ssor, ssor_size)
 
 #include "FastS/Compute/LU/lussor_mjrtmp.for"
 
@@ -230,7 +231,7 @@ c
      &                 ind_loop_lu, ind_loop_sdm,
      &                 ssortmp,rop_ssiter, rotmp,
      &                 ti,tj,tk,venti,ventj,ventk,
-     &                 coe, ssor, lussor_end, size_ssor)
+     &                 coe, ssor, lussor_end, ssor_size)
 
 
                endif            !5 ou 6 Eq

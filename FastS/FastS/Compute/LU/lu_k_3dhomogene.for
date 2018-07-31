@@ -1,4 +1,5 @@
       l1  = l -inck
+      l1s = ls-incks
  
       tcz = tk(lt,1)
 
@@ -32,10 +33,10 @@
       b54= tcz*h-gamm1*w*qn
       b55= gam1*qn+coe(l1,4)*signe
 
-      b1= b11*drodm_out(l1,1)                   + b14*drodm_out(l1,4)
-      b2= b21*drodm_out(l1,1)+ b22*drodm_out(l1,2) + b24*drodm_out(l1,4)
-      b3= b31*drodm_out(l1,1)+ b33*drodm_out(l1,3) + b34*drodm_out(l1,4)
-      b4= b41*drodm_out(l1,1)+ b42*drodm_out(l1,2) + b43*drodm_out(l1,3)
-     &   +b44*drodm_out(l1,4)+ b45*drodm_out(l1,5)
-      b5= b51*drodm_out(l1,1)+ b52*drodm_out(l1,2) + b53*drodm_out(l1,3)
-     &   +b54*drodm_out(l1,4)+ b55*drodm_out(l1,5)
+      b1= b11*drodm_out(l1s,1)                   + b14*drodm_out(l1s,4)
+      b2= b21*drodm_out(l1s,1)+b22*drodm_out(l1s,2)+b24*drodm_out(l1s,4)
+      b3= b31*drodm_out(l1s,1)+b33*drodm_out(l1s,3)+b34*drodm_out(l1s,4)
+      b4= b41*drodm_out(l1s,1)+b42*drodm_out(l1s,2)+b43*drodm_out(l1s,3)
+     &   +b44*drodm_out(l1s,4)+ b45*drodm_out(l1s,5)
+      b5= b51*drodm_out(l1s,1)+b52*drodm_out(l1s,2)+b53*drodm_out(l1s,3)
+     &   +b54*drodm_out(l1s,4)+ b55*drodm_out(l1s,5)

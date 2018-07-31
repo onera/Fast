@@ -160,7 +160,7 @@ extern "C"
                               E_Float* iptcoe           , E_Float* iptssor     , E_Float* iptssortmp     , E_Int& size_ssor);
 
   void dp_dw_vect_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int* ind_loop,
-		   E_Float* iptrop, E_Float* iptvectin, E_Float* iptvectout);
+		   E_Float* iptrop, E_Float* iptvectin, E_Float* iptvectout, E_Int& size);
 
   void bvbs_wall_inviscid_jacob_(E_Int* ipt_param_int, E_Int* ind_loop, E_Int& idir, E_Int& neq_mtr, E_Float* ipttijk, E_Float* iptvect);
 
@@ -173,7 +173,7 @@ extern "C"
 
   void norm_vect_( E_Int* param_int, E_Int* ind_loop, E_Float* krylov, E_Float& norm);
 
-  void id_vect_(E_Int* param_int, E_Int* ind_loop,  E_Float* drodmd,  E_Float* krylov_out, E_Float* krylov_in);
+  void id_vect_(E_Int* param_int, E_Int* ind_loop,  E_Float* drodmd,  E_Float* krylov_out, E_Float* krylov_in, E_Int& size);
 
   void navier_stokes_struct_d_( E_Int& ndo     , E_Int& nidom       , E_Int& Nbre_thread_actif, E_Int& ithread    ,
 				E_Int& omp_mode, E_Int& layer_mode  , E_Int& Nbre_socket      , E_Int& socket     , E_Int& mx_synchro   , 

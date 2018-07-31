@@ -11,7 +11,8 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
   }
 
 
-            shift_zone=0; shift_coe=0; nd_current=0; E_Float* ipt_ssor_shift; E_Int indice;
+            shift_zone=0; shift_coe=0; nd_current=0;
+            E_Float* ipt_ssor_shift; E_Float* ipt_ssortmp_shift; E_Int ssor_size;
             for (E_Int nd = 0; nd < nidom; nd++)
             {
                E_Float* ipt_CL = iptro_CL[nd];
@@ -71,7 +72,6 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
                          if(lexit_lu == 0 )
 			   { 
 #include "Compute/LU/prep_lussor.h"
-			     indice = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + ithread - 1;
 
 			     invlu_(nd                     , nitcfg                  , nitrun                ,
 				    param_int[nd]          , param_real[nd]          ,
@@ -79,7 +79,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
 				    iptrotmp[nd]           , iptro_ssiter[nd]        , iptdrodm + shift_zone , iptdrodm + shift_zone ,
 				    ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 				    iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-				    iptcoe  + shift_coe    , ipt_ssor_shift          , iptssortmp[nd]        , ipt_ssor_size[indice]);
+				    iptcoe  + shift_coe    , ipt_ssor_shift          , ipt_ssortmp_shift     , ssor_size);
 			   }
                       } //fin kimpli
 

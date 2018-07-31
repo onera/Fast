@@ -307,6 +307,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
 
     if ssors is not []:
         HOOK['ssors'] = ssors
+    else:
+        HOOK['ssors'] = None
 
     #
     # Compactage arbre moyennes stat

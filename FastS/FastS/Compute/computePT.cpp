@@ -258,9 +258,12 @@ else
       iptkrylov[nd]= K_PYTREE::getValueAF(t, hook);
     }
 
-    iptssor[nd] = NULL;
+    iptssor[nd] = NULL; iptssortmp[nd] = NULL;
     if (ipt_param_int[nd][ NB_RELAX ] > 1) // 1 = LUSSOR
-      iptssor[nd] = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, nd));
+      {
+	iptssor[nd] = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd));
+	iptssortmp[nd] = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd + 1));
+      }
   
     //Pointeur sfd
     if (ipt_param_int[nd][ SFD ] == 1)
@@ -357,7 +360,7 @@ else
   if (kwig_stat ==  1) neq_wig_stat = 3; 
   FldArrayF  stat_wig(ndimt*neq_wig_stat); E_Float* iptstat_wig = stat_wig.begin();
 
-  // INIT du LUSSORTMP
+  // INIT du LUSSOR
   E_Int size_tot = 0;
   E_Int* ipt_ssor_size = NULL;
 
@@ -366,16 +369,9 @@ else
       size_tot += ipt_param_int[nd][NDIMDX] * ipt_param_int[nd][NEQ];
 
   E_Int size_ssortmp = 0;
-  if (ipt_param_int[0][NB_RELAX] > 1) size_ssortmp =1;
-  FldArrayF ssortmp(size_tot * size_ssortmp); E_Float* ipt_ssortmp = ssortmp.begin();
-  FldArrayI ssor_size(nidom* mx_sszone * threadmax_sdm * size_ssortmp); ipt_ssor_size = ssor_size.begin();
 
-  if (ipt_param_int[0][NB_RELAX] > 1)
-    {
-      iptssortmp[0] = ipt_ssortmp;
-      for (E_Int nd = 1; nd < nidom; nd++)
-	iptssortmp[nd] = iptssortmp[ nd-1 ] + ipt_param_int[ nd-1 ][NDIMDX] * ipt_param_int[ nd-1 ][NEQ];
-    }
+  if (ipt_param_int[0][NB_RELAX] > 1) size_ssortmp = 1;
+  FldArrayI ssor_size(nidom * mx_sszone * threadmax_sdm * size_ssortmp); ipt_ssor_size = ssor_size.begin();
 
   /// Tableau pour GMRES (on test la premiere zone 
   //
@@ -525,8 +521,8 @@ else
             ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, ndimdx_transfer, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
-            ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size, ipt_drodmd, 
-	    ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp, ipt_givens,
+            ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size , ipt_drodmd, 
+	    ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp  , ipt_givens,
             ipt_cfl            ,
             iptx               , ipty             , iptz              ,
             iptCellN           , iptCellN_IBC     ,

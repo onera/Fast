@@ -7,7 +7,7 @@ c***********************************************************************
      &                      ind_loop, ind_loop_sdm,
      &                      drodm_out,rop,
      &                      ti,tj,tk,
-     &                      coe, ssor, size_ssor)
+     &                      coe, ssor, ssor_size)
 c***********************************************************************
 c                              O N E R A
 c
@@ -33,14 +33,14 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndom, ind_loop(6), param_int(0:*), size_ssor,
+      INTEGER_E ndom, ind_loop(6), param_int(0:*), ssor_size,
      &     ind_loop_sdm(6)
  
       REAL_E  param_real(0:*)
-      REAL_E drodm_out(param_int(NDIMDX),param_int(NEQ))
+      REAL_E drodm_out(ssor_size,param_int(NEQ))
       REAL_E rop(  param_int(NDIMDX),param_int(NEQ))
       REAL_E coe(  param_int(NDIMDX),param_int(NEQ_COE)),
-     &     ssor(size_ssor,param_int(NEQ))
+     &     ssor(ssor_size,param_int(NEQ))
       REAL_E ti(param_int(NDIMDX_MTR),param_int(NEQ_IJ)),
      &       tj(param_int(NDIMDX_MTR),param_int(NEQ_IJ)),
      &       tk(param_int(NDIMDX_MTR),param_int(NEQ_K))
@@ -48,7 +48,7 @@ c***********************************************************************
 c Var loc
       INTEGER_E  inci,incj,inck,l,i,j,k,kdmax,kd,lmax,ll,ndo,
      & kddeb,kdfin,ipas,kfin,kdeb,jfin,jdeb,ifin,ideb,
-     & l1,l2,lt,lt1,lt2,ls,
+     & l1,l2,lt,lt1,lt2,ls,l1s,incis,incjs,incks,
      & inci2_mtr,incj2_mtr,inck2_mtr,inci_mtr,incj_mtr,inck_mtr
 
       REAL_E gam2,gam1,gamm1,cp,xal,diag,
@@ -89,6 +89,10 @@ c Var loc
      &       2 * param_int(NIJK + 3) !taille de la fenetre + ghostcells
         j_size = ind_loop_sdm(4) - ind_loop_sdm(3) + 1 +
      &       2 * param_int(NIJK + 3)
+
+        incis = 1
+        incjs = i_size
+        incks = i_size * j_size
 
       IF(param_int(ITYPZONE).eq.0) THEN !domaine 3d general
 
@@ -719,6 +723,7 @@ c Var loc
 
       !!! coin (ideb,jdeb,kdb)
           l = inddm(ideb,jdeb,1)
+          ls = indssor(ideb,jdeb,1,i_size,j_size)
 #include "FastS/Compute/LU/lu_dinv_2d_SA.for"
 
       !!! ligne (jdeb,kdeb) dans le plan kdeb
