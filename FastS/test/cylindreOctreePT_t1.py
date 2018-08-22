@@ -110,4 +110,6 @@ for it in xrange(nit):
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
+C.convertPyTree2File(t, 'out.cgns')
+
 test.testT(t, 1)

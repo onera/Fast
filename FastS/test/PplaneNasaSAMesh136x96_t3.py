@@ -6,7 +6,6 @@ import FastS.PyTree as FastS
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import KCore.test as test
-import sys
 
 t = C.convertFile2PyTree('Pplane_136_96.cgns')
 t = C.addState(t, MInf=0.2, ReInf=25.e6, MutSMuInf=15)
@@ -25,7 +24,7 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 nit = 500; time = 0.
 for it in xrange(nit):
     FastS._compute(t, metrics, it)
-    if (it%50 == 0):
+    if it%50 == 0:
         print '- %d - %g'%(it, time)
         FastS.display_temporal_criteria(t, metrics, it)
     time += numz['time_step']
