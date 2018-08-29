@@ -2345,7 +2345,7 @@ def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
   mx_omp_size_int= work["MX_OMP_SIZE_INT"]
   #print 'mx_omp_size_int', mx_omp_size_int
   display = 0
-  if Display: display =1
+  if Display: display = 1
 
   fasts.distributeThreads(zones , metrics, nstep, nssiter , nitrun, mx_omp_size_int, display)
 

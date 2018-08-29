@@ -329,7 +329,7 @@ def save(t, fileName='restart', split='single',
 
     flowsol = Internal.getNodeFromName1(zones[0], 'FlowSolution#Centers')
     if flowsol is not None:
-        vars    = Internal.getNodesFromType1(flowsol, 'DataArray_t')
+        vars = Internal.getNodesFromType1(flowsol, 'DataArray_t')
         for var in vars:
             if (('Kry' in var[0]) and not('Kry_0' in var[0])):
                 C._rmVars(t2, 'centers:'+var[0])
@@ -359,7 +359,7 @@ def save(t, fileName='restart', split='single',
             # Rebuild graph
             # skeleton -> gather -> merge -> graph
     else: # sequential run
-        if split == 'single': 
+        if split == 'single':
             C.convertPyTree2File(t2, fileName+'.cgns')
         else:
             # Get and save graph
@@ -367,8 +367,9 @@ def save(t, fileName='restart', split='single',
             import Distributor2.PyTree as D2
             graphID = Cmpi.computeGraph(t2, type='ID')
             graphIBCD = Cmpi.computeGraph(t2, type='IBCD')
+            
             procDict = D2.getProcDict(t2)
-            procList = D2.getProcList(t2,  sort=True)
+            procList = D2.getProcList(t2, sort=True)
             objet = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList}
 
             # Rebuild local trees
