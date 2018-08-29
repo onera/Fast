@@ -30,6 +30,10 @@ try:
     OMP_NUM_THREADS = int(OMP_NUM_THREADS)
 except: OMP_NUM_THREADS = 1
 
+distDir = os.environ['CASSIOPEE']+'/Dist/bin/'+os.environ['ELSAPROD']
+
+import sys
+
 # Variable alignement pour vectorisation
 #CACHELINE = Dist.getCacheLine()
 
@@ -38,6 +42,9 @@ varsN    = ['Density']
 varsP    = ['Density_P1']
 #varsN_SA = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature', 'TurbulentSANuTilde']
 
+def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
+    fasts._stretch(coord,nbp,x1,x2,dx1,dx2,ityp)
+    return None
 #==============================================================================
 # compute in place
 # graph is a dummy argument to be compatible with mpi version
@@ -237,7 +244,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     for nstep in xrange(1, int(dtloc[0])+1):
         hook1       = HOOK.copy()
         distrib_omp = 1
-        hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep, distrib_omp) )
+        hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep, distrib_omp) )    
     
     #init metric
     _init_metric(t, metrics, hook1, ompmode)
@@ -301,6 +308,12 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
        HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
        param_real_tc        = Internal.getNodeFromName1( tc, 'Parameter_real')
        if param_real_tc is not None: HOOK['param_real_tc']= param_real_tc[1]
+
+
+       # Add linelets arrays in the HOOK for ODE-based WallModel (IBC)
+       nbpts_linelets = 45
+       _createTBLESA(tc,nbpts_linelets)
+
     else:
         HOOK['param_real_tc'] = None
         HOOK['param_int_tc']  = None  
@@ -310,7 +323,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     else:
         HOOK['ssors'] = None
 
-    #
+    
     # Compactage arbre moyennes stat
     #
     if tmy is not None:
@@ -394,6 +407,178 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
 
                 c += 1
     return None
+
+#==============================================================================
+# Prepare IBC ODE (TBLE + Spalart 1D)
+#==============================================================================
+def _createTBLESA(tc,nbpts_linelets=45):
+      
+      nfields_lin  = 6 # u,nutild,y,matm,mat,matp
+      count_racIBC = 0
+      addr_IBC = 0
+      addrIBC  = []       
+      size_IBC = 0
+
+      linelets_int_tc  = Internal.getNodeFromName(tc,'linelets_int')
+      linelets_real_tc = Internal.getNodeFromName(tc,'linelets_real')
+      if(linelets_int_tc is not None):
+         HOOK['linelets_int'] = Internal.getValue(linelets_int_tc)                  
+      if(linelets_real_tc is not None):   
+         HOOK['linelets_real']= Internal.getValue(linelets_real_tc)
+
+      zones_tc = Internal.getZones(tc)             
+         
+      for z in zones_tc:
+          subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')  
+          if subRegions is not None:
+                for s in subRegions:                              
+                  zsrname = s[0]
+                  sname  = zsrname[0:2]
+                  if sname == 'IB':
+                     zsrname = zsrname.split('_')
+                     if len(zsrname)!=3: 
+                        print 'Warning: createTBLSSA: non consistent with the version of IBM preprocessing.'
+                     else:
+                       if zsrname[1] == '6':              
+                        print 'Using TBLE SA wall model'         
+                        pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor') 
+                        Nbpts_D       = numpy.shape(pointlistD[1])[0]
+                        addrIBC.append(size_IBC) 
+                        # size_IBC      = size_IBC + Nbpts_D*nbpts_linelets*nfields_lin
+                        size_IBC      = size_IBC + Nbpts_D*(nbpts_linelets*nfields_lin + 1)
+                        count_racIBC  = count_racIBC + 1 
+
+      # addrIBC.append(size_IBC)                
+      # print "Nb Rac =",count_racIBC-1 
+                                   
+      if(size_IBC > 0): 
+        if HOOK['linelets_int'] is None :   # No TBLE Data in tc
+         print 'TBLE data missing in tc, they will be built...'     
+            
+         # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)  
+         Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin+1)     
+         _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=numpy.int32)            
+     
+         HOOK['linelets_int'] = _addrIBC
+            
+         linelets = numpy.zeros(size_IBC + Nbpts_Dtot, dtype=numpy.float64)  
+
+
+         # ====================== Debug (Interp linelets from fine grid) ======================
+
+         # velxData = Internal.getNodeFromName(t,'VelocityX')
+         # velxDataval = Internal.getValue(velxData)
+
+         # turbSAData    = Internal.getNodeFromName(t,'TurbulentSANuTilde')
+         # turbSADataval = Internal.getValue(turbSAData)
+
+
+         # coordYdata = Internal.getNodeFromName(t,'CoordinateY')
+         # coordYdataval = Internal.getValue(coordYdata)
+         # Iw = numpy.argwhere(coordYdataval<0)    
+         # indexWall = Iw[-1][1]   
+         
+
+         # ptlist = Internal.getNodeFromName(tc,'PointListDonor')#'TurbulentSANuTilde')#'VelocityX')
+         # ptlistval = Internal.getValue(ptlist)
+
+         # dimI   = Internal.getZoneDim(zones[0])[1]            
+
+         # nbptD = 190 
+         # ycoord = numpy.zeros(nbptD,dtype=numpy.float64) 
+         # field  = numpy.zeros(nbptD,dtype=numpy.float64)    
+
+                          
+         shift        = 0
+         for z in zones_tc:
+                       subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')  
+                       if subRegions is not None:                        
+                          for s in subRegions:
+                              zsrname = s[0]
+                              sname  = zsrname[0:2]
+                              if sname == 'IB':                              
+                                 zsrname = zsrname.split('_')
+                                 if len(zsrname)!=3: 
+                                   print 'Warning: createTBLESA: non consistent with the version of IBM preprocessing.'
+                                 else:   
+                                   if zsrname[1] == '6':                                                                                                
+                                     pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor') 
+                                     Nbpts_D       = numpy.shape(pointlistD[1])[0]                                   
+                                     
+   
+                                     zI = Internal.getNodeFromName1(s,'CoordinateZ_PI')
+                                     valzI = Internal.getValue(zI)
+                                     yI = Internal.getNodeFromName1(s,'CoordinateY_PI')
+                                     valyI = Internal.getValue(yI)    
+                                     xI = Internal.getNodeFromName1(s,'CoordinateX_PI')
+                                     valxI = Internal.getValue(xI)      
+                                     zW = Internal.getNodeFromName1(s,'CoordinateZ_PW')
+                                     valzW = Internal.getValue(zW) 
+                                     yW = Internal.getNodeFromName1(s,'CoordinateY_PW')
+                                     valyW = Internal.getValue(yW)    
+                                     xW = Internal.getNodeFromName1(s,'CoordinateX_PW')
+                                     valxW = Internal.getValue(xW)    
+   
+                                     if Nbpts_D > 1:
+                                       
+                                         for noind in xrange(0,Nbpts_D):
+                                             
+                                             # print "noind ,Nbpts_D",noind,Nbpts_D
+                                             b0 = valxI[noind]-valxW[noind]
+                                             b1 = valyI[noind]-valyW[noind]
+                                             b2 = valzI[noind]-valzW[noind]
+                                             normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
+                                             
+                                             _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
+                                     else:
+   
+                                             b0 = valxI-valxW
+                                             b1 = valyI-valyW
+                                             b2 = valzI-valzW
+                                             normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)                                  
+                                             
+                                             # _stretch(linelets[shift : shift + nbpts_linelets],nbpts_linelets,1.0e-6,0.0,normb)  
+                                             _stretch(linelets[shift : shift + nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)  
+   
+   
+                                     Internal.createUniqueChild(s, 'CoordinateN_ODE', 'DataArray_t', 
+                                                                linelets[shift : shift + Nbpts_D*nbpts_linelets])
+                                     Internal.createUniqueChild(s, 'VelocityT_ODE', 'DataArray_t', 
+                                                                linelets[shift + Nbpts_D*nbpts_linelets : shift + 2*Nbpts_D*nbpts_linelets ]) 
+                                     Internal.createUniqueChild(s, 'TurbulentSANuTilde_ODE', 'DataArray_t', 
+                                                                linelets[shift + 2*Nbpts_D*nbpts_linelets  : shift + 3*Nbpts_D*nbpts_linelets ]) 
+   
+                                        
+                                     # ========================= Debug interp from fine grid =============
+   
+                                     # for noind in xrange(0,Nbpts_D):
+                                     #     ltarget = ptlistval[noind]
+                                     #     itarget = ltarget%(dimI-1)
+                                                    
+                                     #     ycoord[:] = coordYdataval[itarget,indexWall+1:indexWall+nbptD+1,0]
+                                     #     field[:]  =   velxDataval[itarget,indexWall+1:indexWall+nbptD+1,0] # VelocityX
+                                       
+                                     #     fasts._interpfromzone(nbptD,nbpts_linelets,ycoord, 
+                                     #                                       linelets[shift : shift + nbpts_linelets],
+                                     #                                       field,
+                                     #                                       linelets[shift + Nbpts_D*nbpts_linelets  + noind*nbpts_linelets : shift + Nbpts_D*nbpts_linelets + (noind+1)*nbpts_linelets])                                                                         
+                                                           
+                                     #     field[:]  =   turbSADataval[itarget,indexWall+1:indexWall+nbptD+1,0] # TurbulentSANutTilde
+                                       
+                                     #     fasts._interpfromzone(nbptD,nbpts_linelets,ycoord, 
+                                     #                                       linelets[shift : shift + nbpts_linelets],
+                                     #                                       field,                                                                         
+                                     #                                       linelets[shift + 2*Nbpts_D*nbpts_linelets  + noind*nbpts_linelets : shift + 2*Nbpts_D*nbpts_linelets + (noind+1)*nbpts_linelets])
+                                      
+                                     shift = shift + Nbpts_D*(nbpts_linelets*nfields_lin + 1)                                     
+
+            
+         HOOK['linelets_real'] = linelets 
+
+         Internal.createUniqueChild(tc, 'linelets_real', 'DataArray_t', HOOK['linelets_real'])
+         Internal.createUniqueChild(tc, 'linelets_int', 'DataArray_t', HOOK['linelets_int'])
+
+      return None    
 
 
 #==============================================================================
@@ -624,7 +809,7 @@ def _applyBC(t, metrics, hook1, nstep, omp_mode, var="Density"):
 #==============================================================================
 def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1): 
 
-   timecount = numpy.zeros(4, dtype=numpy.float64)
+   # timecount = numpy.zeros(4, dtype=numpy.float64)
 
    if hook1['lexit_lu'] ==0:
 
@@ -649,6 +834,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
               Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)#,timecount)
+              
               # print "Time in MPI send_buffer, irecv ","%.6f"%timecount[0]
               # print "Time InterpTransfert (Inter)  ","%.6f"%timecount[1]
               # print "Time InterpTransfert (Intra)  ","%.6f"%timecount[2]
@@ -1614,10 +1800,10 @@ def _buildOwnData(t):
     # Data for each zone
     #==== Check if padding file exists (potential cache associativity issue)
     try:
-        f       = open('padding.bin','rb')
+        f       = open(distDir+'/padding.bin','rb')
         pad     = True
     except IOError as e:
-        #print('Padding file not found, using default values.')
+        # print('Padding file not found, using default values.')
         pad   = False
     if pad: 
         padding = numpy.fromfile(f, dtype='int32')        
@@ -1634,9 +1820,12 @@ def _buildOwnData(t):
             #=== check for a padding file  (cache associativity issue)
             dims = Internal.getZoneDim(z)
             if pad:
-                if ((dims[1] < 20) or (dims[2] < 20) or (dims[1] > 200) or (dims[2] > 200)):
+                # Zone dimensions exceed max dimension considered by padding file (or 2D)
+                if (((dims[1] >= padding[0]) or (dims[2] >= padding[1])) or (dims[3] == 2)):
                     shiftvar=0
-                else: shiftvar=padding[(dims[2]-20)*padding[0]+(dims[1]-20)+2]
+                else: 
+                  pad_data = numpy.reshape(padding[2:],[padding[0],padding[1]])
+                  shiftvar=pad_data[dims[1]-5,dims[2]-5]                       
 
             # zone ownData (generated)
             o = Internal.createUniqueChild(z, '.Solver#ownData', 
@@ -1658,8 +1847,8 @@ def _buildOwnData(t):
             filtrage        = "off"
             io_th      = 0
             cacheblckI = 2048
-            cacheblckJ = 3
-            cacheblckK = 2
+            cacheblckJ = 2
+            cacheblckK = 7
             dtnature   = "global"
             dtc        = -0.000001
             epsi_newton  = 0.1 

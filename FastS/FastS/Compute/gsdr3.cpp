@@ -55,9 +55,8 @@ E_Int K_FASTS::gsdr3(
   E_Float**  iptventi        , E_Float**  iptventj        , E_Float** iptventk     ,
   E_Float**& iptrdm          ,
   E_Float*   iptroflt        , E_Float*   iptroflt2       , E_Float*  iptwig       , E_Float*   iptstat_wig  ,
-  E_Float*   iptdrodm        , E_Float*   iptcoe          , E_Float*  iptrot       , E_Float**& iptdelta , E_Float**& iptro_res,
-  E_Float**& iptdrodm_transfer, 
-  E_Int*&    param_int_ibc   , E_Float*&  param_real_ibc  , E_Int*&   param_int_tc , E_Float*& param_real_tc)
+  E_Float*   iptdrodm        , E_Float*   iptcoe          , E_Float*  iptrot       , E_Float**& iptdelta , E_Float**& iptro_res, E_Float**& iptdrodm_transfer,
+  E_Int*&    param_int_ibc   , E_Float*&  param_real_ibc  , E_Int*&   param_int_tc , E_Float*& param_real_tc, E_Int*& linelets_int, E_Float*& linelets_real)
 
  {
    
@@ -138,10 +137,12 @@ E_Int K_FASTS::gsdr3(
       //
       //mise a jour Nombre sous_iter pour implicit (simplification gestion OMP)
       //
+      if(lssiter_verif ==1)
+      {  
       E_Int nd_subzone = 0;
       for (E_Int nd = 0; nd < nidom; nd++)
       {
-        if(lssiter_verif ==1  && ( param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
+        if(param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1)
           {
            E_Int* ipt_nisdom_residu   =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter;                //nisdom_residu(nssiter)
            E_Int* ipt_it_bloc         =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter*2;    //it_bloc(nidom)
@@ -213,7 +214,7 @@ E_Int K_FASTS::gsdr3(
 	      }//loop subzone
 	  }  // if relax
       } // loop zone
-
+      }
 
 
 /****************************************************
@@ -343,9 +344,11 @@ if(lexit_lu ==0 && layer_mode==1)
 {   
 
   //Swap (call to setInterpTransfer)
+
   E_Float Pr = param_real[0][PRANDT];
+
   setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,
-                          param_int_ibc, param_real_ibc, Pr, it_target, nidom, ipt_timecount,mpi);
+                          param_int_ibc, param_real_ibc, linelets_int, linelets_real, Pr, it_target, nidom, ipt_timecount,mpi);
 
   //
   //

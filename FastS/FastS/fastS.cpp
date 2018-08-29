@@ -36,6 +36,8 @@ static PyMethodDef Pyfasts [] =
   {"initNuma"            , K_FASTS::initNuma            ,  METH_VARARGS},
   {"_matvecPT"           , K_FASTS::_matvecPT           ,  METH_VARARGS},
   {"_computePT"          , K_FASTS::_computePT          ,  METH_VARARGS},
+  {"_stretch"            , K_FASTS::_stretch            ,  METH_VARARGS},
+  {"_interpfromzone"     , K_FASTS::_interpfromzone     ,  METH_VARARGS},
   {"_computePT_mut"      , K_FASTS::_computePT_mut      ,  METH_VARARGS},
   {"computePT_my"        , K_FASTS::computePT_my        ,  METH_VARARGS},
   {"computePT_enstrophy" , K_FASTS::computePT_enstrophy ,  METH_VARARGS},

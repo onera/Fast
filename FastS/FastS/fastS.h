@@ -49,6 +49,8 @@ namespace K_FASTS
   PyObject* itt(                     PyObject* self, PyObject* args);
   PyObject* compute(                 PyObject* self, PyObject* args);
   PyObject* _computePT(              PyObject* self, PyObject* args);
+  PyObject* _stretch(                PyObject* self, PyObject* args);
+  PyObject* _interpfromzone(         PyObject* self, PyObject* args);
   PyObject* _computePT_mut(          PyObject* self, PyObject* args);
   PyObject* _matvecPT(               PyObject* self, PyObject* args);
   PyObject* _applyBC(                PyObject* self, PyObject* args);
@@ -146,9 +148,8 @@ namespace K_FASTS
     E_Float**  iptventi, E_Float**  iptventj, E_Float** iptventk,  
     E_Float**& iptrdm,
     E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*   iptwig, E_Float* iptstat_wig,
-    E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res,
-    E_Float**& iptdrodm_trans,
-    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc);
+    E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res,E_Float**& iptdrodm_trans,
+    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real);
 
 
   //=============
@@ -183,7 +184,7 @@ namespace K_FASTS
     E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*   iptwig, E_Float* iptstat_wig,
     E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res,
     E_Float**& iptdrodm_trans,
-    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc);
+    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real);
 
 
 
@@ -192,19 +193,20 @@ namespace K_FASTS
   //==============================
 
   /* Call to transfers from FastS */
-  void setInterpTransfersFastS( E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
-                                E_Int*&    param_bci, E_Float*& param_bcf     , E_Float& Pr         , E_Int& it_target        ,
-                                E_Int& nidom        , E_Float*& ipt_timecount , E_Int& mpi);
+
+  void setInterpTransfersFastS(
+  E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
+  E_Int*& param_bci, E_Float*& param_bcf, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Float& Pr, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi);
   
   /* Transferts FastS Intra process */
   void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
-                              E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Float& Pr, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
+                              E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Float& Pr, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
                               E_Int& NoTransfert, E_Float*& ipt_timecount);
 
   #ifdef _MPI
   /* Transferts FastS Inter process */
   void setInterpTransfersInter(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
-                                E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Float& Pr, E_Int& TypeTransfert, E_Int& nitrun, 
+                                E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Float& Pr, E_Int& TypeTransfert, E_Int& nitrun, 
                                 E_Int& nidom, E_Int& NoTransfert,std::pair<RecvQueue*, SendQueue*>*& pair_of_queue, E_Float*& ipt_timecount);
 
   /* Get Transfert Inter process */

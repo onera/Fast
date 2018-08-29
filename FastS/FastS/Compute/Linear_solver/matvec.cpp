@@ -57,7 +57,7 @@ E_Float time_init;
   E_Float*   iptroflt        , E_Float*   iptroflt2       , E_Float*  iptwig       , E_Float*   iptstat_wig  ,
   E_Float*   iptdrodm        , E_Float*   iptcoe          , E_Float*  iptrot       , E_Float**& iptdelta , E_Float**& iptro_res,
   E_Float**& iptdrodm_transfer, 
-  E_Int*&    param_int_ibc   , E_Float*&  param_real_ibc  , E_Int*&   param_int_tc , E_Float*& param_real_tc)
+  E_Int*&    param_int_ibc   , E_Float*&  param_real_ibc  , E_Int*&   param_int_tc , E_Float*& param_real_tc, E_Int*& linelets_int, E_Float*& linelets_real)
 
  {
 
@@ -113,7 +113,7 @@ E_Float time_init;
       //Raccord X
       E_Float* ipt_timecount = NULL;
       setInterpTransfersFastS(iptkrylov_transfer, ndimdx_transfer, param_int_tc,
-			      param_real_tc, param_int_ibc, param_real_ibc, param_real[0][PRANDT],
+			      param_real_tc, param_int_ibc, param_real_ibc, linelets_int, linelets_real, param_real[0][PRANDT],
          		      it_target, nidom, ipt_timecount, mpi);
    
 
@@ -231,7 +231,7 @@ E_Float time_init;
 
       //Raccord X
       setInterpTransfersFastS(iptkrylov_transfer, ndimdx_transfer, param_int_tc,
-			      param_real_tc, param_int_ibc, param_real_ibc, param_real[0][PRANDT],
+			      param_real_tc, param_int_ibc, param_real_ibc, linelets_int, linelets_real, param_real[0][PRANDT],
          		      it_target, nidom, ipt_timecount, mpi);
    
 

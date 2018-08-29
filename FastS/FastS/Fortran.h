@@ -1,6 +1,8 @@
 // Les protos fortran
 extern "C"
 {
+  void k6stretch_(E_Float& t1, E_Float& t2, E_Float* sn, E_Int& nbp,E_Float& dsm, E_Float& dsp, E_Int& ityp,E_Int& inewt);
+
   void nature_geom_dom_( E_Int* nijk_xyz  ,
                          E_Int& ndimdx_xyz, E_Float* x         , E_Float* y       , E_Float* z       , E_Int* degener   ,
                          E_Int& lale      , E_Float* param_real, E_Int* nijk_mtr  , E_Int& ndimdx_mtr,

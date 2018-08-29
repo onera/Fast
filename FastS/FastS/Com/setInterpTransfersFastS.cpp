@@ -82,7 +82,7 @@ void K_FASTS::del_TransferInter(
 //=============================================================================
 void K_FASTS::setInterpTransfersFastS(
   E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
-  E_Int*& param_bci, E_Float*& param_bcf, E_Float& Pr, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi)
+  E_Int*& param_bci, E_Float*& param_bcf, E_Int*& linelets_int, E_Float*& linelets_real, E_Float& Pr, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi)
 
 {
   E_Int rank = 0;
@@ -156,14 +156,14 @@ if (mpi)
       TypeTransfert = 1;  
       #ifdef _MPI      
       K_FASTS::setInterpTransfersInter(iptro_tmp,     ipt_ndimdx_trans,  param_int_tc,  param_real_tc ,
-                                           param_bci, param_bcf, Pr, TypeTransfert , it_target, nidom, ip2p, pair_of_queue, ipt_timecount); 
+                                           param_bci, param_bcf, linelets_int, linelets_real, Pr, TypeTransfert , it_target, nidom, ip2p, pair_of_queue, ipt_timecount); 
       #endif
     }
     else
     {
 		TypeTransfert = 1;
     K_FASTS::setInterpTransfersIntra(iptro_tmp,     ipt_ndimdx_trans,  param_int_tc,  param_real_tc ,
-                                             param_bci, param_bcf, Pr, TypeTransfert , it_target, nidom, ip2p, ipt_timecount); 
+                                             param_bci, param_bcf, linelets_int, linelets_real, Pr, TypeTransfert , it_target, nidom, ip2p, ipt_timecount); 
     }
     
   }
@@ -205,7 +205,7 @@ if (mpi)
     {             
       TypeTransfert = 0;
       K_FASTS::setInterpTransfersInter(iptro_tmp,     ipt_ndimdx_trans,  param_int_tc,  param_real_tc ,
-                                           param_bci, param_bcf, Pr, TypeTransfert , it_target, nidom, ip2p, pair_of_queue, ipt_timecount);   
+                                           param_bci, param_bcf, linelets_int, linelets_real, Pr, TypeTransfert , it_target, nidom, ip2p, pair_of_queue, ipt_timecount);   
     }
   }
 }
@@ -221,7 +221,7 @@ if (mpi)
     {        
         TypeTransfert = 0;
         K_FASTS::setInterpTransfersIntra(iptro_tmp, ipt_ndimdx_trans, param_int_tc, param_real_tc ,
-                                         param_bci, param_bcf, Pr, TypeTransfert , it_target, nidom, ip2p, ipt_timecount); 
+                                         param_bci, param_bcf, linelets_int, linelets_real, Pr, TypeTransfert , it_target, nidom, ip2p, ipt_timecount); 
     }    
   }
 
@@ -266,7 +266,7 @@ if (mpi)
 //=============================================================================
 void K_FASTS::setInterpTransfersIntra(
     E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int_tc,
-    E_Float*& ipt_param_real_tc, E_Int*& ipt_parambci, E_Float*& ipt_parambcf, E_Float& Pr,
+    E_Float*& ipt_param_real_tc, E_Int*& ipt_parambci, E_Float*& ipt_parambcf, E_Int*& linelets_int, E_Float*& linelets_real, E_Float& Pr,
     E_Int& TypeTransfert, E_Int& it_target, E_Int& nidom, E_Int& NoTransfert,
     E_Float*& ipt_timecount)
 
@@ -367,6 +367,9 @@ void K_FASTS::setInterpTransfersIntra(
     // 1ere pass_typ: IBC
     // 2eme pass_typ: transfert
     //
+
+    E_Int count_racIBC = 0;
+
      for  (E_Int ipass_typ=pass_deb; ipass_typ< pass_fin; ipass_typ++)
      {    
       // 1ere pass_inst: les raccord fixe
@@ -412,7 +415,7 @@ void K_FASTS::setInterpTransfersIntra(
           jmd = ipt_ndimdx[NoD + nidom * 2];
           // }
 
-          imdjmd = imd * jmd;
+          imdjmd = imd * jmd;          
 
           ////
           //  Interpolation parallele
@@ -434,11 +437,23 @@ void K_FASTS::setInterpTransfersIntra(
           E_Float* xPI = NULL;
           E_Float* xPW = NULL;
           E_Float* densPtr = NULL;
-          if (ibc == 1) {
+          E_Float* linelets   = NULL;
+          E_Int* indexlinelets = NULL;
+          E_Int nbptslinelets = 0;      
+          if (ibc == 1) {            
             xPC = ptrCoefs + nbInterpD;
             xPI = ptrCoefs + nbInterpD + 3 * nbRcvPts;
             xPW = ptrCoefs + nbInterpD + 6 * nbRcvPts;
             densPtr = ptrCoefs + nbInterpD + 9 * nbRcvPts;
+
+            if (linelets_int != NULL )
+               {                        
+               nbptslinelets= linelets_int[0];
+               E_Int addrlinelets   = linelets_int[count_racIBC + 3 ];
+               linelets    = linelets_real + addrlinelets;
+               indexlinelets = linelets_int + linelets_int[1]+1 + 3;
+               count_racIBC = count_racIBC + 1;               
+               }                     
           }
 
           E_Int ideb = 0;
@@ -543,6 +558,7 @@ void K_FASTS::setInterpTransfersIntra(
                       if (ibc == 1)
                       {
                         if (varType == 1 || varType == 11)
+
                           K_CONNECTOR::setIBCTransfersCommonVar1(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread,
                                                     xPC, xPC+nbRcvPts, xPC+nbRcvPts*2,
                                                     xPW, xPW+nbRcvPts, xPW+nbRcvPts*2,
@@ -554,7 +570,8 @@ void K_FASTS::setInterpTransfersIntra(
                                                     gamma, cv, muS, Cs, Ts, Pr,
                                                     vectOfDnrFields, vectOfRcvFields);
                         else if (varType == 2 || varType == 21)
-                        {
+                        {                                                                                      
+
                           K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread,
                                                     xPC    , xPC     +nbRcvPts, xPC     +nbRcvPts*2,
                                                     xPW    , xPW     +nbRcvPts, xPW     +nbRcvPts*2,
@@ -564,7 +581,8 @@ void K_FASTS::setInterpTransfersIntra(
                                                     densPtr+nbRcvPts*4, densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, densPtr+nbRcvPts*7, densPtr+nbRcvPts*8,
                                                     ipt_tmp, size,
                                                     gamma, cv, muS, Cs, Ts, Pr,
-                                                    vectOfDnrFields, vectOfRcvFields);
+                                                    vectOfDnrFields, vectOfRcvFields
+                                                    ,nbptslinelets, linelets, indexlinelets);
                         }
                         else if (varType == 3 || varType == 31)
                           K_CONNECTOR::setIBCTransfersCommonVar3(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread,
@@ -610,7 +628,7 @@ void K_FASTS::setInterpTransfersIntra(
 //=============================================================================
 void K_FASTS::setInterpTransfersInter(
     E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int_tc,
-    E_Float*& ipt_param_real_tc, E_Int*& ipt_parambci, E_Float*& ipt_parambcf, E_Float& Pr,
+    E_Float*& ipt_param_real_tc, E_Int*& ipt_parambci, E_Float*& ipt_parambcf, E_Int*& linelets_int, E_Float*& linelets_real, E_Float& Pr,
     E_Int& TypeTransfert, E_Int& it_target, E_Int& nidom, E_Int& NoTransfert,
     std::pair<RecvQueue*, SendQueue*>*& pair_of_queue, E_Float*& ipt_timecount)
 
@@ -855,6 +873,9 @@ void K_FASTS::setInterpTransfersInter(
     // 1ere pass: IBC
     // 2eme pass: transfert
     //
+
+    E_Int count_racIBC = 0;
+
     for ( E_Int ipass_typ = pass_deb; ipass_typ < pass_fin; ipass_typ++ ) 
         {
             // 1ere pass_inst: les raccord fixe
@@ -867,7 +888,7 @@ void K_FASTS::setInterpTransfersInter(
                 E_Int irac_fin = nrac_steady;
                 if ( pass_inst == 1 ) 
                 {
-        irac_deb = ipt_param_int_tc[ech + 4 + it_target];
+                    irac_deb = ipt_param_int_tc[ech + 4 + it_target];
                     irac_fin = ipt_param_int_tc[ech + 4 + it_target + timelevel];
                 }
 
@@ -920,11 +941,23 @@ void K_FASTS::setInterpTransfersInter(
                    E_Float* xPI = NULL;
                    E_Float* xPW = NULL;
                    E_Float* densPtr = NULL;
+                   E_Float* linelets   = NULL;
+                   E_Int* indexlinelets = NULL;
+                   E_Int nbptslinelets = 0;    
                    if (ibc == 1) {
                      xPC = ptrCoefs + nbInterpD;
                      xPI = ptrCoefs + nbInterpD + 3 * nbRcvPts;
                      xPW = ptrCoefs + nbInterpD + 6 * nbRcvPts;
                      densPtr = ptrCoefs + nbInterpD + 9 * nbRcvPts;
+
+                     if (linelets_int != NULL )
+                        {                        
+                        nbptslinelets= linelets_int[0];
+                        E_Int addrlinelets   = linelets_int[count_racIBC + 3 ];
+                        E_Float* linelets    = linelets_real + addrlinelets;
+                        E_Int* indexlinelets = linelets_int + linelets_int[1]+1 + 3;
+                        count_racIBC = count_racIBC + 1;
+                        }                    
                    }
          
                    E_Int ideb = 0;
@@ -1007,7 +1040,8 @@ void K_FASTS::setInterpTransfersInter(
                                                      densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, 
                                                      densPtr+nbRcvPts*4, densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, densPtr+nbRcvPts*7, densPtr+nbRcvPts*8,  
                                                      ipt_tmp, size, gamma, cv, muS, Cs,
-                                                     Ts, Pr, vectOfDnrFields, vectOfRcvFields );
+                                                     Ts, Pr, vectOfDnrFields, vectOfRcvFields,
+                                                     nbptslinelets, linelets, indexlinelets );
                       else if ( varType == 3 || varType == 31 )
                           K_CONNECTOR::setIBCTransfersCommonVar3( bcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread, xPC,
                                                      xPC + nbRcvPts, xPC + nbRcvPts * 2, xPW, xPW + nbRcvPts,

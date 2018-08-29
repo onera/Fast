@@ -69,10 +69,13 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
  // 
  //
  PyObject* pyParam_int_ibc; PyObject* pyParam_real_ibc; PyObject* pyParam_int_tc;PyObject* pyParam_real_tc; PyObject* iskipArray;
+ PyObject* pyLinlets_int; PyObject* pyLinlets_real; 
  FldArrayI* param_int_ibc; FldArrayI* param_int_tc;  E_Int*  ipt_param_int_tc ; FldArrayI* iskip_lu;
  FldArrayF* param_real_tc; FldArrayF* param_real_ibc;
+ FldArrayF* linelets_real; FldArrayI* linelets_int;
  E_Int*   ipt_param_int_ibc; E_Int* ipt_iskip_lu;
  E_Float* ipt_param_real_ibc; E_Float* ipt_param_real_tc;
+ E_Float* ipt_linelets_real; E_Int* ipt_linelets_int;
 
  E_Int lssiter_loc; E_Int lexit_lu;  E_Int lssiter_verif;
  E_Int it_target = iptdtloc[4];
@@ -93,6 +96,16 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
  if (pyParam_real_tc != Py_None)
  { K_NUMPY::getFromNumpyArray(pyParam_real_tc, param_real_tc, true); ipt_param_real_tc= param_real_tc-> begin(); }
  else{ ipt_param_real_tc = NULL; }
+
+ pyLinlets_int = PyDict_GetItemString(work,"linelets_int");
+ if (pyLinlets_int != Py_None)
+ {K_NUMPY::getFromNumpyArray(pyLinlets_int, linelets_int, true); ipt_linelets_int = linelets_int->begin();}
+ else{ipt_linelets_int = NULL;}  
+
+ pyLinlets_real = PyDict_GetItemString(work,"linelets_real");
+ if (pyLinlets_real != Py_None)
+ {K_NUMPY::getFromNumpyArray(pyLinlets_real, linelets_real, true); ipt_linelets_real = linelets_real->begin();}
+ else{ipt_linelets_real = NULL;}
 
 // Fin partie code specifique au Transfer Data
 
@@ -474,7 +487,7 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
             iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res,
             iptdrodm_transfer  ,
-            ipt_param_int_ibc  , ipt_param_real_ibc     , ipt_param_int_tc  , ipt_param_real_tc);
+            ipt_param_int_ibc  , ipt_param_real_ibc     , ipt_param_int_tc  , ipt_param_real_tc , ipt_linelets_int, ipt_linelets_real);
 
   delete [] iptx; delete [] ipt_param_int;
 

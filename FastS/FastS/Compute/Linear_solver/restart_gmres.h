@@ -106,9 +106,10 @@ if (ithread==1) printf("cpu invlu + dpdw       %g \n", lhs_end-lhs_beg);
     //
 lhs_beg = omp_get_wtime();
 #pragma omp master
-    { //Raccord V0
+    { //Raccord V0  
+      
       setInterpTransfersFastS(iptkrylov_transfer, ndimdx_transfer, param_int_tc,
-			      param_real_tc, param_int_ibc, param_real_ibc, param_real[0][PRANDT],
+			      param_real_tc, param_int_ibc, param_real_ibc, linelets_int, linelets_real, param_real[0][PRANDT],
          		      it_target, nidom, ipt_timecount, mpi);
     }
 

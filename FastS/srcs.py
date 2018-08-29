@@ -34,12 +34,15 @@ cpp_srcs = ['FastS/Metric/allocate_metric.cpp',
             #'FastS/ADJOINT/compute_RhsIterAdjoint.cpp',
             #'FastS/ADJOINT/rhs_Iter_Adj.cpp',
             #'FastS/ADJOINT/TAPENADE_FUNCTIONS/adStack.c',
+            'FastS/stretch.cpp',
+            'FastS/testlinlets.cpp',
             'FastS/STAT/computePT_my.cpp']
 
 #==============================================================================
 # Fichiers fortran
 #==============================================================================
-for_srcs = ['FastS/Metric/skmtr.for',
+for_srcs = ['FastS/StretchF.for',
+            'FastS/Metric/skmtr.for',
             'FastS/Metric/tijk_extrap.for',
             'FastS/Metric/dist_extrap.for',
             'FastS/Metric/skmtr_df.for',
