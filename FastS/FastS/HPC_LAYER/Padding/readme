@@ -1,0 +1,3 @@
+cp padding_BDW.bin $CASSIOPEE/Dist/bin/$ELSAPROD/padding.bin  # Activate padding
+rm $CASSIOPEE/Dist/bin/$ELSAPROD/padding.bin  # Deactivate padding
+

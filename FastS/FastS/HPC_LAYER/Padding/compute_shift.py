@@ -12,6 +12,9 @@ import timeit
 import os
 import re
 
+
+# Cree le fichier Shift contenant les infos tailles Pb, tmps cpu et shift. Ce fichier peut etre utiliser pour visualiser (en 2D ou 1D) le tps CPU en fonction des tailles en I,J a l'aide du script plotData.py 
+
 Imin = 119
 Imax = 200
 
