@@ -2632,7 +2632,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None):
         hook1  = HOOK.copy()
         distrib_omp = 0
         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
-	nidom_loc = hook1["nidom_tot"]
+        nidom_loc = hook1["nidom_tot"]
         
         if (hook1["lssiter_verif"] == 0 and nstep == nitmax and nitmax > nitmax ):nidom_loc = 0          
           

@@ -115,7 +115,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
               if nstep <= 3: 
                  for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
-              # #recuperation Nb pas instationnnaire dans tc
+              # #recuperation Nb pas instationnaire dans tc
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
               Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                         bcType=bcType, varType=varType, compact=1,
@@ -249,7 +249,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
 
     if ssors is not []:
         PyTree.HOOK['ssors'] = ssors
-
+    else:
+        PyTree.HOOK['ssors'] = None
     #
     # Compactage arbre moyennes stat
     #
