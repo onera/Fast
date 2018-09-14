@@ -9,8 +9,7 @@ import FastS.PyTree as FastS
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import Transform.PyTree as T
-import KCore.Adim as Adim
-import sys 
+import KCore.Adim as Adim 
 
 varsN = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
 
