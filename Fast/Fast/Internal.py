@@ -518,13 +518,13 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['TIMER_OMP']      = timerOmp
     hook['FIRST_IT']       = FIRST_IT
     hook['neq_max']        = neq_max
-    hook['param_int_ibc' ] = param_int_ibc
+    hook['param_int_ibc']  = param_int_ibc
     hook['param_real_ibc'] = param_real_ibc
-    hook['param_int_tc'  ] = None
-    hook['param_real_tc' ] = None
+    hook['param_int_tc']   = None
+    hook['param_real_tc']  = None
     hook['mpi']            = 0     
-    hook['linelets_int'  ] = None
-    hook['linelets_real' ] = None
+    hook['linelets_int']   = None
+    hook['linelets_real']  = None
     return hook
 
 #==============================================================================

@@ -17,9 +17,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
             {
                E_Float* ipt_CL = iptro_CL[nd];
 
-          //printf("apr  racc %d %d \n", nd, ithread);
 #include       "HPC_LAYER/OMP_MODE_BEGIN.h"
-
                       //
                       //verrou rhs
                       //

@@ -58,13 +58,17 @@ numz["scheme"]             = "ausmpred"
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 surf = G.cylinder((1,1,0), 0.35, 25., 360., 0., 0.5, (NI,1,2))
-t    = FastS.setIBCData_zero(t, surf, dim=2)
+tsurf = C.newPyTree(['Surf']); tsurf[2][1][2]=[surf]
 
+t    = FastS.setIBCData_zero(t, tsurf, dim=2)
+#C.convertPyTree2File(t,"toto.cgns")
+#import sys; sys.exit()
 # Prim vars, solver tag, compact, metrics
 (t,  tc, metrics) = FastS.warmup(t, tc )
 
 # Compute
 for it in xrange(1,100):
+#for it in xrange(1,5):
   print 'it=',it 
   FastS._compute(t, metrics, it, tc)
   if it%20==0:

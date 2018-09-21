@@ -61,7 +61,7 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 
   for (E_Int nd = 0; nd < nidom; nd++)
     {
-      PyObject* zone = PyList_GetItem(zones, nd);
+      PyObject* zone   = PyList_GetItem(zones  , nd);
       PyObject* metric = PyList_GetItem(metrics, nd);
 
       PyObject* o = K_PYTREE::getNodeFromName1(zone, ".Solver#ownData");
@@ -73,7 +73,7 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 	  sizessor = 0;
 	  neq = ipt_param_int[NEQ];
 	  nfic_ij = ipt_param_int[NIJK + 3];
-	  nfic_k = ipt_param_int[NIJK + 4];
+	  nfic_k  = ipt_param_int[NIJK + 4];
 	  ipt_ind_dm = K_NUMPY::getNumpyPtrI(PyList_GetItem(metric, METRIC_INDM));
 
 	  ipt_nidom_loc = ipt_ind_dm + ipt_param_int[MXSSDOM_LU] * 6 * nssiter + nssiter;
@@ -121,13 +121,13 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 			(ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
 		    }
 		}
-	    }
+	    }//loop subzone
 	  ssor = K_NUMPY::buildNumpyArray(sizessor, neq, 0, 1);
 	  PyList_Append(ssors, ssor);
 	  ssortmp = K_NUMPY::buildNumpyArray(sizessor, neq, 0, 1);
 	  PyList_Append(ssors, ssortmp);
-	}
-    }
+	}// test NB_RELAX
+    }//loop zone
   
   if (ipt_param_int[NB_RELAX] > 1)
     { 

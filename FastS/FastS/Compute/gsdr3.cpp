@@ -135,23 +135,19 @@ E_Int K_FASTS::gsdr3(
       }
 
       //
-      //mise a jour Nombre sous_iter pour implicit (simplification gestion OMP)
+      //Calcul taille tableau ssor par thread et mise a jour Nombre sous_iter pour implicit
       //
-      if(lssiter_verif ==1)
-      {  
       E_Int nd_subzone = 0;
       for (E_Int nd = 0; nd < nidom; nd++)
       {
-        if(param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1)
+        //mise a jour Nombre sous_iter pour implicit (simplification gestion OMP)
+        if(param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1 || lssiter_verif ==1 )
           {
            E_Int* ipt_nisdom_residu   =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter;                //nisdom_residu(nssiter)
            E_Int* ipt_it_bloc         =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter*2;    //it_bloc(nidom)
 
            if(ipt_nisdom_residu[nitcfg-1] != 0) ipt_it_bloc[0] +=1;
           }
-	//
-	//Calcul taille tableau ssor par thread
-	//
 	if (param_int[ nd ][ NB_RELAX ] > 1)
 	  {
 #ifdef _OPENMP
@@ -177,11 +173,10 @@ E_Int K_FASTS::gsdr3(
 			if (param_int[nd][PtZoneomp + i] != - 2)
 			  {
 			    E_Int* ipt_ind_dm_thread = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (param_int[nd][PtZoneomp + i]) * 6;
-			    E_Int indice = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
-
-			    ipt_ssor_size[ indice ] = (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic_ij) *
-			      (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic_ij) *
-			      (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
+			    E_Int indice             = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
+		            ipt_ssor_size[indice]=(ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] +1 +2*param_int[nd][ NIJK +3 ])*
+	                                	  (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] +1 +2*param_int[nd][ NIJK +3 ])*
+		                                  (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] +1 +2*param_int[nd][ NIJK +4 ]);
 			  }
 		      }
 		  }
@@ -204,17 +199,14 @@ E_Int K_FASTS::gsdr3(
 
 			if (i > ipt_topology_socket[0]*ipt_topology_socket[1]*ipt_topology_socket[2])
 			  break;
-
-                        
-			ipt_ssor_size[ indice ] = (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic_ij) *
-			  (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic_ij) *
-			  (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
+		         ipt_ssor_size[indice]=(ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] +1 +2*param_int[nd][ NIJK +3 ])*
+	                                       (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] +1 +2*param_int[nd][ NIJK +3 ])*
+		                               (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] +1 +2*param_int[nd][ NIJK +4 ]);
 		      }
 		  }// ompmode
 	      }//loop subzone
 	  }  // if relax
       } // loop zone
-      }
 
 
 /****************************************************

@@ -25,6 +25,7 @@ C***********************************************************************
      +                          , param_real, c4, c5, c6, ventijk, tijk
      +                          , rop, ropd, pext, size_data, inc_bc)
       IMPLICIT NONE
+C
 Cdo  nd = 1, size_data
 C   pext(nd) = data_pres(nd)
 Cenddo
@@ -58,9 +59,8 @@ C
 C
 C
 C
-C
       INTEGER*4 idir, lrhs, neq_mtr, ind_loop(6), param_int(0:*)
-      INTEGER*4 size_data, inc_bc
+      INTEGER*4 size_data, inc_bc(3)
       REAL*8 rop(param_int(41), param_int(36))
       REAL*8 ropd(param_int(41), param_int(36))
       REAL*8 ventijk(param_int(44), param_int(40))
@@ -142,7 +142,7 @@ C
      +          + (j+param_int(15+3)-1)*param_int(15+1) + (k+param_int(
      +          15+4)-1)*param_int(15+2)
               l1 = l + 1
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -242,7 +242,7 @@ C
      +          + (j+param_int(15+3)-1)*param_int(15+1) + (k+param_int(
      +          15+4)-1)*param_int(15+2)
               l1 = l + 1
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -348,7 +348,7 @@ C
      +          (j+param_int(15+3)-1)*param_int(15+1) + (k+param_int(15+
      +          4)-1)*param_int(15+2)
               l1 = l - 1
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -448,7 +448,7 @@ C
      +          (j+param_int(15+3)-1)*param_int(15+1) + (k+param_int(15+
      +          4)-1)*param_int(15+2)
               l1 = l - 1
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -559,7 +559,7 @@ C
      +          4)+1+param_int(15+3)-1)*param_int(15+1) + (k+param_int(
      +          15+4)-1)*param_int(15+2)
               l1 = l + incj
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -670,7 +670,7 @@ C
      +          4)+1+param_int(15+3)-1)*param_int(15+1) + (k+param_int(
      +          15+4)-1)*param_int(15+2)
               l1 = l + incj
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -791,7 +791,7 @@ C
      +          3)+param_int(15+3)-1)*param_int(15+1) + (k+param_int(15+
      +          4)-1)*param_int(15+2)
               l1 = l + incj
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -902,7 +902,7 @@ C
      +          3)+param_int(15+3)-1)*param_int(15+1) + (k+param_int(15+
      +          4)-1)*param_int(15+2)
               l1 = l + incj
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -1024,7 +1024,7 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+1+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -1133,7 +1133,7 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+1+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -1315,7 +1315,7 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
@@ -1424,7 +1424,7 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 C ... Implementation elsA       
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
               tcy = tijk(lmtr, jc)*cj_mtr*snorm

@@ -113,15 +113,17 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
     { K_NUMPY::getFromNumpyArray(pyParam_real_tc, param_real_tc, true); ipt_param_real_tc= param_real_tc-> begin(); }
     else{ ipt_param_real_tc = NULL; }
 
+
     pyLinlets_int = PyDict_GetItemString(work,"linelets_int");
     if (pyLinlets_int != Py_None)
     {K_NUMPY::getFromNumpyArray(pyLinlets_int, linelets_int, true); ipt_linelets_int = linelets_int->begin();}
     else{ipt_linelets_int = NULL;}  
-
+  
     pyLinlets_real = PyDict_GetItemString(work,"linelets_real");
     if (pyLinlets_real != Py_None)
     {K_NUMPY::getFromNumpyArray(pyLinlets_real, linelets_real, true); ipt_linelets_real = linelets_real->begin();}
     else{ipt_linelets_real = NULL;}
+  
     
     if(lcfl ==1)
     {
@@ -219,7 +221,7 @@ else
   FldArrayI tab_ndimdx_transfer(nidom*3);  E_Int* ndimdx_transfer=  tab_ndimdx_transfer.begin();
 
   for (E_Int nd = 0; nd < nidom; nd++)
-  { 
+  {
     // check zone
     PyObject* zone = PyList_GetItem(zones, nd); // domaine i
 
@@ -274,7 +276,7 @@ else
     iptssor[nd] = NULL; iptssortmp[nd] = NULL;
     if (ipt_param_int[nd][ NB_RELAX ] > 1) // 1 = LUSSOR
       {
-	iptssor[nd] = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd));
+	iptssor[nd]    = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd));
 	iptssortmp[nd] = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd + 1));
       }
   
@@ -355,6 +357,8 @@ else
           }
   } // boucle zone
   
+
+
 //  // Reservation tableau travail temporaire pour calcul du champ N+1
 
   /// Tableau pour filtrage Visbal
@@ -372,6 +376,8 @@ else
   E_Int neq_wig_stat = 0;
   if (kwig_stat ==  1) neq_wig_stat = 3; 
   FldArrayF  stat_wig(ndimt*neq_wig_stat); E_Float* iptstat_wig = stat_wig.begin();
+
+
 
   // INIT du LUSSOR
   E_Int size_tot = 0;
@@ -424,6 +430,7 @@ else
   FldArrayF norm_kry(threadmax_sdm); ipt_norm_kry = norm_kry.begin();
   FldArrayF  givens(2 * (num_max_vect - 1)); ipt_givens = givens.begin();
 
+
   /// Tableau pour stockage senseur oscillation
   PyObject* wigArray = PyDict_GetItemString(work,"wiggle"); FldArrayF* wig;
   K_NUMPY::getFromNumpyArray(wigArray, wig, true); E_Float* iptwig = wig->begin();
@@ -446,6 +453,9 @@ else
   // Tableau de travail timer omp
   PyObject*  timer_omp_Array= PyDict_GetItemString(work,"TIMER_OMP"); FldArrayF* tab_timer_omp;
   K_NUMPY::getFromNumpyArray(timer_omp_Array, tab_timer_omp, true); E_Float* timer_omp = tab_timer_omp->begin();
+
+
+
 
   //
   // On recupere ipt_param_int[nd][ ILES ] infos memoire  pour vectorisation du LU (inutile et pas present dans la base en scalaire)
@@ -519,7 +529,6 @@ else
        if (nidom_tot > 0 && skip ==0) skip_navier = 1;
      }
 
-   //printf("skip = %d \n", skip_navier);
      //calcul Navier Stokes + appli CL
      if (skip_navier ==1)
      {
@@ -549,7 +558,7 @@ else
             iptrdm             ,
             iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res, iptdrodm_transfer  ,
-            ipt_param_int_ibc       , ipt_param_real_ibc     , ipt_param_int_tc  , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real);
+            ipt_param_int_ibc , ipt_param_real_ibc, ipt_param_int_tc  , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real);
 
        if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
        {
@@ -604,7 +613,9 @@ else
           iptro_m1[nd]= iptro[nd]; 
           iptro[nd]   = iptro_p1[nd];
           iptro_p1[nd]= ptsave;}
+
   }//loop nit_c
+
 
   delete [] iptx; delete [] ipt_param_int;
 
@@ -620,6 +631,9 @@ else
   {
     if(pyParam_int_tc  != Py_None ) { RELEASESHAREDN( pyParam_int_tc, param_int_tc);  }
     if(pyParam_real_tc != Py_None ) { RELEASESHAREDN( pyParam_real_tc, param_real_tc);}
+
+    if (pyLinlets_int  != Py_None) { RELEASESHAREDN( pyLinlets_int , linelets_int ); }
+    if (pyLinlets_real != Py_None) { RELEASESHAREDN( pyLinlets_real, linelets_real); }
 
     if(lcfl ==1) RELEASESHAREDN( iskipArray, iskip_lu);
 

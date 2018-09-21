@@ -25,7 +25,7 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E idir,lrhs, neq_mtr, ind_loop(6), param_int(0:*)
-      INTEGER_E size_data, inc_bc 
+      INTEGER_E size_data, inc_bc(3) 
       REAL_E rop    (param_int(NDIMDX     ), param_int(NEQ)      )
       REAL_E ventijk(param_int(NDIMDX_VENT), param_int(NEQ_VENT) )
       REAL_E tijk   (param_int(NDIMDX_MTR ), neq_mtr             )
@@ -59,7 +59,8 @@ C...  Tableau de travail local
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_vent_param.h"
-      indbci(j_1,k_1) = 1 + (j_1-1) + (k_1-1)*inc_bc
+
+      indbci(j_1,k_1) = 1 + (j_1-inc_bc(2)) + (k_1-inc_bc(3))*inc_bc(1)
 
       !do  nd = 1, size_data
       !   pext(nd) = data_pres(nd)

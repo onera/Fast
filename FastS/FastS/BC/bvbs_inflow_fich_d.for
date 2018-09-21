@@ -57,9 +57,8 @@ C
 C
 C
 C
-C
       INTEGER*4 idir, lrhs, neq_mtr, ind_loop(6), param_int(0:*)
-      INTEGER*4 size_data, inc_bc, size_work
+      INTEGER*4 size_data, inc_bc(3), size_work
 C
       REAL*8 rop(param_int(41), param_int(36))
       REAL*8 ropd(param_int(41), param_int(36))
@@ -168,7 +167,7 @@ C
      +          15+4)-1)*param_int(15+2)
               l1 = l + 1
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
@@ -516,7 +515,7 @@ C
      +          15+4)-1)*param_int(15+2)
               l1 = l + 1
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
@@ -864,7 +863,7 @@ C
      +          4)-1)*param_int(15+2)
               l1 = l - 1
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
               pwy1 = -gamm1_1
@@ -1210,7 +1209,7 @@ C
      +          4)-1)*param_int(15+2)
               l1 = l - 1
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
               pwy1 = -gamm1_1
@@ -1561,7 +1560,7 @@ C
      +          15+4)-1)*param_int(15+2)
               l1 = l + incj
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
               pwy1 = -gamm1_1
@@ -1918,7 +1917,7 @@ C
      +          15+4)-1)*param_int(15+2)
               l1 = l + incj
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
               pwy1 = -gamm1_1
@@ -2279,7 +2278,7 @@ C
      +          4)-1)*param_int(15+2)
               l1 = l + incj
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
               pwy1 = -gamm1_1
@@ -2636,7 +2635,7 @@ C
      +          4)-1)*param_int(15+2)
               l1 = l + incj
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
               pwy1 = -gamm1_1
@@ -2998,7 +2997,7 @@ C
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
               pwy1 = -gamm1_1
@@ -3353,7 +3352,7 @@ C
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
               pwy1 = -gamm1_1
@@ -3713,7 +3712,7 @@ C
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
               pwy1 = -gamm1_1
@@ -4068,7 +4067,7 @@ C
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
 Cl'etat  impose, sauf pression extrapolé de l'interieur
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
               roi0 = pa(li)*param_real(1)*gamm1_1/ha(li)
               pwx1 = 1 + gamm1*0.5*mach*mach
               pwy1 = -gamm1_1

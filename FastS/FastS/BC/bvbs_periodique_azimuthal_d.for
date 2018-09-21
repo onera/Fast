@@ -54,7 +54,6 @@ C
 C
 C
 C
-C
       INTEGER*4 idir, lrhs, ind_loop(6), param_int(0:*)
 C
       REAL*8 data_per(*)

@@ -13,7 +13,6 @@ import numpy
 import os
 try:
     import Converter.PyTree as C
-    #import Converter.Mpi as Cmpi
     import Converter.Internal as Internal
     import Connector
     import Connector.PyTree as X
@@ -108,6 +107,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
       nstep_fin = nitmax
       layer_mode= 1
       nit_c     = NIT
+      if tc == None:
+          HOOK['param_int_tc']  = None
+          HOOK['param_real_tc'] = None
+ 
       fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , HOOK)
 
     # switch pointers
@@ -2543,32 +2546,37 @@ def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
 #==============================================================================
 #
 # IBC ordre 0: preparation
-#
+# surf : arbre avec une base par obstacle (plusieurs zones possibles)
 #==============================================================================
 def setIBCData_zero(t, surf, dim=None):
 
   zones = Internal.getZones(t)
-  for z in zones:
-     cellN = Internal.getNodeFromName2(z,'cellN')
-     if cellN is not None: cellN[0]= 'cellN_save'
 
-  C._initVars(t, 'centers:cellN', 1.)
-  bodies = [[surf]]
+  # recup des obstacles
+  bodies = []
+  for b in Internal.getBases(surf):
+      print b[0]
+      body = Internal.getZones(b)
+      bodies.append(body)
+  
   # Matrice de masquage (arbre d'assemblage)
-  BM = numpy.array([ [ 1] ] )
-
+  nbodies = len(bodies)
+  BM = numpy.ones((1,nbodies),dtype=numpy.int32)
   if dim == None:
-     nk = Internal.getNodeFromName2(z,'cellN')[1].shape[2]
+     sol= Internal.getNodeFromName1(zones[0],'FlowSolution#Centers')
+     nk = Internal.getNodeFromName1(sol,'Density')[1].shape[2]
      if nk ==1 : dim = 2
      else:       dim = 3
 
-  t = X.blankCells(t, bodies, BM, blankingType="center_in", dim= dim,delta=0.)
+  C._initVars(t,"{centers:cellN_IBC}=1.")
+  #X._blankCells(t, bodies, BM, blankingType="center_in", dim= dim,delta=0., cellNName='cellN_IBC')
+  t = X.blankCells(t, bodies, BM, blankingType="center_in", dim= dim,delta=0., cellNName='cellN_IBC')
 
   numz = {}
   zones = Internal.getZones(t)
   for z in zones:
-     cellN_node = Internal.getNodeFromName2(z,'cellN')
-     cellN_node[0]= 'cellN_IBC'
+     cellN_node = Internal.getNodeFromName2(z,'cellN_IBC')
+     #cellN_node[0]= 'cellN_IBC'
      cellN_IBC = cellN_node[1]
 
      if 0 in cellN_IBC:
@@ -2595,9 +2603,6 @@ def setIBCData_zero(t, surf, dim=None):
         FastI._setNum2Zones(z, numz)
      else:
         C._rmVars(z, ['centers:cellN_IBC'])
-
-     cellN = Internal.getNodeFromName2(z,'cellN_save')
-     if cellN is not None: cellN[0]= 'cellN'
 
   return t
 

@@ -31,7 +31,7 @@ models  = [ 'bvbs_extrapolate',
             'bvbs_outpres',
             'bvbs_inflow',
             'bvbs_inflow_fich',
-            'bvbs_inflow_newton_ale']
+            'bvbs_inflow_newton']
 
 
 # 

@@ -3,11 +3,8 @@ C  Tapenade 3.13 (r6666M) - 28 May 2018 09:28
 C
 C  Differentiation of bvbs_inflow_newton in forward (tangent) mode:
 C   variations   of useful results: rop
-C   with respect to varying inputs: rop d0x d0y d0z ha c4 c5 c6
-C                nue tijk param_real pa ventijk
-C   RW status of diff variables: rop:in-out d0x:in d0y:in d0z:in
-C                ha:in c4:in c5:in c6:in nue:in tijk:in param_real:in
-C                pa:in ventijk:in
+C   with respect to varying inputs: rop
+C   RW status of diff variables: rop:in-out
 C
 C
 C
@@ -25,13 +22,10 @@ C     $Revision: 35 $
 C     $Author: IvanMary $
 C***********************************************************************
       SUBROUTINE BVBS_INFLOW_NEWTON_D(idir, lrhs, neq_mtr, param_int, 
-     +                                ind_loop, param_real, param_reald
-     +                                , c4, c4d, c5, c5d, c6, c6d, 
-     +                                ventijk, ventijkd, tijk, tijkd, 
-     +                                rop, ropd, d0x, d0xd, d0y, d0yd, 
-     +                                d0z, d0zd, pa, pad, ha, had, nue, 
-     +                                nued, size_data, inc_bc, size_work
-     +)
+     +                                ind_loop, param_real, c4, c5, c6, 
+     +                                ventijk, tijk, rop, ropd, d0x, d0y
+     +                                , d0z, pa, ha, nue, size_data, 
+     +                                inc_bc, size_work)
       IMPLICIT NONE
 C
 CSeule la valeur de k_vent et ck_vent a un sens dans cet appel
@@ -43,12 +37,9 @@ Cj
 C
 C
 c      INCLUDE 'DIFFSIZES.inc'
-C  Hint: size_work should be the value of size_work
-C  Hint: size_work should be the value of size_work
-C  Hint: size_work should be the value of size_work
-C  Hint: size_work should be the value of size_work
-C  Hint: size_work should be the value of size_work
-C
+C  Hint: ISIZE1OFroc0dINbvbs_inflow_newton should be the value of size_work
+C  Hint: ISIZE1OFridINbvbs_inflow_newton should be the value of size_work
+C  Hint: ISIZE1OFwngdINbvbs_inflow_newton should be the value of size_work
 C
 C
 C
@@ -69,26 +60,21 @@ C
 C
 C
       INTEGER*4 idir, lrhs, neq_mtr, ind_loop(6), param_int(0:*)
-      INTEGER*4 size_data, inc_bc, size_work
+      INTEGER*4 size_data, inc_bc(3), size_work
       REAL*8 rop(param_int(41), param_int(36))
       REAL*8 ropd(param_int(41), param_int(36))
       REAL*8 ventijk(param_int(44), param_int(40))
-      REAL*8 ventijkd(param_int(44), param_int(40))
       REAL*8 tijk(param_int(43), neq_mtr)
-      REAL*8 tijkd(param_int(43), neq_mtr)
 C
 C...  Contient les donnees CGNS pour l injection subsonique:
       REAL*8 d0x(size_data), d0y(size_data), d0z(size_data), pa(
      +       size_data), ha(size_data), nue(size_data)
-      REAL*8 d0xd(size_data), d0yd(size_data), d0zd(size_data), pad(
-     +       size_data), had(size_data), nued(size_data)
 C
       REAL*8 c4, c5, c6, param_real(0:*)
-      REAL*8 c4d, c5d, c6d, param_reald(0:*)
 C
 C Var local
       INTEGER*4 l, lij, lr, lp, i, j, k, l1, l2, ic, jc, kc, kc_vent, 
-     +          ldp, lmtr, l0, incj, inck, nitnwt, nd, li, lit
+     +          ldp, lmtr, l0, incj, inck, nitnwt, nd, li
       REAL*8 ro, u, v, w, t, nut, c6inv, c0, c1, c2, c3, roe, rue, rve, 
      +       rwe, ete, ci_mtr, cj_mtr, ck_mtr, ck_vent, c_ale, tcx, tcy
      +       , tcz, qref1, qref2, qref3, qref4, qref5, r, p, c, ci, 
@@ -99,8 +85,7 @@ C Var local
      +       etext, roint, ruint, rvint, rwint, etint, s_1, roi, rui, 
      +       rvi, rwi
       REAL*8 eti, tnx, tny, tnz, roinv, sn, roe_inv
-      REAL*8 c0d, c1d, c2d, c3d, tcxd, tcyd, tczd, gamd, gam1d, gam2d, 
-     +       rgpd, qend, s_1d, roid, tnxd, tnyd, tnzd, snd
+      REAL*8 roid
 C
       REAL*8 ui, vi, wi, ti, ro0, u0, v0, w0, t0
       REAL*8 uid, vid, wid, tid, ro0d, u0d, v0d, w0d, t0d
@@ -113,7 +98,6 @@ C
       REAL*8 newtonmax, tolnewton
       REAL*8 roc0l, ril, d0nl, d0n2l, vngl, residul
       REAL*8 ventx, venty, ventz
-      REAL*8 ventxd, ventyd, ventzd
 C
 C...  Tableaux de travail locaux
       REAL*8 roc0(size_work), usd0n(size_work), usd0n2(size_work), ri(
@@ -142,12 +126,10 @@ C    adresse interface pour tableau vitesse entrainement
       REAL*8 pwr1
       REAL*8 pwr1d
       INTEGER ii1
-      REAL*8 usd0n2d(size_work)
       REAL*8 y12
       REAL*8 y11
       REAL*8 y10
       REAL*8 wngd(size_work)
-      REAL*8 usd0nd(size_work)
       REAL*8 roc0d(size_work)
       REAL*8 rid(size_work)
       REAL*8 y9
@@ -169,25 +151,17 @@ C
 C!! premiere rangee = CL
 C!! rangee suivante pour que : Phi_L + Phi_R = 2 * state
       IF (MOD(idir, 2) .EQ. 0) snorm = 1.
-      gamd = param_reald(1)
       gam = param_real(1)
-      gam1d = gamd
       gam1 = gam - 1.
       gam1_1 = 1./gam1
-      gam2d = (gamd*gam1-gam*gam1d)/gam1**2
       gam2 = gam/gam1
-      rgpd = param_reald(2)*gam1 + param_real(2)*gam1d
       rgp = param_real(2)*gam1
       newtonmax = param_int(65)
       tolnewton = param_real(37)
-      c0d = -(c6d/c6**2)
       c0 = 1./c6
-      c1d = -((c4d+c5d)*c0+(c4+c5)*c0d)
       c1 = -((c4+c5)*c0)
-      c2d = -(c6d*c0+c6*c0d)
       c2 = -(c6*c0)
 Cwrite(*,'(a,7i4)')'BC', ind_loop, idir
-      c3d = (-c5d-c4d)*c0 + (2.-c5-c4)*c0d
       c3 = (2.-c5-c4)*c0
 Cidir
 C
@@ -210,46 +184,29 @@ C
      +          + (j+param_int(15+3)-1)*param_int(15+1) + (k+param_int(
      +          15+4)-1)*param_int(15+2)
               l1 = l + 1
-              lit = 1
+              li = 1
 CInit Newton
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -264,7 +221,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -277,57 +234,46 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
 Cresolution Newton             
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
               residug = 1.e+20
               nitnwt = 0
               DO WHILE (residug .GT. tolnewton .AND. nitnwt .LT. 
@@ -339,38 +285,21 @@ CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -390,23 +319,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -414,43 +337,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y1 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y1 = dwng/wng(li)
                 ELSE
-                  y1 = -(dwng/wng(lit))
+                  y1 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y1) THEN
                   residug = y1
@@ -466,38 +384,21 @@ CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -517,28 +418,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -546,33 +441,27 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
 CMise a jour next rank
               ropd(l, 5) = tgd
 C
@@ -584,9 +473,8 @@ C
      +            param_int(0) + (k+param_int(0+4)-1)*param_int(0)*
      +            param_int(0+1)
 Cif(rop(l,1).le.0.3*rop(l0,1)) then  ! protection pour eviter valeur negative de ro et t
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
                 IF (rop(l, 1)/rop(l0, 1) - 1. .GE. 0.) THEN
                   abs0 = rop(l, 1)/rop(l0, 1) - 1.
                 ELSE
@@ -602,18 +490,14 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 4) = ropd(l0, 4)
                   ropd(l, 5) = ropd(l0, 5)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
                 END IF
               ENDDO
             ENDDO
@@ -636,11 +520,11 @@ C
      +          + (j+param_int(15+3)-1)*param_int(15+1) + (k+param_int(
      +          15+4)-1)*param_int(15+2)
               l1 = l + 1
-              lit = 1
+              li = 1
 CInit Newton
 CConstruction premier vecteru pour Newton
 C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C
 C
 CC    IN : rop
@@ -648,38 +532,21 @@ CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -694,7 +561,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -707,58 +574,47 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
 C write(*,*) ventx, venty, ventz, j,k
 Cresolution Newton             
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
               residug = 1.e+20
               nitnwt = 0.
               DO WHILE (residug .GT. tolnewton .AND. nitnwt .LT. 
@@ -770,38 +626,21 @@ CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -821,23 +660,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -845,43 +678,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y2 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y2 = dwng/wng(li)
                 ELSE
-                  y2 = -(dwng/wng(lit))
+                  y2 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y2) THEN
                   residug = y2
@@ -898,38 +726,21 @@ CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -949,28 +760,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -978,36 +783,30 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
               ropd(l, 5) = tgd
 CMise a jour next rank
-              ropd(l, 6) = nued(li)
+              ropd(l, 6) = 0.D0
 C
 C
 C
@@ -1019,9 +818,8 @@ C
                 l = 1 + (i+param_int(0+3)-1) + (j+param_int(0+3)-1)*
      +            param_int(0) + (k+param_int(0+4)-1)*param_int(0)*
      +            param_int(0+1)
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
 C
                 IF (rop(l, 1) .LE. 0.3*rop(l0, 1)) THEN
 C protection pour eviter valeur negative de ro et t
@@ -1032,21 +830,16 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 5) = ropd(l0, 5)
                   ropd(l, 6) = ropd(l0, 6)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
-                  ropd(l, 6) = ropd(l0, 6)*c3 + rop(l0, 6)*c3d + ropd(l1
-     +              , 6)*c1 + rop(l1, 6)*c1d + ropd(l2, 6)*c2 + rop(l2, 
-     +              6)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
+                  ropd(l, 6) = c3*ropd(l0, 6) + c1*ropd(l1, 6) + c2*ropd
+     +              (l2, 6)
                 END IF
               ENDDO
             ENDDO
@@ -1061,6 +854,15 @@ C
 Cparam_int(36)
 C
         IF (param_int(36) .EQ. 5) THEN
+          DO ii1=1,size_work
+            rid(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            roc0d(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            wngd(ii1) = 0.0
+          ENDDO
 C
           DO k=ind_loop(5),ind_loop(6)
             DO j=ind_loop(3),ind_loop(4)
@@ -1075,49 +877,32 @@ C
      +          (j+param_int(15+3)-1)*param_int(15+1) + (k+param_int(15+
      +          4)-1)*param_int(15+2)
               l1 = l - 1
-              lit = 1
+              li = 1
 CInit Newton
 CConstruction premier vecteru pour Newton
 C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -1132,7 +917,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -1145,57 +930,46 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
 Cresolution Newton             
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
               residug = 1.e+20
               nitnwt = 0.
               DO WHILE (residug .GT. tolnewton .AND. nitnwt .LT. 
@@ -1207,38 +981,21 @@ CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -1258,23 +1015,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -1282,43 +1033,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y3 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y3 = dwng/wng(li)
                 ELSE
-                  y3 = -(dwng/wng(lit))
+                  y3 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y3) THEN
                   residug = y3
@@ -1334,38 +1080,21 @@ CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -1385,28 +1114,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -1414,33 +1137,27 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
 CMise a jour next rank
               ropd(l, 5) = tgd
 C
@@ -1452,9 +1169,8 @@ C
      +            param_int(0) + (k+param_int(0+4)-1)*param_int(0)*
      +            param_int(0+1)
 Cif(rop(l,1).le.0.3*rop(l0,1)) then  ! protection pour eviter valeur negative de ro et t
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
                 IF (rop(l, 1)/rop(l0, 1) - 1. .GE. 0.) THEN
                   abs1 = rop(l, 1)/rop(l0, 1) - 1.
                 ELSE
@@ -1470,23 +1186,28 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 4) = ropd(l0, 4)
                   ropd(l, 5) = ropd(l0, 5)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
                 END IF
               ENDDO
             ENDDO
           ENDDO
         ELSE
+          DO ii1=1,size_work
+            rid(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            roc0d(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            wngd(ii1) = 0.0
+          ENDDO
 C
 C
 C
@@ -1503,49 +1224,32 @@ C
      +          (j+param_int(15+3)-1)*param_int(15+1) + (k+param_int(15+
      +          4)-1)*param_int(15+2)
               l1 = l - 1
-              lit = 1
+              li = 1
 CInit Newton
 CConstruction premier vecteru pour Newton
 C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
-              li = 1 + (j-1) + (k-1)*inc_bc
+              li = 1 + (j-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 C
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -1560,7 +1264,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -1573,57 +1277,46 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
 Cresolution Newton             
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
               residug = 1.e+20
               nitnwt = 0.
               DO WHILE (residug .GT. tolnewton .AND. nitnwt .LT. 
@@ -1635,38 +1328,21 @@ CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -1686,23 +1362,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -1710,43 +1380,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y4 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y4 = dwng/wng(li)
                 ELSE
-                  y4 = -(dwng/wng(lit))
+                  y4 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y4) THEN
                   residug = y4
@@ -1763,38 +1428,21 @@ CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -1814,28 +1462,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -1843,36 +1485,30 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
               ropd(l, 5) = tgd
 CMise a jour next rank
-              ropd(l, 6) = nued(li)
+              ropd(l, 6) = 0.D0
 C
 C
 C
@@ -1883,9 +1519,8 @@ C
                 l = 1 + (i+param_int(0+3)-1) + (j+param_int(0+3)-1)*
      +            param_int(0) + (k+param_int(0+4)-1)*param_int(0)*
      +            param_int(0+1)
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
 C
                 IF (rop(l, 1) .LE. 0.3*rop(l0, 1)) THEN
 C protection pour eviter valeur negative de ro et t
@@ -1896,21 +1531,16 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 5) = ropd(l0, 5)
                   ropd(l, 6) = ropd(l0, 6)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
-                  ropd(l, 6) = ropd(l0, 6)*c3 + rop(l0, 6)*c3d + ropd(l1
-     +              , 6)*c1 + rop(l1, 6)*c1d + ropd(l2, 6)*c2 + rop(l2, 
-     +              6)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
+                  ropd(l, 6) = c3*ropd(l0, 6) + c1*ropd(l1, 6) + c2*ropd
+     +              (l2, 6)
                 END IF
               ENDDO
             ENDDO
@@ -1925,6 +1555,15 @@ C
 Cparam_int(36)
 C
         IF (param_int(36) .EQ. 5) THEN
+          DO ii1=1,size_work
+            rid(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            roc0d(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            wngd(ii1) = 0.0
+          ENDDO
 C
 CInit Newton
 CConstruction premier vecteru pour Newton
@@ -1932,7 +1571,7 @@ C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
           DO k=ind_loop(5),ind_loop(6)
 C
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -1946,45 +1585,28 @@ C
      +          4)+1+param_int(15+3)-1)*param_int(15+1) + (k+param_int(
      +          15+4)-1)*param_int(15+2)
               l1 = l + incj
-              lit = lit + 1
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -1999,7 +1621,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -2012,56 +1634,45 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
             ENDDO
 Ci
 Cresolution Newton
@@ -2071,7 +1682,7 @@ C
             DO WHILE (residug .GT. tolnewton .AND. nitnwt .LT. newtonmax
      +         )
               nitnwt = nitnwt + 1
-              lit = 0
+              li = 0
               residug = 0.
 CDEC$ IVDEP
               DO i=ind_loop(1),ind_loop(2)
@@ -2085,45 +1696,28 @@ CDEC$ IVDEP
      +            ind_loop(4)+1+param_int(15+3)-1)*param_int(15+1) + (k+
      +            param_int(15+4)-1)*param_int(15+2)
                 l1 = l + incj
-                lit = lit + 1
-                li = 1 + (i-1) + (k-1)*inc_bc
+                li = li + 1
+                li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -2143,23 +1737,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -2167,43 +1755,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y5 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y5 = dwng/wng(li)
                 ELSE
-                  y5 = -(dwng/wng(lit))
+                  y5 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y5) THEN
                   residug = y5
@@ -2216,7 +1799,7 @@ C
 Ci
 CEnd Newton
 CMise a jour first rank
-            lit = 0
+            li = 0
             DO i=ind_loop(1),ind_loop(2)
 C
               l = 1 + (i+param_int(0+3)-1) + (ind_loop(4)+param_int(0+3)
@@ -2229,45 +1812,28 @@ C
      +          4)+1+param_int(15+3)-1)*param_int(15+1) + (k+param_int(
      +          15+4)-1)*param_int(15+2)
               l1 = l + incj
-              lit = lit + 1
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -2287,28 +1853,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -2316,33 +1876,27 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
               ropd(l, 5) = tgd
             ENDDO
 Ci
@@ -2361,9 +1915,8 @@ C
                 l1 = l0 + incj
                 l2 = l0 + 2*incj
 Cif(rop(l,1).le.0.3*rop(l0,1)) then  ! protection pour eviter valeur negative de ro et t
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
                 IF (rop(l, 1)/rop(l0, 1) - 1. .GE. 0.) THEN
                   abs2 = rop(l, 1)/rop(l0, 1) - 1.
                 ELSE
@@ -2379,23 +1932,29 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 4) = ropd(l0, 4)
                   ropd(l, 5) = ropd(l0, 5)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
                 END IF
               ENDDO
             ENDDO
           ENDDO
         ELSE
+          DO ii1=1,size_work
+            rid(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            roc0d(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            wngd(ii1) = 0.0
+          ENDDO
+C
 Ci
 Cj
 C
@@ -2408,7 +1967,7 @@ C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
           DO k=ind_loop(5),ind_loop(6)
 C
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -2422,45 +1981,28 @@ C
      +          4)+1+param_int(15+3)-1)*param_int(15+1) + (k+param_int(
      +          15+4)-1)*param_int(15+2)
               l1 = l + incj
-              lit = lit + 1
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -2475,7 +2017,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -2488,56 +2030,45 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
             ENDDO
 Ci
 Cresolution Newton
@@ -2547,7 +2078,7 @@ C
             DO WHILE (residug .GT. tolnewton .AND. nitnwt .LT. newtonmax
      +         )
               nitnwt = nitnwt + 1
-              lit = 0
+              li = 0
               residug = 0.
 CDEC$ IVDEP
               DO i=ind_loop(1),ind_loop(2)
@@ -2561,45 +2092,28 @@ CDEC$ IVDEP
      +            ind_loop(4)+1+param_int(15+3)-1)*param_int(15+1) + (k+
      +            param_int(15+4)-1)*param_int(15+2)
                 l1 = l + incj
-                lit = lit + 1
-                li = 1 + (i-1) + (k-1)*inc_bc
+                li = li + 1
+                li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -2619,23 +2133,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -2643,43 +2151,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y6 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y6 = dwng/wng(li)
                 ELSE
-                  y6 = -(dwng/wng(lit))
+                  y6 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y6) THEN
                   residug = y6
@@ -2693,7 +2196,7 @@ C
 Ci
 CEnd Newton
 CMise a jour first rank
-            lit = 0
+            li = 0
             DO i=ind_loop(1),ind_loop(2)
 C
               l = 1 + (i+param_int(0+3)-1) + (ind_loop(4)+param_int(0+3)
@@ -2706,45 +2209,28 @@ C
      +          4)+1+param_int(15+3)-1)*param_int(15+1) + (k+param_int(
      +          15+4)-1)*param_int(15+2)
               l1 = l + incj
-              lit = lit + 1
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -2764,28 +2250,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -2793,35 +2273,29 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
               ropd(l, 5) = tgd
-              ropd(l, 6) = nued(li)
+              ropd(l, 6) = 0.D0
             ENDDO
 C
 C
@@ -2840,9 +2314,8 @@ C
      +            )*param_int(0+1)
                 l1 = l0 + incj
                 l2 = l0 + 2*incj
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
 C
                 IF (rop(l, 1) .LE. 0.3*rop(l0, 1)) THEN
 C protection pour eviter valeur negative de ro et t
@@ -2853,21 +2326,16 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 5) = ropd(l0, 5)
                   ropd(l, 6) = ropd(l0, 6)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
-                  ropd(l, 6) = ropd(l0, 6)*c3 + rop(l0, 6)*c3d + ropd(l1
-     +              , 6)*c1 + rop(l1, 6)*c1d + ropd(l2, 6)*c2 + rop(l2, 
-     +              6)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
+                  ropd(l, 6) = c3*ropd(l0, 6) + c1*ropd(l1, 6) + c2*ropd
+     +              (l2, 6)
                 END IF
               ENDDO
             ENDDO
@@ -2886,13 +2354,22 @@ C
 Cparam_int(36)
 C
         IF (param_int(36) .EQ. 5) THEN
+          DO ii1=1,size_work
+            rid(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            roc0d(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            wngd(ii1) = 0.0
+          ENDDO
 C
 CInit Newton
 CConstruction premier vecteru pour Newton
 C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
           DO k=ind_loop(5),ind_loop(6)
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -2906,45 +2383,28 @@ C
      +          3)+param_int(15+3)-1)*param_int(15+1) + (k+param_int(15+
      +          4)-1)*param_int(15+2)
               l1 = l + incj
-              lit = lit + 1
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -2959,7 +2419,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -2972,56 +2432,45 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
             ENDDO
 Ci
 Cresolution Newton
@@ -3032,7 +2481,7 @@ C
      +         )
               nitnwt = nitnwt + 1
 C
-              lit = 0
+              li = 0
               residug = 0.
 CDEC$ IVDEP
               DO i=ind_loop(1),ind_loop(2)
@@ -3046,45 +2495,28 @@ CDEC$ IVDEP
      +            ind_loop(3)+param_int(15+3)-1)*param_int(15+1) + (k+
      +            param_int(15+4)-1)*param_int(15+2)
                 l1 = l + incj
-                lit = lit + 1
-                li = 1 + (i-1) + (k-1)*inc_bc
+                li = li + 1
+                li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -3104,23 +2536,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -3128,43 +2554,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y7 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y7 = dwng/wng(li)
                 ELSE
-                  y7 = -(dwng/wng(lit))
+                  y7 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y7) THEN
                   residug = y7
@@ -3178,7 +2599,7 @@ Ci
 CEnd Newton 
 CMise a jour first rank
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -3192,45 +2613,28 @@ C
      +          3)+param_int(15+3)-1)*param_int(15+1) + (k+param_int(15+
      +          4)-1)*param_int(15+2)
               l1 = l + incj
-              lit = lit + 1
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -3250,28 +2654,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -3279,33 +2677,27 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
               ropd(l, 5) = tgd
             ENDDO
 Ci
@@ -3323,9 +2715,8 @@ C
                 l1 = l0 + incj
                 l2 = l0 + 2*incj
 Cif(rop(l,1).le.0.3*rop(l0,1)) then  ! protection pour eviter valeur negative de ro et t
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
                 IF (rop(l, 1)/rop(l0, 1) - 1. .GE. 0.) THEN
                   abs3 = rop(l, 1)/rop(l0, 1) - 1.
                 ELSE
@@ -3341,23 +2732,28 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 4) = ropd(l0, 4)
                   ropd(l, 5) = ropd(l0, 5)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
                 END IF
               ENDDO
             ENDDO
           ENDDO
         ELSE
+          DO ii1=1,size_work
+            rid(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            roc0d(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            wngd(ii1) = 0.0
+          ENDDO
 C
 Ci
 Cj
@@ -3369,7 +2765,7 @@ CConstruction premier vecteru pour Newton
 C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
           DO k=ind_loop(5),ind_loop(6)
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -3383,45 +2779,28 @@ C
      +          3)+param_int(15+3)-1)*param_int(15+1) + (k+param_int(15+
      +          4)-1)*param_int(15+2)
               l1 = l + incj
-              lit = lit + 1
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -3436,7 +2815,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -3449,56 +2828,45 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
             ENDDO
 Ci
 Cresolution Newton
@@ -3509,7 +2877,7 @@ C
      +         )
               nitnwt = nitnwt + 1
 C
-              lit = 0
+              li = 0
               residug = 0.
 CDEC$ IVDEP
               DO i=ind_loop(1),ind_loop(2)
@@ -3523,45 +2891,28 @@ CDEC$ IVDEP
      +            ind_loop(3)+param_int(15+3)-1)*param_int(15+1) + (k+
      +            param_int(15+4)-1)*param_int(15+2)
                 l1 = l + incj
-                lit = lit + 1
-                li = 1 + (i-1) + (k-1)*inc_bc
+                li = li + 1
+                li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -3581,23 +2932,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -3605,43 +2950,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y8 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y8 = dwng/wng(li)
                 ELSE
-                  y8 = -(dwng/wng(lit))
+                  y8 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y8) THEN
                   residug = y8
@@ -3656,7 +2996,7 @@ Ci
 CEnd Newton 
 CMise a jour first rank
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -3670,45 +3010,28 @@ C
      +          3)+param_int(15+3)-1)*param_int(15+1) + (k+param_int(15+
      +          4)-1)*param_int(15+2)
               l1 = l + incj
-              lit = lit + 1
-              li = 1 + (i-1) + (k-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (k-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -3728,28 +3051,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -3757,35 +3074,29 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
               ropd(l, 5) = tgd
-              ropd(l, 6) = nued(li)
+              ropd(l, 6) = 0.D0
             ENDDO
 C
 C
@@ -3803,9 +3114,8 @@ C
      +            )*param_int(0+1)
                 l1 = l0 + incj
                 l2 = l0 + 2*incj
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
 C
                 IF (rop(l, 1) .LE. 0.3*rop(l0, 1)) THEN
 C protection pour eviter valeur negative de ro et t
@@ -3816,21 +3126,16 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 5) = ropd(l0, 5)
                   ropd(l, 6) = ropd(l0, 6)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
-                  ropd(l, 6) = ropd(l0, 6)*c3 + rop(l0, 6)*c3d + ropd(l1
-     +              , 6)*c1 + rop(l1, 6)*c1d + ropd(l2, 6)*c2 + rop(l2, 
-     +              6)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
+                  ropd(l, 6) = c3*ropd(l0, 6) + c1*ropd(l1, 6) + c2*ropd
+     +              (l2, 6)
                 END IF
               ENDDO
             ENDDO
@@ -3849,13 +3154,22 @@ C
 Cparam_int(36)
 C
         IF (param_int(36) .EQ. 5) THEN
+          DO ii1=1,size_work
+            rid(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            roc0d(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            wngd(ii1) = 0.0
+          ENDDO
 C
 CInit Newton
 CConstruction premier vecteru pour Newton
 C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
           DO j=ind_loop(3),ind_loop(4)
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -3869,45 +3183,28 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+1+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              lit = lit + 1
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -3922,7 +3219,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -3935,56 +3232,45 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
             ENDDO
 Cresolution Newton
 C
@@ -3994,7 +3280,7 @@ C
      +         )
               nitnwt = nitnwt + 1
 C
-              lit = 0
+              li = 0
               residug = 0.
 CDEC$ IVDEP
               DO i=ind_loop(1),ind_loop(2)
@@ -4008,45 +3294,28 @@ CDEC$ IVDEP
      +            param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+1+
      +            param_int(15+4)-1)*param_int(15+2)
                 l1 = l + inck
-                lit = lit + 1
-                li = 1 + (i-1) + (j-1)*inc_bc
+                li = li + 1
+                li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -4066,23 +3335,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -4090,43 +3353,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y9 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y9 = dwng/wng(li)
                 ELSE
-                  y9 = -(dwng/wng(lit))
+                  y9 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y9) THEN
                   residug = y9
@@ -4138,7 +3396,7 @@ C
 C
 CEnd Newton 
 CMise a jour first rank
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -4152,45 +3410,28 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+1+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              lit = lit + 1
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -4210,28 +3451,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -4239,33 +3474,27 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
               ropd(l, 5) = tgd
             ENDDO
 CMise a jour next rank
@@ -4283,9 +3512,8 @@ C
                 l1 = l0 + inck
                 l2 = l0 + 2*inck
 Cif(rop(l,1).le.0.3*rop(l0,1)) then  ! protection pour eviter valeur negative de ro et t
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
                 IF (rop(l, 1)/rop(l0, 1) - 1. .GE. 0.) THEN
                   abs4 = rop(l, 1)/rop(l0, 1) - 1.
                 ELSE
@@ -4301,23 +3529,28 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 4) = ropd(l0, 4)
                   ropd(l, 5) = ropd(l0, 5)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
                 END IF
               ENDDO
             ENDDO
           ENDDO
         ELSE
+          DO ii1=1,size_work
+            rid(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            roc0d(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            wngd(ii1) = 0.0
+          ENDDO
 C
 C
 Cj
@@ -4328,7 +3561,7 @@ CConstruction premier vecteru pour Newton
 C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
           DO j=ind_loop(3),ind_loop(4)
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -4342,45 +3575,28 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+1+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              lit = lit + 1
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -4395,7 +3611,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -4408,56 +3624,45 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
             ENDDO
 Cresolution Newton
 C
@@ -4467,7 +3672,7 @@ C
      +         )
               nitnwt = nitnwt + 1
 C
-              lit = 0
+              li = 0
               residug = 0.
 CDEC$ IVDEP
               DO i=ind_loop(1),ind_loop(2)
@@ -4481,45 +3686,28 @@ CDEC$ IVDEP
      +            param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+1+
      +            param_int(15+4)-1)*param_int(15+2)
                 l1 = l + inck
-                lit = lit + 1
-                li = 1 + (i-1) + (j-1)*inc_bc
+                li = li + 1
+                li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -4539,23 +3727,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -4563,43 +3745,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y10 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y10 = dwng/wng(li)
                 ELSE
-                  y10 = -(dwng/wng(lit))
+                  y10 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y10) THEN
                   residug = y10
@@ -4612,7 +3789,7 @@ C
 C
 CEnd Newton 
 CMise a jour first rank
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -4626,45 +3803,28 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+1+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              lit = lit + 1
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -4684,28 +3844,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -4713,35 +3867,29 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
               ropd(l, 5) = tgd
-              ropd(l, 6) = nued(li)
+              ropd(l, 6) = 0.D0
             ENDDO
 C
 C
@@ -4759,9 +3907,8 @@ C
      +            param_int(0)*param_int(0+1)
                 l1 = l0 + inck
                 l2 = l0 + 2*inck
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
 C
                 IF (rop(l, 1) .LE. 0.3*rop(l0, 1)) THEN
 C protection pour eviter valeur negative de ro et t
@@ -4772,21 +3919,16 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 5) = ropd(l0, 5)
                   ropd(l, 6) = ropd(l0, 6)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
-                  ropd(l, 6) = ropd(l0, 6)*c3 + rop(l0, 6)*c3d + ropd(l1
-     +              , 6)*c1 + rop(l1, 6)*c1d + ropd(l2, 6)*c2 + rop(l2, 
-     +              6)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
+                  ropd(l, 6) = c3*ropd(l0, 6) + c1*ropd(l1, 6) + c2*ropd
+     +              (l2, 6)
                 END IF
               ENDDO
             ENDDO
@@ -4804,13 +3946,22 @@ C
 Cparam_int(36)
 C
         IF (param_int(36) .EQ. 5) THEN
+          DO ii1=1,size_work
+            rid(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            roc0d(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            wngd(ii1) = 0.0
+          ENDDO
 C
 CInit Newton
 CConstruction premier vecteru pour Newton
 C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
           DO j=ind_loop(3),ind_loop(4)
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -4824,45 +3975,28 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              lit = lit + 1
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -4877,7 +4011,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -4890,56 +4024,45 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
             ENDDO
 Cresolution Newton
 C
@@ -4949,7 +4072,7 @@ C
      +         )
               nitnwt = nitnwt + 1
 C
-              lit = 0
+              li = 0
               residug = 0.
 CDEC$ IVDEP
               DO i=ind_loop(1),ind_loop(2)
@@ -4963,45 +4086,28 @@ CDEC$ IVDEP
      +            param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+
      +            param_int(15+4)-1)*param_int(15+2)
                 l1 = l + inck
-                lit = lit + 1
-                li = 1 + (i-1) + (j-1)*inc_bc
+                li = li + 1
+                li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -5021,23 +4127,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -5045,43 +4145,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y11 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y11 = dwng/wng(li)
                 ELSE
-                  y11 = -(dwng/wng(lit))
+                  y11 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y11) THEN
                   residug = y11
@@ -5094,7 +4189,7 @@ C
 CEnd Newton
 CMise a jour first rank
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -5108,45 +4203,28 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              lit = lit + 1
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -5166,28 +4244,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -5195,33 +4267,27 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
               ropd(l, 5) = tgd
             ENDDO
 CMise a jour next rank
@@ -5239,9 +4305,8 @@ C
                 l1 = l0 + inck
                 l2 = l0 + 2*inck
 Cif(rop(l,1).le.0.3*rop(l0,1)) then  ! protection pour eviter valeur negative de ro et t
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
                 IF (rop(l, 1)/rop(l0, 1) - 1. .GE. 0.) THEN
                   abs5 = rop(l, 1)/rop(l0, 1) - 1.
                 ELSE
@@ -5257,23 +4322,28 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 4) = ropd(l0, 4)
                   ropd(l, 5) = ropd(l0, 5)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
                 END IF
               ENDDO
             ENDDO
           ENDDO
         ELSE
+          DO ii1=1,size_work
+            rid(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            roc0d(ii1) = 0.0
+          ENDDO
+          DO ii1=1,size_work
+            wngd(ii1) = 0.0
+          ENDDO
 C
 Cj
 C
@@ -5283,7 +4353,7 @@ CConstruction premier vecteru pour Newton
 C OUT: roc0(*), usd0n(*),usd0n2(*), ri(*), wng(*)
           DO j=ind_loop(3),ind_loop(4)
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -5297,45 +4367,28 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              lit = lit + 1
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -5350,7 +4403,7 @@ C ... Inner state
               wi = rop(l1, 4)
               tid = ropd(l1, 5)
               ti = rop(l1, 5)
-              pid = (roid*rgp+roi*rgpd)*ti + roi*rgp*tid
+              pid = rgp*(roid*ti+roi*tid)
               pi = roi*rgp*ti
 C ... linearization state = inner state (elsA-like)
               ro0d = ropd(l1, 1)
@@ -5363,56 +4416,45 @@ C ... linearization state = inner state (elsA-like)
               w0 = rop(l1, 4)
               t0d = ropd(l1, 5)
               t0 = rop(l1, 5)
-              p0d = (ro0d*rgp+ro0*rgpd)*t0 + ro0*rgp*t0d
+              p0d = rgp*(ro0d*t0+ro0*t0d)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
-              vnid = uid*tnx + ui*tnxd + vid*tny + vi*tnyd + wid*tnz + 
-     +          wi*tnzd
+              vnid = tnx*uid + tny*vid + tnz*wid
               vni = ui*tnx + vi*tny + wi*tnz
 C rho*c
 Csans dimension: produit scalaire direction vitesse . normale
-              arg1d = (ro0d*gam+ro0*gamd)*p0 + ro0*gam*p0d
+              arg1d = gam*(ro0d*p0+ro0*p0d)
               arg1 = ro0*gam*p0
               IF (arg1 .EQ. 0.0) THEN
-                roc0d(lit) = 0.D0
+                roc0d(li) = 0.D0
               ELSE
-                roc0d(lit) = arg1d/(2.0*SQRT(arg1))
+                roc0d(li) = arg1d/(2.0*SQRT(arg1))
               END IF
-              roc0(lit) = SQRT(arg1)
-              usd0nd(lit) = -((d0xd(li)*tnx+d0x(li)*tnxd+d0yd(li)*tny+
-     +          d0y(li)*tnyd+d0zd(li)*tnz+d0z(li)*tnzd)/(d0x(li)*tnx+d0y
-     +          (li)*tny+d0z(li)*tnz)**2)
-              usd0n(lit) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
-              usd0n2d(lit) = 2*usd0n(lit)*usd0nd(lit)
-              usd0n2(lit) = usd0n(lit)**2
+              roc0(li) = SQRT(arg1)
+              usd0n(li) = 1./(d0x(li)*tnx+d0y(li)*tny+d0z(li)*tnz)
+              usd0n2(li) = usd0n(li)**2
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
-              wnid = vnid - qend
+              wnid = vnid
               wni = vni - qen
-              rid(lit) = pid + roc0d(lit)*wni + roc0(lit)*wnid
-              ri(lit) = pi + roc0(lit)*wni
+              rid(li) = pid + roc0d(li)*wni + roc0(li)*wnid
+              ri(li) = pi + roc0(li)*wni
 C ...   Newton Initialization for the relative normal velocity 
-              wn0d = u0d*tnx + u0*tnxd + v0d*tny + v0*tnyd + w0d*tnz + 
-     +          w0*tnzd - qend
+              wn0d = tnx*u0d + tny*v0d + tnz*w0d
               wn0 = u0*tnx + v0*tny + w0*tnz - qen
-              wngd(lit) = wn0d
-              wng(lit) = wn0
+              wngd(li) = wn0d
+              wng(li) = wn0
             ENDDO
 Cresolution Newton
 C
@@ -5422,7 +4464,7 @@ C
      +         )
               nitnwt = nitnwt + 1
 C
-              lit = 0
+              li = 0
               residug = 0.
 CDEC$ IVDEP
               DO i=ind_loop(1),ind_loop(2)
@@ -5436,45 +4478,28 @@ CDEC$ IVDEP
      +            param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+
      +            param_int(15+4)-1)*param_int(15+2)
                 l1 = l + inck
-                lit = lit + 1
-                li = 1 + (i-1) + (j-1)*inc_bc
+                li = li + 1
+                li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-                tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
                 tcx = tijk(lmtr, ic)*ci_mtr*snorm
-                tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
                 tcy = tijk(lmtr, jc)*cj_mtr*snorm
-                tczd = ck_mtr*snorm*tijkd(lmtr, kc)
                 tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-                arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd
-     +            *tcz + tcz*tczd
                 arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-                IF (arg1 .EQ. 0.0) THEN
-                  snd = 0.D0
-                ELSE
-                  snd = arg1d/(2.0*SQRT(arg1))
-                END IF
                 sn = SQRT(arg1)
 C
-                s_1d = -(snd/sn**2)
                 s_1 = 1./sn
                 IF (sn .EQ. 0.) THEN
                   tnx = 1.
                   tny = 0.
                   tnz = 0.
-                  tnxd = 0.0
-                  tnyd = 0.0
-                  tnzd = 0.0
                 ELSE
-                  tnxd = tcxd*s_1 + tcx*s_1d
                   tnx = tcx*s_1
-                  tnyd = tcyd*s_1 + tcy*s_1d
                   tny = tcy*s_1
-                  tnzd = tczd*s_1 + tcz*s_1d
                   tnz = tcz*s_1
                 END IF
 C
@@ -5494,23 +4519,17 @@ C ... linearization state = inner state (elsA-like)
                 p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-                ventxd = ventijkd(ldp, 1)
                 ventx = ventijk(ldp, 1)
-                ventyd = ventijkd(ldp, 2)
                 venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-                ventzd = ck_vent*ventijkd(ldp, kc_vent)
                 ventz = ventijk(ldp, kc_vent)*ck_vent
-                qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*
-     +            tnyd+ventzd*tnz+ventz*tnzd)
                 qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C... Newton for the relative normal velocity
-                bd = -(((2*(wng(lit)+qen)*(wngd(lit)+qend)*usd0n2(lit)+(
-     +            wng(lit)+qen)**2*usd0n2d(lit))*2.*ha(li)-(wng(lit)+qen
-     +            )**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-                b = 1. - (wng(lit)+qen)**2*usd0n2(lit)/(2.*ha(li))
+                bd = -(usd0n2(li)*2*(wng(li)+qen)*wngd(li)/(2.*ha(li)
+     +            ))
+                b = 1. - (wng(li)+qen)**2*usd0n2(li)/(2.*ha(li))
                 IF (0.2 .LT. b) THEN
                   b = b
                 ELSE
@@ -5518,43 +4537,38 @@ C... Newton for the relative normal velocity
                   bd = 0.0
                 END IF
 C
-                IF (b .GT. 0.0) THEN
-                  pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-                ELSE IF (b .EQ. 0.0) THEN
-                  IF (gam2 .EQ. 1.0) THEN
-                    pwr1d = bd
-                  ELSE
-                    pwr1d = 0.0
-                  END IF
-                ELSE IF (gam2 .EQ. INT(gam2)) THEN
+                IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2
+     +              ))) THEN
                   pwr1d = gam2*b**(gam2-1)*bd
+                ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                  pwr1d = bd
                 ELSE
                   pwr1d = 0.0
                 END IF
                 pwr1 = b**gam2
-                pgd = pad(li)*pwr1 + pa(li)*pwr1d
+                pgd = pa(li)*pwr1d
                 pg = pa(li)*pwr1
 C      nan = isnan(pg)
 C      if(nan)   write(*,*)'fuck Nan inflow_newton',pa(li),b,gam2
 C
-                rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+
-     +            ha(li)*bd))/(ha(li)*b)**2
+                rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)
+     +            **2
                 rog = gam2*pg/(ha(li)*b)
 C
-                fd = pgd + roc0d(lit)*wng(lit) + roc0(lit)*wngd(lit) - 
-     +            rid(lit)
-                f = pg + roc0(lit)*wng(lit) - ri(lit)
-                dfd = roc0d(lit) - (rogd*usd0n2(lit)+rog*usd0n2d(lit))*(
-     +            wng(lit)+qen) - rog*usd0n2(lit)*(wngd(lit)+qend)
-                df = roc0(lit) - rog*(wng(lit)+qen)*usd0n2(lit)
+                fd = pgd + roc0d(li)*wng(li) + roc0(li)*wngd(li) - 
+     +            rid(li)
+                f = pg + roc0(li)*wng(li) - ri(li)
+                dfd = roc0d(li) - usd0n2(li)*(rogd*(wng(li)+qen)+rog*
+     +            wngd(li))
+                df = roc0(li) - rog*(wng(li)+qen)*usd0n2(li)
                 dwngd = -((fd*df-f*dfd)/df**2)
                 dwng = -(f/df)
-                wngd(lit) = wngd(lit) + dwngd
-                wng(lit) = wng(lit) + dwng
-                IF (dwng/wng(lit) .GE. 0.) THEN
-                  y12 = dwng/wng(lit)
+                wngd(li) = wngd(li) + dwngd
+                wng(li) = wng(li) + dwng
+                IF (dwng/wng(li) .GE. 0.) THEN
+                  y12 = dwng/wng(li)
                 ELSE
-                  y12 = -(dwng/wng(lit))
+                  y12 = -(dwng/wng(li))
                 END IF
                 IF (residug .LT. y12) THEN
                   residug = y12
@@ -5568,7 +4582,7 @@ C
 CEnd Newton
 CMise a jour first rank
 C
-            lit = 0
+            li = 0
 CDEC$ IVDEP
             DO i=ind_loop(1),ind_loop(2)
 C
@@ -5582,45 +4596,28 @@ C
      +          param_int(15+3)-1)*param_int(15+1) + (ind_loop(6)+
      +          param_int(15+4)-1)*param_int(15+2)
               l1 = l + inck
-              lit = lit + 1
-              li = 1 + (i-1) + (j-1)*inc_bc
+              li = li + 1
+              li = 1 + (i-inc_bc(2)) + (j-inc_bc(3))*inc_bc(1)
 CC    IN : rop
 CC    OUT: roi,ui,vi,wi,Ti,pi (etat intern)
 CC    OUT: ro0,u0,v0,w0,T0,pi (etat extern)
 CC    OUT: tcx,tcy,tcz, tnx,tny,tnz
 C ... Implementation elsA       
-              tcxd = ci_mtr*snorm*tijkd(lmtr, ic)
               tcx = tijk(lmtr, ic)*ci_mtr*snorm
-              tcyd = cj_mtr*snorm*tijkd(lmtr, jc)
               tcy = tijk(lmtr, jc)*cj_mtr*snorm
-              tczd = ck_mtr*snorm*tijkd(lmtr, kc)
               tcz = tijk(lmtr, kc)*ck_mtr*snorm
 C
-              arg1d = tcxd*tcx + tcx*tcxd + tcyd*tcy + tcy*tcyd + tczd*
-     +          tcz + tcz*tczd
               arg1 = tcx*tcx + tcy*tcy + tcz*tcz
-              IF (arg1 .EQ. 0.0) THEN
-                snd = 0.D0
-              ELSE
-                snd = arg1d/(2.0*SQRT(arg1))
-              END IF
               sn = SQRT(arg1)
 C
-              s_1d = -(snd/sn**2)
               s_1 = 1./sn
               IF (sn .EQ. 0.) THEN
                 tnx = 1.
                 tny = 0.
                 tnz = 0.
-                tnxd = 0.0
-                tnyd = 0.0
-                tnzd = 0.0
               ELSE
-                tnxd = tcxd*s_1 + tcx*s_1d
                 tnx = tcx*s_1
-                tnyd = tcyd*s_1 + tcy*s_1d
                 tny = tcy*s_1
-                tnzd = tczd*s_1 + tcz*s_1d
                 tnz = tcz*s_1
               END IF
 C
@@ -5640,28 +4637,22 @@ C ... linearization state = inner state (elsA-like)
               p0 = ro0*rgp*t0
 CC    In : tnx,tny,tnz, c_ale, ventijk
 CC    OUT: qen (vitesse entrainememnt)
-              ventxd = ventijkd(ldp, 1)
               ventx = ventijk(ldp, 1)
-              ventyd = ventijkd(ldp, 2)
               venty = ventijk(ldp, 2)
 Cwrite(*,*) ventx, venty, ventz, j,k
-              ventzd = ck_vent*ventijkd(ldp, kc_vent)
               ventz = ventijk(ldp, kc_vent)*ck_vent
-              qend = c_ale*(ventxd*tnx+ventx*tnxd+ventyd*tny+venty*tnyd+
-     +          ventzd*tnz+ventz*tnzd)
               qen = (ventx*tnx+venty*tny+ventz*tnz)*c_ale
 C
 C
 C
 C... End of Newton and building of the variables
-              vngd = wngd(lit) + qend
-              vng = wng(lit) + qen
+              vngd = wngd(li)
+              vng = wng(li) + qen
 C...      Absolute velocity module
-              vgd = vngd*usd0n(lit) + vng*usd0nd(lit)
-              vg = vng*usd0n(lit)
-              bd = -(((2*vng*vngd*usd0n2(lit)+vng**2*usd0n2d(lit))*2.*ha
-     +          (li)-vng**2*usd0n2(lit)*2.*had(li))/(2.*ha(li))**2)
-              b = 1. - vng**2*usd0n2(lit)/(2.*ha(li))
+              vgd = usd0n(li)*vngd
+              vg = vng*usd0n(li)
+              bd = -(usd0n2(li)*2*vng*vngd/(2.*ha(li)))
+              b = 1. - vng**2*usd0n2(li)/(2.*ha(li))
               IF (0.2 .LT. b) THEN
                 b = b
               ELSE
@@ -5669,35 +4660,29 @@ C...      Absolute velocity module
                 bd = 0.0
               END IF
 C
-              IF (b .GT. 0.0) THEN
-                pwr1d = b**gam2*(LOG(b)*gam2d+gam2*bd/b)
-              ELSE IF (b .EQ. 0.0) THEN
-                IF (gam2 .EQ. 1.0) THEN
-                  pwr1d = bd
-                ELSE
-                  pwr1d = 0.0
-                END IF
-              ELSE IF (gam2 .EQ. INT(gam2)) THEN
+              IF (b .GT. 0.0 .OR. (b .LT. 0.0 .AND. gam2 .EQ. INT(gam2))
+     +        ) THEN
                 pwr1d = gam2*b**(gam2-1)*bd
+              ELSE IF (b .EQ. 0.0 .AND. gam2 .EQ. 1.0) THEN
+                pwr1d = bd
               ELSE
                 pwr1d = 0.0
               END IF
               pwr1 = b**gam2
-              pgd = pad(li)*pwr1 + pa(li)*pwr1d
+              pgd = pa(li)*pwr1d
               pg = pa(li)*pwr1
-              rogd = ((gam2d*pg+gam2*pgd)*ha(li)*b-gam2*pg*(had(li)*b+ha
-     +          (li)*bd))/(ha(li)*b)**2
+              rogd = (gam2*pgd*ha(li)*b-gam2*pg*ha(li)*bd)/(ha(li)*b)**2
               rog = gam2*pg/(ha(li)*b)
 Cif(j*k.eq.1)write(*,'(a,4f16.6,2i4)')'verif',vg,pg,rog,Tg,j,k
-              tgd = (pgd*rog*rgp-pg*(rogd*rgp+rog*rgpd))/(rog*rgp)**2
+              tgd = (pgd*rog*rgp-pg*rgp*rogd)/(rog*rgp)**2
               tg = pg/(rog*rgp)
 C
               ropd(l, 1) = rogd
-              ropd(l, 2) = vgd*d0x(li) + vg*d0xd(li)
-              ropd(l, 3) = vgd*d0y(li) + vg*d0yd(li)
-              ropd(l, 4) = vgd*d0z(li) + vg*d0zd(li)
+              ropd(l, 2) = d0x(li)*vgd
+              ropd(l, 3) = d0y(li)*vgd
+              ropd(l, 4) = d0z(li)*vgd
               ropd(l, 5) = tgd
-              ropd(l, 6) = nued(li)
+              ropd(l, 6) = 0.D0
             ENDDO
 C
 C
@@ -5715,9 +4700,8 @@ C
      +            param_int(0)*param_int(0+1)
                 l1 = l0 + inck
                 l2 = l0 + 2*inck
-                ropd(l, 1) = ropd(l0, 1)*c3 + rop(l0, 1)*c3d + ropd(l1, 
-     +            1)*c1 + rop(l1, 1)*c1d + ropd(l2, 1)*c2 + rop(l2, 1)*
-     +            c2d
+                ropd(l, 1) = c3*ropd(l0, 1) + c1*ropd(l1, 1) + c2*ropd(
+     +            l2, 1)
 C
                 IF (rop(l, 1) .LE. 0.3*rop(l0, 1)) THEN
 C protection pour eviter valeur negative de ro et t
@@ -5728,21 +4712,16 @@ C protection pour eviter valeur negative de ro et t
                   ropd(l, 5) = ropd(l0, 5)
                   ropd(l, 6) = ropd(l0, 6)
                 ELSE
-                  ropd(l, 2) = ropd(l0, 2)*c3 + rop(l0, 2)*c3d + ropd(l1
-     +              , 2)*c1 + rop(l1, 2)*c1d + ropd(l2, 2)*c2 + rop(l2, 
-     +              2)*c2d
-                  ropd(l, 3) = ropd(l0, 3)*c3 + rop(l0, 3)*c3d + ropd(l1
-     +              , 3)*c1 + rop(l1, 3)*c1d + ropd(l2, 3)*c2 + rop(l2, 
-     +              3)*c2d
-                  ropd(l, 4) = ropd(l0, 4)*c3 + rop(l0, 4)*c3d + ropd(l1
-     +              , 4)*c1 + rop(l1, 4)*c1d + ropd(l2, 4)*c2 + rop(l2, 
-     +              4)*c2d
-                  ropd(l, 5) = ropd(l0, 5)*c3 + rop(l0, 5)*c3d + ropd(l1
-     +              , 5)*c1 + rop(l1, 5)*c1d + ropd(l2, 5)*c2 + rop(l2, 
-     +              5)*c2d
-                  ropd(l, 6) = ropd(l0, 6)*c3 + rop(l0, 6)*c3d + ropd(l1
-     +              , 6)*c1 + rop(l1, 6)*c1d + ropd(l2, 6)*c2 + rop(l2, 
-     +              6)*c2d
+                  ropd(l, 2) = c3*ropd(l0, 2) + c1*ropd(l1, 2) + c2*ropd
+     +              (l2, 2)
+                  ropd(l, 3) = c3*ropd(l0, 3) + c1*ropd(l1, 3) + c2*ropd
+     +              (l2, 3)
+                  ropd(l, 4) = c3*ropd(l0, 4) + c1*ropd(l1, 4) + c2*ropd
+     +              (l2, 4)
+                  ropd(l, 5) = c3*ropd(l0, 5) + c1*ropd(l1, 5) + c2*ropd
+     +              (l2, 5)
+                  ropd(l, 6) = c3*ropd(l0, 6) + c1*ropd(l1, 6) + c2*ropd
+     +              (l2, 6)
                 END IF
               ENDDO
             ENDDO

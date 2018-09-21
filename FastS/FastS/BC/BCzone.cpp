@@ -204,22 +204,16 @@ E_Int K_FASTS::BCzone(
 	  {
 	    E_Int nfic_ij = param_int[ NIJK + 3 ];
 	    
-	    if (ishift_lu[0] > 1)
-	      ishift_lu[0] -= nfic_ij;
-	    if (ishift_lu[1] < param_int[ IJKV ])
-	      ishift_lu[1] += nfic_ij;
-	    if (ishift_lu[2] > 1)
-	      ishift_lu[2] -= nfic_ij;
-	    if (ishift_lu[3] < param_int[ IJKV + 1 ])
-	      ishift_lu[3] += nfic_ij;
+	    if (ishift_lu[0]> 1                  ) {ishift_lu[0] -= nfic_ij;}
+	    if (ishift_lu[1]< param_int[ IJKV   ]) {ishift_lu[1] += nfic_ij;}
+	    if (ishift_lu[2]> 1                  ) {ishift_lu[2] -= nfic_ij;}
+	    if (ishift_lu[3]< param_int[ IJKV+1 ]) {ishift_lu[3] += nfic_ij;}
 	    if (param_int[ ITYPZONE ] != 3)
 	      {
 		E_Int nfic_k  = param_int[ NIJK + 4 ];
 
-		if (ishift_lu[4] > 1)
-		  ishift_lu[4] -= nfic_k;
-		if (ishift_lu[5] < param_int[ IJKV + 2 ])
-		  ishift_lu[5] += nfic_k;
+		if (ishift_lu[4] > 1                    ){ ishift_lu[4] -= nfic_k;}
+		if (ishift_lu[5] < param_int[ IJKV + 2 ]){ ishift_lu[5] += nfic_k;}
 	      }
 	  }
 
@@ -322,7 +316,7 @@ E_Int K_FASTS::BCzone(
         E_Int nbdata = param_int[pt_bc + BC_NBDATA];
         E_Int bc_type= param_int[pt_bc + BC_TYPE];
 
-        //printf("ptbc= %d , idir= %d , nbdat= %d , bctype=  %d \n", pt_bc, idir,nbdata,  bc_type );
+        //printf("ptbc= %d , idir= %d , ndom= %d , bctype=  %d \n", pt_bc, idir,nd,  bc_type );
 
         E_Int* iptsize_data = param_int + pt_bc + BC_NBDATA + 1;
 
@@ -408,8 +402,8 @@ E_Int K_FASTS::BCzone(
                     DEFAULT_STATE( "BCOutflow" )
                     // MUSCL
                     E_Float c4, c5, c6;
-                    c4 = 5. / 6.;
-                    c5 = 2. / 6.;
+                    c4 =  5. / 6.;
+                    c5 =  2. / 6.;
                     c6 = -1. / 6.;
 
                     bvbs_outflow_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
@@ -428,10 +422,8 @@ E_Int K_FASTS::BCzone(
                                    iptrop, ipt_data );
                      }
                     else
-                     { E_Int* ind_fen = param_int + pt_bc + BC_FEN;
-                       E_Int  inc_bc;
-                       if ( idir <= 2 ) { inc_bc = ind_fen[3] - ind_fen[2] + 1; }  // nombre element de la fenetre dans la direction J
-                       else             { inc_bc = ind_fen[1] - ind_fen[0] + 1; }  // nombre element de la fenetre dans la direction I
+                     { 
+#                      include "BC/INCREMENT_BC.h"
 
                        E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
 
@@ -499,15 +491,8 @@ E_Int K_FASTS::BCzone(
                     c5 = 2. / 6.;
                     c6 = -1. / 6.;
 
-                    E_Int* ind_fen = param_int + pt_bc + BC_FEN;
-                    E_Int  inc_bc;
-                    if ( idir <= 2 ) {
-                        inc_bc = ind_fen[3] - ind_fen[2] + 1;
-                    }  // nombre element de la fenetre dans la direction J
-                    else {
-                        inc_bc = ind_fen[1] - ind_fen[0] + 1;
-                    }  // nombre element de la fenetre dans la direction I
-
+#                   include "BC/INCREMENT_BC.h"
+                    
                     bvbs_outpres_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                    iptijk, iptrop, ipt_data, iptsize_data[0], inc_bc );
 
@@ -518,14 +503,7 @@ E_Int K_FASTS::BCzone(
                     c5 = 2. / 6.;
                     c6 = -1. / 6.;
 
-                    E_Int* ind_fen = param_int + pt_bc + BC_FEN;
-                    E_Int  inc_bc;
-                    if ( idir <= 2 ) {
-                        inc_bc = ind_fen[3] - ind_fen[2] + 1;
-                    }  // nombre element de la fenetre dans la direction J
-                    else {
-                        inc_bc = ind_fen[1] - ind_fen[0] + 1;
-                    }  // nombre element de la fenetre dans la direction I
+#                   include "BC/INCREMENT_BC.h"
 
                     E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
 

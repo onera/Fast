@@ -272,11 +272,11 @@ extern "C"
    void     bvbs_outpres_(    E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr,  E_Int* param_int ,E_Int* ind_loop  ,
                               E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
                               E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* data_pres,
-			      E_Int& size_data, E_Int& inc_bc);
+			      E_Int& size_data, E_Int* inc_bc);
    void     bvbs_outpres_d_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr,  E_Int* param_int ,E_Int* ind_loop  ,
                               E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
                               E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptrod, E_Float* data_pres,
-			      E_Int& size_data, E_Int& inc_bc);
+			      E_Int& size_data, E_Int* inc_bc);
 
 //   void     bvbs_updatepressure_(  E_Int& idir  , E_Int& ithread, E_Int* ind_avg, E_Int* ind_mjr, E_Int* param_in ,E_Int* ind_loop ,
 //                            E_Float* param_real, E_Float* ipty   , E_Float* iptz  , E_Float* iptro, E_Float* data_pres,
@@ -286,23 +286,23 @@ extern "C"
                                     E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
                                     E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, 
                                     E_Float* state1    , E_Float* state2   , E_Float* state3, E_Float* state4, E_Float* state5, E_Float* state6, 
-	         	            E_Int& size_data   , E_Int& inc_bc     , E_Int& size_work);
+	         	            E_Int& size_data   , E_Int* inc_bc     , E_Int& size_work);
    void     bvbs_inflow_newton_d_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
                                     E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
                                     E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptrod,
                                     E_Float* state1    , E_Float* state2   , E_Float* state3, E_Float* state4, E_Float* state5, E_Float* state6, 
-	         	            E_Int& size_data   , E_Int& inc_bc     , E_Int& size_work);
+	         	            E_Int& size_data   , E_Int* inc_bc     , E_Int& size_work);
 
    void     bvbs_inflow_fich_(    E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
                                   E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
                                   E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, 
                                   E_Float* state1    , E_Float* state2   , E_Float* state3, E_Float* state4, E_Float* state5, E_Float* state6, 
-	         	          E_Int& size_data   , E_Int& inc_bc     , E_Int& size_work);
+	         	          E_Int& size_data   , E_Int* inc_bc     , E_Int& size_work);
    void     bvbs_inflow_fich_d_(  E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
                                   E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
                                   E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, E_Float* iptrod,
                                   E_Float* state1    , E_Float* state2   , E_Float* state3, E_Float* state4, E_Float* state5, E_Float* state6, 
-	         	          E_Int& size_data   , E_Int& inc_bc     , E_Int& size_work);
+	         	          E_Int& size_data   , E_Int* inc_bc     , E_Int& size_work);
 
 
    void indice_cl_sdm_( E_Int& dir    , E_Int& npass  , E_Int& lskip , E_Int& typbc,

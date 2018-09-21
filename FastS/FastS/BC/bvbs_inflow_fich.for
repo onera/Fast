@@ -26,7 +26,7 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E idir,lrhs, neq_mtr, ind_loop(6), param_int(0:*)
-      INTEGER_E size_data,inc_bc, size_work
+      INTEGER_E size_data,inc_bc(3), size_work
 
       REAL_E rop    (param_int(NDIMDX     ), param_int(NEQ)      )
       REAL_E ventijk(param_int(NDIMDX_VENT), param_int(NEQ_VENT) )
@@ -56,7 +56,7 @@ C Var local
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_vent_param.h"
 
-       indbci(j_1,k_1) = 1 + (j_1-1) + (k_1-1)*inc_bc
+      indbci(j_1,k_1) = 1 + (j_1-inc_bc(2)) + (k_1-inc_bc(3))*inc_bc(1)
 
 c......determine la forme des tableuz metrique en fonction de la nature du domaine
       !Seule la valeur de k_vent et ck_vent a un sens dans cet appel

@@ -52,7 +52,6 @@ C
 C
 C
 C
-C
       INTEGER*4 idir, lrhs, neq_mtr, ind_loop(6), param_int(0:*)
 C
       REAL*8 rop(param_int(41), param_int(36))

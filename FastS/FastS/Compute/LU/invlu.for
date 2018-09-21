@@ -134,16 +134,21 @@ c
      &        2 * param_int(NIJK + 3) !taille de la fenetre + ghostcells
          j_size = ind_loop_sdm(4) - ind_loop_sdm(3) + 1 +
      &        2 * param_int(NIJK + 3)
-
+        
+!! ssor =0
 #include "FastS/Compute/LU/lussor_initssor.for"
 
-         do m = 1, param_int(NB_RELAX)
-         !do m =1,1
-            lussor_end = 0
-            if ((m == param_int(NB_RELAX)) .AND. (mjrnewton == 1)) then
-               lussor_end = 1
-            endif
 
+
+         !loop relaxation
+         do m = 1, param_int(NB_RELAX)
+         !do m = 1, 1
+
+            lussor_end = 0
+            if (m.eq.param_int(NB_RELAX).and.mjrnewton.eq.1)lussor_end=1
+            !if (m.eq.1.and.mjrnewton.eq.1)lussor_end=1
+
+!! ssortmp = drodm_in + ssor
 #include "FastS/Compute/LU/lussor_mjrtmp.for"
 
 !     domaine fixe
@@ -237,7 +242,7 @@ c
                endif            !5 ou 6 Eq
             ENDIF               !maillge fixe/mobile
 
-         enddo
+         enddo !loop relaxation
 
       endif
       

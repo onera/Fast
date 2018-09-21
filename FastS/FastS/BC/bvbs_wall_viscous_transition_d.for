@@ -54,7 +54,6 @@ C
 C
 C
 C
-C
       INTEGER*4 idir, lrhs, neq_mtr, ind_loop(6), param_int(0:*)
 C
       REAL*8 x(param_int(42)), y(param_int(42)), z(param_int(42))
@@ -89,6 +88,7 @@ C    adresse interface pour tableau vitesse entrainement
       INTRINSIC ABS
       EXTERNAL SHAPE_TAB_MTR
       !EXTERNAL RANDOM_NUMBER
+      INTRINSIC RANDOM_NUMBER
       INTRINSIC SIN
       INTRINSIC EXP
       REAL*8 arg1
@@ -212,7 +212,6 @@ C
                   s_1 = c_pertu/result1
 C
                   CALL RANDOM_NUMBER(rnd)
-                  !rnd=0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -267,8 +266,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
-                  !rnd =0.
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd = 0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -331,8 +330,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
-                  !rnd =0.
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd =0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -385,8 +384,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
-                  !rnd =0.
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd =0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -465,8 +464,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
-                  !rnd =0.
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd =0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -523,8 +522,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
-                  !rnd =0.
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd =0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -587,7 +586,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd =0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -643,8 +643,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
-                  !rnd =0.
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd =0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -709,8 +709,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
-                  !rnd =0.
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd =0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -765,8 +765,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
-                  !rnd =0.
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd =0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -832,8 +832,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
-                  !rnd =0.
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd =0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0
@@ -889,8 +889,8 @@ C
                   result1 = SQRT(arg1)
                   s_1 = c_pertu/result1
 C
-                  CALL RANDOM_NUMBER(rnd)
-                  !rnd =0.
+                  !CALL RANDOM_NUMBER(rnd)
+                  rnd =0.
 Cpertu random
 Cpertu sinuoidale temps et z + gaussien (x,y)
                   arg1 = -(10.*xlong*((x(ldx)-x0)*(x(ldx)-x0)+(y(ldx)-y0

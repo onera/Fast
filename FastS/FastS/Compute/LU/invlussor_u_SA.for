@@ -115,6 +115,7 @@ c Var loc
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
+        ls= indssor(ideb,jdeb,kdeb,i_size,j_size)
 
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
@@ -164,8 +165,8 @@ c Var loc
 
           do i= ideb+ipas,ifin,ipas
 
-            l      =  inddm(i,j,kdeb)
-            ls     =  indssor(i,j,kdeb,i_size,j_size)
+            l      = inddm(i,j,kdeb)
+            ls     = indssor(i,j,kdeb,i_size,j_size)
             lt     = indmtr(i,j,kdeb)
 
             xal    = coe(l,1)*signe
@@ -203,6 +204,7 @@ C     DIR$ IVDEP
               do  i= ideb,ifin,ipas
 
                  l  = inddm(i, j, kdeb)
+                 ls = indssor(i,j,kdeb,i_size,j_size)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
               enddo
            enddo
@@ -337,7 +339,8 @@ C     DIR$ IVDEP
 C     DIR$ IVDEP
                 do  i= ifin, ideb
 
-                   l  = inddm(i, j, k)
+                   l  = inddm(i,   j, k)
+                   ls = indssor(i, j, k ,i_size,j_size)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
                 enddo
              enddo
@@ -352,6 +355,7 @@ C     DIR$ IVDEP
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
+        ls= indssor(ideb,jdeb,kdeb,i_size,j_size)
 
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
@@ -440,6 +444,7 @@ C     DIR$ IVDEP
 C     DIR$ IVDEP
               do  i= ideb,ifin,ipas
                  l  = inddm(i, j, kdeb)
+                 ls = indssor(i,j,kdeb,i_size,j_size)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
               enddo
            enddo
@@ -574,6 +579,7 @@ C     DIR$ IVDEP
                 do  i= ifin, ideb
 
                    l  = inddm(i, j, k)
+                   ls = indssor(i, j, k ,i_size,j_size)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
                 enddo
              enddo
@@ -591,6 +597,7 @@ C     DIR$ IVDEP
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
+        ls= indssor(ideb,jdeb,kdeb,i_size,j_size)
 
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
@@ -677,6 +684,7 @@ C     DIR$ IVDEP
               do  i= ideb,ifin,ipas
 
                  l  = inddm(i, j, kdeb)
+                 ls = indssor(i,j,kdeb,i_size,j_size)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
               enddo
            enddo
@@ -809,6 +817,7 @@ C     DIR$ IVDEP
                 do  i= ifin, ideb
 
                    l  = inddm(i, j, k)
+                   ls = indssor(i,j,k, i_size,j_size)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
                 enddo
              enddo

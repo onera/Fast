@@ -99,6 +99,7 @@ c Var loc
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
+        ls= indssor(ideb,jdeb,kdeb,i_size,j_size)
 
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
@@ -113,6 +114,10 @@ c Var loc
 
 #include "FastS/Compute/LU/lu_i_3dfull_SA.for"
 #include "FastS/Compute/LU/mjr_drodm_SA.for"
+
+          if(ls.gt.ssor_size) then
+            write(*,*)'ls', ls, i,jdeb,kdeb
+          endif
 
           ssor(ls,1) = ssor(ls,1)+b1*xal 
           ssor(ls,2) = ssor(ls,2)+b2*xal 
@@ -158,6 +163,9 @@ c Var loc
 #include    "FastS/Compute/LU/lu_i_3dfull_SA.for"
 #include "FastS/Compute/LU/mjr_drodm_SA.for"
 
+          if(ls.gt.ssor_size) then
+            write(*,*)'ls', ls, i,j,kdeb
+          endif
           ssor(ls,1) = ssor(ls,1)+b1*xal 
           ssor(ls,2) = ssor(ls,2)+b2*xal 
           ssor(ls,3) = ssor(ls,3)+b3*xal 
@@ -311,6 +319,7 @@ c Var loc
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
+        ls= indssor(ideb,jdeb,kdeb,i_size,j_size)
 
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
@@ -526,6 +535,7 @@ c Var loc
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
+        ls= indssor(ideb,jdeb,kdeb,i_size,j_size)
 
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 

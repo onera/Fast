@@ -502,6 +502,8 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
   if(pyParam_int_tc  != Py_None ) { RELEASESHAREDN( pyParam_int_tc, param_int_tc);  }
   if(pyParam_real_tc != Py_None ) { RELEASESHAREDN( pyParam_real_tc, param_real_tc);}
 
+  if (pyLinlets_int  != Py_None) { RELEASESHAREDN( pyLinlets_int , linelets_int ); }
+  if (pyLinlets_real != Py_None) { RELEASESHAREDN( pyLinlets_real, linelets_real); }
 
   RELEASESHAREDN( pyParam_int_ibc , param_int_ibc);
   RELEASESHAREDN( pyParam_real_ibc, param_real_ibc);

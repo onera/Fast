@@ -275,10 +275,8 @@ E_Int K_FASTS::BCzone_d(
                       bvbs_inflow_d_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk, iptijk, iptrop, iptrop_d, ipt_data );
                      }
                     else
-                     { E_Int* ind_fen = param_int + pt_bc + BC_FEN;
-                       E_Int  inc_bc;
-                       if ( idir <= 2 ) { inc_bc = ind_fen[3] - ind_fen[2] + 1; }  // nombre element de la fenetre dans la direction J
-                       else             { inc_bc = ind_fen[1] - ind_fen[0] + 1; }  // nombre element de la fenetre dans la direction I
+                     { 
+#                      include "BC/INCREMENT_BC.h"
 
                        E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
 
@@ -344,14 +342,7 @@ E_Int K_FASTS::BCzone_d(
                     c5 = 2. / 6.;
                     c6 = -1. / 6.;
 
-                    E_Int* ind_fen = param_int + pt_bc + BC_FEN;
-                    E_Int  inc_bc;
-                    if ( idir <= 2 ) {
-                        inc_bc = ind_fen[3] - ind_fen[2] + 1;
-                    }  // nombre element de la fenetre dans la direction J
-                    else {
-                        inc_bc = ind_fen[1] - ind_fen[0] + 1;
-                    }  // nombre element de la fenetre dans la direction I
+#                   include "BC/INCREMENT_BC.h"
 
                     bvbs_outpres_d_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                      iptijk, iptrop, iptrop_d, ipt_data, iptsize_data[0], inc_bc );
@@ -363,14 +354,7 @@ E_Int K_FASTS::BCzone_d(
                     c5 = 2. / 6.;
                     c6 = -1. / 6.;
 
-                    E_Int* ind_fen = param_int + pt_bc + BC_FEN;
-                    E_Int  inc_bc;
-                    if ( idir <= 2 ) {
-                        inc_bc = ind_fen[3] - ind_fen[2] + 1;
-                    }  // nombre element de la fenetre dans la direction J
-                    else {
-                        inc_bc = ind_fen[1] - ind_fen[0] + 1;
-                    }  // nombre element de la fenetre dans la direction I
+#                   include "BC/INCREMENT_BC.h"
 
                     E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
 

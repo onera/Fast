@@ -427,7 +427,7 @@ void K_FASTS::setInterpTransfersIntra(
 
           E_Int pos;
           pos = ipt_param_int_tc[shift_rac + nrac * 7];      E_Int* ntype    = ipt_param_int_tc  + pos;
-          pos = pos + 1 + ntype[0];                       E_Int* types    = ipt_param_int_tc  + pos;
+          pos = pos + 1 + ntype[0];                          E_Int* types    = ipt_param_int_tc  + pos;
           pos = ipt_param_int_tc[shift_rac + nrac * 6];      E_Int* donorPts = ipt_param_int_tc  + pos;
           pos = ipt_param_int_tc[shift_rac + nrac * 12 + 1]; E_Int* rcvPts   = ipt_param_int_tc  + pos;  // donor et receveur inverser car storage donor
           pos = ipt_param_int_tc[shift_rac + nrac * 8];    E_Float* ptrCoefs = ipt_param_real_tc + pos;
@@ -437,9 +437,9 @@ void K_FASTS::setInterpTransfersIntra(
           E_Float* xPI = NULL;
           E_Float* xPW = NULL;
           E_Float* densPtr = NULL;
-          E_Float* linelets   = NULL;
+          E_Float* linelets    = NULL;
           E_Int* indexlinelets = NULL;
-          E_Int nbptslinelets = 0;      
+          E_Int nbptslinelets  = 0;      
           if (ibc == 1) {            
             xPC = ptrCoefs + nbInterpD;
             xPI = ptrCoefs + nbInterpD + 3 * nbRcvPts;
