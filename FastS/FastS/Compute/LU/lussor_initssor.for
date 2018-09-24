@@ -5,7 +5,7 @@
             do j = ind_loop_lu(3), ind_loop_lu(4)
                do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                  ls = indssor(i, j, 1, i_size, j_size)
+                  ls = indssor(i, j, 1)
 
                   ssor(ls, 1) = 0.
                   ssor(ls, 2) = 0.
@@ -20,7 +20,7 @@
             do j = ind_loop_lu(3), ind_loop_lu(4)
                do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                  ls = indssor(i, j, 1, i_size, j_size)
+                  ls = indssor(i, j, 1)
 
                   ssor(ls, 1) = 0.
                   ssor(ls, 2) = 0.
@@ -41,7 +41,7 @@
                do j = ind_loop_lu(3), ind_loop_lu(4)
                   do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                     ls = indssor(i, j, k, i_size, j_size)
+                     ls = indssor(i, j, k)
 
                      ssor(ls, 1) = 0.
                      ssor(ls, 2) = 0.
@@ -59,7 +59,7 @@
                do j = ind_loop_lu(3), ind_loop_lu(4)
                   do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                     ls = indssor(i, j, k, i_size, j_size)
+                     ls = indssor(i, j, k)
 
                      ssor(ls, 1) = 0.
                      ssor(ls, 2) = 0.

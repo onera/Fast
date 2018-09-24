@@ -130,11 +130,10 @@ c
 
       elseif (param_int(NB_RELAX) .GE. 2) then
 
-         i_size = ind_loop_sdm(2) - ind_loop_sdm(1) + 1 +
-     &        2 * param_int(NIJK + 3) !taille de la fenetre + ghostcells
-         j_size = ind_loop_sdm(4) - ind_loop_sdm(3) + 1 +
-     &        2 * param_int(NIJK + 3)
-        
+
+      ssor_i= ind_loop_sdm(2)-ind_loop_sdm(1)+1 +2*param_int(NIJK+3) !taille de la fenetre + ghostcells
+      ssor_j= ind_loop_sdm(4)-ind_loop_sdm(3)+1 +2*param_int(NIJK+3)
+
 !! ssor =0
 #include "FastS/Compute/LU/lussor_initssor.for"
 
@@ -156,11 +155,14 @@ c
 
                if(lSA.eq.1) Then
 
-               if(param_int(LU_MATCH).eq.1) then
+                 if(m.eq.1.and.param_int(LU_MATCH).eq.1) Then
+
                  call extrap_coe(ndo, param_int, depth, 
      &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
-               endif
-!     lower
+                 endif
+
+              !if(m.eq.1) then
+         !lower
                   call invlussor_l_SA(ndo, param_int, param_real, 
      &                 ind_loop_lu, ind_loop_sdm,
      &                 ssortmp,rop_ssiter,
@@ -199,10 +201,11 @@ c
 
                if(lSA.eq.1) Then
 
-               if(param_int(LU_MATCH).eq.1) then
+                 if(m.eq.1.and.param_int(LU_MATCH).eq.1) Then
+
                  call extrap_coe(ndo, param_int, depth, 
      &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
-               endif
+                 endif
 
                   call invlussor_ale_l_SA(ndo, param_int, param_real, 
      &                 ind_loop_lu, ind_loop_sdm,

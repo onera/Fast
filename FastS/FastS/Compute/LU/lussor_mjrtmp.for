@@ -5,8 +5,8 @@
             do j = ind_loop_lu(3), ind_loop_lu(4)
                do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                  l = inddm(i, j, 1)
-                  ls = indssor(i, j, 1, i_size, j_size)
+                  l  =   inddm(i, j, 1)
+                  ls = indssor(i, j, 1)
 
                   ssortmp(ls, 1) = drodm_in(l, 1) + ssor(ls, 1)
                   ssortmp(ls, 2) = drodm_in(l, 2) + ssor(ls, 2)
@@ -26,8 +26,8 @@
             do j = ind_loop_lu(3), ind_loop_lu(4)
                do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                  l = inddm(i, j, 1)
-                  ls = indssor(i, j, 1, i_size, j_size)
+                  l  =   inddm(i, j, 1)
+                  ls = indssor(i, j, 1)
 
                   ssortmp(ls, 1) = drodm_in(l, 1) + ssor(ls, 1)
                   ssortmp(ls, 2) = drodm_in(l, 2) + ssor(ls, 2)
@@ -54,8 +54,8 @@
                do j = ind_loop_lu(3), ind_loop_lu(4)
                   do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                     l = inddm(i, j, k)
-                     ls = indssor(i, j, k, i_size, j_size)
+                     l =   inddm(i, j, k)
+                     ls= indssor(i, j, k)
 
                      ssortmp(ls, 1) = drodm_in(l, 1) + ssor(ls, 1)
                      ssortmp(ls, 2) = drodm_in(l, 2) + ssor(ls, 2)
@@ -79,8 +79,8 @@
                do j = ind_loop_lu(3), ind_loop_lu(4)
                   do i = ind_loop_lu(1), ind_loop_lu(2)
 
-                     l = inddm(i, j, k)
-                     ls = indssor(i, j, k, i_size, j_size)
+                     l  =   inddm(i, j, k)
+                     ls = indssor(i, j, k)
 
                      ssortmp(ls, 1) = drodm_in(l, 1) + ssor(ls, 1)
                      ssortmp(ls, 2) = drodm_in(l, 2) + ssor(ls, 2)
