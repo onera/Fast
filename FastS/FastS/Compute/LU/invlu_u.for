@@ -310,9 +310,9 @@ C     DIR$ IVDEP
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dhomogene.for"
-#include "FastS/Compute/LU/mjr_drodm.for"
+#include    "FastS/Compute/LU/mjr_drodm.for"
 #include    "FastS/Compute/LU/lu_j_3dhomogene.for"
-#include "FastS/Compute/LU/mjr_drodm.for"
+#include    "FastS/Compute/LU/mjr_drodm.for"
 #include    "FastS/Compute/LU/lu_dinv.for"
 
           enddo
@@ -352,7 +352,7 @@ C     DIR$ IVDEP
 
 #include "FastS/Compute/LU/lu_k_3dhomogene.for"
 #include "FastS/Compute/LU/mjr_drodm.for"
-#include    "FastS/Compute/LU/lu_dinv.for"
+#include "FastS/Compute/LU/lu_dinv.for"
 
           !!! Fin plan jdeb 
           do i= ideb+ipas,ifin,ipas
@@ -364,9 +364,9 @@ C     DIR$ IVDEP
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dhomogene.for"
-#include "FastS/Compute/LU/mjr_drodm.for"
+#include    "FastS/Compute/LU/mjr_drodm.for"
 #include    "FastS/Compute/LU/lu_k_3dhomogene.for"
-#include "FastS/Compute/LU/mjr_drodm.for"
+#include    "FastS/Compute/LU/mjr_drodm.for"
 #include    "FastS/Compute/LU/lu_dinv.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
@@ -378,9 +378,9 @@ C     DIR$ IVDEP
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_j_3dhomogene.for"
-#include "FastS/Compute/LU/mjr_drodm.for"
+#include    "FastS/Compute/LU/mjr_drodm.for"
 #include    "FastS/Compute/LU/lu_k_3dhomogene.for"
-#include "FastS/Compute/LU/mjr_drodm.for"
+#include    "FastS/Compute/LU/mjr_drodm.for"
 #include    "FastS/Compute/LU/lu_dinv.for"
 
              do  i= ideb+ipas,ifin,ipas
@@ -392,11 +392,11 @@ C     DIR$ IVDEP
                 xal    = coe(l,1)*signe
 
 #include       "FastS/Compute/LU/lu_i_3dhomogene.for"
-#include "FastS/Compute/LU/mjr_drodm.for"
+#include       "FastS/Compute/LU/mjr_drodm.for"
 #include       "FastS/Compute/LU/lu_j_3dhomogene.for"
-#include "FastS/Compute/LU/mjr_drodm.for"
+#include       "FastS/Compute/LU/mjr_drodm.for"
 #include       "FastS/Compute/LU/lu_k_3dhomogene.for"
-#include "FastS/Compute/LU/mjr_drodm.for"
+#include       "FastS/Compute/LU/mjr_drodm.for"
 #include       "FastS/Compute/LU/lu_dinv.for"
              enddo
           enddo

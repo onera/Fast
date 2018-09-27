@@ -71,13 +71,16 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
 			   { 
 #include "Compute/LU/prep_lussor.h"
 
+                             E_Float* iptdrodm_out = iptdrodm + shift_zone;
+                             if(param_int[nd][LU_MATCH]==1 || param_int[nd][NB_RELAX]>1) iptdrodm_out = ipt_ssortmp_shift;
+
 			     invlu_(nd                     , nitcfg                  , nitrun                ,
 				    param_int[nd]          , param_real[nd]          ,
 				    ipt_shift_lu           , ipt_ind_dm_thread       , mjrnewton             ,
-				    iptrotmp[nd]           , iptro_ssiter[nd]        , iptdrodm + shift_zone , iptdrodm + shift_zone ,
+				    iptrotmp[nd]           , iptro_ssiter[nd]        , iptdrodm + shift_zone , iptdrodm_out,
 				    ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 				    iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-				    iptcoe  + shift_coe    , ipt_ssor_shift          , ipt_ssortmp_shift     , ssor_size);
+				    iptcoe  + shift_coe    , ipt_ssor_shift          , ssor_size);
 			   }
                       } //fin kimpli
 

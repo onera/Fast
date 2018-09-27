@@ -148,7 +148,7 @@ E_Int K_FASTS::gsdr3(
 
            if(ipt_nisdom_residu[nitcfg-1] != 0) ipt_it_bloc[0] +=1;
           }
-	if (param_int[ nd ][ NB_RELAX ] > 1)
+	if (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1)
 	  {
 #ifdef _OPENMP
 	    E_Int  Nbre_thread_actif = __NUMTHREADS__;

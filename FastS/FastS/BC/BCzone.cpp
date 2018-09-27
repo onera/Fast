@@ -200,7 +200,8 @@ E_Int K_FASTS::BCzone(
         ishift_lu[4]  = ipt_ind_dm_thread[4] - ( 1 - lskip[4] ) * ificmax[4];
         ishift_lu[5]  = ipt_ind_dm_thread[5] + ( 1 - lskip[5] ) * ificmax[5];
 
-	if ((param_int[ LU_MATCH ] == 1) && (param_int[ NB_RELAX ] > 1))
+	//if ((param_int[ LU_MATCH ] == 1) && (param_int[ NB_RELAX ] > 1))
+	if (param_int[ LU_MATCH ] == 1 )
 	  {
 	    E_Int nfic_ij = param_int[ NIJK + 3 ];
 	    

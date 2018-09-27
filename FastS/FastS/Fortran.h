@@ -159,7 +159,7 @@ extern "C"
                               E_Float* iptdrodmin       , E_Float* iptdrodmout ,
                               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , 
                               E_Float* iptventi         , E_Float* iptventj    , E_Float* iptventk       ,  
-                              E_Float* iptcoe           , E_Float* iptssor     , E_Float* iptssortmp     , E_Int& size_ssor);
+                              E_Float* iptcoe           , E_Float* iptssor     , E_Int& size_ssor);
 
   void dp_dw_vect_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int* ind_loop,
 		   E_Float* iptrop, E_Float* iptvectin, E_Float* iptvectout, E_Int& size);

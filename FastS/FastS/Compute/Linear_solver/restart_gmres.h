@@ -57,20 +57,40 @@ lhs_beg = omp_get_wtime();
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 #include "Compute/LU/prep_lussor.h"
 
+             // CL sur rhs pour implicitation
+		 E_Int lrhs=1; E_Int lcorner=1;
+                   BCzone( nd, lrhs, lcorner,
+                           param_int[nd], param_real[nd],
+                           npass,
+                           ipt_ind_dm_loc         , ipt_ind_dm_thread      ,
+                           ipt_ind_CL_thread      , ipt_ind_CL119          , ipt_ind_CLgmres, ipt_shift_lu,
+                           krylov_in              , ipti[nd]               , iptj[nd]       , iptk[nd]          ,
+                           iptx[nd]               , ipty[nd]               , iptz[nd]       ,
+                           iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd]);
+                 
+                         if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu ,  krylov_in);
+
+
+           E_Float* iptdrodm_out = ipt_gmrestmp[nd];
+           if(param_int[nd][LU_MATCH]==1 || param_int[nd][NB_RELAX]>1) iptdrodm_out = ipt_ssortmp_shift;
+
 	   invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
-	   	  ipt_ind_dm_thread      , ipt_ind_dm_thread       , mjrnewton             ,
-	   	  iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , ipt_gmrestmp[nd],
+	   	  ipt_shift_lu           , ipt_ind_dm_thread       , mjrnewton             ,
+	   	  iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , iptdrodm_out,
 	   	  ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 	   	  iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-	   	  iptcoe  + shift_coe    , ipt_ssor_shift          , ipt_ssortmp_shift     , ssor_size);
+	   	  iptcoe  + shift_coe    , ipt_ssor_shift          , ssor_size);
 
-	   if (param_int[nd][NB_RELAX] == 1)
+           /*
+	   if (param_int[nd][NB_RELAX] == 1 && param_int[nd][LU_MATCH]==0)
 	     {
 	       krylov_in = ipt_gmrestmp[nd];
 	       //ssor_size = param_int[nd][NDIMDX];
 	     }
-	   else if (param_int[nd][NB_RELAX] > 1) krylov_in = ipt_ssortmp_shift;
-	   
+	   else if (param_int[nd][NB_RELAX] >= 1) krylov_in = ipt_ssortmp_shift;
+	   */
+           if (param_int[nd][NB_RELAX] > 0) krylov_in = iptdrodm_out;
+
 	   dp_dw_vect_(param_int[nd], param_real[nd],ipt_ind_dm_thread , iptro_ssiter[nd], krylov_in,  krylov_out, ssor_size);
 
 	   nd_current +=1;
@@ -208,8 +228,8 @@ lhs_beg = omp_get_wtime();
         E_Float* krylov_out= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 #include   "Compute/LU/prep_lussor.h"
-	    if      (param_int[nd][NB_RELAX] == 1) krylov_in = ipt_gmrestmp[nd];
-	    else if (param_int[nd][NB_RELAX]  > 1) krylov_in = ipt_ssortmp_shift;
+	    if      (param_int[nd][NB_RELAX] == 1 && param_int[nd][LU_MATCH]==0) krylov_in = ipt_gmrestmp[nd];
+	    else if (param_int[nd][NB_RELAX] >= 1) krylov_in = ipt_ssortmp_shift;
 
   	    id_vect_(param_int[nd], ipt_ind_dm_thread, ipt_drodmd + shift_zone, krylov_out, krylov_in, ssor_size);
 
@@ -467,15 +487,29 @@ lhs_beg = omp_get_wtime();
 #include "Compute/LU/prep_lussor.h"
 
             E_Float* krylov_in = iptdrodm + shift_zone;
-	    E_Float* krylov_out= iptdrodm + shift_zone;
+            E_Float* iptdrodm_out = ipt_gmrestmp[nd];
+            if(param_int[nd][LU_MATCH]==1 || param_int[nd][NB_RELAX]>1) iptdrodm_out = ipt_ssortmp_shift;
 	    mjrnewton = 1;
+            E_Int lcorner=1; E_Int lrhs=1;
+
+            BCzone( nd, lrhs, lcorner,
+                   param_int[nd], param_real[nd],
+                   npass,
+                   ipt_ind_dm_loc         , ipt_ind_dm_thread      ,
+                   ipt_ind_CL_thread      , ipt_ind_CL119          , ipt_ind_CLgmres, ipt_shift_lu,
+                   krylov_in              , ipti[nd]               , iptj[nd]       , iptk[nd]          ,
+                   iptx[nd]               , ipty[nd]               , iptz[nd]       ,
+                   iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd]);
+                 
+                   if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu ,  krylov_in);
+
 
 	   invlu_(nd                     , nitcfg      ,nitrun, param_int[nd], param_real[nd],
-	   	  ipt_ind_dm_thread      , ipt_ind_dm_thread       , mjrnewton             ,
-	   	  iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , ipt_gmrestmp[nd],
+	   	  ipt_shift_lu           , ipt_ind_dm_thread       , mjrnewton             ,
+	   	  iptrotmp[nd]           , iptro_ssiter[nd]        , krylov_in             , iptdrodm_out,
 	   	  ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 	   	  iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
-	   	  iptcoe  + shift_coe    , ipt_ssor_shift          , ipt_ssortmp_shift     , ssor_size);
+	   	  iptcoe  + shift_coe    , ipt_ssor_shift          , ssor_size);
 
             nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"

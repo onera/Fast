@@ -5,8 +5,8 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine invlussor_ale_u_SA(ndom,  param_int, param_real,
      &                      visco,sa_real,
-     &                      ind_loop, ind_loop_sdm,
-     &                      drodm_out,rop,rop_1,
+     &                      ind_loop, ind_loop_sdm, mjr_ssor,
+     &                      drodm_out, drodm_in, rop,rop_1,
      &                      ti,tj,tk,venti,ventj,ventk,
      &                      coe,ssor,lussor_end, ssor_size)
 c***********************************************************************
@@ -35,12 +35,13 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E ndom, ind_loop(6), param_int(0:*),lussor_end, ssor_size,
-     &     ind_loop_sdm(6) 
+     &     mjr_ssor, ind_loop_sdm(6) 
 
       REAL_E visco(5),sa_real(3)
 
       REAL_E  param_real(0:*)
       REAL_E drodm_out(ssor_size,param_int(NEQ)),
+     &       drodm_in(param_int(NDIMDX)  ,param_int(NEQ)),
      &       coe(param_int(NDIMDX)  ,param_int(NEQ_COE)),
      &       rop(param_int(NDIMDX)  ,param_int(NEQ)),
      &       rop_1(param_int(NDIMDX),param_int(NEQ)),
@@ -189,11 +190,12 @@ c Var loc
         enddo
         !!! plan kdeb termine
 
-        if (lussor_end == 1) then
+        if (lussor_end.eq.1.and.kdeb.ge.ind_loop_sdm(5)
+     &                     .and.kdeb.le.ind_loop_sdm(6) ) then
 !!mise a jour Newton 1er plan k
-           do j= jdeb,jfin,ipas
+           do j=ind_loop_sdm(3),ind_loop_sdm(4)
 C     DIR$ IVDEP
-              do  i= ideb,ifin,ipas
+              do  i= ind_loop_sdm(1),ind_loop_sdm(2)
 
                  l  =   inddm(i, j, kdeb)
                  ls = indssor(i, j, kdeb)
@@ -266,10 +268,12 @@ C     DIR$ IVDEP
              enddo
           enddo
 
-          if (lussor_end == 1) then
-             do j= jfin,jdeb
+          if (lussor_end.eq.1.and.k.ge.ind_loop_sdm(5)
+     &                     .and.k.le.ind_loop_sdm(6) ) then
+             !!mise a jour Newton 1er plan k
+             do j=ind_loop_sdm(3),ind_loop_sdm(4)
 C     DIR$ IVDEP
-                do  i= ifin, ideb
+                do  i= ind_loop_sdm(1),ind_loop_sdm(2)
 
                    l  =   inddm(i, j, k)
                    ls = indssor(i, j, k)
@@ -278,7 +282,33 @@ C     DIR$ IVDEP
              enddo
           endif
 
+           !mise a jour ssor sur plan k-ipas
+           if (mjr_ssor.eq.1) then
+            do  j= jdeb,jfin,ipas
+C            DIR$ IVDEP
+              do  i= ideb,ifin,ipas
+
+                l1    =   inddm(i,j,k-ipas)
+                l1s   = indssor(i,j,k-ipas)
+#include        "FastS/Compute/LU/mjr_ssor_SA.for"
+              enddo
+            enddo
+           endif
+
+        enddo  !!plan k
+
+        !mise a jour ssor sur dernier plan k
+       if (mjr_ssor.eq.1) then
+        do  j= jdeb,jfin,ipas
+C         DIR$ IVDEP
+            do  i= ideb,ifin,ipas
+
+             l1    =   inddm(i,j,kfin)
+             l1s   = indssor(i,j,kfin)
+#include     "FastS/Compute/LU/mjr_ssor_SA.for"
+            enddo
         enddo
+       endif
 
 
       ELSEIF(param_int(ITYPZONE).eq.1) THEN !maillage 3d k homogene_SA:
@@ -339,11 +369,12 @@ C     DIR$ IVDEP
         enddo
         !!! plan kdeb termine
 
-        if (lussor_end == 1) then
+        if (lussor_end.eq.1.and.kdeb.ge.ind_loop_sdm(5)
+     &                     .and.kdeb.le.ind_loop_sdm(6) ) then
 !!mise a jour Newton 1er plan k
-           do j= jdeb,jfin,ipas
+           do j=ind_loop_sdm(3),ind_loop_sdm(4)
 C     DIR$ IVDEP
-              do  i= ideb,ifin,ipas
+              do  i= ind_loop_sdm(1),ind_loop_sdm(2)
 
                  l  =   inddm(i, j, kdeb)
                  ls = indssor(i, j, kdeb)
@@ -416,10 +447,12 @@ C     DIR$ IVDEP
              enddo
           enddo
 
-          if (lussor_end == 1) then
-             do j= jfin,jdeb
+          if (lussor_end.eq.1.and.k.ge.ind_loop_sdm(5)
+     &                     .and.k.le.ind_loop_sdm(6) ) then
+             !!mise a jour Newton 1er plan k
+             do j=ind_loop_sdm(3),ind_loop_sdm(4)
 C     DIR$ IVDEP
-                do  i= ifin, ideb
+                do  i= ind_loop_sdm(1),ind_loop_sdm(2)
 
                    l  =   inddm(i, j, k)
                    ls = indssor(i, j, k)
@@ -428,7 +461,33 @@ C     DIR$ IVDEP
              enddo
           endif
 
+           !mise a jour ssor sur plan k-ipas
+       if (mjr_ssor.eq.1) then
+           do  j= jdeb,jfin,ipas
+C            DIR$ IVDEP
+              do  i= ideb,ifin,ipas
+
+                l1    =   inddm(i,j,k-ipas)
+                l1s   = indssor(i,j,k-ipas)
+#include        "FastS/Compute/LU/mjr_ssor_SA.for"
+              enddo
+           enddo
+        endif
+
+        enddo !! loop k
+
+        !mise a jour ssor sur dernier plan k
+       if (mjr_ssor.eq.1) then
+        do  j= jdeb,jfin,ipas
+          do  i= ideb,ifin,ipas
+
+             l1    =   inddm(i,j,kfin)
+             l1s   = indssor(i,j,kfin)
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
+          enddo
         enddo
+       endif
+
 
       ELSEIF(param_int(ITYPZONE).eq.2) THEN !maillage 3d cartesien
 
@@ -490,11 +549,12 @@ C     DIR$ IVDEP
         enddo
         !!! plan kdeb termine
 
-        if (lussor_end == 1) then
+        if (lussor_end.eq.1.and.kdeb.ge.ind_loop_sdm(5)
+     &                     .and.kdeb.le.ind_loop_sdm(6) ) then
 !!mise a jour Newton 1er plan k
-           do j= jdeb,jfin,ipas
+           do j=ind_loop_sdm(3),ind_loop_sdm(4)
 C     DIR$ IVDEP
-              do  i= ideb,ifin,ipas
+              do  i= ind_loop_sdm(1),ind_loop_sdm(2)
 
                  l  =   inddm(i, j, kdeb)
                  ls = indssor(i, j, kdeb)
@@ -563,11 +623,12 @@ C     DIR$ IVDEP
              enddo
           enddo
    
-          if (lussor_end == 1) then
-!! mise a jour newton
-             do j= jfin,jdeb
+          if (lussor_end.eq.1.and.k.ge.ind_loop_sdm(5)
+     &                     .and.k.le.ind_loop_sdm(6) ) then
+             !!mise a jour Newton 1er plan k
+             do j=ind_loop_sdm(3),ind_loop_sdm(4)
 C     DIR$ IVDEP
-                do  i= ifin, ideb
+                do  i= ind_loop_sdm(1),ind_loop_sdm(2)
 
                    l  =   inddm(i, j, k)
                    ls = indssor(i, j, k)
@@ -576,7 +637,32 @@ C     DIR$ IVDEP
              enddo
           endif
 
+       if (mjr_ssor.eq.1) then
+           !mise a jour ssor sur plan k-ipas
+           do  j= jdeb,jfin,ipas
+C            DIR$ IVDEP
+              do  i= ideb,ifin,ipas
+
+                l1    =   inddm(i,j,k-ipas)
+                l1s   = indssor(i,j,k-ipas)
+#include        "FastS/Compute/LU/mjr_ssor_SA.for"
+              enddo
+           enddo
+       endif
+
+        enddo !! loop k
+
+        !mise a jour ssor sur dernier plan k
+       if (mjr_ssor.eq.1) then
+        do  j= jdeb,jfin,ipas
+          do  i= ideb,ifin,ipas
+
+             l1    =   inddm(i,j,kfin)
+             l1s   = indssor(i,j,kfin)
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
+          enddo
         enddo
+       endif
 
 
       ELSE !2d
@@ -641,6 +727,18 @@ C     DIR$ IVDEP
 #include     "FastS/Compute/LU/mjr_newton_2d_SA.for"
              enddo
           enddo
+       endif
+
+       if (mjr_ssor.eq.1) then
+        !mise a jour ssor sur dernier plan k
+        do  j= jdeb,jfin,ipas
+          do  i= ideb,ifin,ipas
+
+             l1    =   inddm(i,j,1)
+             l1s   = indssor(i,j,1)
+#include    "FastS/Compute/LU/mjr_ssor_2d_SA.for"
+          enddo
+        enddo
        endif
 
       ENDIF

@@ -1,4 +1,4 @@
-if (param_int[ nd ][ NB_RELAX ] > 1)
+if (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1 )
   {
     ipt_ssor_shift    = iptssor[    nd ];
     ipt_ssortmp_shift = iptssortmp[ nd ];

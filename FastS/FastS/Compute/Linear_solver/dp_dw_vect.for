@@ -43,7 +43,7 @@ c***********************************************************************
 
       cvinv = 1./param_real(CVINF)
 
-      if (param_int(NB_RELAX) .GE. 2) then
+      if (param_int(NB_RELAX).ge.2.or.param_int(LU_MATCH).eq.1) then
 
          i_size = ind_loop(2) - ind_loop(1) + 1 +
      &        2 * param_int(NIJK + 3) !taille de la fenetre + ghostcells

@@ -68,7 +68,7 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
       o = K_PYTREE::getNodeFromName1(o, "Parameter_int"); 
       ipt_param_int = K_PYTREE::getValueAI(o, hook);
 
-      if (ipt_param_int[NB_RELAX] > 1)
+      if (ipt_param_int[NB_RELAX] > 1 || ipt_param_int[LU_MATCH]==1 )
 	{
 	  sizessor = 0;
 	  neq = ipt_param_int[NEQ];
@@ -122,14 +122,17 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 		    }
 		}
 	    }//loop subzone
-	  ssor = K_NUMPY::buildNumpyArray(sizessor, neq, 0, 1);
-	  PyList_Append(ssors, ssor);
-	  ssortmp = K_NUMPY::buildNumpyArray(sizessor, neq, 0, 1);
-	  PyList_Append(ssors, ssortmp);
+          E_Int sz_ssortmp = sizessor;
+          E_Int sz_ssor    = sizessor;
+          if( ipt_param_int[NB_RELAX] == 1 ) sz_ssor=1;
+
+	  ssor    = K_NUMPY::buildNumpyArray(sz_ssor   , neq, 0, 1);  PyList_Append(ssors, ssor);
+	  ssortmp = K_NUMPY::buildNumpyArray(sz_ssortmp, neq, 0, 1);  PyList_Append(ssors, ssortmp);
+	  
 	}// test NB_RELAX
     }//loop zone
   
-  if (ipt_param_int[NB_RELAX] > 1)
+  if (ipt_param_int[NB_RELAX] > 1 || ipt_param_int[LU_MATCH]==1 )
     { 
       Py_DECREF(ssor);
       Py_DECREF(ssortmp);

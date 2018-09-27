@@ -274,7 +274,7 @@ else
     }
 
     iptssor[nd] = NULL; iptssortmp[nd] = NULL;
-    if (ipt_param_int[nd][ NB_RELAX ] > 1) // 1 = LUSSOR
+    if (ipt_param_int[nd][ NB_RELAX ] > 1 || ipt_param_int[nd][ LU_MATCH ] ==1) // 1 = LUSSOR
       {
 	iptssor[nd]    = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd));
 	iptssortmp[nd] = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd + 1));
@@ -389,7 +389,7 @@ else
 
   E_Int size_ssortmp = 0;
 
-  if (ipt_param_int[0][NB_RELAX] > 1) size_ssortmp = 1;
+  if (ipt_param_int[0][NB_RELAX] > 1 || ipt_param_int[0][LU_MATCH] == 1 ) size_ssortmp = 1;
   FldArrayI ssor_size(nidom * mx_sszone * threadmax_sdm * size_ssortmp); ipt_ssor_size = ssor_size.begin();
 
   /// Tableau pour GMRES (on test la premiere zone 
