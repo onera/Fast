@@ -143,7 +143,7 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
 
     if (not (model == 'Euler' or model == 'euler')):
         if C.isNamePresent(zone, 'centers:ViscosityEddy') != 1: 
-            C._initVars(zone, 'centers:ViscosityEddy', 1e-15)
+           C._initVars(zone, 'centers:ViscosityEddy', 1e-15)
 
     if (not (model == 'NSTurbulent' or model == 'nsspalart')): sa = False
     else: 
@@ -328,6 +328,20 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
        if C.isNamePresent(zone, 'centers:Res_MomentumZ') != 1:   C._initVars(zone, 'centers:Res_MomentumZ', 0.)
        if C.isNamePresent(zone, 'centers:Res_EnergyStagnationDensity') != 1: C._initVars(zone, 'centers:Res_EnergyStagnationDensity', 0.)
        if (sa and  C.isNamePresent(zone, 'centers:Res_TurbulentSANuTildeDensity') != 1): C._initVars(zone, 'centers:Res_TurbulentSANuTildeDensity', 0.)
+    if extract_res == 2:
+       C._initVars(zone, 'centers:drodm0_1', 1e-15)
+       C._initVars(zone, 'centers:drodm0_2', 1e-15)
+       C._initVars(zone, 'centers:drodm0_3', 1e-15)
+       C._initVars(zone, 'centers:drodm0_4', 1e-15)
+       C._initVars(zone, 'centers:drodm0_5', 1e-15)
+       C._initVars(zone, 'centers:drodmN_1', 1e-15)
+       C._initVars(zone, 'centers:drodmN_2', 1e-15)
+       C._initVars(zone, 'centers:drodmN_3', 1e-15)
+       C._initVars(zone, 'centers:drodmN_4', 1e-15)
+       C._initVars(zone, 'centers:drodmN_5', 1e-15)
+       if sa:
+          C._initVars(zone, 'centers:drodm0_6', 1e-15)
+          C._initVars(zone, 'centers:drodmN_6', 1e-15)
 
     #KRYLOV SUBSPACE VECTOR ALLOCATION
     implicit_solver = 'none'
