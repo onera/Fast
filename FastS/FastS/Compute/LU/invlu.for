@@ -49,6 +49,8 @@ c     Var loc
 
       IF (param_int(NB_RELAX) == 1) THEN
          
+       !write(*,*)'lu', ind_loop_lu
+       !write(*,*)'sdm',ind_loop_sdm
 ! domaine fixe
          If(param_int(LALE).eq.0) Then
 
@@ -256,7 +258,7 @@ c     Var loc
                   else
                   call invlussor_l(ndo, param_int, param_real, 
      &                 ind_loop_lu, ind_loop_sdm,
-     &                 drodm_out,rop_ssiter,
+     &                 drodm_out, drodm_in, rop_ssiter,
      &                 ti,tj,tk,
      &                 coe, ssor, ssor_size)
                   endif
@@ -292,7 +294,7 @@ c
                   else
                   call invlussor_ale_l_SA(ndo, param_int, param_real, 
      &                 ind_loop_lu, ind_loop_sdm,
-     &                 drodm_out,rop_ssiter,
+     &                 drodm_out, drodm_in, rop_ssiter,
      &                 ti,tj,tk,venti,ventj,ventk,
      &                 coe, ssor, ssor_size)
                   endif
@@ -318,7 +320,7 @@ c
                   else
                   call invlussor_ale_l(ndo, param_int, param_real,
      &                 ind_loop_lu, ind_loop_sdm,
-     &                 drodm_out,rop_ssiter,
+     &                 drodm_out, drodm_in, rop_ssiter,
      &                 ti,tj,tk,venti,ventj,ventk,
      &                 coe, ssor, ssor_size)
                   endif

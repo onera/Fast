@@ -5,7 +5,7 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine invlussor_ale_l_SA(ndom, param_int, param_real,
      &                      ind_loop, ind_loop_sdm,
-     &                      drodm_out,rop,
+     &                      drodm_out, drodm_in, rop,
      &                      ti,tj,tk,venti,ventj,ventk,
      &                      coe,ssor, ssor_size)
 c***********************************************************************
@@ -37,6 +37,7 @@ c***********************************************************************
      &     ind_loop_sdm(6)
  
       REAL_E  param_real(0:*)
+      REAL_E drodm_in(param_int(NDIMDX), param_int(NEQ))
       REAL_E drodm_out(ssor_size,param_int(NEQ)),
      &       coe(param_int(NDIMDX),param_int(NEQ_COE)),
      &       rop(param_int(NDIMDX),param_int(NEQ)),
@@ -127,7 +128,12 @@ c Var loc
         ls= indssor(ideb,jdeb,kdeb)
 
 #include "FastS/Compute/LU/lu_dinv_SA.for"
-
+          ssor(ls,1) = 0.
+          ssor(ls,2) = 0.
+          ssor(ls,3) = 0.
+          ssor(ls,4) = 0.
+          ssor(ls,5) = 0.
+          ssor(ls,6) = 0.
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
 
@@ -189,6 +195,7 @@ c Var loc
 #include "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
 #include "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
+#include "FastS/Compute/LU/mjr_ssor_SA.for"
 
           !!! Fin plan jdeb 
           do i= ideb+ipas,ifin,ipas
@@ -205,6 +212,7 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
 
@@ -220,7 +228,7 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
-
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
              do  i= ideb+ipas,ifin,ipas
       
                l      =   inddm(i,j,k)
@@ -237,10 +245,20 @@ c Var loc
 #include       "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
 #include       "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
+#include       "FastS/Compute/LU/mjr_ssor_SA.for"
              enddo
           enddo
         enddo
 
+       !mise a jour ssor sur dernier plan k
+        do  j= jdeb,jfin,ipas
+          do  i= ideb,ifin,ipas
+
+             l1    =   inddm(i,j,kfin)
+             l1s   = indssor(i,j,kfin)
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
+          enddo
+        enddo
 
       ELSEIF(param_int(ITYPZONE).eq.1) THEN !maillage 3d k homogene:
 
@@ -251,6 +269,12 @@ c Var loc
         ls= indssor(ideb,jdeb,kdeb)
 
 #include "FastS/Compute/LU/lu_dinv_SA.for"
+          ssor(ls,1) = 0.
+          ssor(ls,2) = 0.
+          ssor(ls,3) = 0.
+          ssor(ls,4) = 0.
+          ssor(ls,5) = 0.
+          ssor(ls,6) = 0.
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
@@ -313,7 +337,7 @@ c Var loc
 #include "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
 #include "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
-
+#include "FastS/Compute/LU/mjr_ssor_SA.for"
           !!! Fin plan jdeb 
           do i= ideb+ipas,ifin,ipas
 
@@ -329,6 +353,7 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
 
@@ -344,7 +369,7 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
-
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
              do  i= ideb+ipas,ifin,ipas
       
                l      =   inddm(i,j,k)
@@ -361,7 +386,18 @@ c Var loc
 #include       "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
 #include       "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
+#include       "FastS/Compute/LU/mjr_ssor_SA.for"
              enddo
+          enddo
+        enddo
+
+       !mise a jour ssor sur dernier plan k
+        do  j= jdeb,jfin,ipas
+          do  i= ideb,ifin,ipas
+
+             l1    =   inddm(i,j,kfin)
+             l1s   = indssor(i,j,kfin)
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
           enddo
         enddo
 
@@ -378,6 +414,12 @@ c Var loc
         ls= indssor(ideb,jdeb,kdeb)
 
 #include "FastS/Compute/LU/lu_dinv_SA.for"
+          ssor(ls,1) = 0.
+          ssor(ls,2) = 0.
+          ssor(ls,3) = 0.
+          ssor(ls,4) = 0.
+          ssor(ls,5) = 0.
+          ssor(ls,6) = 0.
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
@@ -436,7 +478,7 @@ c Var loc
 #include "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
 #include "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
-
+#include "FastS/Compute/LU/mjr_ssor_SA.for"
           !!! Fin plan jdeb 
           do i= ideb+ipas,ifin,ipas
 
@@ -451,6 +493,7 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
 
@@ -465,7 +508,7 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
-
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
              do  i= ideb+ipas,ifin,ipas
       
                l      =   inddm(i,j,k)
@@ -481,11 +524,20 @@ c Var loc
 #include       "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
 #include       "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
+#include       "FastS/Compute/LU/mjr_ssor_SA.for"
              enddo
           enddo
         enddo
 
+       !mise a jour ssor sur dernier plan k
+        do  j= jdeb,jfin,ipas
+          do  i= ideb,ifin,ipas
 
+             l1    =   inddm(i,j,kfin)
+             l1s   = indssor(i,j,kfin)
+#include    "FastS/Compute/LU/mjr_ssor_SA.for"
+          enddo
+        enddo
 
       ELSE !2d
 
@@ -493,6 +545,11 @@ c Var loc
         l =   inddm(ideb,jdeb,1)
         ls= indssor(ideb,jdeb,1)
 #include "FastS/Compute/LU/lu_dinv_2d_SA.for"
+          ssor(ls,1) = 0.
+          ssor(ls,2) = 0.
+          ssor(ls,3) = 0.
+          ssor(ls,5) = 0.
+          ssor(ls,6) = 0.
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
@@ -521,6 +578,7 @@ c Var loc
 #include "FastS/Compute/LU/lu_j_2d_SA_ale.for"
 #include "FastS/Compute/LU/mjr_drodm_ssor_2d_SA.for"
 #include "FastS/Compute/LU/lu_dinv_2d_SA.for"
+#include "FastS/Compute/LU/mjr_ssor_2d_SA.for"
           do i= ideb+ipas,ifin,ipas
 
             l      =   inddm(i,j,1)
@@ -535,8 +593,16 @@ c Var loc
 #include    "FastS/Compute/LU/lu_j_2d_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_2d_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_2d_SA.for"
+#include    "FastS/Compute/LU/mjr_ssor_2d_SA.for"
           enddo
         enddo
+
+        !mise a jour ssor sur derniere ligne j
+         do i= ideb,ifin,ipas
+            l1 =   inddm(i, jfin,1)
+            l1s= indssor(i, jfin,1)
+#include       "FastS/Compute/LU/mjr_ssor_2d_SA.for"
+         enddo
 
       ENDIF
  

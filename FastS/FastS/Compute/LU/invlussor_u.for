@@ -651,6 +651,7 @@ C            DIR$ IVDEP
 
             xal    = coe(l,1)*signe
 
+
 #include    "FastS/Compute/LU/lu_i_2d.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_2d.for"
 #include    "FastS/Compute/LU/lu_j_2d.for"
@@ -661,7 +662,7 @@ C            DIR$ IVDEP
 
        if (lussor_end == 1) then
 !! mise a jour newton
-          do j= ind_loop_sdm(3), ind_loop_sdm(4)
+          do j= ind_loop_sdm(4), ind_loop_sdm(3), ipas
 C     DIR$ IVDEP
              do  i= ind_loop_sdm(1), ind_loop_sdm(2)
 

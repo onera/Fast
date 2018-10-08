@@ -464,9 +464,9 @@ c Var loc
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_2d.for"
-#include "FastS/Compute/LU/mjr_drodm_IO_2d.for"
+#include    "FastS/Compute/LU/mjr_drodm_IO_2d.for"
 #include    "FastS/Compute/LU/lu_j_2d.for"
-#include "FastS/Compute/LU/mjr_drodm_2d.for"
+#include    "FastS/Compute/LU/mjr_drodm_2d.for"
 #include    "FastS/Compute/LU/lu_dinv_2d.for"
           enddo
         enddo

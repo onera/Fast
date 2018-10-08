@@ -100,6 +100,12 @@ c Var loc
         l =   inddm(ideb,jdeb,kdeb)
         ls= indssor(ideb,jdeb,kdeb)
 #include "FastS/Compute/LU/lu_dinv_IO_SA.for"
+          ssor(ls,1) = 0.
+          ssor(ls,2) = 0.
+          ssor(ls,3) = 0.
+          ssor(ls,4) = 0.
+          ssor(ls,5) = 0.
+          ssor(ls,6) = 0.
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
 
@@ -228,6 +234,12 @@ c Var loc
         l =   inddm(ideb,jdeb,kdeb)
         ls= indssor(ideb,jdeb,kdeb)
 #include "FastS/Compute/LU/lu_dinv_IO_SA.for"
+          ssor(ls,1) = 0.
+          ssor(ls,2) = 0.
+          ssor(ls,3) = 0.
+          ssor(ls,4) = 0.
+          ssor(ls,5) = 0.
+          ssor(ls,6) = 0.
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
@@ -362,6 +374,12 @@ c Var loc
         l =   inddm(ideb,jdeb,kdeb)
         ls= indssor(ideb,jdeb,kdeb)
 #include "FastS/Compute/LU/lu_dinv_IO_SA.for"
+          ssor(ls,1) = 0.
+          ssor(ls,2) = 0.
+          ssor(ls,3) = 0.
+          ssor(ls,4) = 0.
+          ssor(ls,5) = 0.
+          ssor(ls,6) = 0.
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
@@ -480,6 +498,11 @@ c Var loc
          ls= indssor(ideb,jdeb,1)
 
 #include "FastS/Compute/LU/lu_dinv_IO_2d_SA.for"
+          ssor(ls,1) = 0.
+          ssor(ls,2) = 0.
+          ssor(ls,3) = 0.
+          ssor(ls,5) = 0.
+          ssor(ls,6) = 0.
 !!! ligne (jdeb,kdeb) dans le plan kdeb
          do i= ideb+ipas,ifin,ipas
 

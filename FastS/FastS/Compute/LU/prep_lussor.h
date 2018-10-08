@@ -1,13 +1,13 @@
+E_Int shift=0; E_Int indice;
 if (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1 )
   {
     ipt_ssor_shift    = iptssor[    nd ];
     ipt_ssortmp_shift = iptssortmp[ nd ];
-    E_Int indice; E_Int shift=0;
 
     if (omp_mode == 0)
       for (E_Int i = 0; i < ithread - 1; i++)
 	{
-	  indice = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
+	  indice = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
 	  ipt_ssor_shift    += ipt_ssor_size[ indice ] * param_int[ nd ][ NEQ ];
 	  ipt_ssortmp_shift += ipt_ssor_size[ indice ] * param_int[ nd ][ NEQ ];
 	  shift             += ipt_ssor_size[ indice ] * param_int[ nd ][ NEQ ];
@@ -26,7 +26,7 @@ if (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1 )
 	      cpt_actif++;
 	      if (cpt_actif > 1)
 		{
-		  indice = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + ithread_pre;
+		  indice = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + ithread_pre;
 		  ipt_ssor_shift    += ipt_ssor_size[ indice ] * param_int[ nd ][ NEQ ];
 		  ipt_ssortmp_shift += ipt_ssor_size[ indice ] * param_int[ nd ][ NEQ ];
 		}
@@ -39,9 +39,9 @@ if (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1 )
 #pragma omp barrier
       }
     
-    indice = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + ithread - 1;
+    indice = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + ithread -1;
 
-    ssor_size = ipt_ssor_size[ nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + ithread - 1 ];
+    ssor_size = ipt_ssor_size[ indice ];
 
     //printf("shift = %d et thread = %d \n", shift/5,ithread);
   }

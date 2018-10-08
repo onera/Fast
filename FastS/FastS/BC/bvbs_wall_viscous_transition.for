@@ -69,10 +69,16 @@ c      write(*,*)'loop vis=', ind_loop
 
       xlong=sqrt( (x(li1)-x(li2))**2+(y(li1)-y(li2))**2)
 
-      !zlong_transi   = 0.001
+      ! Funk
+      !zlong_transi   =  0.
+      !freq_transi    =  80000.00
+      !lambdaz_transi =  1.
+      !ampli_transi   =  0.0005
+
+      !Guillaume sd7003
       zlong_transi   =  0.
-      freq_transi    =  80000.00
-      lambdaz_transi =  1.
+      freq_transi    =  2.3
+      lambdaz_transi =  2.
       ampli_transi   =  0.0005
 
       if(zlong_transi.eq.0.0) then

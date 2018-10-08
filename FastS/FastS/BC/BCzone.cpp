@@ -185,7 +185,8 @@ E_Int K_FASTS::BCzone(
                            {
                              lskip[ipara] = 0;
                              lcorner      = 0;
-                             if (  param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7 )  ificmax[ipara] = 1;
+                             //if (  (param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7) ||  param_int[pt_bc + BC_TYPE] == 12) ificmax[ipara]=param_int[LU_MATCH];
+                             if (  (param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7) ||  param_int[pt_bc + BC_TYPE] == 12) ificmax[ipara]=1;
                            }
 	}
         else {lskip[ipara] = 1;}
@@ -200,21 +201,26 @@ E_Int K_FASTS::BCzone(
         ishift_lu[4]  = ipt_ind_dm_thread[4] - ( 1 - lskip[4] ) * ificmax[4];
         ishift_lu[5]  = ipt_ind_dm_thread[5] + ( 1 - lskip[5] ) * ificmax[5];
 
-	//if ((param_int[ LU_MATCH ] == 1) && (param_int[ NB_RELAX ] > 1))
 	if (param_int[ LU_MATCH ] == 1 )
 	  {
 	    E_Int nfic_ij = param_int[ NIJK + 3 ];
 	    
-	    if (ishift_lu[0]> 1                  ) {ishift_lu[0] -= nfic_ij;}
-	    if (ishift_lu[1]< param_int[ IJKV   ]) {ishift_lu[1] += nfic_ij;}
-	    if (ishift_lu[2]> 1                  ) {ishift_lu[2] -= nfic_ij;}
-	    if (ishift_lu[3]< param_int[ IJKV+1 ]) {ishift_lu[3] += nfic_ij;}
+	    if (ishift_lu[0]> ipt_ind_dm[0]      ) {ishift_lu[0] -= nfic_ij;}
+	    if (ishift_lu[1]< ipt_ind_dm[1]      ) {ishift_lu[1] += nfic_ij;}
+	    if (ishift_lu[2]> ipt_ind_dm[2]      ) {ishift_lu[2] -= nfic_ij;}
+	    if (ishift_lu[3]< ipt_ind_dm[3]      ) {ishift_lu[3] += nfic_ij;}
+	    //if (ishift_lu[0]> 1                  ) {ishift_lu[0] -= nfic_ij;}
+	    //if (ishift_lu[1]< param_int[ IJKV   ]) {ishift_lu[1] += nfic_ij;}
+	    //if (ishift_lu[2]> 1                  ) {ishift_lu[2] -= nfic_ij;}
+	    //if (ishift_lu[3]< param_int[ IJKV+1 ]) {ishift_lu[3] += nfic_ij;}
 	    if (param_int[ ITYPZONE ] != 3)
 	      {
 		E_Int nfic_k  = param_int[ NIJK + 4 ];
 
-		if (ishift_lu[4] > 1                    ){ ishift_lu[4] -= nfic_k;}
-		if (ishift_lu[5] < param_int[ IJKV + 2 ]){ ishift_lu[5] += nfic_k;}
+		if (ishift_lu[4] > ipt_ind_dm[4]        ){ ishift_lu[4] -= nfic_k;}
+		if (ishift_lu[5] < ipt_ind_dm[5]        ){ ishift_lu[5] += nfic_k;}
+		//if (ishift_lu[4] > 1                    ){ ishift_lu[4] -= nfic_k;}
+		//if (ishift_lu[5] < param_int[ IJKV + 2 ]){ ishift_lu[5] += nfic_k;}
 	      }
 	  }
 
@@ -226,18 +232,9 @@ E_Int K_FASTS::BCzone(
         for ( E_Int idir = 0; idir < idirmax; idir++ ) {
             for ( E_Int l = 0; l < 6; l++ ) ind_rhs[l] = ipt_ind_dm_thread[l];
             E_Int       lskip_loc;
-            if ( idir == 0 ) {
-                ind_rhs[0] = 1;
-                ind_rhs[1] = 1;
-            }
-            if ( idir == 2 ) {
-                ind_rhs[2] = 1;
-                ind_rhs[3] = 1;
-            }
-            if ( idir == 4 ) {
-                ind_rhs[4] = 1;
-                ind_rhs[5] = 1;
-            }
+            if ( idir == 0 ) { ind_rhs[0] = 1; ind_rhs[1] = 1; }
+            if ( idir == 2 ) { ind_rhs[2] = 1; ind_rhs[3] = 1; }
+            if ( idir == 4 ) { ind_rhs[4] = 1; ind_rhs[5] = 1; }
             if ( idir == 1 ) { ind_rhs[0] = ind_rhs[1]; }
             if ( idir == 3 ) { ind_rhs[2] = ind_rhs[3]; }
             if ( idir == 5 ) { ind_rhs[4] = ind_rhs[5]; }
@@ -251,8 +248,7 @@ E_Int K_FASTS::BCzone(
 
                 E_Int eq_deb = 1;
                 if ( lskip_loc == 0 )
-                    bvbs_extrapolate_( idir_loc, lrhs_loc, eq_deb, param_int, ipt_ind_CL119, param_real[RONUTILDEINF],
-                                       iptrop );
+                    bvbs_extrapolate_( idir_loc, lrhs_loc, eq_deb, param_int, ipt_ind_CL119, param_real[RONUTILDEINF], iptrop);
             }
         }
     }

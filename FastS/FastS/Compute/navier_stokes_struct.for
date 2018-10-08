@@ -7,7 +7,8 @@ c***********************************************************************
      &        ithread, ithread_io, 
      &        omp_mode, layer_mode, Nbre_socket, socket, mx_synchro, 
      &        lssiter_verif,
-     &        nptpsi, nitcfg, nitrun, first_it, nb_pulse, flagCellN,
+     &        nptpsi, nitcfg, nssiter, nitrun, first_it,
+     &        nb_pulse, flagCellN,
      &        param_int, param_real,
      &        temps, tot,
      &        ijkv_sdm,
@@ -51,7 +52,7 @@ c***********************************************************************
       INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, first_it,
      & ithread, ithread_io, Nbre_socket, socket, nitrun, nptpsi, nitcfg,
      & nb_pulse,
-     & lssiter_verif,flagCellN,omp_mode,layer_mode
+     & lssiter_verif,flagCellN,omp_mode,layer_mode,nssiter
 c
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
      & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
@@ -73,7 +74,7 @@ C Var loc
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
-     & ind_loop(6),neq_rot,depth,nb_bc,thmax,th
+     & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -320,6 +321,24 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                            ind_mjr, cellN,
      &                            rop_ssiter, rop, rop_m1, drodm, coe)
               endif
+
+             !Extraction tableau residu
+             if( param_int(EXTRACT_RES).eq.2.and.
+     &           (nitcfg.eq.1.or.nitcfg.eq.nssiter) ) then
+
+                shift2=1
+                if(param_int(IFLOW).eq.3) shift2=2
+
+                if(nitcfg.eq.1)  then
+                   shift1 = param_int(NDIMDX)*shift2
+                else
+                   shift1 = param_int(NDIMDX)*(param_int(NEQ)+shift2)
+                endif
+
+                call extract_res(ndo, param_int, param_real,
+     &                           ind_mjr,
+     &                         drodm, vol, xmut(1+shift1) )
+             endif
            !! explicit Lu                 
            else
              !c--------------------------------------------------

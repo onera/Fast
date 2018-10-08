@@ -10,7 +10,7 @@
           s_1  = c_pertu/sqrt(tcx*tcx + tcy*tcy +tcz*tcz)
 
           call random_number(rnd)
-          rnd = (rnd-0.5)*ampli_transi*0.05                       !pertu random
+          rnd = (rnd-0.5)*ampli_transi*0.05                      !pertu random
      &       +2.*ampli_transi*sin(omega*param_real(TEMPS))
      &                       *sin(lambda*z(ldx))                  !pertu sinuoidale temps et z + gaussien (x,y)
      &        *exp(-10.*xlong*( (x(ldx)-x0)*(x(ldx)-x0)

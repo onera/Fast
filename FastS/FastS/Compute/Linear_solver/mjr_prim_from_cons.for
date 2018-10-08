@@ -31,7 +31,7 @@ c***********************************************************************²
      &     rop(param_int(NDIMDX), param_int(NEQ)), 
      &     drodm_out(param_int(NDIMDX), param_int(NEQ)), param_real(0:*)
 
-      INTEGER_E k, j, lij, l,v1, v2, v3,v4,v5,v6,ltij,lt,lvo,ls
+      INTEGER_E k, j, lij, l,v1, v2, v3,v4,v5,v6,ltij,lt,lvo,ls,ndom,i
 
       REAL_E cvinv, cvinv2, ro_old, u_old, v_old, w_old,t_old, roe_old,
      &     r_1, anulam, nu_old, cmus1, temp01, coesut,ratiom

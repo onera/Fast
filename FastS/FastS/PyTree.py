@@ -742,6 +742,10 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             # on compacte les variables "visqueuse"
             loc             ='centers:'
             fields         = [loc+'ViscosityEddy',loc+'TurbulentDistance', loc+'zgris']
+            for sufix in ['0','N']:
+               for i in range(1,7):
+                  fields.append(loc+'drodm'+sufix+'_'+str(i))
+
             fields2compact = []
             for field in fields: 
                if C.isNamePresent(z, field) == 1: fields2compact.append(field)

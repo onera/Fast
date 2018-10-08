@@ -102,6 +102,8 @@ E_Int K_FASTS::gsdr3(
       E_Int nptpsi        = 1;
       E_Int balance       = 0;
 
+      E_Int mx_sszone = mx_nidom/nidom;
+
       FldArrayI tot( 6*threadmax_sdm); E_Int* ipt_tot  =  tot.begin();
 
 
@@ -148,6 +150,10 @@ E_Int K_FASTS::gsdr3(
 
            if(ipt_nisdom_residu[nitcfg-1] != 0) ipt_it_bloc[0] +=1;
           }
+
+    E_Int* ipt_nidom_loc= ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;
+
+
 	if (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1)
 	  {
 #ifdef _OPENMP
@@ -182,7 +188,7 @@ E_Int K_FASTS::gsdr3(
 		  }
 		else //ompmode = 0
 		  {
-		    E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd] + 6 * nd_subzone;
+                    E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
 		    E_Int ipt_topology_socket[3];
 		    E_Int ipt_ind_dm_thread[6];
 		    E_Int lmin = 10;
@@ -191,17 +197,22 @@ E_Int K_FASTS::gsdr3(
 		    for (E_Int i = 0; i < Nbre_thread_actif; i++)
 		      {
 			E_Int ithread = i + 1;
-			E_Int indice = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
+			E_Int indice = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
 
 			indice_boucle_lu_(nd, ithread, Nbre_thread_actif, lmin,
 					  ipt_ind_dm_loc,
 					  ipt_topology_socket, ipt_ind_dm_thread);
 
-			if (i > ipt_topology_socket[0]*ipt_topology_socket[1]*ipt_topology_socket[2])
-			  break;
-		         ipt_ssor_size[indice]=(ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] +1 +2*param_int[nd][ NIJK +3 ])*
-	                                       (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] +1 +2*param_int[nd][ NIJK +3 ])*
-		                               (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] +1 +2*param_int[nd][ NIJK +4 ]);
+			if (ithread > ipt_topology_socket[0]*ipt_topology_socket[1]*ipt_topology_socket[2])
+		         { ipt_ssor_size[indice]=0;
+			  //break;
+                         }
+                        else
+                         {
+		          ipt_ssor_size[indice]=(ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] +1 +2*param_int[nd][ NIJK +3 ])*
+	                                        (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] +1 +2*param_int[nd][ NIJK +3 ])*
+		                                (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] +1 +2*param_int[nd][ NIJK +4 ]);
+                         }
 		      }
 		  }// ompmode
 	      }//loop subzone
@@ -341,7 +352,6 @@ if(lexit_lu ==0 && layer_mode==1)
 
   setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,
                           param_int_ibc, param_real_ibc, linelets_int, linelets_real, Pr, it_target, nidom, ipt_timecount,mpi);
-
   //
   //
   //Apply BC (parcour Zones) + reinitialisation verrou pour calcul rhs
