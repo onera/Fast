@@ -377,6 +377,7 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
                tmp = kry[ shift + 0: shift + ndimdx ]
                Internal.createChild(sol , name, 'DataArray_t', value=tmp, children=VarNew[2])
                shift += ndimdx
+
    # TEST PYTHON CONTEXTE ADJOINT ? (dpCLp, dpCDp)  -----------------------------
     if (adjoint==True): 
        if C.isNamePresent(zone, 'centers:dpCLp_dpDensity') != 1: C._initVars(zone, 'centers:dpCLp_dpDensity', 0.)
@@ -433,6 +434,21 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
        if C.isNamePresent(zone, 'dpCDp_dpZ') != 1: C._initVars(zone, 'dpCDp_dpZ', 0.)
 
     # fin du if adjoint ------------------------------------
+
+    # init termes sources
+    source = 0
+    a = Internal.getNodeFromName2(zone, 'source')
+    if a is not None: source = Internal.getValue(a)
+    if source == 1:
+       if C.isNamePresent(zone, 'centers:Density_src')   != 1:   C._initVars(zone, 'centers:Density_src', 0.)
+       if C.isNamePresent(zone, 'centers:MomentumX_src') != 1:   C._initVars(zone, 'centers:MomentumX_src', 0.)
+       if C.isNamePresent(zone, 'centers:MomentumY_src') != 1:   C._initVars(zone, 'centers:MomentumY_src', 0.)
+       if C.isNamePresent(zone, 'centers:MomentumZ_src') != 1:   C._initVars(zone, 'centers:MomentumZ_src', 0.)
+       if C.isNamePresent(zone, 'centers:EnergyStagnationDensity_src') != 1: C._initVars(zone, 'centers:EnergyStagnationDensity_src', 0.)
+       if (sa and C.isNamePresent(zone, 'centers:TurbulentSANuTildeDensity_src') != 1): C._initVars(zone, 'centers:TurbulentSANuTildeDensity_src', 0.)
+
+
+
     return sa, FIRST_IT
 
 #==============================================================================
@@ -562,7 +578,7 @@ def tagBC(bcname):
   elif bcname == "BCWallViscous_transition":tag =12;
   elif bcname == "BCInflow":                tag =13;
   elif bcname == "BCExtrapolateRANS":       tag =14;
-  elif bcname  == "BCPeriodic":             tag =15;
+  elif bcname == "BCPeriodic":              tag =15;
   elif bcname == "BCOutpres":               tag =16;
   elif bcname == "BCInj1":                  tag =17;
   elif bcname == "BCRacinf":                tag =18;

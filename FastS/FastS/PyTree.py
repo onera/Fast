@@ -698,6 +698,9 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             if omp_mode == 1: count += 1
             sa,FIRST_IT     = FastI._createPrimVars(b, z, omp_mode, rmConsVars,Adjoint)
             HOOK['FIRST_IT']= FIRST_IT
+            source = 0
+            a = Internal.getNodeFromName2(z,'Density_src')
+            if a is not None: source = 1
             sfd = 0
             a = Internal.getNodeFromName2(z, 'sfd')
             if a is not None: sfd = Internal.getValue(a)
@@ -726,6 +729,8 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                 #t1=timeit.default_timer()
                 #print "cout compact P= ", t1-t0, z[0]
                 #t0=timeit.default_timer()
+                if source == 1:
+                    _compact(z, fields=['centers:Density_src','centers:MomentumX_src','centers:MomentumY_src','centers:MomentumZ_src','centers:EnergyStagnationDensity_src', 'centers:TurbulentSANuTildeDensity_src'],mode=count)
                 if sfd == 1:
                    _compact(z, fields=['centers:Density_f','centers:VelocityX_f','centers:VelocityY_f','centers:VelocityZ_f','centers:Temperature_f', 'centers:TurbulentSANuTilde_f'],mode=count)
                 if extract_res == 1:
@@ -734,6 +739,8 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                 _compact(z, fields=['centers:Density'   , 'centers:VelocityX'   , 'centers:VelocityY'   ,'centers:VelocityZ'   , 'centers:Temperature'   ], mode=count)
                 _compact(z, fields=['centers:Density_M1', 'centers:VelocityX_M1', 'centers:VelocityY_M1','centers:VelocityZ_M1', 'centers:Temperature_M1'], mode=count)
                 _compact(z, fields=['centers:Density_P1', 'centers:VelocityX_P1', 'centers:VelocityY_P1','centers:VelocityZ_P1', 'centers:Temperature_P1'], mode=count)
+                if source == 1:
+                    _compact(z, fields=['centers:Density_src','centers:MomentumX_src','centers:MomentumY_src','centers:MomentumZ_src','centers:EnergyStagnationDensity_src'],mode=count)
                 if sfd == 1:
                    _compact(z, fields=['centers:Density_f','centers:VelocityX_f','centers:VelocityY_f','centers:VelocityZ_f','centers:Temperature_f'],mode=count)
                 if extract_res == 1:
@@ -1734,7 +1741,8 @@ def _buildOwnData(t):
     'snear': 1, # ignored
     'DES_debug':['none','active'],
     'extract_res':0,
-    'IBC':3
+    'IBC':3,
+    'source':0
     }
 
     for b in bases:
@@ -1873,6 +1881,7 @@ def _buildOwnData(t):
             DES_debug    = 0
             extract_res  = 0
             ibc          = numpy.zeros( 7, dtype=numpy.int32)
+            source       = 0
             
             a = Internal.getNodeFromName2(z, 'GoverningEquations')
             if a is not None: model = Internal.getValue(a)
@@ -1977,9 +1986,11 @@ def _buildOwnData(t):
                     tmp = Internal.getValue(a)
                     if tmp == 'active': DES_debug =1
                 a = Internal.getNodeFromName1(d, 'extract_res')
-                if (a != None): extract_res = Internal.getValue(a)
+                if a is not None: extract_res = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'IBC')
                 if a is not None: ibc = a[1]
+                a = Internal.getNodeFromName1(d, 'source')
+                if a is not None: source = Internal.getValue(a)
                
             iflow  = 1
             ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0;
@@ -2072,7 +2083,7 @@ def _buildOwnData(t):
             # creation noeud parametre integer
             # Determination de levelg et leveld             
 
-            datap = numpy.empty(83, numpy.int32)
+            datap = numpy.empty(84, numpy.int32)
             datap[0:25] = -1
             datap[25]   = 0     # zone 3D curvi par defaut
             datap[26]   = 0     # Vent 3D par defaut
@@ -2115,7 +2126,8 @@ def _buildOwnData(t):
             datap[73]   = nbr_krylov
             datap[74]   = ImplicitSolverNum
             datap[75]   = lu_match          
-            datap[76:83]= ibc[0:7]          
+            datap[76:83]= ibc[0:7]
+            datap[83]   = source          
 
             i += 1
          

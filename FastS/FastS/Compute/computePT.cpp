@@ -152,7 +152,7 @@ else
   E_Float** ipt_param_real  ;
   E_Float** iptx;          E_Float** ipty;         E_Float** iptz;    E_Float** iptro; E_Float** iptro_m1; E_Float** iptro_p1; E_Float** iptmut;
   E_Float** ipti;          E_Float** iptj;         E_Float** iptk;    E_Float** iptvol;
-  E_Float** ipti0;         E_Float** iptj0;        E_Float** iptk0;
+  E_Float** ipti0;         E_Float** iptj0;        E_Float** iptk0;   E_Float** iptsrc;
   E_Float** ipti_df;       E_Float** iptj_df;      E_Float** iptk_df ; E_Float** iptvol_df;
   E_Float** iptdist;       E_Float** iptventi;     E_Float** iptventj; E_Float** iptventk;
   E_Float** iptrdm;        E_Float** iptkrylov;    E_Float** iptkrylov_transfer;
@@ -165,7 +165,7 @@ else
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
 
-  iptx              = new E_Float*[nidom*35];
+  iptx              = new E_Float*[nidom*36];
   ipty              = iptx               + nidom;
   iptz              = ipty               + nidom;
   iptro             = iptz               + nidom;
@@ -200,6 +200,7 @@ else
   ipt_cfl_zones     = iptssortmp         + nidom;   //3composants: attention a la prochaine addition
   iptdrodm_transfer = ipt_cfl_zones      + nidom;
   iptCellN_IBC      = iptdrodm_transfer  + nidom;
+  iptsrc            = iptCellN_IBC       + nidom;
 
   vector<PyArrayObject*> hook;
   PyObject* ssorArray = PyDict_GetItemString(work,"ssors");
@@ -261,6 +262,9 @@ else
     t            = K_PYTREE::getNodeFromName1(sol_center, "cellN");
     if (t == NULL) iptCellN[nd] = NULL;
     else iptCellN[nd] = K_PYTREE::getValueAF(t, hook);
+    t            = K_PYTREE::getNodeFromName1(sol_center, "Density_src");
+    if (t == NULL) iptsrc[nd] = NULL;
+    else iptsrc[nd]   = K_PYTREE::getValueAF(t, hook);
 
     if(ipt_param_int[nd][ IBC ]== 1){t=K_PYTREE::getNodeFromName1(sol_center, "cellN_IBC"); iptCellN_IBC[nd] = K_PYTREE::getValueAF(t, hook); } 
     else { iptCellN_IBC[nd] = NULL;}
@@ -544,7 +548,7 @@ else
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
             ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size , ipt_drodmd, 
-	    ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp  , ipt_givens,
+	          ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp  , ipt_givens,
             ipt_cfl            ,
             iptx               , ipty             , iptz              ,
             iptCellN           , iptCellN_IBC     ,
@@ -558,7 +562,8 @@ else
             iptrdm             ,
             iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res, iptdrodm_transfer  ,
-            ipt_param_int_ibc , ipt_param_real_ibc, ipt_param_int_tc  , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real);
+            ipt_param_int_ibc , ipt_param_real_ibc, ipt_param_int_tc  , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real, 
+            iptsrc);
 
        if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
        {

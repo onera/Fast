@@ -7,7 +7,7 @@ c***********************************************************************
      &                    ind_sdm, ind_rhs, ind_ssa,
      &                    temps,
      &                    rop, xmut, drodm, coe, x,y,z,cellN_IBC,
-     &                    ti, tj, tk, vol, delta)
+     &                    ti, tj, tk, vol, delta, ro_src)
 c***********************************************************************
 c_P                          O N E R A
 c
@@ -33,7 +33,7 @@ c
       REAL_E ti(*),tj(*),tk(*), vol(*)
       REAL_E x(*),y(*),z(*), cellN_IBC(*)
       REAL_E param_real(0:*), temps
-      REAL_E delta(*)
+      REAL_E delta(*), ro_src(*)
 
 C Var loc
       INTEGER_E nacp,l,idirx,idirz,i,j,k,n,n2,i1,j1,k1,i2m1,j2m1,k2m1,
@@ -55,6 +55,11 @@ C Var loc
      !Initilalisation systematique de drodm
       call init_rhs(ndom, nitcfg, param_int, param_int( NDIMDX ),
      &              param_int( NEQ ), ind_rhs,  drodm )
+
+      IF (param_int(SRC).eq.1) THEN
+        call update_src(ndom, nitcfg, param_int, ind_rhs,  drodm , 
+     &              ro_src)
+      ENDIF
 
       ! Si dtloc + ALE 
       ! => on resoud la conservation du moment dans le repere relatif

@@ -151,7 +151,7 @@ extern "C"
                               E_Float* ipti_df          , E_Float* iptj_df     , E_Float* iptk_df        , E_Float* iptvol_df      , 
                               E_Float* iptventi         , E_Float* iptventj    , E_Float* iptventk       ,  
                               E_Float* iptwig           , E_Float* iptstat_wig , E_Float* iptrot         ,
-                              E_Float* iptdrodm         , E_Float* iptcoe      , E_Float* iptdelta       ,  E_Float* iptro_res );
+                              E_Float* iptdrodm         , E_Float* iptcoe      , E_Float* iptdelta       ,  E_Float* iptro_res , E_Float* iptsrc);
 
   void invlu_(                E_Int& ndo      , E_Int& nitcfg      , E_Int& nitrun   , E_Int*  param_int , E_Float* param_real,
                               E_Int* ipt_sdm            , E_Int* ipt_sdm_thread, E_Int& mjrnewton        ,

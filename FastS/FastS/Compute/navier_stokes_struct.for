@@ -22,7 +22,7 @@ c***********************************************************************
      &        ti, tj, tk, vol,  ti_df, tj_df, tk_df, vol_df,
      &        venti , ventj , ventk ,
      &        wig , stat_wig, rot,
-     &        drodm , coe, delta, ro_res)
+     &        drodm , coe, delta, ro_res, ro_src)
 
 c***********************************************************************
 c_U   USER : TERRACOL
@@ -61,7 +61,8 @@ c
       REAL_E rop(*),rop_m1(*),rop_tmp(*),rop_ssiter(*),xmut(*),drodm(*),
      & coe(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
      & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*), rot(*), celln(*),
-     & ti_df(*),tj_df(*),tk_df(*),vol_df(*), krylov(*), cellN_IBC(*)
+     & ti_df(*),tj_df(*),tk_df(*),vol_df(*), krylov(*), cellN_IBC(*), 
+     & ro_src(*)
 
       REAL_E delta(*),ro_res(*)
 
@@ -203,7 +204,7 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                   ind_sdm, ind_rhs, ind_ssa,
      &                   temps,
      &                   rop_ssiter, xmut, drodm, coe, x,y,z,cellN_IBC,
-     &                   ti,tj,tk,vol, delta)
+     &                   ti,tj,tk,vol, delta, ro_src)
 
            IF(param_int(IFLOW).lt.3.or.param_int(ITYPCP).eq.2) then
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
