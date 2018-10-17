@@ -21,11 +21,11 @@ a = G.map(a, distrib, dir=2)
 
 a1 = T.subzone(a,(1,1,1),(NI/2,-1,-1)); a1[0] = 'cyl1'
 a2 = T.subzone(a,(NI/2,1,1),(NI,-1,-1)); a2[0] = 'cyl2'
-t = C.newPyTree(["Base"]); t[2][1][2] = [a1,a2]
+t = C.newPyTree(["Base",a1,a2])
 t = X.connectMatch(t)
 
 #duplication raccord match en BC classique  (pour implicitation)
-zones   =  Internal.getZones(t)
+zones = Internal.getZones(t)
 for z in zones:
   connect =  Internal.getNodeFromName3(z, 'ZoneGridConnectivity')
   matchs  =  Internal.getNodesFromType1(connect, 'GridConnectivity1to1_t')
@@ -81,7 +81,7 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 # Compute
 for it in xrange(1,40): 
    FastS._compute(t, metrics, it, tc)
-   if (it%modulo_verif == 0):
+   if it%modulo_verif == 0:
         print 'it=', it
         FastS.display_temporal_criteria(t, metrics, it, format='double')
 

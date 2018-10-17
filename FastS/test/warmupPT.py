@@ -1,10 +1,8 @@
 # - warmup (pyTree) - 
 import Converter.PyTree as C
-import Converter.Internal as Internal
 import Generator.PyTree as G
 import FastS.PyTree as FastS
 import Fast.PyTree as Fast
-import KCore.test as test
 import Initiator.PyTree as I
 
 ni = 155; dx = 100./(ni-1); dz = 0.01

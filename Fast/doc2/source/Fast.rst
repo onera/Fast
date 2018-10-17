@@ -269,9 +269,9 @@ Actions
     
     Load tree from file. The tree must be already distributed (with 'proc' nodes).
     The file can be a single CGNS file ("t.cgns") or a splitted per processor 
-    CGNS file ("t/t_1.cgns", "t_2.cgns", ...)
+    CGNS file ("t/t_1.cgns", "t/t_2.cgns", ...)
     
-    If you run in seq mode, mpirun must be false.
+    If you run in sequential mode, mpirun must be false.
     The function returns a full tree.
 
     If you run in mpi mode, mpirun must be true.
@@ -282,11 +282,11 @@ Actions
     :param split: 'single' or 'multiple'
     :type split: string
     :param mpirun: true if python is run with mpirun
-    :type boolean
+    :type mpirun boolean
     :return: t
     :rtype: CGNS tree
 
-    * `Load pyTree (pyTree) <Examples/Fast/loadFilePT.py>`_:
+    * `Load single pyTree (pyTree) <Examples/Fast/loadFilePT.py>`_:
 
     .. literalinclude:: ../build/Examples/Fast/loadFilePT.py
 
@@ -308,9 +308,9 @@ Actions
     :param split: 'single' or 'multiple'
     :type split: string
     :param mpirun: true if python is run with mpirun
-    :type boolean
+    :type mpirune: boolean
     
-    * `Save pyTree (pyTree) <Examples/Fast/saveFilePT.py>`_:
+    * `Save single pyTree (pyTree) <Examples/Fast/saveFilePT.py>`_:
 
     .. literalinclude:: ../build/Examples/Fast/saveFilePT.py
 

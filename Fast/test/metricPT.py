@@ -1,8 +1,6 @@
 # - metric (pyTree) -
 import Generator.PyTree as G
 import Converter.PyTree as C
-import Initiator.PyTree as I
-import CPlot.PyTree as CPlot
 import Transform.PyTree as T
 import Fast.PyTree as Fast
 

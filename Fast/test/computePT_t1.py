@@ -2,7 +2,6 @@
 import Generator.PyTree as G
 import Converter.PyTree as C
 import Initiator.PyTree as I
-import CPlot.PyTree as CPlot
 import Fast.PyTree as Fast
 import KCore.test as test
 

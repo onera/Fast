@@ -12,7 +12,6 @@ import Converter.PyTree as C
 import Distributor2.PyTree as D2
 import Converter.Mpi as Cmpi
 import Converter.Internal as Internal
-import KCore.test as test
 import sys
 import math, numpy
 

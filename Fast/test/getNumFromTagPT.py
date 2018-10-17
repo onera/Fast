@@ -1,5 +1,4 @@
 # - getNumFromTag (pyTree) -
-import Converter.PyTree as C
 import Generator.PyTree as G
 import Fast.PyTree as Fast
 

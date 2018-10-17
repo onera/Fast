@@ -9,8 +9,8 @@ Preamble
 FastS is an efficient Navier-Stokes solver for use on structured 
 grids.
 
-FastS module works on arrays (as defined in Converter) or on CGNS/python trees (pyTrees) 
-containing grid information (coordinates must be defined).
+FastS module works on CGNS/python trees (pyTrees) 
+containing grid information (coordinates must be defined, boundary conditions and flow solution).
 
 This module is only available for the pyTree interface::
 
@@ -37,7 +37,7 @@ List of functions
 .. autosummary::
 
     FastS.PyTree._compute
-    FastS.PyTree.display_temporal_criteria
+    FastS.PyTree.displayTemporalCriteria
 
 **-- Post**
 

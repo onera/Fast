@@ -21,7 +21,7 @@ a = G.map(a, distrib, dir=2)
 
 a1 = T.subzone(a,(1,1,1),(NI/2,-1,-1)); a1[0] = 'cyl1'
 a2 = T.subzone(a,(NI/2,1,1),(NI,-1,-1)); a2[0] = 'cyl2'
-t = C.newPyTree(["Base"]); t[2][1][2] = [a1,a2]
+t = C.newPyTree(["Base",a1,a2])
 t = X.connectMatch(t)
 
 t = Internal.addGhostCells(t,t,2,2)

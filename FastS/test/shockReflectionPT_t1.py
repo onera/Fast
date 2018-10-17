@@ -6,8 +6,6 @@ import Converter.Internal as Internal
 import Initiator.PyTree as I
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
-import CPlot.PyTree as CPlot
-import Post.PyTree as P
 import Transform.PyTree as T
 import KCore.Adim as Adim
 import KCore.test as test

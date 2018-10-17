@@ -50,6 +50,7 @@ def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
 #==============================================================================
 #def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python"):
 def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
+    """Compute a given number of iterations."""
     global FIRST_IT, HOOK
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
@@ -211,6 +212,7 @@ def _init_metric(t, metrics, hook, omp_mode):
 # + alignement + placement DRAM
 #==============================================================================
 def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
+    """Perform necessary operations for the solver to run."""
     global FIRST_IT, HOOK, HOOKIBC
     # Get omp_mode
     ompmode = OMP_MODE
@@ -861,6 +863,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
        #print "Time BC",(t1-t0)
             
    return None
+   
 #==============================================================================
 # Cree un noeud POST
 # IN: t: tree
@@ -870,6 +873,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 # OUT: return a tree with POST node
 #==============================================================================
 def createStatNodes(t, dir='0', vars=[], nsamples=0):
+    """Create node in tree to store stats."""
     try: import Transform.PyTree as T
     except: raise ImportError("createStatNodes: requires Transform module.")
 
@@ -1278,6 +1282,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
 # compute statistique in place
 #==============================================================================
 def _computeStats(t, tmy, metrics):
+    """Compute the space/time average of flowfields in tmy."""
     zones    = Internal.getZones(t)
     zones_my = Internal.getZones(tmy)
 
@@ -1327,10 +1332,11 @@ def _computeEnstrophy(t, metrics, time):
 # Post: compute variable in place
 #==============================================================================
 def _computeVariables(t, metrics, varlist, order=2):
+    """Compute given variables."""
     global FIRST_IT, HOOK
 
-    if   isinstance( varlist, basestring): vars = [varlist]
-    elif isinstance( varlist, list      ): vars = varlist
+    if   isinstance(varlist, basestring): vars = [varlist]
+    elif isinstance(varlist, list      ): vars = varlist
     else: raise ValueError("_computeVariables: last argument must be a string or list of strings.")
 
     lcompact_Q    = False
@@ -1343,19 +1349,19 @@ def _computeVariables(t, metrics, varlist, order=2):
 
     for var in vars:
        #print 'var=',var
-       if (var == 'QCriterion'):  
+       if var == 'QCriterion':  
           flag += 1
           var_loc.append('QCriterion')
-       elif (var == 'QpCriterion'):  
+       elif var == 'QpCriterion':  
           flag += 2
           var_loc.append('QpCriterion')
-       elif (var == 'Enstrophy'): 
+       elif var == 'Enstrophy': 
           flag += 10
           var_loc.append('Enstrophy')
-       elif (var == 'RotX'): 
+       elif var == 'RotX': 
           flag += 100
           var_loc.append('RotX')
-       elif (var == 'dDensitydt'): 
+       elif var == 'dDensitydt': 
           flag += 1000
           var_loc.append('dDensitydt')
 
@@ -1370,14 +1376,14 @@ def _computeVariables(t, metrics, varlist, order=2):
         for var in var_loc:
             node = Internal.getNodeFromName1(solution, var)
             if node is None:
-                 if(var=='QCriterion' or var=='QpCriterion'): lcompact_Q     = True
-                 if(var=='RotX'      )                      : lcompact_Rotx  = True
-                 if(var=='Enstrophy' )                      : lcompact_Enst  = True
-                 if(var=='dDensity/dt')                     : lcompact_drodt = True
+                 if var=='QCriterion' or var=='QpCriterion': lcompact_Q     = True
+                 if var=='RotX'                            : lcompact_Rotx  = True
+                 if var=='Enstrophy'                       : lcompact_Enst  = True
+                 if var=='dDensity/dt'                     : lcompact_drodt = True
                  tmp = numpy.ones( (dim[1]-1,dim[2]-1,dim[3]-1) , dtype=numpy.float64)
                  Internal.createChild(solution, var, 'DataArray_t', tmp)
 
-    if (var_loc != []):
+    if var_loc != []:
        if (lcompact_Q):     _compact(zones, fields=['centers:QCriterion'])
        if (lcompact_Enst) : _compact(zones, fields=['centers:Enstrophy' ])
        if (lcompact_Rotx) : _compact(zones, fields=['centers:RotX' ])
@@ -1395,6 +1401,7 @@ def _computeVariables(t, metrics, varlist, order=2):
 # Post: compute gradient in place
 #==============================================================================
 def _computeGrad(t, metrics, varlist, order=2):
+    """Compute gradient of fiven variables."""
     global FIRST_IT, HOOK
 
     if isinstance(varlist, basestring): vars = [varlist]
@@ -1433,10 +1440,10 @@ def _computeGrad(t, metrics, varlist, order=2):
                       Internal.createChild(solution, grad, 'DataArray_t', tmp)
                       lcompact = True
 
-               if(lcompact): _compact(z, fields=['centers:'+vargrad[0],'centers:'+vargrad[1],'centers:'+vargrad[2]])
-        nd+=1
+               if lcompact: _compact(z, fields=['centers:'+vargrad[0],'centers:'+vargrad[1],'centers:'+vargrad[2]])
+        nd += 1
       
-    if(var_loc !=[]):
+    if var_loc != []:
        dtloc = Internal.getNodeFromName3(t , '.Solver#dtloc')  # noeud
        dtloc = Internal.getValue(dtloc)                       # tab numpy
 
@@ -1448,6 +1455,10 @@ def _computeGrad(t, metrics, varlist, order=2):
 #==============================================================================
 # Display
 #==============================================================================
+def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None):
+    """Display CFL and convergence information.""" 
+    return display_temporal_criteria(t, metrics, nitrun, format, gmres)
+    
 def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
     zones        = Internal.getZones(t)
     dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
@@ -1487,6 +1498,7 @@ def itt(var):
     print "itt collection (Vtune/Advisor)", var
     fasts.itt(ivar)
     return None
+    
 #==============================================================================
 # IN: d: container
 # IN: keys: les cles possibles
@@ -1495,7 +1507,6 @@ def checkKeys(d, keys):
     for i in d[2]:
         if i[0] not in keys:
             print 'Warning: FastS: keyword %s is invalid.'%i[0]
-
 
 #==============================================================================
 # Construit les donnees compactees pour traiter les BC
@@ -1668,8 +1679,7 @@ def _buildOwnData(t):
     first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
     if first is not None: timelevel_target = Internal.getValue(first)
 
-
-    # Ecriture d un vecteur contenant le niveau en temps de chaque zone
+    # Ecriture d'un vecteur contenant le niveau en temps de chaque zone
     # Determination du niveau en temps le plus grand 
     
     levelg=[]; leveld=[]; val=1; i=0
@@ -2194,8 +2204,9 @@ def _buildOwnData(t):
             Internal.createUniqueChild(o, 'temporal_scheme', 'DataArray_t', temporal_scheme)
 
     return None
+    
 #==============================================================================
-# init veloty (ALE)
+# init velocity (ALE)
 #==============================================================================
 def _computeVelocityAle(t, metrics):
     global FIRST_IT, HOOK
@@ -2238,13 +2249,14 @@ def _motionlaw(t, teta, tetap):
 # Convergence
 #==============================================================================
 def createConvergenceHistory(t, nrec):
+    """Create a node in tree to store convergence history."""
     varsR   = [ 'RSD_L2','RSD_oo']
     bases   = Internal.getNodesFromType1(t, 'CGNSBase_t')
     curIt   = 0
     for b in bases:
        Internal.createUniqueChild(b, 'GlobalConvergenceHistory',
                                   'ConvergenceHistory_t', value=curIt)
-    zones  = Internal.getZones(t)
+    zones = Internal.getZones(t)
     neq = 5
     a = Internal.getNodeFromName3(t, 'GoverningEquations')
     if a is not None:
@@ -2306,7 +2318,7 @@ def extractConvergenceHistory(t, fileout):
 # OUT: return arbre stress
 #==============================================================================
 def createStressNodes(t, BC=None, window=None):
-
+    """Create nodes to store stress data."""
     import Converter.GhostCells as Ghost
     try: import Transform.PyTree as T
     except: raise ImportError("createStressNodes: requires transform module.")
@@ -2490,7 +2502,6 @@ def createStressNodes(t, BC=None, window=None):
               no_z +=1
               ndf  +=1
 
-
     Internal._rmNodesByType(b,'ZoneGridConnectivity_t')
     Internal._rmNodesByType(b,'ZoneBC_t')
     Internal._rmNodesByType(b,'Rind_t')
@@ -2511,6 +2522,7 @@ def createStressNodes(t, BC=None, window=None):
 #
 #==============================================================================
 def _computeStress(t, teff, metrics):
+    """Compute efforts in teff."""
     global FIRST_IT, HOOK
     zones     = Internal.getZones(t)
     zones_eff = Internal.getZones(teff)
@@ -2520,7 +2532,6 @@ def _computeStress(t, teff, metrics):
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
-
     
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     if HOOK is None: 
@@ -2540,7 +2551,6 @@ def _computeStress(t, teff, metrics):
     fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, ompmode)
 
     return effort
-
 
 #==============================================================================
 #
@@ -2562,7 +2572,7 @@ def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
 #==============================================================================
 #
 # IBC ordre 0: preparation
-# surf : arbre avec une base par obstacle (plusieurs zones possibles)
+# surf: arbre avec une base par obstacle (plusieurs zones possibles)
 #==============================================================================
 def setIBCData_zero(t, surf, dim=None):
 
@@ -2766,7 +2776,6 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 #    hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nit_adjoint, nstep) )
 #    hook1  = HOOK
     
-
 
    #--------------------------------------------------------------------------
    #  0  peut-on faire ici un test pour verifier que dpJdpW a bien ete prealablement

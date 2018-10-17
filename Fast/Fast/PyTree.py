@@ -1,7 +1,6 @@
 """Common functions for FAST solvers.
 """
 import Fast
-import numpy
 __version__ = Fast.__version__
 
 try: import Fast.Internal as FastI
