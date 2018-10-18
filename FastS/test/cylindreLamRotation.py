@@ -15,13 +15,11 @@ import math
 import sys  
 import script_prepareCaseHdf_r37 as SPCH
 
-
 angle = 10.
 
 anglex =angle
 angley = 0.
 anglez = 0.
-
 
 a = G.cylinder((0.,0.,0.), 0.24, 0.3, angle , 0., 0.22, (21,77,35)) 
 
@@ -61,7 +59,7 @@ ret = C.isNamePresent(t, 'centers:Density')
 if ret != 1: # Density not present
     state = Internal.getNodeFromType(t, 'ReferenceState_t')
     if state is None:
-        raise ValueError, 'Reference state is missing in input cgns.'
+        raise ValueError('Reference state is missing in input cgns.')
     vars = ['Density', 'MomentumX', 'MomentumY', 'MomentumZ',
             'EnergyStagnationDensity']
     for v in vars:
@@ -70,7 +68,7 @@ if ret != 1: # Density not present
             val = float(node[1][0])
             C._initVars(t, 'centers:'+v, val)
         else:
-            raise ValueError, v + ' is missing in ReferenceState.'
+            raise ValueError(v + ' is missing in ReferenceState.')
     if Model == 'NSTurbulent':
         vars = ['TurbulentSANuTildeDensity']
         for v in vars:

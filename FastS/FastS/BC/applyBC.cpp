@@ -53,7 +53,7 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
 
   E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; 
   
-  E_Float** ipt_param_real  ;
+  E_Float** ipt_param_real;
   E_Float** iptx;       E_Float** ipty;     E_Float** iptz;    E_Float** iptro;
   E_Float** ipti;       E_Float** iptj;     E_Float** iptk;    E_Float** iptvol;
   E_Float** iptventi;   E_Float** iptventj; E_Float** iptventk;

@@ -247,7 +247,7 @@ def addUniformFlowSolution2FastS(t, Model = 'NSTurbulent'):
 	if ret != 1: # Density not present
 	    state = CI.getNodeFromType(t, 'ReferenceState_t')
 	    if state is None:
-	        raise ValueError, 'Reference state is missing in input cgns.'
+	        raise ValueError('Reference state is missing in input cgns.')
 	    vars = ['Density', 'MomentumX', 'MomentumY', 'MomentumZ',
 	            'EnergyStagnationDensity']
 	    for v in vars:
@@ -256,7 +256,7 @@ def addUniformFlowSolution2FastS(t, Model = 'NSTurbulent'):
 	            val = float(node[1][0])
 	            CP._initVars(t, 'centers:'+v, val)
 	        else:
-	            raise ValueError, v + ' is missing in ReferenceState.'
+	            raise ValueError(v + ' is missing in ReferenceState.')
 	    if Model == 'NSTurbulent':
 	        vars = ['TurbulentSANuTildeDensity']
 	        for v in vars:

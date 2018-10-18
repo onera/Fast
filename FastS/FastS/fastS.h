@@ -19,10 +19,6 @@
 # ifndef _FASTS_FASTS_H_
 # define _FASTS_FASTS_H_
 
-# include "connector.h"
-# include "kcore.h"
-# include "Fortran.h"
-
 #ifdef _MPI
 #include "CMP/include/pending_message_container.hpp"
 #include "CMP/include/recv_buffer.hpp"
@@ -32,6 +28,9 @@ typedef typename CMP::PendingMsgContainer<CMP::RecvBuffer> RecvQueue;
 typedef typename CMP::PendingMsgContainer<CMP::SendBuffer> SendQueue;
 #endif
 
+# include "connector.h"
+# include "kcore.h"
+# include "Fortran.h"
 
 //# include "Zone.h"
 using namespace K_FLD;
