@@ -11,6 +11,7 @@ import FastS.PyTree as FastS
 import Converter.Internal as Internal
 import Post.PyTree as P
 import time
+import KCore.test as test
 
 mach=0.
 npts = 251
@@ -73,11 +74,9 @@ numz["scheme"]             = "roe"
 numz["source"]		   = source
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
-print "warmup"
 (t, tc, metrics) = FastS.warmup(t, None)
 
-print "compute"
-nit = 2730
+nit = 100
 timeStep = numz['time_step']
 for it in xrange(nit):
     # create source term
@@ -91,12 +90,8 @@ for it in xrange(nit):
 	C._initVars(t,'{centers:EnergyStagnationDensity_src}={centers:Temperature}*{centers:Density_src}*%g'%gam3)
     #######
     FastS._compute(t, metrics, it)
-    if (it%5 == 0):
-        print '- %d - %g'%(it, temps)
-        CPlot.display(t, offscreen=0, dim=3, mode='Scalar', scalarField='centers:Density', isoScales=['centers:Density',25,1.19996,1.200006], isoEdges=1,posCam=(0.,0.,120.5), posEye=(0.,0.,0.5), dirCam=(0.,1.,0.))#,export="export.mpeg")
-    time.sleep(0.1)
     temps += timeStep
-#CPlot.finalizeExport()
 
-Fast.save(t,'restart.cgns')
-import os;os._exit(1)
+test.testT(t, 1)
+
+

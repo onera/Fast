@@ -248,8 +248,8 @@ c
            !phi   = acp_phi(nacp)
            coefa = 2.71128
            coefb = 2.4
-           x0    = 65.
-           y0    = 30.
+           x0    = 0.
+           y0    = 0.
            z0    = 0.
            amp   = 0.01
            per   = 0.014
