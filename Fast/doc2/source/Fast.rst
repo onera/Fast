@@ -192,11 +192,21 @@ Actions
         + 1  (save div(F_Euler-F_viscous) in the FlowSolution#Centers node)
         + default value is 0
 
+    - **'source'**: possible values are
+
+        + 0   
+        + 1  (read a source terme in the FlowSolution#Centers node. The conservative variables centers:Density_src, centers:MomentumX_src, centers:MomentumY_src, centers:MomentumZ_src and centers:EnergyStagnationDensity_src are used.)
+        + default value is 0
+
     *Example of use:*
 
     * `Set numerics to zone (pyTree) <Examples/Fast/setNum2ZonesPT.py>`_:
 
     .. literalinclude:: ../build/Examples/Fast/setNum2ZonesPT.py
+
+    * `Create a source term (pyTree) <Examples/FastS/createSrcTermPT.py>`_:
+
+    .. literalinclude:: ../build/Examples/FastS/createSrcTermPT.py
 
 ..  ----------------------------------------------------
 .. ..py:function:: Fast.PyTree.metric(a)
