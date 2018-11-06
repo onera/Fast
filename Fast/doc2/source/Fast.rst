@@ -204,9 +204,9 @@ Actions
 
     .. literalinclude:: ../build/Examples/Fast/setNum2ZonesPT.py
 
-    * `Create a source term (pyTree) <Examples/FastS/createSrcTermPT.py>`_:
+    * `Create a source term (pyTree) <Examples/Fast/createSrcTermPT.py>`_:
 
-    .. literalinclude:: ../build/Examples/FastS/createSrcTermPT.py
+    .. literalinclude:: ../build/Examples/Fast/createSrcTermPT.py
 
 ..  ----------------------------------------------------
 .. ..py:function:: Fast.PyTree.metric(a)
@@ -292,7 +292,7 @@ Actions
     :param split: 'single' or 'multiple'
     :type split: string
     :param mpirun: true if python is run with mpirun
-    :type mpirun boolean
+    :type mpirun: boolean
     :return: t
     :rtype: CGNS tree
 

@@ -2276,6 +2276,7 @@ def createConvergenceHistory(t, nrec):
 # extraction des residus du Pytree dans fichier tecplot ascii
 # ==============================================================================
 def extractConvergenceHistory(t, fileout):
+    """Extract residuals in an ascii file."""
     zones = Internal.getZonePaths(t)
     it = []; RSD_L2 = []; RSD_oo = []; a = []
     nd = 0

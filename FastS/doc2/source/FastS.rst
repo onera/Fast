@@ -100,9 +100,9 @@ Preparation
 .. py:function:: FastS.PyTree.createConvergenceHistory(t, nrec)
 
     Create a node in each zone with convergence information (residuals)
-    MUST be called before display_temporal_criteria() and only for steady case.
+    MUST be called before displayTemporalCriteria() and only for steady case.
     t is a pyTree, nrec is the size of the data arrays to store the residuals.
-    The data arrays are stored during the call to  **FastS.display_temporal_criteria**
+    The data arrays are stored during the call to  **FastS.displayTemporalCriteria**
 
     :param t: input pyTRee
     :type t: pyTree
@@ -217,7 +217,7 @@ Running computation
 
 -------------------------------------------
 
-.. py:function:: FastS.PyTree.display_temporal_criteria(t, metrics, nit, format=None)
+.. py:function:: FastS.PyTree.displayTemporalCriteria(t, metrics, nit, format=None)
 
     Display CFL and implicit convergence informations.
 
@@ -238,9 +238,9 @@ Running computation
 
     *Example of use:*
 
-    * `Display temporal criteria in stdout (PyTree) <Examples/FastS/display_temporal_criteriaPT.py>`_:
+    * `Display temporal criteria in stdout (PyTree) <Examples/FastS/displayTemporalCriteriaPT.py>`_:
 
-    .. literalinclude:: ../build/Examples/FastS/display_temporal_criteriaPT.py
+    .. literalinclude:: ../build/Examples/FastS/displayTemporalCriteriaPT.py
     
 
 
@@ -284,32 +284,32 @@ Post
 
         1. Density     (contains the numerical fluxes linked to the mass conservation) 
         2. MomentumX   (contains the numerical fluxes linked to the MomentumX conservation)
-        3. MomentumY   ...
-        4. MomentumZ   ...
+        3. MomentumY...
+        4. MomentumZ...
         5. EnergyStagnationDensity  (contains the numerical fluxes of the linked to the energy conservation)
         6. gradxVelocityX (gradient in the x direction of VelocityX at the position of the BC)
         7. gradyVelocityX 
-        8. gradZVelocityX 
-        9. gradxVelocityY 
-         . ...
-        12. gradxVelocityZ 
-         . ...
-        15. gradxTemperature 
-         . ...
-        17. gradzTemperature
-        18. CoefPressure
-        19. ViscosityMolecular
+        8. gradzVelocityX 
+        9. gradxVelocityY
+        10. etc...
+        11. gradxVelocityZ 
+        12. etc...
+        13. gradxTemperature 
+        14. etc...
+        15. gradzTemperature
+        16. CoefPressure
+        17. ViscosityMolecular
 
     the return of the function, effort, is a list of 8 items which contains integral over the surface of the BC of different variables of teff:
 
-        1. integral of MomentumX ( numerical fluxes linked to the MomentumX conservation) give access to cx (stored in effort[0]) 
-        2. integral of MomentumY ( numerical fluxes linked to the MomentumY conservation) give access to cy (stored in effort[1])
-        3. integral of MomentumZ ( numerical fluxes linked to the MomentumZ conservation) give access to cz (stored in effort[2])
+        1. integral of MomentumX (numerical fluxes linked to the MomentumX conservation) give access to cx (stored in effort[0]) 
+        2. integral of MomentumY (numerical fluxes linked to the MomentumY conservation) give access to cy (stored in effort[1])
+        3. integral of MomentumZ (numerical fluxes linked to the MomentumZ conservation) give access to cz (stored in effort[2])
         4. give access to cmx (stored in effort[3])
         5. give access to cmy (stored in effort[4])
         6. give access to cmz (stored in effort[5])
         7. give access to surface of the BC (stored in effort[6])
-        8. integral of Density ( numerical fluxes linked to the Density conservation) give access to mass flow rate (stored in effort[7]) 
+        8. integral of Density (numerical fluxes linked to the Density conservation) give access to mass flow rate (stored in effort[7]) 
 
     For a 2D computation in (x,y) plan, with an angle of attack of theta:
 
