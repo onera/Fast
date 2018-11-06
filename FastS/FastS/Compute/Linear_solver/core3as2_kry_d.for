@@ -32,7 +32,7 @@ CDIR$ IVDEP
               drodmd(l, 3) = coe(l, 1)*drodmd(l, 3)
               drodmd(l, 4) = coe(l, 1)*drodmd(l, 4)
               drodmd(l, 5) = coe(l, 1)*drodmd(l, 5)
-              drodmd(l, 6) = coe(l, 1)*drodmd(l, 6)
+              drodmd(l, 6) = coe(l, 1)*drodmd(l, 6)*1.e0
             ENDDO
           ENDDO
         ENDDO

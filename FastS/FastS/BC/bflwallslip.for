@@ -3,7 +3,7 @@ c     $Date: 2013-04-30 16:01:06 +0200 (mar. 30 avril 2013) $
 c     $Revision: 39 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine bflwall(ndom, idir, mobile_coef, neq_mtr,
+      subroutine bflwallslip(ndom, idir, mobile_coef, neq_mtr,
      &                   param_int, param_real, incijk, ind_loop,
      &                   rop, drodm, tijk, ventijk)
 c***********************************************************************
@@ -60,13 +60,14 @@ C var loc
 
       REAL_E p,r,u,v,w,qen,ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,
      & ck_mtr_vent, u_int,sens,rgp,flu1,flu2,flu3,flu4,flu5,flu6,
-     & tcx,tcy,tcz
+     & tcx,tcy,tcz,h,gam2
  
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_vent_param.h"
 
-      rgp    = param_real( CVINF )*(param_real( GAMMA )-1.)  !Cv(gama-1)= R (gas parfait)
+      rgp   = param_real( CVINF )*(param_real( GAMMA )-1.)  !Cv(gama-1)= R (gas parfait)
+      gam2  = param_real( GAMMA )/ (param_real( GAMMA )-1.)
 
       v1 = 0
       v2 =   param_int(NDIMDX)
@@ -128,15 +129,21 @@ C var loc
           v     = 0.5*(rop(l+v3)+rop(iadrf+v3))
           w     = 0.5*(rop(l+v4)+rop(iadrf+v4))
 
-          p = 0.5*(rop(l+v5)*rop(l+v1)+rop(iadrf+v5)*rop(iadrf+v1))*rgp
           !determination vitesse normale interface
           u_int= tcx*u +tcy*v +tcz*w -qen
 
-          flu1= 0.
-          flu2= tcx * p  + u_int*u*r
-          flu3= tcy * p  + u_int*v*r
-          flu4= tcz * p  + u_int*w*r
-          flu5= p*qen
+
+          p     = rop(iadrf+v5)*rop(iadrf+v1)*rgp
+
+          h     = gam2*p + r*(u*u+v*v+w*w)*0.5
+
+          p=0.5*(rop(l+v5)*rop(l+v1)+rop(iadrf+v5)*rop(iadrf+v1))*rgp
+
+          flu1=            u_int*r
+          flu2= tcx * p  + u_int*r*u
+          flu3= tcy * p  + u_int*r*v
+          flu4= tcz * p  + u_int*r*w
+          flu5=            u_int*h    + p*qen
 #include  "FastS/Compute/assemble_drodm_corr.for"
        enddo
        enddo
@@ -168,18 +175,27 @@ C var loc
           v     = 0.5*(rop(l+v3)+rop(iadrf+v3))
           w     = 0.5*(rop(l+v4)+rop(iadrf+v4))
 
-          p=0.5*(rop(l+v5)*rop(l+v1)+rop(iadrf+v5)*rop(iadrf+v1))*rgp
-
           !determination vitesse normale interface
           u_int= tcx*u +tcy*v +tcz*w -qen
-          !p = p-r*sqrt(param_real(GAMMA)*rgp*rop(l+v5))*u_int
 
-          flu1= 0.
-          flu2= tcx * p  + u_int*u*r
-          flu3= tcy * p  + u_int*v*r
-          flu4= tcz * p  + u_int*w*r
-          flu5= p*qen
-          flu6= 0.
+
+          r     =rop(iadrf+v1)
+          u     =rop(iadrf+v2)
+          v     =rop(iadrf+v3)
+          w     =rop(iadrf+v4)
+
+          p     = rop(iadrf+v5)*rop(iadrf+v1)*rgp
+
+          h     = gam2*p + r*(u*u+v*v+w*w)*0.5
+
+          p=0.5*(rop(l+v5)*rop(l+v1)+rop(iadrf+v5)*rop(iadrf+v1))*rgp
+
+          flu1=            u_int*r
+          flu2= tcx * p  + u_int*r*u
+          flu3= tcy * p  + u_int*r*v
+          flu4= tcz * p  + u_int*r*w
+          flu5=            u_int*h    + p*qen
+          flu6=            u_int*r*rop(iadrf+v6)
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
        enddo
        enddo

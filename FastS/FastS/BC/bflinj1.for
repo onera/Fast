@@ -106,7 +106,11 @@ C var loc
 
          DO k = ind_loop(5), ind_loop(6)
          DO j = ind_loop(3), ind_loop(4)
-#include   "FastS/Compute/loopI_ale_begin.for"
+         DO i = ind_loop(1), ind_loop(2)
+
+          l     = inddm(  i, j, k)
+          lt    = indmtr( i, j, k)
+          lven  = indven( i, j, k)
 
           iadrf = l  - incijk
           l0    = l  - shift
@@ -125,15 +129,26 @@ C var loc
           v     = 0.5*(rop(l+v3)+rop(iadrf+v3))
           w     = 0.5*(rop(l+v4)+rop(iadrf+v4))
 
-          p = 0.5*(rop(l+v5)*rop(l+v1)+rop(iadrf+v5)*rop(iadrf+v1))*rgp
           !determination vitesse normale interface
           u_int= tcx*u +tcy*v +tcz*w -qen
 
-          flu1= 0.
-          flu2= tcx * p  + u_int*u*r
-          flu3= tcy * p  + u_int*v*r
-          flu4= tcz * p  + u_int*w*r
-          flu5= p*qen
+
+          r     =rop(iadrf+v1)
+          u     =rop(iadrf+v2)
+          v     =rop(iadrf+v3)
+          w     =rop(iadrf+v4)
+
+          p     = rop(iadrf+v5)*rop(iadrf+v1)*rgp
+
+          h     = gam2*p + r*(u*u+v*v+w*w)*0.5
+
+          p=0.5*(rop(l+v5)*rop(l+v1)+rop(iadrf+v5)*rop(iadrf+v1))*rgp
+
+          flu1=            u_int*r
+          flu2= tcx * p  + u_int*r*u
+          flu3= tcy * p  + u_int*r*v
+          flu4= tcz * p  + u_int*r*w
+          flu5=            u_int*h    + p*qen
 #include  "FastS/Compute/assemble_drodm_corr.for"
        enddo
        enddo
@@ -144,7 +159,11 @@ C var loc
          !write(*,*)'loop',ind_loop(1),incijk,shift
          DO k = ind_loop(5), ind_loop(6)
          DO j = ind_loop(3), ind_loop(4)
-#include   "FastS/Compute/loopI_ale_begin.for"
+         DO i = ind_loop(1), ind_loop(2)
+
+          l     = inddm(  i, j, k)
+          lt    = indmtr( i, j, k)
+          lven  = indven( i, j, k)
 
           iadrf = l  - incijk
           l0    = l  - shift
@@ -165,7 +184,6 @@ C var loc
 
           !determination vitesse normale interface
           u_int= tcx*u +tcy*v +tcz*w -qen
-
 
           r     =rop(iadrf+v1)
           u     =rop(iadrf+v2)

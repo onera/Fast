@@ -180,11 +180,15 @@ E_Int K_FASTS::gsdr3(
 			if (param_int[nd][PtZoneomp + i] != - 2)
 			  {
 			    E_Int* ipt_ind_dm_thread = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (param_int[nd][PtZoneomp + i]) * 6;
-			    E_Int indice             = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
+			    E_Int indice             = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
+			    //E_Int indice             = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
 		            ipt_ssor_size[indice]=(ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] +1 +2*param_int[nd][ NIJK +3 ])*
 	                                	  (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] +1 +2*param_int[nd][ NIJK +3 ])*
 		                                  (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] +1 +2*param_int[nd][ NIJK +4 ]);
 			  }
+                         else { E_Int indice = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
+                                ipt_ssor_size[indice]=0;
+                              }
 		      }
 		  }
 		else //ompmode = 0

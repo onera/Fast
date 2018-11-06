@@ -55,6 +55,12 @@ C Var loc
        ind_loop(4) =  min( ind_rhs(4), param_int(IBC +4) )
        ind_loop(5) =  max( ind_rhs(5), param_int(IBC +5) )
        ind_loop(6) =  min( ind_rhs(6), param_int(IBC +6) )
+       !ind_loop(1) = ind_rhs(1)
+       !ind_loop(2) = ind_rhs(2)
+       !ind_loop(3) = ind_rhs(3)
+       !ind_loop(4) = ind_rhs(4)
+       !ind_loop(5) = ind_rhs(5)
+       !ind_loop(6) = ind_rhs(6)
 
 
       IF(param_int(NEQ).eq.5) THEN
@@ -71,6 +77,7 @@ C Var loc
 
             ampli= cellN(l)/coe(l +V1)*rho
   
+          !if(cellN(l).ne.1. .or.cellN(l).ne.0.)write(*,*)'ail',cellN(l)
             !drodm(l +v1) = drodm(l +v1)*xcomp
             drodm(l +v2) = drodm(l +v2)+ vu*ampli
             drodm(l +v3) = drodm(l +v3)+ vv*ampli
