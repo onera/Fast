@@ -2610,15 +2610,16 @@ def setIBCData_zero(t, surf, dim=None):
         ibc = numpy.ones( 7, dtype=numpy.int32)
         itemindex = numpy.where( cellN_IBC==0 )
         ibc[0]=1
-        ibc[1]= numpy.amin( itemindex[0] )
-        ibc[2]= numpy.amax( itemindex[0] )
-        ibc[3]= numpy.amin( itemindex[1] )
-        ibc[4]= numpy.amax( itemindex[1] )
+        #formule valable pour 2Ghostcells: sinon -ific+1
+        ibc[1]= numpy.amin( itemindex[0] )-1
+        ibc[2]= numpy.amax( itemindex[0] )-1
+        ibc[3]= numpy.amin( itemindex[1] )-1
+        ibc[4]= numpy.amax( itemindex[1] )-1
   
         if cellN_IBC.shape[2]!=1:
            #print'verifier en 3d'
-           ibc[5]= numpy.amin( itemindex[2] )
-           ibc[6]= numpy.amax( itemindex[2] )
+           ibc[5]= numpy.amin( itemindex[2] )-1
+           ibc[6]= numpy.amax( itemindex[2] )-1
 
         #on retranche 1 pour avoir une bonne visu et un terme src plus compact
         cellN_IBC[0:] -= 1

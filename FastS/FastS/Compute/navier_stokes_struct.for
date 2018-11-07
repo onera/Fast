@@ -75,7 +75,8 @@ C Var loc
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
-     & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2
+     & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2,
+     & flag_wait
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -87,6 +88,8 @@ C Var loc
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
 
+
+          flag_wait = 0
 
 c         if(ithread_io.eq.24.and.nitcfg.le.1.and.icache.eq.1
 c     &    .and.jcache.eq.1) then
@@ -177,6 +180,7 @@ c       endif
              !!sinon cfl foireux
              IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
 #include      "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+               flag_wait = 1
              ENDIF
 
 
@@ -192,9 +196,13 @@ c       endif
            !SI SA implicit, verrou ici car dependence entre coe(5)
            !calculee sur ind_coe dans cptst3 et coe(6) calculee sur
            !ind_ssa dans src_term
-           IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1
-     &                             .and.nitcfg.gt.1) then
+           ! pareil pour ibc0
+           IF( (    (param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1)
+     &          .or.param_int(IBC).eq.1
+     &         )
+     &                             .and.flag_wait.eq.0) then
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+               flag_wait = 1
            ENDIF
 
            ! - Ajout d'un eventuel terme source au second membre
@@ -206,7 +214,7 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                   rop_ssiter, xmut, drodm, coe, x,y,z,cellN_IBC,
      &                   ti,tj,tk,vol, delta, ro_src)
 
-           IF(param_int(IFLOW).lt.3.or.param_int(ITYPCP).eq.2) then
+           IF(flag_wait.eq.0) then
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
            ENDIF
 
