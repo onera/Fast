@@ -77,7 +77,6 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 # Prim vars, solver tag, compact, metrics
 (t,  tc, metrics) = FastS.warmup(t, tc )
 
-
 # Compute
 for it in xrange(1,40): 
    FastS._compute(t, metrics, it, tc)
