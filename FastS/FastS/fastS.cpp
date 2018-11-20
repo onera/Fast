@@ -68,7 +68,7 @@ extern "C"
   PyMODINIT_FUNC initfasts();
   PyMODINIT_FUNC initfasts()
   {
-    __activation__ = K_KCORE::activation();
+    __activation__ = K_KCORE::activation("0");
     Py_InitModule("fasts", Pyfasts);
     import_array();
   }

@@ -49,7 +49,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
   E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_degen;
   
-  E_Float** ipt_param_real  ;
+  E_Float** ipt_param_real;
   E_Float** iptx;       E_Float** ipty;     E_Float** iptz;  
   E_Float** ipti;       E_Float** iptj;     E_Float** iptk;    E_Float** iptvol;
   E_Float** ipti_df;    E_Float** iptj_df;  E_Float** iptk_df; E_Float** iptvol_df;
@@ -361,7 +361,8 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
      } //* fin zone parallele  *//
 
-
+  delete [] iptx;
+  delete [] ipt_param_int;
   RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL);
  
   Py_INCREF(Py_None);
