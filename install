@@ -41,7 +41,7 @@ do
           ./install
       fi
       if [ "$1" = "doc" -o "$1" = "all" ]; then
-          if [ "$mod" = "Fast" -o "$mod" = "FastS" ]; then
+          if [ "$mod" = "Fast" -o "$mod" = "FastS" -o "$mod" = "FFX" ]; then
               cd doc2
               ./install 1 2
               cd ..
