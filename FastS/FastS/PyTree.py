@@ -29,10 +29,6 @@ try:
     OMP_NUM_THREADS = int(OMP_NUM_THREADS)
 except: OMP_NUM_THREADS = 1
 
-distDir = os.environ['CASSIOPEE']+'/Dist/bin/'+os.environ['ELSAPROD']
-
-import sys
-
 # Variable alignement pour vectorisation
 #CACHELINE = Dist.getCacheLine()
 
@@ -41,6 +37,9 @@ varsN    = ['Density']
 varsP    = ['Density_P1']
 #varsN_SA = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature', 'TurbulentSANuTilde']
 
+#==============================================================================
+# generation maillage pour tble
+#==============================================================================
 def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
     fasts._stretch(coord,nbp,x1,x2,dx1,dx2,ityp)
     return None
@@ -48,7 +47,6 @@ def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
 # compute in place
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
-#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python"):
 def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     """Compute a given number of iterations."""
     global FIRST_IT, HOOK
@@ -211,7 +209,7 @@ def _init_metric(t, metrics, hook, omp_mode):
 # Initialisation parametre calcul: calcul metric + var primitive + compactage 
 # + alignement + placement DRAM
 #==============================================================================
-def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
+def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, Padding=None):
     """Perform necessary operations for the solver to run."""
     global FIRST_IT, HOOK, HOOKIBC
     # Get omp_mode
@@ -225,7 +223,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     FastI._reorder(t, tc, ompmode)
 
     # Construction param_int et param_real des zones
-    _buildOwnData(t)
+    _buildOwnData(t, Padding)
 
     #init hook necessaire pour info omp
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
@@ -918,6 +916,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
 	    for var in varmy: C._initVars(zp, var, 0.)
 
             dim_my = Internal.getZoneDim(zp)
+
             datap[0]  = 0                                                # nbr direction homogene
             datap[1]  = 0                                                # dir homogne
     	    datap[2]  = nsamples                                         # nbre echantillon
@@ -941,6 +940,11 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
+
+            ##modifie le moeud param_int de l'arbre tmy (issue de subzone) pour la fonction initNuma
+            param_int[1]    = numpy.copy(param_int[1])    # sinon tableau partager avec param de la zone NS
+            param_int[1][66]= 0                           # pas de padding pour les variables stats
+
             b[0][2].append(zp)
 
     elif dir == 'i':
@@ -993,6 +997,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][20]= 1                     #ijkv
             param_int[1][21]= dim_my[2]-1 -2*ific 
             param_int[1][22]= dim_my[3]-1 -2*ific*inck
+            param_int[1][66]= 0                           # pas de padding pour les variables stats
 
 	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
@@ -1047,6 +1052,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][20]= dim_my[2]-1 -2*ific   #ijkv
             param_int[1][21]= 1                    
             param_int[1][22]= dim_my[3]-1 -2*ific*inck
+            param_int[1][66]= 0                           # pas de padding pour les variables stats
             #
 	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
@@ -1100,6 +1106,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][20]= dim_my[1]-1 -2*ific   #ijkv
             param_int[1][21]= dim_my[2]-1 -2*ific 
             param_int[1][22]= 1
+            param_int[1][66]= 0                           # pas de padding pour les variables stats
             #
 	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
@@ -1154,6 +1161,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][20]= 1                     #ijkv
             param_int[1][21]= 1                    
             param_int[1][22]= dim_my[3]-1 -2*ific*inck
+            param_int[1][66]= 0                           # pas de padding pour les variables stats
             #
             #
 	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
@@ -1209,6 +1217,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][20]= 1                     #ijkv
             param_int[1][21]= dim_my[2]-1 -2*ific                    
             param_int[1][22]= 1
+            param_int[1][66]= 0                           # pas de padding pour les variables stats
             #
             #
 	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
@@ -1264,6 +1273,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][20]= dim_my[1]-1 -2*ific   #ijkv
             param_int[1][21]= 1
             param_int[1][22]= 1
+            param_int[1][66]= 0                           # pas de padding pour les variables stats
             #
             #
 	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
@@ -1662,7 +1672,7 @@ def _BCcompact(t):
 #==============================================================================
 # Construit les datas possedees par FastS
 #==============================================================================
-def _buildOwnData(t):
+def _buildOwnData(t, Padding):
     global FIRST_IT, HOOK
     # Data for each Base
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
@@ -1824,15 +1834,25 @@ def _buildOwnData(t):
 
     # Data for each zone
     #==== Check if padding file exists (potential cache associativity issue)
-    try:
-        f       = open(distDir+'/padding.bin','rb')
-        pad     = True
-    except IOError as e:
-        # print('Padding file not found, using default values.')
-        pad   = False
-    if pad: 
-        padding = numpy.fromfile(f, dtype='int32')        
-        f.close()
+    pad   = False
+    if Padding is not None:
+      try:
+          f       = open(Padding,'rb')
+          pad     = True
+      except IOError as e:
+          print('Padding file not found, using default values.')
+          pad   = False
+      if pad: 
+          lines_f = f.readlines()
+
+          sizeIJK=[]
+          shiftvars=[]
+          for l in lines_f:
+             mots = l.split(',')
+             sizeIJK.append([ int( mots[1] ),  int( mots[2] ),  int( mots[3]) ] )
+             shiftvars.append( int( mots[5] ) )
+
+          f.close()
 
     bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
     
@@ -1845,13 +1865,32 @@ def _buildOwnData(t):
             #=== check for a padding file  (cache associativity issue)
             dims = Internal.getZoneDim(z)
             if pad:
-                # Zone dimensions exceed max dimension considered by padding file (or 2D)
-                if (((dims[1] >= padding[0]) or (dims[2] >= padding[1])) or (dims[3] == 2)):
-                    shiftvar=0
-                else: 
-                  pad_data = numpy.reshape(padding[2:],[padding[0],padding[1]])
-                  shiftvar=pad_data[dims[1]-5,dims[2]-5]                       
-
+                  iv = dims[1]-5
+                  jv = dims[2]-5
+                  kv = dims[3]-5
+                  target = [iv,jv,kv]
+                  if target in sizeIJK:
+                       l        = sizeIJK.index( target)
+                       shiftvar =  shiftvars[l]
+                  '''
+                  if   iv==540 and jv==160 and kv==40: shiftvar= 30
+                  elif iv==470 and jv==160 and kv==40: shiftvar=384
+                  elif iv==466 and jv==160 and kv==40: shiftvar=512
+                  elif iv==354 and jv==160 and kv==40: shiftvar=256
+                  elif iv==353 and jv==160 and kv==40: shiftvar=  2
+                  elif iv==341 and jv==160 and kv==40: shiftvar= 20
+                  elif iv==322 and jv==160 and kv==40: shiftvar=128
+                  elif iv==321 and jv==160 and kv==40: shiftvar=640
+                  elif iv==540 and jv== 50 and kv==40: shiftvar=256
+                  elif iv==540 and jv== 60 and kv== 2: shiftvar= 64
+                  elif iv==470 and jv== 60 and kv== 2: shiftvar= 32
+                  elif iv==466 and jv== 60 and kv== 2: shiftvar= 48
+                  elif iv==354 and jv== 60 and kv== 2: shiftvar= 32
+                  elif iv==353 and jv== 60 and kv== 2: shiftvar=  8
+                  elif iv==341 and jv== 60 and kv== 2: shiftvar=  8
+                  elif iv==322 and jv== 60 and kv== 2: shiftvar= 32
+                  elif iv==321 and jv== 60 and kv== 2: shiftvar= 48
+                  '''
             # zone ownData (generated)
             o = Internal.createUniqueChild(z, '.Solver#ownData', 
                                            'UserDefinedData_t')
@@ -2633,6 +2672,140 @@ def setIBCData_zero(t, surf, dim=None):
         C._rmVars(z, ['centers:cellN_IBC'])
 
   return t
+
+#==============================================================================
+#
+# rmGhost robuste 2d et 3d
+#==============================================================================
+def rmGhostCells(t, depth, adaptBCs=1):
+
+ try: import Transform.PyTree as T
+ except: raise ImportError("rmGhostCells: requires Transform module.")
+
+ zones = Internal.getZones(t)
+
+ basename = Internal.getNodeFromType1(t, 'CGNSBase_t')[0]
+
+ zout=[]
+ for z in zones:
+   dim = Internal.getZoneDim(z)
+   zname = z[0]
+   if dim[3]==2:  #zone 2D 
+      coordz = Internal.getNodeFromName2( z, "CoordinateZ" )[1]
+      dz = coordz[2,2,1]-coordz[2,2,0]
+      z = T.subzone(z,(1,1,1),(-1,-1,1))
+      z = Internal.rmGhostCells(z, z, 2, adaptBCs=adaptBCs)
+      z = T.addkplane(z,1)
+
+      coordz = Internal.getNodeFromName2( z, "CoordinateZ" )[1]
+      b =z[1]
+      jmax = b[1,1]+1
+      imax = b[0,1]+1
+      coordz[0:imax,0:jmax,1] = coordz[2,2,0] +dz
+   else:
+      z = Internal.rmGhostCells(z, z, 2, adaptBCs=adaptBCs)
+
+   z[0]=zname
+   zout.append(z)
+
+ tp = C.newPyTree([basename])
+ # Attache les zones
+ tp[2][1][2] += zout
+  
+ return tp
+
+
+#==============================================================================
+#
+# display CPU efficiency diagnostic
+#==============================================================================
+def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FILEOUT='listZonesSlow.dat', RECORD=None):
+
+ bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
+ own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
+ dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+
+ node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+ node = Internal.getNodeFromName1(node, 'omp_mode')
+ ompmode = OMP_MODE
+ if  node is not None: ompmode = Internal.getValue(node)
+
+ dtloc   = Internal.getValue(dtloc) # tab numpy
+ ss_iteration  = int(dtloc[0]) 
+
+ timer_omp = HOOK["TIMER_OMP"]
+ ADR = OMP_NUM_THREADS*2*(ss_iteration)
+ echant    =  timer_omp[ ADR ]
+ zones     = Internal.getZones(t)
+ tps_percell=0.
+ cout       =0.
+ cells_tot  =0
+ data       ={}
+ for z in zones:
+    param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
+    if ompmode ==1:
+       Ptomp       = param_int[69]
+       PtrIterOmp  = param_int[Ptomp] 
+       PtZoneomp   = param_int[PtrIterOmp]
+       NbreThreads = param_int[ PtZoneomp  + OMP_NUM_THREADS ]
+    else:
+       NbreThreads = OMP_NUM_THREADS
+
+    if diag== 'compact':
+      tps_zone_percell =0.
+      for i in range(OMP_NUM_THREADS):
+          if ompmode ==1:
+            ithread = param_int[ PtZoneomp  +  i ]
+            if ithread != -2: 
+               tps_zone_percell+=timer_omp[ ADR + 1+ithread ]
+          else:
+            tps_zone_percell+=timer_omp[ ADR + 1+i ]
+      
+      ijkv         = param_int[20]*param_int[21]*param_int[22]
+      tps_percell += tps_zone_percell/echant/NbreThreads*ijkv
+      cout_zone    = tps_zone_percell/echant/NbreThreads*ijkv
+      cout        += cout_zone
+      data[ z[0] ]   = [ tps_zone_percell/echant/NbreThreads, cout_zone]
+
+      cells_tot   += ijkv
+      if RECORD is None: print 'zone= ', z[0], 'cpu= ',tps_zone_percell/echant/NbreThreads, 'Nthtread actif=', NbreThreads, ' dim zone=',ijkv, 'dim tot=', cells_tot
+      if RECORD is not None:
+          tape = tps_zone_percell/echant/NbreThreads
+
+    else:
+      for i in range(OMP_NUM_THREADS):
+          if ompmode ==1:
+            ithread = param_int[ PtZoneomp  +  i ]
+            if ithread != -2: 
+               if RECORD is None: print 'zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread ]/echant,' th=  ', ithread, 'echant= ', echant
+          else:
+            ithread = i
+            if RECORD is None: print 'zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread ]/echant,' th=  ', ithread, 'echant= ', echant
+
+    ADR+= OMP_NUM_THREADS
+
+ tps_percell/=cells_tot
+ if RECORD is None: print 'cpu moyen %cell en microsec: ', tps_percell
+
+ f = open(FILEOUT, 'w')
+ sizeZones=[]
+ for z in zones:
+    param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
+    cout_relatif   = data[z[0]][0]/tps_percell-1.
+    effort_relatif = data[z[0]][1]/cout
+    if cout_relatif > mask_cpu and effort_relatif > mask_cell:
+       sizeZone=[param_int[20],param_int[21],param_int[22]]
+       if sizeZone not in sizeZones:
+          sizeZones.append(sizeZone)
+          if RECORD is None: print 'zone ', z[0],'(',param_int[20],param_int[21],param_int[22],'):  surcout cpu= ', cout_relatif ,' , temps necessaire a cette zone (%)=', effort_relatif
+ 
+          f.write(z[0]+','+str(param_int[20])+","+str(param_int[21])+","+str(param_int[22])+","+str(param_int[25])+","+str(param_int[27])+","+str(param_int[29])+","+str(param_int[33])+'\n')
+ f.close()
+
+ if RECORD is not None:
+   return tape
+ else:
+   return None
 
 #==============================================================================
 # compute guillaume

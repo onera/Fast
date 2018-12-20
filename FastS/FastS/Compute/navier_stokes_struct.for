@@ -6,14 +6,14 @@ c***********************************************************************
       subroutine navier_stokes_struct( ndo, nidom, Nbre_thread_actif,
      &        ithread, ithread_io, 
      &        omp_mode, layer_mode, Nbre_socket, socket, mx_synchro, 
-     &        lssiter_verif,
+     &        lssiter_verif, lexit_lu,
      &        nptpsi, nitcfg, nssiter, nitrun, first_it,
      &        nb_pulse, flagCellN,
      &        param_int, param_real,
      &        temps, tot,
      &        ijkv_sdm,
      &        ind_dm_zone, ind_dm_socket, ind_dm_omp,
-     &        socket_topology, lok , topo_omp, inddm_omp,
+     &        socket_topology, lok , topo_omp, inddm_omp,timer_omp,
      &        krylov, norm_kry,
      &        cfl,
      &        x , y , z, cellN, cellN_IBC,
@@ -51,7 +51,7 @@ c***********************************************************************
 
       INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, first_it,
      & ithread, ithread_io, Nbre_socket, socket, nitrun, nptpsi, nitcfg,
-     & nb_pulse,
+     & nb_pulse,lexit_lu,
      & lssiter_verif,flagCellN,omp_mode,layer_mode,nssiter
 c
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
@@ -62,7 +62,7 @@ c
      & coe(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
      & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*), rot(*), celln(*),
      & ti_df(*),tj_df(*),tk_df(*),vol_df(*), krylov(*), cellN_IBC(*), 
-     & ro_src(*)
+     & ro_src(*),timer_omp(*)
 
       REAL_E delta(*),ro_res(*)
 
@@ -76,12 +76,17 @@ C Var loc
 
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
      & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2,
-     & flag_wait
+     & flag_wait,cells
+
+      REAL_E rhs_begin,rhs_end
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 
       include 'omp_lib.h'
+
+
+       rhs_begin = OMP_GET_WTIME()
 
 #include "FastS/HPC_LAYER/SIZE_MIN.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
@@ -389,4 +394,16 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
 
 #include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+
+      if(lexit_lu.eq.0.and.nitrun*nitcfg.gt.5) then
+        rhs_end = OMP_GET_WTIME()
+        cells = (ind_dm_omp(2)-ind_dm_omp(1)+1)
+     &         *(ind_dm_omp(4)-ind_dm_omp(3)+1)
+     &         *(ind_dm_omp(6)-ind_dm_omp(5)+1)
+
+        timer_omp(1)=timer_omp(1)+(rhs_end-rhs_begin)/float(cells)
+c      if(ithread.eq.1)
+c     & write(*,*)'cpu0=',(rhs_end-rhs_begin)/float(cells)
+      endif
+
       end

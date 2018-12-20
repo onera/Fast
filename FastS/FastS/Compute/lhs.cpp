@@ -17,6 +17,8 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
             {
                E_Float* ipt_CL = iptro_CL[nd];
 
+               E_Float lhs_begin = omp_get_wtime();
+
 #include       "HPC_LAYER/OMP_MODE_BEGIN.h"
                       //
                       //verrou rhs
@@ -81,6 +83,17 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
 				    ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 				    iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
 				    iptcoe  + shift_coe    , ipt_ssor_shift          , ssor_size);
+
+                             if(nitrun*nitcfg > 5) //protection garbage collector
+                             {
+                               E_Float lhs_end = omp_get_wtime();
+                               E_Int cpu_perzone   =  nssiter*Nbre_thread_actif*2;
+                               E_Int cells = (ipt_shift_lu[1]-ipt_shift_lu[0]+1)*(ipt_shift_lu[3]-ipt_shift_lu[2]+1)*(ipt_shift_lu[5]-ipt_shift_lu[4]+1);
+                               E_Int ith = ithread;
+                               if (omp_mode == 1) ith = ithread_loc;
+                               timer_omp[ cpu_perzone + nd*Nbre_thread_actif+ ith ] +=(lhs_end - lhs_begin)/double(cells);
+                             }
+                             //if(ithread==1)printf("cpu1= %g \n",(lhs_end - lhs_begin)/double(cells) );
 			   }
                       } //fin kimpli
 

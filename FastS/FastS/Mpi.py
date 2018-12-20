@@ -1,7 +1,7 @@
 # FastS + MPI
 import PyTree
 import fasts
-from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createPrimVars, _createPrimVars, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _buildOwnData, _init_metric, allocate_metric, _BCcompact, _motionlaw, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp, allocate_ssor, setIBCData_zero
+from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createPrimVars, _createPrimVars, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _buildOwnData, _init_metric, allocate_metric, _BCcompact, _motionlaw, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp, allocate_ssor, setIBCData_zero, display_cpu_efficiency
 import timeit
 
 import numpy
@@ -138,9 +138,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
    return None
 #==============================================================================
-def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
-
-    rank = Cmpi.rank
+def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, Padding=None):
 
     if graph is not None:
         procDict  = graph['procDict']
@@ -160,7 +158,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None):
     FastI._reorder(t, tc, ompmode)
 
     # Construction param_int et param_real des zones
-    _buildOwnData(t)
+    _buildOwnData(t, Padding)
 
     # determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)

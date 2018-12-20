@@ -47,20 +47,21 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
   E_Int nidom    = PyList_Size(zones);
 
-  E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_degen;
+  E_Int** ipt_ind_dm; E_Int** ipt_degen;
   
   E_Float** ipt_param_real;
-  E_Float** iptx;       E_Float** ipty;     E_Float** iptz;  
+  E_Float** ipty;       E_Float** iptz;  
   E_Float** ipti;       E_Float** iptj;     E_Float** iptk;    E_Float** iptvol;
   E_Float** ipti_df;    E_Float** iptj_df;  E_Float** iptk_df; E_Float** iptvol_df;
   E_Float** ipti0;      E_Float** iptj0;    E_Float** iptk0;   
   E_Float** iptventi;   E_Float** iptventj; E_Float** iptventk; E_Float** iptdist;
 
-  ipt_param_int     = new E_Int*[nidom*3];
+  E_Int* ipt_param_int[nidom*3];
+
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_degen         = ipt_ind_dm      + nidom;
 
-  iptx              = new E_Float*[nidom*19];
+  E_Float* iptx[nidom*19];
   ipty              = iptx            + nidom;
   iptz              = ipty            + nidom;
   ipti              = iptz            + nidom;
@@ -361,8 +362,6 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
      } //* fin zone parallele  *//
 
-  delete [] iptx;
-  delete [] ipt_param_int;
   RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL);
  
   Py_INCREF(Py_None);

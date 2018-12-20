@@ -9,6 +9,8 @@
 	   
 */
      
+          E_Int    cpu_perzone  =  nssiter*Nbre_thread_actif*2;
+          E_Float* timer_omp_th = timer_omp + cpu_perzone + nd*Nbre_thread_actif+ ithread;
 
           ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
           nb_subzone    = ipt_nidom_loc [nitcfg-1];                                            //nbre sous-zone a la sousiter courante
@@ -34,6 +36,8 @@
               ipt_topo_omp          = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 1;
               ipt_inddm_omp         = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
 
+
+              timer_omp_th = timer_omp + cpu_perzone + nd*Nbre_thread_actif+ ithread_loc;
 
              //if (ithread == param_int[nd][IO_THREAD] && nitrun == 0 && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
              //if (nd == 0 && nitrun == 0 && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
@@ -78,10 +82,10 @@
                               ipt_topology_socket, ipt_ind_dm_socket );
 
             navier_stokes_struct_( ndo,    nidom, Nbre_thread_actif_loc, ithread_loc, ithread, omp_mode, layer_mode, Nbre_socket, socket, mx_synchro , 
-                                   lssiter_verif, nptpsi               , nitcfg     , nssiter, nitrun , first_it, nb_pulse  , flagCellN  ,
+                                   lssiter_verif, lexit_lu             ,nptpsi      , nitcfg , nssiter , nitrun    , first_it   , nb_pulse  , flagCellN,
                                   param_int[nd] , param_real[nd] ,
                                   temps               , ipt_tot       ,
-                                  ipt_ijkv_sdm_thread , ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread, ipt_topology_socket, ipt_lok_thread, ipt_topo_omp, ipt_inddm_omp,
+                                  ipt_ijkv_sdm_thread , ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread, ipt_topology_socket, ipt_lok_thread, ipt_topo_omp, ipt_inddm_omp, timer_omp_th,
                                   iptkrylov[nd]       , ipt_norm_kry[ithread-1],
                                   ipt_cfl_thread      ,
                                   iptx[nd]                , ipty[nd]                , iptz[nd]            , iptCellN_loc     , iptCellN_IBC[nd],
@@ -111,6 +115,8 @@
 
 
             nd_current++;
+
+            if(ithread==1 && nd==0 && lexit_lu==0 && nitcfg*nitrun > 5) {timer_omp[cpu_perzone]+=1; } //nbre echantillon
 
             if(nd_current > mx_nidom)
              {

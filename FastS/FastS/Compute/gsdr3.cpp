@@ -16,7 +16,7 @@ using namespace std;
 using namespace K_CONNECTOR;
 
 #undef TimeShow
-// #define TimeShow
+//#define TimeShow
 
 #ifdef TimeShow
 
@@ -32,8 +32,8 @@ E_Float time_init;
 
 E_Int K_FASTS::gsdr3( 
   E_Int**& param_int  , E_Float**& param_real ,
-  E_Int& nidom        , E_Int& nitrun         , E_Int&  nitcfg    , E_Int&  nssiter, E_Int& it_target , E_Int&  first_it,
-  E_Int& kimpli       , E_Int& lssiter_verif  , E_Int& lexit_lu   , E_Int& omp_mode, E_Int& layer_mode, E_Int& mpi,
+  E_Int& nidom        , E_Int& nitrun         , E_Int&  nitcfg    , E_Int&  nitcfg_last, E_Int&  nssiter, E_Int& it_target , E_Int&  first_it,
+  E_Int& kimpli       , E_Int& lssiter_verif  , E_Int& lexit_lu   , E_Int& omp_mode    , E_Int& layer_mode, E_Int& mpi,
   E_Int& nisdom_lu_max, E_Int& mx_nidom       , E_Int& ndimt_flt  ,
   E_Int& threadmax_sdm, E_Int& mx_synchro,
   E_Int& nb_pulse     , 
@@ -61,7 +61,6 @@ E_Int K_FASTS::gsdr3(
 
  {
    
-
 #ifdef TimeShow  
   E_Int rank =0; 
   E_Float* ipt_timecount = new E_Float[5];
@@ -86,13 +85,13 @@ E_Int K_FASTS::gsdr3(
   }
 #endif
 
-  ofstream outputfile;
-  std::ostringstream tmp;
+  //ofstream outputfile;
+  //std::ostringstream tmp;
 
-  tmp << "Output" << std::setw(4) << std::setfill('0') << std::to_string(rank);
-  std::string filename = tmp.str();
+  //tmp << "Output" << std::setw(4) << std::setfill('0') << std::to_string(rank);
+  //std::string filename = tmp.str();
 
-  outputfile.open(filename, ios::app);
+ // outputfile.open(filename, ios::app);
   time_init = omp_get_wtime();
     
 #endif
@@ -181,7 +180,6 @@ E_Int K_FASTS::gsdr3(
 			  {
 			    E_Int* ipt_ind_dm_thread = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (param_int[nd][PtZoneomp + i]) * 6;
 			    E_Int indice             = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
-			    //E_Int indice             = nd * nb_subzone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
 		            ipt_ssor_size[indice]=(ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] +1 +2*param_int[nd][ NIJK +3 ])*
 	                                	  (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] +1 +2*param_int[nd][ NIJK +3 ])*
 		                                  (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] +1 +2*param_int[nd][ NIJK +4 ]);
@@ -288,6 +286,7 @@ E_Int K_FASTS::gsdr3(
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
         E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int nd_current=0;
+        E_Float rhs_end;
 
         if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1) { ipt_norm_kry[ithread-1]=0.; }
         //calcul du sous domaine a traiter par le thread 
@@ -295,18 +294,20 @@ E_Int K_FASTS::gsdr3(
           {
            E_Int lmin = 10;
            if (param_int[nd][ITYPCP] == 2) lmin = 4;
+           rhs_begin = omp_get_wtime();
 #include "Compute/rhs.cpp"
           shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
           shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
           shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-          } //Fin boucle sur zones pour calcul RHS
 
+          } //Fin boucle sur zones pour calcul RHS
 
           //
           //timer pour omp "dynamique"
           //
-          E_Float rhs_end = omp_get_wtime();
-          timer_omp[(ithread-1)*2 +(nitcfg-1)*Nbre_thread_actif] += rhs_end - rhs_begin;
+          rhs_end = omp_get_wtime();
+          E_Int cpu_perthread = (ithread-1)*2 +(nitcfg-1)*Nbre_thread_actif*2;
+          timer_omp[ cpu_perthread] += rhs_end - rhs_begin;
 
           if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1)
 	  {
@@ -322,22 +323,22 @@ E_Int K_FASTS::gsdr3(
           //
           //finalisation timer pour omp "dynamique"
           //
-          E_Float lhs_end = omp_get_wtime();
-          timer_omp[(ithread-1)*2 +1 +(nitcfg-1)*Nbre_thread_actif] += lhs_end- rhs_end;
+          E_Float     lhs_end = omp_get_wtime();
+          timer_omp[ cpu_perthread +1 ] += lhs_end- rhs_end;
+          // if(ithread==24) printf(" time lhs= %g \n",lhs_end - rhs_end );
           
 } // Fin zone // omp
 
-
 #ifdef TimeShow
      time_COM = omp_get_wtime();
-     outputfile << "Time in compute (gsdr3 omp//) " << time_COM - time_init << std::endl;
-     outputfile << "Time adim: " <<  (time_COM - time_init)/nbpointsTot << " nidom " << nidom << std::endl;
+//     outputfile << "Time in compute (gsdr3 omp//) " << time_COM - time_init << std::endl;
+//     outputfile << "Time adim: " <<  (time_COM - time_init)/nbpointsTot << " nidom " << nidom << std::endl;
      // std::cout << " sizes (ni,nj,nk):" << std::endl;
      // for (E_Int nd = 0; nd < nidom; nd++)
      //      {
      //      std::cout << param_int[nd][ IJKV    ] << "," << param_int[nd][ IJKV +1 ] << "," << param_int[nd][ IJKV  +2  ] << std::endl;
      //      } 
-     outputfile.close();
+//     outputfile.close();
      time_init = omp_get_wtime();
 #endif 
 
@@ -457,8 +458,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
 #    include "HPC_LAYER/OPTIMIZE_DISTRIB_OMP.h"
     }
 
-
    delete [] ipt_timecount;
    return ibord_ale;
 
-  }
+}

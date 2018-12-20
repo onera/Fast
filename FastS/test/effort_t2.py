@@ -65,7 +65,8 @@ teff = FastS.createStressNodes(t, BC=['BCWall'])
 for it in xrange(1,200): FastS._compute(t, metrics, it, tc)
 
 effort = FastS._computeStress(t, teff, metrics)
-
+#on supprime ghost de l'arbre effort car valeur non initialisee
+teff = Internal.rmGhostCells(teff,teff,2,2)
 Internal._rmNodesByName(teff, '.Solver#Param')
 Internal._rmNodesByName(teff, '.Solver#ownData')
 test.testT(teff, 1)

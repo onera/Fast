@@ -145,12 +145,12 @@ for (E_Int so = 0; so < nb_socket; so++) //loop sur nb socket
 
 
         }//loop socket
-        if(nitcfg==nssiter-1)
+        if(nitcfg==nitcfg_last)
         {
-         for (E_Int it = 1; it < nssiter; it++)
+         for (E_Int it = 1; it <= nssiter; it++)
           {
           for (E_Int th = 0; th < threadmax_sdm; th++) 
-           { E_Int ptTimer = th*2 + (it-1)*threadmax_sdm; 
+           { E_Int ptTimer = th*2 + (it-1)*threadmax_sdm*2; 
              timer_omp[ptTimer   ]=0;
              timer_omp[ptTimer+1 ]=0;
            }//loop thread

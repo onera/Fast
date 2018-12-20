@@ -22,4 +22,6 @@ effort = FastS._computeStress(t, teff, metrics)
 
 Internal._rmNodesByName(teff, '.Solver#Param')
 Internal._rmNodesByName(teff, '.Solver#ownData')
+#on supprime ghost de l'arbre effort car valeur non initialisee
+#teff = FastS.rmGhostCells(teff,2,0)
 test.testT(teff, 1)

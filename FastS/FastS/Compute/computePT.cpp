@@ -514,7 +514,7 @@ else
    E_Int nidom_tot;
    for (E_Int nstep = nstep_deb; nstep < nstep_fin+1; ++nstep)
    {
-   //printf("nstep= %d \n", nstep);
+     //printf("nstep= %d \n", nstep);
      E_Int skip_navier = 1; //layer_mode 0: on calcul tout le temps gsdr3
      if (layer_mode ==1)
      {
@@ -538,7 +538,7 @@ else
      {
       gsdr3( 
             ipt_param_int, ipt_param_real   ,
-            nidom              , nitrun_loc       , nstep             , nssiter       , it_target, first_it,
+            nidom              , nitrun_loc       , nstep             , nstep_fin     , nssiter       , it_target, first_it,
             kimpli             , lssiter_verif    , lexit_lu          , omp_mode      , layer_mode, mpi,
             nisdom_lu_max      ,  mx_nidom        , ndimt_flt         , threadmax_sdm , mx_synchro,
             nb_pulse           ,                
@@ -651,8 +651,9 @@ else
 
 #if TIMER == 1
   c_end = clock();
+  timeout = omp_get_wtime();
   E_Float duree  = (float)(c_end-c_start) / CLOCKS_PER_SEC/threadmax_sdm;
-  printf("nitrun =%d, temps =%g, cpu =%g \n",nitrun_loc,temps,duree);
+  printf("nitrun =%d, temps =%g, cpu =%g  %g \n",nitrun,temps,duree, timeout-timein);
 #endif
 
   Py_INCREF(Py_None);

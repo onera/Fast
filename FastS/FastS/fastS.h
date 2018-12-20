@@ -123,8 +123,8 @@ namespace K_FASTS
   // Compute t=n+1
   E_Int gsdr3( 
     E_Int**& ipt_param_int , E_Float**& ipt_param_real, 
-    E_Int& nidom        , E_Int& nitrun       , E_Int& nstep    , E_Int& nssiter , E_Int& it_target , E_Int& first_it,
-    E_Int& kimpli       , E_Int& lssiter_verif, E_Int& lexit_lu , E_Int& omp_mode, E_Int& layer_mode, E_Int& mpi,
+    E_Int& nidom        , E_Int& nitrun       , E_Int& nstep    , E_Int& nstep_last, E_Int& nssiter , E_Int& it_target , E_Int& first_it,
+    E_Int& kimpli       , E_Int& lssiter_verif, E_Int& lexit_lu , E_Int& omp_mode  , E_Int& layer_mode, E_Int& mpi,
     E_Int& nisdom_lu_max, E_Int& mx_nidom     , E_Int& ndimt_flt,
     E_Int& threadmax_sdm, E_Int& mx_synchro, 
     E_Int& nb_pulse     ,
