@@ -482,10 +482,21 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 
         neq_max = max(neq, neq_max)
 
+        param_int = Internal.getNodeFromName2(z, 'Parameter_int')
+        if param_int is not None:
+           shiftvar  = param_int[1][66]
+        else:
+           shiftvar  = 100
+           print 'shiftVar=', shiftvar
+           print 'create workarray'
+           print 'Danger sur optimisation cache shiftVar'      
+           print 'Danger '      
+           print 'Danger '      
+
         # dim from getZoneDim
         dims = Internal.getZoneDim(z)
-        if dims[0]=='Structured' : nijk = (dims[1]-1)*(dims[2]-1)*(dims[3]-1)
-        else                     : nijk = dims[2]
+        if dims[0]=='Structured' : nijk = (dims[1]-1)*(dims[2]-1)*(dims[3]-1)+shiftvar
+        else                     : nijk = dims[2]+shiftvar
         ndimt   +=     neq*nijk       # surdimensionne ici
         ndimcoe += neq_coe*nijk       # surdimensionne ici
         ndimwig +=        3*nijk      # surdimensionne ici
@@ -494,7 +505,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
     verrou      = MX_SSZONE*c*MX_SYNCHRO*mx_thread
 
-    timerOmp = numpy.zeros(  mx_thread*2*dtloc[0] , dtype=numpy.float64)
+    timerOmp = numpy.zeros(  mx_thread*2*dtloc[0] + mx_thread*len(zones)+1, dtype=numpy.float64)
 
 #    wig   = KCore.empty(ndimwig, CACHELINE)
 #    coe   = KCore.empty(ndimcoe, CACHELINE)
