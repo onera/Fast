@@ -2,3 +2,4 @@ FREEMODULES=''
 export FREEMODULES
 FULLMODULES=$FREEMODULES'Ael Fast FastS FastP Nxo FFX Thermolib'
 export FULLMODULES
+OTHERS='Bemuse'
