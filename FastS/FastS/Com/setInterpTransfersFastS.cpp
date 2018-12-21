@@ -22,7 +22,7 @@
 
 #ifdef _MPI
 #include <mpi.h>
-#include "CMP/include/pending_message_container"
+#include "CMP/include/pending_message_container.h"
 #include "CMP/include/recv_buffer.hpp"
 #include "CMP/include/send_buffer.hpp"
 #include "setInterpTransfersD.h"

@@ -2,7 +2,7 @@
 # include "param_solver.h"
 # include "connector.h"
 # include <string.h>
-//# include <CMP/include/pending_message_container>
+//# include <CMP/include/pending_message_container.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
