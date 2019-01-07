@@ -207,9 +207,7 @@ c.....formulation originelle
 
           do k = ind_loop(5), ind_loop(6)
            do j = ind_loop(3), ind_loop(4)
-                lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-             do l = lij, lij +  ind_loop(2)- ind_loop(1)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_comp_grad_3dcart.for"
 #include       "FastS/Compute/SA/sourceSA_prod_dest.for"
@@ -223,9 +221,7 @@ c.....formulation originelle
 
           do k = ind_loop(5), ind_loop(6)
            do j = ind_loop(3), ind_loop(4)
-                lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-             do l = lij, lij +  ind_loop(2)- ind_loop(1)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_comp_grad_3dcart.for"
 #include       "FastS/Compute/SA/sourceSA_prod_dest.for"

@@ -8,7 +8,11 @@ CVD$  NODEPCHK
              do j = ind_loop(3), ind_loop(4)
                 lij  =       inddm( ind_loop(1) , j, k)
                 ltij = lij - indmtr(ind_loop(1) , j, k)
-!DEC$ IVDEP
+#ifdef _OPENMP4
+!$OMP SIMD 
+#else
+!DIR$ IVDEP
+#endif
                 do l = lij, lij +  ind_loop(2)- ind_loop(1)
 #endif 
                     lt = l  - ltij

@@ -71,7 +71,7 @@ c Var loc
 
 c.....formulation originelle
       fw(s)      = s*((1.+SA_CW3)/(s**6+SA_CW3))**(1./6.)
-      fv1(s)     = (s**3)/(s**3+SA_CV1)
+      fv1(s)     = 1./(1.+SA_CV1/(s*s*s)) 
       fv2(s,t)   = 1.-s/(1.+s*t)
 
       cmus1  = param_real(VISCO+4)
@@ -203,32 +203,24 @@ c.....formulation originelle
 
           do k = ind_loop(5), ind_loop(6)
            do j = ind_loop(3), ind_loop(4)
-                lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-             do l = lij, lij +  ind_loop(2)- ind_loop(1)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_grad_3dcart.for"
 #include       "FastS/Compute/SA/sourceSA_prod_dest_diff.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-             enddo
-           enddo
-          enddo
+#include  "FastS/Compute/loop_end.for"
 
        Else  !calcul explicit, Stockage terme source inutile
 
           do k = ind_loop(5), ind_loop(6)
            do j = ind_loop(3), ind_loop(4)
-                lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-             do l = lij, lij +  ind_loop(2)- ind_loop(1)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_grad_3dcart.for"
 #include       "FastS/Compute/SA/sourceSA_prod_dest_diff.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-             enddo
-           enddo
-          enddo
+#include  "FastS/Compute/loop_end.for"
 
        endif!explicite/implicite 3dcart
 

@@ -3,7 +3,8 @@
 CC    !DIR$ ASSUME (mod(lij,4) .eq. 0)
 #ifdef _OPENMP4
 CCCCCDIR$ VECTOR TEMPORAL
-!$OMP simd aligned(dvardc,rop: CACHELINE)
+CCCCC!$OMP simd aligned(dvardc,rop: CACHELINE)
+!$OMP SIMD 
 #else
 !DIR$ IVDEP
 #endif

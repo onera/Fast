@@ -184,10 +184,10 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
                                     ipt_topology_socket, ipt_ind_dm_socket );
 
                   post_grad_(nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, neq_grad, order,
-                    ipt_param_int[nd], ipt_param_real[nd], ipt_ijkv_sdm_thread,
-                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
-                    ipt_topology_socket, ipt_lok_thread ,
-                    iptvar[nv+nd*nivar] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptgra[nv+nd*nivar]);
+                             ipt_param_int[nd]  , ipt_param_real[nd], ipt_ijkv_sdm_thread,
+                             ipt_ind_dm_loc     , ipt_ind_dm_socket , ipt_ind_dm_omp_thread,
+                             ipt_topology_socket, ipt_lok_thread    ,
+                             iptvar[nv+nd*nivar], ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptgra[nv+nd*nivar]);  
               }// boucle var  
           }// boucle zone 
 # include "HPC_LAYER/INIT_LOCK.h"

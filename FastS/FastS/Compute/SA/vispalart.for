@@ -41,7 +41,7 @@ c Var loc
 #include "FastS/formule_param.h"
 
 c.....formulation originelle
-      fv1(s)     = (s**3)/(s**3+SA_CV1)
+      fv1(s)     = 1./(1.+SA_CV1/(s*s*s))
  
       cmus1  =    param_real(VISCO+4)
       temp01 = 1./param_real(VISCO+3)

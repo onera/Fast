@@ -72,7 +72,8 @@ def addSourceScannerToTargets(target, source, env):
    return (target, source)
 
 PP = Dist.getPP() # preprocessing des fortrans
-f77CppArgs = '-D_NOOPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'
+#f77CppArgs = '-D_NOOPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'
+f77CppArgs = '-D_OPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'
 cacheLine = Dist.getCacheLine()
 if cacheLine == 1: f77CppArgs += ' -DCACHELINE=16'
 else: f77CppArgs += ' -DCACHELINE=%d'%cacheLine

@@ -54,7 +54,7 @@ c Var loc
      & incj_mtr,inck_mtr, l1,l2,l3,l4,l5,l6,ltij,lij,lt,ndimdx,lvo
 
       REAL_E adtild,adtild1,ad1,adelta1,adelta2,
-     1  testzg2,testzg,fw,fv1,fv2,r1_1,amulam,anulam,
+     &  testzg2,testzg,fw,fv1,fv2,r1_1,amulam,anulam,
      &  amutild,anutild,voldes,tci,tcj,tck,sph2,amut,xmuprov,
      &  rotx,roty,rotz,rot,chi,prod,stild,stides,r,r2,g,fwg1,fwg,
      & aseuil,destruc,dest2,anvisc,tsource,tsourceb,
@@ -71,7 +71,7 @@ c Var loc
 
 c.....formulation originelle
       fw(s)      = s*((1.+SA_CW3)/(s**6+SA_CW3))**(1./6.)
-      fv1(s)     = (s**3)/(s**3+SA_CV1)
+      fv1(s)     = 1./(1.+SA_CV1/(s*s*s))
       fv2(s,t)   = 1.-s/(1.+s*t)
 
       cmus1  = param_real(VISCO+4)
@@ -79,7 +79,6 @@ c.....formulation originelle
       coesut =  param_real(VISCO+2) * (1.+cmus1*temp01)
       c1     =  SA_CB2/SA_SIGMA
       cw1    = (SA_CB1/SA_CKARM/SA_CKARM)+(1.+SA_CB2)/SA_SIGMA
- 
 
       incmax=param_int(NIJK)*param_int(NIJK+1)*param_int(NIJK+4)
 
@@ -203,9 +202,7 @@ c.....formulation originelle
 
           do k = ind_loop(5), ind_loop(6)
            do j = ind_loop(3), ind_loop(4)
-                lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-             do l = lij, lij +  ind_loop(2)- ind_loop(1)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_grad_3dcart.for"
 #include       "FastS/Compute/SA/sourceSA_prod_dest.for"
@@ -219,9 +216,7 @@ c.....formulation originelle
 
           do k = ind_loop(5), ind_loop(6)
            do j = ind_loop(3), ind_loop(4)
-                lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-             do l = lij, lij +  ind_loop(2)- ind_loop(1)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_grad_3dcart.for"
 #include       "FastS/Compute/SA/sourceSA_prod_dest.for"

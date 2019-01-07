@@ -31,7 +31,7 @@ c***********************************************************************
  
 C Var loc
       INTEGER_E incmax,l,i,j,k,lij
-      REAL_E c1,c2,c3,c4,roe,roe_n,roe_n1,cv
+      REAL_E c1,c2,c3,c4,roe,roe_n,roe_n1,cv,norm_kryloc
 
 #include "FastS/formule_param.h"
 
@@ -47,7 +47,8 @@ C Var loc
         c3=-0.5
       endif
 
-      !IF(iflow(ndom).eq.3.and.les(ndom).eq.0) THEN
+      norm_kryloc = 0.
+
       IF(param_int(NEQ).eq.6) THEN
 
        If (nitcfg.eq.1) then
@@ -64,19 +65,27 @@ C Var loc
             drodm(l,4)= coe(l,1)*drodm(l,4) 
             drodm(l,5)= coe(l,1)*drodm(l,5) 
             drodm(l,6)= coe(l,1)*drodm(l,6)
+          enddo
+#ifndef _OPENMP4
+!$OMP SIMD reduction(+:norm_kryloc)
+#else
+CDIR$ IVDEP
+#endif
+          do l = lij, lij +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
-            norm_kry = norm_kry + kry(l,1)*kry(l,1)
             kry(l,2) = drodm(l,2)
-            norm_kry = norm_kry + kry(l,2)*kry(l,2)
             kry(l,3) = drodm(l,3)
-            norm_kry = norm_kry + kry(l,3)*kry(l,3)
             kry(l,4) = drodm(l,4)
-            norm_kry = norm_kry + kry(l,4)*kry(l,4)
             kry(l,5) = drodm(l,5)
-            norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
-            norm_kry = norm_kry + kry(l,6)*kry(l,6)
+
+            norm_kryloc = norm_kryloc + drodm(l,1)*drodm(l,1)
+            norm_kryloc = norm_kryloc + drodm(l,2)*drodm(l,2)
+            norm_kryloc = norm_kryloc + drodm(l,3)*drodm(l,3)
+            norm_kryloc = norm_kryloc + drodm(l,4)*drodm(l,4)
+            norm_kryloc = norm_kryloc + drodm(l,5)*drodm(l,5)
+            norm_kryloc = norm_kryloc + drodm(l,6)*drodm(l,6)
 #include  "FastS/Compute/loop_end.for"
 
            else
@@ -112,19 +121,27 @@ C Var loc
             drodm(l,6)= coe(l,1)*drodm(l,6) 
      &                     + c4*rop   (l,6)*rop   (l,1)
      &                     + c3*rop_n1(l,6)*rop_n1(l,1)
+          enddo
+#ifndef _OPENMP4
+!$OMP SIMD reduction(+:norm_kryloc)
+#else
+CDIR$ IVDEP
+#endif
+          do l = lij, lij +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
-            norm_kry = norm_kry + kry(l,1)*kry(l,1)
             kry(l,2) = drodm(l,2)
-            norm_kry = norm_kry + kry(l,2)*kry(l,2)
             kry(l,3) = drodm(l,3)
-            norm_kry = norm_kry + kry(l,3)*kry(l,3)
             kry(l,4) = drodm(l,4)
-            norm_kry = norm_kry + kry(l,4)*kry(l,4)
             kry(l,5) = drodm(l,5)
-            norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
-            norm_kry = norm_kry + kry(l,6)*kry(l,6)
+
+            norm_kryloc = norm_kryloc + drodm(l,1)*drodm(l,1)
+            norm_kryloc = norm_kryloc + drodm(l,2)*drodm(l,2)
+            norm_kryloc = norm_kryloc + drodm(l,3)*drodm(l,3)
+            norm_kryloc = norm_kryloc + drodm(l,4)*drodm(l,4)
+            norm_kryloc = norm_kryloc + drodm(l,5)*drodm(l,5)
+            norm_kryloc = norm_kryloc + drodm(l,6)*drodm(l,6)
 #include  "FastS/Compute/loop_end.for"
 
            endif ! optim bdf1
@@ -132,25 +149,38 @@ C Var loc
         else !dom 2d
 
            if(param_int(DTLOC).eq.1) then
+
 #include  "FastS/Compute/loop_core_begin.for"
             drodm(l,1)= coe(l,1)*drodm(l,1)
             drodm(l,2)= coe(l,1)*drodm(l,2)
             drodm(l,3)= coe(l,1)*drodm(l,3)
             drodm(l,5)= coe(l,1)*drodm(l,5)
             drodm(l,6)= coe(l,1)*drodm(l,6)*1.e0
+        enddo
+#ifndef _OPENMP4
+!$OMP SIMD reduction(+:norm_kryloc)
+#else
+CDIR$ IVDEP
+#endif
+        do l = lij, lij +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
-            norm_kry = norm_kry + kry(l,1)*kry(l,1)
             kry(l,2) = drodm(l,2)
-            norm_kry = norm_kry + kry(l,2)*kry(l,2)
             kry(l,3) = drodm(l,3)
-            norm_kry = norm_kry + kry(l,3)*kry(l,3)
             kry(l,4) = 0.
             kry(l,5) = drodm(l,5)
-            norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
-            norm_kry = norm_kry + kry(l,6)*kry(l,6)
+
+            norm_kryloc = norm_kryloc + drodm(l,1)*drodm(l,1)
+            norm_kryloc = norm_kryloc + drodm(l,2)*drodm(l,2)
+            norm_kryloc = norm_kryloc + drodm(l,3)*drodm(l,3)
+            norm_kryloc = norm_kryloc + drodm(l,5)*drodm(l,5)
+            norm_kryloc = norm_kryloc + drodm(l,6)*drodm(l,6)
 #include  "FastS/Compute/loop_end.for"
+         
+           !write(*,*)'norm kry',norm_kryloc
+           ! stop
+
 
            else
 
@@ -180,18 +210,26 @@ C Var loc
             drodm(l,6)= coe(l,1)*drodm(l,6) 
      &                     + c4*rop   (l,6)*rop   (l,1)
      &                     + c3*rop_n1(l,6)*rop_n1(l,1)
+        enddo
+#ifndef _OPENMP4
+!$OMP SIMD reduction(+:norm_kryloc)
+#else
+CDIR$ IVDEP
+#endif
+        do l = lij, lij +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
-            norm_kry = norm_kry + kry(l,1)*kry(l,1)
             kry(l,2) = drodm(l,2)
-            norm_kry = norm_kry + kry(l,2)*kry(l,2)
             kry(l,3) = drodm(l,3)
-            norm_kry = norm_kry + kry(l,3)*kry(l,3)
             kry(l,4) = 0.
             kry(l,5) = drodm(l,5)
-            norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
-            norm_kry = norm_kry + kry(l,6)*kry(l,6)
+
+            norm_kryloc = norm_kryloc + drodm(l,1)*drodm(l,1)
+            norm_kryloc = norm_kryloc + drodm(l,2)*drodm(l,2)
+            norm_kryloc = norm_kryloc + drodm(l,3)*drodm(l,3)
+            norm_kryloc = norm_kryloc + drodm(l,5)*drodm(l,5)
+            norm_kryloc = norm_kryloc + drodm(l,6)*drodm(l,6)
 #include  "FastS/Compute/loop_end.for"
            endif ! optim bdf1
         endif!2d/3d
@@ -240,20 +278,29 @@ C Var loc
      &                     + c1*rop   (l,6)*rop   (l,1)
      &                     + c2*rop_n (l,6)*rop_n (l,1)
      &                     + c3*rop_n1(l,6)*rop_n1(l,1)
+          enddo
+#ifndef _OPENMP4
+!$OMP SIMD reduction(+:norm_kryloc)
+#else
+CDIR$ IVDEP
+#endif
+          do l = lij, lij +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
-            norm_kry = norm_kry + kry(l,1)*kry(l,1)
             kry(l,2) = drodm(l,2)
-            norm_kry = norm_kry + kry(l,2)*kry(l,2)
             kry(l,3) = drodm(l,3)
-            norm_kry = norm_kry + kry(l,3)*kry(l,3)
             kry(l,4) = drodm(l,4)
-            norm_kry = norm_kry + kry(l,4)*kry(l,4)
             kry(l,5) = drodm(l,5)
-            norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
-            norm_kry = norm_kry + kry(l,6)*kry(l,6)
+
+            norm_kryloc = norm_kryloc + drodm(l,1)*drodm(l,1)
+            norm_kryloc = norm_kryloc + drodm(l,2)*drodm(l,2)
+            norm_kryloc = norm_kryloc + drodm(l,3)*drodm(l,3)
+            norm_kryloc = norm_kryloc + drodm(l,4)*drodm(l,4)
+            norm_kryloc = norm_kryloc + drodm(l,5)*drodm(l,5)
+            norm_kryloc = norm_kryloc + drodm(l,6)*drodm(l,6)
 #include  "FastS/Compute/loop_end.for"
+
 
         else !dom 2d
 
@@ -290,18 +337,26 @@ C Var loc
      &                     + c1*rop   (l,6)*rop   (l,1)
      &                     + c2*rop_n (l,6)*rop_n (l,1)
      &                     + c3*rop_n1(l,6)*rop_n1(l,1)
+          enddo
+#ifndef _OPENMP4
+!$OMP SIMD reduction(+:norm_kryloc)
+#else
+CDIR$ IVDEP
+#endif
+          do l = lij, lij +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
-            norm_kry = norm_kry + kry(l,1)*kry(l,1)
             kry(l,2) = drodm(l,2)
-            norm_kry = norm_kry + kry(l,2)*kry(l,2)
             kry(l,3) = drodm(l,3)
-            norm_kry = norm_kry + kry(l,3)*kry(l,3)
             kry(l,4) = 0.
             kry(l,5) = drodm(l,5)
-            norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
-            norm_kry = norm_kry + kry(l,6)*kry(l,6)
+
+            norm_kryloc = norm_kryloc + drodm(l,1)*drodm(l,1)
+            norm_kryloc = norm_kryloc + drodm(l,2)*drodm(l,2)
+            norm_kryloc = norm_kryloc + drodm(l,3)*drodm(l,3)
+            norm_kryloc = norm_kryloc + drodm(l,5)*drodm(l,5)
+            norm_kryloc = norm_kryloc + drodm(l,6)*drodm(l,6)
 #include  "FastS/Compute/loop_end.for"
 
         endif !2d/3d
@@ -341,17 +396,25 @@ C Var loc
      &                                  +rop_n1(l,4)*rop_n1(l,4)))
 
             drodm(l,5)= coe(l,1)*drodm(l,5) + c4*roe + c3*roe_n1
+          enddo
+#ifndef _OPENMP4
+!$OMP SIMD reduction(+:norm_kryloc)
+#else
+CDIR$ IVDEP
+#endif
+          do l = lij, lij +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
-            norm_kry = norm_kry + kry(l,1)*kry(l,1)
             kry(l,2) = drodm(l,2)
-            norm_kry = norm_kry + kry(l,2)*kry(l,2)
             kry(l,3) = drodm(l,3)
-            norm_kry = norm_kry + kry(l,3)*kry(l,3)
             kry(l,4) = drodm(l,4)
-            norm_kry = norm_kry + kry(l,4)*kry(l,4)
             kry(l,5) = drodm(l,5)
-            norm_kry = norm_kry + kry(l,5)*kry(l,5)
+
+            norm_kryloc = norm_kryloc + drodm(l,1)*drodm(l,1)
+            norm_kryloc = norm_kryloc + drodm(l,2)*drodm(l,2)
+            norm_kryloc = norm_kryloc + drodm(l,3)*drodm(l,3)
+            norm_kryloc = norm_kryloc + drodm(l,4)*drodm(l,4)
+            norm_kryloc = norm_kryloc + drodm(l,5)*drodm(l,5)
 #include  "FastS/Compute/loop_end.for"
 
         else !dom 2d
@@ -379,16 +442,24 @@ C Var loc
      &                                  +rop_n1(l,3)*rop_n1(l,3)))
 
             drodm(l,5)= coe(l,1)*drodm(l,5) + c4*roe + c3*roe_n1
+          enddo
+#ifndef _OPENMP4
+!$OMP SIMD reduction(+:norm_kryloc)
+#else
+CDIR$ IVDEP
+#endif
+          do l = lij, lij +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
-            norm_kry = norm_kry + kry(l,1)*kry(l,1)
             kry(l,2) = drodm(l,2)
-            norm_kry = norm_kry + kry(l,2)*kry(l,2)
             kry(l,3) = drodm(l,3)
-            norm_kry = norm_kry + kry(l,3)*kry(l,3)
             kry(l,4) = 0.
             kry(l,5) = drodm(l,5)
-            norm_kry = norm_kry + kry(l,5)*kry(l,5)
+
+            norm_kryloc = norm_kryloc + drodm(l,1)*drodm(l,1)
+            norm_kryloc = norm_kryloc + drodm(l,2)*drodm(l,2)
+            norm_kryloc = norm_kryloc + drodm(l,3)*drodm(l,3)
+            norm_kryloc = norm_kryloc + drodm(l,5)*drodm(l,5)
 #include  "FastS/Compute/loop_end.for"
 
         endif!2d/3d
@@ -433,17 +504,25 @@ C Var loc
      &                                  +rop_n1(l,4)*rop_n1(l,4)))
 
             drodm(l,5)= coe(l,1)*drodm(l,5)+ c1*roe +c2*roe_n +c3*roe_n1
+          enddo
+#ifndef _OPENMP4
+!$OMP SIMD reduction(+:norm_kryloc)
+#else
+CDIR$ IVDEP
+#endif
+          do l = lij, lij +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
-            norm_kry = norm_kry + kry(l,1)*kry(l,1)
             kry(l,2) = drodm(l,2)
-            norm_kry = norm_kry + kry(l,2)*kry(l,2)
             kry(l,3) = drodm(l,3)
-            norm_kry = norm_kry + kry(l,3)*kry(l,3)
             kry(l,4) = drodm(l,4)
-            norm_kry = norm_kry + kry(l,4)*kry(l,4)
             kry(l,5) = drodm(l,5)
-            norm_kry = norm_kry + kry(l,5)*kry(l,5)
+
+            norm_kryloc = norm_kryloc + drodm(l,1)*drodm(l,1)
+            norm_kryloc = norm_kryloc + drodm(l,2)*drodm(l,2)
+            norm_kryloc = norm_kryloc + drodm(l,3)*drodm(l,3)
+            norm_kryloc = norm_kryloc + drodm(l,4)*drodm(l,4)
+            norm_kryloc = norm_kryloc + drodm(l,5)*drodm(l,5)
 #include  "FastS/Compute/loop_end.for"
 
         else !dom 2d
@@ -475,20 +554,31 @@ C Var loc
      &                                  +rop_n1(l,3)*rop_n1(l,3)))
 
             drodm(l,5)= coe(l,1)*drodm(l,5)+ c1*roe +c2*roe_n +c3*roe_n1
+          enddo
+#ifndef _OPENMP4
+!$OMP SIMD reduction(+:norm_kryloc)
+#else
+CDIR$ IVDEP
+#endif
+          do l = lij, lij +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
-            norm_kry = norm_kry + kry(l,1)*kry(l,1)
             kry(l,2) = drodm(l,2)
-            norm_kry = norm_kry + kry(l,2)*kry(l,2)
             kry(l,3) = drodm(l,3)
-            norm_kry = norm_kry + kry(l,3)*kry(l,3)
             kry(l,4) = 0.
             kry(l,5) = drodm(l,5)
-            norm_kry = norm_kry + kry(l,5)*kry(l,5)
+
+            norm_kryloc = norm_kryloc + drodm(l,1)*drodm(l,1)
+            norm_kryloc = norm_kryloc + drodm(l,2)*drodm(l,2)
+            norm_kryloc = norm_kryloc + drodm(l,3)*drodm(l,3)
+            norm_kryloc = norm_kryloc + drodm(l,5)*drodm(l,5)
 #include  "FastS/Compute/loop_end.for"
+
         endif
 
       ENDIF!nitcfg
       ENDIF!neq
+
+      norm_kry = norm_kry + norm_kryloc
 
       end

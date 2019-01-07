@@ -76,7 +76,7 @@ c Var loc
 
 c.....formulation originelle
       fw(s)      = s*((1.+SA_CW3)/(s**6+SA_CW3))**(1./6.)
-      fv1(s)     = (s**3)/(s**3+SA_CV1)
+      fv1(s)     = 1./(1.+SA_CV1/(s*s*s))
       fv2(s,t)   = 1.-s/(1.+s*t)
 
       cmus1  = param_real(VISCO+4)
@@ -195,33 +195,28 @@ c.....formulation originelle
 
         If(param_int(ITYPCP).le.1) then !calcul implicite, on stocke coe pour ssor SA
 
-
-           do 102 k = ind_loop(5), ind_loop(6)
-           do 102 j = ind_loop(3), ind_loop(4)
-             lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-            do 102 l = lij, lij +  ind_loop(2)- ind_loop(1)
+          do k = ind_loop(5), ind_loop(6)
+           do j = ind_loop(3), ind_loop(4)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/rot_3dcart.for" 
 #include       "FastS/Compute/SA/delta_rot_3dcart.for"
 #include       "FastS/Compute/SA/sourceZDES3_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
- 102  continue
+#include   "FastS/Compute/loop_end.for"
 
         Else  !calcul explicit, Stockage terme source inutile
 
-           do 202 k = ind_loop(5), ind_loop(6)
-           do 202 j = ind_loop(3), ind_loop(4)
-            lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-            do 202 l = lij, lij +  ind_loop(2)- ind_loop(1)
+          do k = ind_loop(5), ind_loop(6)
+           do j = ind_loop(3), ind_loop(4)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/rot_3dcart.for" 
 #include       "FastS/Compute/SA/delta_rot_3dcart.for"
 #include       "FastS/Compute/SA/sourceZDES3_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
- 202  continue
+#include   "FastS/Compute/loop_end.for"
 
        endif!explicite/implicite 3dcart
 

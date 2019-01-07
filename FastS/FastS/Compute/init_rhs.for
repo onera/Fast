@@ -101,32 +101,68 @@ c***********************************************************************
 
       IF(param_int(ITYPCP).le.1.or.nitcfg.eq.1) THEN
 
-         do  ne= 1, neq
-          vg = ndimdx*(ne-1)
-          do  k = ind_loop(5), ind_loop(6)
-          do  j = ind_loop(3), ind_loop(4)
-#include    "FastS/Compute/loopI_begin.for"
+          if(neq.eq.5) then
 
-           drodm(l +vg)=  0.
-        enddo
-        enddo
-        enddo
-        enddo
+            do  k = ind_loop(5), ind_loop(6)
+            do  j = ind_loop(3), ind_loop(4)
+#include      "FastS/Compute/loopI_begin.for"
+                 drodm(l          )=  0.
+                 drodm(l +ndimdx  )=  0.
+                 drodm(l +ndimdx*2)=  0.
+                 drodm(l +ndimdx*3)=  0.
+                 drodm(l +ndimdx*4)=  0.
+               enddo
+            enddo
+            enddo
+          else
+            do  k = ind_loop(5), ind_loop(6)
+            do  j = ind_loop(3), ind_loop(4)
+#include      "FastS/Compute/loopI_begin.for"
+                 drodm(l          )=  0.
+                 drodm(l +ndimdx  )=  0.
+                 drodm(l +ndimdx*2)=  0.
+                 drodm(l +ndimdx*3)=  0.
+                 drodm(l +ndimdx*4)=  0.
+                 drodm(l +ndimdx*5)=  0.
+               enddo
+            enddo
+            enddo
+
+          endif
 
       ELSE
 
-         do  ne= 1, neq
-          vg = ndimdx*(ne-1)
-         do  k = ind_loop(5), ind_loop(6)
-         do  j = ind_loop(3), ind_loop(4)
-#include    "FastS/Compute/loopI_begin.for"
 
-           drodm(l +vg)=  drodm(l + vg)*coefH
+          if(neq.eq.5) then
 
-        enddo
-        enddo
-        enddo
-        enddo
+            do  k = ind_loop(5), ind_loop(6)
+            do  j = ind_loop(3), ind_loop(4)
+#include      "FastS/Compute/loopI_begin.for"
+                 drodm(l          )=  drodm(l          )*coefH
+                 drodm(l +ndimdx  )=  drodm(l +ndimdx  )*coefH
+                 drodm(l +ndimdx*2)=  drodm(l +ndimdx*2)*coefH
+                 drodm(l +ndimdx*3)=  drodm(l +ndimdx*3)*coefH
+                 drodm(l +ndimdx*4)=  drodm(l +ndimdx*4)*coefH
+               enddo
+            enddo
+            enddo
+
+          else
+            do  k = ind_loop(5), ind_loop(6)
+            do  j = ind_loop(3), ind_loop(4)
+#include      "FastS/Compute/loopI_begin.for"
+                 drodm(l          )=  drodm(l          )*coefH
+                 drodm(l +ndimdx  )=  drodm(l +ndimdx  )*coefH
+                 drodm(l +ndimdx*2)=  drodm(l +ndimdx*2)*coefH
+                 drodm(l +ndimdx*3)=  drodm(l +ndimdx*3)*coefH
+                 drodm(l +ndimdx*4)=  drodm(l +ndimdx*4)*coefH
+                 drodm(l +ndimdx*5)=  drodm(l +ndimdx*5)*coefH
+               enddo
+            enddo
+            enddo
+
+          endif
+
 
       ENDIF
 

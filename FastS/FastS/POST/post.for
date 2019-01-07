@@ -49,7 +49,7 @@ C Var loc
       INTEGER_E nitrun
       INTEGER_E omp_mode, topo_omp(3), inddm_omp(6)
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
-      REAL_E c1,c2
+      REAL_E c1,c2,val
 
 #include "FastS/param_solver.h"
 #include "FastS/formule_param.h"
@@ -74,7 +74,8 @@ C Var loc
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
 
            !Initilalisation systematique de grad
-           call init_rhs(ndo, 1, param_int, param_int(NDIMDX),
+           val =0.
+           call init_tab(ndo, val, param_int, param_int(NDIMDX),
      &                   neq_grad*3, ind_grad, grad )
 
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
