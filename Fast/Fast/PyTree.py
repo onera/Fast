@@ -429,7 +429,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False, mpirun=False):
             t = Cmpi.convertFile2SkeletonTree(FILE)
             mp = getMaxProc(t)
             if mp+1 != size: 
-                raise ValueError, 'The number of mpi proc (%d) doesn t match the tree distribution (%d)'%(mp+1,size) 
+                raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d).'%(size,mp+1))
             if graph:
                 graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
                 graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)

@@ -439,8 +439,8 @@ def _createTBLESA(tc,nbpts_linelets=45):
                   sname  = zsrname[0:2]
                   if sname == 'IB':
                      zsrname = zsrname.split('_')
-                     if len(zsrname)!=3: 
-                        print 'Warning: createTBLSSA: non consistent with the version of IBM preprocessing.'
+                     if len(zsrname)<3: 
+                        print 'Warning: createTBLESA: non consistent with the version of IBM preprocessing.'
                      else:
                        if zsrname[1] == '6':              
                         print 'Using TBLE SA wall model'         
@@ -501,7 +501,7 @@ def _createTBLESA(tc,nbpts_linelets=45):
                               sname  = zsrname[0:2]
                               if sname == 'IB':                              
                                  zsrname = zsrname.split('_')
-                                 if len(zsrname)!=3: 
+                                 if len(zsrname)<3: 
                                    print 'Warning: createTBLESA: non consistent with the version of IBM preprocessing.'
                                  else:   
                                    if zsrname[1] == '6':                                                                                                
