@@ -248,7 +248,11 @@ E_Int K_FASTS::gsdr3(
    E_Int socket          = (ithread-1)/thread_parsock +1;
    E_Int  ithread_sock   = ithread-(socket-1)*thread_parsock;
 
+#ifdef _OPENMP
    E_Float rhs_begin = omp_get_wtime();
+#else 
+   E_Float rhs_begin = 0.;
+#endif
 
    E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3;
    E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3;
@@ -294,7 +298,9 @@ E_Int K_FASTS::gsdr3(
           {
            E_Int lmin = 10;
            if (param_int[nd][ITYPCP] == 2) lmin = 4;
+#ifdef _OPENMP
            rhs_begin = omp_get_wtime();
+#endif
 #include "Compute/rhs.cpp"
           shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
           shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
@@ -305,7 +311,9 @@ E_Int K_FASTS::gsdr3(
           //
           //timer pour omp "dynamique"
           //
+#ifdef _OPENMP         
           rhs_end = omp_get_wtime();
+#endif
           E_Int cpu_perthread = (ithread-1)*2 +(nitcfg-1)*Nbre_thread_actif*2;
           timer_omp[ cpu_perthread] += rhs_end - rhs_begin;
 
@@ -323,7 +331,11 @@ E_Int K_FASTS::gsdr3(
           //
           //finalisation timer pour omp "dynamique"
           //
+#ifdef _OPENMP
           E_Float     lhs_end = omp_get_wtime();
+#else
+          E_Float     lhs_end = 0.;
+#endif
           timer_omp[ cpu_perthread +1 ] += lhs_end- rhs_end;
           // if(ithread==24) printf(" time lhs= %g \n",lhs_end - rhs_end );
           

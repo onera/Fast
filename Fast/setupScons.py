@@ -44,7 +44,7 @@ listExtensions.append(
               include_dirs=["Fast"]+additionalIncludePaths+includeDirs,
               library_dirs=additionalLibPaths+libraryDirs,
               libraries=libraries+additionalLibs,
-              extra_compile_args=Dist.getCppArgs(),
+              extra_compile_args=Dist.getCArgs(),
               extra_link_args=Dist.getLinkArgs()
               ) )
     

@@ -18,8 +18,11 @@
   // Pour verif Ax-b
   E_Float save = normL2_sum;
 
-E_Float lhs_beg = omp_get_wtime();
-
+#ifdef _OPENMP
+  E_Float lhs_beg = omp_get_wtime();
+#else
+  E_Float lhs_beg = 0.;
+#endif
 
     //iptkrylov[nd] = iptkrylov[nd] / normL2_sum
     nd_current =0;
@@ -32,7 +35,11 @@ E_Float lhs_beg = omp_get_wtime();
           nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
       }
+#ifdef _OPENMP
 E_Float lhs_end = omp_get_wtime();
+#else
+E_Float lhs_end = 0.;
+#endif
 if (ithread==100) printf("cpu normalisation_vect %g \n", lhs_end-lhs_beg);
 //
 //
@@ -45,7 +52,9 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 #pragma omp barrier
      //if( ithread==100) printf("iter krylov =  %d  \n" , kr);
 
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
+#endif
     // 2.1) Calcul de V_kr = A * V_kr-1
         shift_coe=0; shift_zone=0; nd_current=0;
 	for (E_Int nd = 0; nd < nidom; nd++)
@@ -102,7 +111,9 @@ lhs_beg = omp_get_wtime();
 	   iptkrylov_transfer[nd] = krylov_out;
 
 	  }//loop zone
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("cpu invlu + dpdw       %g \n", lhs_end-lhs_beg);
 
 #pragma omp barrier
@@ -124,7 +135,9 @@ if (ithread==100) printf("cpu invlu + dpdw       %g \n", lhs_end-lhs_beg);
     // fillghostCell
     //
     //
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
+#endif
 #pragma omp master
     { //Raccord V0  
       
@@ -132,10 +145,13 @@ lhs_beg = omp_get_wtime();
 			      param_real_tc, param_int_ibc, param_real_ibc, linelets_int, linelets_real, param_real[0][PRANDT],
          		      it_target, nidom, ipt_timecount, mpi);
     }
-
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
+#endif
 #pragma omp barrier
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("transfert              %g \n", lhs_end-lhs_beg);
 
     E_Int lrhs = 2; E_Int lcorner = 0; E_Int npass = 0; E_Int ipt_shift_lu[6];
@@ -172,11 +188,14 @@ if (ithread==100) printf("transfert              %g \n", lhs_end-lhs_beg);
             nd_current +=1;
 #include    "HPC_LAYER/OMP_MODE_END.h"
       }//loop zone
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("bczone                 %g \n", lhs_end-lhs_beg);
 
-
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
+#endif
 #pragma omp barrier
 
     //
@@ -208,7 +227,9 @@ lhs_beg = omp_get_wtime();
 	shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
       }
 #pragma omp barrier
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("tapenade               %g \n", lhs_end-lhs_beg);
 
 /*
@@ -217,8 +238,9 @@ if (ithread==100) printf("tapenade               %g \n", lhs_end-lhs_beg);
     normL2_sum = sqrt(normL2_sum);
     if(ithread==100) printf("tapenade   %f %d  \n",normL2_sum , ithread);
 */
-
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
+#endif
     // kry(kr+1) = kry(kr) + drodmd
     shift_zone=0;
     nd_current=0;
@@ -238,11 +260,13 @@ lhs_beg = omp_get_wtime();
 
         shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
       }
+#ifdef _OPENMP      
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("id_vect                %g \n", lhs_end-lhs_beg);
-
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
-
+#endif
     // 2.2) Orthonormalisation du vecteur V_kr
     //
     //
@@ -312,7 +336,9 @@ lhs_beg = omp_get_wtime();
         //
         //
         //
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("vect_rvect             %g %d \n", lhs_end-lhs_beg, kr);
 
 
@@ -374,10 +400,13 @@ if (ithread==100) printf("vect_rvect             %g %d \n", lhs_end-lhs_beg, kr)
 
       //cout << "Residu GMRES = " << K_FUNC::E_abs(ipt_VectG[kr + 1]) << endl;
     }// end single
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("Normalisation de V_kr  %g \n", lhs_end-lhs_beg);
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
-
+#endif
     nd_current =0;
     ipt_norm_kry[ithread-1]= 0.;
     for (E_Int nd = 0; nd < nidom; nd++)
@@ -398,10 +427,13 @@ lhs_beg = omp_get_wtime();
                nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
       }
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("Normalisation_vect     %g \n", lhs_end-lhs_beg);
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
-
+#endif
 /*
     // norm L2 pour verrif bug
     for (E_Int th = 0; th < Nbre_thread_actif; th++) { normL2_sum += ipt_norm_kry[th];}
@@ -421,7 +453,6 @@ lhs_beg = omp_get_wtime();
    //  
    //
    //
-
 
   //Resolution de Y par remontee
   E_Float* Hessenberg   = ipt_Hessenberg;
@@ -452,10 +483,13 @@ lhs_beg = omp_get_wtime();
         } //end single
 
    }//end loop i
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("Remontee               %g \n", lhs_end-lhs_beg);
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
-
+#endif
   if (ithread ==1) printf("Residu GMRES =  %14.12g, target= %14.12g,  Nit_kry= %d, Nb_restart= %d \n",K_FUNC::E_abs(ipt_VectG[ kr ]) / save, epsi_linear, kr, restart );
 
   //continue_gmres = K_FUNC::E_abs(ipt_VectG[kr]) > epsi_linear;
@@ -476,10 +510,13 @@ lhs_beg = omp_get_wtime();
 #include "HPC_LAYER/OMP_MODE_END.h"
      shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
     }//loop zone
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("prod_mat_vect          %g \n", lhs_end-lhs_beg);
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
-
+#endif
       shift_coe =0; shift_zone =0; nd_current =0;
       for (E_Int nd  = 0; nd < nidom; nd++)
         {
@@ -516,9 +553,13 @@ lhs_beg = omp_get_wtime();
           shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
           shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
          }//loop zone
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==100) printf("invlu final            %g \n", lhs_end-lhs_beg);
+#ifdef _OPENMP
 lhs_beg = omp_get_wtime();
+#endif
   //
   //
   //init_gramm schmidt again normL2

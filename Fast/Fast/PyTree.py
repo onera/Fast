@@ -53,7 +53,7 @@ def _compute(t, metrics):
     for z in zones:
         solver = getValueFromTag(z, 'solver')
         metric = metrics[i]
-        if solver == 'FastP' and FASTP: 
+        if solver == 'FastP' and FASTP:
             #FastP._computeZone(z)
             pass
         elif solver == 'FastS' and FASTS: 
@@ -317,6 +317,15 @@ def save(t, fileName='restart', split='single',
     baseName = os.path.splitext(baseName)[0] # name without extension
     fileName = os.path.splitext(fileName)[0] # full path without extension
 
+    if split != 'single':
+        if NP > 0: # mpirun
+            import Converter.Mpi as Cmpi
+            if Cmpi.rank == 0:
+                if not os.path.exists(fileName): os.makedirs(fileName)
+            Cmpi.barrier()
+        else:
+            if not os.path.exists(fileName): os.makedirs(fileName)
+
     # Rip some useless data (FastS)
     t2 = C.rmVars(t, 'centers:Density_P1')
     C._rmVars(t2, 'centers:VelocityX_P1')
@@ -372,7 +381,6 @@ def save(t, fileName='restart', split='single',
             objet = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList}
 
             # Rebuild local trees
-            if not os.path.exists(fileName): os.makedirs(fileName)
             for i in xrange(max(1,-NP)):
                 tl = Internal.copyRef(t2)
                 bases = Internal.getNodesFromType1(tl, 'CGNSBase_t')
