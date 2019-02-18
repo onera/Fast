@@ -451,13 +451,13 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
    E_Int nidom_tot;
    
    E_Int skip_navier = 1; //layer_mode 0: on calcul tout le temps gsdr3
-   souszones_list_c( ipt_param_int , ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, nidom_tot, lexit_lu, lssiter_verif);
+   souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, nidom_tot, lexit_lu, lssiter_verif);
 
    E_Int display=0;
    //calcul distri si implicit ou explicit local + modulo verif
    if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1) )
        {
-         distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
+         distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
        }
 
    E_Int layer_mode=1;

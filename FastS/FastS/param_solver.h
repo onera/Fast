@@ -173,7 +173,8 @@
 #define EPSI_INFLOW 37  
 #define PRANDT_TUR  38  
 #define EPSI_LINEAR 39  
-#define BC_DATA     40
+#define HPC_CUPS    40  
+#define BC_DATA     41
 
 
 #define SA_CKARM    0.41 

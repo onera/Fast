@@ -108,12 +108,12 @@ namespace K_FASTS
   // - State -
   //==========
 
-  void souszones_list_c( E_Int**& ipt_param_int, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom, PyObject* work ,
-                         E_Int* dtloc          , E_Int* ipt_iskip_lu, E_Int lssiter_loc       , E_Int nidom    , 
-                         E_Int nitrun          , E_Int nstep        , E_Int& nidom_tot        , E_Int& lexit_lu, E_Int& lssiter_verif);
+  void souszones_list_c( E_Int**& ipt_param_int, E_Float**& ipt_param_real, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom, PyObject* work ,
+                         E_Int* dtloc          , E_Int* ipt_iskip_lu      , E_Int lssiter_loc       , E_Int nidom    , 
+                         E_Int nitrun          , E_Int nstep              , E_Int& nidom_tot        , E_Int& lexit_lu, E_Int& lssiter_verif);
 
-  void distributeThreads_c( E_Int**& ipt_param_int, E_Int**& ipt_ind_dm, 
-                            E_Int& nidom          ,  E_Int& nssiter    , E_Int& mx_sszone      , E_Int& nstep       , E_Int& nitrun, E_Int& display);
+  void distributeThreads_c( E_Int**& ipt_param_int,  E_Float**& ipt_param_real, E_Int**& ipt_ind_dm, 
+                            E_Int& nidom          ,  E_Int& nssiter           , E_Int& mx_sszone   , E_Int& nstep, E_Int& nitrun, E_Int& display);
 
   E_Int topo_test( E_Int* topo, E_Int* nijk, E_Int& cell_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k);
 

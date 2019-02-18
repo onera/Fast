@@ -28,7 +28,7 @@ using namespace K_FLD;
 // Souszonelist (C layer)
 // 
 // 
-void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm, 
+void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_Int**& ipt_ind_dm, 
                                    E_Int& nidom  , E_Int& nssiter , E_Int& mx_omp_size_int  , E_Int& nstep, E_Int& nitrun, E_Int& display)
 {
 
@@ -77,6 +77,8 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
   FldArrayI newtab_nozone(mxzone);   E_Int* ipt_nozone_new  = newtab_nozone.begin();
   FldArrayI newtab_nosszone(mxzone); E_Int* ipt_nosszone_new= newtab_nosszone.begin();
 
+  FldArrayF newtab_HPC_CUPS(mxzone); E_Float* ipt_HPC_CUPS= newtab_HPC_CUPS.begin();
+
   E_Int c = 0;
   E_Int boom=0;
   E_Int check_size;
@@ -102,6 +104,9 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
             E_Int* nozone   = ipt_nozone   +   c;
             E_Int* nosszone = ipt_nosszone +   c;
 
+            ipt_HPC_CUPS[c] = param_real[nd][HPC_CUPS];
+
+
             ijk_start[0]= ipt_ind_dm[nd][0+shift];
             ijk_start[1]= ipt_ind_dm[nd][2+shift];
             ijk_start[2]= ipt_ind_dm[nd][4+shift];
@@ -109,7 +114,6 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
             nijk[1]     = ipt_ind_dm[nd][3+shift]-ipt_ind_dm[nd][2+shift]+1;
             nijk[2]     = ipt_ind_dm[nd][5+shift]-ipt_ind_dm[nd][4+shift]+1;
 
-        //printf("c NOZONE %d %d %d %d %d %d %d %d \n", c, nd, ijk_start[0], ipt_ind_dm[nd][1+shift], ijk_start[1],ipt_ind_dm[nd][3+shift], ijk_start[2], ipt_ind_dm[nd][5+shift]  );
             ndimdx[0]   = nijk[0]*nijk[1]*nijk[2];
             nozone[0]   = nd;
             nosszone[0] = nd_subzone;
@@ -137,6 +141,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
         E_Int  No_zone      = nozone_new[0];
         E_Int  No_sszone    = nosszone_new[0];
         E_Int* ndimdx       = ipt_ndimdx_new   +   c;
+
 
         E_Int* ipt_nidom_loc = ipt_ind_dm[No_zone] + param_int[No_zone][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
         E_Int nb_subzone     = ipt_nidom_loc [nstep-1];   
@@ -166,6 +171,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 
 
   //Tri par taille decroissante des zone
+  E_Float cout= 0.;
   for (E_Int c = 0; c < Nbzones; c++)
      {  
 
@@ -203,8 +209,15 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
        nozone_new[0]   = nozone[0];
        nosszone_new[0] = nosszone[0];
        ndimdx[0]       = -1;
+
+       // estimation des poids
+       cout += nijk[0]*nijk[1]*nijk[2]/ipt_HPC_CUPS[c_tg];
+
      } // loop zone
 
+  E_Float cupsmoy = float(ndimt)/cout;
+  E_Float poids;
+  E_Float cells_tg_float=0;
 
   E_Int cells_tg = 0;
   E_Int flui_tg  = 0;
@@ -219,7 +232,6 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
         E_Int* ijk_start = ipt_nijk_new     + 3*c + 3*mxzone;
         E_Int* ind_dm    = ipt_inddm_zone   + 6*c;
 
-        //printf("start %d %d %d \n", ijk_start[0], ijk_start[1], ijk_start[2]);
 
         ind_dm[0]= ijk_start[0];
         ind_dm[2]= ijk_start[1];
@@ -235,23 +247,28 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 	E_Int size_k = 0;
         if(nijk[2] != 1) size_k = (nijk[2]+1)*nijk[0]*nijk[1];
 
-        cells_tg += size_c;
-        flui_tg  += size_i;
-        fluj_tg  += size_j;
-        fluk_tg  += size_k;
+        poids = cupsmoy/ipt_HPC_CUPS[c];
+        //printf("poids %f %d \n", poids, c);
+
+        cells_tg_float += size_c*poids;
+        flui_tg        += size_i*poids;
+        fluj_tg        += size_j*poids;
+        fluk_tg        += size_k*poids;
      }  
 
-    cells_tg /= __NUMTHREADS__;
+    cells_tg  = int(cells_tg_float) / __NUMTHREADS__;
     flui_tg  /= __NUMTHREADS__;
     fluj_tg  /= __NUMTHREADS__;
     fluk_tg  /= __NUMTHREADS__;
 
   // creation et initialisation remainder
-  FldArrayI tab_remaind(__NUMTHREADS__);   E_Int* remaind  = tab_remaind.begin();
-  FldArrayI tab_flu_i(__NUMTHREADS__);   E_Int* flu_i  = tab_flu_i.begin();
-  FldArrayI tab_flu_j(__NUMTHREADS__);   E_Int* flu_j  = tab_flu_j.begin();
-  FldArrayI tab_flu_k(__NUMTHREADS__);   E_Int* flu_k  = tab_flu_k.begin();
-  FldArrayI tab_grain(__NUMTHREADS__);   E_Int* grain  = tab_grain.begin();
+  FldArrayI tab_remaind_sav(__NUMTHREADS__); E_Int* remaind_sav  = tab_remaind_sav.begin();
+  FldArrayI tab_remaind_pos(__NUMTHREADS__); E_Int* remaind_pos  = tab_remaind_pos.begin();
+  FldArrayI tab_remaind(__NUMTHREADS__);     E_Int* remaind  = tab_remaind.begin();
+  FldArrayI tab_flu_i(__NUMTHREADS__);       E_Int* flu_i    = tab_flu_i.begin();
+  FldArrayI tab_flu_j(__NUMTHREADS__);       E_Int* flu_j    = tab_flu_j.begin();
+  FldArrayI tab_flu_k(__NUMTHREADS__);       E_Int* flu_k    = tab_flu_k.begin();
+  FldArrayI tab_grain(__NUMTHREADS__);       E_Int* grain    = tab_grain.begin();
 
   FldArrayI tab_topo_lu(3);   E_Int* topo_lu  = tab_topo_lu.begin();
   FldArrayI tab_ind_dm_th(6); E_Int* ind_dm_th= tab_ind_dm_th.begin();
@@ -262,11 +279,12 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 
   FldArrayI tab_numa_socket(NBR_SOCKET);   E_Int* numa_socket  = tab_numa_socket.begin();
 
-  for (E_Int th = 0; th < __NUMTHREADS__ ; th++){ remaind[th] = cells_tg; flu_i[th]=0;  flu_j[th]=0;  flu_k[th]=0; grain[th]=0;}
+  E_Int dependence[__NUMTHREADS__];
+
+  for (E_Int th = 0; th < __NUMTHREADS__ ; th++){ remaind[th] = cells_tg; flu_i[th]=0;  flu_j[th]=0;  flu_k[th]=0; grain[th]=0; dependence[th]=-1;}
 
   //
   E_Int cells_tg_save = cells_tg;
-  E_Float      marge  = 1.005;
 
   for (E_Int c = 0; c < Nbzones; c++)
      {  
@@ -305,21 +323,44 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
        
         param_int[No_zone][PtrIterOmp + No_sszone] = PtZoneomp;
 
-	E_Int size_c = nijk[0]*nijk[1]*nijk[2];
+        poids = cupsmoy/ipt_HPC_CUPS[c];
+
+	E_Int size_c = nijk[0]*nijk[1]*nijk[2]*poids;
 	E_Int size_i =(nijk[0]+1)*nijk[1]*nijk[2];
 	E_Int size_j =(nijk[1]+1)*nijk[0]*nijk[2];
 	E_Int size_k = 0;
         if(nijk[2] != 1) size_k = (nijk[2]+1)*nijk[0]*nijk[1];
 
         E_Int Nthreads;
-        //printf("so %d %f %d \n ", size_c, cells_tg*marge, c);
+        //printf("so %d %d  %f \n ", size_c, nijk[0]*nijk[1]*nijk[2], poids, c);
 
-        if(size_c <= cells_tg*marge)
+        //
+        //on determine les threads ou il reste le plus de place
+        for (E_Int th1 = 0; th1 < __NUMTHREADS__ ; th1++) { remaind_sav[th1] =  remaind[th1];}
+        for (E_Int th1 = 0; th1 < __NUMTHREADS__ ; th1++)
+        { 
+          E_Int rmax=-1e9;
+          for (E_Int th = 0; th < __NUMTHREADS__ ; th++) { if(remaind[th] > rmax){ rmax = remaind[th]; remaind_pos[th1]=th;} }
+          remaind[ remaind_pos[th1] ]=-1e9;
+        }
+        // on reinitialise les restes apres le tri par ordre decroissant
+        for (E_Int th1 = 0; th1 < __NUMTHREADS__ ; th1++) { remaind[th1] =  remaind_sav[th1];}
+
+        E_Int rmax =  remaind[ remaind_pos[0] ];
+
+        E_Float      marge  = 1.008;
+        if      (rmax<= cells_tg_save/1.5){marge  = 1.035;} 
+        else if (rmax<= cells_tg_save/2  ){marge  = 1.04;} 
+        else if (rmax<= cells_tg_save/4  ){marge  = 1.08;} 
+        else if (rmax<= cells_tg_save/8  ){marge  = 1.16;} 
+
+        //printf("size_c= %d, remain max= %d , th_max= %d,  marge= %f, zone= %d \n ", size_c, rmax, remaind_pos[0], marge, c);
+
+        if(size_c <= rmax*marge)
         {
             E_Int socket_tg = c%nb_socket;
 
-	    E_Int th_count = 0;
-	    //E_Int th_current = 0;
+	    E_Int th_count   = 0;
 	    E_Int th_current = socket_tg*core_per_socket;
             E_Int lgo = 1;
 	    while(lgo==1)
@@ -375,7 +416,6 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
             E_Int check = PtZoneomp + __NUMTHREADS__ +9 - param_int[No_zone][PT_OMP  ];
             if(check > mx_omp_size_int  && boom ==0) {boom =1; check_size =check;}
 
-
            if ((display==1 && nitrun ==1 && nstep==1) || display ==2)
            {
              printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d \n", c, No_zone, Nthreads, nstep);
@@ -384,32 +424,23 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
         }
         else
         {
-            E_Int cells_tg = cells_tg_save;
-            Nthreads =  size_c/cells_tg;
-            if(size_c%cells_tg != 0) Nthreads +=1;
-            Nthreads = K_FUNC::E_min( Nthreads,  __NUMTHREADS__ );
+            Nthreads=0; E_Int cells_loc=0;
+            while( cells_loc < size_c && Nthreads < __NUMTHREADS__ ){  cells_loc += remaind[ remaind_pos[Nthreads]]; Nthreads +=1;}
 
-            //verif place dispo sur les dernier threads du socket
-            E_Int socket_tg  = c%nb_socket;
-	    E_Int th_count   = 0;
-	    E_Int th_current = socket_tg*core_per_socket;
+            cells_tg  =  cells_loc/Nthreads;
 
-            cells_tg     = 0;
-            E_Int cells_tg_min =10000000; E_Int th_min;
 
-            //for (E_Int th_check = __NUMTHREADS__-1; th_check > __NUMTHREADS__ -Nthreads-1; th_check--)
-            for (E_Int th_check = th_current+ activ_core_per_socket[socket_tg]-1; th_check >  th_current+ activ_core_per_socket[socket_tg]-1 -Nthreads; th_check--)
-               { cells_tg  +=  remaind[th_check];
-                 if(remaind[th_check] <  cells_tg_min)
-                    { 
-                      cells_tg_min = remaind[th_check];
-                      th_min = th_check;
-                    }
-               }
-            cells_tg  /=  Nthreads;
+            E_Int cells_tg_min = remaind[ remaind_pos[Nthreads-1]]; E_Int th_min=-1; 
+           
+            if( cells_tg_min != cells_tg_save){ th_min=remaind_pos[Nthreads-1]; } 
 
             if(cells_tg == cells_tg_min) th_min =-1;
+
             cells_tg  =  cells_tg_min*marge;
+            cells_tg   = K_FUNC::E_max( cells_tg , rmax );
+
+            //printf("cell_tg %d, rmax= %d , cell_thmin= %d, th_min= %d , Nthreads= %d \n", cells_tg, rmax, cells_tg_min, th_min,Nthreads );
+            //if(c==8) printf("cell_tg %d %d , th_min= %d \n", cells_tg, rmax, th_min);
 
             E_Int lmin;
             if(param_int[No_zone][ITYPCP] == 2 ) lmin =  4;
@@ -433,12 +464,11 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                 search = 0;
 
                 //print 'ind_zone', inddm_zones[c], Nthreads
-                //E_Int ithread =-10;
                 E_Int ithread = 1;
-
                 if(search_topo==0) indice_boucle_lu_(c, ithread, Nthreads, lmin, ind_dm, topo_lu, ind_dm_th );
-                //printf("nijk      a %d %d %d  \n", nijk[0], nijk[1],nijk[2]);
-                //printf("topo_LLLUUU %d %d %d %d \n", topo_lu[0], topo_lu[1],topo_lu[2], search_topo);
+
+                //if(c==8) printf("nijk      a %d %d %d  \n", nijk[0], nijk[1],nijk[2]);
+                //if(c==0) printf("topo_LLLUUU %d %d %d %d \n", topo_lu[0], topo_lu[1],topo_lu[2], search_topo);
 
                 
                 for (E_Int dir = 0; dir < 3; dir++){
@@ -460,7 +490,9 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                   }
                 */
 
-                E_Int res = dim_i[0]*dim_j[0]*dim_k[0] - cells_tg;
+                poids = cupsmoy/ipt_HPC_CUPS[c];
+
+                E_Int res = dim_i[0]*dim_j[0]*dim_k[0]*poids - cells_tg;
                 E_Float sign = 1.;
                 if(res < 0) sign = -1.; //block trop petit % la cible
 
@@ -471,7 +503,8 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                   {
                     E_Int compteur =0;
                     E_Int go = 0;
-                    while(res*sign > 0. && go==0 && compteur < 6)
+                    //while(res*sign > 0. && go==0 && compteur < compteur_mx)
+                    while(res*sign > 0. && go==0)
                        {
                         go      = 1;
                         E_Int deriv_i= K_FUNC::E_min(1, (topo_lu[0]-1) );
@@ -481,58 +514,66 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                         E_Int cout_i = dim_j[0]*dim_k[0]*deriv_i;
                         E_Int cout_j = dim_i[0]*dim_k[0]*deriv_j;
                         E_Int cout_k = dim_j[0]*dim_i[0]*deriv_k;
-                        if( cout_i+cout_j+cout_k < res*sign)
+                        if( (cout_i+cout_j+cout_k)*poids < res*sign)
                           {
                             dim_i[0] -=deriv_i*sign; 
                             dim_j[0] -=deriv_j*sign;
                             dim_k[0] -=deriv_k*sign;
-                            res      -= (cout_i+cout_j+cout_k)*sign;
+                            res      -= (cout_i+cout_j+cout_k)*sign*poids;
                             if(cout_i+cout_j+cout_k != 0) go = 0;
+                //if(c==8) printf("cout  %d %d %d  \n", res, cout_k,dim_k[0]);
                           }
-                        else if( cout_j+cout_k < res*sign)
+                        else if( (cout_j+cout_k)*poids < res*sign)
                           {
                             dim_j[0] -=deriv_j*sign;
                             dim_k[0] -=deriv_k*sign;
-                                 res -= (cout_j+cout_k)*sign;
+                                 res -= (cout_j+cout_k)*sign*poids;
                             if(cout_j+cout_k != 0) go = 0;
                           }
-                        else if(cout_j+cout_i < res*sign)
+                        else if( (cout_j+cout_i)*poids < res*sign)
                           {
                             dim_j[0] -=deriv_j*sign; 
                             dim_i[0] -=deriv_i*sign;
-                            res      -= (cout_j+cout_i)*sign;
+                            res      -= (cout_j+cout_i)*sign*poids;
                             if(cout_j+cout_i != 0) go = 0;
                           }
-                        else if(cout_k+cout_i < res*sign)
+                        else if( (cout_k+cout_i)*poids < res*sign)
                           {
                             dim_k[0] -=deriv_k*sign; 
                             dim_i[0] -=deriv_i*sign;
-                            res      -= (cout_k+cout_i)*sign;
+                            res      -= (cout_k+cout_i)*sign*poids;
                             if( cout_k+cout_i != 0) go = 0;
                           }
-                        else if(cout_k < res*sign)
+                        else if(cout_k*poids < res*sign)
                           {
                             dim_k[0] -=deriv_k*sign;
-                            res      -= cout_k*sign;
+                            res      -= cout_k*sign*poids;
                             if(cout_k != 0) go = 0;
                           }
-                        else if(cout_j < res*sign)
+                        else if(cout_j*poids < res*sign)
                           {
                             dim_j[0] -=deriv_j*sign;
-                            res      -= cout_j*sign;
+                            res      -= cout_j*sign*poids;
                             if(cout_j != 0) go = 0;
                           }
-                        else if(cout_i < res*sign)
+                        else if(cout_i*poids < res*sign)
                           {
                             dim_i[0] -=deriv_i*sign;
-                            res      -= cout_i*sign;
+                            res      -= cout_i*sign*poids;
                             if(cout_i != 0) go = 0;
                           }
-                        compteur +=1;
+                        E_Int rest = nijk[0] - deriv_i*dim_i[0];
+                        if(rest <= lmin || dim_i[0] <= lmin)  go=1;
+                        rest = nijk[1] - deriv_j*dim_j[0];
+                        if(rest <= lmin || dim_j[0] <= lmin)  go=1;
+                        rest = nijk[2] - deriv_k*dim_k[0];
+                        //if(c==0) printf("rest %d %d  \n",dim_k[0], lmin );
+                        if(rest <= lmin || dim_k[0] <= lmin)  go=1;
+                        //compteur +=1;
                        }//while go
                   } // if res
 
-              //printf("topo dim0 %d %d %d  \n",dim_i[0], dim_j[0],dim_k[0] );
+              //if(c==0) printf("topo dim0 %d %d %d  \n",dim_i[0], dim_j[0],dim_k[0] );
 
               for (E_Int dir = 0; dir < 3; dir++){
                    if(topo_lu[dir] != 1)
@@ -540,18 +581,80 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                       //on repartie la place restante entre les thread restant
                       if(th_min != -1)
                       {
-                          E_Int test;
-                          if     (dir==0) test = dim_i[0];
-                          else if(dir==1) test = dim_j[0];
-                          else            test = dim_k[0];
 
-                          E_Int dim_loc = (nijk[dir]-test)/(topo_lu[dir]-1);
-                          E_Int res_loc = (nijk[dir]-test)%(topo_lu[dir]-1);
-                          for( E_Int l=1; l < topo_lu[dir]; l++){
-                              if     (dir==0){dim_i[l] =  dim_loc; if(l <= res_loc){dim_i[l] += 1;}  }
-                              else if(dir==1){dim_j[l] =  dim_loc; if(l <= res_loc){dim_j[l] += 1;}  }
-                              else           {dim_k[l] =  dim_loc; if(l <= res_loc){dim_k[l] += 1;}  }
+                          E_Int sum;
+                          if(topo_lu[0]*topo_lu[1]==1)  //decoupe K
+                           {
+                            sum=0.;
+                            for (E_Int l = 0; l <topo_lu[2] ; l++)
+                            {
+                              dim_k[l]=remaind[ remaind_pos[l]]/(nijk[0]*nijk[1]);
+                              dim_k[l]= K_FUNC::E_max(dim_k[l], lmin);
+                              if (l==topo_lu[2]-1){dim_k[l] = nijk[2]-sum;}
+                              sum+=dim_k[l];
                             }
+                           }
+                          else if (topo_lu[0]*topo_lu[2]==1) //decoupe J
+                           {
+                            sum=0.;
+                            for (E_Int l = 0; l <topo_lu[1] ; l++)
+                            {
+                              dim_j[l]=remaind[ remaind_pos[l]]/(nijk[0]*nijk[2]);
+                              dim_j[l]= K_FUNC::E_max(dim_j[l], lmin);
+                              if (l==topo_lu[1]-1){dim_j[l] = nijk[1]-sum;}
+                              sum+=dim_j[l];
+                            }
+                           }
+                          else if (topo_lu[1]*topo_lu[2]==1) //decoupe I
+                           {
+                            sum=0.;
+                            for (E_Int l = 0; l <topo_lu[0] ; l++)
+                            {
+                              dim_i[l]=remaind[ remaind_pos[l]]/(nijk[1]*nijk[2]);
+                              dim_i[l]= K_FUNC::E_max(dim_i[l], lmin);
+                              if (l==topo_lu[0]-1){dim_i[l] = nijk[0]-sum;}
+                              sum+=dim_i[l];
+                            }
+                           }
+                          else if (topo_lu[2]==1) //decoupe IJ
+                           {
+                            sum=0.; // on dimensione dim_i a partie de dim_j(0)
+                            for (E_Int l = 0; l <topo_lu[0] ; l++)
+                            {
+                              dim_i[l]=remaind[ remaind_pos[l]]/(dim_j[0]*nijk[2]);
+                              dim_i[l]= K_FUNC::E_max(dim_i[l], lmin);
+                              if (l==topo_lu[0]-1){dim_i[l] = nijk[0]-sum;}
+                              sum+=dim_i[l];
+                            }
+                            E_Int sum=0.; // on dimensione dim_j a partie de dim_i(0)
+                            for (E_Int l = 1; l <topo_lu[1] ; l++)
+                            {
+                              dim_j[l]=remaind[ remaind_pos[ l*topo_lu[0] ] ]/(dim_i[0]*nijk[2]);
+                              dim_j[l]= K_FUNC::E_max(dim_j[l], lmin);
+                              if (l==topo_lu[0]-1){dim_j[l] = nijk[1]-sum;}
+                              sum+=dim_j[l];
+                            }
+                           }
+                          else if (topo_lu[0]==1) //decoupe KJ
+                           {
+                            sum=0.; // on dimensione dim_k a partie de dim_j(0)
+
+                            for (E_Int l = 0; l <topo_lu[2] ; l++)
+                            {
+                              dim_k[l]=remaind[ remaind_pos[l]]/(nijk[0]*dim_j[0]);
+                              dim_k[l]= K_FUNC::E_max(dim_k[l], lmin);
+                              if (l==topo_lu[2]-1){dim_k[l] = nijk[2]-sum;}
+                              sum+=dim_k[l];
+                            }
+                            E_Int sum=0.; // on dimensione dim_j a partie de dim_k(0)
+                            for (E_Int l = 1; l <topo_lu[1] ; l++)
+                            {
+                              dim_j[l]=remaind[ remaind_pos[ l*topo_lu[1] ] ]/(dim_k[0]*nijk[0]);
+                              dim_j[l]= K_FUNC::E_max(dim_j[l], lmin);
+                              if (l==topo_lu[0]-1){dim_j[l] = nijk[1]-sum;}
+                              sum+=dim_j[l];
+                            }
+                           }
                       }
                       //#on affecte la taille du premier bloc thraed a tous les autres bloc
                       else
@@ -602,9 +705,8 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                       else            test = dim_k[l];
                       if(search==0 && test < lmin &&  nijk[dir] != test) 
                       {
-                          if     (dir ==0 ) Nthreads -=  topo_lu[1]*topo_lu[2];
-                          else if(dir ==1 ) Nthreads -=  topo_lu[0]*topo_lu[2];
-                          else if(dir ==2 ) Nthreads -=  topo_lu[0]*topo_lu[1];
+                          Nthreads -=  1;
+
                           search = 1;
                           adapt_thread =1;
                           //printf("change th   %d \n", Nthreads);
@@ -615,10 +717,14 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                }
               }// while search
 
+
+
             E_Int list_affected[__NUMTHREADS__];
+            E_Int   thread_list[__NUMTHREADS__];
             //Carte threads actifs       
             for (E_Int th = 0; th < __NUMTHREADS__; th++) { param_int[No_zone][ PtZoneomp + th ] = -2; list_affected[th]=-1;} //Thread inactif
 
+            poids = cupsmoy/ipt_HPC_CUPS[c];
             //Recherche thread disponible
             E_Int th = 0;
             for (E_Int k = 0; k < topo_lu[2]; k++){
@@ -630,13 +736,12 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 	          E_Int th_current = socket_tg*core_per_socket;
 
 		  //E_Int th_current = 0;
-                  E_Int size_th    = dim_i[i]*dim_j[j]*dim_k[k];
+                  E_Int size_th    = dim_i[i]*dim_j[j]*dim_k[k]*poids;
                   E_Int size_loc   = size_th;
 
-	          //while(size_loc/marge > remaind[th_current] && th_current < __NUMTHREADS__-1) th_current +=1;
+	          //On cherche de la place sur un des socket, puis sur le suivant si pas de candidat local
 	          while(size_loc/marge > remaind[th_current] && th_count < __NUMTHREADS__-1) {th_current +=1; th_count +=1; if(th_current==__NUMTHREADS__-1) th_current = 0;}
                 
-                  //if(th_current == __NUMTHREADS__-1)
                   if(th_count == __NUMTHREADS__-1)
                   {
                      E_Int blind = -100000;
@@ -648,7 +753,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                      }
                   }
                   //tentative optim distrib
-                  if(th_min != -1) { if(list_affected[th_min]==-1){ th_current = th_min; th_min = -1;} }   
+                  //if(th_min != -1) { if(list_affected[th_min]==-1){ th_current = th_min; th_min = -1;} }   
 
                   //on exclut le thread our ne pas avoir 2 souszone traite par le meme thread
                   list_affected[th_current]=0;
@@ -659,15 +764,13 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                   if (socket >= nb_socket) socket=0;
                   numa_socket[socket] += size_loc;
 
-                  //printf("th_current %d %d %d %d %d %d \n", th_current, remaind[th_current], i,j,k, nstep  );
-
                   remaind[th_current] -=  size_loc;
                   E_Int size_i =  size_loc;
                   E_Int size_j =  size_loc;
                   E_Int size_k =  size_loc;
-                  if(i == topo_lu[0]) size_i =  (dim_i[i]+1)*dim_j[j]*dim_k[k];
-                  if(j == topo_lu[1]) size_j =  dim_i[i]*(dim_j[j]+1)*dim_k[k];
-                  if(k == topo_lu[2]) size_k =  dim_i[i]*dim_j[j]*(dim_k[k]+1);
+                  if(i == topo_lu[0]-1) { size_i = (dim_i[i]+1)*dim_j[j]*dim_k[k];}
+                  if(j == topo_lu[1]-1) { size_j = dim_i[i]*(dim_j[j]+1)*dim_k[k];}
+                  if(k == topo_lu[2]-1) { size_k = dim_i[i]*dim_j[j]*(dim_k[k]+1);}
                   if(nijk[2] == 1) size_k = 0;
                   flu_i[th_current]   +=  size_i; 
                   flu_j[th_current]   +=  size_j; 
@@ -676,7 +779,45 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
                   grain[th_current] +=1;
 
                   param_int[No_zone][ PtZoneomp + th_current ] = th;                                    //Thread actif
+                  thread_list[th] = th_current;
+
+                  //pour optimiser graph dependance, on bascule en premiere position les threads deja sollicité sur les zones precedente
+                  if( dependence[th_current]==1)
+                  {  
+                    E_Int thcurrent_save, size;
+                    if ( i == topo_lu[0]-1 && i !=0)
+                     { size    = dim_i[i];
+                       dim_i[i]   = dim_i[0]; 
+                       dim_i[0]   = size;
+                       thcurrent_save = thread_list[th-i];
+                       param_int[No_zone][ PtZoneomp + thcurrent_save ] = th;
+                       param_int[No_zone][ PtZoneomp + th_current ]     = th-i;
+                     }
+                    if ( j == topo_lu[1]-1  && j !=0)
+                     { size    = dim_j[j];
+                       dim_j[j]= dim_j[0]; 
+                       dim_j[0]= size;
+                       thcurrent_save = thread_list[th-j];
+                       param_int[No_zone][ PtZoneomp + thcurrent_save ] = th;
+                       param_int[No_zone][ PtZoneomp + th_current ]     = th-j;
+                     }
+                    if ( k == topo_lu[2]-1  && k !=0)
+                     { size    = dim_k[k];
+                       dim_k[k]= dim_k[0]; 
+                       dim_k[0]= size;
+                       thcurrent_save = thread_list[th-k];
+                       param_int[No_zone][ PtZoneomp + thcurrent_save ] = th;
+                       param_int[No_zone][ PtZoneomp + th_current ]     = th-k;
+                     }
+                  }
+
+                  if(i == topo_lu[0]-1) { dependence[th_current]=1;}
+                  if(j == topo_lu[1]-1) { dependence[th_current]=1;}
+                  if(k == topo_lu[2]-1) { dependence[th_current]=1;}
+
                   th +=1;
+
+                  //printf("th_current %d %d %d %d %d %d %d %d \n", th_current, th, remaind[th_current], i,j,k, size_loc, nstep  );
                   //print 'thread=', th, size_loc, remaind[str(th_current)], th_current
                 }//loop i
               }//loop j
@@ -687,6 +828,8 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
              for (E_Int socket = 0; socket < NBR_SOCKET; socket++) { if( numa_socket[socket] > numa_max) { numa_max= numa_socket[socket]; sock_tg= socket;} } 
              param_int[No_zone][Ptomp + nssiter]= sock_tg;
             }
+
+            
             //Nb threads actifs
             param_int[No_zone][ PtZoneomp +  __NUMTHREADS__   ] =  topo_lu[0]*topo_lu[1]*topo_lu[2];
             //topology omp
@@ -738,16 +881,15 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
 
              printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d \n", c, No_zone, Nthreads, nstep);
 
-             E_Int th=0;
              for (E_Int th_current = 0; th_current < __NUMTHREADS__; th_current++){
 
-                 if( param_int[No_zone][ PtZoneomp + th_current ] != -2)
+                 E_Int th=param_int[No_zone][ PtZoneomp + th_current ];
+                 if( th != -2)
                  {
                    E_Int* ind_dm = param_int[No_zone] + PtZoneomp + __NUMTHREADS__ +4 + th*6;
 
-                   printf("-- Thread= %d : fenetre=( %d, %d, %d, %d, %d, %d) \n", th_current,
+                   printf("-- Thread= %d  %d: fenetre=( %d, %d, %d, %d, %d, %d) \n", th_current, th,
                                                  ind_dm[0],ind_dm[1],ind_dm[2],ind_dm[3],ind_dm[4],ind_dm[5]);
-                   th +=1;
                  }
              }//loop
            }//if display
@@ -815,7 +957,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Int**& ipt_ind_dm,
      for (E_Int th_current = 0; th_current < __NUMTHREADS__; th_current++){
         //printf("desequilibre thread, %d, : %f percent. Nb flui= %d  %d,   Nb fluj= %d %d,  Nb fluk= %d \n", th_current, (float(-remaind[th_current])/cells_tg)*100., 
         //flu_i[th_current],flui_tg, flu_j[th_current],fluj_tg, flu_k[th_current] );
-        printf("desequilibre thread, %d, : %f percent. Nb flui= %f,   Nb fluj= %f,  Nb fluk= %d, Nb zones= %d \n", th_current, (float(-remaind[th_current])/cells_tg)*100., 
+        printf("desequilibre thread, %d, : %f percent. Nb flui= %f,   Nb fluj= %f,  Nb fluk= %d, Nb zones= %d \n", th_current, (float(-remaind[th_current])/cells_tg_save)*100., 
         float(flu_i[th_current]-flui_tg)/flui_tg*100, float(flu_j[th_current]-fluj_tg)/fluj_tg*100, flu_k[th_current], grain[th_current] );
      }
   }
@@ -841,9 +983,10 @@ PyObject* K_FASTS::distributeThreads(PyObject* self, PyObject* args)
   
   E_Int nidom = PyList_Size(zones);
 
-  E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; 
+  E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Float** ipt_param_real;
   ipt_param_int     = new E_Int*[nidom*2];
   ipt_ind_dm        = ipt_param_int   + nidom;
+  ipt_param_real    = new E_Float*[nidom];
 
   vector<PyArrayObject*> hook;
 
@@ -855,15 +998,18 @@ PyObject* K_FASTS::distributeThreads(PyObject* self, PyObject* args)
     PyObject*   numerics  = K_PYTREE::getNodeFromName1(zone    , ".Solver#ownData");
     PyObject*          o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"); 
     ipt_param_int[nd]     = K_PYTREE::getValueAI(o, hook);
+                       o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
+    ipt_param_real[nd]    = K_PYTREE::getValueAF(o, hook);
 
     // get metric
     PyObject* metric     = PyList_GetItem(metrics, nd); // metric du domaine i
     ipt_ind_dm[nd]       = K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
   }
 
-  distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom, nssiter, mx_omp_size_int, nstep, nitrun, display );
+  distributeThreads_c( ipt_param_int ,  ipt_param_real, ipt_ind_dm, nidom, nssiter, mx_omp_size_int, nstep, nitrun, display );
 
   delete [] ipt_param_int;
+  delete [] ipt_param_real;
 
   RELEASEHOOK(hook)
 
@@ -930,30 +1076,33 @@ E_Int K_FASTS::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin
     //J vers K
     dim_loc = cells_tg/(nijk[0]*nijk[1]);
     res     = nijk[2]-(topo[1]-1)*dim_loc;
-    if(res >= lmin){ //K vers J 
+    printf("KKKKK %d %d %d %d %d \n", topo[0],topo[1],topo[2], res, dim_loc);
+    if(res >= lmin && dim_loc >= lmin)
+                   { //K vers J 
                     dim_loc = cells_tg/(nijk[0]*nijk[2]);
                     res     = nijk[1]-(topo[2]-1)*dim_loc;
-                    if(res >= lmin){ E_Int tmp=topo[2]; topo[2]=topo[1]; topo[1]=tmp; topo[1]=1; return test=1;}
+                     printf("JJJ %d %d %d %d %d \n", topo[0],topo[1],topo[2], res, dim_loc);
+                    if(res >= lmin && dim_loc >= lmin ){ E_Int tmp=topo[2]; topo[2]=topo[1]; topo[1]=tmp; topo[1]=1; printf("cou1 \n"); return test=1; }
                    }
     
     //on test si on peut intervertir la direction J vers I et K vers J
     //J vers I
     dim_loc = cells_tg/(nijk[2]*nijk[1]);
     res     = nijk[0]-(topo[1]-1)*dim_loc;
-    if(res >= lmin){ //K vers J 
+    if(res >= lmin && dim_loc >= lmin ){ //K vers J 
                     dim_loc = cells_tg/(nijk[0]*nijk[2]);
                     res     = nijk[1]-(topo[2]-1)*dim_loc;
-                    if(res >= lmin){ topo[0]=topo[1]; topo[1]=topo[2]; topo[2]=1; return test=1;}
+                    if(res >= lmin && dim_loc >= lmin ){ topo[0]=topo[1]; topo[1]=topo[2]; topo[2]=1; printf("cou2 \n"); return test=1;}
                    }
 
     //on test si on peut intervertir la direction J vers J et K vers I
     //J vers J
     dim_loc = cells_tg/(nijk[2]*nijk[0]);
     res     = nijk[1]-(topo[1]-1)*dim_loc;
-    if(res >= lmin){ //K vers I 
+    if(res >= lmin && dim_loc >= lmin){ //K vers I 
                     dim_loc = cells_tg/(nijk[1]*nijk[2]);
                     res     = nijk[0]-(topo[2]-1)*dim_loc;
-                    if(res >= lmin){ topo[0]=topo[2]; topo[2]=1; return test=1;}
+                    if(res >= lmin && dim_loc >= lmin ){ topo[0]=topo[2]; topo[2]=1; printf("cou3 \n"); return test=1;}
                    }
   }
   //
@@ -964,30 +1113,30 @@ E_Int K_FASTS::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin
     //J vers I
     dim_loc = cells_tg/(nijk[2]*nijk[1]);
     res     = nijk[0]-(topo[1]-1)*dim_loc;
-    if(res >= lmin){ //I vers J 
+    if(res >= lmin && dim_loc >= lmin){ //I vers J 
                     dim_loc = cells_tg/(nijk[0]*nijk[2]);
                     res     = nijk[1]-(topo[0]-1)*dim_loc;
-                    if(res >= lmin){ E_Int tmp=topo[0]; topo[0]=topo[1]; topo[1]=tmp; topo[2]=1; return test=1;}
+                    if(res >= lmin && dim_loc >= lmin ){ E_Int tmp=topo[0]; topo[0]=topo[1]; topo[1]=tmp; topo[2]=1; return test=1;}
                    }
     
     //on test si on peut intervertir la direction I vers J et J vers K
     //I vers J
     dim_loc = cells_tg/(nijk[2]*nijk[0]);
     res     = nijk[1]-(topo[0]-1)*dim_loc;
-    if(res >= lmin){ //J vers K 
+    if(res >= lmin && dim_loc >= lmin ){ //J vers K 
                     dim_loc = cells_tg/(nijk[0]*nijk[1]);
                     res     = nijk[2]-(topo[1]-1)*dim_loc;
-                    if(res >= lmin){ topo[2]=topo[1]; topo[1]=topo[0]; topo[0]=1; return test=1;}
+                    if(res >= lmin && dim_loc >= lmin ){ topo[2]=topo[1]; topo[1]=topo[0]; topo[0]=1; return test=1;}
                    }
 
     //on test si on peut intervertir la direction J vers J et I vers K
     //J vers J
     dim_loc = cells_tg/(nijk[2]*nijk[0]);
     res     = nijk[1]-(topo[1]-1)*dim_loc;
-    if(res >= lmin){ //I vers K 
+    if(res >= lmin && dim_loc >= lmin ){ //I vers K 
                     dim_loc = cells_tg/(nijk[1]*nijk[0]);
                     res     = nijk[2]-(topo[0]-1)*dim_loc;
-                    if(res >= lmin){ topo[2]=topo[0]; topo[0]=1; return test=1;}
+                    if(res >= lmin && dim_loc >= lmin ){ topo[2]=topo[0]; topo[0]=1; return test=1;}
                    }
   }
 

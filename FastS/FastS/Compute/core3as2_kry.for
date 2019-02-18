@@ -71,7 +71,7 @@ C Var loc
 #else
 CDIR$ IVDEP
 #endif
-          do l = lij, lij +  ind_loop(2) - ind_loop(1)
+          do l = lij+1, lij+1 +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
             kry(l,2) = drodm(l,2)
@@ -127,7 +127,7 @@ CDIR$ IVDEP
 #else
 CDIR$ IVDEP
 #endif
-          do l = lij, lij +  ind_loop(2) - ind_loop(1)
+          do l = lij+1, lij+1 +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
             kry(l,2) = drodm(l,2)
@@ -162,7 +162,7 @@ CDIR$ IVDEP
 #else
 CDIR$ IVDEP
 #endif
-        do l = lij, lij +  ind_loop(2) - ind_loop(1)
+        do l = lij+1, lij+1 +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
             kry(l,2) = drodm(l,2)
@@ -216,7 +216,7 @@ CDIR$ IVDEP
 #else
 CDIR$ IVDEP
 #endif
-        do l = lij, lij +  ind_loop(2) - ind_loop(1)
+        do l = lij+1, lij+1 +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
             kry(l,2) = drodm(l,2)
@@ -284,7 +284,7 @@ CDIR$ IVDEP
 #else
 CDIR$ IVDEP
 #endif
-          do l = lij, lij +  ind_loop(2) - ind_loop(1)
+          do l = lij+1, lij+1 +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
             kry(l,2) = drodm(l,2)
@@ -343,7 +343,7 @@ CDIR$ IVDEP
 #else
 CDIR$ IVDEP
 #endif
-          do l = lij, lij +  ind_loop(2) - ind_loop(1)
+          do l = lij+1, lij+1 +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
             kry(l,2) = drodm(l,2)
@@ -402,7 +402,7 @@ CDIR$ IVDEP
 #else
 CDIR$ IVDEP
 #endif
-          do l = lij, lij +  ind_loop(2) - ind_loop(1)
+          do l = lij+1, lij+1 +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
             kry(l,2) = drodm(l,2)
@@ -448,7 +448,7 @@ CDIR$ IVDEP
 #else
 CDIR$ IVDEP
 #endif
-          do l = lij, lij +  ind_loop(2) - ind_loop(1)
+          do l = lij+1, lij+1 +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
             kry(l,2) = drodm(l,2)
@@ -510,7 +510,7 @@ CDIR$ IVDEP
 #else
 CDIR$ IVDEP
 #endif
-          do l = lij, lij +  ind_loop(2) - ind_loop(1)
+          do l = lij+1, lij+1 +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
             kry(l,2) = drodm(l,2)
@@ -560,7 +560,7 @@ CDIR$ IVDEP
 #else
 CDIR$ IVDEP
 #endif
-          do l = lij, lij +  ind_loop(2) - ind_loop(1)
+          do l = lij+1, lij+1 +  ind_loop(2) - ind_loop(1)
 
             kry(l,1) = drodm(l,1)
             kry(l,2) = drodm(l,2)

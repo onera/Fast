@@ -518,13 +518,14 @@ else
      E_Int skip_navier = 1; //layer_mode 0: on calcul tout le temps gsdr3
      if (layer_mode ==1)
      {
-       souszones_list_c( ipt_param_int , ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, nidom_tot, lexit_lu, lssiter_verif);
+       souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, nidom_tot, lexit_lu, lssiter_verif);
 
        E_Int display=0;
        //calcul distri si implicit ou explicit local + modulo verif
-       if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1) )
+       if( omp_mode==1 && ( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]==1 && ipt_param_int[0][ITYPCP]==2) ) && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1) ) )
        {
-         distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
+         printf("coucou %d \n",omp_mode); 
+         distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
        }
 
        E_Int skip = 0;
@@ -587,7 +588,16 @@ else
 
            for (E_Int ithread = 0; ithread < Nbre_thread_actif_loc ; ithread++) 
               {
-               E_Float* ipt_cfl_thread  = ipt_cfl + ithread*3+ nd*3*threadmax_sdm;
+
+               E_Int ithread_loc = ithread;
+               if(omp_mode == 1) 
+                 { E_Int  Ptomp     = ipt_param_int[nd][PT_OMP];
+                   E_Int PtrIterOmp = ipt_param_int[nd][Ptomp];
+                   E_Int PtZoneomp  = ipt_param_int[nd][PtrIterOmp];
+                       ithread_loc  = ipt_param_int[nd][ PtZoneomp  +  ithread ];
+                 }
+
+               E_Float* ipt_cfl_thread  = ipt_cfl + ithread_loc*3+ nd*3*threadmax_sdm;
 
                ipt_cfl_zones[nd][0] = max( ipt_cfl_zones[nd][0], ipt_cfl_thread[0]);
                ipt_cfl_zones[nd][1] = min( ipt_cfl_zones[nd][1], ipt_cfl_thread[1]);

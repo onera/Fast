@@ -28,7 +28,7 @@ using namespace K_FLD;
 // Souszonelist (C layer)
 // 
 // 
-void K_FASTS::souszones_list_c( E_Int**& param_int, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom, PyObject* work,
+void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom, PyObject* work,
                                 E_Int* iptdtloc   , E_Int* ipt_iskip_lu, E_Int lssiter_loc       , E_Int nidom      , 
                                 E_Int nitrun      , E_Int nstep        , E_Int& nidom_tot        , E_Int& lexit_lu  , E_Int& lssiter_verif )
 {
@@ -130,10 +130,11 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
   K_NUMPY::getFromNumpyArray(iskipArray, iskip_lu, true); E_Int* ipt_iskip_lu = iskip_lu->begin();
 
  
-  E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_it_lu_ssdom;
+  E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_it_lu_ssdom; E_Float** ipt_param_real;
   ipt_param_int     = new E_Int*[nidom*3];
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
+  ipt_param_real    = new E_Float*[nidom];
 
   vector<PyArrayObject*> hook;
 
@@ -145,6 +146,8 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
     PyObject*   numerics  = K_PYTREE::getNodeFromName1(zone    , ".Solver#ownData");
     PyObject*          o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"); 
     ipt_param_int[nd]     = K_PYTREE::getValueAI(o, hook);
+                       o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
+    ipt_param_real[nd]    = K_PYTREE::getValueAF(o, hook);
 
 
     // get metric
@@ -153,14 +156,14 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
     ipt_it_lu_ssdom[nd]  =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_ITLU) );
   }
 
-  souszones_list_c( ipt_param_int , ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun, nstep, nidom_tot, lexit_lu, lssiter_verif);
+  souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun, nstep, nidom_tot, lexit_lu, lssiter_verif);
 
   //calcul distri si implicit ou explicit local + modulo verif
   if( distrib_omp==1 || (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun%iptdtloc[1] == 0 || nitrun == 1) )
   {
     E_Int display = 0;
-    //if (nstep==1) display = 1;
-    distributeThreads_c( ipt_param_int , ipt_ind_dm, nidom  , iptdtloc[0] , mx_omp_size_int , nstep, nitrun, display );
+    if (nstep==1) display = 1;
+    distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , iptdtloc[0] , mx_omp_size_int , nstep, nitrun, display );
   }
 
   PyObject* dico = PyDict_New();
@@ -174,6 +177,7 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
   PyDict_SetItemString(dico , "lssiter_verif", tmp);
 
   delete [] ipt_param_int;
+  delete [] ipt_param_real;
 
   RELEASESHAREDN(dtlocArray, dtloc);
   RELEASESHAREDN( iskipArray, iskip_lu);

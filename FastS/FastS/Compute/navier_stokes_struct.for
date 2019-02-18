@@ -395,15 +395,13 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
 #include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
-      if(lexit_lu.eq.0.and.nitrun*nitcfg.gt.5) then
+      if(lexit_lu.eq.0.and.nitrun*nitcfg.gt.15) then
         rhs_end = OMP_GET_WTIME()
         cells = (ind_dm_omp(2)-ind_dm_omp(1)+1)
      &         *(ind_dm_omp(4)-ind_dm_omp(3)+1)
      &         *(ind_dm_omp(6)-ind_dm_omp(5)+1)
 
         timer_omp(1)=timer_omp(1)+(rhs_end-rhs_begin)/float(cells)
-c      if(ithread.eq.1)
-c     & write(*,*)'cpu0=',(rhs_end-rhs_begin)/float(cells)
       endif
 
       end

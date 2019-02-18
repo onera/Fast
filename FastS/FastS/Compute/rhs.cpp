@@ -44,9 +44,9 @@
              // printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
              //if (ithread == param_int[nd][IO_THREAD] && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
               //ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5] );
-             //if (ithread == 24 && ithread_loc != -1 && nitrun%5==0 && nitcfg==nssiter-1)  printf("thread loc %d, Nthreads= %d, ithread= %d, zone= %d,  %d %d %d %d %d %d \n",
-             //ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
-              //ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5]);
+             //if (ithread == 24)  printf("thread loc %d, Nthreads= %d, ithread= %d, zone= %d %d ,  %d %d %d %d %d %d \n",
+             //ithread_loc, Nbre_thread_actif_loc, ithread, nd, nd_subzone,
+             // ipt_inddm_omp[0],ipt_inddm_omp[1], ipt_inddm_omp[2],ipt_inddm_omp[3],ipt_inddm_omp[4],ipt_inddm_omp[5]);
 
               if (ithread_loc == -1) { nd_current++; continue;}
             }
@@ -62,12 +62,11 @@
             ipt_lok_thread   = ipt_lok   + nd_current*mx_synchro*Nbre_thread_actif;
 
             E_Int* ipt_ind_dm_loc         = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;      //ind_dm(6, < ssdom_lu,nssiter)
-            E_Float* ipt_cfl_thread       = ipt_cfl         + (ithread-1)*3+ ndo*3*Nbre_thread_actif;
+            E_Float* ipt_cfl_thread       = ipt_cfl         + (ithread_loc-1)*3+ ndo*3*Nbre_thread_actif;
 
             E_Float* iptCellN_loc; E_Int flagCellN;
             if (iptCellN[nd] == NULL) { flagCellN = 0; iptCellN_loc = iptro[nd];}
             else                      { flagCellN = 1; iptCellN_loc = iptCellN[nd]; }
-
 
             // Distribution de la sous-zone sur les threads
             //E_Int icp_loc =2;
@@ -116,7 +115,7 @@
 
             nd_current++;
 
-            if(ithread==1 && nd==0 && lexit_lu==0 && nitcfg*nitrun > 5) {timer_omp[cpu_perzone]+=1; } //nbre echantillon
+            if(ithread==1 && nd==0 && lexit_lu==0 && nitcfg*nitrun >15) {timer_omp[cpu_perzone]+=1; } //nbre echantillon
 
             if(nd_current > mx_nidom)
              {

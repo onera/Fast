@@ -1762,7 +1762,8 @@ def _buildOwnData(t, Padding):
     'DES_debug':['none','active'],
     'extract_res':0,
     'IBC':3,
-    'source':0
+    'source':0,
+    'Cups':4
     }
 
     for b in bases:
@@ -1931,6 +1932,7 @@ def _buildOwnData(t, Padding):
             extract_res  = 0
             ibc          = numpy.zeros( 7, dtype=numpy.int32)
             source       = 0
+            cups         = [1.,1.]
             
             a = Internal.getNodeFromName2(z, 'GoverningEquations')
             if a is not None: model = Internal.getValue(a)
@@ -2040,6 +2042,8 @@ def _buildOwnData(t, Padding):
                 if a is not None: ibc = a[1]
                 a = Internal.getNodeFromName1(d, 'source')
                 if a is not None: source = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'Cups')
+                if a is not None: cups = Internal.getValue(a)  
                
             iflow  = 1
             ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0;
@@ -2184,7 +2188,7 @@ def _buildOwnData(t, Padding):
             
             # creation noeud parametre real 
             #size_real = 23 +  size_ale   
-            size_real = 40
+            size_real = 41
             datap = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
                 print 'Warning: time_step set to default value (0.0001).'
@@ -2233,6 +2237,7 @@ def _buildOwnData(t, Padding):
             datap[37]=  epsi_inflow
             datap[38]=  prandtltb
             datap[39]=  epsi_linear
+            datap[40]=  cups[1] # on garde la valeur max, pas la moyenne        
 
             Internal.createUniqueChild(o, 'Parameter_real', 'DataArray_t', datap)
 
@@ -2357,7 +2362,7 @@ def extractConvergenceHistory(t, fileout):
 # IN: window: ou range de window
 # OUT: return arbre stress
 #==============================================================================
-def createStressNodes(t, BC=None, window=None):
+def createStressNodes(t, BC=None, windows=None):
     """Create nodes to store stress data."""
     import Converter.GhostCells as Ghost
     try: import Transform.PyTree as T
@@ -2409,134 +2414,149 @@ def createStressNodes(t, BC=None, window=None):
                  else:
                    name = v[0]
 
-                 #if name in BC:
-                 if (BC is not None and name in BC) or (window is not None and z[0]==window[0]):
-                   #print 'coucou', window, z[0], BC
-                   if BC is not None:
-                      ptrg = Internal.getNodeFromName(v, "PointRange")
-                   else: 
-                      range = numpy.zeros(6, numpy.int32 ).reshape(3,2)
-                      range[0,0]= window[1]
-                      range[1,0]= window[3]
-                      range[2,0]= window[5]
-                      range[0,1]= window[2]
-                      range[1,1]= window[4]
-                      range[2,1]= window[6]
-                      ptrg = [ 'PointRange', range,  [], 'IndexRange_t']
+                 if windows is None:
+                     windows = [None]
+
+                 inum = 0
+
+                 for window in windows:
+
+                   if (BC is not None and name in BC) or (window is not None and z[0]==window[0]):
+                     if BC is not None:
+                        ptrg = Internal.getNodeFromName(v, "PointRange")
+                     else: 
+                        range = numpy.zeros(6, numpy.int32 ).reshape(3,2)
+                        range[0,0]= window[1]
+                        range[1,0]= window[3]
+                        range[2,0]= window[5]
+                        range[0,1]= window[2]
+                        range[1,1]= window[4]
+                        range[2,1]= window[6]
+                        ptrg = [ 'PointRange', range,  [], 'IndexRange_t']
                       
-                   dim = Internal.getValue(ptrg)
-                   #print 'ptrg',ptrg
-                   #print 'dim ', dim
+                     dim = Internal.getValue(ptrg)
+                     #print 'ptrg',ptrg
+                     #print 'dim ', dim
 
-                   #dir=0,...5
-                   idir = Ghost.getDirection__(dimbase, [ptrg])
-                   #print 'idir ', idir
-                   inci =0
-                   incj =0
-                   inck =0
-                   if BC is not None:
-                      if  (idir==0): inci= ific
-                      elif(idir==1): inci=-ific
-                      elif(idir==2): incj= ific
-                      elif(idir==3): incj=-ific
-                      elif(idir==4): inck= inck0
-                      elif(idir==5): inck=-inck0
+                     #dir=0,...5
+                     idir = Ghost.getDirection__(dimbase, [ptrg])
+                     if windows[0] is not None:
+                       if   window[7]== 'imin': idir =0
+                       elif window[7]== 'imax': idir =1
+                       elif window[7]== 'jmin': idir =2
+                       elif window[7]== 'jmax': idir =3
+                       elif window[7]== 'kmin': idir =4
+                       elif window[7]== 'kmax': idir =5
+                     
+                     #print 'idir ', idir
+                     inci =0
+                     incj =0
+                     inck =0
+                     if BC is not None:
+                       if  (idir==0): inci= ific
+                       elif(idir==1): inci=-ific
+                       elif(idir==2): incj= ific
+                       elif(idir==3): incj=-ific
+                       elif(idir==4): inck= inck0
+                       elif(idir==5): inck=-inck0
+  
+                     ni = dim[0,1]-dim[0,0]
+                     nj = dim[1,1]-dim[1,0]
+                     nk = dim[2,1]-dim[2,0]
 
-                   ni = dim[0,1]-dim[0,0]
-                   nj = dim[1,1]-dim[1,0]
-                   nk = dim[2,1]-dim[2,0]
-                   zp = T.subzone(z, (dim[0,0]+inci,dim[1,0]+incj,dim[2,0]+inck), (dim[0,1]+inci,dim[1,1]+incj,dim[2,1]+inck))
-                   zp[0] = z[0]+'_'+v[0]
-                   C._extractVars(zp, vars0)
-                   c = 0
-	           for v1 in varc: 
-                      #print 'var name=',v1,zp[0], c
-                      C._initVars(zp, v1, c)
-                      c += 1
-                   #print 'zone name=',zp[0]
-                   #print 'dim0=',dim[0,0],dim[0,1],dim[1,0],dim[1,1],dim[2,0],dim[2,1]
+                     ideb = dim[0,0]+inci
+                     ifin = dim[0,1]+inci
+                     jdeb = dim[1,0]+incj
+                     jfin = dim[1,1]+incj
+                     kdeb = dim[2,0]+inck
+                     kfin = dim[2,1]+inck
 
-                   if idir <= 1:
-                     ni1      = nj
-                     nj1      = nk
-                     imin     = dim[0,0]
-                     imax     = imin
-                     jmin     = dim[1,0]-ific      #jmin
-                     jmax     = dim[1,1]-ific-1    #jmax
-                     kmin     = dim[2,0]-inck0     #kmin
-                     kmax     = dim[2,1]-inck0-1   #kmax
-                     if(idir==1 and BC is not None):
-                          imin    = dim[0,0]-2*ific
-                          imax    = imin
-                   elif (idir <= 3):   
-                     ni1      = ni
-                     nj1      = nk
-                     jmin     = dim[1,0]
-                     jmax     = jmin
-                     imin     = dim[0,0]-ific      #imin
-                     imax     = dim[0,1]-ific-1    #imax
-                     kmin     = dim[2,0]-inck0     #kmin
-                     kmax     = dim[2,1]-inck0-1   #kmax
-                     if (idir == 3 and BC is not None): 
-                          jmin = dim[1,0]-2*ific
-                          jmax = jmin
-                   else:
-                     ni1      = ni
-                     nj1      = nj
-                     kmin     = dim[2,0]
-                     kmax     = kmin
-                     imin     = dim[0,0]-ific      #imin
-                     imax     = dim[0,1]-ific-1    #imax
-                     jmin     = dim[1,0]-ific      #jmin
-                     jmax     = dim[1,1]-ific-1    #jmax
-                     if (idir == 5 and BC is not None):
-                          kmin = dim[2,0]-2*inck0
-                          kmax = kmin
+                     #print 'subZ', ideb,ifin,jdeb,jfin,kdeb,kfin
 
-                   param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
-                   if param_int is None:
-                      raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%zp[0])
+                     zp = T.subzone(z, (ideb,jdeb,kdeb), (ifin,jfin,kfin))
+                     zp[0] = z[0]+'_'+v[0]+str(inum)
+                     inum  = inum + 1
+                     C._extractVars(zp, vars0)
+                     c = 0
+	             for v1 in varc: 
+                        #print 'var name=',v1,zp[0], c
+                        C._initVars(zp, v1, c)
+                        c += 1
+                     #print 'zone name=',zp[0]
+                     #print 'dim0=',dim[0,0],dim[0,1],dim[1,0],dim[1,1],dim[2,0],dim[2,1]
 
-                   #print 'loop',imin,imax,jmin,jmax,kmin,kmax
-                   ##modifie le moeud param_int de l'arbre teffot (issue de subzone) pour la fonction initNuma
-                   param_int[1]    = numpy.copy(param_int[1])    # sinon tableau partager avec param de la zone NS
-                   #NIJK  pour initNuma
-                   param_int[1][ 0] = ni1
-                   param_int[1][ 1] = nj1
-                   param_int[1][ 2] = 1
-                   param_int[1][ 3] = ific
-                   param_int[1][ 4] = 0
-                   #IJKV  pour initNuma
-                   param_int[1][20] = max(ni1-2*ific, 1)
-                   param_int[1][21] = max(nj1-2*ific, 1)
-                   param_int[1][22] = 1
-                   param_int[1][36] = len(varc)             #NEQ    
-                   param_int[1][41] = ni1*nj1               #NDIMDX
-                   param_int[1][66] = 0                     #SHIFTVAR
-                   #fenetre calcul flux dans arbre NS
-                   param_int[1][23] = imin
-                   param_int[1][24] = imax
-                   param_int[1][25] = jmin
-                   param_int[1][26] = jmax
-                   param_int[1][27] = kmin
-                   param_int[1][28] = kmax
-                   #adresse stockage flu:  adr = 1 + (i-i0) +(j-j0)*Ni0 + (k-k0)*Ni0*Nj0
-                   param_int[1][29] = imin                             #i0
-                   param_int[1][30] = jmin                             #j0
-                   param_int[1][31] = kmin                             #k0
-                   param_int[1][32] = imax-imin+1                      #Ni0
-                   param_int[1][33] = param_int[1][32]*(jmax-jmin+1)   #Ni0*Nj0
-                   #no de la zone pour recuperer pointer zone
-                   param_int[1][34] = no_z               
-                   param_int[1][35] = idir+1               
-                   #param_int[1][36] = ndf
-                      
-                   #print 'dim1=',imin,imax,jmin,jmax,kmin,kmax
-                   #print 'idir=',idir+1
+                     if idir <= 1:
+                       ni1  = nj
+                       nj1  = nk
+                       jmin = jdeb -ific      #jmin
+                       jmax = jfin -ific-1    #jmax
+                       kmin = kdeb -inck0     #kmin
+                       kmax = kfin -inck0-1   #kmax
+                       imin = ideb -ific
+                       imax = imin
+                     elif(idir <= 3):   
+                       ni1  = ni
+                       nj1  = nk
+                       imin = ideb -ific      #imin
+                       imax = ifin -ific-1    #imax
+                       kmin = kdeb -inck0     #kmin
+                       kmax = kfin -inck0-1   #kmax
+                       jmin = jdeb -ific
+                       jmax = jmin
+                     else:
+                       ni1  = ni
+                       nj1  = nj
+                       imin = ideb -ific      #imin
+                       imax = ifin -ific-1    #imax
+                       jmin = jdeb -ific      #jmin
+                       jmax = jfin -ific-1    #jmax
+                       kmin = kdeb -inck0
+                       kmax = kmin
+  
+                     param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
+                     if param_int is None:
+                        raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%zp[0])
+ 
+                     #print 'loop effort',imin,imax,jmin,jmax,kmin,kmax
+                     ##modifie le moeud param_int de l'arbre teffot (issue de subzone) pour la fonction initNuma
+                     param_int[1]    = numpy.copy(param_int[1])    # sinon tableau partager avec param de la zone NS
+                     #NIJK  pour initNuma
+                     param_int[1][ 0] = ni1
+                     param_int[1][ 1] = nj1
+                     param_int[1][ 2] = 1
+                     param_int[1][ 3] = ific
+                     param_int[1][ 4] = 0
+                     #IJKV  pour initNuma
+                     param_int[1][20] = max(ni1-2*ific, 1)
+                     param_int[1][21] = max(nj1-2*ific, 1)
+                     param_int[1][22] = 1
+                     param_int[1][36] = len(varc)             #NEQ    
+                     param_int[1][41] = ni1*nj1               #NDIMDX
+                     param_int[1][66] = 0                     #SHIFTVAR
+                     #fenetre calcul flux dans arbre NS
+                     param_int[1][23] = imin
+                     param_int[1][24] = imax
+                     param_int[1][25] = jmin
+                     param_int[1][26] = jmax
+                     param_int[1][27] = kmin
+                     param_int[1][28] = kmax
+                     #adresse stockage flu:  adr = 1 + (i-i0) +(j-j0)*Ni0 + (k-k0)*Ni0*Nj0
+                     param_int[1][29] = imin                             #i0
+                     param_int[1][30] = jmin                             #j0
+                     param_int[1][31] = kmin                             #k0
+                     param_int[1][32] = imax-imin+1                      #Ni0
+                     param_int[1][33] = param_int[1][32]*(jmax-jmin+1)   #Ni0*Nj0
+                     #no de la zone pour recuperer pointer zone
+                     param_int[1][34] = no_z               
+                     param_int[1][35] = idir+1               
+                     #param_int[1][36] = ndf
+                        
+                     #print 'dim1=',imin,imax,jmin,jmax,kmin,kmax
+                     #print 'idir=',idir+1
 
-                   _compact(zp, fields=varc, init=False) #allocation compact uniquememnt; init dans er calcul effort
+                     _compact(zp, fields=varc, init=False) #allocation compact uniquememnt; init dans er calcul effort
 
-                   b[0][2].append(zp)
+                     b[0][2].append(zp)
 
 
               no_z +=1
@@ -2736,13 +2756,19 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
  timer_omp = HOOK["TIMER_OMP"]
  ADR = OMP_NUM_THREADS*2*(ss_iteration)
  echant    =  timer_omp[ ADR ]
+ if echant == 0.:
+   print 'nombre iterations insuffisant pour diagnostic: nitrun * ss_iteration > 15'
+   return None
+
  zones     = Internal.getZones(t)
- tps_percell=0.
- cout       =0.
- cells_tot  =0
- data       ={}
+ tps_percell     =0.
+ tps_percell_max =0.
+ cout            =0.
+ cells_tot       =0
+ data            ={}
  for z in zones:
     param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
+    solver_def= Internal.getNodeFromName2(z, '.Solver#define')
     if ompmode ==1:
        Ptomp       = param_int[69]
        PtrIterOmp  = param_int[Ptomp] 
@@ -2752,25 +2778,39 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
        NbreThreads = OMP_NUM_THREADS
 
     if diag== 'compact':
-      tps_zone_percell =0.
+      tps_zone_percell     =0.
+      tps_zone_percell_max =0.
+      ithread_max          = 0
       for i in range(OMP_NUM_THREADS):
           if ompmode ==1:
             ithread = param_int[ PtZoneomp  +  i ]
             if ithread != -2: 
                tps_zone_percell+=timer_omp[ ADR + 1+ithread ]
+               if timer_omp[ ADR + 1+ithread ] > tps_zone_percell_max : 
+                    tps_zone_percell_max = timer_omp[ ADR + 1+ithread ]
+                    ithread_max          = ithread
           else:
             tps_zone_percell+=timer_omp[ ADR + 1+i ]
+            if timer_omp[ ADR + 1+i ] > tps_zone_percell_max : 
+                 tps_zone_percell_max = timer_omp[ ADR + 1+i ]
+                 ithread_max          = i
       
-      ijkv         = param_int[20]*param_int[21]*param_int[22]
-      tps_percell += tps_zone_percell/echant/NbreThreads*ijkv
-      cout_zone    = tps_zone_percell/echant/NbreThreads*ijkv
-      cout        += cout_zone
+      ijkv             = param_int[20]*param_int[21]*param_int[22]
+      tps_percell     += tps_zone_percell/echant/NbreThreads*ijkv
+      tps_percell_max += tps_zone_percell_max/echant*ijkv
+      cout_zone        = tps_zone_percell/echant/NbreThreads*ijkv
+      cout            += cout_zone
       data[ z[0] ]   = [ tps_zone_percell/echant/NbreThreads, cout_zone]
 
       cells_tot   += ijkv
-      if RECORD is None: print 'zone= ', z[0], 'cpu= ',tps_zone_percell/echant/NbreThreads, 'Nthtread actif=', NbreThreads, ' dim zone=',ijkv, 'dim tot=', cells_tot
+      if RECORD is None: print 'zone= ', z[0],'cpumoy/cell= ',tps_zone_percell/echant/NbreThreads,'cpumax= ',tps_zone_percell_max/echant,'thread lent=', ithread_max ,'Nthtread actif=', NbreThreads, ' dim zone=',ijkv,'dim tot=',cells_tot
       if RECORD is not None:
           tape = tps_zone_percell/echant/NbreThreads
+
+     
+      perfo = numpy.empty(2, dtype=numpy.float64); perfo[0]= int(echant*NbreThreads/tps_zone_percell); perfo[1]= int(echant/tps_zone_percell_max);
+      Internal.createUniqueChild(solver_def, 'Cups', 'DataArray_t', value=perfo)
+
 
     else:
       for i in range(OMP_NUM_THREADS):
@@ -2785,7 +2825,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
     ADR+= OMP_NUM_THREADS
 
  tps_percell/=cells_tot
- if RECORD is None: print 'cpu moyen %cell en microsec: ', tps_percell
+ if RECORD is None: print 'cpu moyen %cell en microsec: ', tps_percell, tps_percell_max/cells_tot
 
  f = open(FILEOUT, 'w')
  sizeZones=[]

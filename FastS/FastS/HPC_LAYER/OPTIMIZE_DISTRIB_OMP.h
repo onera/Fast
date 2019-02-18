@@ -24,10 +24,13 @@ for (E_Int so = 0; so < nb_socket; so++) //loop sur nb socket
 
     for (E_Int th = th_deb; th < th_fin; th++) // loop sur thread du socket pour calculer cout moyen sur les ssiter
       { 
-       if(nitcfg==nssiter-1)
+       //if(nitcfg==nssiter-1)
+       if(nitcfg==nitcfg_last)
          { E_Float cout1 = 0; E_Float cout2 = 0;
-           for (E_Int it = 1; it < nssiter; it++)
-             { E_Int ptTimer = th*2 + (it-1)*threadmax_sdm;
+           E_Int nit_moy = nitcfg-1;
+           if (param_int[0][ITYPCP]==2) nit_moy = nssiter;
+           for (E_Int it = 1; it <= nit_moy; it++)
+             { E_Int ptTimer = th*2 + (it-1)*threadmax_sdm*2;
                       cout1 += timer_omp[ptTimer   ];
                       cout2 += timer_omp[ptTimer +1];
              }
@@ -45,7 +48,7 @@ for (E_Int so = 0; so < nb_socket; so++) //loop sur nb socket
 
     for (E_Int ithread = th_deb+1; ithread <= th_fin; ithread++)
     {
-     E_Int ptTimer = (ithread-1)*2 + (nitcfg-1)*Nbre_thread_actif;
+     E_Int ptTimer = (ithread-1)*2 + (nitcfg-1)*Nbre_thread_actif*2;
      E_Float cout_th = timer_omp[ptTimer ]+timer_omp[ptTimer +1];
      //si thread lent, on cherche a lui enlever du travail
      if (cout_th > marge*cout_moyen) 
@@ -55,7 +58,7 @@ for (E_Int so = 0; so < nb_socket; so++) //loop sur nb socket
         E_Int th_min;
         for (E_Int th = th_deb+1 ; th <= th_fin; th++)
           {  
-              E_Int ptTimer = (th-1)*2 + (nitcfg-1)*Nbre_thread_actif;
+              E_Int ptTimer = (th-1)*2 + (nitcfg-1)*Nbre_thread_actif*2;
               cout_th       = timer_omp[ptTimer]+timer_omp[ptTimer+1];
               if (cout_th < cout_min){ th_min = th;  cout_min = cout_th;}
           } 
@@ -133,7 +136,7 @@ for (E_Int so = 0; so < nb_socket; so++) //loop sur nb socket
               param_int[nd_tg][ PtZoneomp  +  ithread -1 ] = -2;
               param_int[nd_tg][ PtZoneomp  +  th_min  -1 ] = ithread_loc-1; // a blinder si thread deja actif sur cette zone
                
-              E_Int ptTimer = (th_min-1)*2 + (nitcfg-1)*Nbre_thread_actif;
+              E_Int ptTimer = (th_min-1)*2 + (nitcfg-1)*Nbre_thread_actif*2;
 
               timer_omp[ptTimer ] += cell_ajoutee*cout_per_cell;
       
@@ -147,12 +150,14 @@ for (E_Int so = 0; so < nb_socket; so++) //loop sur nb socket
         }//loop socket
         if(nitcfg==nitcfg_last)
         {
+
          for (E_Int it = 1; it <= nssiter; it++)
           {
           for (E_Int th = 0; th < threadmax_sdm; th++) 
            { E_Int ptTimer = th*2 + (it-1)*threadmax_sdm*2; 
              timer_omp[ptTimer   ]=0;
              timer_omp[ptTimer+1 ]=0;
+             //printf("mise zero = %d  %d  %d  %d \n", nssiter, it, nitcfg, ptTimer );
            }//loop thread
           }//loop it
         }

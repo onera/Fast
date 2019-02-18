@@ -87,7 +87,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
 				    iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
 				    iptcoe  + shift_coe    , ipt_ssor_shift          , ssor_size);
 
-                             if(nitrun*nitcfg > 5) //protection garbage collector
+                             if(nitrun*nitcfg > 15) //protection garbage collector
                              {
 #ifdef _OPENMP
                                E_Float lhs_end = omp_get_wtime();

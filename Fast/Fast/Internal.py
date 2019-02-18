@@ -863,7 +863,7 @@ def checkKeys(d, keys):
             fail = True; print 'Error: Fast: keyword %s requires an array of ints.'%i[0]
         elif k == 4: # Array/list of floats
           if not isinstance(val, numpy.ndarray):
-            fail = True; print 'Error: Fast: keyword %s requires an array of ints.'%i[0]
+            fail = True; print 'Error: Fast: keyword %s requires an array of floats.'%i[0]
         elif isinstance(k, list): # list of given strings
           if not val in k:
             fail = True; print 'Error: Fast: keyword %s requires a string in %s.'%(i[0], str(k))

@@ -144,7 +144,7 @@ c      write(*,*)'loop=', ind_loop
                lmtr = indmtr(ind_loop(1)    , j,  k )
                ldp  = indven(ind_loop(1)    , j,  k )
                l1   = l  - 1
-               ldp  = l 
+               !ldp  = l 
 #include       "FastS/BC/BCFarfield_firstrank.for"
 
                l0   = l
