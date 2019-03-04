@@ -356,7 +356,8 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
         //printf("size_c= %d, remain max= %d , th_max= %d,  marge= %f, zone= %d \n ", size_c, rmax, remaind_pos[0], marge, c);
 
-        if(size_c <= rmax*marge)
+        if(size_c <= rmax*marge || size_c<= 0.01*cells_tg_save)  // si place sur 1 thread ou zone tres petite, on reserve 1 thread pour eviter synchro sur micozone
+        //if(size_c <= rmax*marge)
         {
             E_Int socket_tg = c%nb_socket;
 
@@ -463,10 +464,19 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
                 search = 0;
 
-                //print 'ind_zone', inddm_zones[c], Nthreads
+                //printf("Nthread %d \n", Nthreads);
                 E_Int ithread = 1;
-                if(search_topo==0) indice_boucle_lu_(c, ithread, Nthreads, lmin, ind_dm, topo_lu, ind_dm_th );
+                if(search_topo==0)
+                      {
+                        indice_boucle_lu_(c, ithread, Nthreads, lmin, ind_dm, topo_lu, ind_dm_th );
+                        E_Int Nthread_tg = topo_lu[0]*topo_lu[1]*topo_lu[2];
 
+                        while(Nthread_tg == 1 && Nthreads !=1)
+                         { Nthreads-=1;
+                          indice_boucle_lu_(c, ithread, Nthreads, lmin, ind_dm, topo_lu, ind_dm_th );
+                          Nthread_tg = topo_lu[0]*topo_lu[1]*topo_lu[2];
+                         } 
+                      }
                 //if(c==8) printf("nijk      a %d %d %d  \n", nijk[0], nijk[1],nijk[2]);
                 //if(c==0) printf("topo_LLLUUU %d %d %d %d \n", topo_lu[0], topo_lu[1],topo_lu[2], search_topo);
 
@@ -624,14 +634,17 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                               dim_i[l]=remaind[ remaind_pos[l]]/(dim_j[0]*nijk[2]);
                               dim_i[l]= K_FUNC::E_max(dim_i[l], lmin);
                               if (l==topo_lu[0]-1){dim_i[l] = nijk[0]-sum;}
+                              //printf("dimI %d %d \n", dim_i[l], l);
                               sum+=dim_i[l];
                             }
-                            E_Int sum=0.; // on dimensione dim_j a partie de dim_i(0)
+                              //printf("dimJO %d \n", dim_j[0]);
+                            E_Int sum=dim_j[0]; // on dimensione dim_j a partie de dim_i(0)
                             for (E_Int l = 1; l <topo_lu[1] ; l++)
                             {
                               dim_j[l]=remaind[ remaind_pos[ l*topo_lu[0] ] ]/(dim_i[0]*nijk[2]);
                               dim_j[l]= K_FUNC::E_max(dim_j[l], lmin);
-                              if (l==topo_lu[0]-1){dim_j[l] = nijk[1]-sum;}
+                              if (l==topo_lu[1]-1){dim_j[l] = nijk[1]-sum;}
+                              //printf("dimJ %d %d \n", dim_j[l], l);
                               sum+=dim_j[l];
                             }
                            }
@@ -646,12 +659,12 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                               if (l==topo_lu[2]-1){dim_k[l] = nijk[2]-sum;}
                               sum+=dim_k[l];
                             }
-                            E_Int sum=0.; // on dimensione dim_j a partie de dim_k(0)
+                            E_Int sum=dim_j[0]; // on dimensione dim_j a partie de dim_k(0)
                             for (E_Int l = 1; l <topo_lu[1] ; l++)
                             {
                               dim_j[l]=remaind[ remaind_pos[ l*topo_lu[1] ] ]/(dim_k[0]*nijk[0]);
                               dim_j[l]= K_FUNC::E_max(dim_j[l], lmin);
-                              if (l==topo_lu[0]-1){dim_j[l] = nijk[1]-sum;}
+                              if (l==topo_lu[1]-1){dim_j[l] = nijk[1]-sum;}
                               sum+=dim_j[l];
                             }
                            }
@@ -740,7 +753,11 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                   E_Int size_loc   = size_th;
 
 	          //On cherche de la place sur un des socket, puis sur le suivant si pas de candidat local
-	          while(size_loc/marge > remaind[th_current] && th_count < __NUMTHREADS__-1) {th_current +=1; th_count +=1; if(th_current==__NUMTHREADS__-1) th_current = 0;}
+	          while( (size_loc/marge > remaind[th_current] || list_affected[th_current]!=-1)  && th_count < __NUMTHREADS__-1) 
+                    { th_current +=1; 
+                      th_count   +=1;
+                      if(th_current==__NUMTHREADS__-1) th_current = 0;
+                    }
                 
                   if(th_count == __NUMTHREADS__-1)
                   {
@@ -815,9 +832,10 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                   if(j == topo_lu[1]-1) { dependence[th_current]=1;}
                   if(k == topo_lu[2]-1) { dependence[th_current]=1;}
 
+                  //printf("th_currentNew %d %d %d %d %d %d %d %d \n", th_current, th, remaind[th_current], i,j,k, size_loc, nstep  );
+
                   th +=1;
 
-                  //printf("th_current %d %d %d %d %d %d %d %d \n", th_current, th, remaind[th_current], i,j,k, size_loc, nstep  );
                   //print 'thread=', th, size_loc, remaind[str(th_current)], th_current
                 }//loop i
               }//loop j
@@ -840,8 +858,14 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
             th = 0;
             E_Int kstart = ind_dm[4];
             for (E_Int k = 0; k < topo_lu[2]; k++){
+              ind_dm_th[4] = kstart;
+              ind_dm_th[5] = kstart + dim_k[k] - 1;
+
               E_Int jstart = ind_dm[2];
               for (E_Int j = 0; j < topo_lu[1]; j++){
+                ind_dm_th[2] = jstart;
+                ind_dm_th[3] = jstart + dim_j[j] - 1;
+
                 E_Int istart = ind_dm[0];
                 for (E_Int i = 0; i < topo_lu[0]; i++){
 
@@ -850,13 +874,6 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                     ind_dm_th[1] = istart + dim_i[i] - 1;
                     istart       = ind_dm_th[1] + 1;
 
-                    ind_dm_th[2] = jstart;
-                    ind_dm_th[3] = jstart + dim_j[j] - 1;
-                    //printf(" start= %d , dim_j= %d , l= %d \n", jstart, dim_j[j], j);
-
-                    ind_dm_th[4] = kstart;
-                    ind_dm_th[5] = kstart + dim_k[k] - 1;
-                   
 
                     param_int[No_zone][PtZoneomp + __NUMTHREADS__ +4 + th*6] = ind_dm_th[0];
                     param_int[No_zone][PtZoneomp + __NUMTHREADS__ +5 + th*6] = ind_dm_th[1];
@@ -865,6 +882,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                     param_int[No_zone][PtZoneomp + __NUMTHREADS__ +8 + th*6] = ind_dm_th[4];
                     param_int[No_zone][PtZoneomp + __NUMTHREADS__ +9 + th*6] = ind_dm_th[5];
 
+                    //printf(" dom = %d  %d  %d  %d %d \n", ind_dm_th[0],ind_dm_th[1], ind_dm_th[2],ind_dm_th[3], th);
                     th     +=1;
                 }//loop i
                jstart  =   ind_dm_th[3]+ 1;
