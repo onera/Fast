@@ -66,18 +66,18 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
         zones += Internal.getNodesFromType1(f, 'Zone_t') 
 
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
-    node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode = OMP_MODE
-    if  node is not None: ompmode = Internal.getValue(node)
+    omp_node = Internal.getNodeFromName1(node, 'omp_mode')
+    ompmode  = OMP_MODE
+    if  omp_node is not None: ompmode = Internal.getValue(omp_node)
 
     dtloc   = Internal.getValue(dtloc) # tab numpy
     nitmax  = int(dtloc[0])                 
-    orderRk = int(dtloc[len(dtloc)-1])
 
     #### a blinder...
-    itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
-    #rk = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][52]
-    #exploc = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][54]
+    param_int_firstZone = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1]
+    itypcp = param_int_firstZone[29]
+    rk     = param_int_firstZone[52]
+    exploc = param_int_firstZone[54]
     #### a blinder...
                 
      
@@ -85,6 +85,19 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
     if layer == "Python": 
         
+      if exploc==2 and tc is not None and rk==3:
+         tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
+         if tc_compact is not None:
+                param_real_tc= tc_compact[1]
+                param_int_tc = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
+
+                zones_tc    = Internal.getZones(tc)
+                nbcomIBC    = param_int_tc[1]
+                shift_graph = nbcomIBC + param_int_tc[2+nbcomIBC] + 2
+                comm_P2P    = param_int_tc[0]
+                pt_ech      = param_int_tc[comm_P2P + shift_graph]
+                dest        = param_int_tc[pt_ech] 
+       
       #nitmaxs = 3    
       for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
 
@@ -109,17 +122,45 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             #t0=Time.time()
             fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
             #print 't_compute = ', Time.time() - t0
-            #C.convertPyTree2File(t,'profile-prob-padding'+str(nstep)+'.cgns') 
 
-            #Ghostcell
-            vars=  varsP
-            #if  nstep == 2 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
-            #_fillGhostcells(zones, tc, metrics, nitrun+1, vars, nstep, hook1) 
-            if  nstep%2 == 0 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
-            timelevel_target = int(dtloc[4])
-            #t0=Time.time()
-            _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
-            #print 't_transferts = ', Time.time() - t0
+            #dtloc GJeanmasson
+            if exploc==2 and tc is not None and rk==3:
+               fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
+
+               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
+               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
+               _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0], rk=rk, exploc=exploc)    
+
+               FastI.switchPointers2__(zones,nitmax,nstep)
+                
+               # Ghostcell
+               if (nitmax%3 != 0) : # Tous les schemas sauf constantinescu RK3
+                   if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
+                   elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
+                   timelevel_target = int(dtloc[4])
+                   _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax, rk, exploc)
+            
+               fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
+
+               if (nstep%2==0) :
+                   timelevel_target = int(dtloc[4])
+                   vars = ['Density'  ]
+                   _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, nitmax, rk, exploc, 2)
+
+               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
+               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
+               _applyBC_(zones,metrics, hook1, nstep, ompmode,  var=vars[0])
+
+
+
+            else:
+              #Ghostcell
+              vars=  varsP
+              if  nstep%2 == 0 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
+              timelevel_target = int(dtloc[4])
+              #t0=Time.time()
+              _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
+              #print 't_transferts = ', Time.time() - t0
 
       dtloc[3] +=1    #time_level_motion
       dtloc[4] +=1    #time_level_target
@@ -135,12 +176,19 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
       fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , HOOK)
 
- 
-    case = NIT%3
-    #case = 2
-    if case != 0 and itypcp < 2: FastI.switchPointers__(zones, case)
-    #if case != 0 and itypcp ==2: FastI.switchPointers__(zones, case,3)# nitmax%2+2)
-    if case != 0 and itypcp ==2: FastI.switchPointers__(zones, case, nitmax%2+2)
+
+    #switch pointer a la fin du pas de temps
+    if exploc==2 and tc is not None and rk==3:
+         if layer == 'Python':
+             FastI.switchPointers__(zones, 1, 3)
+         else:
+             FastI.switchPointers3__(zones,nitmax)
+    else:
+         case = NIT%3
+         #case = 2
+         if case != 0 and itypcp < 2: FastI.switchPointers__(zones, case)
+         if case != 0 and itypcp ==2: FastI.switchPointers__(zones, case, nitmax%2+2)
+
     # flag pour derivee temporelle 1er pas de temps implicit
     HOOK["FIRST_IT"]  = 1
     FIRST_IT          = 1
