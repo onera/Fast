@@ -455,7 +455,7 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
 # create work arrays
 #==============================================================================
 def createWorkArrays__(zones, dtloc, FIRST_IT):
-    ndimt = 0 ; ndimcoe = 0 ; ndimwig = 0 ; c = 0;
+    ndimt=0; ndimcoe=0; ndimwig=0; ndimplan=0; c = 0;
     global  MX_OMP_SIZE_INT
     # on check sur 1ere zone si implicite: mixte impli/expli impossible pour le moment
     scheme = "implicit"
@@ -464,15 +464,12 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     rk=3
     rk_ = Internal.getNodeFromName2(zones[0],'rk')
     if rk_ is not None: rk = Internal.getValue(rk_)
-    #print 'rk= ',rk
+   
     exploc=0
     exploc_ = Internal.getNodeFromName2(zones[0], 'exp_local')
     if exploc_ is not None: exploc = Internal.getValue(exploc_)
-    #print 'exploc= ',exploc
-    #neq = 5
-    #if (model == 'nsspalart' or model =='NSTurbulent'): neq = 6
 
-    if scheme == 'implicit': lssiter_loc = 0
+    if   scheme == 'implicit': lssiter_loc = 0
     elif scheme == 'implicit_local':  lssiter_loc = 1  # sous-iteration local
     else: lssiter_loc = 0
 
@@ -502,15 +499,30 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 
         # dim from getZoneDim
         dims = Internal.getZoneDim(z)
-        if dims[0]=='Structured' : nijk = (dims[1]-1)*(dims[2]-1)*(dims[3]-1)+shiftvar
-        else                     : nijk = dims[2]+shiftvar
+        if dims[0]=='Structured' : 
+            nijk = (dims[1]-1)*(dims[2]-1)*(dims[3]-1)+shiftvar
+            dimJK    = (dims[2]-1)*(dims[3]-1); dimIK = (dims[1]-1)*(dims[3]-1); dimIJ=(dims[1]-1)*(dims[2]-1)
+            ndimplan = max( ndimplan, dimIJ)
+            ndimplan = max( ndimplan, dimIK)
+            ndimplan = max( ndimplan, dimJK)
+        else: 
+            nijk = dims[2]+shiftvar
+            ndimplan = nijk     ### a revoir
+
 
         ndimt   +=     neq*nijk       # surdimensionne ici
         ndimcoe += neq_coe*nijk       # surdimensionne ici
         ndimwig +=        3*nijk      # surdimensionne ici
+
+        #print 'zone,taille =', z[0], nijk
+
         c       += 1
         
-        #print 'zone,taille =', z[0], nijk
+    #           3 depth     6 faces  5 tableau
+    ndimface= neq*3*ndimplan*6*5*len(zones)
+
+    #si pas de temps local inactif (rk3)
+    if(rk!=3 or exploc !=2): ndimface=1
 
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
     verrou      = MX_SSZONE*c*MX_SYNCHRO*mx_thread
@@ -522,15 +534,12 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #    drodm = KCore.empty(ndimt  , CACHELINE)
     wig   = numpy.empty(ndimwig, dtype=numpy.float64)
     coe   = numpy.empty(ndimcoe, dtype=numpy.float64)
-    if (rk==4 and exploc==0):
-        drodm = numpy.empty(4*ndimt  , dtype=numpy.float64)
-    elif (rk==5 and exploc==0):
-        drodm = numpy.empty(5*ndimt  , dtype=numpy.float64)
-    else:
-        drodm = numpy.empty(ndimt  , dtype=numpy.float64)        
 
-    #drodm1= numpy.empty(ndimt  , dtype=numpy.float64)
-    #drodm1[rodm = numpy.empty(ndimt  , dtype=numpy.float640:ndimt] = 1.
+    if   (rk==4 and exploc==0): size_drodm = 4*ndimt
+    elif (rk==5 and exploc==0): size_drodm = 5*ndimt
+    else                      : size_drodm =   ndimt
+    drodm     = numpy.empty(ndimt   , dtype=numpy.float64)        
+    tab_dtloc = numpy.empty(ndimface, dtype=numpy.float64)        
 
 #    for z in zones:
 #         param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
@@ -563,6 +572,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['wiggle']         = wig
     hook['coe']            = coe
     hook['rhs']            = drodm
+    hook['tab_dtloc']      = tab_dtloc
     hook['verrou_omp']     = lok
     hook['skip_lu']        = iskip_lu
     hook['dtloc']          = dtloc

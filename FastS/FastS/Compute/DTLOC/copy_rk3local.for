@@ -49,8 +49,6 @@ C Var local
       !print*, ind_loop(3)," ",ind_loop(4)
       !print*, ind_loop(5)," ",ind_loop(6)
 
-      !print*, "coucou"
-       
       if (ind.eq.1) then  ! Stockage 
 
          
@@ -66,29 +64,14 @@ C Var local
      &              +(k-ind_loop(5))*nistk*nistk2
 
                stock(lstk,ne) = rop(l,ne)
-
-        !if (ne==1.and.j==76.and.i==1.and.param_int(LEVEL)==1) then
-        !  print*, rop(l,1)
-        !end if
-        !if (j.ge.10.and.ne==1) then
-        !   print*, rop(l,ne)
-        !end if
-
-      !if(j==ind_loop(4).and.i==ind_loop(2) ) then 
-       !print*,"rop stocké= ",stock(lstk,2),k,lstk,ne
-      !end if
-                          
+            enddo
            enddo
-                          
-         enddo
-         enddo
+          enddo
          enddo
          
 
       elseif (ind.eq.2) then  ! Recuperation des valeurs
 
-         !print*, "coucou recup valeurs"
-      
          do  ne=1,neq
            do  k = ind_loop(5), ind_loop(6)
              do  j = ind_loop(3), ind_loop(4)
@@ -103,33 +86,10 @@ C Var local
                 
 
                   rop(l,ne) =  stock(lstk,ne)
-
-        !if (j==74.and.ne==2.and.i==1) then
-        !  print*, "rop= ",rop(l,2)," ",l,""," ",lstk,ind_loop(2)
-        !end if
-
-        !if (ne==1.and.j==76.and.i==1.and.param_int(LEVEL)==1) then
-        !  print*, rop(l,1)
-        !end if
-
-
-              !  if (j==75.and.ne==1.or.j==74.and.ne==1) then
-              !    print*, "ro= ",rop(l,1),"copy"
-              ! end if
-
-
+            enddo
            enddo
-
+          enddo
          enddo
-         enddo
-         enddo
-         
-    
-
- 
       end if
 
-              
-
-      
       end

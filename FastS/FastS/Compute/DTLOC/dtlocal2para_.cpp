@@ -33,17 +33,13 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
   PyObject *zonesR, *zonesD;
   PyObject *work;
   PyObject *pyParam_int, *pyParam_real;
-  PyObject* drodmstock;
-  PyObject* constk;
-  PyObject* stock;
   E_Int loc, nstep, vartype;
-  E_Int omp_mode,taille_tabs, NoTransfert, process;
+  E_Int omp_mode, NoTransfert, process;
 
   if (!PYPARSETUPLE(args,
-                    "OOOOOOOOllllll", "OOOOOOOOiiiiii",
-                    "OOOOOOOOllllll", "OOOOOOOOiiiiii",
-                    &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work,&stock, &drodmstock, &constk,
-                    &vartype, &nstep, &omp_mode, &taille_tabs, &NoTransfert, &process))
+                    "OOOOOlllll", "OOOOOiiiii",
+                    "OOOOOlllll", "OOOOOiiiii",
+                    &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work, &vartype, &nstep, &omp_mode,  &NoTransfert, &process))
   {
       return NULL;
   }
@@ -62,7 +58,6 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
   E_Float** iptro    = new E_Float*[nidomR];
 
   for (E_Int nd = 0; nd < nidomR; nd++)
-
      {   
        PyObject* zone = PyList_GetItem(zonesR, nd);
  
@@ -80,23 +75,17 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
         o            = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
        PyObject* t1  = K_PYTREE::getNodeFromName1( o        , "Density");
        iptro[nd]     = K_PYTREE::getValueAF(t1, hook);
-
-
      }
 
-
- 
  /// Recuperation du tableau de stockage des valeurs
-  FldArrayF* stk;
-  K_NUMPY::getFromNumpyArray(stock, stk, true); E_Float* iptstk = stk->begin();
+  PyObject* dtlocArray = PyDict_GetItemString(work,"tab_dtloc"); FldArrayF* stk;
+  K_NUMPY::getFromNumpyArray(dtlocArray, stk, true); E_Float* iptstk = stk->begin();
 
-  /// Recuperation du tableau de stockage des flux
-  FldArrayF* drodmstk;
-  K_NUMPY::getFromNumpyArray(drodmstock,drodmstk, true); E_Float* iptdrodmstk = drodmstk->begin();
+  E_Int stk_size    = stk[0].getSize();
+  E_Int taille_tabs = stk_size/5;
 
-  /// Recuperation du tableau de stockage des flux pour conservativite
-  FldArrayF* cstk;
-  K_NUMPY::getFromNumpyArray(constk, cstk, true); E_Float* iptcstk = cstk->begin();
+  E_Float* iptdrodmstk = iptstk+ taille_tabs*3;
+  E_Float* iptcstk     = iptstk+ taille_tabs*4;
 
   /// Tableau de travail communs explicite/implicite
   PyObject* drodmArray = PyDict_GetItemString(work,"rhs"); FldArrayF* drodm;
@@ -153,7 +142,9 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
 	 b=b+param_intt[nd][ NDIMDX ]*param_intt[nd][ NEQ_COE ];	 
        }
 
-      E_Int taille=taille_tabs/nrac;
+      E_Int taille_stk       = taille_tabs*3/nrac;
+      E_Int taille_drodmstk  = taille_tabs/nrac;
+      E_Int taille_cstck     = taille_tabs/nrac;
 
 
   vector<E_Int> nbraczone(nidomR,0);
@@ -238,46 +229,43 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
 	     donorPts[5]=ipt_ind_dm_omp_thread[5];
 
 
+	     E_Float* tab1;   
+	     E_Float* tab2;   
+	     E_Float* tab3;   
+	     E_Int ind;
 	     if (nstep%cycle==1 and (nstep/cycle)%2==0) /// La 1ere sous-iteration du cycle
 	       {
-
-		 //cout <<donorPts[0] <<" "<< donorPts[1]<< " "<<  donorPts[2]<<" "<< donorPts[3]<<" "<< donorPts[4]<<" "<< donorPts[5]<<" "<<NoD<< endl;
-	 
-
 		 //// stockage des flux en vue de l'interpolation pour la zone de + gd pas de temps (ici NoR) en position 0 dans le tableau de stockage des flux (raccord)
-		 E_Int ind=1;
-		 copyflux_rk3localpara_(param_intt[NoD],donorPts, donorPts_, iptdrodm + shift_zone[NoD], iptdrodmstk + irac*taille + 0*taillefenetre,ind,taillefenetre);
+		 ind=1;
+                 tab1 = iptdrodm + shift_zone[NoD];
+                 tab2 = iptdrodmstk + irac*taille_drodmstk;
+                 
+		 copyflux_rk3localpara_(param_intt[NoD],donorPts, donorPts_, tab1, tab2, ind, taillefenetre);
 
 		 /// stockage de yn en position 0 dans le tableau de stockage du raccord
-		 copy_rk3localpara_(param_intt[NoD], donorPts,donorPts_, iptro[NoD], iptstk + irac*taille + 0*taillefenetre,ind,taillefenetre); 
+                 tab1 = iptro[NoD];
+                 tab2 = iptstk + irac*taille_stk;
 
-
-
+		 copy_rk3localpara_(   param_intt[NoD], donorPts, donorPts_, tab1, tab2, ind, taillefenetre);
 	       }
 	 
 	     if (nstep%cycle==cycle/2 and (nstep/cycle)%2==0 ) /// Recuperation des valeurs stockées en position 0 (yn ou yinterpolé suivant la parité du cycle) et stockage de y2 ou y6
-		 
 	       {   
-
 		 //// Recuperation et transformation de f(yn) + coeff*f(y1) pour obtenir alpha*f(yn) + beta*f(y1)
-		 E_Int ind=2;
-		 copyflux_rk3localpara_(param_intt[NoD], donorPts , donorPts_, iptdrodm + shift_zone[NoD], iptdrodmstk + irac*taille + 0*taillefenetre,ind,taillefenetre);
-			 
+		 ind=2;
+                 tab1 = iptdrodm + shift_zone[NoD];
+                 tab2 = iptdrodmstk + irac*taille_drodmstk;
+		 copyflux_rk3localpara_(param_intt[NoD], donorPts , donorPts_, tab1, tab2, ind, taillefenetre);
 	       }
-
 
 	     if (nstep%cycle==cycle/2 and (nstep/cycle)%2==1)
-
 	       {
-
 		 /// Stockage de y6  en position 1 dans le tableau de stockage du raccord
-		 E_Int ind=1;
-		 copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_, iptro[NoD], iptstk + irac*taille + 1*5*taillefenetre,ind,taillefenetre); 
- 
+		 ind=1;
+                 tab1 = iptro[NoD];
+                 tab2 = iptstk + irac*taille_stk + param_intt[NoD][NEQ]*taillefenetre;
+		 copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_, tab1, tab2, ind, taillefenetre);
 	       }
-
-
-
        }
 
       else if (ipt_param_int[debut_rac + 25] < ipt_param_int[debut_rac + 24] ) /// Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
@@ -315,80 +303,85 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
 	  donorPts[5]=ipt_ind_dm_omp_thread[5];
 
 
-	     
+	  E_Float* tab1;   
+	  E_Float* tab2;   
+	  E_Float* tab3;   
+	  E_Int ind;
 	  if (nstep%cycle == 1)
-
 	    {
 
 	      //cout << donorPts[0]<<" "<< donorPts[1]<<"  "<< donorPts[2]<<"  "<< donorPts[3]<<"  "<< donorPts[4]<<"  "<< donorPts[5]<<"  "<< NoD << endl; 
 
 	      /// Stockage de yn en position 0 dans le tableau de stocakge du raccord 
-	      E_Int ind=1;
-	      copy_rk3localpara_(param_intt[NoD], donorPts , donorPts_, iptro[NoD], iptstk + irac*taille + 0*taillefenetre,ind,taillefenetre); 
+	      ind =1;
+              tab1 = iptro[NoD];
+              tab2 = iptstk + irac*taille_stk;
+
+	      copy_rk3localpara_(param_intt[NoD], donorPts , donorPts_, tab1, tab2 , ind, taillefenetre); 
 
 	      /// Stockage de y3 en position 1 dans le tableau de stockage du raccord 
-	      copy_rk3localpara_(param_intt[NoD], donorPts , donorPts_, iptro_p1[NoD], iptstk + irac*taille + 1*5*taillefenetre,ind,taillefenetre); 
+              tab1 = iptro_p1[NoD];
+              tab2 = iptstk + irac*taille_stk + 1*param_intt[NoD][NEQ]*taillefenetre;
+
+	      copy_rk3localpara_(param_intt[NoD], donorPts , donorPts_, tab1, tab2 , ind, taillefenetre); 
     
 	      /// stockage de drodm (yn)
 	      ind=1;
-	      copyflux_rk3local2para_(param_intt[NoD], donorPts , donorPts_ ,iptdrodm + shift_zone[NoD], iptdrodmstk + irac*taille + 0*taillefenetre,ind,taillefenetre);
+              tab1 = iptdrodm + shift_zone[NoD];
+              tab2 = iptdrodmstk + irac*taille_drodmstk;
 
+	      copyflux_rk3local2para_(param_intt[NoD], donorPts , donorPts_ , tab1, tab2, ind, taillefenetre);
 	    }
 	      
 	      
+	  /// Interpolation de y2
 	  if (nstep%cycle == cycle/4)
-
 	    {		       
-	      
-	      /// Interpolation de y2
-	      interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, iptstk + irac*taille + 0*taillefenetre,iptstk + irac*taille + 1*5*taillefenetre, iptro[NoD],dir,taillefenetre,nstep,NoD);
+	      tab1 = iptstk + irac*taille_stk ;
+              tab2 = iptstk + irac*taille_stk + param_intt[NoD][NEQ]*taillefenetre;
+              tab3 = iptro[NoD];
+
+	      interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, tab1, tab2, tab3, dir, taillefenetre, nstep, NoD);
 	    }
-
 	      
-	     
+	  /// Recuperation de y3 en position 1 dans le tableau de stockage du raccord 
 	  if (nstep%cycle == cycle/2-1)
-
 	  {
-	       
-	    /// Recuperation de y3 en position 1 dans le tableau de stockage du raccord 
-	    E_Int ind=2;
-	    copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_, iptro_p1[NoD], iptstk + irac*taille + 1*5*taillefenetre,ind,taillefenetre); 
+	    ind=2;
+            tab1 =  iptro_p1[NoD];
+            tab2 =  iptstk + irac*taille_stk + param_intt[NoD][NEQ]*taillefenetre;
 
+	    copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_, tab1, tab2, ind, taillefenetre); 
 	   }
 
-
 	  if (nstep%cycle == cycle/2)
-
 	    {
-
-	      /// Switch pointeurs
-
 	      /// Stockage de y4 en position 4 dans le tableau de stockage du raccord 
-	      E_Int ind=1;
-	      copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_, iptro[NoD], iptstk + irac*taille + 2*5*taillefenetre,ind,taillefenetre);
+	      ind=1;
+              tab1 = iptro[NoD];
+              tab2 = iptstk + irac*taille_stk + 2*param_intt[NoD][NEQ]*taillefenetre;
+
+	      copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_, tab1, tab2, ind, taillefenetre);
 
 	      /// stockage de drodm(y1) pour obtenir alpha*drodm(yn) + beta*drodm(y1)
 	      ind=2;
-	      copyflux_rk3local2para_(param_intt[NoD], donorPts , donorPts_, iptdrodm + shift_zone[NoD], iptdrodmstk + irac*taille + 0*taillefenetre,ind,taillefenetre);
-
-
+	      tab1 = iptdrodm + shift_zone[NoD];
+              tab2 = iptdrodmstk + irac*taille_drodmstk;
+              
+	      copyflux_rk3local2para_(param_intt[NoD], donorPts , donorPts_, tab1, tab2, ind, taillefenetre);
 	    }
 
 	  if (nstep%cycle == cycle/2 + 1)
-
 	    {
-	      /// Switch pointeurs
-
 	      //Interpolation de y6
-	      interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts,donorPts_, iptstk + irac*taille + 0*taillefenetre,iptstk + irac*taille + 1*5*taillefenetre, iptro_p1[NoD],dir,taillefenetre,nstep,NoD);
+	      tab1 = iptstk + irac*taille_stk ;
+              tab2 = iptstk + irac*taille_stk + param_intt[NoD][NEQ]*taillefenetre;
+              tab3 = iptro_p1[NoD];
 
+	      interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, tab1, tab2, tab3, dir, taillefenetre, nstep, NoD);
 	    }
-
-
        }
-
     }// boucle raccords
-
  }// fin zone omp 
 
 	 
@@ -416,6 +409,9 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
    topology[2]=0;
 
 
+   E_Float* tab1;   
+   E_Float* tab2;   
+   E_Float* tab3;   
 
   for  (E_Int irac=0; irac< nrac; irac++) // Boucle sur les différents raccords (frontières)
 
@@ -430,19 +426,6 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
       E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 +1 ];
 
       E_Int ibcType = ipt_param_int[shift_rac + nrac * 3];
-
-      vector<E_Float*> vectOfRcvFields(nvars);
-      vector<E_Float*> vectOfDnrFields(nvars);
-
-      for (E_Int eq = 0; eq < nvars; eq++)
-	{
-	  vectOfRcvFields[eq] = iptro[ NoR] + eq*param_intt[ NoR ][NDIMDX];
-	  vectOfDnrFields[eq] = iptro[ NoD] + eq*param_intt[ NoD ][NDIMDX];
-	}
-
-
-      //E_Int cycle;  
-      //cycle = param_intt[NoD][NSSITER]/param_intt[NoD][LEVEL];
 
       E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
 
@@ -486,125 +469,41 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
 	     donorPts[5]=ipt_ind_dm_omp_thread[5];
 
 
+	     E_Float* tab1;   
+	     E_Float* tab2;   
+	     E_Float* tab3;   
 	     if (nstep%cycle == 1 )
-
 	       {
-
-
 		 /// Interpolation de y1 : y1 = 0.5*y3 + 0.5*yn 
-		 interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts,donorPts_, iptstk + irac*taille + 0*taillefenetre,iptstk + irac*taille + 1*5*taillefenetre, iptro_p1[NoD],dir,taillefenetre,nstep,NoD);
-		 
-	     
+	         tab1 = iptstk + irac*taille_stk ;
+                 tab2 = iptstk + irac*taille_stk + param_intt[NoD][NEQ]*taillefenetre;
+                 tab3 = iptro_p1[NoD];
+
+	         interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, tab1, tab2, tab3, dir, taillefenetre, nstep, NoD);
 	       }
-	     
-
 	     if (nstep%cycle == cycle/2 + cycle/4)
- 
 	       {
-
 		 //Interpolation de y6 ds rop
 		 E_Float coeff=1.0;
-		 interp_rk3local4para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts,donorPts_, iptstk + irac*taille + 0*taillefenetre, iptdrodmstk + irac*taille + 0*taillefenetre, iptro[NoD],taillefenetre,coeff);
+	         tab1 = iptstk + irac*taille_stk ;
+                 tab2 = iptdrodmstk + irac*taille_drodmstk; 
+                 tab3 = iptro[NoD];
 
+		 interp_rk3local4para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts,donorPts_, tab1, tab2, iptro[NoD], taillefenetre, coeff);
 
-		       
+//// are you sure???
+//// are you sure???
+//// are you sure???
+//// are you sure???
+//// are you sure???
+//// are you sure???
 #pragma omp barrier // On attend que tous les threads aient écrit la solution dans iptro[NoD]
-
-		 /* 
-       E_Int pos;
-       pos  = ipt_param_int[ shift_rac + nrac*7 ]     ; E_Int* ntype      = ipt_param_int +  pos;
-       pos  = pos +1 + ntype[0]                       ; E_Int* types      = ipt_param_int +  pos;
-       pos  = ipt_param_int[ shift_rac + nrac*6      ]; E_Int* donorPts   = ipt_param_int +  pos;
-       pos  = ipt_param_int[ shift_rac + nrac*12 + 1 ]; E_Int* rcvPts     = ipt_param_int +  pos;   // donor et receveur inverser car storage donor
-       pos  = ipt_param_int[ shift_rac + nrac*8      ]; E_Float* ptrCoefs = ipt_param_real + pos;
-
-       E_Int nbInterpD = ipt_param_int[ shift_rac +  nrac ]; E_Float* xPC=NULL; E_Float* xPI=NULL; E_Float* xPW=NULL; E_Float* densPtr=NULL;
-
-       E_Int ideb      = 0;
-       E_Int ifin      = 0;
-       E_Int shiftCoef = 0;
-       E_Int shiftDonnor  = 0;
-       E_Int sizecoefs = 0;
-       
-       for (E_Int ndtyp = 0; ndtyp < ntype[0]; ndtyp++)
-       { 
-        E_Int type      = types[ifin];
-
-        //SIZECF(type, meshtype, sizecoefs);
-        ifin =  ifin + ntype[ 1 + ndtyp];
-
-        E_Int pt_deb, pt_fin;
-
-        // Calcul du nombre de champs a traiter par chaque thread
-        E_Int size_bc =  ifin-ideb;
-        E_Int chunk   =  size_bc/Nbre_thread_actif;
-        E_Int r       =  size_bc - chunk*Nbre_thread_actif;
-        // pts traitees par thread
-        if (ithread <= r)
-             { pt_deb = ideb + (ithread-1)*(chunk+1);           pt_fin = pt_deb + (chunk+1); }
-        else { pt_deb = ideb + (chunk+1)*r+(ithread-r-1)*chunk; pt_fin = pt_deb + chunk; } 
-
-        //Si type 0, calcul sequentiel
-        if      ( type == 0 )
-          { if (ithread ==1 ){ pt_deb = ideb; pt_fin = ifin;}
-            else             { pt_deb = ideb; pt_fin = ideb;}
-          }
-
-          E_Int noi       = shiftDonnor;                             // compteur sur le tableau d indices donneur
-          E_Int indCoef   = (pt_deb-ideb)*sizecoefs +  shiftCoef;
-
-#         include "commonTransfert_5eq.h" 
-
-  //        } //chunk
-  //
-          ideb       = ideb + ifin;
-          shiftCoef  = shiftCoef    +  ntype[1+ndtyp]*sizecoefs; //shift coef   entre 2 types successif
-          shiftDonnor= shiftDonnor  +  ntype[1+ndtyp];           //shift donnor entre 2 types successif
-       }// type 
-
-		 */
-
-
-
-		 /*
-
-		 E_Int nbRcvPts = ipt_param_int[ shift_rac +  nrac*10 + 1 ];
-		 E_Int pos;
-		 //pos  = ipt_param_int[ shift_rac + nrac*7 ]     ; E_Int* ntype      = ipt_param_int +  pos;
-		 //pos  = pos +1 + ntype[0]                       ; E_Int* types      = ipt_param_int +  pos;
-		 pos  = ipt_param_int[ shift_rac + nrac*6      ]; E_Int* donorPts2   = ipt_param_int +  pos;
-		 pos  = ipt_param_int[ shift_rac + nrac*12 + 1 ]; E_Int* rcvPts     = ipt_param_int +  pos;   // donor et receveur inverser car storage donor
-		 //pos  = ipt_param_int[ shift_rac + nrac*8      ]; E_Float* ptrCoefs = ipt_param_real + pos;
-
-		 E_Int size_bc =  nbRcvPts ;
-		 E_Int chunk   =  size_bc/Nbre_thread_actif;
-		 E_Int r       =  size_bc - chunk*Nbre_thread_actif;
-		 E_Int ideb    =  0;
-		 E_Int pt_deb;
-		 E_Int pt_fin;
-		 // pts traitees par thread
-		 if (Nbre_thread_actif != 1)
-		   {
-		     if (ithread <= r)
-		       { pt_deb = ideb + (ithread-1)*(chunk+1);           pt_fin = pt_deb + (chunk+1); pt_fin=pt_fin-1;}
-		     else { pt_deb = ideb + (chunk+1)*r+(ithread-r-1)*chunk; pt_fin = pt_deb + chunk;  pt_fin=pt_fin-1;} 
-
-		   }
-		 else
-		   {
-		     pt_deb=0;
-		     pt_fin=nbRcvPts-1;
-		     nbRcvPts = pt_fin - pt_deb +1;
-
-		   }
-
-		 remp_cellfictivespara_(param_intt[NoD],param_intt[NoR], iptro[NoD], iptro[NoR],donorPts2,rcvPts,nbRcvPts,pt_deb,pt_fin);
- 		 */
-
-
-
-
-
+//// are you sure???
+//// are you sure???
+//// are you sure???
+//// are you sure???
+//// are you sure???
+//// are you sure???
 	       }
 
 
@@ -626,7 +525,6 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
 	     E_Int profondeur = ipt_param_int[debut_rac + 20];
 	     donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*(profondeur);
 
-	     //cout << "irac= " <<irac<< endl;
 	      E_Int taillefenetre;
 	      taillefenetre = (donorPts_[1] - donorPts_[0] + 1)*(donorPts_[3] - donorPts_[2] + 1)*(donorPts_[5] - donorPts_[4] + 1);
 
@@ -647,119 +545,18 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
 	     if (nstep%cycle==cycle/2 and (nstep/cycle)%2==1)
 
 	       {
-
-
 		 /// Ecriture de yinterpolé dans rop
 		 E_Float coeff=2.0 ;		        	       
-		 interp_rk3local4para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts,donorPts_, iptstk + irac*taille + 0*taillefenetre, iptdrodmstk + irac*taille + 0*taillefenetre,iptro[NoD],taillefenetre,coeff);  
+	         tab1 = iptstk + irac*taille_stk ;
+                 tab2 = iptdrodmstk + irac*taille_drodmstk; 
+                 tab3 = iptro[NoD];
 
+		 interp_rk3local4para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts,donorPts_, tab1, tab2, tab3, taillefenetre, coeff);  
 
 #pragma omp barrier // On attend que tous les threads aient écrit la solution dans iptro[NoD]
-		 /*
-
-       E_Int pos;
-       pos  = ipt_param_int[ shift_rac + nrac*7 ]     ; E_Int* ntype      = ipt_param_int +  pos;
-       pos  = pos +1 + ntype[0]                       ; E_Int* types      = ipt_param_int +  pos;
-       pos  = ipt_param_int[ shift_rac + nrac*6      ]; E_Int* donorPts   = ipt_param_int +  pos;
-       pos  = ipt_param_int[ shift_rac + nrac*12 + 1 ]; E_Int* rcvPts     = ipt_param_int +  pos;   // donor et receveur inverser car storage donor
-       pos  = ipt_param_int[ shift_rac + nrac*8      ]; E_Float* ptrCoefs = ipt_param_real + pos;
-
-       E_Int nbInterpD = ipt_param_int[ shift_rac +  nrac ]; E_Float* xPC=NULL; E_Float* xPI=NULL; E_Float* xPW=NULL; E_Float* densPtr=NULL;
-       //if(ibc ==1)
-       // { 
-       //  xPC     = ptrCoefs + nbInterpD;
-       // xPI     = ptrCoefs + nbInterpD +3*nbRcvPts;
-       // xPW     = ptrCoefs + nbInterpD +6*nbRcvPts;
-       //  densPtr = ptrCoefs + nbInterpD +9*nbRcvPts;
-       // }
-
-       E_Int ideb      = 0;
-       E_Int ifin      = 0;
-       E_Int shiftCoef = 0;
-       E_Int shiftDonnor  = 0;
-       E_Int sizecoefs = 0;
-       
-       for (E_Int ndtyp = 0; ndtyp < ntype[0]; ndtyp++)
-       { 
-        E_Int type      = types[ifin];
-
-        //SIZECF(type, meshtype, sizecoefs);
-        ifin =  ifin + ntype[ 1 + ndtyp];
-
-        E_Int pt_deb, pt_fin;
-
-        // Calcul du nombre de champs a traiter par chaque thread
-        E_Int size_bc =  ifin-ideb;
-        E_Int chunk   =  size_bc/Nbre_thread_actif;
-        E_Int r       =  size_bc - chunk*Nbre_thread_actif;
-        // pts traitees par thread
-        if (ithread <= r)
-             { pt_deb = ideb + (ithread-1)*(chunk+1);           pt_fin = pt_deb + (chunk+1); }
-        else { pt_deb = ideb + (chunk+1)*r+(ithread-r-1)*chunk; pt_fin = pt_deb + chunk; } 
-
-        //Si type 0, calcul sequentiel
-        if      ( type == 0 )
-          { if (ithread ==1 ){ pt_deb = ideb; pt_fin = ifin;}
-            else             { pt_deb = ideb; pt_fin = ideb;}
-          }
-
-          E_Int noi       = shiftDonnor;                             // compteur sur le tableau d indices donneur
-          E_Int indCoef   = (pt_deb-ideb)*sizecoefs +  shiftCoef;
-
-#         include "commonTransfert_5eq.h" 
-
-  //        } //chunk
-  //
-          ideb       = ideb + ifin;
-          shiftCoef  = shiftCoef    +  ntype[1+ndtyp]*sizecoefs; //shift coef   entre 2 types successif
-          shiftDonnor= shiftDonnor  +  ntype[1+ndtyp];           //shift donnor entre 2 types successif
-       }// type 
-
-		 */
-
-		 /*
-		 E_Int nbRcvPts = ipt_param_int[ shift_rac +  nrac*10 + 1 ];
-	     
-		 pos  = ipt_param_int[ shift_rac + nrac*7 ]     ; E_Int* ntype      = ipt_param_int +  pos;
-		 pos  = pos +1 + ntype[0]                       ; E_Int* types      = ipt_param_int +  pos;
-		 pos  = ipt_param_int[ shift_rac + nrac*6      ]; E_Int* donorPts2   = ipt_param_int +  pos;
-		 pos  = ipt_param_int[ shift_rac + nrac*12 + 1 ]; E_Int* rcvPts     = ipt_param_int +  pos;   // donor et receveur inverser car storage donor
-		 // //pos  = ipt_param_int[ shift_rac + nrac*8      ]; E_Float* ptrCoefs = ipt_param_real + pos;
-
-		 // //cout << irac << endl;
-
-		 E_Int size_bc =  nbRcvPts ;
-		 E_Int chunk   =  size_bc/Nbre_thread_actif;
-		 E_Int r       =  size_bc - chunk*Nbre_thread_actif;
-		 E_Int ideb    =  0;
-		 E_Int pt_deb;
-		 E_Int pt_fin;
-		 //pts traitees par thread
-		 if (Nbre_thread_actif != 1)
-		   {
-		     if (ithread <= r)
-		       { pt_deb = ideb + (ithread-1)*(chunk+1);           pt_fin = pt_deb + (chunk+1); pt_fin=pt_fin-1;}
-		     else { pt_deb = ideb + (chunk+1)*r+(ithread-r-1)*chunk; pt_fin = pt_deb + chunk;  pt_fin=pt_fin-1;} 
-		   }
-		 else
-		   {
-		     pt_deb=0;
-		     pt_fin=nbRcvPts-1;
-		     nbRcvPts = pt_fin - pt_deb +1;
-		   }
-
-	     
-		 remp_cellfictivespara_(param_intt[NoD],param_intt[NoR], iptro[NoD], iptro[NoR],donorPts2,rcvPts,nbRcvPts,pt_deb,pt_fin);
-
-		 */
 	       }
-	     
        }
-
-	      
-
     }
-
   } // fin zone omp
 
 
@@ -1052,9 +849,9 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
   */
   
   
- RELEASESHAREDN( constk  , cstk );
- RELEASESHAREDN( stock  , stk );
- RELEASESHAREDN( drodmstock  , drodmstk );
+ //RELEASESHAREDN( constk  , cstk );
+ //RELEASESHAREDN( drodmstock  , drodmstk );
+ RELEASESHAREDN( dtlocArray  , stk );
  RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL); 
  RELEASESHAREDN(pyParam_int    , param_int    );
  RELEASESHAREDN(pyParam_real   , param_real   );

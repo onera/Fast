@@ -132,7 +132,8 @@ if f77compiler == 'ifort':
 
    if version[0] >= 17:
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 -r8 -i4 -traceback -fpe-all=0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
-      env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'  -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
+      #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'  -qopt-zmm-usage=high -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
+      env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'   -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -fp-model=strict  -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -O3 -no-prec-sqrt -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
       if Dist.DEBUG == True:

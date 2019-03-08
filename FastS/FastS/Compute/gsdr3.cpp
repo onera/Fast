@@ -459,11 +459,7 @@ E_Int cycl;
 E_Float deb_dtlocal;
 E_Float tmps;
     
-
-
-
   if (param_int[0][EXPLOC] == 0)
-
     {
       
       /*
@@ -563,14 +559,11 @@ E_Float tmps;
 
       setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,
                           param_int_ibc, param_real_ibc, linelets_int, linelets_real, Pr, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
-    }
+    }//test exploc==0
 
  
   if (param_int[0][EXPLOC] == 2 and param_int[0][RK] == 3) 
-
    {
-
-
      dtlocal2para_c(iptro, iptrotmp, param_int_tc, param_real_tc, param_int, param_real, iptdrodm, iptcoe, stock, drodmstock, constk, nitcfg, omp_mode, taille_tabs, nidom);
 
      //BC_local(iptro, iptrotmp, param_int_tc, param_real_tc, param_int, param_real, iptdrodm, iptcoe, ipt_ind_CL, ipti, iptj, iptk, iptx, ipty, iptz, iptventi, iptventj, iptventk, stock, drodmstock, constk, nitcfg, omp_mode, taille_tabs, nidom);

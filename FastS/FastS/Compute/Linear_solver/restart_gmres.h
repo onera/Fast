@@ -138,6 +138,8 @@ if (ithread==100) printf("cpu invlu + dpdw       %g \n", lhs_end-lhs_beg);
 #ifdef _OPENMP
 lhs_beg = omp_get_wtime();
 #endif
+if( param_int_tc != NULL)
+  { 
 #pragma omp master
     { //Raccord V0  
       
@@ -145,6 +147,7 @@ lhs_beg = omp_get_wtime();
 			      param_real_tc, param_int_ibc, param_real_ibc, linelets_int, linelets_real, param_real[0][PRANDT],
          		      it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
     }
+  }
 #ifdef _OPENMP
 lhs_beg = omp_get_wtime();
 #endif

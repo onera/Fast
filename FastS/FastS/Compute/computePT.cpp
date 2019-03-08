@@ -110,7 +110,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
 
     if (pyParam_int_tc != Py_None)
     { K_NUMPY::getFromNumpyArray(pyParam_int_tc , param_int_tc , true); ipt_param_int_tc = param_int_tc -> begin(); }
-    else{ ipt_param_int_tc = NULL; }
+    else{ ipt_param_int_tc = NULL;}
 
     if (pyParam_real_tc != Py_None)
     { K_NUMPY::getFromNumpyArray(pyParam_real_tc, param_real_tc, true); ipt_param_real_tc= param_real_tc-> begin(); }
@@ -142,6 +142,10 @@ else
  {
   PyObject* tmp = PyDict_GetItemString(work,"lexit_lu");      lexit_lu      = PyLong_AsLong(tmp);
             tmp = PyDict_GetItemString(work,"lssiter_verif"); lssiter_verif = PyLong_AsLong(tmp);
+  ipt_linelets_int  = NULL;
+  ipt_linelets_real = NULL; 
+  ipt_param_int_tc  = NULL;
+  ipt_param_real_tc = NULL;
  }
 // Fin partie code specifique au Transfer Data
 
@@ -470,6 +474,22 @@ else
   K_NUMPY::getFromNumpyArray(timer_omp_Array, tab_timer_omp, true); E_Float* timer_omp = tab_timer_omp->begin();
 
 
+ /// Recuperation du tableau de stockage dtloc
+  PyObject* dtloc_stk;
+  FldArrayF* stk; E_Float* iptstk=NULL; E_Float* iptdrodmstk=NULL; E_Float* iptcstk=NULL;
+  E_Int stk_size=1; E_Int taille_tabs=1; E_Int flag_dtloc=0;
+  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==2 and ipt_param_int[0][RK]==3 and layer_mode ==1)
+  {
+    dtloc_stk = PyDict_GetItemString(work,"tab_dtloc"); 
+    K_NUMPY::getFromNumpyArray(dtloc_stk, stk, true);  iptstk = stk->begin();
+
+    stk_size    = stk[0].getSize();
+    taille_tabs = stk_size/5;
+    flag_dtloc  = 1;
+
+    iptdrodmstk = iptstk+ taille_tabs*3;
+    iptcstk     = iptstk+ taille_tabs*4;
+  }
 
 
   //
@@ -499,6 +519,7 @@ else
     for (E_Int i = 0;  i <  nidom*threadmax_sdm; i++){ ipt_cfl[ i*3 ] = 0;  ipt_cfl[ i*3 +1] = 100000000; ipt_cfl[ i*3 +2] = 0; }
   }
 
+
 // Iteration C level
   // 
   // 
@@ -508,20 +529,6 @@ else
   // 
   //
 
-  // Allocation des tableaux de stockage pour l'explicite local
-
-  E_Int taille_tabs = 1;
-
-  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==2 and ipt_param_int[0][RK]==3 and layer_mode ==1)
-    {
-      taille_tabs = 200000000;
-    }
-
-  E_Float* stock = new E_Float[taille_tabs];
-  E_Float* drodmstock = new E_Float[taille_tabs];
-  //E_Float* constk = new E_Float[taille_tabs];
-  E_Float* constk = new E_Float[10];
-   
   for (E_Int it = 0; it < nit_c; ++it)
   {
    // SOUS PAS
@@ -591,10 +598,10 @@ else
             iptventi           , iptventj         , iptventk          ,  
             iptrdm             ,
             iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
-            iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res, iptdrodm_transfer  ,
-            ipt_param_int_ibc       , ipt_param_real_ibc     , ipt_param_int_tc  , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real, taille_tabs, stock, drodmstock, constk, iptsrc);
+            iptdrodm           , iptcoe           , iptrot            , iptdelta         , iptro_res, iptdrodm_transfer  ,
+            ipt_param_int_ibc  , ipt_param_real_ibc, ipt_param_int_tc , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real,
+            taille_tabs        , iptstk           , iptdrodmstk       , iptcstk          , iptsrc);
 
-      
 
        if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
        {
@@ -663,8 +670,9 @@ else
    }//loop nstep
 
    //data update for unsteady joins
-   iptdtloc[3] +=1;  //time_level_motion
-   iptdtloc[4] +=1;  //time_level_target
+   if(layer_mode==1){ iptdtloc[3] +=1;  //time_level_motion 
+                      iptdtloc[4] +=1;  //time_level_target 
+                    }
 
    first_it = 1;
    //switch pointer
@@ -679,8 +687,6 @@ else
 
 
   delete [] iptx; delete [] ipt_param_int;
-  delete [] stock; delete [] drodmstock; delete [] constk;
-
   
   RELEASESHAREDN( wigArray       , wig  );
   RELEASESHAREDN( drodmArray     , drodm);
@@ -689,6 +695,8 @@ else
   RELEASESHAREDN( timer_omp_Array, tab_timer_omp);
   RELEASESHAREDN( dtlocArray     , dtloc);
  
+  if(flag_dtloc==1) { RELEASESHAREDN( dtloc_stk     , stk);}
+
   if(layer_mode==1)
   {
     if(pyParam_int_tc  != Py_None ) { RELEASESHAREDN( pyParam_int_tc, param_int_tc);  }

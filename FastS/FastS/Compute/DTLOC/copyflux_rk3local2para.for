@@ -42,73 +42,14 @@ C Var local
 
 #include "FastS/formule_param.h"
       
-       neq=param_int(NEQ)
+      neq=param_int(NEQ)
 
  
-       nistk = (ind_loop_(2)- ind_loop_(1))+1
-       nistk2 =(ind_loop_(4)- ind_loop_(3))+1
-       nistk3 =(ind_loop_(6)- ind_loop_(5))+1
+      nistk = (ind_loop_(2)- ind_loop_(1))+1
+      nistk2 =(ind_loop_(4)- ind_loop_(3))+1
+      nistk3 =(ind_loop_(6)- ind_loop_(5))+1
 
-      !print*, 'coucouflux',ind       
-      
-       if (ind.eq.2) then   ! Stockage de alpha*f(yn) + beta*f(y1)
-    
-      !print*, 'ndom= ', nzone, ' ', 'stockage des flux'      
-
-      do  ne=1,neq
-       do  k = ind_loop(5), ind_loop(6)
-        do  j = ind_loop(3), ind_loop(4)
-         do  i = ind_loop(1), ind_loop(2)                              
-               
-           l  = inddm(i,j,k)
-
-
-           lstk  =  (i+1 - ind_loop_(1))
-     &              +(j - ind_loop_(3))*nistk
-     &            +(k-ind_loop_(5))*nistk*nistk2
-
-
-           stock(lstk,ne) = alpha*stock(lstk,ne) + beta*drodm(l,ne) - 
-     & alphabis*stock(lstk,ne)
-   
-            ! if (lstk.ge.400000) then
-            !    print*, lstk, 'nzone= ', nzone
-            ! end if
-
-      ! if (j==ind_loop(4).or.j==ind_loop(4)-1.or.
-      !&  j==ind_loop(4)-2.or.j==ind_loop(4)-3) then
-      !    print*, "stock= ", stock(lstk,1),"  ",j
-      !    print*, "drodm= ", drodm(l,1)
-      ! end if
-
-
-        !if (j==75.and.ne==1.or.j==74.and.ne==1) then
-      ! &  j==ind_loop(4)-2.or.j==ind_loop(4)-3) then
-      !   print*, "interpzone dt/2= ",stock(lstk2,1),"  ",j
-        ! print*, "drodm= ",stock(lstk,1) 
-        !end if
-
-           !   if (j==295.and.ne==1) then
-           !      print*,stock(lstk,1),"  ",pos,"  ",i
-           !   endif
-         
-          !if(i==50.and.ne==1) then
-          !  print*, stock(lstk,ne),"  ",lstk
-          !end if
-
-           
-
-           enddo
-                          
-         enddo
-         enddo
-         enddo
-
-
-            
-      else if (ind.eq.1) then ! Stockage de f(yn)
-
-       !print*, 'ndom= ', nzone, ' ', 'recup des flux'
+      if (ind.eq.1) then ! Stockage de f(yn)
 
        do  ne=1,neq
           do  k = ind_loop(5), ind_loop(6)
@@ -124,14 +65,6 @@ C Var local
 
 
              stock(lstk,ne) =  drodm(l,ne)
-
-         !open(unit=1,file='verifdrodm3.dat')
-          !if(i==50.and.ne==1) then
-          !  print*, stock(lstk,ne),"  ",lstk
-          !end if
-
-
-
                                 
            enddo
 
@@ -139,10 +72,30 @@ C Var local
         enddo
        enddo
 
-     
-       
+      elseif (ind.eq.2) then   ! Stockage de alpha*f(yn) + beta*f(y1)
+    
+       do  ne=1,neq
+        do  k = ind_loop(5), ind_loop(6)
+         do  j = ind_loop(3), ind_loop(4)
+          do  i = ind_loop(1), ind_loop(2)                              
+               
+           l  = inddm(i,j,k)
+
+
+           lstk  =  (i+1 - ind_loop_(1))
+     &              +(j - ind_loop_(3))*nistk
+     &            +(k-ind_loop_(5))*nistk*nistk2
+
+           stock(lstk,ne)= (alpha-alphabis)*stock(lstk,ne)
+     &                    + beta*drodm(l,ne)
+   
+           enddo
+                          
+         enddo
+         enddo
+         enddo
+
       end if
       
-      !close(1)
              
       end

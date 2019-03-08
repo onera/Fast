@@ -121,6 +121,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
             #print 't_transferts = ', Time.time() - t0
 
+      dtloc[3] +=1    #time_level_motion
+      dtloc[4] +=1    #time_level_target
     else: 
       nstep_deb = 1
       nstep_fin = nitmax
@@ -1782,25 +1784,14 @@ def _buildOwnData(t, Padding):
                     a = Internal.getNodeFromName1(d, 'niveaux_temps')
                     if a is not None: val = Internal.getValue(a)
                     else : val=1
-                    if z[0]=='cart' or z[0]=='join' or z[0]=='cylinder' or z[0]=='zone':
-                        posg.append(0)
-                    elif z[0]=='cart.0':
-                        posg.append(0)                    
-                    else:
-                        #print z[0]
-                        #posg.append(int(z[0][len(z[0])-1])+1)
-                        #print z[0]
-                        posg.append(int(z[0][len(z[0])-1])-1)
                veclevel.append(val)
+               posg.append(0)
                i += 1
     if posg==[]:
         for a in xrange(0,i):
             posg.append(0)
 
     maxlevel = max(veclevel)
-
-    #print "veclevel= ", veclevel
-    #print "posg= ", posg
 
     levelg = numpy.roll(veclevel,1)
     levelg[0] = 0
@@ -2245,6 +2236,12 @@ def _buildOwnData(t, Padding):
 
             # creation noeud parametre integer
             # Determination de levelg et leveld             
+            levelg=0
+            leveld=0
+            #if posg[i]!=0:
+            #    #levelg  = veclevel[posg.index(posg[i]-1)]#levelg=0#veclevel[posg.index(posg[i]-1)
+            #if posg[i]!=len(veclevel)-1:
+            #    #leveld = veclevel[posg.index(posg[i]+1)]#leveld=0#veclevel[posg.index(posg[i]+1)]
 
             datap = numpy.empty(84, numpy.int32)
             datap[0:25] = -1
@@ -2271,17 +2268,7 @@ def _buildOwnData(t, Padding):
             datap[53]  = veclevel[i]
             datap[54]  = exploc
             datap[55]  = itexploc
-            if posg[i]==0:
-                levelg=0
-            else: 
-                #levelg  = veclevel[posg.index(posg[i]-1)]#levelg=0#veclevel[posg.index(posg[i]-1)
-                levelg=0
             datap[56]  = levelg
-            if posg[i]==len(veclevel)-1:
-                leveld=0
-            else: 
-                #leveld = veclevel[posg.index(posg[i]+1)]#leveld=0#veclevel[posg.index(posg[i]+1)]
-                leveld = 0
             datap[57]  = leveld
             datap[58]  = nssiter
             datap[59]  = cacheblckI
@@ -2974,101 +2961,8 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
    return None
 
 #==============================================================================
-# compute guillaume
-#==============================================================================
-
-def _fillGhostcellsGuillaume(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1,nitmax): 
-
-   timecount = numpy.zeros(4, dtype=numpy.float64)
-
-   if hook1['lexit_lu'] ==0:
-
-       #transfert
-       if tc is not None :
-           tc_compact = Internal.getNodeFromName1( tc, 'Parameter_real')
-           #Si param_real n'existe pas, alors pas de raccord dans tc
-           if tc_compact is not  None:
-
-              param_real= tc_compact[1]
-              param_int = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
-              zonesD    = Internal.getZones(tc)
-
-              if hook1["neq_max"] == 5: varType = 2
-              else                    : varType = 21
-
-              bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
-
-              #if nstep <= 3: 
-              for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
-
-              type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
-              no_transfert   = 1  # dans la list des transfert point a point
-              Connector.connector.___setInterpTransfersGuillaume(zones, zonesD, vars, param_int, param_real,timelevel_target, varType, bcType, type_transfert, no_transfert,nstep,nitmax,Gamma,Cv,Mus,Cs,Ts)
-              # print "Time in MPI send_buffer, irecv ","%.6f"%timecount[0]
-              # print "Time InterpTransfert (Inter)  ","%.6f"%timecount[1]
-              # print "Time InterpTransfert (Intra)  ","%.6f"%timecount[2]
-              # print "Time in getTransfersInter ","%.6f"%timecount[3]
-
-
-       #apply BC
-       #t0=timeit.default_timer()
-       #_applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
-       #t1=timeit.default_timer()
-       #print "Time BC",(t1-t0)
-            
-
-   return None
-
-
-#==============================================================================
-# fillGhostCellsGuillaume2
-#==============================================================================
-
-def _fillGhostcellsGuillaume2(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1): 
-
-   timecount = numpy.zeros(4, dtype=numpy.float64)
-
-   if hook1['lexit_lu'] ==0:
-
-       #transfert
-       if tc is not None :
-           tc_compact = Internal.getNodeFromName1( tc, 'Parameter_real')
-           #Si param_real n'existe pas, alors pas de raccord dans tc
-           if tc_compact is not  None:
-
-              param_real= tc_compact[1]
-              param_int = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
-              zonesD    = Internal.getZones(tc)
-
-              if hook1["neq_max"] == 5: varType = 2
-              else                    : varType = 21
-
-              bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
-
-              #if nstep <= 3: 
-              for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
-
-              type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
-              no_transfert   = 1  # dans la list des transfert point a point
-
-              # print "Time in MPI send_buffer, irecv ","%.6f"%timecount[0]
-              # print "Time InterpTransfert (Inter)  ","%.6f"%timecount[1]
-              # print "Time InterpTransfert (Intra)  ","%.6f"%timecount[2]
-              # print "Time in getTransfersInter ","%.6f"%timecount[3]
-              Connector.connector.___setInterpTransfersGuillaume2(zones, zonesD, vars, param_int, param_real,timelevel_target,varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)
-
-       #apply BC
-       #t0=timeit.default_timer()
-       #_applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
-       #t1=timeit.default_timer()
-       #print "Time BC",(t1-t0)
-            
-
-   return None
-
-
-#==============================================================================
-# compute guillaume1
+# compute rk3 dtloc 
+# 
 #==============================================================================
 def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
 
@@ -3116,12 +3010,6 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
                 for f in bases:
                     tmp = Internal.getNodesFromType1(f, 'Zone_t') 
                     zonesD += tmp
-    
-    if (layer=='Python'):
-        taille_tabs = 200000000
-        rostk = numpy.empty(taille_tabs, dtype=numpy.float64)  # tableau de stockage des valeurs 
-        drodmstk = numpy.empty(taille_tabs, dtype=numpy.float64) # tableau de stockage des flux (drodm)
-        constk = numpy.empty(taille_tabs, dtype=numpy.float64) # tableau de stockage des flux (conservativite)
 
     zonesD    = Internal.getZones(tc)
 
@@ -3133,7 +3021,6 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 
 
     #nitmaxs=8
-
     if nitrun == 1: print 'Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode)
 
     if (layer == 'Python'):     
@@ -3161,44 +3048,31 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
                 nit_c     = 1
                 fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
 
-                
-                #tic=timeit.default_timer()
-                fasts.dtlocal2para_(zones,zonesD,param_int,param_real,hook1,rostk,drodmstk,constk,0,nstep,ompmode,taille_tabs,1,dest)
+                fasts.dtlocal2para_(zones,zonesD,param_int,param_real,hook1,0,nstep,ompmode,1,dest)
                 
                 if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
                 elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
                 _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0], rk=rk, exploc=explocal)    
 
- 
-                #toc1=timeit.default_timer()-tic
                 FastI.switchPointers2__(zones,nitmax,nstep)
                 
-                #print 'duree dtlocal2= ', toc
-
                 # Ghostcell
                 if (nitmax%3 != 0) : # Tous les schemas sauf constantinescu RK3
                     if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
                     elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
                     timelevel_target = int(dtloc[4])
                     _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax, rk, explocal)
-                    #_fillGhostcellsGuillaume(zones, tc, metrics, timelevel_target,vars, nstep, ompmode, hook1,nitmax)
             
-                fasts.recup3para_(zones,zonesD,param_int,param_real,hook1,rostk,0,nstep,ompmode,taille_tabs,1) 
+                fasts.recup3para_(zones,zonesD,param_int,param_real,hook1,0,nstep,ompmode,1) 
 
-          
-                #if (nstep==nitmax-2 or nstep%8==6) :
                 if (nstep%2==0) :
                     timelevel_target = int(dtloc[4])
                     vars = ['Density'  ]
                     _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, nitmax, rk, explocal, 2)
-                    # _fillGhostcellsGuillaume2(zones, tc, metrics, timelevel_target,vars, nstep, ompmode, hook1)
-
 
                 if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
                 elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
                 _applyBC_(zones,metrics, hook1, nstep, ompmode,  var=vars[0])    
-
-
 
     else: 
       nstep_deb = 1
@@ -3320,13 +3194,8 @@ def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
                 elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
                 _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0],rk=rk,exploc=explocal)
            
-             
-
                 #fonction qui controle stockage, destockage et calcule le predicteur sans passer par le code entier
                 fasts.stockrecup(zones,rostk,drodmstk,constk,hook1,nstep,taille_tabs)
-
-                #print 'coucou'
-           
 
                 # Ghostcell
                 if (nitmax%3 != 0) : # Tous les schemas sauf constantinescu RK3
@@ -3335,19 +3204,12 @@ def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
                     timelevel_target = int(dtloc[4])
                     _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1) 
 
-
                 elif (nitmax%3 == 0) : # Constantinescu RK3             
                     if   (nstep%3==1)  and itypcp == 2 :  vars = ['Density_P1']
                     elif (nstep%3==2)  and itypcp == 2 :  vars = ['Density_M1']
                     elif (nstep%3==0)  and itypcp == 2 :  vars = ['Density'  ]
                     timelevel_target = int(dtloc[4])
                     _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
-
-
-                #fasts.recup(zones,rostk,nstep,taille_tabs)
-
-
-
     else: 
       nstep_deb = 1
       nstep_fin = nitmax
@@ -3390,12 +3252,8 @@ def _temps_estim(t,varsN,varP,drodm_,coe_,nstep):
     index[0]=0
     index_[0]=0
 
-    print index
-
-    #if (nstep == 1):
     # Nouvel arbre
     tp = C.newPyTree(['Base'])
-    # Attache les zones
 
     i=0
     out=[]
@@ -3408,8 +3266,8 @@ def _temps_estim(t,varsN,varP,drodm_,coe_,nstep):
          var_P1 = Internal.getNodeFromName1(node, varsP[0])
          var_N  = Internal.getNodeFromName1(node, varsN[0])
          ndimdx = (dim[1]-1)*(dim[2]-1)*(dim[3]-1)
-         drodm = numpy.copy(drodm_[index[i]:index[i] + ndimdx])
-         coe = numpy.copy(coe_[index_[i]:index_[i] + ndimdx])
+         drodm  = numpy.copy(drodm_[index[i]:index[i] + ndimdx])
+         coe    = numpy.copy(coe_[index_[i]:index_[i] + ndimdx])
          #drodm = numpy.reshape(drodm,(dim[1]-1,dim[2]-1,dim[3]-1))
          for j in xrange(2,dim[2]-3):
             for k in xrange(2,dim[1]-3):
@@ -3420,19 +3278,11 @@ def _temps_estim(t,varsN,varP,drodm_,coe_,nstep):
                  C.setValue(z, 'centers:temps', (k,j,0),diff)
          i = i + 1
          out.append(z)
-         #var1  = Internal.getValue(node_)
 
-
+    # Attache les zones
     tp[2][1][2] += out
 
-    C.convertPyTree2File(tp,'lamb__.cgns')
-
-    #print var1
-
-    #return index
-    
-
-
+    return tp 
 #==============================================================================
 # Calcule la CFL en chaque maille et la met dans l'arbre t
 #==============================================================================
@@ -3443,19 +3293,12 @@ def _comp_cfl(t,metrics):
     for b in bases:
         zones += Internal.getNodesFromType1(b, 'Zone_t')
 
-    #node = Internal.getNodeFromName1(bases[0], '.Solver#define')
-    #node = Internal.getNodeFromName1(node, 'omp_mode')
     omp_mode = 0
-    #if  node is not None: omp_mode = Internal.getValue(node) 
 
     fasts.prep_cfl(zones, metrics, 1, 1, omp_mode)
     return None
-
 #==============================================================================
-
-
-#==============================================================================
-# Calcule la CFL en chaque maille et la met dans l'arbre t
+# decoupe maillage pour dtloc instationnaire
 #==============================================================================
 def _decoupe(t):
 
@@ -3464,15 +3307,8 @@ def _decoupe(t):
     for b in bases:
         zones += Internal.getNodesFromType1(b, 'Zone_t')
 
-
     infos = fasts.decoupe_maillage(zones,4)
     return infos
-
-#==============================================================================
-# 
-#==============================================================================
-
-
 #==============================================================================
 # compute_dpJ_dpW in place
 # graph is a dummy argument to be compatible with mpi version
