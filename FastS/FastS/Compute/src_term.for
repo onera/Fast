@@ -29,6 +29,7 @@ C-----------------------------------------------------------------------
       INTEGER_E ndom,nitcfg,nb_pulse,ind_sdm(6),ind_rhs(6),ind_ssa(6),
      & param_int(0:*)
 c
+
       REAL_E rop(*),xmut(*),drodm(*),coe(*)
       REAL_E ti(*),tj(*),tk(*), vol(*)
       REAL_E x(*),y(*),z(*), cellN_IBC(*)
@@ -39,7 +40,7 @@ C Var loc
       INTEGER_E nacp,l,idirx,idirz,i,j,k,n,n2,i1,j1,k1,i2m1,j2m1,k2m1,
      & i2,j2,k2,ind1,ind2,lt,n_tot,ndt,nsp,ix,iy,iz,incr,indf,ci,cj,ck,
      & im,jm,km,indmy,imin,jmin,kmin,imax,jmax,kmax,l1,l2,l3,lm,lp,
-     & iptribc,niloc,njloc,m,igetadr,ind2d,ierr
+     & iptribc,niloc,njloc,m,igetadr,ind2d,ierr,cycl
 
       REAL_E coefa,coefb,x0,y0,z0,amp,per,phi,qnp1,dvzparoi,
      & q_tot,qf_tot,
@@ -52,9 +53,41 @@ C Var loc
 
 #include "FastS/param_solver.h"
 
-     !Initilalisation systematique de drodm
-      call init_rhs(ndom, nitcfg, param_int, param_int( NDIMDX ),
-     &              param_int( NEQ ), ind_rhs,  drodm )
+      !cycl=param_int(NSSITER)/param_int(LEVEL)
+
+
+      !if (param_int(EXPLOC)==2.and.param_int(RK)==3.and.
+      !& cycl.ne.4 .and. mod(nitcfg,cycl)==2) then 
+
+       ! call initdrodm(param_int,ind_rhs,drodmbis,drodm)
+       
+       !end if
+
+      !Initilalisation systematique de drodm
+      if (param_int(EXPLOC).ne.0) then !! explicite local
+
+         if (param_int(EXPLOC).eq.2 .and. param_int(RK).eq.3 .or.
+     &        param_int(EXPLOC).eq.1 .and. param_int(RK).eq.2) then
+
+            call init_rhs_dtloc(ndom, nitcfg, param_int, 
+     &       param_int(NDIMDX),param_int( NEQ ), ind_ssa,  drodm )
+               
+
+         else
+
+            call init_rhs_dtloc(ndom, nitcfg, param_int, 
+     &       param_int(NDIMDX),param_int( NEQ ), ind_rhs,  drodm )
+
+
+         end if
+
+      else  !! pas explicite local
+
+         call init_rhs(ndom, nitcfg, param_int, param_int( NDIMDX ),
+     &        param_int( NEQ ), ind_rhs,  drodm )
+
+      end if
+
 
       IF (param_int(SRC).eq.1) THEN
         call update_src(ndom, nitcfg, param_int, ind_rhs,  drodm , 
@@ -248,12 +281,16 @@ c
            !phi   = acp_phi(nacp)
            coefa = 2.71128
            coefb = 2.4
-           x0    = 0.
-           y0    = 0.
+           x0    = 60.
+           y0    = 60.
            z0    = 0.
            amp   = 0.01
            per   = 0.014
            phi   = 0.
+
+           !temps = param_real(TEMPS)
+           
+           !print*, 'temps= ',temps
 
            call ac_pulse(ndom, param_int, ind_rhs,
      &                   temps, param_real(STAREF),

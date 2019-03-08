@@ -461,7 +461,14 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     scheme = "implicit"
     a = Internal.getNodeFromName2(zones[0], 'temporal_scheme')
     if a is not None: scheme = Internal.getValue(a)
-
+    rk=3
+    rk_ = Internal.getNodeFromName2(zones[0],'rk')
+    if rk_ is not None: rk = Internal.getValue(rk_)
+    #print 'rk= ',rk
+    exploc=0
+    exploc_ = Internal.getNodeFromName2(zones[0], 'exp_local')
+    if exploc_ is not None: exploc = Internal.getValue(exploc_)
+    #print 'exploc= ',exploc
     #neq = 5
     #if (model == 'nsspalart' or model =='NSTurbulent'): neq = 6
 
@@ -481,8 +488,8 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         else:                                                    neq_coe = 1    # explicit
 
         neq_max = max(neq, neq_max)
-
         param_int = Internal.getNodeFromName2(z, 'Parameter_int')
+        shiftvar = param_int[1][66]
         if param_int is not None:
            shiftvar  = param_int[1][66]
         else:
@@ -497,10 +504,13 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         dims = Internal.getZoneDim(z)
         if dims[0]=='Structured' : nijk = (dims[1]-1)*(dims[2]-1)*(dims[3]-1)+shiftvar
         else                     : nijk = dims[2]+shiftvar
+
         ndimt   +=     neq*nijk       # surdimensionne ici
         ndimcoe += neq_coe*nijk       # surdimensionne ici
         ndimwig +=        3*nijk      # surdimensionne ici
         c       += 1
+        
+        #print 'zone,taille =', z[0], nijk
 
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
     verrou      = MX_SSZONE*c*MX_SYNCHRO*mx_thread
@@ -512,8 +522,12 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #    drodm = KCore.empty(ndimt  , CACHELINE)
     wig   = numpy.empty(ndimwig, dtype=numpy.float64)
     coe   = numpy.empty(ndimcoe, dtype=numpy.float64)
-    drodm = numpy.empty(ndimt  , dtype=numpy.float64)
-
+    if (rk==4 and exploc==0):
+        drodm = numpy.empty(4*ndimt  , dtype=numpy.float64)
+    elif (rk==5 and exploc==0):
+        drodm = numpy.empty(5*ndimt  , dtype=numpy.float64)
+    else:
+        drodm = numpy.empty(ndimt  , dtype=numpy.float64)        
 
     #drodm1= numpy.empty(ndimt  , dtype=numpy.float64)
     #drodm1[rodm = numpy.empty(ndimt  , dtype=numpy.float640:ndimt] = 1.
@@ -658,6 +672,7 @@ def switchPointers__(zones, case, order=3):
             model  = Internal.getValue(model)
 
             if case ==1:
+              #print 'coucou'
               # sauvegarde M1
               ta = caM1[1]; tb = cbM1[1]; tc = ccM1[1]; td = cdM1[1]; te = ceM1[1]
 
@@ -696,7 +711,7 @@ def switchPointers__(zones, case, order=3):
                 tf   = cfP1[1]; cfP1[1] = cf[1];  cf[1]= cfM1[1]; cfM1[1] = tf
 
     elif order == 2:
-        print 'adapter switch poinyer'
+        #print 'adapter switch poinyer'
         for z in zones:
             caP1 = Internal.getNodeFromName2(z, 'Density_P1')
             cbP1 = Internal.getNodeFromName2(z, 'VelocityX_P1')
@@ -710,7 +725,7 @@ def switchPointers__(zones, case, order=3):
             cdM1 = Internal.getNodeFromName2(z, 'VelocityZ_M1')
             ceM1 = Internal.getNodeFromName2(z, 'Temperature_M1')
 
-            caP1[1] = caM1[1]; cbP1[1] = cbM1[1]; ccP1[1] = ccM1[1]; cdP1[1] = cdM1[1]; ceP1[1] = ceM1[1]
+            #caP1[1] = caM1[1]; cbP1[1] = cbM1[1]; ccP1[1] = ccM1[1]; cdP1[1] = cdM1[1]; ceP1[1] = ceM1[1]
 
             model  = Internal.getNodeFromName2(z, 'model')
             model  = Internal.getValue(model)
@@ -876,3 +891,161 @@ def checkKeys(d, keys):
         fail = True
     if fail:
       import sys; sys.exit(0) # much stronger os._exit(0)?
+
+
+
+#==============================================================================
+# echange M1 <- current, current <- P1, P1 <- M1
+#==============================================================================
+def switchPointers2__(zones,nitmax,nstep):
+    
+     for z in zones:
+        node = Internal.getNodeFromName1(z, '.Solver#define')
+        level = Internal.getNodeFromName1(node, 'niveaux_temps')            
+        niveau = Internal.getValue(level)
+
+        cycle = nitmax/niveau
+        #print 'cycle= ',cycle
+        if nstep%cycle==0 and nstep!=nitmax :
+
+            #print 'switch zone= ', z[0]
+
+            sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+            own =  Internal.getNodeFromName1(z, '.Solver#ownData')
+            ca = Internal.getNodeFromName1(sol, 'Density')
+            cb = Internal.getNodeFromName1(sol, 'VelocityX')
+            cc = Internal.getNodeFromName1(sol, 'VelocityY')
+            cd = Internal.getNodeFromName1(sol, 'VelocityZ')
+            ce = Internal.getNodeFromName1(sol, 'Temperature')
+
+            caM1 = Internal.getNodeFromName1(sol, 'Density_M1')
+            cbM1 = Internal.getNodeFromName1(sol, 'VelocityX_M1')
+            ccM1 = Internal.getNodeFromName1(sol, 'VelocityY_M1')
+            cdM1 = Internal.getNodeFromName1(sol, 'VelocityZ_M1')
+            ceM1 = Internal.getNodeFromName1(sol, 'Temperature_M1')
+
+            caP1 = Internal.getNodeFromName1(sol, 'Density_P1')
+            cbP1 = Internal.getNodeFromName1(sol, 'VelocityX_P1')
+            ccP1 = Internal.getNodeFromName1(sol, 'VelocityY_P1')
+            cdP1 = Internal.getNodeFromName1(sol, 'VelocityZ_P1')
+            ceP1 = Internal.getNodeFromName1(sol, 'Temperature_P1')
+
+            #print 'ca[1]= ',ca[1]
+
+            # sauvegarde current
+            ta = ca[1]; tb = cb[1]; tc = cc[1]; td = cd[1]; te = ce[1]
+
+            # M1 <- current
+            #caM1[1] = ca[1]; cbM1[1] = cb[1]; ccM1[1] = cc[1]; cdM1[1] = cd[1]; ceM1[1] = ce[1]
+
+            # current <- P1
+            ca[1] = caP1[1]; cb[1] = cbP1[1]; cc[1] = ccP1[1]; cd[1] = cdP1[1]; ce[1] = ceP1[1]
+
+            # P1 <- temp
+            caP1[1] = ta; cbP1[1] = tb; ccP1[1] = tc; cdP1[1] = td; ceP1[1] = te
+
+            model  = Internal.getNodeFromName1(own, 'model')
+            model  = Internal.getValue(model)
+
+            if model == 'nsspalart' or model=='NSTurbulent': 
+                cf   =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde')
+                cfM1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_M1')
+                cfP1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_P1')
+                tf   = cfM1[1]; cfM1[1] = cf[1]; cf[1] = cfP1[1]; cfP1[1] = tf
+
+
+#==============================================================================
+# echange M1 <- current, current <- P1, P1 <- M1
+#==============================================================================
+def switchPointers3__(zones,nitmax):
+    
+     for z in zones:
+        node = Internal.getNodeFromName1(z, '.Solver#define')
+        level = Internal.getNodeFromName1(node, 'niveaux_temps')            
+        niveau = Internal.getValue(level)
+
+        cycle = nitmax/niveau
+        #print 'cycle= ',cycle
+        if cycle==nitmax :
+
+            #print 'switch zone= ', z[0]
+
+            sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+            own =  Internal.getNodeFromName1(z, '.Solver#ownData')
+            ca = Internal.getNodeFromName1(sol, 'Density')
+            cb = Internal.getNodeFromName1(sol, 'VelocityX')
+            cc = Internal.getNodeFromName1(sol, 'VelocityY')
+            cd = Internal.getNodeFromName1(sol, 'VelocityZ')
+            ce = Internal.getNodeFromName1(sol, 'Temperature')
+
+            caM1 = Internal.getNodeFromName1(sol, 'Density_M1')
+            cbM1 = Internal.getNodeFromName1(sol, 'VelocityX_M1')
+            ccM1 = Internal.getNodeFromName1(sol, 'VelocityY_M1')
+            cdM1 = Internal.getNodeFromName1(sol, 'VelocityZ_M1')
+            ceM1 = Internal.getNodeFromName1(sol, 'Temperature_M1')
+
+            caP1 = Internal.getNodeFromName1(sol, 'Density_P1')
+            cbP1 = Internal.getNodeFromName1(sol, 'VelocityX_P1')
+            ccP1 = Internal.getNodeFromName1(sol, 'VelocityY_P1')
+            cdP1 = Internal.getNodeFromName1(sol, 'VelocityZ_P1')
+            ceP1 = Internal.getNodeFromName1(sol, 'Temperature_P1')
+
+            #print 'ca[1]= ',ca[1]
+
+            #print 'coucou'
+            # sauvegarde M1
+            ta = caM1[1]; tb = cbM1[1]; tc = ccM1[1]; td = cdM1[1]; te = ceM1[1]
+
+            # M1 <- current
+            caM1[1] = ca[1]; cbM1[1] = cb[1]; ccM1[1] = cc[1]; cdM1[1] = cd[1]; ceM1[1] = ce[1]
+
+            # current <- P1
+            ca[1] = caP1[1]; cb[1] = cbP1[1]; cc[1] = ccP1[1]; cd[1] = cdP1[1]; ce[1] = ceP1[1]
+
+            # P1 <- temp
+            caP1[1] = ta; cbP1[1] = tb; ccP1[1] = tc; cdP1[1] = td; ceP1[1] = te
+
+
+            model  = Internal.getNodeFromName1(own, 'model')
+            model  = Internal.getValue(model)
+
+            if model == 'nsspalart' or model=='NSTurbulent': 
+                cf   =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde')
+                cfM1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_M1')
+                cfP1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_P1')
+                tf   = cfM1[1]; cfM1[1] = cf[1]; cf[1] = cfP1[1]; cfP1[1] = tf
+
+        else:
+
+
+            sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+            own =  Internal.getNodeFromName1(z, '.Solver#ownData')
+            ca = Internal.getNodeFromName1(sol, 'Density')
+            cb = Internal.getNodeFromName1(sol, 'VelocityX')
+            cc = Internal.getNodeFromName1(sol, 'VelocityY')
+            cd = Internal.getNodeFromName1(sol, 'VelocityZ')
+            ce = Internal.getNodeFromName1(sol, 'Temperature')
+
+            caM1 = Internal.getNodeFromName1(sol, 'Density_M1')
+            cbM1 = Internal.getNodeFromName1(sol, 'VelocityX_M1')
+            ccM1 = Internal.getNodeFromName1(sol, 'VelocityY_M1')
+            cdM1 = Internal.getNodeFromName1(sol, 'VelocityZ_M1')
+            ceM1 = Internal.getNodeFromName1(sol, 'Temperature_M1')
+
+            caP1 = Internal.getNodeFromName1(sol, 'Density_P1')
+            cbP1 = Internal.getNodeFromName1(sol, 'VelocityX_P1')
+            ccP1 = Internal.getNodeFromName1(sol, 'VelocityY_P1')
+            cdP1 = Internal.getNodeFromName1(sol, 'VelocityZ_P1')
+            ceP1 = Internal.getNodeFromName1(sol, 'Temperature_P1')
+
+            #print 'ca[1]= ',ca[1]
+
+            #print 'coucou'
+            # sauvegarde M1
+            ta = caM1[1]; tb = cbM1[1]; tc = ccM1[1]; td = cdM1[1]; te = ceM1[1]
+
+            # M1 <- current
+            caM1[1] = caP1[1]; cbM1[1] = cbP1[1]; ccM1[1] = ccP1[1]; cdM1[1] = cdP1[1]; ceM1[1] = ceP1[1]
+
+            # P1 <- temp
+            caP1[1] = ta; cbP1[1] = tb; ccP1[1] = tc; cdP1[1] = td; ceP1[1] = te

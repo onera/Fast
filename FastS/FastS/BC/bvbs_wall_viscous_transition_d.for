@@ -21,7 +21,8 @@ C     $Date: 2013-08-26 16:00:23 +0200 (lun. 26 août 2013) $
 C     $Revision: 35 $
 C     $Author: IvanMary $
 C***********************************************************************
-      SUBROUTINE BVBS_WALL_VISCOUS_TRANSITION_D(idir, lrhs, neq_mtr, 
+      SUBROUTINE BVBS_WALL_VISCOUS_TRANSITION_D(idir, lrhs, neq_mtr,
+     &                                         nstep,
      +                                          mobile_coef, param_int, 
      +                                          ind_loop, param_real, x
      +                                          , y, z, ventijk, tijk, 
@@ -54,7 +55,7 @@ C
 C
 C
 C
-      INTEGER*4 idir, lrhs, neq_mtr, ind_loop(6), param_int(0:*)
+      INTEGER*4 idir, lrhs, neq_mtr, nstep,ind_loop(6), param_int(0:*)
 C
       REAL*8 x(param_int(42)), y(param_int(42)), z(param_int(42))
 C

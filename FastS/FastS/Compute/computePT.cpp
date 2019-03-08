@@ -22,6 +22,7 @@
 # include "fastS.h"
 # include "param_solver.h"
 # include <string.h>
+#include <cstdlib>
 //# include <omp.h>
 #if TIMER == 1
 # include <ctime>
@@ -91,10 +92,12 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
  E_Int lssiter_loc; E_Int lexit_lu;  E_Int lssiter_verif;
  E_Int it_target = iptdtloc[4];
 
+
  lssiter_verif = 0; // par defaut, pas de calcul cfl , ni residu Newton
  if(nitrun % iptdtloc[1] == 0 || nitrun == 1) lcfl =1;
 
  if( layer_mode ==1)
+
  {
     pyParam_int_ibc = PyDict_GetItemString(work,"param_int_ibc");
     pyParam_real_ibc = PyDict_GetItemString(work,"param_real_ibc");
@@ -219,6 +222,7 @@ else
   E_Int iorder_flt    =10;
   E_Float temps;
 
+
   FldArrayI tab_ndimdx_transfer(nidom*3);  E_Int* ndimdx_transfer=  tab_ndimdx_transfer.begin();
 
   for (E_Int nd = 0; nd < nidom; nd++)
@@ -233,8 +237,13 @@ else
                        o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
     ipt_param_real[nd]    = K_PYTREE::getValueAF(o, hook);
 
-    temps = (nitrun-1)*ipt_param_real[nd][ DTC]; 
+    temps = (nitrun-1)*ipt_param_real[nd][ DTC];
+    //temps = (nitrun)*ipt_param_real[nd][ DTC]; 
+    //if (nstep == 2){temps = temps + 0.5*ipt_param_real[nd][ DTC];}
+    //else if (nstep==3){temps = temps + 0.7886751238*ipt_param_real[nd][ DTC];}
 
+
+    //cout << "temps= " << temps << endl;
     PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
 
     if( ipt_param_int[nd][ NDIMDX ] > ndimdx_max ) ndimdx_max = ipt_param_int[nd][ NDIMDX ];
@@ -443,8 +452,10 @@ else
   /// Tableau de travail communs explicite/implicite
   PyObject* drodmArray = PyDict_GetItemString(work,"rhs"); FldArrayF* drodm;
   K_NUMPY::getFromNumpyArray(drodmArray, drodm, true); E_Float* iptdrodm = drodm->begin();
+
   iptdrodm_transfer[0]= iptdrodm;
   for (E_Int nd = 1; nd < nidom; nd++){ iptdrodm_transfer[nd]= iptdrodm_transfer[nd-1] + ipt_param_int[nd-1][NEQ]*ipt_param_int[nd-1][NDIMDX];}
+
   
   // Tableau de travail coe   ( dt/vol et diags LU)
   PyObject* coeArray = PyDict_GetItemString(work,"coe"); FldArrayF* coe;
@@ -495,7 +506,22 @@ else
   // loop sur les iteration demander au niveau C
   // 
   // 
-  // 
+  //
+
+  // Allocation des tableaux de stockage pour l'explicite local
+
+  E_Int taille_tabs = 1;
+
+  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==2 and ipt_param_int[0][RK]==3 and layer_mode ==1)
+    {
+      taille_tabs = 200000000;
+    }
+
+  E_Float* stock = new E_Float[taille_tabs];
+  E_Float* drodmstock = new E_Float[taille_tabs];
+  //E_Float* constk = new E_Float[taille_tabs];
+  E_Float* constk = new E_Float[10];
+   
   for (E_Int it = 0; it < nit_c; ++it)
   {
    // SOUS PAS
@@ -506,12 +532,14 @@ else
    // 
    // 
    // 
+
    E_Int nitrun_loc = nitrun*nit_c + it;
    //printf("nitrun= %d \n", nitrun_loc);
    //
    //E_Float** roN = iptro; E_Float** roM1 = iptro_m1;  E_Float** roP1 = iptro_p1;
 
    E_Int nidom_tot;
+
    for (E_Int nstep = nstep_deb; nstep < nstep_fin+1; ++nstep)
    {
      //printf("nstep= %d \n", nstep);
@@ -522,9 +550,9 @@ else
 
        E_Int display=0;
        //calcul distri si implicit ou explicit local + modulo verif
-       if( omp_mode==1 && ( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]==1 && ipt_param_int[0][ITYPCP]==2) ) && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1) ) )
+       if( omp_mode==1 && ( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]==2 && ipt_param_int[0][RK]==3 && ipt_param_int[0][ITYPCP]==2) ) && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1) ) )
        {
-         printf("coucou %d \n",omp_mode); 
+         //printf("coucou %d \n",omp_mode); 
          distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
        }
 
@@ -535,6 +563,7 @@ else
      }
 
      //calcul Navier Stokes + appli CL
+
      if (skip_navier ==1)
      {
       gsdr3( 
@@ -563,8 +592,9 @@ else
             iptrdm             ,
             iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res, iptdrodm_transfer  ,
-            ipt_param_int_ibc , ipt_param_real_ibc, ipt_param_int_tc  , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real, 
-            iptsrc);
+            ipt_param_int_ibc       , ipt_param_real_ibc     , ipt_param_int_tc  , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real, taille_tabs, stock, drodmstock, constk, iptsrc);
+
+      
 
        if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
        {
@@ -577,6 +607,7 @@ else
            E_Int size_dom   = ipt_param_int[nd][ IJKV ]*ipt_param_int[nd][ IJKV +1]*ipt_param_int[nd][ IJKV +2];
            E_Float scale    = size_dom;
 
+
            E_Int Nbre_thread_actif_loc = threadmax_sdm;
            if(omp_mode == 1) 
               { E_Int  Ptomp     = ipt_param_int[nd][PT_OMP];
@@ -586,7 +617,8 @@ else
                 Nbre_thread_actif_loc  = ipt_param_int[nd][ PtZoneomp  +  threadmax_sdm];
               }
 
-           for (E_Int ithread = 0; ithread < Nbre_thread_actif_loc ; ithread++) 
+           for (E_Int ithread = 1; ithread < Nbre_thread_actif_loc ; ithread++) 
+
               {
 
                E_Int ithread_loc = ithread;
@@ -603,15 +635,29 @@ else
                ipt_cfl_zones[nd][1] = min( ipt_cfl_zones[nd][1], ipt_cfl_thread[1]);
                ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]+ ipt_cfl_thread[2];
               }
+	   //cout << ipt_cfl_zones[nd][2] << endl;
            ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]/scale;
            //printf("cpPT cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[nd][0],ipt_cfl_zones[nd][1],ipt_cfl_zones[nd][2]);
          }
        }//test mise a jour cfl
 
-       if((nstep == nssiter && lssiter_verif==1) || (nstep == nssiter-1 && lssiter_verif==0))  // mise a jour  du temps courant
-       {
+       if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]!= 0) // mise a jour du temps par zone en explicite local
+	 {
+	   for (E_Int nd = 0; nd < nidom ; nd++) 
+	     {
+	       E_Int cycl = ipt_param_int[nd][NSSITER]/ipt_param_int[nd][LEVEL];
+	       if (nstep%cycl == 0)
+		 {
+		   ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]/float(ipt_param_int[nd][LEVEL]);
+	     //cout << "zone " << nd <<" "<< ipt_param_real[nd][TEMPS] << endl;
+		 }
+	     }
+	 }
+
+       else if((ipt_param_int[0][EXPLOC] == 0 && nstep == nssiter && lssiter_verif==1) || (ipt_param_int[0][EXPLOC] == 0 && nstep == nssiter-1 && lssiter_verif==0))  // mise a jour  du temps courant pour les schemas autres que l'explicite local
+	 {
         for (E_Int nd = 0; nd < nidom ; nd++) { ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]; }
-       }
+	 }
      }//test calcul NS
 
    }//loop nstep
@@ -624,15 +670,16 @@ else
    //switch pointer
    //E_Float** ptsav = roM1; roM1 = roN; roN = roP1; roP1 = ptsav;
    for (E_Int nd = 0; nd < nidom ; nd++)
-   { E_Float* ptsave  = iptro_m1[nd]; 
-          iptro_m1[nd]= iptro[nd]; 
-          iptro[nd]   = iptro_p1[nd];
-          iptro_p1[nd]= ptsave;}
+      { E_Float* ptsave  = iptro_m1[nd]; 
+	iptro_m1[nd]= iptro[nd]; 
+        iptro[nd]   = iptro_p1[nd];
+        iptro_p1[nd]= ptsave;}
 
   }//loop nit_c
 
 
   delete [] iptx; delete [] ipt_param_int;
+  delete [] stock; delete [] drodmstock; delete [] constk;
 
   
   RELEASESHAREDN( wigArray       , wig  );

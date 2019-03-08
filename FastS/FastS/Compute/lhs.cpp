@@ -4,8 +4,8 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
     { //Raccord V0
 
       setInterpTransfersFastS(iptdrodm_transfer, ndimdx_transfer, param_int_tc,
-                           param_real_tc, param_int_ibc, param_real_ibc, linelets_int, linelets_real,param_real[0][PRANDT],
-                           it_target, nidom, ipt_timecount, mpi);
+                         param_real_tc, param_int_ibc, param_real_ibc, linelets_int, linelets_real,param_real[0][PRANDT],
+      			 it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
     }
     #pragma omp barrier
   }
@@ -51,7 +51,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1)
                       {  //
                          // CL sur rhs pour implicitation
 			 E_Int lrhs=1; E_Int lcorner=1; E_Int mjrnewton=1;
-                         BCzone( nd, lrhs, lcorner,
+                         BCzone( nd, lrhs, nitcfg, lcorner, 
                                  param_int[nd], param_real[nd],
                                  npass,
                                  ipt_ind_dm_loc         , ipt_ind_dm_thread      ,

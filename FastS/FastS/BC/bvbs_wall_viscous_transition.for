@@ -3,8 +3,9 @@ c     $Date: 2013-08-26 16:00:23 +0200 (lun. 26 août 2013) $
 c     $Revision: 35 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine bvbs_wall_viscous_transition(idir,lrhs, neq_mtr,
-     &                                  mobile_coef,
+      subroutine bvbs_wall_viscous_transition(idir,lrhs, nstep, neq_mtr,
+     &                                  mobile_coef, random,
+     &                                  size_data,inc_bc,
      &                                  param_int, ind_loop,
      &                                  param_real,
      &                                  x , y , z, ventijk, tijk, rop)
@@ -23,10 +24,11 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E idir,lrhs, neq_mtr, ind_loop(6), param_int(0:*)
+      INTEGER_E idir,lrhs, nstep, neq_mtr, ind_loop(6), param_int(0:*)
+      INTEGER_E size_data,inc_bc(3)
 
       REAL_E x( param_int(NDIMDX_XYZ) ),y( param_int(NDIMDX_XYZ) ),
-     &       z( param_int(NDIMDX_XYZ) )
+     &       z( param_int(NDIMDX_XYZ) ),random(size_data)
 
       REAL_E rop    (param_int(NDIMDX     ), param_int(NEQ)      )
       REAL_E ventijk(param_int(NDIMDX_VENT), param_int(NEQ_VENT) )
@@ -35,7 +37,7 @@ c***********************************************************************
 C Var local
       INTEGER_E  inc2,inc3,li1,li2,l,iref,jref,kref,lij,lr,lp,
      & njf,nkf,ldjr,ic,jc,kc,i,j,k,li3,ldp,kc_vent,l0,ldjr0,
-     & ldx,lx,ltr,lmtr
+     & ldx,lx,ltr,lmtr,li, indbci
 
       REAL_E ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,tcx,tcy,tcz,
      & ventx,venty,ventz,r,u,v,w,ut,vt,wt,ua,va,wa,s_1,qn,rnd,
@@ -47,10 +49,15 @@ C Var local
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_vent_param.h"
 
+      indbci(j_1,k_1) = 1 + (j_1-inc_bc(2)) + (k_1-inc_bc(3))*inc_bc(1)
 
 c      write(*,*)'idir=', idir,nijk(4),nijk(5),ndimdx
 c      write(*,*)'nijk=', nijk
 c      write(*,*)'loop vis=', ind_loop
+
+      !do li1 = 1,200
+      !   print*, random(li1)
+      !end do
 
 
       if(idir.ne.3) then
@@ -126,6 +133,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
              l    = inddm( i              , j,  k ) 
              ldjr = inddm(  iref - i      , j,  k )
              ldp  = inddm(  ind_loop(2)+1 , j,  k )
+             li   = indbci(j,  k )
 #include     "FastS/BC/BCWallViscous_transition.for"
 100    continue
 
@@ -138,6 +146,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
              l    = inddm( i              , j,  k ) 
              ldjr = inddm(  iref - i      , j,  k )
              ldp  = inddm(  ind_loop(2)+1 , j,  k )
+             li   = indbci(j,  k )
 
 #include     "FastS/BC/BCWallViscous_transition_SA.for"
 110       continue
@@ -145,7 +154,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
 
       ELSEIF (idir.eq.2) THEN
-
+      
        iref = 2*ind_loop(1) - 1
 
        if(param_int(NEQ).eq.5) then
@@ -158,6 +167,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
               l    = inddm(  i           , j, k ) 
               ldjr = inddm(  iref - i    , j, k )
               ldp  = indven(  ind_loop(1) , j, k )
+              li   = indbci(j,  k )
 #include     "FastS/BC/BCWallViscous_transition.for"
 120    continue
        else
@@ -169,6 +179,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
               l    = inddm(  i           , j, k ) 
               ldjr = inddm(  iref - i    , j, k )
               ldp  = indven(  ind_loop(1) , j, k )
+              li   = indbci(j,  k )
 #include     "FastS/BC/BCWallViscous_transition_SA.for"
 130       continue
         endif !param_int(NEQ)
@@ -176,9 +187,20 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
       ELSEIF (idir.eq.3) THEN
 
+
        jref = 2*ind_loop(4) + 1
 
        if(param_int(NEQ).eq.5) then
+          
+          !! mise a jour du random a la premiere ssiter uniquememnt
+          if(nstep.eq.1) then
+            do k = ind_loop(5), ind_loop(6)
+            do i = ind_loop(1), ind_loop(2)
+                li  = indbci(i,  k )
+                call random_number(random(li))
+            enddo
+            enddo
+          endif
 
           do 200 k = ind_loop(5), ind_loop(6)
           do 200 j = ind_loop(3), ind_loop(4)
@@ -198,6 +220,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
                 ldp  = l - lp
                 ldx  = l - lx
                 lmtr = l - ltr
+                li  = indbci(l-lij+ind_loop(1),  k )
 #include     "FastS/BC/BCWallViscous_transition.for"
 200    continue
        else
@@ -213,6 +236,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
                 ldjr = l - lr
                 ldp  = l - lp
+                li  = indbci(l-lij+ind_loop(1),  k )
 #include     "FastS/BC/BCWallViscous_transition_SA.for"
 210       continue
         endif !param_int(NEQ)
@@ -232,6 +256,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
             do 220 l = lij, lij + ind_loop(2) - ind_loop(1)
               ldjr = l - lr
               ldp  = l - lp
+                li  = indbci(l-lij+ind_loop(1),  k )
 #include     "FastS/BC/BCWallViscous_transition.for"
 220    continue
 

@@ -32,11 +32,13 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
 {
-  PyObject *zones; PyObject *metrics; PyObject *work; char* var; E_Int nstep; E_Int omp_mode;
+  PyObject *zones; PyObject *metrics; PyObject *work; char* var; E_Int nstep; E_Int rk;
+  E_Int exploc; E_Int omp_mode;
+  
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOlls", &zones, &metrics, &work, &nstep, &omp_mode, &var )) return NULL;
+  if (!PyArg_ParseTuple(args, "OOOlllls", &zones, &metrics, &work, &nstep, &rk, &exploc, &omp_mode, &var )) return NULL;
 #else 
-  if (!PyArg_ParseTuple(args, "OOOiis", &zones, &metrics, &work, &nstep, &omp_mode, &var )) return NULL;
+  if (!PyArg_ParseTuple(args, "OOOiiiis", &zones, &metrics, &work, &nstep, &rk, &exploc, &omp_mode, &var )) return NULL;
 #endif
 
   //* tableau pour stocker dimension sous-domaine omp *//
@@ -73,12 +75,16 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   iptventj          = iptventi        + nidom;
   iptventk          = iptventj        + nidom;
   ipt_param_real    = iptventk        + nidom;
-
-
+  
   /*------*/
   /* Zone */
   /*------*/
   vector<PyArrayObject*> hook;
+
+  E_Int autorisation_bc[nidom];
+  E_Int cycl;
+  E_Int nstep_loc = nstep;
+
 
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
@@ -117,8 +123,54 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
 
     ipt_ind_dm[ nd ]      =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
 
+    //rk = ipt_param_int[0][RK];
+    //exploc = ipt_param_int[0][EXPLOC];
+
+    //cout << rk <<" "<<exploc << endl;
+
+    if (rk == 3 and exploc == 2) 
+      {
+	cycl = ipt_param_int[nd][NSSITER]/ipt_param_int[nd][LEVEL];
+
+        nstep_loc = 1;
+        autorisation_bc[nd]=0;
+	if ( nstep%cycl == 1 and cycl != 4)
+	  {
+	    autorisation_bc[nd] = 1;
+	  }
+	else if (nstep%cycl == cycl/4 and cycl != 4)
+	  {
+	    autorisation_bc[nd] = 1;
+	  }
+	else if (nstep%cycl== cycl/2-1 and cycl != 4 )
+	  {
+	    autorisation_bc[nd] = 1;
+	  }	    
+	else if (nstep%cycl== cycl/2+1 and cycl != 4 )
+	  {
+	    autorisation_bc[nd] = 1;
+	  }
+	else if (nstep%cycl== cycl/2+cycl/4 and cycl != 4 )
+	  {
+	    autorisation_bc[nd] = 1;
+	  }
+	else if (nstep%cycl== cycl-1 and cycl != 4 )
+	  {
+	    autorisation_bc[nd] = 1;
+	  }
+	else if( nstep%cycl == cycl-1 and cycl == 4 or nstep%cycl==cycl/2 and (nstep/cycl)%2==1 and cycl == 4)
+	  {
+	    autorisation_bc[nd] = 1;
+	  }
+      } 
+    else {autorisation_bc[nd] = 1;}
+
+	    
+ 
   } // boucle zone
 
+  //E_Int rk = ipt_param_int[0][RK];
+  //E_Int exploc = ipt_param_int[0][EXPLOC];
 
 
   /*----------------------------------*/
@@ -161,8 +213,9 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
        E_Int nd_current =0;
        for (E_Int nd = 0; nd < nidom; nd++)
           {
+
            E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
-           E_Int nb_subzone     = ipt_nidom_loc [nstep -1];
+           E_Int nb_subzone     = ipt_nidom_loc [nstep_loc -1];
 
            E_Int* ipt_ind_CL          = ind_CL.begin() + (ithread-1)*6;
            E_Int* ipt_ind_CL119       = ind_CL.begin() + (ithread-1)*6 + Nbre_thread_max*6 ;
@@ -171,18 +224,18 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
            //E_Int* ipt_ind_CL119       = ind_CL119.begin()       + (ithread-1)*6;
            //E_Int* ipt_ind_CL119       = ind_CL119.begin()       + (ithread-1)*6;
            //E_Int* ipt_shift_lu        = shift_lu.begin( )       + (ithread-1)*6;
-
+  
           for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
           {
             E_Int ndo   = nd;
 
-            E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nstep-1)*6*ipt_param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
+            E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nstep_loc-1)*6*ipt_param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
 
             E_Int* ipt_ind_dm_thread;
             if (omp_mode == 1)
             { 
               E_Int       Ptomp = ipt_param_int[nd][PT_OMP];
-              E_Int  PtrIterOmp = ipt_param_int[nd][Ptomp +nstep -1];   
+              E_Int  PtrIterOmp = ipt_param_int[nd][Ptomp +nstep_loc -1];   
               E_Int  PtZoneomp  = ipt_param_int[nd][PtrIterOmp + nd_subzone];
 
               Nbre_thread_actif_loc = ipt_param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
@@ -203,17 +256,22 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
                                ipt_ind_dm_loc,
                                ipt_thread_topology, ipt_ind_dm_thread);
             }
+
   
-            ierr[ithread-1] = BCzone(nd, lrhs , lcorner, ipt_param_int[nd], ipt_param_real[nd], npass,
+	    if (autorisation_bc[nd] == 1)
+	    {
+            ierr[ithread-1] = BCzone(nd, lrhs , nstep, lcorner, ipt_param_int[nd], ipt_param_real[nd], npass,
                                      ipt_ind_dm_loc, ipt_ind_dm_thread, 
                                      ipt_ind_CL    , ipt_ind_CL119   , ipt_ind_CLgmres, ipt_shift_lu,
                                      iptro[nd]     , ipti[nd]        , iptj[nd]       , iptk[nd]    ,
                                      iptx[nd]      , ipty[nd]        , iptz[nd]     ,
                                      iptventi[nd]  , iptventj[nd]    , iptventk[nd], iptro[nd]);
-
+            
             correct_coins_(nd,  ipt_param_int[nd], ipt_ind_dm_thread , iptro[nd]);
+	    }// test autorisation
 
           }//loop souszone
+	  // } // loop autorisation_bc
        }//loop zone
   }//fin zone omp
 

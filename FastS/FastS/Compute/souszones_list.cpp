@@ -74,7 +74,7 @@ void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
            
            nidom_tot = nidom_tot + ipt_nidom_loc[0];
        }
-
+       
 
      } // loop zone 
 
@@ -83,10 +83,12 @@ void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
      if (nstep == iptdtloc[0] && itypcp!=2) lexit_lu  = 1;
      iptdtloc[nstep+5] = nidom_tot;
 
+
+
    }  //fin if module_verif
 
   else
-   { nidom_tot = iptdtloc[nstep+5]; }
+   {nidom_tot = iptdtloc[nstep+5];}
 
   RELEASEHOOK(hook)
 
@@ -159,7 +161,7 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
   souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun, nstep, nidom_tot, lexit_lu, lssiter_verif);
 
   //calcul distri si implicit ou explicit local + modulo verif
-  if( distrib_omp==1 || (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun%iptdtloc[1] == 0 || nitrun == 1) )
+  if( distrib_omp==1 || (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2))  && (nitrun%iptdtloc[1] == 0 || nitrun == 1) )
   {
     E_Int display = 0;
     if (nstep==1) display = 1;

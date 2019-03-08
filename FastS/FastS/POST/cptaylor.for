@@ -6,7 +6,7 @@ c***********************************************************************
       subroutine cptaylor(ndom, neq_grad,
      &                    param_int, ind_loop,
      &                    rop  , dvardc, 
-     &                    tke  , enst , compteur )
+     &                    tke  , enst , compteur,vol )
 c***********************************************************************
 c_U   USER : C. laurent
 c
@@ -22,11 +22,12 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndom, neq_grad, ind_loop(6), compteur, param_int(0:*)
+      INTEGER_E ndom, neq_grad, ind_loop(6), param_int(0:*)
 c
       REAL_E    rop( param_int(NDIMDX) * param_int(NEQ) )
+      REAL_E vol( param_int(NDIMDX_MTR) )
       REAL_E dvardc( param_int(NDIMDX) * neq_grad*3 )
-      REAL_E tke, enst
+      REAL_E tke, enst,compteur
 
 c Var loc
       INTEGER_E i,j,k,l,lij, v1,v2,v3,v4,v5,ltij,lt,lvo,
@@ -57,27 +58,31 @@ c Var loc
 
 
 
-      compteur = compteur +  (ind_loop(2) -ind_loop(1)+1)*
-     &                       (ind_loop(4) -ind_loop(3)+1)*
-     &                       (ind_loop(6) -ind_loop(5)+1)
+c$$$      compteur = compteur +  (ind_loop(2) -ind_loop(1)+1)*
+c$$$     &                       (ind_loop(4) -ind_loop(3)+1)*
+c$$$     &                       (ind_loop(6) -ind_loop(5)+1)
 
       DO k = ind_loop(5), ind_loop(6)
       DO j = ind_loop(3), ind_loop(4)
 CC#include "FastS/POST/loopI_begin.for"
 #include "FastS/Compute/loopI_begin.for"
 
+          compteur = compteur + vol(lt)
+
+          !print*, compteur , vol(lt)
+
           rho        = rop(l+ V1)
           u1         = rop(l+ V2)
           u2         = rop(l+ V3) 
           u3         = rop(l+ V4)
 
-          tke        = tke + 0.5*rho*(u1*u1+u2*u2+u3*u3)
+          tke        = tke + 0.5*rho*(u1*u1+u2*u2+u3*u3)*vol(lt)
 
           w1         = (dvardc(l + Vdwdy) - dvardc(l + Vdvdz))
           w2         = (dvardc(l + Vdudz) - dvardc(l + Vdwdx))
           w3         = (dvardc(l + Vdvdx) - dvardc(l + Vdudy))
 
-          enst       =enst + 0.5*rho*(w1*w1+w2*w2+w3*w3)
+          enst       =enst + 0.5*rho*(w1*w1+w2*w2+w3*w3)*vol(lt)
 
         end do
         end do

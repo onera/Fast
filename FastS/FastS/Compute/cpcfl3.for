@@ -45,7 +45,7 @@ C var local
       REAL_E xinvkt, u,v,w,r,ue,ve,we,
      &      ur,vr,wr,ur2,ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,rgp,gam2,
      &      sp,c, xinvspc, vis, conv,comp, cfloc, u2,gam1,
-     &      ddi,ddj,ddk,surf
+     &      ddi,ddj,ddk,surf,dt
  
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_vent_param.h"
@@ -58,7 +58,16 @@ C var local
       rgp  = param_real(STAREF+1)*( param_real(STAREF) -1.)  !Cv(gama-1)= R (gas parfait)
       gam1 = param_real(STAREF)/param_real(VISCO +1)
       gam2 = param_real(STAREF)*rgp
+      
+      !print*, ind_loop(1), ind_loop(2),ind_loop(3), ind_loop(4)
+      
+      if (param_int(EXPLOC).ne.0) then
+         dt = param_real(DTC)/param_int(LEVEL)
+      else
+         dt = param_real(DTC)
+      end if
 
+      
 c******* NS unsteady *****
       If (param_int(LALE).ge.1.and.(param_int(IFLOW).ge.2)) Then
 
@@ -120,7 +129,7 @@ c******* NS unsteady *****
               conv  = 2.*vol(lvo) * surf * xinvspc
               comp  = min(vis,conv)
 
-              cfloc = param_real(DTC)/comp
+              cfloc = dt/comp
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -167,7 +176,7 @@ c******* NS unsteady *****
               conv  = 2.*vol(lvo) * surf * xinvspc
               comp  = min(vis,conv)
 
-              cfloc = param_real(DTC)/comp
+              cfloc = dt/comp
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -212,7 +221,7 @@ c******* NS unsteady *****
               conv  = 2.*vol(lvo) * surf * xinvspc
               comp  = min(vis,conv)
 
-              cfloc = param_real(DTC)/comp
+              cfloc = dt/comp
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -253,7 +262,8 @@ c******* NS unsteady *****
               conv  = 2.*vol(lvo) * surf * xinvspc
               comp  = min(vis,conv)
 
-              cfloc = param_real(DTC)/comp
+
+              cfloc = dt/comp
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -307,7 +317,7 @@ c******* NS steady *****
               conv  = 2.*vol(lvo) * surf * xinvspc
               comp  = min(vis,conv)
 
-              cfloc = param_real(DTC)/comp
+              cfloc = dt/comp
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -317,7 +327,9 @@ c******* NS steady *****
 
        elseif(param_int(ITYPZONE).eq.1) then
 
+
 #include   "FastS/Compute/loop_begin.for"
+
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2) )
               ddi =ddi+ sqrt( ti(lt,1)*ti(lt,1)+ti(lt,2)*ti(lt,2) )
@@ -347,13 +359,15 @@ c******* NS steady *****
               conv  = 2.*vol(lvo) * surf * xinvspc
               comp  = min(vis,conv)
 
-              cfloc = param_real(DTC)/comp
+              cfloc = dt/comp
+
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
+              !cfl(2) = min(cfl(2),vis/conv)
               cfl(3) = cfl(3) + cfloc
 #include   "FastS/Compute/loop_end.for"
-
+        ! print*, 'cfl(3)= ', cfl(3)
 
        elseif(param_int(ITYPZONE).eq.2) then
 
@@ -385,7 +399,7 @@ c******* NS steady *****
               conv  = 2.*vol(lvo) * surf * xinvspc
               comp  = min(vis,conv)
 
-              cfloc = param_real(DTC)/comp
+              cfloc = dt/comp
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -420,7 +434,7 @@ c******* NS steady *****
               conv  = 2.*vol(lvo) * surf * xinvspc
               comp  = min(vis,conv)
 
-              cfloc = param_real(DTC)/comp
+              cfloc = dt/comp
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -435,6 +449,7 @@ c******* Euler unsteady *****
 
          inci_ven = param_int(NIJK_VENT)
 
+
          if(param_int(NEQ_VENT).eq.2) then
             ck_vent =0.
          else
@@ -446,7 +461,9 @@ c******* Euler unsteady *****
 
         if(param_int(ITYPZONE).eq.0) then
 
+
 #include   "FastS/Compute/loop_ale_begin.for"
+
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2)
      &                  +ti(lt+inci,3)*ti(lt+inci,3) )
@@ -487,7 +504,7 @@ c******* Euler unsteady *****
 
               conv  = 2.*vol(lvo) * surf * xinvspc
 
-              cfloc = param_real(DTC)/conv
+              cfloc = dt/conv
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -495,6 +512,7 @@ c******* Euler unsteady *****
 #include   "FastS/Compute/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.1) then
+
 
 #include   "FastS/Compute/loop_ale_begin.for"
  
@@ -531,7 +549,7 @@ c******* Euler unsteady *****
 
               conv  = 2.*vol(lvo) * surf * xinvspc
 
-              cfloc = param_real(DTC)/conv
+              cfloc = dt/conv
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -571,7 +589,7 @@ c******* Euler unsteady *****
 
               conv  = 2.*vol(lvo) * surf * xinvspc
 
-              cfloc = param_real(DTC)/conv
+              cfloc = dt/conv
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -608,7 +626,9 @@ c******* Euler unsteady *****
 
               conv  = 2.*vol(lvo) * surf * xinvspc
 
-              cfloc = param_real(DTC)/conv
+              cfloc = dt/conv
+
+
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -620,6 +640,8 @@ c******* Euler unsteady *****
 c******* Euler steady *****
 
       Elseif (param_int(LALE).eq.0.and.param_int(IFLOW).lt.2) Then
+
+          !print*, "coucou"
 
         if(param_int(ITYPZONE).eq.0) then
 
@@ -657,7 +679,7 @@ c******* Euler steady *****
 
               conv  = 2.*vol(lvo) * surf * xinvspc
 
-              cfloc = param_real(DTC)/conv
+              cfloc = dt/conv
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -693,7 +715,7 @@ c******* Euler steady *****
 
               conv  = 2.*vol(lvo) * surf * xinvspc
 
-              cfloc = param_real(DTC)/conv
+              cfloc = dt/conv
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -727,7 +749,7 @@ c******* Euler steady *****
 
               conv  = 2.*vol(lvo) * surf * xinvspc
 
-              cfloc = param_real(DTC)/conv
+              cfloc = dt/conv
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
@@ -759,12 +781,16 @@ c******* Euler steady *****
 
               conv  = 2.*vol(lvo) * surf * xinvspc
 
-              cfloc = param_real(DTC)/conv
+              cfloc = dt/conv
 
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
+
+              !print*, cfloc
 #include   "FastS/Compute/loop_end.for"
+
+              !print*, cfl(1), cfl(2), cfl(3)
 
        endif
 

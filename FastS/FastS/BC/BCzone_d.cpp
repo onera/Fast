@@ -41,7 +41,7 @@ using namespace K_FLD;
 
 //=============================================================================
 E_Int K_FASTS::BCzone_d(
-    E_Int& nd, E_Int& lrhs, E_Int& lcorner,
+    E_Int& nd, E_Int& lrhs,  E_Int& nstep, E_Int& lcorner,
     // E_Int& ithread,  E_Int& Nbre_thread_actif, E_Int* ipt_thread_topology, E_Float* vteta, E_Float* roteta,
     E_Int* param_int, E_Float* param_real, E_Int& npass, E_Int* ipt_ind_dm, E_Int* ipt_ind_dm_thread, E_Int* ipt_ind_CL,
     E_Int* ipt_ind_CL119, E_Int* ipt_ind_CLgmres, E_Int* ishift_lu, E_Float* iptrop, E_Float* ipti, E_Float* iptj, E_Float* iptk, E_Float* iptx,
@@ -315,11 +315,21 @@ E_Int K_FASTS::BCzone_d(
                     bvbs_wall_viscous_adia_d_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, ipventijk, iptijk,
                                                iptrop, iptrop_d );
                 } else if ( bc_type == 12 && param_int[IFLOW] > 1 ) {
+#                   include "BC/INCREMENT_BC.h"
                     E_Float mobile_coef            = 1.;
-                    if ( nbdata != 0 ) mobile_coef = ipt_data[0];
+                    E_Float* random_bc;
+                    E_Int size_data=1;
+                    if ( nbdata != 0 ) 
+		      {
+			if   (iptsize_data[0]==1){ mobile_coef = ipt_data[0]; random_bc = ipt_data+1; size_data= iptsize_data[1];}
+			else { random_bc = ipt_data;
+                               if(nbdata == 2) {E_Float* tmp=ipt_data+iptsize_data[0];  size_data= iptsize_data[0]; mobile_coef =tmp[0];}
+                             }
 
-                    bvbs_wall_viscous_transition_d_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, param_real,
-                                                     iptx, ipty, iptz, ipventijk, iptijk, iptrop, iptrop_d );
+		      }
+
+                    bvbs_wall_viscous_transition_d_( idir, lrhs_loc, nstep, neq_mtr, mobile_coef, random_bc, size_data, inc_bc, param_int, ipt_ind_CL, param_real,
+                                                    iptx, ipty, iptz, ipventijk, iptijk, iptrop, iptrop_d );
                 }
 
                 else if ( bc_type == 11 ) {

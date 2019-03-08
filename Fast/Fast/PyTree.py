@@ -300,6 +300,10 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             else: ts = None
     return t, tc, ts, graph
 
+
+
+
+
 #==============================================================================
 # save t
 # IN: NP: 0 (seq run), >0 (mpi run, distributed), <0 (seq, save multiple)
@@ -494,6 +498,123 @@ def loadFile(fileName='t.cgns', split='single', graph=False, mpirun=False):
 
     if graph: return t, graphN
     else:     return t
+
+
+#==============================================================================
+# Load one file
+# si split='single': load t.cgns
+# si split='multiple': read t.cgns ou t/t_1.cgns
+# if graph=True,
+# return the communication graph for Chimera and abutting transfers
+# and the communication graph for IBM transfers
+#==============================================================================
+def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
+    """Load tree and connectivity tree."""
+    import os.path
+    baseName = os.path.basename(fileName)
+    baseName = os.path.splitext(baseName)[0] # name without extension
+    fileName = os.path.splitext(fileName)[0] # full path without extension
+
+    graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
+    list_graph=[]
+    if mpirun: # mpi run
+        import Converter.Mpi as Cmpi
+        import Distributor2.PyTree as D2
+        rank = Cmpi.rank; size = Cmpi.size
+        
+        if split == 'single':
+            FILE = fileName+'.cgns'
+            #print FILE
+            t = Cmpi.convertFile2SkeletonTree(FILE)
+            #t = C.convertFile2PyTree(FILE)
+            #zones = Internal.getZones(t)
+            #for z in zones:print z
+            mp = getMaxProc(t)
+            #print 'mp= ',mp
+            if mp+1 != size: 
+                raise ValueError, 'The number of mpi proc (%d) doesn t match the tree distribution (%d)'%(mp+1,size) 
+            if graph:
+                graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
+                graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
+                procDict  = D2.getProcDict(t)
+                procList  = D2.getProcList(t,  sort=True)
+                graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+
+                graphID_   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=True)
+                graphIBCD_  = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=True)
+                procDict_  = D2.getProcDict(t)
+                procList_  = D2.getProcList(t,  sort=True)
+                
+                i=0
+                graphN_={}
+                if graphID_ is not None:
+                    for g in graphID_:
+                        graphN_={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
+                        list_graph.append(graphN_)
+                        i += 1
+
+                
+                elif graphIBCD_ is not None:
+                    for g in graphIBCD_:
+                        graphN_={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
+                        list_graph.append(graphN_)
+                        i += 1
+
+                
+
+                #print graphID_[1]
+            
+            t = Cmpi.readZones(t, FILE, rank=rank)
+            t = Cmpi.convert2PartialTree(t, rank=rank)
+            
+        else: # load 1 fichier par proc
+            if graph:
+                # Try to load graph from file
+                if os.access('%s/graph.pk'%fileName, os.R_OK):
+                    import cPickle as pickle
+                    file = open('%s/graph.pk'%fileName, 'rb')
+                    graphN = pickle.load(file)
+                    file.close()
+                # Load all skeleton proc files
+                else:
+                    ret = 1; no = 0; t = []
+                    while ret == 1:
+                       FILE = '%s_%d.cgns'%(fileName, no)
+                       if not os.access(FILE, os.F_OK): ret = 0
+                       if ret == 1: 
+                          t.append(Cmpi.convertFile2SkeletonTree(FILE))
+                       no += 1
+                    if t != []:
+                        t        = Internal.merge(t)
+                        graphID  = Cmpi.computeGraph(t, type='ID'  , reduction=False)
+                        graphIBCD= Cmpi.computeGraph(t, type='IBCD', reduction=False)
+                        procDict = D2.getProcDict(t)
+                        procList = D2.getProcList(t,  sort=True)
+                        graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+                    else: print 'graph non calculable: manque de fichiers connectivite'
+
+            FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
+            if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
+            else: t = None
+
+    else: # sequential run
+        if split == 'single':
+            FILE = fileName+'.cgns'
+            if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
+            else: t = None
+        else: # multiple
+            ret = 1; no = 0; t = []
+            while ret == 1:
+                FILE = '%s/%s_%d.cgns'%(fileName, baseName, no)
+                if not os.access(FILE, os.F_OK): ret = 0
+                if ret == 1: t.append(C.convertFile2PyTree(FILE))
+                no += 1
+            if t != []: t = Internal.merge(t)
+            else: t = None
+
+    if graph: return t, graphN, list_graph
+    else:     return t
+
 
 #==============================================================================
 # Save tree in one file.

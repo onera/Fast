@@ -61,8 +61,10 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
   for (E_Int nd = 0; nd < nidom; nd++)
      {  
        E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
+       //cout << "max_ssdom= "<<  param_int[nd][ MXSSDOM_LU ] << endl;
        E_Int nb_subzone     = ipt_nidom_loc [nstep-1];   
        mxzone +=nb_subzone;
+       //cout << nb_subzone << endl;
      } // loop zone
 
   FldArrayI tab_nijk(mxzone*3*2);   E_Int* ipt_nijk    = tab_nijk.begin();
@@ -88,7 +90,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
      {  
        E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
        E_Int nb_subzone     = ipt_nidom_loc [nstep-1];   
-
+       //cout << "zone " << nd << " " << nb_subzone << endl; 
        size_subzone[nd] = 0;
 
        //Initialisation pointer iteration si zone skipper
@@ -124,6 +126,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
      } // loop zone 
 
   E_Int Nbzones = c;
+  //cout << "Nbzones = " << Nbzones << endl;
 
   //
   //
@@ -419,16 +422,23 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
            if ((display==1 && nitrun ==1 && nstep==1) || display ==2)
            {
-             printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d \n", c, No_zone, Nthreads, nstep);
+             printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d, cycle = %d \n", c, No_zone, Nthreads, nstep, param_int[No_zone][NSSITER]/param_int[No_zone][LEVEL] );
              printf("-- Thread= %d : fenetre=( %d, %d, %d, %d, %d, %d) \n", th_current, ind_dm[0],ind_dm[1],ind_dm[2],ind_dm[3],ind_dm[4],ind_dm[5]);
            }
         }
         else
-        {
+	{
             Nthreads=0; E_Int cells_loc=0;
-            while( cells_loc < size_c && Nthreads < __NUMTHREADS__ ){  cells_loc += remaind[ remaind_pos[Nthreads]]; Nthreads +=1;}
+            while( cells_loc < size_c && Nthreads < __NUMTHREADS__ )
+	      {  
+		cells_loc += remaind[ remaind_pos[Nthreads]]; Nthreads +=1;
+		//printf("cells_loc = %d, remain = %d \n", cells_loc, remaind[ remaind_pos[Nthreads]] ); 
+
+	      }
 
             cells_tg  =  cells_loc/Nthreads;
+
+
 
 
             E_Int cells_tg_min = remaind[ remaind_pos[Nthreads-1]]; E_Int th_min=-1; 
@@ -595,7 +605,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                           E_Int sum;
                           if(topo_lu[0]*topo_lu[1]==1)  //decoupe K
                            {
-                            sum=0.;
+                            sum=0;
                             for (E_Int l = 0; l <topo_lu[2] ; l++)
                             {
                               dim_k[l]=remaind[ remaind_pos[l]]/(nijk[0]*nijk[1]);
@@ -606,7 +616,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                            }
                           else if (topo_lu[0]*topo_lu[2]==1) //decoupe J
                            {
-                            sum=0.;
+                            sum=0;
                             for (E_Int l = 0; l <topo_lu[1] ; l++)
                             {
                               dim_j[l]=remaind[ remaind_pos[l]]/(nijk[0]*nijk[2]);
@@ -617,7 +627,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                            }
                           else if (topo_lu[1]*topo_lu[2]==1) //decoupe I
                            {
-                            sum=0.;
+                            sum=0;
                             for (E_Int l = 0; l <topo_lu[0] ; l++)
                             {
                               dim_i[l]=remaind[ remaind_pos[l]]/(nijk[1]*nijk[2]);
@@ -628,7 +638,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                            }
                           else if (topo_lu[2]==1) //decoupe IJ
                            {
-                            sum=0.; // on dimensione dim_i a partie de dim_j(0)
+                            sum=0; // on dimensione dim_i a partie de dim_j(0)
                             for (E_Int l = 0; l <topo_lu[0] ; l++)
                             {
                               dim_i[l]=remaind[ remaind_pos[l]]/(dim_j[0]*nijk[2]);
@@ -637,20 +647,20 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                               //printf("dimI %d %d \n", dim_i[l], l);
                               sum+=dim_i[l];
                             }
-                              //printf("dimJO %d \n", dim_j[0]);
                             E_Int sum=dim_j[0]; // on dimensione dim_j a partie de dim_i(0)
+
                             for (E_Int l = 1; l <topo_lu[1] ; l++)
                             {
                               dim_j[l]=remaind[ remaind_pos[ l*topo_lu[0] ] ]/(dim_i[0]*nijk[2]);
                               dim_j[l]= K_FUNC::E_max(dim_j[l], lmin);
                               if (l==topo_lu[1]-1){dim_j[l] = nijk[1]-sum;}
-                              //printf("dimJ %d %d \n", dim_j[l], l);
                               sum+=dim_j[l];
+                              //printf("dimJ %d %d \n", dim_j[l],dim_j[0]);
                             }
                            }
                           else if (topo_lu[0]==1) //decoupe KJ
                            {
-                            sum=0.; // on dimensione dim_k a partie de dim_j(0)
+                            sum=0; // on dimensione dim_k a partie de dim_j(0)
 
                             for (E_Int l = 0; l <topo_lu[2] ; l++)
                             {
@@ -897,11 +907,14 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
            { 
              E_Int Nthreads = param_int[No_zone][ PtZoneomp + __NUMTHREADS__ ];
 
-             printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d \n", c, No_zone, Nthreads, nstep);
-
+             printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d, cycle=%d \n", c, No_zone, Nthreads, nstep, param_int[No_zone][NSSITER]/param_int[No_zone][LEVEL]);
+	     
              for (E_Int th_current = 0; th_current < __NUMTHREADS__; th_current++){
 
                  E_Int th=param_int[No_zone][ PtZoneomp + th_current ];
+
+		 //printf("th= %d \n", th);
+
                  if( th != -2)
                  {
                    E_Int* ind_dm = param_int[No_zone] + PtZoneomp + __NUMTHREADS__ +4 + th*6;

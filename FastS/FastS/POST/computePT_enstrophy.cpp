@@ -114,7 +114,7 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
 //
 
   //printf("thread =%d\n",threadmax_sdm);
-  FldArrayI compteur(     threadmax_sdm); E_Int* ipt_compteur   =  compteur.begin();
+  FldArrayF compteur(     threadmax_sdm); E_Float*ipt_compteur   =  compteur.begin();
   FldArrayI ijkv_sdm(   3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(   3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
   FldArrayI ind_dm(     6*threadmax_sdm); E_Int* ipt_ind_dm     =  ind_dm.begin();
@@ -129,6 +129,18 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
   // Tableau de travail verrou omp
   PyObject* lokArray = PyDict_GetItemString(work,"verrou_omp"); FldArrayI* lok;
   K_NUMPY::getFromNumpyArray(lokArray, lok, true); E_Int* ipt_lok  = lok->begin();
+
+
+  // Variables pour calcul de l enstrophie, tke
+  E_Float enstr;
+  E_Float tk;
+  E_Float compt;
+  
+  enstr=0.0;
+  tk=0.0;
+  compt=0.0;
+
+  //ipt_compteur[0]=0;
 
 #pragma omp parallel default(shared)
   {
@@ -183,12 +195,22 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
                  ipt_tke[0]     =  ipt_tke[0] + ipt_tke[nd];
                  ipt_compteur[0]=  ipt_compteur[0] + ipt_compteur[nd];
                }
-               ipt_enst[0]=  ipt_enst[0]/float( ipt_compteur[0]);
-               ipt_tke[0] =  ipt_tke[0]/ float( ipt_compteur[0]);
+	     //ipt_enst[0]=  ipt_enst[0]/float( ipt_compteur[0]);
+	     // ipt_tke[0] =  ipt_tke[0]/ float( ipt_compteur[0]);
+	     enstr = enstr + ipt_enst[0];
+	     tk = tk + ipt_tke[0];
+	     compt = compt + ipt_compteur[0];
+
+	     //cout << "enstr= " << enstr <<" "<<"zone"<<" "<< nd << endl;
+	     //cout << "compt= " << compt <<" "<<"zone"<<" "<< nd << endl;
+
            }
           }// boucle zone 
 # include "HPC_LAYER/INIT_LOCK.h"
   }  // zone OMP
+
+  ipt_enst[0]=  enstr/compt;
+  ipt_tke[0] =  tk/ compt;
 
 
   delete [] ipt_param_real;

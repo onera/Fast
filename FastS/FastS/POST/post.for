@@ -36,12 +36,12 @@ c***********************************************************************
       implicit none
 
       INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, 
-     & ithread, Nbre_socket, socket , neq_grad, compteur
+     & ithread, Nbre_socket, socket , neq_grad
 
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),ind_dm_omp(6),
      &  ind_dm_socket(6), socket_topology(3), param_int(0:*), lok(*)
 
-      REAL_E rop(*), ti(*),tj(*),tk(*),vol(*), grad(*), tke,enst
+      REAL_E rop(*), ti(*),tj(*),tk(*),vol(*), grad(*),tke,enst,compteur
 
       REAL_E param_real(0:*)
 
@@ -93,7 +93,7 @@ C Var loc
             call cptaylor(ndo, neq_grad,
      &                    param_int, ind_mjr,
      &                    rop  , grad, 
-     &                    tke  , enst , compteur )
+     &                    tke  , enst , compteur,vol )
 
 #include "FastS/HPC_LAYER/SYNCHRO_GO.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_END.for"

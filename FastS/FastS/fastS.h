@@ -48,15 +48,32 @@ namespace K_FASTS
   PyObject* itt(                     PyObject* self, PyObject* args);
   PyObject* compute(                 PyObject* self, PyObject* args);
   PyObject* _computePT(              PyObject* self, PyObject* args);
+  //PyObject* _computePT_(             PyObject* self, PyObject* args);
   PyObject* _stretch(                PyObject* self, PyObject* args);
   PyObject* _interpfromzone(         PyObject* self, PyObject* args);
   PyObject* _computePT_mut(          PyObject* self, PyObject* args);
   PyObject* _matvecPT(               PyObject* self, PyObject* args);
   PyObject* _applyBC(                PyObject* self, PyObject* args);
+  PyObject* _applyBC_(               PyObject* self, PyObject* args);
   PyObject* PygetRange(              PyObject* self, PyObject* args);
   PyObject* display_ss_iteration(    PyObject* self, PyObject* args);
   PyObject* stockrecup(              PyObject* self, PyObject* args);
+  PyObject* recup(                   PyObject* self, PyObject* args);
+  PyObject* recup2(                  PyObject* self, PyObject* args);
+  PyObject* recup3(                  PyObject* self, PyObject* args);
+  PyObject* recup3para(              PyObject* self, PyObject* args);
+  PyObject* recup3para_(             PyObject* self, PyObject* args);
+  PyObject* recup3para_mpi(          PyObject* self, PyObject* args);
+  PyObject* dtlocal(                 PyObject* self, PyObject* args);
+  PyObject* dtlocal2(                PyObject* self, PyObject* args);
+  PyObject* dtlocal2para(            PyObject* self, PyObject* args);
+  PyObject* dtlocal2para_(           PyObject* self, PyObject* args);
+  PyObject* dtlocal2para_mpi(        PyObject* self, PyObject* args);
+  PyObject* prep_cfl(                PyObject* self, PyObject* args);
+  PyObject* decoupe_maillage(        PyObject* self, PyObject* args);
   PyObject* souszones_list(          PyObject* self, PyObject* args);
+  PyObject* souszones_list2(         PyObject* self, PyObject* args);
+  PyObject* souszones_list3(         PyObject* self, PyObject* args);
   PyObject* distributeThreads(       PyObject* self, PyObject* args);
   PyObject* computePT_enstrophy(     PyObject* self, PyObject* args);
   PyObject* computePT_variables(     PyObject* self, PyObject* args);
@@ -148,8 +165,7 @@ namespace K_FASTS
     E_Float**& iptrdm,
     E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*   iptwig, E_Float* iptstat_wig,
     E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res,E_Float**& iptdrodm_trans,
-    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real,
-    E_Float**  iptsrc);
+    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& taille_tabs, E_Float*& stock, E_Float*& drodmstock, E_Float*& constk, E_Float**  iptsrc);
 
 
   //=============
@@ -187,7 +203,6 @@ namespace K_FASTS
     E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real);
 
 
-
   //==============================
   // - Transfer with CMP library -
   //==============================
@@ -196,18 +211,18 @@ namespace K_FASTS
 
   void setInterpTransfersFastS(
   E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
-  E_Int*& param_bci, E_Float*& param_bcf, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Float& Pr, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi);
+  E_Int*& param_bci, E_Float*& param_bcf, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Float& Pr, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi, E_Int& nitcfg, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& numpassage );
   
   /* Transferts FastS Intra process */
   void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
                               E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Float& Pr, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
-                              E_Int& NoTransfert, E_Float*& ipt_timecount);
+                              E_Int& NoTransfert, E_Float*& ipt_timecount, E_Int& nitcfg, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& numpassage );
 
   #ifdef _MPI
   /* Transferts FastS Inter process */
   void setInterpTransfersInter(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
                                 E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Float& Pr, E_Int& TypeTransfert, E_Int& nitrun, 
-                                E_Int& nidom, E_Int& NoTransfert,std::pair<RecvQueue*, SendQueue*>*& pair_of_queue, E_Float*& ipt_timecount);
+                                E_Int& nidom, E_Int& NoTransfert,std::pair<RecvQueue*, SendQueue*>*& pair_of_queue, E_Float*& ipt_timecount, E_Int& nitcfg, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& numpassage );
 
   /* Get Transfert Inter process */
   void getTransfersInter(E_Float**& ipt_roD, E_Int*& ipt_ndimdxD, E_Int*& ipt_param_int ,
@@ -241,14 +256,14 @@ namespace K_FASTS
                       std::vector<E_Int>& type_bc,
                       std::vector<PyArrayObject*>& hook);
 
-  E_Int BCzone(E_Int& nd, E_Int& lrhs, E_Int& lcorner,
+  E_Int BCzone(E_Int& nd, E_Int& lrhs,  E_Int& nstep,E_Int& lcorner,
                E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int& npass ,
                E_Int* ipt_ind_dm, E_Int* ipt_ind_dm_thread,
                E_Int* ipt_ind_CL  , E_Int* ipt_ind_CL119, E_Int* ipt_ind_CLgmres, E_Int* ishift_lu,
                E_Float*   iptrop  , E_Float*   ipti     , E_Float*  iptj        , E_Float* iptk   , E_Float* iptx, E_Float* ipty, E_Float* iptz,
                E_Float* iptventi  , E_Float* iptventj   , E_Float* iptventk, E_Float* iptro_gmres);
 
-  E_Int BCzone_d(E_Int& nd, E_Int& lrhs, E_Int& lcorner,
+  E_Int BCzone_d(E_Int& nd, E_Int& lrhs,  E_Int& nstep,E_Int& lcorner,
                E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int& npass ,
                E_Int* ipt_ind_dm, E_Int* ipt_ind_dm_thread,
                E_Int* ipt_ind_CL  , E_Int* ipt_ind_CL119, E_Int* ipt_ind_CLgmres, E_Int* ishift_lu,
@@ -259,6 +274,29 @@ namespace K_FASTS
                  E_Float** iptx,  E_Float** ipty, E_Float** iptz,
                  E_Float** ipti,  E_Float** iptj, E_Float** iptk, E_Float** iptvol,
                  E_Float** iptventi        , E_Float**  iptventj         , E_Float** iptventk);
+
+
+  //====================
+  // - explicite local -
+  //====================
+
+void dtlocal2para_c(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int,
+		    E_Float*& param_real, E_Int**& param_intt, E_Float**& param_realt,
+		    E_Float*& iptdrodm,  E_Float*& iptdrodmcoe, E_Float*& iptstk, E_Float*& iptdrodmstk,
+		    E_Float*& iptcstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom);
+
+void BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int,
+		    E_Float*& param_real, E_Int**& param_intt, E_Float**& param_realt,
+		    E_Float*& iptdrodm,  E_Float*& iptdrodmcoe, E_Int* ipt_ind_CL, E_Float** ipti, E_Float** iptj, E_Float** iptk,
+		    E_Float** iptx, E_Float** ipty, E_Float** iptz, E_Float** iptventi, E_Float** iptventj, E_Float** iptventk, 
+		    E_Float*& iptstk, E_Float*& iptdrodmstk,
+		    E_Float*& iptcstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom);
+
+void recup3para_c(E_Float**& iptro, E_Int*& param_int,
+		    E_Float*& param_real, E_Int**& param_intt, 
+		    E_Float*& iptstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom);
+
+
 
 }
 #endif

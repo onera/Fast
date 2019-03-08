@@ -132,15 +132,14 @@ E_Int K_FASTS::getRange( E_Int* in_bc, E_Int* ind_fen, E_Int* param_int ) {
 //
 //=============================================================================
 E_Int K_FASTS::BCzone(
-    E_Int& nd, E_Int& lrhs, E_Int& lcorner,
-    // E_Int& ithread,  E_Int& Nbre_thread_actif, E_Int* ipt_thread_topology, E_Float* vteta, E_Float* roteta,
+    E_Int& nd, E_Int& lrhs, E_Int& nstep, E_Int& lcorner,
     E_Int* param_int, E_Float* param_real, E_Int& npass, E_Int* ipt_ind_dm, E_Int* ipt_ind_dm_thread, E_Int* ipt_ind_CL,
     E_Int* ipt_ind_CL119, E_Int* ipt_ind_CLgmres, E_Int* ishift_lu, E_Float* iptrop, E_Float* ipti, E_Float* iptj, E_Float* iptk, E_Float* iptx,
     E_Float* ipty, E_Float* iptz, E_Float* iptventi, E_Float* iptventj, E_Float* iptventk, E_Float* iptrop_gmres ) {
+
     E_Int err = 1;
     E_Int neq_mtr;
     E_Int itest[6], lskip[6], ind_rhs[6], ind_avg[6], ind_avg_thread[6], ind_mjr[6], ind_mjr_thread[6];
-
     E_Int lrhs_loc = 0;
     if (lrhs == 1) lrhs_loc = 1;
 
@@ -150,6 +149,8 @@ E_Int K_FASTS::BCzone(
     itest[3] = param_int[IJKV + 1];
     itest[4] = 1;
     itest[5] = param_int[IJKV + 2];
+ 
+    vector<PyArrayObject*> hook;
 
     for ( E_Int i = 0; i < 6; i++ ) lskip[i] = 1;
 
@@ -161,7 +162,7 @@ E_Int K_FASTS::BCzone(
 
     E_Int pt_bcs = param_int[PT_BC];
     E_Int nb_bc  = param_int[ pt_bcs ];
-
+   
     E_Int ificmax[6];
     if( param_int[LU_MATCH] != 0) param_int[LU_MATCH] = 1;
 
@@ -178,7 +179,7 @@ E_Int K_FASTS::BCzone(
         if ( lrhs_loc == 1 ) {
                           if ( ( ipt_ind_dm_thread[ipara] == itest[ipara] ) &&
                                (   (  param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7 ) 
-                                 ||   param_int[pt_bc + BC_TYPE] == 12 
+				 ||   param_int[pt_bc + BC_TYPE] == 12 
                                  ||   param_int[pt_bc + BC_TYPE] == 18 
                                )   
                              ) 
@@ -188,6 +189,7 @@ E_Int K_FASTS::BCzone(
                              //if (  (param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7) ||  param_int[pt_bc + BC_TYPE] == 12) ificmax[ipara]=param_int[LU_MATCH];
                              if (  (param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7) ||  param_int[pt_bc + BC_TYPE] == 12) ificmax[ipara]=1;
                            }
+
 	}
         else {lskip[ipara] = 1;}
 
@@ -313,7 +315,9 @@ E_Int K_FASTS::BCzone(
         E_Int nbdata = param_int[pt_bc + BC_NBDATA];
         E_Int bc_type= param_int[pt_bc + BC_TYPE];
 
-        //printf("ptbc= %d , idir= %d , ndom= %d , bctype=  %d \n", pt_bc, idir,nd,  bc_type );
+	//cout << "bc_type= " << bc_type << endl;
+
+        //printf("ptbc= %d , idir= %d , ndom= %d , bctype=  %d, nstep= %d \n", pt_bc, idir,nd,  bc_type, nstep );
 
         E_Int* iptsize_data = param_int + pt_bc + BC_NBDATA + 1;
 
@@ -339,7 +343,7 @@ E_Int K_FASTS::BCzone(
             E_Int lskip_loc;
             indice_cl_sdm_( idir, npass, lskip_loc, param_int[pt_bc + BC_TYPE], ipt_nijk[3], ipt_nijk[4],  // IN
                             ipt_ijkv, param_int + pt_bc + BC_FEN, ipt_ind_dm, ipt_ind_dm_thread,           // IN
-                            ipt_ind_CL, ipt_ind_CL119 );                                                   // OUT
+                            ipt_ind_CL, ipt_ind_CL119 );// OUT
 
             E_Int bc_type = param_int[pt_bc + BC_TYPE];
             E_Float* ipt_data;
@@ -384,6 +388,7 @@ E_Int K_FASTS::BCzone(
 
                 if ( bc_type == 0 ) {
                     bvbs_extrapolate_( idir, lrhs_loc, eq_deb, param_int, ipt_ind_CL119, param_real[RONUTILDEINF], iptrop );
+
                 } else if ( bc_type == 1) {
                     DEFAULT_STATE( "BCFarfield" )
                     // MUSCL
@@ -459,11 +464,23 @@ E_Int K_FASTS::BCzone(
                     bvbs_wall_viscous_adia_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, ipventijk, iptijk,
                                              iptrop );
                 } else if ( bc_type == 12 && param_int[IFLOW] > 1 ) {
+#                   include "BC/INCREMENT_BC.h"
                     E_Float mobile_coef            = 1.;
-                    if ( nbdata != 0 ) mobile_coef = ipt_data[0];
+                    E_Float* random_bc;
+                    E_Int size_data=1;
+                    if ( nbdata != 0 ) 
+		      {
+			if   (iptsize_data[0]==1){ mobile_coef = ipt_data[0]; random_bc = ipt_data+1; size_data= iptsize_data[1];}
+			else { random_bc = ipt_data;
+                               if(nbdata == 2) {E_Float* tmp=ipt_data+iptsize_data[0];  size_data= iptsize_data[0]; mobile_coef =tmp[0];}
+                             }
 
-                    bvbs_wall_viscous_transition_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, param_real,
-                                                   iptx, ipty, iptz, ipventijk, iptijk, iptrop );
+		      }
+
+		    //cout << iptsize_data[0] << endl;
+		    //cout << "coucou" << endl;
+                    bvbs_wall_viscous_transition_( idir, lrhs_loc, nstep, neq_mtr, mobile_coef, random_bc, size_data, inc_bc, param_int, ipt_ind_CL, param_real,
+                                                   iptx, ipty, iptz, ipventijk, iptijk, iptrop);
                 }
 
                 else if ( bc_type == 11 ) {
