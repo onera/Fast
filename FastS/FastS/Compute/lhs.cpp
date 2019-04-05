@@ -93,11 +93,11 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
 #else
                                E_Float lhs_end = 0.;
 #endif
-                               E_Int cpu_perzone   =  nssiter*Nbre_thread_actif*2;
+                               E_Int cpu_perzone   =  nssiter*Nbre_thread_actif*2 + nd*(Nbre_thread_actif+1);
                                E_Int cells = (ipt_shift_lu[1]-ipt_shift_lu[0]+1)*(ipt_shift_lu[3]-ipt_shift_lu[2]+1)*(ipt_shift_lu[5]-ipt_shift_lu[4]+1);
                                E_Int ith = ithread;
                                if (omp_mode == 1) ith = ithread_loc;
-                               timer_omp[ cpu_perzone + nd*Nbre_thread_actif+ ith ] +=(lhs_end - lhs_begin)/double(cells);
+                               timer_omp[ cpu_perzone + ith ] +=(lhs_end - lhs_begin)/double(cells);
                              }
                              //if(ithread==1)printf("cpu1= %g \n",(lhs_end - lhs_begin)/double(cells) );
 			   }

@@ -330,7 +330,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         hook1       = HOOK.copy()
         distrib_omp = 1
         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep, distrib_omp) )   
-        #print 'nstep = ', nstep
     
     #print "APRES hook.update"
 
@@ -1677,12 +1676,12 @@ def _BCcompact(t):
             for bc in bcs:
                 
                 ## Si la bc est une wall_viscous_transition on ajoute un data qui est un vecteur contenant des nombres random
-                #if (''.join(bc[1]) == 'BCWallViscous_transition'):
-                #    ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
-                #    range_= ptrange[0][1]
-                #    nb_cell = max([range_[0][1] - range_[0][0],1])* max([range_[1][1] - range_[1][0],1])*max([range_[2][1] - range_[2][0],1])
-                #    rand = numpy.zeros((1,nb_cell), dtype=numpy.float64)
-                #    Internal.createUniqueChild(bc, 'random_vec', 'DataArray_t', rand)
+                if (''.join(bc[1]) == 'BCWallViscous_transition'):
+                    ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
+                    range_= ptrange[0][1]
+                    nb_cell = max([range_[0][1] - range_[0][0],1])* max([range_[1][1] - range_[1][0],1])*max([range_[2][1] - range_[2][0],1])
+                    rand = numpy.zeros((1,nb_cell), dtype=numpy.float64)
+                    Internal.createUniqueChild(bc, 'random_vec', 'DataArray_t', rand)
                 
                 bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
                 Nb_data = len(bcdata)
@@ -2928,6 +2927,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
  cells_tot       =0
  data            ={}
  for z in zones:
+    echant    =  timer_omp[ ADR ]
     param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
     solver_def= Internal.getNodeFromName2(z, '.Solver#define')
     if ompmode ==1:
@@ -2983,7 +2983,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
             ithread = i
             if RECORD is None: print 'zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread ]/echant,' th=  ', ithread, 'echant= ', echant
 
-    ADR+= OMP_NUM_THREADS
+    ADR+= OMP_NUM_THREADS+1
 
  tps_percell/=cells_tot
  if RECORD is None: print 'cpu moyen %cell en microsec: ', tps_percell, tps_percell_max/cells_tot

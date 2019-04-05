@@ -28,14 +28,36 @@ using namespace K_FLD;
 //=============================================================================
 // Idem: in place + from zone + tc compact au niveau base 
 //=============================================================================
-void K_FASTS::recup3para_c(E_Float**& iptro, E_Int*& ipt_param_int,
-				E_Float*& ipt_param_real, E_Int**& param_intt, 
+void K_FASTS::recup3para_c(E_Float**& iptro, E_Int*& param_int_tc,
+				E_Float*& param_real_tc, E_Int**& param_int, 
 				E_Float*& iptstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom)
 
-   
 {
 
-  omp_mode = 0;
+#ifdef NB_SOCKET
+  E_Int nb_socket=NB_SOCKET;
+#else
+  E_Int nb_socket=1;
+#endif
+#ifdef CORE_PER_SOCK
+  E_Int core_per_socket=CORE_PER_SOCK;
+#else
+  E_Int core_per_socket=__NUMTHREADS__;
+#endif
+
+  if( __NUMTHREADS__ <= core_per_socket)  nb_socket=1;
+
+  //printf(" socket core %d %d \n", nb_socket, core_per_socket);
+  
+  FldArrayI tab_activ_core_per_socket(nb_socket);   E_Int* activ_core_per_socket = tab_activ_core_per_socket.begin();
+
+  E_Int count = __NUMTHREADS__;
+  for (E_Int s = 0; s < nb_socket; s++)
+     {   if (count >= core_per_socket) {activ_core_per_socket[s]=  core_per_socket; count -= core_per_socket;}
+         else activ_core_per_socket[s] = count;
+     }
+
+  E_Int omp_mode_loc = 0;
 
 #pragma omp parallel default(shared) //private(cycle)
   {
@@ -46,151 +68,70 @@ void K_FASTS::recup3para_c(E_Float**& iptro, E_Int*& ipt_param_int,
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-    E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
-    if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
-
-    E_Int Nbre_thread_actif_loc, ithread_loc;
-    if( omp_mode == 1) { Nbre_thread_actif_loc = 1;                 ithread_loc = 1;}
-    else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
+    E_Int Nbre_thread_actif_loc = Nbre_thread_actif;
+    E_Int ithread_loc = ithread;
 
     E_Int topology[3];
     topology[0]=0;
     topology[1]=0;
     topology[2]=0;
 
-    for (E_Int NoTransfert = 1; NoTransfert < ipt_param_int[0] + 1; NoTransfert++)
+    for (E_Int NoTransfert = 1; NoTransfert < param_int_tc[0] + 1; NoTransfert++)
 
       {
 
-	E_Int nbcomIBC = ipt_param_int[1];
-	E_Int nbcomID  = ipt_param_int[2+nbcomIBC];
+	E_Int nbcomIBC = param_int_tc[1];
+	E_Int nbcomID  = param_int_tc[2+nbcomIBC];
   
 	E_Int shift_graph = nbcomIBC + nbcomID + 2;
 
-	E_Int ech            = ipt_param_int[ NoTransfert +shift_graph];
+	E_Int ech            = param_int_tc[ NoTransfert +shift_graph];
  
-	E_Int nrac = ipt_param_int[ ech +1 ];
+	E_Int nrac = param_int_tc[ ech +1 ];
 
 
 	for  (E_Int irac=0; irac< nrac; irac++) // Boucle sur les différents raccords (frontières)
 	  {
 
 	    //E_Int shift_rac =  ech + 2 + irac;
-	    E_Int timelevel = ipt_param_int[ ech +3 ];
+	    E_Int timelevel = param_int_tc[ ech +3 ];
 	    E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
 
-	    E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
-	    E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
+	    E_Int NoD      =  param_int_tc[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
+	    E_Int NoR      =  param_int_tc[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
+
+            //Si omp_mode=1, on modifie la distribution du travail pour ameliorer le numa
+#           include "distrib_omp.h"
 
 	    E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
 
-	    E_Int ibcType = ipt_param_int[shift_rac + nrac * 3];
+	    E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
 
 	    E_Int cycle;
 
-	    cycle = param_intt[NoD][NSSITER]/ipt_param_int[debut_rac +25];
+	    cycle = param_int[NoD][NSSITER]/param_int_tc[debut_rac +25];
 
-	    if (ipt_param_int[debut_rac + 25] > ipt_param_int[debut_rac + 24]) /// Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse 
-
+	    if (param_int_tc[debut_rac + 25] > param_int_tc[debut_rac + 24]) /// Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse 
 	      {
-		
-		E_Int donorPts_[6];  E_Int idir = 2;
-		donorPts_[0] =  ipt_param_int[debut_rac + 7];
-		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
-		donorPts_[2] =  ipt_param_int[debut_rac + 9];
-		donorPts_[3] =  ipt_param_int[debut_rac + 10];
-		donorPts_[4] =  ipt_param_int[debut_rac + 11];
-		donorPts_[5] =  ipt_param_int[debut_rac + 12];
-		int dir = ipt_param_int[debut_rac + 13];
-		E_Int profondeur = ipt_param_int[debut_rac + 20];
-
-		donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*(profondeur);
-
-		E_Int taillefenetre;
-		taillefenetre = (donorPts_[1] - donorPts_[0] + 1)*(donorPts_[3] - donorPts_[2] + 1)*(donorPts_[5] - donorPts_[4] + 1); 
-
-		E_Int ipt_ind_dm_omp_thread[6]; 
-
-		indice_boucle_lu_(NoD, ithread_loc, Nbre_thread_actif_loc, param_intt[NoD][ ITYPCP ],
-				  donorPts_,
-				  topology, ipt_ind_dm_omp_thread);
-		E_Int donorPts[6];
-		donorPts[0]=ipt_ind_dm_omp_thread[0];
-		donorPts[1]=ipt_ind_dm_omp_thread[1];
-		donorPts[2]=ipt_ind_dm_omp_thread[2];
-		donorPts[3]=ipt_ind_dm_omp_thread[3];
-		donorPts[4]=ipt_ind_dm_omp_thread[4];
-		donorPts[5]=ipt_ind_dm_omp_thread[5];
-	  
 		if (nstep%cycle==cycle/2 and (nstep/cycle)%2==1) 
 		  {
-
-		    E_Int pos_tab = ipt_param_int[debut_rac + 26];
+#                   include "fenetre_raccord.h"
 
 		    //// Recuperation de y6 en position 1 dans le tableau de stockage du raccord
 		    E_Int ind=2;
-		    copy_rk3localpara_(param_intt[NoD], donorPts , donorPts_, iptro[NoD], iptstk + pos_tab + 1*5*taillefenetre,ind,taillefenetre); 
-
-
+		    copy_rk3localpara_(param_int[NoD], donorPts , donorPts_, iptro[NoD], iptstk + pos_tab + 1*5*taillefenetre,ind,taillefenetre); 
 		  }
-
 	      }
-
-	    else if (ipt_param_int[debut_rac + 25] < ipt_param_int[debut_rac + 24]) /// Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
+	    else if (param_int_tc[debut_rac + 25] < param_int_tc[debut_rac + 24]) /// Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
 	      {
-
-		E_Int donorPts_[6];  E_Int idir = 2;
-		donorPts_[0] =  ipt_param_int[debut_rac + 7];
-		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
-		donorPts_[2] =  ipt_param_int[debut_rac + 9];
-		donorPts_[3] =  ipt_param_int[debut_rac + 10];
-		donorPts_[4] =  ipt_param_int[debut_rac + 11];
-		donorPts_[5] =  ipt_param_int[debut_rac + 12];
-		int dir = ipt_param_int[debut_rac + 13];
-		E_Int profondeur = ipt_param_int[debut_rac + 20];
-
-		donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*(profondeur);
-
-		E_Int taillefenetre;
-		taillefenetre = (donorPts_[1] - donorPts_[0] + 1)*(donorPts_[3] - donorPts_[2] + 1)*(donorPts_[5] - donorPts_[4] + 1);
-
-
-		E_Int ipt_ind_dm_omp_thread[6]; 
-
-		indice_boucle_lu_(NoD, ithread_loc, Nbre_thread_actif_loc, param_intt[NoD][ ITYPCP ],
-				  donorPts_,
-				  topology, ipt_ind_dm_omp_thread);
-		E_Int donorPts[6];
-		donorPts[0]=ipt_ind_dm_omp_thread[0];
-		donorPts[1]=ipt_ind_dm_omp_thread[1];
-		donorPts[2]=ipt_ind_dm_omp_thread[2];
-		donorPts[3]=ipt_ind_dm_omp_thread[3];
-		donorPts[4]=ipt_ind_dm_omp_thread[4];
-		donorPts[5]=ipt_ind_dm_omp_thread[5];
-
- 
 		if (nstep%cycle==cycle/2 + cycle/4) 	   
-	
 		  {
-
-		    E_Int pos_tab = ipt_param_int[debut_rac + 26];
+#                   include "fenetre_raccord.h"
 
 		    E_Int ind=2;
-		    copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_,  iptro[NoD], iptstk + pos_tab + 2*5*taillefenetre,ind,taillefenetre);
-
+		    copy_rk3localpara_(param_int[NoD], donorPts ,donorPts_,  iptro[NoD], iptstk + pos_tab + 2*5*taillefenetre,ind,taillefenetre);
 		  }
-
-
-
-
-
-
-
 	      }
-
-
-
-
 	  }
 
       } //boucle NoTransfert

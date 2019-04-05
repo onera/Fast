@@ -486,6 +486,7 @@ else
     stk_size    = stk[0].getSize();
     taille_tabs = stk_size/5;
     flag_dtloc  = 1;
+    //printf("dtloc size= %d %d \n", taille_tabs,  stk_size);
 
     iptdrodmstk = iptstk+ taille_tabs*3;
     iptcstk     = iptstk+ taille_tabs*4;
@@ -557,11 +558,11 @@ else
 
        E_Int display=0;
        //calcul distri si implicit ou explicit local + modulo verif
-       if( omp_mode==1 && ( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]==2 && ipt_param_int[0][RK]==3 && ipt_param_int[0][ITYPCP]==2) ) && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1) ) )
-       {
-         //printf("coucou %d \n",omp_mode); 
-         distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
+       if( omp_mode==1 && (lssiter_loc ==1 && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1)) && ipt_param_int[0][ITYPCP]==1) 
+       { 
+          distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
        }
+
 
        E_Int skip = 0;
        if ( lssiter_verif == 0 && nstep == nstep_fin && ipt_param_int[0][ ITYPCP ] ==1){skip = 1;}

@@ -81,7 +81,7 @@ PyObject* K_FASTS::_applyBC_(PyObject* self, PyObject* args)
   vector<PyArrayObject*> hook;
   E_Int rk; 
   E_Int exploc; 
-  E_Int* autorisation_bc = new E_Int[nidom];
+  E_Int autorisation_bc[nidom];
   E_Int cycl;
   E_Int nstep_stk = nstep;
 

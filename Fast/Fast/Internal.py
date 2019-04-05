@@ -520,14 +520,15 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         
     #           3 depth     6 faces  5 tableau
     ndimface= neq*3*ndimplan*6*5*len(zones)
-
+    ndimface = min(ndimface, 2000000000)
     #si pas de temps local inactif (rk3)
     if(rk!=3 or exploc !=2): ndimface=1
+    else: print 'taille tab dtloc=', ndimface
 
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
     verrou      = MX_SSZONE*c*MX_SYNCHRO*mx_thread
 
-    timerOmp = numpy.zeros(  mx_thread*2*dtloc[0] + mx_thread*len(zones)+1, dtype=numpy.float64)
+    timerOmp = numpy.zeros(  mx_thread*2*dtloc[0] + (mx_thread+1)*len(zones), dtype=numpy.float64)
 
 #    wig   = KCore.empty(ndimwig, CACHELINE)
 #    coe   = KCore.empty(ndimcoe, CACHELINE)
@@ -539,7 +540,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     elif (rk==5 and exploc==0): size_drodm = 5*ndimt
     else                      : size_drodm =   ndimt
     drodm     = numpy.empty(ndimt   , dtype=numpy.float64)        
-    tab_dtloc = numpy.empty(ndimface, dtype=numpy.float64)        
+    tab_dtloc = numpy.empty(ndimface, dtype=numpy.float64)
 
 #    for z in zones:
 #         param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud

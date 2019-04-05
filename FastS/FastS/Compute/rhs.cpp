@@ -10,8 +10,8 @@
 */
      
 
-          E_Int    cpu_perzone  =  nssiter*Nbre_thread_actif*2;
-          E_Float* timer_omp_th = timer_omp + cpu_perzone + nd*Nbre_thread_actif+ ithread;
+          E_Int    cpu_perzone  =  nssiter*Nbre_thread_actif*2 + nd*(Nbre_thread_actif+1);
+          E_Float* timer_omp_th = timer_omp + cpu_perzone + ithread;
 
           ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
           nb_subzone    = ipt_nidom_loc [nitcfg-1];                                            //nbre sous-zone a la sousiter courante
@@ -19,7 +19,7 @@
 
            // cout <<  nb_subzone  << endl; 
 
-            //if(ithread==1)printf("hum %d %d %d \n", nb_subzone, nd, nitcfg);
+          //if(ithread==1)printf("hum %d %d %d \n", nb_subzone, nd, nitcfg);
           //---------------------------------------------------------------------
           // -----Boucle sur param_int[nd][ ILES ] sous-zones ( //on skippe param_int[nd][ ILES ] parties qui converge + vite (Daude)
           // ---------------------------------------------------------------------
@@ -41,7 +41,7 @@
               ipt_inddm_omp         = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
 
 
-              timer_omp_th = timer_omp + cpu_perzone + nd*Nbre_thread_actif+ ithread_loc;
+              timer_omp_th = timer_omp + cpu_perzone + ithread_loc;
 
              //if (ithread == param_int[nd][IO_THREAD] && nitrun == 0 && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
              //if (nd == 0 && nitrun == 0 && ithread_loc != -1) printf("thraed loxc %d %d %d %d %d %d %d %d %d %d \n", ithread_loc, Nbre_thread_actif_loc, ithread, nd, 
@@ -140,7 +140,7 @@
 
             nd_current++;
 
-            if(ithread==1 && nd==0 && lexit_lu==0 && nitcfg*nitrun >15) {timer_omp[cpu_perzone]+=1; } //nbre echantillon
+            if(ithread_loc==1 && lexit_lu==0 && nitcfg*nitrun >15) {timer_omp[cpu_perzone]+=1; } //nbre echantillon
 
             if(nd_current > mx_nidom)
              {

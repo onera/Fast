@@ -461,102 +461,6 @@ E_Float tmps;
     
   if (param_int[0][EXPLOC] == 0)
     {
-      
-      /*
-      E_Int lrhs=0; E_Int lcorner=0; 
-#pragma omp parallel default(shared)
-      {
-#ifdef _OPENMP
-	E_Int  ithread           = omp_get_thread_num() +1;
-	E_Int  Nbre_thread_actif = omp_get_num_threads();
-#else
-	E_Int ithread = 1;
-	E_Int Nbre_thread_actif = 1;
-#endif
-
-	//E_Int Nbre_socket   = NBR_SOCKET;             
-	E_Int Nbre_socket   = 1;                       // nombre de proc (socket) sur le noeud a memoire partagee
-	if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
-
-	E_Int Nbre_thread_actif_loc, ithread_loc;
-	if( omp_mode == 1) { Nbre_thread_actif_loc = 1;                 ithread_loc = 1;}
-	else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
-
-
-	E_Int* ipt_ind_dm_thread; 
-	E_Int nd_current =0;
-	for (E_Int nd = 0; nd < nidom; nd++)
-	  {
-	    E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
-	    E_Int  nb_subzone    = ipt_nidom_loc [nitcfg-1];                                           //nbre sous-zone a la sousiter courante
-
-	    E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
-	    E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
-	    E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
-	    E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
-
-	    for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
-	      {
-		E_Int ndo   = nd;
-
-		E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
-
-		E_Int* ipt_ind_dm_thread;
-		if (omp_mode == 1)
-		  { 
-		    E_Int       Ptomp = param_int[nd][PT_OMP];
-		    E_Int  PtrIterOmp = param_int[nd][Ptomp +nitcfg -1];   
-		    E_Int  PtZoneomp  = param_int[nd][PtrIterOmp + nd_subzone];
-
-		    Nbre_thread_actif_loc = param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
-		    ithread_loc           = param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
-		    ipt_ind_dm_thread     = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
-
-		    if (ithread_loc == -1) { continue;}
-		  }
-		else
-		  { 
-		    E_Int* ipt_topology_socket = ipt_topology       + (ithread-1)*3;
-		    E_Int* ipt_ind_dm_socket   = ipt_ind_dm_omp     + (ithread-1)*12;
-		    ipt_ind_dm_thread   = ipt_ind_dm_socket  +6;
-
-
-		    E_Int lmin = 10;
-		    if (param_int[nd][ITYPCP] == 2) lmin = 4;
-
-		    indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, lmin,
-				      ipt_ind_dm_loc,
-				      ipt_topology_socket, ipt_ind_dm_thread);
-		  }
-
-	    
-		//if (autorisation_bc[nd] == 1)
-
-		// {
-  
-		    E_Int ierr = BCzone(nd, lrhs , nitcfg, lcorner, param_int[nd], param_real[nd], npass,
-					ipt_ind_dm_loc, ipt_ind_dm_thread, 
-					ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
-					iptro_CL[nd] , ipti[nd]            , iptj[nd]    , iptk[nd]       ,
-					iptx[nd]     , ipty[nd]            , iptz[nd]    ,
-					iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd]);
-
-		    //correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptro_CL[nd]);
-
-		    // }
-
-		//Reinitialisation verrou omp
-		//
-		E_Int l =  nd_current*mx_synchro*Nbre_thread_actif  + (ithread_loc-1)*mx_synchro;
-		for (E_Int i = 0;  i < mx_synchro ; i++) { ipt_lok[ l + i ]  = 0; }
-		nd_current +=1;
-
-	      }//loop souszone
-	  }//loop zone
-
-      }//fin zone omp
-      */
-
       setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,
                           param_int_ibc, param_real_ibc, linelets_int, linelets_real, Pr, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
     }//test exploc==0
@@ -574,25 +478,17 @@ E_Float tmps;
 	 cycl = nssiter/param_int[nd][LEVEL];
 	 if (nitcfg%cycl == 0 and nitcfg != nssiter)
 	   {
-
 	     E_Float* ptsave  = iptro[nd]; 
 	     iptro[nd] = iptrotmp[nd]; 
 	     iptrotmp[nd] = ptsave;
-
-
 	   } 
-
        }
-
 
      setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,
                           param_int_ibc, param_real_ibc, linelets_int, linelets_real, Pr, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
 
-     
 
      recup3para_c(iptro, param_int_tc, param_real_tc, param_int, stock, nitcfg, omp_mode, taille_tabs, nidom);
-
-
 
      numpassage=2;
      if (nitcfg%2==0)
@@ -601,7 +497,6 @@ E_Float tmps;
                         param_int_ibc, param_real_ibc, linelets_int, linelets_real, Pr, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
       }
  
-
 
    } // fin boucle test dtlocal
 
@@ -618,57 +513,22 @@ E_Float tmps;
   //
   //
     
- E_Int* autorisation_bc = new E_Int[nidom];
+ E_Int autorisation_bc[nidom];
  E_Int nitcfg_stk = nitcfg;
  
 for (E_Int nd = 0; nd < nidom; nd++)
-
   {
-
    autorisation_bc[nd]=0;
    if (rk == 3 and exploc == 2) 
       {
-
 	cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
-	//cout << "ccoucou" << endl;
 	  
-	if ( nitcfg_stk%cycl == cycl/2 -1 and cycl != 4)
-	  {
-
-	    nitcfg = 1;
-	    autorisation_bc[nd] = 1;
-
-	  }
-	else if (nitcfg_stk%cycl == cycl/2 + cycl/4 and cycl != 4)
-	  {
-
-	    nitcfg = 1;
-	    autorisation_bc[nd] = 1;
-
-	  }	    
-	else if (nitcfg_stk%cycl== cycl-1 and cycl != 4 )
-	  {
-
-	    nitcfg = 1;
-	    autorisation_bc[nd] = 1;
-
-	  }
-
-	else if( nitcfg_stk%cycl == 1 and cycl == 4 or nitcfg_stk%cycl == cycl/2 and cycl == 4 or nitcfg_stk%cycl== cycl-1 and cycl == 4 )
-	  {
-
-	    nitcfg = 1;
-	    autorisation_bc[nd] = 1;
-
-	  }
-
-
+	if      (nitcfg_stk%cycl == cycl/2 -1       and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}
+	else if (nitcfg_stk%cycl == cycl/2 + cycl/4 and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}	    
+	else if (nitcfg_stk%cycl == cycl-1          and cycl != 4 ){ nitcfg = 1; autorisation_bc[nd] = 1;}
+	else if((nitcfg_stk%cycl == 1 or nitcfg_stk%cycl == cycl/2  or nitcfg_stk%cycl== cycl-1) and cycl == 4 ) { nitcfg = 1; autorisation_bc[nd] = 1; }
       } 
-
     else {autorisation_bc[nd] = 1;}
-
-
-
   }
  
 
@@ -777,6 +637,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
 
 
  }//test exit_lu
+
 
     //
     //omp "dynamic" balance

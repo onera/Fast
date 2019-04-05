@@ -32,10 +32,10 @@ c***********************************************************************
     
 C Var local
 
-      INTEGER_E incmax, l, i,j,k,ne,lij,ltij,lt,neq,n,nistk,lstk
+      INTEGER_E incmax, l, i,j,k,ne,lij,ltij,lt,neq,n,nistk,lstk,lvec
       INTEGER_E nistk2,nistk3
       REAL_E ratio,coefH,xmut(1),rop(1)
-      REAL_E c1,alpha,beta,alphabis
+      REAL_E c1,alpha,beta,alphabis, tmp(6400,param_int(NEQ))
 
       parameter( alphabis =-0.84967936855888582)
       parameter( alpha    =-0.45534180126147938)
@@ -50,58 +50,84 @@ C Var local
        nistk2 =(ind_loop_(4)- ind_loop_(3))+1
        nistk3 =(ind_loop_(6)- ind_loop_(5))+1
 
-      !print*, 'coucouflux',ind       
       
        if (ind.eq.2) then   ! Stockage de alpha*f(yn) + beta*f(y1)
     
-      !print*, 'ndom= ', nzone, ' ', 'stockage des flux'      
+       if(neq.eq.5) then
 
-      do  ne=1,neq
-       do  k = ind_loop(5), ind_loop(6)
-        do  j = ind_loop(3), ind_loop(4)
-         do  i = ind_loop(1), ind_loop(2)                              
+         do  k = ind_loop(5), ind_loop(6)
+          do  j = ind_loop(3), ind_loop(4)
+            do  i = ind_loop(1), ind_loop(2)
                
-           l  = inddm(i,j,k)
+             lstk  =  (1+i - ind_loop_(1))
+     &               +(  j - ind_loop_(3))*nistk
+     &               +(  k - ind_loop_(5))*nistk*nistk2
 
+             lvec= 1+i - ind_loop_(1)
 
-           lstk  =  (i+1 - ind_loop_(1))
-     &              +(j - ind_loop_(3))*nistk
-     &            +(k-ind_loop_(5))*nistk*nistk2
+             tmp(lvec,1) = (alpha-alphabis)*stock(lstk,1)
+             tmp(lvec,2) = (alpha-alphabis)*stock(lstk,2)
+             tmp(lvec,3) = (alpha-alphabis)*stock(lstk,3)
+             tmp(lvec,4) = (alpha-alphabis)*stock(lstk,4)
+             tmp(lvec,5) = (alpha-alphabis)*stock(lstk,5)
+            enddo
+            do  i = ind_loop(1), ind_loop(2)
+               
+             l     = inddm(i,j,k)
+             lvec  = 1+i - ind_loop_(1)
 
+             lstk  =  (1+i - ind_loop_(1))
+     &               +(  j - ind_loop_(3))*nistk
+     &               +(  k - ind_loop_(5))*nistk*nistk2
 
-
-
-           stock(lstk,ne) = alpha*stock(lstk,ne) + beta*drodm(l,ne) - 
-     & alphabis*stock(lstk,ne)
-
-
-
-
-   
-            ! if (lstk.ge.400000) then
-            !    print*, lstk, 'nzone= ', nzone
-            ! end if
-
-      ! if (j==ind_loop(4).or.j==ind_loop(4)-1.or.
-      !&  j==ind_loop(4)-2.or.j==ind_loop(4)-3) then
-      !    print*, "stock= ", stock(lstk,1),"  ",j
-      !    print*, "drodm= ", drodm(l,1)
-      ! end if
-
-           !   if (j==295.and.ne==1) then
-           !      print*,stock(lstk,1),"  ",pos,"  ",i
-           !   endif
-         
-
-
-
-           
-
-           enddo
-                          
+             stock(lstk,1) = tmp(lvec,1) + beta*drodm(l,1)
+             stock(lstk,2) = tmp(lvec,2) + beta*drodm(l,2)
+             stock(lstk,3) = tmp(lvec,3) + beta*drodm(l,3)
+             stock(lstk,4) = tmp(lvec,4) + beta*drodm(l,4)
+             stock(lstk,5) = tmp(lvec,5) + beta*drodm(l,5)
+            enddo
          enddo
+        enddo
+
+       else
+
+         do  k = ind_loop(5), ind_loop(6)
+          do  j = ind_loop(3), ind_loop(4)
+            do  i = ind_loop(1), ind_loop(2)
+               
+             lstk  =  (1+i - ind_loop_(1))
+     &               +(  j - ind_loop_(3))*nistk
+     &               +(  k - ind_loop_(5))*nistk*nistk2
+
+             lvec= 1+i - ind_loop_(1)
+
+             tmp(lvec,1) = (alpha-alphabis)*stock(lstk,1)
+             tmp(lvec,2) = (alpha-alphabis)*stock(lstk,2)
+             tmp(lvec,3) = (alpha-alphabis)*stock(lstk,3)
+             tmp(lvec,4) = (alpha-alphabis)*stock(lstk,4)
+             tmp(lvec,5) = (alpha-alphabis)*stock(lstk,5)
+             tmp(lvec,6) = (alpha-alphabis)*stock(lstk,6)
+            enddo
+            do  i = ind_loop(1), ind_loop(2)
+               
+             l     = inddm(i,j,k)
+             lvec  = 1+i - ind_loop_(1)
+ 
+             lstk  =  (1+i - ind_loop_(1))
+     &               +(  j - ind_loop_(3))*nistk
+     &               +(  k - ind_loop_(5))*nistk*nistk2
+
+             stock(lstk,1) = tmp(lvec,1) + beta*drodm(l,1)
+             stock(lstk,2) = tmp(lvec,2) + beta*drodm(l,2)
+             stock(lstk,3) = tmp(lvec,3) + beta*drodm(l,3)
+             stock(lstk,4) = tmp(lvec,4) + beta*drodm(l,4)
+             stock(lstk,5) = tmp(lvec,5) + beta*drodm(l,5)
+             stock(lstk,6) = tmp(lvec,6) + beta*drodm(l,6)
+            enddo
+          enddo
          enddo
-         enddo
+
+       endif
 
 
             
@@ -122,28 +148,7 @@ C Var local
      &             +(k-ind_loop_(5))*nistk*nistk2
 
 
-
-
              stock(lstk,ne) =  drodm(l,ne)
-
-
-           !print*, stock(lstk,ne), drodm(l,ne)
-
-
-
-
-               !if (ne==1) then
-               !   print*, 'l= ',l
-               !end if
-
-
-         !open(unit=1,file='verifdrodm3.dat')
-          !if(ind_loop(1).gt.6) then
-          !  write(1,*) drodm(l,ne),"  ",l
-          !end if
-
-
-
                                 
            enddo
 
