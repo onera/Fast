@@ -47,8 +47,9 @@ if mpi:
     libraryDirs.append(mpiLibDir)
     includeDirs.append(mpiIncDir)
     ADDITIONALCPPFLAGS = ['-D_MPI']
-    libraries.append('mpi')
- 
+    if Dist.getSystem()[0] == 'mingw': libraries.append('msmpi')
+    else: libraries.append('mpi')
+
 ##   
 ## Modif pour calcul MPI sur poste GC   
 ##   

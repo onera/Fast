@@ -172,7 +172,7 @@ def adaptCellNForGC(t, depth, metrics):
 # the communication graph for IBM transfers
 #==============================================================================
 def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
-         restart=False, NP=0):
+         restart=False, NP=0, cartesian=False):
     """Load tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -298,11 +298,11 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
                 no += 1
             if ts != []: ts = Internal.merge(ts)
             else: ts = None
+    if cartesian: 
+        import Compressor.PyTree as Compressor
+        Compressor._uncompressCartesian(t)
+    
     return t, tc, ts, graph
-
-
-
-
 
 #==============================================================================
 # save t
@@ -313,7 +313,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
 # multiple: write restart/restart_1.cgns, ... (partial trees)
 #==============================================================================
 def save(t, fileName='restart', split='single',
-         temporal_scheme='implicit', NP=0):
+         temporal_scheme='implicit', NP=0, cartesian=False):
     """Save tree and connectivity tree."""
     # Rip file ext if any
     import os.path
@@ -337,8 +337,11 @@ def save(t, fileName='restart', split='single',
     C._rmVars(t2, 'centers:VelocityZ_P1')
     C._rmVars(t2, 'centers:Temperature_P1')
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
+    if cartesian: 
+        import Compressor.PyTree as Compressor
+        Compressor._compressCartesian(t2)
+    
     zones = Internal.getZones(t2)
-
     flowsol = Internal.getNodeFromName1(zones[0], 'FlowSolution#Centers')
     if flowsol is not None:
         vars = Internal.getNodesFromType1(flowsol, 'DataArray_t')
@@ -423,7 +426,8 @@ def getMaxProc(t):
 # return the communication graph for Chimera and abutting transfers
 # and the communication graph for IBM transfers
 #==============================================================================
-def loadFile(fileName='t.cgns', split='single', graph=False, mpirun=False):
+def loadFile(fileName='t.cgns', split='single', graph=False, 
+             mpirun=False, cartesian=False):
     """Load tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -496,10 +500,13 @@ def loadFile(fileName='t.cgns', split='single', graph=False, mpirun=False):
             if t != []: t = Internal.merge(t)
             else: t = None
 
+    if cartesian:
+        import Compressor.PyTree as Compressor
+        Compressor._uncompressCartesian(t)
+        
     if graph: return t, graphN
     else:     return t
-
-
+    
 #==============================================================================
 # Load one file
 # si split='single': load t.cgns
@@ -626,7 +633,8 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
 # the communication graph for Chimera and abutting transfers
 # the communication graph for IBM transfers
 #==============================================================================
-def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0, mpirun=False):
+def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0, 
+    mpirun=False, cartesian=False):
     """Save tree in file."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -640,6 +648,10 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0, mpir
     C._rmVars(t2, 'centers:VelocityZ_P1')
     C._rmVars(t2, 'centers:Temperature_P1')
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
+    if cartesian:
+        import Compressor.PyTree as Compressor
+        Compressor._compressCartesian(t2)
+        
     zones = Internal.getZones(t2)
     for z in zones:
         node = Internal.getNodeFromName1(z, '.Solver#define')
@@ -862,6 +874,12 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
         FILE = directory+'/'+fileName+'.cgns'
         C.convertPyTree2File(t2, FILE)
 
+#=======================================================================
+def setIBCType(t, value):
+    tp = Internal.copyRef(t)
+    _setIBCType(t, value)
+    return tp
+    
 # Set IBC type in zones
 def _setIBCType(z, value):
     zones = Internal.getZones(z)
@@ -871,6 +889,11 @@ def _setIBCType(z, value):
         Internal._createUniqueChild(n, 'ibctype', 'DataArray_t', value)
     return None
 
+def setSnear(t, value):
+    tp = Internal.copyRef(t)
+    _setSnear(t, value)
+    return tp
+
 # Set snear in zones
 def _setSnear(z, value):
     zones = Internal.getZones(z)
@@ -879,6 +902,11 @@ def _setSnear(z, value):
         n = Internal.getNodeFromName1(z, '.Solver#define')
         Internal._createUniqueChild(n, 'snear', 'DataArray_t', value)
     return None
+
+def setDfar(t, value):
+    tp = Internal.copyRef(t)
+    _setDfar(t, value)
+    return tp
 
 # Set dfar in zones 
 def _setDfar(z, value):
