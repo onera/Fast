@@ -24,11 +24,10 @@ Dist.writeSetupCfg()
 from KCore.config import *
 
 # Compilation des fortrans ====================================================
-if (f77compiler == "None"):
-    print "Error: a fortran 77 compiler is required for compiling Fast."
+if f77compiler == "None":
+    print("Error: a fortran 77 compiler is required for compiling Fast.")
 args = Dist.getForArgs(); opt = ''
-for c in xrange(len(args)):
-    opt += 'FOPT'+str(c)+'='+args[c]+' '
+for c, v in enumerate(args): opt += 'FOPT'+str(c)+'='+v+' '
 os.system("make -e FC="+f77compiler+" WDIR=Fast/Fortran "+opt)
 prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'

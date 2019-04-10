@@ -15,6 +15,8 @@ import KCore.Adim as Adim
 import KCore.test as test
 import sys
 
+LOCAL = test.getLocal()
+
 MInf = 0.5 ; alpha = 0.
 adim = Adim.adim1(MInf=MInf)
 
@@ -108,7 +110,7 @@ nit = 25
 for it in xrange(nit):
     FastS._compute(t, metrics, it, tc)
 
-FastS.display_cpu_efficiency(t, mask_cpu=-0.05, mask_cell=0.008, FILEOUT='listZonesSlow.dat')
+FastS.display_cpu_efficiency(t, mask_cpu=-0.05, mask_cell=0.008, FILEOUT=LOCAL+'/listZonesSlow.dat')
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

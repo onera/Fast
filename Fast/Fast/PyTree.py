@@ -846,7 +846,6 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
        if node is not None: node[1][0]= dtloc[4]
        else: Internal.createUniqueChild(t, 'TimeLevelTarget', 'DataArray_t', value=dtloc[4])
 
-
     # save
     if mpirun == True: # mpi run
         import Converter.Mpi as Cmpi
@@ -863,4 +862,29 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
         FILE = directory+'/'+fileName+'.cgns'
         C.convertPyTree2File(t2, FILE)
 
+# Set IBC type in zones
+def _setIBCType(z, value):
+    zones = Internal.getZones(z)
+    for z in zones:
+        Internal._createUniqueChild(z, '.Solver#define', 'UseDefinedData_t')
+        n = Internal.getNodeFromName1(z, '.Solver#define')
+        Internal._createUniqueChild(n, 'ibctype', 'DataArray_t', value)
+    return None
 
+# Set snear in zones
+def _setSnear(z, value):
+    zones = Internal.getZones(z)
+    for z in zones:
+        Internal._createUniqueChild(z, '.Solver#define', 'UseDefinedData_t')
+        n = Internal.getNodeFromName1(z, '.Solver#define')
+        Internal._createUniqueChild(n, 'snear', 'DataArray_t', value)
+    return None
+
+# Set dfar in zones 
+def _setDfar(z, value):
+    zones = Internal.getZones(z)
+    for z in zones:
+        Internal._createUniqueChild(z, '.Solver#define', 'UseDefinedData_t')
+        n = Internal.getNodeFromName1(z, '.Solver#define')
+        Internal._createUniqueChild(n, 'dfar', 'DataArray_t', value)
+    return None

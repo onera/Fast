@@ -24,13 +24,12 @@ Dist.writeSetupCfg()
 from KCore.config import *
 
 # Compilation des fortrans ====================================================
-if (f77compiler == "None"):
-    print "Error: a fortran 77 compiler is required for compiling FastS."
+if f77compiler == "None":
+    print("Error: a fortran 77 compiler is required for compiling FastS.")
 os.system('./MakeLinks')
 args = Dist.getForArgs(); opt = ''
-for c in xrange(len(args)):
-    opt += 'FOPT'+str(c)+'='+args[c]+' '
-if (f77compiler == 'gfortran'): opt += 'FOPT3=-fdefault-real-8'
+for c, v in enumerate(args): opt += 'FOPT'+str(c)+'='+v+' '
+if f77compiler == 'gfortran': opt += 'FOPT3=-fdefault-real-8'
 
 os.system("make -e FC="+f77compiler+" WDIR=FastS/Metric "+opt)
 os.system("make -e FC="+f77compiler +" WDIR=FastS/Compute "+opt)

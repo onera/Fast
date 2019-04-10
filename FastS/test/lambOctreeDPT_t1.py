@@ -16,7 +16,6 @@ MInf = 0.7
 rank = Cmpi.rank; size = Cmpi.size
 FILE = 'lamb.cgns'
 FILED = 'lambD.cgns'
-#FILED = 'tc_compact.cgns'
 # lecture du squelette
 t = Cmpi.convertFile2SkeletonTree(FILE)
 tc = Cmpi.convertFile2SkeletonTree(FILED)
@@ -28,9 +27,6 @@ tc = D2.copyDistribution(tc, t)
 graph = Cmpi.computeGraph(tc, type='ID')
 procDict = D2.getProcDict(tc)
 
-print 'dic', procDict
-
-
 # load des zones locales dans le squelette
 t = Cmpi.readZones(t, FILE, rank=rank)
 tc = Cmpi.readZones(tc, FILED, rank=rank)
@@ -38,13 +34,12 @@ tc = Cmpi.readZones(tc, FILED, rank=rank)
 t = Cmpi.convert2PartialTree(t)
 tc = Cmpi.convert2PartialTree(tc)
 
-#Cmpi.convertPyTree2File(t, 't1.cgns')
-#Cmpi.convertPyTree2File(tc, 't1c.cgns')
+Cmpi.convertPyTree2File(t, 't1.cgns')
+Cmpi.convertPyTree2File(tc, 't1c.cgns')
 #sys.exit()
 Cmpi.barrier()
 t,tc,ts,graph=Fast.load('t1.cgns','t1c.cgns', split='single', restart=False , NP=size)
 
-print 'graph', graph['graphID']
 # Init
 t = C.addState(t, 'GoverningEquations', 'Euler')
 t = C.addState(t, MInf=MInf)
