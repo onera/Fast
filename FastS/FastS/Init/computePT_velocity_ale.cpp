@@ -146,12 +146,8 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
   FldArrayI ind_dm_omp(12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
   // Tableau de travail verrou omp
-  PyObject* lokArray = PyList_GetItem(work,3); FldArrayI* lok;
+  PyObject* lokArray = PyDict_GetItemString(work,"verrou_omp"); FldArrayI* lok;
   K_NUMPY::getFromNumpyArray(lokArray, lok, true); E_Int* ipt_lok  = lok->begin();
-
-  // Tableau distribution omp
-  PyObject* distompArray = PyDict_GetItemString(work,"distrib_omp"); FldArrayI* dist_omp;
-  K_NUMPY::getFromNumpyArray(distompArray,dist_omp, true); E_Int* ipt_distomp  = dist_omp->begin();
 
 
 #pragma omp parallel default(shared)
@@ -169,12 +165,11 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
       // ---------------------------------------------------------------------
+        E_Int nd_current = 0;
         for (E_Int nd = 0; nd < nidom; nd++)
           {  
 
             E_Int ndo   = nd; 
-            
-            E_Int* ipt_lok_thread   = ipt_lok   + nd*mx_synchro*Nbre_thread_actif;
             
             E_Int* ipt_ind_dm_loc         = ipt_ind_dm         + (ithread-1)*6;
             ipt_ind_dm_loc[0] = 1;
@@ -187,7 +182,6 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
             E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
             E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
             E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
-            E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
 
              // Distribution de la sous-zone sur les threads
              //E_Int type_decoup =2;
@@ -201,24 +195,33 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
             E_Int Nbre_thread_actif_loc, ithread_loc;
             if (omp_mode == 1)
             { 
-              Nbre_thread_actif_loc = ipt_distomp[ mx_sszone*nd*(Nbre_thread_actif*7+4) + Nbre_thread_actif ];
-              ithread_loc           = ipt_distomp[ mx_sszone*nd*(Nbre_thread_actif*7+4) +  ithread -1       ] +1 ;
+              E_Int nitcfg=1; E_Int nd_subzone =0;
+              E_Int       Ptomp = ipt_param_int[nd][PT_OMP];
+              E_Int  PtrIterOmp = ipt_param_int[nd][Ptomp +nitcfg -1];   
+              E_Int  PtZoneomp  = ipt_param_int[nd][PtrIterOmp + nd_subzone];
 
-              ipt_topo_omp   = ipt_distomp + mx_sszone*nd*(Nbre_thread_actif*7+4) + Nbre_thread_actif + 1;
-              ipt_inddm_omp  = ipt_distomp + mx_sszone*nd*(Nbre_thread_actif*7+4) + Nbre_thread_actif + 4 + ithread_loc*6;
+              Nbre_thread_actif_loc = ipt_param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
+              ithread_loc           = ipt_param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
+              ipt_topo_omp          = ipt_param_int[nd] + PtZoneomp +  Nbre_thread_actif + 1;
+              ipt_inddm_omp         = ipt_param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
 
-              if (ithread_loc == -1) { continue;}
+              if (ithread_loc == -1) { nd_current++; continue;}
             }
 
+            E_Int* ipt_lok_thread   = ipt_lok   + nd_current*mx_synchro*Nbre_thread_actif;
 
-             init_ventijk_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, omp_mode,
+             printf("couc %d %d \n", nd, ithread);
+
+             init_ventijk_( nd, nidom,  Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, omp_mode,
                           ipt_param_int[nd], ipt_param_real[nd],
                           ipt_ijkv_sdm_thread,
-                          ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
+                          ipt_ind_dm_loc, ipt_ind_dm_socket,
                           ipt_topology_socket, ipt_lok_thread , ipt_topo_omp, ipt_inddm_omp,
                           ipti[nd]    , iptj[nd]    , iptk[nd]    , iptvol[nd]  ,
                           ipti_df[nd] , iptj_df[nd] , iptk_df[nd] ,
                           iptventi[nd], iptventj[nd], iptventk[nd], iptx[nd], ipty[nd], iptz[nd] );
+
+            nd_current++;
 
           }// boucle zone 
 # include "HPC_LAYER/INIT_LOCK.h"
@@ -229,7 +232,6 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
   delete [] ipt_param_int;
 
   RELEASESHAREDN( lokArray    , lok  );
-  RELEASESHAREDN( distompArray, dist_omp);
   RELEASEHOOK(hook)
 
   Py_INCREF(Py_None);

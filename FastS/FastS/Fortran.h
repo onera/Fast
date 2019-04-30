@@ -151,10 +151,9 @@ extern "C"
 		   E_Float* ti, E_Float* tj, E_Float* tk, E_Float* vol, E_Float* ipt_cfl_);
 
   void init_ventijk_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& omp_mode,
-
-                      E_Int* ipt_param_int      , E_Float* ipt_param_real  , 
+                      E_Int* ipt_param_int        , E_Float* ipt_param_real , 
                       E_Int* ipt_ijkv_sdm       ,
-                      E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok, E_Int* ipt_topo_omp, E_Int* ipt_inddm_omp,
+                      E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_topo_thread  , E_Int* ipt_lok, E_Int* ipt_topo_omp, E_Int* ipt_inddm_omp,
                       E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , 
                       E_Float* ipti_df          , E_Float* iptj_df     , E_Float* iptk_df        , 
                       E_Float* iptventi         , E_Float* iptventj    , E_Float* iptventk       ,  
