@@ -302,7 +302,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # Construction param_int et param_real des zones
     _buildOwnData(t, Padding)
 
-
     #init hook necessaire pour info omp
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
@@ -2274,7 +2273,7 @@ def _buildOwnData(t, Padding):
             dtloc = 0
             if dtnature == "global": dtloc = 0
             elif dtnature == "local": dtloc = 1
-            else: print 'Warning: FastS: time_step_nature %s is invalid.'%dtnature
+            else: print('Warning: FastS: time_step_nature %s is invalid.'%dtnature)
 
             ImplicitSolverNum = 0
             if implicit_solver == "lussor": ImplicitSolverNum = 0
