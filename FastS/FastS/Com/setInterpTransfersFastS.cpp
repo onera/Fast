@@ -733,11 +733,10 @@ void K_FASTS::setInterpTransfersIntra(
                                                                  xPC, xPC+nbRcvPts, xPC+nbRcvPts*2,
                                                                  xPW, xPW+nbRcvPts, xPW+nbRcvPts*2,
                                                                  xPI, xPI+nbRcvPts, xPI+nbRcvPts*2, 
-                                                                 densPtr, densPtr+nbRcvPts,
-                                                                 densPtr+nbRcvPts*2, densPtr+nbRcvPts*3,
-                                                                 densPtr+nbRcvPts*4, densPtr+nbRcvPts*5, 
-                                                                 densPtr+nbRcvPts*6, densPtr+nbRcvPts*7, 
-                                                                 densPtr+nbRcvPts*8,  
+                                                                 densPtr, densPtr+nbRcvPts, //dens + press
+                                                                 densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
+                                                                 densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                                 densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,  
                                                                  ipt_tmp, size,
                                                                  gamma, cv, muS, Cs, Ts, Pr,
                                                                  vectOfDnrFields, vectOfRcvFields);
@@ -747,11 +746,10 @@ void K_FASTS::setInterpTransfersIntra(
                                                                  xPC    , xPC     +nbRcvPts, xPC     +nbRcvPts*2,
                                                                  xPW    , xPW     +nbRcvPts, xPW     +nbRcvPts*2,
                                                                  xPI    , xPI     +nbRcvPts, xPI     +nbRcvPts*2, 
-                                                                 densPtr, densPtr+nbRcvPts, 
-                                                                 densPtr+nbRcvPts*2, densPtr+nbRcvPts*3,
-                                                                 densPtr+nbRcvPts*4, densPtr+nbRcvPts*5, 
-                                                                 densPtr+nbRcvPts*6, densPtr+nbRcvPts*7, 
-                                                                 densPtr+nbRcvPts*8,
+                                                                 densPtr, densPtr+nbRcvPts, //dens + press
+                                                                 densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
+                                                                 densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                                 densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,  
                                                                  ipt_tmp, size,
                                                                  gamma, cv, muS, Cs, Ts, Pr,
                                                                  vectOfDnrFields, vectOfRcvFields
@@ -762,11 +760,10 @@ void K_FASTS::setInterpTransfersIntra(
                                                                  xPC    , xPC     +nbRcvPts, xPC     +nbRcvPts*2,
                                                                  xPW    , xPW     +nbRcvPts, xPW     +nbRcvPts*2,
                                                                  xPI    , xPI     +nbRcvPts, xPI     +nbRcvPts*2, 
-                                                                 densPtr, densPtr +nbRcvPts, 
-                                                                 densPtr+nbRcvPts*2, densPtr+nbRcvPts*3,
-                                                                 densPtr+nbRcvPts*4, densPtr+nbRcvPts*5, 
-                                                                 densPtr+nbRcvPts*6, densPtr+nbRcvPts*7, 
-                                                                 densPtr+nbRcvPts*8,
+                                                                 densPtr, densPtr+nbRcvPts, //dens + press
+                                                                 densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
+                                                                 densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                                 densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,  
                                                                  ipt_tmp, size,
                                                                  gamma, cv, muS, Cs, Ts, Pr,
                                                                  vectOfDnrFields, vectOfRcvFields);
@@ -1292,11 +1289,10 @@ if (has_data_to_send) {
                                                              xPC, xPC + nbRcvPts, xPC + nbRcvPts * 2, 
                                                              xPW, xPW + nbRcvPts, xPW + nbRcvPts * 2, 
                                                              xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
-                                                             densPtr, densPtr+nbRcvPts, 
-                                                             densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, 
-                                                             densPtr+nbRcvPts*4, densPtr+nbRcvPts*5, 
-                                                             densPtr+nbRcvPts*6, densPtr+nbRcvPts*7, 
-                                                             densPtr+nbRcvPts*8,
+                                                             densPtr, densPtr+nbRcvPts, //dens + press
+                                                             densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
+                                                             densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                             densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,  
                                                              ipt_tmp, size, gamma, cv, muS, Cs,
                                                              Ts,  Pr,vectOfDnrFields, vectOfRcvFields );
                     else if ( varType == 2 || varType == 21 )
@@ -1304,11 +1300,10 @@ if (has_data_to_send) {
                                                              xPC, xPC + nbRcvPts, xPC + nbRcvPts * 2, 
                                                              xPW, xPW + nbRcvPts, xPW + nbRcvPts * 2, 
                                                              xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
-                                                             densPtr, densPtr+nbRcvPts, 
-                                                             densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, 
-                                                             densPtr+nbRcvPts*4, densPtr+nbRcvPts*5, 
-                                                             densPtr+nbRcvPts*6, densPtr+nbRcvPts*7, 
-                                                             densPtr+nbRcvPts*8,  
+                                                             densPtr, densPtr+nbRcvPts, //dens + press
+                                                             densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
+                                                             densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                             densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,   
                                                              ipt_tmp, size, gamma, cv, muS, Cs,
                                                              Ts, Pr, vectOfDnrFields, vectOfRcvFields,
                                                              nbptslinelets, linelets, indexlinelets );
@@ -1317,11 +1312,10 @@ if (has_data_to_send) {
                                                              xPC, xPC + nbRcvPts, xPC + nbRcvPts * 2, 
                                                              xPW, xPW + nbRcvPts, xPW + nbRcvPts * 2, 
                                                              xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
-                                                             densPtr, densPtr+nbRcvPts, 
-                                                             densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, 
-                                                             densPtr+nbRcvPts*4, densPtr+nbRcvPts*5, 
-                                                             densPtr+nbRcvPts*6, densPtr+nbRcvPts*7, 
-                                                             densPtr+nbRcvPts*8,  
+                                                             densPtr, densPtr+nbRcvPts, //dens + press
+                                                             densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
+                                                             densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                             densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,   
                                                              ipt_tmp, size, gamma, cv, muS, Cs,
                                                              Ts, Pr, vectOfDnrFields, vectOfRcvFields );
                   }  // ibc
