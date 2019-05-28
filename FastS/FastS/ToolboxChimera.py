@@ -28,7 +28,7 @@ def blankByBodies(t, tb, loc, dim, gridType='single'):
             else: bodies.append([wallsl])
 
     nbodies = len(bodies)
-    print 'Blanking mesh by %d bodies'%nbodies
+    print('Blanking mesh by %d bodies'%nbodies)
     if loc == 'centers': typeb = 'cell_intersect'
     else: typeb = 'node_in'
     nbases = len(Internal.getBases(t))
@@ -119,8 +119,10 @@ def modifyBCOverlapsForGhostMesh(t,NGhostCells):
 # INTERPOLATIONS CHIMERE PERIODIQUE ENTRE LE ROTOR ET LE STATOR
 # Les donnees d interpolation sont calculees dans le repere cylindrique
 #-----------------------------------------------------------------------------
-def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, (XC0,YC0,ZC0), (AXISX,AXISY,AXISZ), check=False):
+def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, tCoord0, tAxis, check=False):
 
+    (XC0,YC0,ZC0) = tCoord0
+    (AXISX,AXISY,AXISZ) = tAxis    
     basenames  = ['Stator', 'Rotor' ]
     donorBases = {}
     theta_meanDonor = {}
@@ -157,7 +159,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
        theta_perioDonor[name]= [      -theta_abs      , 0.        ,       theta_abs        ]
        theta_meanDonor[name] = [ thetameanD- theta_abs, thetameanD, thetameanD+ theta_abs, ]
        donorBases[name] = tmp
-       print name, ' is Donor.  <angle>= ', theta_meanDonor[name][1]/math.pi*180,' <angle> donorGD=', theta_meanDonor[name][0]/math.pi*180, theta_meanDonor[name][2]/math.pi*180
+       print(name, ' is Donor.  <angle>= ', theta_meanDonor[name][1]/math.pi*180,' <angle> donorGD=', theta_meanDonor[name][0]/math.pi*180, theta_meanDonor[name][2]/math.pi*180)
 
 
        #calcul theta_meanRecepteur
@@ -165,7 +167,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
        zones  = Internal.getZones(base)
        thetameanR= C.getMeanValue(zones, 'CoordinateY')
        theta_meanRecept[name] = [thetameanR] 
-       print  name, ' is Recept. <angle>= ', thetameanR/math.pi*180
+       print(name, ' is Recept. <angle>= ', thetameanR/math.pi*180)
       
     #rotation parameter
     THETADEG  = THETA/math.pi*180
@@ -189,13 +191,12 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
     coef_secure = 1.3
     ReceptCyl={}
     for it in xrange(IT_DEB, IT_FIN):
-        print '-----------'
-        print 'theta(radians,degree,it) = ', it*DTHETA,' ,', it*DTHETA/math.pi*180,' ,', it
-        print '-----------'
+        print('-----------')
+        print('theta(radians,degree,it) = ', it*DTHETA,' ,', it*DTHETA/math.pi*180,' ,', it)
+        print('-----------')
 
         for rcpt in basenames:
-        #for rcpt in ['Rotor']:
-           print '  '
+           print('  ')
 
            RotAngleDG= [ numpy.zeros( (3), numpy.float64 ) , numpy.zeros( (3), numpy.float64), numpy.zeros( (3), numpy.float64) ]
 
@@ -209,7 +210,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                 #angle moyen donneur
                 theta_meanDonorD= theta_meanDonor[donor][2]
                 theta_meanDonorG= theta_meanDonor[donor][0]
-                print 'Rcpt  rotor.  <angle> receveur=', theta_meanR*180/math.pi, '<angle> donorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi
+                print('Rcpt  rotor.  <angle> receveur=', theta_meanR*180/math.pi, '<angle> donorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi)
            else:
                 zones2translateR =  donorBases['Rotor']
                 donor            = 'Rotor'
@@ -218,7 +219,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                 #angle moyen donneur
                 theta_meanDonorD= theta_meanDonor[donor][2] +it*DTHETA
                 theta_meanDonorG= theta_meanDonor[donor][0] +it*DTHETA
-                print 'Rcpt stator. <angle> receveur=', theta_meanR*180/math.pi, '<angle> donorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi
+                print('Rcpt stator. <angle> receveur=', theta_meanR*180/math.pi, '<angle> donorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi)
 
            Internal._rmNodesByName( donorBases[donor],'ID_*')
 
@@ -249,7 +250,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                       theta_perioDonor[donor][2] =   theta_perioDonor[donor][1]
                       theta_perioDonor[donor][1] =   tmp3
 
-                      print 'Donor_D du ', rcpt, ' moved by', -3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor D=',theta_meanDonorD*180/math.pi
+                      print('Donor_D du ', rcpt, ' moved by', -3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor D=',theta_meanDonorD*180/math.pi)
 
                 elif theta_meanR -theta_abs*coef_secure >  theta_meanDonorG:
 
@@ -273,7 +274,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                       theta_perioDonor[donor][0] =   theta_perioDonor[donor][1]
                       theta_perioDonor[donor][1] =   tmp3
 
-                      print 'Donor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi
+                      print('Donor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi)
                       
            elif AXISY > 0.: 
 
@@ -303,7 +304,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                       theta_perioDonor[donor][2] =   theta_perioDonor[donor][1]
                       theta_perioDonor[donor][1] =   tmp3
 
-                      print 'Donor_D du ', rcpt, ' moved by', -3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor D=',theta_meanDonorD*180/math.pi
+                      print('Donor_D du ', rcpt, ' moved by', -3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor D=',theta_meanDonorD*180/math.pi)
 
                 elif theta_meanR -theta_abs*coef_secure >  theta_meanDonorG:
 
@@ -327,7 +328,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                       theta_perioDonor[donor][0] =   theta_perioDonor[donor][1]
                       theta_perioDonor[donor][1] =   tmp3
 
-                      print 'Donor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi
+                      print('Donor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi)
 
            RD = [ ReceptCyl[rcpt] , donorBases[donor]] 
 
@@ -361,7 +362,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
                   for zsr in Internal.getNodesFromName(zdperio,"ID_*"):
                     srname = Internal.getValue(zsr)
                     zsr[0] = 'IDPER'+source+'#%d_%s'%(it,srname)
-                    print 'zoneD=',zdperio[0],'zoneR=',srname,'subRegionName=', zsr[0],'. teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c
+                    print('zoneD=',zdperio[0],'zoneR=',srname,'subRegionName=', zsr[0],'. teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c)
                     #modif pointlist pour calcul sur zone reduite
                     _adaptRange(zdorig, zsr, infos_PtlistRebuild ) 
 
@@ -404,10 +405,9 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN,  infos_PtlistRebuild, 
 #------------------------------------------------------------------
 def _adaptRange(z, s, infos_Ptlist):
 
-     #zonename du receveur
+     # zonename du receveur
      recpt = Internal.getValue(s)
 
-     #print 'zname',z[0],' rac=', s[0]
      ptlist  = Internal.getNodeFromName( s, "PointList" )[1]
      ptlistD = Internal.getNodeFromName( s, "PointListDonor" )[1]
 
@@ -457,13 +457,12 @@ def ZonePrecond( base, NGhostCells, info_PtlistRebuild, dim=3):
 
      zones=[]
      for z in Internal.getZones(base):
-        print 'zone selectionnee', z[0]
+        print('zone selectionnee %s'%z[0])
         #on cherche si interface =imin, imax, ...
         connect =Internal.getNodeFromType(z ,'ZoneGridConnectivity_t')
         conns   =Internal.getNodesFromType1(connect ,'GridConnectivity_t')
         for conn in conns:
           contype =Internal.getNodeFromType(conn ,'GridConnectivityType_t')
-          print contype
           if Internal.getValue(contype) == 'Overset':
              ptrange =Internal.getNodeFromType(conn ,'IndexRange_t')
              #dir=0,...5

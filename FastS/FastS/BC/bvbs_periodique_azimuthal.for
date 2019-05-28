@@ -135,8 +135,7 @@ C Var local
             lij  = inddm(ind_loop(1) , j, k)
 
 #ifdef _OPENMP4
-cDEC$ PREFETCH rop
-!$OMP simd aligned(rop: CACHELINE)
+CCCC!$OMP simd
 #else
 CDIR$ IVDEP
 #endif
@@ -167,8 +166,7 @@ CDIR$ IVDEP
             lij  = inddm(ind_loop(1) , j, k)
 
 #ifdef _OPENMP4
-cDEC$ PREFETCH rop
-!$OMP simd aligned(rop: CACHELINE)
+CCCC!$OMP simd
 #else
 CDIR$ IVDEP
 #endif

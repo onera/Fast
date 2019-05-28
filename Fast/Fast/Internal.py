@@ -87,7 +87,7 @@ def _reorder(t, tc=None, omp_mode=0):
           l = base_tc[2]
           orig = []
           for i in l:
-	     if i[3] != 'Zone_t': orig.append(i)
+	           if i[3] != 'Zone_t': orig.append(i)
           base_tc[2]=  orig+new_zones
 
        # reordone les zones de t pour garantir meme ordre entre t et tc
@@ -116,7 +116,7 @@ def _reorder(t, tc=None, omp_mode=0):
            l = base[2]
            orig = []
            for i in l:
-	        if i[3] != 'Zone_t': orig.append(i)
+	           if i[3] != 'Zone_t': orig.append(i)
            base[2] = new_zones + orig
 
 #==============================================================================
@@ -156,25 +156,25 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     if C.isNamePresent(zone, 'centers:VelocityX'  ) != 1: P._computeVariables(zone, ['centers:VelocityX'  ], rgp=rgp)
     ''' 
     t1=timeit.default_timer()
-    print "cout calcul VX= ", t1-t0, zone[0]
+    print("cout calcul VX= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:VelocityY'  ) != 1: P._computeVariables(zone, ['centers:VelocityY'  ], rgp=rgp)
     '''
     t1=timeit.default_timer()
-    print "cout calcul VY= ", t1-t0, zone[0]
+    print("cout calcul VY= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:VelocityZ'  ) != 1: P._computeVariables(zone, ['centers:VelocityZ'  ], rgp=rgp)
     '''
     t1=timeit.default_timer()
-    print "cout calcul VZ= ", t1-t0, zone[0]
+    print("cout calcul VZ= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:Temperature') != 1: P._computeVariables(zone, ['centers:Temperature'], rgp=rgp)
     '''
     t1=timeit.default_timer()
-    print "cout calcul T = ", t1-t0, zone[0]
+    print("cout calcul T = ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
 
@@ -183,7 +183,7 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
         else: C._initVars(zone, '{centers:TurbulentSANuTilde}= {centers:TurbulentSANuTildeDensity}/{centers:Density}')
     '''
     t1=timeit.default_timer()
-    print "cout calcul Nu = ", t1-t0, zone[0]
+    print("cout calcul Nu = ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
 
@@ -196,7 +196,7 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
 
     '''
     t1=timeit.default_timer()
-    print "cout rmvars    = ", t1-t0, zone[0]
+    print("cout rmvars    = ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
 
@@ -205,74 +205,74 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     if C.isNamePresent(zone, 'centers:Density_M1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_M1')  ; FIRST_IT=0
     '''
     t1=timeit.default_timer()
-    print "cout calcul RoM1= ", t1-t0, zone[0]
+    print("cout calcul RoM1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:VelocityX_M1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_M1'); FIRST_IT=0
     '''
     t1=timeit.default_timer()
-    print "cout calcul VXM1= ", t1-t0, zone[0]
+    print("cout calcul VXM1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:VelocityY_M1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_M1'); FIRST_IT=0
     '''
     t1=timeit.default_timer()
-    print "cout calcul VYM1= ", t1-t0, zone[0]
+    print("cout calcul VYM1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:VelocityZ_M1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_M1'); FIRST_IT=0
     '''
     t1=timeit.default_timer()
-    print "cout calcul VZM1= ", t1-t0, zone[0]
+    print("cout calcul VZM1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
     '''
     t1=timeit.default_timer()
-    print "cout calcul TM1 = ", t1-t0, zone[0]
+    print("cout calcul TM1 = ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_M1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_M1'); FIRST_IT=0
     '''
     t1=timeit.default_timer()
-    print "cout calcul NuM1= ", t1-t0, zone[0]
+    print("cout calcul NuM1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
 
     if C.isNamePresent(zone, 'centers:Density_P1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_P1')  
     '''
     t1=timeit.default_timer()
-    print "cout calcul RoP1= ", t1-t0, zone[0]
+    print("cout calcul RoP1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:VelocityX_P1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_P1')
     '''
     t1=timeit.default_timer()
-    print "cout calcul VXP1= ", t1-t0, zone[0]
+    print("cout calcul VXP1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:VelocityY_P1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_P1')
     '''
     t1=timeit.default_timer()
-    print "cout calcul VYP1= ", t1-t0, zone[0]
+    print("cout calcul VYP1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:VelocityZ_P1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_P1')
     '''
     t1=timeit.default_timer()
-    print "cout calcul VZP1= ", t1-t0, zone[0]
+    print("cout calcul VZP1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if C.isNamePresent(zone, 'centers:Temperature_P1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_P1')
     '''
     t1=timeit.default_timer()
-    print "cout calcul TP1 = ", t1-t0, zone[0]
+    print("cout calcul TP1 = ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
     if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_P1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_P1')
     '''
     t1=timeit.default_timer()
-    print "cout calcul NuP1= ", t1-t0, zone[0]
+    print("cout calcul NuP1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
 
@@ -479,7 +479,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         a = Internal.getNodeFromName2(z, 'model')
         model  = Internal.getValue(a)
         neq = 5
-        if (model == 'nsspalart' or model =='NSTurbulent'): neq = 6
+        if model == 'nsspalart' or model =='NSTurbulent': neq = 6
         
         if scheme == 'implicit' or scheme == 'implicit_local':   neq_coe = neq     
         else:                                                    neq_coe = 1    # explicit
@@ -490,13 +490,11 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         if param_int is not None:
            shiftvar  = param_int[1][66]
         else:
-           shiftvar  = 100
-           print 'shiftVar=', shiftvar
-           print 'create workarray'
-           print 'Danger sur optimisation cache shiftVar'      
-           print 'Danger '      
-           print 'Danger '      
-
+           shiftvar = 100
+           print('shiftVar=%d'%shiftvar)
+           print('create workarray')
+           print('Danger sur optimisation cache shiftVar')      
+           
         # dim from getZoneDim
         dims = Internal.getZoneDim(z)
         if dims[0]=='Structured' : 
@@ -514,8 +512,6 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         ndimcoe += neq_coe*nijk       # surdimensionne ici
         ndimwig +=        3*nijk      # surdimensionne ici
 
-        #print 'zone,taille =', z[0], nijk
-
         c       += 1
         
     #           3 depth     6 faces  5 tableau
@@ -523,7 +519,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     ndimface = min(ndimface, 2000000000)
     #si pas de temps local inactif (rk3)
     if(rk!=3 or exploc !=2): ndimface=1
-    else: print 'taille tab dtloc=', ndimface
+    else: print('taille tab dtloc=%d'%ndimface)
 
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
     verrou      = MX_SSZONE*c*MX_SYNCHRO*mx_thread
@@ -620,7 +616,7 @@ def tagBC(bcname):
   elif bcname == "BCRacinf":                tag =18;
   else:
     tag = -1
-    print "Warning: unknown BC type %s."%bcname
+    print("Warning: unknown BC type %s."%bcname)
   return tag
 
 #==============================================================================
@@ -683,7 +679,6 @@ def switchPointers__(zones, case, order=3):
             model  = Internal.getValue(model)
 
             if case ==1:
-              #print 'coucou'
               # sauvegarde M1
               ta = caM1[1]; tb = cbM1[1]; tc = ccM1[1]; td = cdM1[1]; te = ceM1[1]
 
@@ -877,28 +872,28 @@ def checkKeys(d, keys):
         val = Internal.getValue(i)
         if k == 0: # must be int
           if not isinstance(val, (int, long)):
-            fail = True; print 'Error: Fast: keyword %s requires an int.'%i[0]
+            fail = True; print('Error: Fast: keyword %s requires an int.'%i[0])
         elif k == 1: # must be float but we accept int
           if not isinstance(val, (float, int, long)):
-            fail = True; print 'Error: Fast: keyword %s requires a float.'%i[0]
+            fail = True; print('Error: Fast: keyword %s requires a float.'%i[0])
         elif k == 2: # must be any string
           if not isinstance(val, string):
-            fail = True; print 'Error: Fast: keyword %s requires a string.'%i[0]
+            fail = True; print('Error: Fast: keyword %s requires a string.'%i[0])
         elif k == 3: # Array/list of ints
           if not isinstance(val, numpy.ndarray):
-            fail = True; print 'Error: Fast: keyword %s requires an array of ints.'%i[0]
+            fail = True; print('Error: Fast: keyword %s requires an array of ints.'%i[0])
         elif k == 4: # Array/list of floats
           if not isinstance(val, numpy.ndarray):
-            fail = True; print 'Error: Fast: keyword %s requires an array of floats.'%i[0]
+            fail = True; print('Error: Fast: keyword %s requires an array of floats.'%i[0])
         elif isinstance(k, list): # list of given strings
           if not val in k:
-            fail = True; print 'Error: Fast: keyword %s requires a string in %s.'%(i[0], str(k))
+            fail = True; print('Error: Fast: keyword %s requires a string in %s.'%(i[0], str(k)))
       else:
-        print 'Error: Fast: keyword %s is INVALID.'%i[0]
+        print('Error: Fast: keyword %s is INVALID.'%i[0])
         import difflib
         words = keys.keys()
         m = difflib.get_close_matches(i[0], words)
-        print 'Error: Fast: do you mean %s?'%str(m)
+        print('Error: Fast: do you mean %s?'%str(m))
         fail = True
     if fail:
       import sys; sys.exit(0) # much stronger os._exit(0)?
@@ -916,7 +911,6 @@ def switchPointers2__(zones,nitmax,nstep):
         niveau = Internal.getValue(level)
 
         cycle = nitmax/niveau
-        #print 'cycle= ',cycle
         if nstep%cycle==0 and nstep!=nitmax :
 
             #print 'switch zone= ', z[0]
@@ -1001,9 +995,6 @@ def switchPointers3__(zones,nitmax):
             cdP1 = Internal.getNodeFromName1(sol, 'VelocityZ_P1')
             ceP1 = Internal.getNodeFromName1(sol, 'Temperature_P1')
 
-            #print 'ca[1]= ',ca[1]
-
-            #print 'coucou'
             # sauvegarde M1
             ta = caM1[1]; tb = cbM1[1]; tc = ccM1[1]; td = cdM1[1]; te = ceM1[1]
 
@@ -1049,9 +1040,6 @@ def switchPointers3__(zones,nitmax):
             cdP1 = Internal.getNodeFromName1(sol, 'VelocityZ_P1')
             ceP1 = Internal.getNodeFromName1(sol, 'Temperature_P1')
 
-            #print 'ca[1]= ',ca[1]
-
-            #print 'coucou'
             # sauvegarde M1
             ta = caM1[1]; tb = cbM1[1]; tc = ccM1[1]; td = cdM1[1]; te = ceM1[1]
 

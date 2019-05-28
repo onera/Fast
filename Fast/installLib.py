@@ -26,4 +26,4 @@ else: # Essai en dynamique
         shutil.copy(installPathLocal+"/Fast/fast"+__EXTMODULE__,
                     libPath+"/libfast"+__EXTSHARED__) 
     else:
-        print "Error: fast"+__EXTMODULE__+" can not be found."
+        print("Error: fast"+__EXTMODULE__+" can not be found.")

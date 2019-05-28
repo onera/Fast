@@ -46,7 +46,7 @@ static struct PyModuleDef moduledef = {
         "fast",
         NULL,
         sizeof(struct module_state),
-        Pyconverter,
+        Pyfast,
         NULL,
         myextension_traverse,
         myextension_clear,

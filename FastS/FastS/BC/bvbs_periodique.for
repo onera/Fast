@@ -67,8 +67,7 @@ C Var local
             lij  = inddm(ind_loop(1) , j, k)
 
 #ifdef _OPENMP4
-cDEC$ PREFETCH rop
-!$OMP simd aligned(rop: CACHELINE)
+!$OMP simd 
 #else
 CDIR$ IVDEP
 #endif
@@ -85,8 +84,7 @@ CDIR$ IVDEP
            if(param_int(NEQ).ge.6) then
               do  ne=6,param_int(NEQ)
 #ifdef _OPENMP4
-cDEC$ PREFETCH rop
-!$OMP simd aligned(rop: CACHELINE)
+!$OMP simd
 #else
 CDIR$ IVDEP
 #endif
@@ -113,8 +111,7 @@ CDIR$ IVDEP
             lij  = inddm(ind_loop(1) , j, k)
 
 #ifdef _OPENMP4
-cDEC$ PREFETCH rop
-!$OMP simd aligned(rop: CACHELINE)
+!$OMP simd
 #else
 CDIR$ IVDEP
 #endif
@@ -132,8 +129,7 @@ CDIR$ IVDEP
            if(param_int(NEQ).ge.6) then
              do  ne=6,param_int(NEQ)
 #ifdef _OPENMP4
-cDEC$ PREFETCH rop
-!$OMP simd aligned(rop: CACHELINE)
+!$OMP simd
 #else
 CDIR$ IVDEP
 #endif

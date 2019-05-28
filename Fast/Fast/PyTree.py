@@ -1,11 +1,11 @@
 """Common functions for FAST solvers.
 """
-import Fast
+from . import Fast
 __version__ = Fast.__version__
 
 try: import Fast.Internal as FastI
-except: import Internal as FastI
-from Internal import _setNum2Zones, _setNum2Base, setNum2Zones, setNum2Base
+except: from . import Internal as FastI
+from .Internal import _setNum2Zones, _setNum2Base, setNum2Zones, setNum2Base
 try:
     import Converter.PyTree as C
     import Converter.Internal as Internal
@@ -479,7 +479,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                         procDict = D2.getProcDict(t)
                         procList = D2.getProcList(t,  sort=True)
                         graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
-                    else: print 'graph non calculable: manque de fichiers connectivite'
+                    else: print('graph non calculable: manque de fichiers connectivite.')
 
             FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
@@ -531,7 +531,6 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
         
         if split == 'single':
             FILE = fileName+'.cgns'
-            #print FILE
             t = Cmpi.convertFile2SkeletonTree(FILE)
             #t = C.convertFile2PyTree(FILE)
             #zones = Internal.getZones(t)
@@ -539,7 +538,7 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
             mp = getMaxProc(t)
             #print 'mp= ',mp
             if mp+1 != size: 
-                raise ValueError, 'The number of mpi proc (%d) doesn t match the tree distribution (%d)'%(mp+1,size) 
+                raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d)'%(mp+1,size)) 
             if graph:
                 graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
                 graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
@@ -598,7 +597,7 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
                         procDict = D2.getProcDict(t)
                         procList = D2.getProcList(t,  sort=True)
                         graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
-                    else: print 'graph non calculable: manque de fichiers connectivite'
+                    else: print('graph non calculable: manque de fichiers connectivite.')
 
             FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
@@ -773,11 +772,10 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
                         procDict = D2.getProcDict(t)
                         procList = D2.getProcList(t,  sort=True)
                         graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
-                    else: print 'graph non calculable: manque de fichiers connectivite'
+                    else: print('graph non calculable: manque de fichiers connectivite.')
 
             #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
             FILE = '%s/%s%d.cgns'%(directory, fileName, rank)
-            print 'filename', FILE
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
             else: tc= None
 

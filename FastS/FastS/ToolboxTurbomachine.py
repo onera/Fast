@@ -153,8 +153,7 @@ def getParentNodeWithType(data, typeName, path):
    while not test:
       node = CI.getNodeFromName(data,pathL[ind])
       test = CI.isType(node, 'Zone_t')
-      #print test,ind, CI.getName(node)
-      ind-=1
+      ind -= 1
    return node
 
 def addTriggerAndOutput(data, fam):
@@ -521,7 +520,7 @@ def convertRelative2Absolute(data, nbBlock, omega, gamma ):
 
 	for p in range(nbBlock):                                     #for each block (block by block)
 		blockMesh = blockMeshList[p]
-		print 'Processing conversion relative to absolute ===', blockMesh
+		print('Processing conversion relative to absolute ===', blockMesh)
 
 		zoneInit = CI.getNodeFromName(data, blockMesh)
 		zone = CI.getNodeFromName(data, blockMesh)     #we extract the mesh zone
@@ -936,9 +935,7 @@ def addNonUniformBCData(t, BCName, BCValue, DataFile):
          Prop       = CI.createUniqueChild(bc,'.Solver#Property','UserDefinedData_t')
          zone_carto = CI.getNodeFromName(data_carto, z[0])
          sol_carto  = CI.getNodeFromName(zone_carto, 'FlowSolution')
-         print sol_carto[0]
          vars       = CI.getNodesFromType(sol_carto, 'DataArray_t')
-         #CI.printTree(zone_carto) 
          for v in vars:
            varBC = numpy.reshape( v[1], v[1].size, order='F')                 #we reshape the array with a Fortran like order
 
@@ -1098,9 +1095,9 @@ def cleanUpByValue2FastS(data,Value):
 # XXX 
 def printStep(step):
 	
-	print '#################################################'
-	print  step 
-	print '#################################################'
+	print('#################################################')
+	print(step) 
+	print('#################################################')
 
 # XXX COMPLETE
 def rhoVtheta(t, outBlock):
@@ -1118,7 +1115,7 @@ def rhoVtheta(t, outBlock):
 	for z in zones :
 		
 		if z[0] == outBlock:                                    	#for each block (block by block)	
-			print 'init rhoVtheta Processing=== for zone:', outBlock
+			print('init rhoVtheta Processing=== for zone:', outBlock)
 			
 			zc = CP.node2Center(z)                    				#we change the coordinates (ONLY) to have them at the center of the cell
 	
@@ -1538,11 +1535,11 @@ def adaptRadius(radius_real, radius_star):
 	for i in range(nbRad):
 		if radius_real[i] < radius_star[0]:
 			radius_real[i] = radius_star[0]
-			print 'LOWER PART ==> we change at i = ', i, 'old radius=', radius_real[i], 'new radius=', radius_star[i]
+			print('LOWER PART ==> we change at i = ', i, 'old radius=', radius_real[i], 'new radius=', radius_star[i])
 		
 		if radius_real[i] > radius_star[nbRad-1]:
 				radius_real[i] = radius_star[nbRad-1]
-				print 'UPPER PART ==> we change at i = ', i, 'old radius=', radius_real[i], 'new radius=', radius_star[nbRad-1]
+				print('UPPER PART ==> we change at i = ', i, 'old radius=', radius_real[i], 'new radius=', radius_star[nbRad-1])
 						
 	return radius_real
 
@@ -1632,8 +1629,6 @@ def azimAverage2DUpdate_(t, varlist, dir_avg, outBlock, bctype):
                    if   idir ==1: ind_bc[1] = ind_bc[1] + 1
                    elif idir ==2: ind_bc[3] = ind_bc[3] + 1
                    else         : ind_bc[5] = ind_bc[5] + 1
-
-                   #print 'ind_bc',ind_bc
 
                    for v in varlist:
                       #print 'name',name, size, v
@@ -1757,7 +1752,7 @@ def interpolationAzimUpdate(radius_star, dpdr_star, radius_real, interpolation='
 
 # dpdr          : return         [1D numpy array] real derivative of the pressure with respect to the real radius distribution
 
-        print 'interpolate not available'
+        print('interpolate not available')
 	#f_dpdr = interpolate.interp1d(radius_star, dpdr_star, kind=interpolation) #interpolation function generator
 	#dpdr   = f_dpdr(radius_real)
 	dpdr   = 0
@@ -1828,7 +1823,6 @@ def outradeqExtensionUpdate_(t, outBlock, press1D, dir, nb_avg, iteration, displ
   size    = press1D.size*nb_avg
   press2d = numpy.empty(size, numpy.float64)
 
-  #print 'size 2d', size, nb_avg
   #a generaliser (permutation jk pour matcher ordre eciture ficher dataArray
   if dir == 1:
     c=0
@@ -1875,7 +1869,7 @@ def outradeqExtensionUpdate(tinit, outBlock,  radius1D, press1D, iteration, disp
 	nr = km-5 												# nb of points in  radial direction (-1 because cell centered)
 	nt = jm-5 			                                                                        # nb of points in  azimutal direction (-1 because cell centered)
 														
-        print 'size',ra.size,pa.size, nr,nt
+    
 	# ####################################################################
 	#1D angular distribution
 	# ####################################################################
@@ -1911,8 +1905,6 @@ def outradeqExtensionUpdate(tinit, outBlock,  radius1D, press1D, iteration, disp
 	
 	text = CA.convertArrays3D2Arrays([[varname,var]])
 
-        print text
-	
 	if iteration % display == 0:
 		fileName = 'outradeq' + str(iteration)
 		CV.convertArrays2File(text, fileName + '.dat')
@@ -1987,14 +1979,14 @@ def _updateOutradeq2FastS(iteration, t, rad_real1D, rad_star1D,  nbBlock,  outBl
 # ======================================================================================================							
 	#press1D = RadEqUpdateUpdate(dpdr_real1D, rad_real1D, ppiv_def, rpiv_def, zone = location )      #1D
 	press1D = RadEqUpdateUpdate(dpdr_real1D, radius, ppiv_def, rpiv_def, zone = location )      #1D
-        print 'press_carter=',press1D[87]
+    print('press_carter=',press1D[87])
 	#printStep('STEP4 =  Radial equilibrium DONE' )
 # ======================================================================================================
 #  STEP5 =  azimutal extension/carto creation                            
 # ======================================================================================================
 	#press2D = outradeqExtensionUpdate(tinit, outBlock,  rad_real1D, press1D, iteration)					  #2D
 	press2D = outradeqExtensionUpdate_(t, outBlock, press1D, dir, var_avg[0][3], iteration)					  #2D
-        #print press2D.size
+    #print press2D.size
 	#printStep('STEP5 =  azimutal extension DONE' )
 # ======================================================================================================
 #  STEP6 =  2D pressure setting                           
@@ -2019,15 +2011,4 @@ def _updateOutradeq2FastS(iteration, t, rad_real1D, rad_star1D,  nbBlock,  outBl
 	#printStep('STEP6 =  2D pressure setting DONE' )
 	
 	return None
-	
-	
-	
-		
-	
-	
-	
-	
-	
-		
-	
 

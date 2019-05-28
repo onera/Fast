@@ -44,8 +44,8 @@ def loadData(split='single',filedir='.', prefix='restart'):
             t = Cmpi.convert2PartialTree(t)
         else: # un fichier loade par proc
             FILEIN = outprefix+'_proc%d.cgns'%rank
-            print 'trying to read %s'%FILEIN
-            if (os.access(FILEIN, os.F_OK) == True): FILE = FILEIN
+            print('trying to read %s'%FILEIN)
+            if os.access(FILEIN, os.F_OK): FILE = FILEIN
             else: FILE = filedir+'/t_proc%d.cgns'%rank
             t = C.convertFile2PyTree(FILE)
 

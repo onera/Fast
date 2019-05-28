@@ -11,17 +11,17 @@ files.append("Compute/core3as2.for")
 files.append("Compute/core3as2_chim.for")
 #files.append("Compute/src_term.for")
 
-print files
+print(files)
 
 for i in files:
-  print 'traitement fichier:',i
+  print('traitement fichier: %d'%i)
   f = open(i,'r')                         # ouvrir le fichier input
   lines = f.readlines()
   #loop solver
   for solver in modules:
 
     fout = '../../'+solver+'/'+solver+'/'+i
-    print 'generation fichier:',fout, 'du module', solver
+    print('generation fichier: %s du module %s'%(fout, solver))
 
     fo = open(fout,"w")                  # ouvrir le fichier de sortie
 

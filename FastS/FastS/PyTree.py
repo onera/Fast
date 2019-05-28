@@ -81,7 +81,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     #### a blinder...
                 
      
-    if nitrun == 1: print 'Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode)
+    if nitrun == 1: print('Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode))
 
     if layer == "Python": 
         
@@ -101,7 +101,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
       #nitmaxs = 3    
       for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
 
-         #print 'nstep=',nstep
+         #print('nstep=%d'%nstep)
 
          hook1 = HOOK.copy()
          distrib_omp = 0
@@ -121,7 +121,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             nit_c     = 1
             #t0=Time.time()
             fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
-            #print 't_compute = ', Time.time() - t0
+            #print('t_compute = %f'%(Time.time() - t0))
 
             #dtloc GJeanmasson
             if exploc==2 and tc is not None and rk==3:
@@ -160,7 +160,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
               timelevel_target = int(dtloc[4])
               #t0=Time.time()
               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
-              #print 't_transferts = ', Time.time() - t0
+              #print('t_transferts = %f'%(Time.time() - t0)
 
       dtloc[3] +=1    #time_level_motion
       dtloc[4] +=1    #time_level_target
@@ -330,7 +330,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         distrib_omp = 1
         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep, distrib_omp) )   
     
-    #print "APRES hook.update"
+    #print("APRES hook.update")
 
     #init metric
     _init_metric(t, metrics, hook1, ompmode)
@@ -380,8 +380,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # mise a jour vitesse entrainememnt
     #
     #t0=timeit.default_timer()
-    if (ale == True and infos_ale is not None):
-        print "ale actif. Teta et tetap=", infos_ale
+    if ale == True and infos_ale is not None:
+        print("ale actif. Teta et tetap=", infos_ale)
         teta = infos_ale[0];  tetap = infos_ale[1]
         _motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
@@ -535,10 +535,10 @@ def _createTBLESA(tc,nbpts_linelets=45):
                   if sname == 'IB':
                      zsrname = zsrname.split('_')
                      if len(zsrname)<3: 
-                        print 'Warning: createTBLESA: non consistent with the version of IBM preprocessing.'
+                        print('Warning: createTBLESA: non consistent with the version of IBM preprocessing.')
                      else:
                        if zsrname[1] == '6':              
-                        print 'Using TBLE SA wall model'         
+                        print('Using TBLE SA wall model')
                         pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor') 
                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
                         addrIBC.append(size_IBC) 
@@ -551,7 +551,7 @@ def _createTBLESA(tc,nbpts_linelets=45):
                                    
       if(size_IBC > 0): 
         if HOOK['linelets_int'] is None :   # No TBLE Data in tc
-         print 'TBLE data missing in tc, they will be built...'     
+         print('TBLE data missing in tc, they will be built...')
             
          # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)  
          Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin+1)     
@@ -597,7 +597,7 @@ def _createTBLESA(tc,nbpts_linelets=45):
                               if sname == 'IB':                              
                                  zsrname = zsrname.split('_')
                                  if len(zsrname)<3: 
-                                   print 'Warning: createTBLESA: non consistent with the version of IBM preprocessing.'
+                                   print('Warning: createTBLESA: non consistent with the version of IBM preprocessing.')
                                  else:   
                                    if zsrname[1] == '6':                                                                                                
                                      pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor') 
@@ -720,7 +720,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        FILE = tc_steady
        if os.access(FILE, os.F_OK): tc  = C.convertFile2PyTree(FILE)
-       else: print "error reading", FILE
+       else: print("error reading %s."%FILE)
        FILE = directory+'/tc_'+str(root)+'.cgns'
        print 'File inst=', FILE, 'target=', timelevel_target, 'motionlevel=', timelevel_motion
        if os.access(FILE, os.F_OK): tc_inst  = C.convertFile2PyTree(FILE)
@@ -2895,7 +2895,6 @@ def rmGhostCells(t, depth, adaptBCs=1):
 
 
 #==============================================================================
-#
 # display CPU efficiency diagnostic
 #==============================================================================
 def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FILEOUT='listZonesSlow.dat', RECORD=None):
@@ -2909,17 +2908,17 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
  ompmode = OMP_MODE
  if  node is not None: ompmode = Internal.getValue(node)
 
- dtloc   = Internal.getValue(dtloc) # tab numpy
+ dtloc = Internal.getValue(dtloc) # tab numpy
  ss_iteration  = int(dtloc[0]) 
 
  timer_omp = HOOK["TIMER_OMP"]
  ADR = OMP_NUM_THREADS*2*(ss_iteration)
  echant    =  timer_omp[ ADR ]
  if echant == 0.:
-   print 'nombre iterations insuffisant pour diagnostic: nitrun * ss_iteration > 15'
+   print('nombre iterations insuffisant pour diagnostic: nitrun * ss_iteration > 15')
    return None
 
- zones     = Internal.getZones(t)
+ zones = Internal.getZones(t)
  tps_percell     =0.
  tps_percell_max =0.
  cout            =0.
@@ -2944,14 +2943,14 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       for i in range(OMP_NUM_THREADS):
           if ompmode ==1:
             ithread = param_int[ PtZoneomp  +  i ]
-            if ithread != -2: 
+            if ithread != -2:
                tps_zone_percell+=timer_omp[ ADR + 1+ithread ]
-               if timer_omp[ ADR + 1+ithread ] > tps_zone_percell_max : 
+               if timer_omp[ ADR + 1+ithread ] > tps_zone_percell_max: 
                     tps_zone_percell_max = timer_omp[ ADR + 1+ithread ]
                     ithread_max          = ithread
           else:
             tps_zone_percell+=timer_omp[ ADR + 1+i ]
-            if timer_omp[ ADR + 1+i ] > tps_zone_percell_max : 
+            if timer_omp[ ADR + 1+i ] > tps_zone_percell_max: 
                  tps_zone_percell_max = timer_omp[ ADR + 1+i ]
                  ithread_max          = i
       
@@ -2967,10 +2966,10 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       if RECORD is not None:
           tape = tps_zone_percell/echant/NbreThreads
 
-     
-      perfo = numpy.empty(2, dtype=numpy.float64); perfo[0]= int(echant*NbreThreads/tps_zone_percell); perfo[1]= int(echant/tps_zone_percell_max);
+      perfo = numpy.empty(2, dtype=numpy.float64)
+      perfo[0]= int(echant*NbreThreads/tps_zone_percell)
+      perfo[1]= int(echant/tps_zone_percell_max);
       Internal.createUniqueChild(solver_def, 'Cups', 'DataArray_t', value=perfo)
-
 
     else:
       for i in range(OMP_NUM_THREADS):
@@ -3068,9 +3067,9 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 
 
     #nitmaxs=8
-    if nitrun == 1: print 'Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode)
+    if nitrun == 1: print('Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode))
 
-    if (layer == 'Python'):     
+    if layer == 'Python':
            
         for nstep in xrange(1, nitmax+1): # Etape explicit local
 
@@ -3174,7 +3173,7 @@ def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 
     dtloc = Internal.getValue(dtloc) # tab numpy
     nitmax = int(dtloc[0])   
-    #print 'nitmax= ', nitmax
+    #print('nitmax= %d'%nitmax)
     bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
  
     #### a blinder...
@@ -3186,7 +3185,6 @@ def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
     if tc is not None:
          bases = Internal.getNodesFromType1(tc, 'CGNSBase_t')  # noeud
          tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
-         #print tc_compact
          if tc_compact is not None:
                 param_real= tc_compact[1]
                 param_int = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
@@ -3206,16 +3204,16 @@ def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 
 
 
-    #print 'nitmax= ', nitmax
+    #print('nitmax= %d'%nitmax)
     #nitmaxs=1
 
-    if nitrun == 1: print 'Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode)
+    if nitrun == 1: print('Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode))
 
     if layer == "Python": 
     
         for nstep in xrange(1, nitmax+1): # Etape explicit local
  
-            #print 'nstep ', nstep             
+            #print('nstep '%nstep)             
             # determination taille des zones a integrer (implicit ou explicit local)
 
             hook1  = HOOK.copy()
@@ -3318,7 +3316,6 @@ def _temps_estim(t,varsN,varP,drodm_,coe_,nstep):
          #drodm = numpy.reshape(drodm,(dim[1]-1,dim[2]-1,dim[3]-1))
          for j in xrange(2,dim[2]-3):
             for k in xrange(2,dim[1]-3):
-                 #print k,j,var_N[1][k,j,1]
                  diff =  abs(var_N[1][k,j,0] - var_P1[1][k,j,0])/drodm[k + j*(dim[1]-1)]
                  #diff = abs(diff)/coe[k + j*(dim[1]-1)]
                  #a = C.getValue(z,'centers:temps', (k,j,0))

@@ -226,8 +226,6 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
         
       for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
 
-         #print 'coucou', Cmpi.rank
-
          if graph is not None:
              procDict  = list_graph[nstep-1]['procDict']
              graphID   = list_graph[nstep-1]['graphID']
@@ -265,7 +263,6 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
             elif  (nstep%2 == 1)  and itypcp == 2 : vars = PyTree.varsP 
             _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0], rk=rk, exploc=explocal)
             #toc2=Time.time()-tic              
-            #print 'coucou'
 
             #tic=Time.time()
             #for comm_P2P in xrange(1,param_int[0]+1):
@@ -275,7 +272,6 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
             #tic=Time.time()
             fasts.dtlocal2para_mpi(zones,zonesD,param_int,param_real,hook1,rostk,drodmstk,constk,0,nstep,ompmode,taille_tabs,no_transfert,process)
           
-            #print 'coucou'
             FastI.switchPointers2__(zones,nitmax,nstep)
             #toc3=Time.time()-tic
                 
@@ -307,7 +303,6 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
                     procDict=None; graphID=None; graphIBCD=None      
                 _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, graphID, graphIBCD, procDict, nitmax, rk, explocal, 2)
             #toc2_=Time.time()-tic 
-            #print 'coucou'
 
             #tps_calcul = tps_calcul + toc1 + toc2 + toc4  + toc3 
             #tps_com_transferts = tps_com_transferts + toc1 #toc2_+ toc1_ 
@@ -347,9 +342,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 
 def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=1, num_passage=1): 
 
-   rank=Cmpi.rank 
-
-   #print vars
+   rank=Cmpi.rank
 
    #timecount = numpy.zeros(4, dtype=numpy.float64)
    timecount = []
@@ -389,7 +382,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
                                         nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict)
 
               #toc = Time.time() - tic
-       # if (rank == 0):
+       # if rank == 0:
        #     print "Time in MPI send_buffer, irecv ","%.6f"%timecount[0]
        #     print "Time InterpTransfert (Inter)  ","%.6f"%timecount[1]
        #     print "Time InterpTransfert (Intra)  ","%.6f"%timecount[2]
@@ -496,7 +489,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # mise a jour vitesse entrainememnt
     #
     if ale == True and infos_ale is not None:
-        print "ale actif. Teta et tetap=", infos_ale
+        print("ale actif. Teta et tetap=", infos_ale)
         teta = infos_ale[0];  tetap = infos_ale[1]
         _motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
