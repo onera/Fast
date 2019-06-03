@@ -1,7 +1,7 @@
 """Fast Structured Grid Navier-Stokes solver.
 """
-import fasts
-import FastS
+from . import fasts
+from . import FastS
 __version__ = FastS.__version__
 
 FIRST_IT = 0
@@ -30,6 +30,9 @@ try:
     OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
     OMP_NUM_THREADS = int(OMP_NUM_THREADS)
 except: OMP_NUM_THREADS = 1
+
+try: range = xrange
+except: passe
 
 # Variable alignement pour vectorisation
 #CACHELINE = Dist.getCacheLine()
@@ -99,7 +102,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                 dest        = param_int_tc[pt_ech] 
        
       #nitmaxs = 3    
-      for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
+      for nstep in range(1, nitmax+1): # pas RK ou ssiterations
 
          #print('nstep=%d'%nstep)
 
@@ -109,12 +112,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
          nidom_loc = hook1["nidom_tot"]
         
          skip      = 0
-         if (hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1): skip = 1
+         if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
 
          # calcul Navier_stokes + appli CL
-      	 if nidom_loc > 0 and skip == 0:
-
-            # Navier-Stokes
+         if nidom_loc > 0 and skip == 0:
             nstep_deb = nstep
             nstep_fin = nstep
             layer_mode= 0
@@ -123,7 +124,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
             #print('t_compute = %f'%(Time.time() - t0))
 
-            #dtloc GJeanmasson
+            # dtloc GJeanmasson
             if exploc==2 and tc is not None and rk==3:
                fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
 
@@ -134,7 +135,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                FastI.switchPointers2__(zones,nitmax,nstep)
                 
                # Ghostcell
-               if (nitmax%3 != 0) : # Tous les schemas sauf constantinescu RK3
+               if nitmax%3 != 0: # Tous les schemas sauf constantinescu RK3
                    if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
                    elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
                    timelevel_target = int(dtloc[4])
@@ -142,21 +143,21 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             
                fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
 
-               if (nstep%2==0) :
+               if nstep%2 == 0:
                    timelevel_target = int(dtloc[4])
                    vars = ['Density'  ]
                    _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, nitmax, rk, exploc, 2)
 
-               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
-               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
+               if    nstep%2 == 0 and itypcp == 2 : vars = ['Density'  ] 
+               elif  nstep%2 == 1 and itypcp == 2 : vars = ['Density_P1'] 
                _applyBC_(zones,metrics, hook1, nstep, ompmode,  var=vars[0])
 
 
 
             else:
               #Ghostcell
-              vars=  varsP
-              if  nstep%2 == 0 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
+              vars = varsP
+              if nstep%2 == 0 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
               timelevel_target = int(dtloc[4])
               #t0=Time.time()
               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
@@ -170,7 +171,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
       layer_mode= 1
       nit_c     = NIT
 
-      if tc == None:
+      if tc is None:
           HOOK['param_int_tc']  = None
           HOOK['param_real_tc'] = None
 
@@ -323,9 +324,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
 
     #determination taille des zones a integrer (implicit ou explicit local)
-    #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)
+    #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     #print 'int(dtloc[0])= ', int(dtloc[0])
-    for nstep in xrange(1, int(dtloc[0])+1):
+    for nstep in range(1, int(dtloc[0])+1):
         hook1       = HOOK.copy()
         distrib_omp = 1
         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep, distrib_omp) )   
@@ -519,9 +520,9 @@ def _createTBLESA(tc,nbpts_linelets=45):
 
       linelets_int_tc  = Internal.getNodeFromName(tc,'linelets_int')
       linelets_real_tc = Internal.getNodeFromName(tc,'linelets_real')
-      if(linelets_int_tc is not None):
+      if linelets_int_tc is not None:
          HOOK['linelets_int'] = Internal.getValue(linelets_int_tc)                  
-      if(linelets_real_tc is not None):   
+      if linelets_real_tc is not None:   
          HOOK['linelets_real']= Internal.getValue(linelets_real_tc)
 
       zones_tc = Internal.getZones(tc)             
@@ -549,8 +550,8 @@ def _createTBLESA(tc,nbpts_linelets=45):
       # addrIBC.append(size_IBC)                
       # print "Nb Rac =",count_racIBC-1 
                                    
-      if(size_IBC > 0): 
-        if HOOK['linelets_int'] is None :   # No TBLE Data in tc
+      if size_IBC > 0: 
+        if HOOK['linelets_int'] is None:   # No TBLE Data in tc
          print('TBLE data missing in tc, they will be built...')
             
          # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)  
@@ -619,9 +620,8 @@ def _createTBLESA(tc,nbpts_linelets=45):
    
                                      if Nbpts_D > 1:
                                        
-                                         for noind in xrange(0,Nbpts_D):
+                                         for noind in range(0,Nbpts_D):
                                              
-                                             # print "noind ,Nbpts_D",noind,Nbpts_D
                                              b0 = valxI[noind]-valxW[noind]
                                              b1 = valyI[noind]-valyW[noind]
                                              b2 = valzI[noind]-valzW[noind]
@@ -649,7 +649,7 @@ def _createTBLESA(tc,nbpts_linelets=45):
                                         
                                      # ========================= Debug interp from fine grid =============
    
-                                     # for noind in xrange(0,Nbpts_D):
+                                     # for noind in range(0,Nbpts_D):
                                      #     ltarget = ptlistval[noind]
                                      #     itarget = ltarget%(dimI-1)
                                                     
@@ -712,8 +712,8 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
     #
     #target in no more in tc; need need data in a new file
     #
-    #if timelevel_target == timelevel_perfile+1 or tc == None: 
-    if timelevel_target == timelevel_perfile or tc == None: 
+    #if timelevel_target == timelevel_perfile+1 or tc is None: 
+    if timelevel_target == timelevel_perfile or tc is None: 
 
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
@@ -722,9 +722,9 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        if os.access(FILE, os.F_OK): tc  = C.convertFile2PyTree(FILE)
        else: print("error reading %s."%FILE)
        FILE = directory+'/tc_'+str(root)+'.cgns'
-       print 'File inst=', FILE, 'target=', timelevel_target, 'motionlevel=', timelevel_motion
+       print('File inst=', FILE, 'target=', timelevel_target, 'motionlevel=', timelevel_motion)
        if os.access(FILE, os.F_OK): tc_inst  = C.convertFile2PyTree(FILE)
-       else: print "error reading", FILE
+       else: print("error reading %s."%FILE)
 
        #
        #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
@@ -893,8 +893,7 @@ def checkBalance(t):
        trans =  4*(iv*jv + iv*kv + kv*jv)
        size_reelle = size_reelle +iv*jv*kv
        size_transf = size_transf + trans
-       #print  iv, jv, kv, trans
-    print "size Pb: totale =", size_reelle+size_transf, 'woghost=', size_reelle, 'NB ghost=',size_transf, 'Nbzone=',len(zones)
+    print("size Pb: totale =", size_reelle+size_transf, 'woghost=', size_reelle, 'NB ghost=',size_transf, 'Nbzone=',len(zones))
     return None
 
 #==============================================================================
@@ -903,7 +902,7 @@ def checkBalance(t):
 def itt(var):
     if var == 'pause': ivar =1
     else: ivar = 0
-    print "itt collection (Vtune/Advisor)", var
+    print("itt collection (Vtune/Advisor)", var)
     fasts.itt(ivar)
     return None
 #==============================================================================
@@ -947,7 +946,6 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
-              #print 'coucou'
               Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, bcType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, Gamma,Cv,Mus,Cs,Ts)#,timecount)
 
               #Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, bcType, type_transfert, no_transfert, Gamma,Cv,Mus,Cs,Ts)#,timecount)
@@ -960,7 +958,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
        #apply BC
        #t0=timeit.default_timer()
-       if (rk != 3 and exploc != 2):
+       if rk != 3 and exploc != 2:
           _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0], rk=1, exploc=1)
        #t1=timeit.default_timer()
        #print "Time BC",(t1-t0)
@@ -992,14 +990,14 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
     varmy = ['MomentumX','MomentumY','MomentumZ','Density','Pressure','Pressure^2','ViscosityEddy','rou^2','rov^2','row^2','rouv','rouw','rovw']
     lgrad = 0
     for var in vars:
-	if var == 'thermique':
-		varmy += ['Temperature','T^2','rouT','rovT','rowT','Eps_T' ]
-                lgrad =  1
+      if var == 'thermique':
+        varmy += ['Temperature','T^2','rouT','rovT','rowT','Eps_T' ]
+        lgrad =  1
 
-    for i in xrange(len(varmy)):
-	varmy[i] = 'centers:'+varmy[i]
+    for i in range(len(varmy)):
+      varmy[i] = 'centers:'+varmy[i]
 
-    ##on determine le nbr de cellule fictive active pour le calcul des moyennes
+    # on determine le nbr de cellule fictive active pour le calcul des moyennes
     numcellfic = 2 
     ific       = 2   # a adapter en DF
     if lgrad == 1: numcellfic = 1
@@ -1014,20 +1012,20 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             #
             datap = numpy.empty((17), numpy.int32)
             #
-            dim   = Internal.getZoneDim(z)
-   	    inck = 1
+            dim  = Internal.getZoneDim(z)
+            inck = 1
             if dim[3] == 2: inck =  0
             zp = T.subzone(z, (1,1,1), (-1,-1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: C._initVars(zp, var, 0.)
+            for var in varmy: C._initVars(zp, var, 0.)
 
             dim_my = Internal.getZoneDim(zp)
 
             datap[0]  = 0                                                # nbr direction homogene
             datap[1]  = 0                                                # dir homogne
-    	    datap[2]  = nsamples                                         # nbre echantillon
-    	    datap[3]  = (dim_my[1]-1)*(dim_my[2]-1)*(dim_my[3]-1)        # nbre d'element par champ
-    	    datap[4]  = len( varmy )                                     # nbre champ statistique
+            datap[2]  = nsamples                                         # nbre echantillon
+            datap[3]  = (dim_my[1]-1)*(dim_my[2]-1)*(dim_my[3]-1)        # nbre d'element par champ
+            datap[4]  = len( varmy )                                     # nbre champ statistique
             datap[5]  = 1                                                # nbre cellule homogene
             datap[6]  = 1                                                # incerment i
             datap[7]  = dim_my[1]-1                                      # increment j
@@ -1041,7 +1039,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             datap[14] =  dim_my[2]-1 -2*ific + numcellfic                   # loop moyenne jmax
             datap[15] =  1 - numcellfic*inck                             # loop moyenne kmin
             datap[16] =  dim_my[3]-1 -2*ific*inck + numcellfic*inck         # loop moyenne kmax
-	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
+            zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
 
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
@@ -1055,32 +1053,28 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
 
     elif dir == 'i':
         for z in zones:
-            #
             datap = numpy.empty((17), numpy.int32)
-            #
             dim   = Internal.getZoneDim(z)
-   	    inck = 1
-            if (dim[3] == 2): inck =  0
-            #
+            inck = 1
+            if dim[3] == 2: inck =  0
             zp = T.subzone(z, (1,1,1), (1,-1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: C._initVars(zp, var, 0.)
-            #
+            for var in varmy: C._initVars(zp, var, 0.)
+            
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, 1 , dim_tr[1], dim_tr[2] ]
-            #print dim_my
             datap[0]  = 1                                                # nbr direction homogene
             datap[1]  = 1                                                # dir homogne
-    	    datap[2]  = nsamples                                         # nbre echantillon
-    	    datap[3]  = (dim_my[1])*(dim_my[2]-1)*(dim_my[3]-1)        # nbre d'element par champ
-    	    datap[4]  = len( varmy )                                     # nbre champ statistique
+            datap[2]  = nsamples                                         # nbre echantillon
+            datap[3]  = (dim_my[1])*(dim_my[2]-1)*(dim_my[3]-1)        # nbre d'element par champ
+            datap[4]  = len( varmy )                                     # nbre champ statistique
             datap[5]  = dim[1]-1 -2*ific                                 # nbre cellule homogene
             datap[6]  = 0                                                # incerment i
             datap[7]  = dim_my[1]-1                                      # increment j
             datap[8]  =(dim_my[1]-1)*(dim_my[2]-1)                       # increment k
             datap[9]  =  ific                                            # ific: a adapter  si DF
             datap[10] =  ific                                            # kfic: a adapter  si DF
-            if (dim[3] == 2): datap[10] =  0
+            if dim[3] == 2: datap[10] =  0
             datap[11] =  1                                               # loop moyenne imin
             datap[12] =  1                                               # loop moyenne imax
             datap[13] =  1 - numcellfic                                  # loop moyenne jmin
@@ -1105,45 +1099,43 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][22]= dim_my[3]-1 -2*ific*inck
             param_int[1][66]= 0                           # pas de padding pour les variables stats
 
-	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
+            zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    elif (dir == 'j'):
+    elif dir == 'j':
         for z in zones:
             #
             datap = numpy.empty((17), numpy.int32)
             #
-            dim   = Internal.getZoneDim(z)
-   	    inck = 1
-            if (dim[3] == 2): inck =  0
-            #
+            dim  = Internal.getZoneDim(z)
+            inck = 1
+            if dim[3] == 2: inck =  0
+            
             zp = T.subzone(z, (1,1,1), (-1,1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: C._initVars(zp, var, 0.)
-            #
+            for var in varmy: C._initVars(zp, var, 0.)
+            
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, dim_tr[1], 1, dim_tr[2] ]
-            #print dim_my
             datap[0]  = 1                                                # nbr direction homogene
             datap[1]  = 2                                                # dir homogne
-    	    datap[2]  = nsamples                                         # nbre echantillon
-    	    datap[3]  = (dim_my[1]-1)*(dim_my[2])*(dim_my[3]-1)        # nbre d'element par champ
-    	    datap[4]  = len( varmy )                                     # nbre champ statistique
+            datap[2]  = nsamples                                         # nbre echantillon
+            datap[3]  = (dim_my[1]-1)*(dim_my[2])*(dim_my[3]-1)        # nbre d'element par champ
+            datap[4]  = len( varmy )                                     # nbre champ statistique
             datap[5]  = dim[2]-1  -2*ific                                # nbre cellule homogene
             datap[6]  = 1                                                # incerment i
             datap[7]  = 0                                                # increment j
             datap[8]  =(dim_my[1]-1)                                     # increment k
             datap[9]  =  ific                                            # ific: a adapter  si DF
             datap[10] =  ific                                            # kfic: a adapter  si DF
-            if (dim[3] == 2): datap[10] =  0
+            if dim[3] == 2: datap[10] =  0
             datap[11] =  1 - numcellfic                                  # loop moyenne imin
             datap[12] =  datap[6] -2*ific + numcellfic                   # loop moyenne imax
             datap[13] =  1                                               # loop moyenne jmin
             datap[14] =  1                                               # loop moyenne jmax
             datap[15] =  1 - numcellfic*inck                             # loop moyenne kmin
             datap[16] =  datap[8] -2*ific*inck + numcellfic*inck         # loop moyenne kmax
-            #print datap
-
+            
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
@@ -1159,38 +1151,36 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][21]= 1                    
             param_int[1][22]= dim_my[3]-1 -2*ific*inck
             param_int[1][66]= 0                           # pas de padding pour les variables stats
-            #
-	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
+            
+            zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    elif (dir == 'k'):
+    elif dir == 'k':
         for z in zones:
-            #
             datap = numpy.empty(17, numpy.int32)
-            #
-            dim   = Internal.getZoneDim(z)
-   	    inck = 1
-            if (dim[3] == 2): inck =  0
-            #
+            
+            dim  = Internal.getZoneDim(z)
+            inck = 1
+            if dim[3] == 2: inck =  0
+            
             zp = T.subzone(z, (1,1,1), (-1,-1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: C._initVars(zp, var, 0.)
-            #
+            for var in varmy: C._initVars(zp, var, 0.)
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, dim_tr[1], dim_tr[2], 1 ]
             
             datap[0]  = 1                                                # nbr direction homogene
             datap[1]  = 3                                                # dir homogne
-    	    datap[2]  = nsamples                                         # nbre echantillon
-    	    datap[3]  = (dim_my[1]-1)*(dim_my[2]-1)*(dim_my[3])          # nbre d'element par champ
-    	    datap[4]  = len( varmy )                                     # nbre champ statistique
+            datap[2]  = nsamples                                         # nbre echantillon
+            datap[3]  = (dim_my[1]-1)*(dim_my[2]-1)*(dim_my[3])          # nbre d'element par champ
+            datap[4]  = len( varmy )                                     # nbre champ statistique
             datap[5]  = dim[3]-1  -2*ific*inck                           # nbre cellule homogene
             datap[6]  = 1                                                # nbre cellule i pour calcul adress
             datap[7]  = dim_my[1]-1                                      # nbre cellule j
             datap[8]  = 0                                                # nbre cellule k
             datap[9]  =  ific                                            # ific: a adapter  si DF
             datap[10] =  ific                                            # kfic: a adapter  si DF
-            if (dim[3] == 2): datap[10] =  0
+            if dim[3] == 2: datap[10] =  0
             datap[11] =  1 - numcellfic                                  # loop moyenne imin
             datap[12] =  (dim_my[1]-1) -2*ific + numcellfic              # loop moyenne imax
             datap[13] =  1 - numcellfic                                  # loop moyenne jmin
@@ -1213,46 +1203,43 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][21]= dim_my[2]-1 -2*ific 
             param_int[1][22]= 1
             param_int[1][66]= 0                           # pas de padding pour les variables stats
-            #
-	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
+            
+            zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    elif (dir == 'ij'):
+    elif dir == 'ij':
         for z in zones:
-            #
+            
             datap = numpy.empty((17), numpy.int32)
-            #
             dim   = Internal.getZoneDim(z)
-   	    inck = 1
-            if (dim[3] == 2): inck =  0
-            #
+            inck = 1
+            if dim[3] == 2: inck =  0
+            
             zp = T.subzone(z, (1,1,1), (1,1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: C._initVars(zp, var, 0.)
-            #
+            for var in varmy: C._initVars(zp, var, 0.)
+            
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, 1, 1, dim_tr[1] ]
-            #print dim_my
             datap[0]  = 2                                                # nbr direction homogene
             datap[1]  = 3                                                # dir non homogne
-    	    datap[2]  = nsamples                                         # nbre echantillon
-    	    datap[3]  = (dim_my[1])*(dim_my[2])*(dim_my[3]-1)        # nbre d'element par champ
-    	    datap[4]  = len( varmy )                                     # nbre champ statistique
+            datap[2]  = nsamples                                         # nbre echantillon
+            datap[3]  = (dim_my[1])*(dim_my[2])*(dim_my[3]-1)        # nbre d'element par champ
+            datap[4]  = len( varmy )                                     # nbre champ statistique
             datap[5]  = (dim[1]-1  -2*ific)*(dim[2]-1  -2*ific)          # nbre cellule homogene
             datap[6]  = 0                                                # nbre cellule i pour calcul adress
             datap[7]  = 0                                                # nbre cellule j
             datap[8]  = 1                                                # nbre cellule k
             datap[9]  =  ific                                            # ific: a adapter  si DF
             datap[10] =  ific                                            # kfic: a adapter  si DF
-            if (dim[3] == 2): datap[10] =  0
+            if dim[3] == 2: datap[10] =  0
             datap[11] =  1                                               # loop moyenne imin
             datap[12] =  1                                               # loop moyenne imax
             datap[13] =  1                                               # loop moyenne jmin
             datap[14] =  1                                               # loop moyenne jmax
             datap[15] =  1 - numcellfic*inck                             # loop moyenne kmin
             datap[16] =  datap[8] -2*ific*inck + numcellfic*inck         # loop moyenne kmax
-            #print datap
-
+            
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
@@ -1268,47 +1255,43 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][21]= 1                    
             param_int[1][22]= dim_my[3]-1 -2*ific*inck
             param_int[1][66]= 0                           # pas de padding pour les variables stats
-            #
-            #
-	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
+            
+            zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    elif (dir == 'ik'):
+    elif dir == 'ik':
         for z in zones:
-            #
             datap = numpy.empty((17), numpy.int32)
-            #
+            
             dim   = Internal.getZoneDim(z)
-   	    inck = 1
-            if (dim[3] == 2): inck =  0
-            #
+            inck = 1
+            if dim[3] == 2: inck =  0
+            
             zp = T.subzone(z, (1,1,1), (1,-1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: C._initVars(zp, var, 0.)
-            #
+            for var in varmy: C._initVars(zp, var, 0.)
+            
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, 1, dim_tr[1], 1 ]
-            #print dim_my
             datap[0]  = 2                                                # nbr direction homogene
             datap[1]  = 2                                                # dir non homogne
-    	    datap[2]  = nsamples                                         # nbre echantillon
-    	    datap[3]  = (dim_my[1])*(dim_my[2]-1)*(dim_my[3])        # nbre d'element par champ
-    	    datap[4]  = len( varmy )                                     # nbre champ statistique
+            datap[2]  = nsamples                                         # nbre echantillon
+            datap[3]  = (dim_my[1])*(dim_my[2]-1)*(dim_my[3])        # nbre d'element par champ
+            datap[4]  = len( varmy )                                     # nbre champ statistique
             datap[5]  = (dim[1]-1  -2*ific)*(dim[3]-1  -2*ific*inck)     # nbre cellule homogene
             datap[6]  = 0                                                # nbre cellule i pour calcul adress
             datap[7]  = 1                                                # nbre cellule j
             datap[8]  = 0                                                # nbre cellule k
             datap[9]  =  ific                                            # ific: a adapter  si DF
             datap[10] =  ific                                            # kfic: a adapter  si DF
-            if (dim[3] == 2): datap[10] =  0
+            if dim[3] == 2: datap[10] =  0
             datap[11] =  1                                               # loop moyenne imin
             datap[12] =  1                                               # loop moyenne imax
             datap[13] =  1 - numcellfic                                  # loop moyenne jmin
             datap[14] =  datap[7] -2*ific + numcellfic                   # loop moyenne jmax
             datap[15] =  1                                               # loop moyenne kmin
             datap[16] =  1                                               # loop moyenne kmax
-            #print datap
-
+            
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
@@ -1324,47 +1307,42 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][21]= dim_my[2]-1 -2*ific                    
             param_int[1][22]= 1
             param_int[1][66]= 0                           # pas de padding pour les variables stats
-            #
-            #
-	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
+            
+            zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    elif (dir == 'jk'):
+    elif dir == 'jk':
         for z in zones:
-            #
             datap = numpy.empty((17), numpy.int32)
-            #
             dim   = Internal.getZoneDim(z)
-   	    inck = 1
-            if (dim[3] == 2): inck =  0
-            #
+            inck = 1
+            if dim[3] == 2: inck =  0
+
             zp = T.subzone(z, (1,1,1), (-1,1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
-	    for var in varmy: C._initVars(zp, var, 0.)
-            #
+            for var in varmy: C._initVars(zp, var, 0.)
+            
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, dim_tr[1], 1, 1 ]
-            #print dim_my
             datap[0]  = 2                                                # nbr direction homogene
             datap[1]  = 1                                                # dir non homogne
-    	    datap[2]  = nsamples                                         # nbre echantillon
-    	    datap[3]  = (dim_my[1]-1)*(dim_my[2])*(dim_my[3])            # nbre d'element par champ
-    	    datap[4]  = len( varmy )                                     # nbre champ statistique
+            datap[2]  = nsamples                                         # nbre echantillon
+            datap[3]  = (dim_my[1]-1)*(dim_my[2])*(dim_my[3])            # nbre d'element par champ
+            datap[4]  = len( varmy )                                     # nbre champ statistique
             datap[5]  = (dim[2]-1  -2*ific)*(dim[3]-1  -2*ific*inck)     # nbre cellule homogene
             datap[6]  = 1                                                # nbre cellule i pour calcul adress
             datap[7]  = 0                                                # nbre cellule j
             datap[8]  = 0                                                # nbre cellule k
             datap[9]  =  ific                                            # ific: a adapter  si DF
             datap[10] =  ific                                            # kfic: a adapter  si DF
-            if (dim_my[3] == 2): datap[10] =  0
+            if dim_my[3] == 2: datap[10] =  0
             datap[11] =  1 - numcellfic                                  # loop moyenne jmin
             datap[12] =  datap[6] -2*ific + numcellfic                   # loop moyenne jmax
             datap[13] =  1                                               # loop moyenne imin
             datap[14] =  1                                               # loop moyenne imax
             datap[15] =  1                                               # loop moyenne kmin
             datap[16] =  1                                               # loop moyenne kmax
-            #print datap
-
+            
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
@@ -1380,9 +1358,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][21]= 1
             param_int[1][22]= 1
             param_int[1][66]= 0                           # pas de padding pour les variables stats
-            #
-            #
-	    zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
+            zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
     else: raise ValueError("createStatNodes: not a valid direction.")
@@ -1500,10 +1476,10 @@ def _computeVariables(t, metrics, varlist, order=2):
                  Internal.createChild(solution, var, 'DataArray_t', tmp)
 
     if var_loc != []:
-       if (lcompact_Q):     _compact(zones, fields=['centers:QCriterion'])
-       if (lcompact_Enst) : _compact(zones, fields=['centers:Enstrophy' ])
-       if (lcompact_Rotx) : _compact(zones, fields=['centers:RotX' ])
-       if (lcompact_drodt): _compact(zones, fields=['centers:dDensitydt' ])
+       if lcompact_Q:    _compact(zones, fields=['centers:QCriterion'])
+       if lcompact_Enst: _compact(zones, fields=['centers:Enstrophy' ])
+       if lcompact_Rotx: _compact(zones, fields=['centers:RotX' ])
+       if lcompact_drodt: _compact(zones, fields=['centers:dDensitydt' ])
 
        dtloc = Internal.getNodeFromName3(t , '.Solver#dtloc')  # noeud
        dtloc = Internal.getValue(dtloc)                       # tab numpy
@@ -1540,7 +1516,7 @@ def _computeGrad(t, metrics, varlist, order=2):
             node = Internal.getNodeFromName1(solution, var)
             #verifie si la variable existe dans l'arbre
             if node is None:
-               print "no", var, "in tree: gradient is not computed."
+               print("no", var, "in tree: gradient is not computed.")
             else:
                var_loc.append(var)
                lcompact = False
@@ -1611,7 +1587,7 @@ def itt(var):
           ivar =1
     else :
           ivar = 0
-    print "itt collection (Vtune/Advisor)", var
+    print("itt collection (Vtune/Advisor)", var)
     fasts.itt(ivar)
     return None
     
@@ -1622,7 +1598,7 @@ def itt(var):
 def checkKeys(d, keys):
     for i in d[2]:
         if i[0] not in keys:
-            print 'Warning: FastS: keyword %s is invalid.'%i[0]
+            print('Warning: FastS: keyword %s is invalid.'%i[0])
 
 #==============================================================================
 # Construit les donnees compactees pour traiter les BC
@@ -1741,7 +1717,6 @@ def _BCcompact(t):
 
             pt_bcs_real=  size_param_real[no] 
             param_int[ pt_bcs_int ] = Nb_bc
-            #print 'pt_bc= ', pt_bcs_int
             i         = 1
             size_int  = 1 + 2*Nb_bc  # shift pour nb_bc et pointeur BC_int et BC_real
             size_real = 0
@@ -1829,12 +1804,12 @@ def _buildOwnData(t, Padding):
                if d is not None:
                     a = Internal.getNodeFromName1(d, 'niveaux_temps')
                     if a is not None: val = Internal.getValue(a)
-                    else : val=1
+                    else: val=1
                veclevel.append(val)
                posg.append(0)
                i += 1
     if posg==[]:
-        for a in xrange(0,i):
+        for a in range(0,i):
             posg.append(0)
 
     maxlevel = max(veclevel)
@@ -1943,11 +1918,11 @@ def _buildOwnData(t, Padding):
         if temporal_scheme == "explicit": nssiter = 3
         elif temporal_scheme == "implicit": nssiter = ss_iteration+1
         elif temporal_scheme == "implicit_local": nssiter = ss_iteration+1
-        else: print 'Warning: FastS: invalid value %s for key temporal_scheme.'%temporal_scheme
+        else: print('Warning: FastS: invalid value %s for key temporal_scheme.'%temporal_scheme)
         try: ss_iteration = int(ss_iteration)
-        except: print 'Warning: FastS: invalid value %s for key ss_iteration.'%ss_iteration
+        except: print('Warning: FastS: invalid value %s for key ss_iteration.'%ss_iteration)
         try: modulo_verif = int(modulo_verif)
-        except: print 'Warning: FastS: invalid value %s for key modulo_verif.'%modulo_verif
+        except: print('Warning: FastS: invalid value %s for key modulo_verif.'%modulo_verif)
         if (rk == 1 and exploc==0 and temporal_scheme == "explicit"): nssiter = 1 # explicit global
         if (rk == 2 and exploc==0 and temporal_scheme == "explicit"): nssiter = 2 # explicit global
         if (rk == 3 and exploc==0 and temporal_scheme == "explicit"): nssiter = 3 # explicit global
@@ -1978,7 +1953,7 @@ def _buildOwnData(t, Padding):
 
     # Data for each zone
     #==== Check if padding file exists (potential cache associativity issue)
-    pad   = False
+    pad = False
     if Padding is not None:
       try:
           f       = open(Padding,'rb')
@@ -2107,8 +2082,8 @@ def _buildOwnData(t, Padding):
               adim      = C.getState(ref)
               prandtltb = adim[18]        #prandtl laminar 
             else: 
-              print 'FastS: Warning: can not find a refState.'
-              print 'FastS: Warning: Prandtl turb by default= 1.'
+              print('FastS: Warning: can not find a refState.')
+              print('FastS: Warning: Prandtl turb by default=1.')
               prandtltb = 1.
 
             d = Internal.getNodeFromName1(z, '.Solver#define')
@@ -2214,7 +2189,7 @@ def _buildOwnData(t, Padding):
                     elif des == "ZDES3"   or des == "zdes3":   ides = 6
                     elif des == "ZDES3_w" or des == "zdes3_w": ides = 7
             else:
-                 print 'Warning: FastS: model %s is invalid.'%model
+                 print('Warning: FastS: model %s is invalid.'%model)
 
             iles = 0
             if sgsmodel == 'smsm': iles = 1
@@ -2256,16 +2231,16 @@ def _buildOwnData(t, Padding):
               islope  = 1
             elif scheme == "roe": 
               kfludom = 5
-            elif(scheme == "ausmpred_pattern")  :  
+            elif scheme == "ausmpred_pattern":  
                 kfludom = 7
 
-            else: print 'Warning: FastS: scheme %s is invalid.'%scheme
+            else: print('Warning: FastS: scheme %s is invalid.'%scheme)
 
             lale   = 0; size_ale =0;
             if    motion == "none"       : lale = 0
             elif  motion == "rigid"      : lale = 1; size_ale = 11
             elif  motion == "deformation": lale = 2
-            else: print 'Warning: FastS: motion %s is invalid.'%motion
+            else: print('Warning: FastS: motion %s is invalid.'%motion)
 
             iflagflt = 0
             if filtrage == "on": iflagflt = 1
@@ -2278,7 +2253,7 @@ def _buildOwnData(t, Padding):
             ImplicitSolverNum = 0
             if implicit_solver == "lussor": ImplicitSolverNum = 0
             elif implicit_solver == "gmres": ImplicitSolverNum = 1
-            else: print 'Warning: FastS: implicit_solver %s is invalid.'%implicit_solver
+            else: print('Warning: FastS: implicit_solver %s is invalid.'%implicit_solver)
 
             # creation noeud parametre integer
             # Determination de levelg et leveld             
@@ -2346,7 +2321,7 @@ def _buildOwnData(t, Padding):
             size_real = 41
             datap = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
-                print 'Warning: time_step set to default value (0.0001).'
+                print('Warning: time_step set to default value (0.0001).')
                 dtc = 0.0001
             datap[0] = dtc
             
@@ -2412,7 +2387,6 @@ def _buildOwnData(t, Padding):
 #==============================================================================
 def _computeVelocityAle(t, metrics):
     global FIRST_IT, HOOK
-
 
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
@@ -2506,10 +2480,10 @@ def extractConvergenceHistory(t, fileout):
         nd =+ 1
         FileCvg.write("ZONE T=%sbloc %s %s I=%d F=POINT\n"%(a,i,a,lastRec))
         c = it[1]
-        for l in xrange(lastRec):
+        for l in range(lastRec):
            a  = ""
-           for k in xrange(neq): a = a+"{0:7f} ".format(RSD_L2[(k,l)])
-           for k in xrange(neq): a = a+"{0:7f} ".format(RSD_oo[(k,l)])
+           for k in range(neq): a = a+"{0:7f} ".format(RSD_L2[(k,l)])
+           for k in range(neq): a = a+"{0:7f} ".format(RSD_oo[(k,l)])
            FileCvg.write('%s %s\n'%(1+c[l],a))
     FileCvg.close()
 
@@ -2553,8 +2527,8 @@ def createStressNodes(t, BC=None, windows=None):
                    vargrad=['gradxVelocityX','gradyVelocityX','gradxVelocityY','gradyVelocityY','gradxTemperature','gradyTemperature','CoefPressure','ViscosityMolecular']
 
               varc  = []
-              for i in xrange(len(var)): varc.append('centers:'+var[i])
-              for i in xrange(len(vargrad)): varc.append('centers:'+vargrad[i])
+              for i in range(len(var)): varc.append('centers:'+var[i])
+              for i in range(len(vargrad)): varc.append('centers:'+vargrad[i])
               
               if BC is not None:
                  bc = Internal.getNodeFromName1(z, "ZoneBC")
@@ -2606,7 +2580,6 @@ def createStressNodes(t, BC=None, windows=None):
                        elif window[7]== 'kmin': idir =4
                        elif window[7]== 'kmax': idir =5
                      
-                     #print 'idir ', idir
                      inci =0
                      incj =0
                      inck =0
@@ -2636,8 +2609,7 @@ def createStressNodes(t, BC=None, windows=None):
                      inum  = inum + 1
                      C._extractVars(zp, vars0)
                      c = 0
-	             for v1 in varc: 
-                        #print 'var name=',v1,zp[0], c
+                     for v1 in varc: 
                         C._initVars(zp, v1, c)
                         c += 1
                      #print 'zone name=',zp[0]
@@ -2800,7 +2772,6 @@ def setIBCData_zero(t, surf, dim=None):
   # recup des obstacles
   bodies = []
   for b in Internal.getBases(surf):
-      print b[0]
       body = Internal.getZones(b)
       bodies.append(body)
   
@@ -2842,7 +2813,7 @@ def setIBCData_zero(t, surf, dim=None):
         #on retranche 1 pour avoir une bonne visu et un terme src plus compact
         cellN_IBC[0:] -= 1
 
-        print 'zone', z[0],': plage IBC=', ibc[1:7]
+        print('zone', z[0],': plage IBC=', ibc[1:7])
       
         numz["IBC"]  = ibc
 
@@ -2962,7 +2933,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       data[ z[0] ]   = [ tps_zone_percell/echant/NbreThreads, cout_zone]
 
       cells_tot   += ijkv
-      if RECORD is None: print 'zone= ', z[0],'cpumoy/cell= ',tps_zone_percell/echant/NbreThreads,'cpumax= ',tps_zone_percell_max/echant,'thread lent=', ithread_max ,'Nthtread actif=', NbreThreads, ' dim zone=',ijkv,'dim tot=',cells_tot
+      if RECORD is None: print('zone= ', z[0],'cpumoy/cell= ',tps_zone_percell/echant/NbreThreads,'cpumax= ',tps_zone_percell_max/echant,'thread lent=', ithread_max ,'Nthtread actif=', NbreThreads, ' dim zone=',ijkv,'dim tot=',cells_tot)
       if RECORD is not None:
           tape = tps_zone_percell/echant/NbreThreads
 
@@ -2976,15 +2947,15 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
           if ompmode ==1:
             ithread = param_int[ PtZoneomp  +  i ]
             if ithread != -2: 
-               if RECORD is None: print 'zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread ]/echant,' th=  ', ithread, 'echant= ', echant
+               if RECORD is None: print('zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread ]/echant,' th=  ', ithread, 'echant= ', echant)
           else:
             ithread = i
-            if RECORD is None: print 'zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread ]/echant,' th=  ', ithread, 'echant= ', echant
+            if RECORD is None: print('zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread ]/echant,' th=  ', ithread, 'echant= ', echant)
 
     ADR+= OMP_NUM_THREADS+1
 
  tps_percell/=cells_tot
- if RECORD is None: print 'cpu moyen %cell en microsec: ', tps_percell, tps_percell_max/cells_tot
+ if RECORD is None: print('cpu moyen %cell en microsec: ', tps_percell, tps_percell_max/cells_tot)
 
  f = open(FILEOUT, 'w')
  sizeZones=[]
@@ -2996,7 +2967,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
        sizeZone=[param_int[20],param_int[21],param_int[22]]
        if sizeZone not in sizeZones:
           sizeZones.append(sizeZone)
-          if RECORD is None: print 'zone ', z[0],'(',param_int[20],param_int[21],param_int[22],'):  surcout cpu= ', cout_relatif ,' , temps necessaire a cette zone (%)=', effort_relatif
+          if RECORD is None: print('zone ', z[0],'(',param_int[20],param_int[21],param_int[22],'):  surcout cpu= ', cout_relatif ,' , temps necessaire a cette zone (%)=', effort_relatif)
  
           f.write(z[0]+','+str(param_int[20])+","+str(param_int[21])+","+str(param_int[22])+","+str(param_int[25])+","+str(param_int[27])+","+str(param_int[29])+","+str(param_int[33])+'\n')
  f.close()
@@ -3071,7 +3042,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 
     if layer == 'Python':
            
-        for nstep in xrange(1, nitmax+1): # Etape explicit local
+        for nstep in range(1, nitmax+1): # Etape explicit local
 
             # determination taille des zones a integrer (implicit ou explicit local)
 
@@ -3211,7 +3182,7 @@ def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 
     if layer == "Python": 
     
-        for nstep in xrange(1, nitmax+1): # Etape explicit local
+        for nstep in range(1, nitmax+1): # Etape explicit local
  
             #print('nstep '%nstep)             
             # determination taille des zones a integrer (implicit ou explicit local)
@@ -3314,8 +3285,8 @@ def _temps_estim(t,varsN,varP,drodm_,coe_,nstep):
          drodm  = numpy.copy(drodm_[index[i]:index[i] + ndimdx])
          coe    = numpy.copy(coe_[index_[i]:index_[i] + ndimdx])
          #drodm = numpy.reshape(drodm,(dim[1]-1,dim[2]-1,dim[3]-1))
-         for j in xrange(2,dim[2]-3):
-            for k in xrange(2,dim[1]-3):
+         for j in range(2,dim[2]-3):
+            for k in range(2,dim[1]-3):
                  diff =  abs(var_N[1][k,j,0] - var_P1[1][k,j,0])/drodm[k + j*(dim[1]-1)]
                  #diff = abs(diff)/coe[k + j*(dim[1]-1)]
                  #a = C.getValue(z,'centers:temps', (k,j,0))

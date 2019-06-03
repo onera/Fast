@@ -37,7 +37,7 @@ nit = 10 ; time = 0.
 timeStep = numz['time_step']
 for it in xrange(nit):
     FastS._compute(t, metrics, it)
-    if (it%1 == 0):
-        print '- %d - %g'%(it, time)
+    if it%1 == 0:
+        print('- %d - %g'%(it, time))
         #CPlot.display(t, dim=2, mode=3, isoEdges=1)
     time += timeStep

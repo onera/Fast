@@ -3,7 +3,7 @@
 __version__ = '2.9'
 __author__ = "Ivan Mary, Stephanie Peron, Christophe Benoit, Thomas Renaud, Guillaume Jeanmasson"
 
-import fasts
+from . import fasts
 import numpy
 try: import Converter as C
 except: raise ImportError("FastS: requires Converter module.")

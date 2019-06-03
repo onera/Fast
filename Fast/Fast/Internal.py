@@ -867,7 +867,7 @@ def getBC__(node, state):
 def checkKeys(d, keys):
     fail = False
     for i in d[2]:
-      if keys.has_key(i[0]):
+      if i[0] in keys:
         k = keys[i[0]]
         val = Internal.getValue(i)
         if k == 0: # must be int
