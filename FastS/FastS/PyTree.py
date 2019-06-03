@@ -32,7 +32,7 @@ try:
 except: OMP_NUM_THREADS = 1
 
 try: range = xrange
-except: passe
+except: pass
 
 # Variable alignement pour vectorisation
 #CACHELINE = Dist.getCacheLine()
@@ -42,7 +42,6 @@ varsN    = ['Density']
 varsP    = ['Density_P1']
 varsM    = ['Density_M1']
 #varsN_SA = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature', 'TurbulentSANuTilde']
-
 
 #==============================================================================
 # generation maillage pour tble
@@ -2557,14 +2556,14 @@ def createStressNodes(t, BC=None, windows=None):
                      if BC is not None:
                         ptrg = Internal.getNodeFromName(v, "PointRange")
                      else: 
-                        range = numpy.zeros(6, numpy.int32 ).reshape(3,2)
-                        range[0,0]= window[1]
-                        range[1,0]= window[3]
-                        range[2,0]= window[5]
-                        range[0,1]= window[2]
-                        range[1,1]= window[4]
-                        range[2,1]= window[6]
-                        ptrg = [ 'PointRange', range,  [], 'IndexRange_t']
+                        wrange = numpy.zeros(6, numpy.int32 ).reshape(3,2)
+                        wrange[0,0]= window[1]
+                        wrange[1,0]= window[3]
+                        wrange[2,0]= window[5]
+                        wrange[0,1]= window[2]
+                        wrange[1,1]= window[4]
+                        wrange[2,1]= window[6]
+                        ptrg = [ 'PointRange', wrange,  [], 'IndexRange_t']
                       
                      dim = Internal.getValue(ptrg)
                      #print 'ptrg',ptrg

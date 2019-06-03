@@ -1979,7 +1979,7 @@ def _updateOutradeq2FastS(iteration, t, rad_real1D, rad_star1D,  nbBlock,  outBl
 # ======================================================================================================							
 	#press1D = RadEqUpdateUpdate(dpdr_real1D, rad_real1D, ppiv_def, rpiv_def, zone = location )      #1D
 	press1D = RadEqUpdateUpdate(dpdr_real1D, radius, ppiv_def, rpiv_def, zone = location )      #1D
-    print('press_carter=',press1D[87])
+    #print('press_carter=',press1D[87])
 	#printStep('STEP4 =  Radial equilibrium DONE' )
 # ======================================================================================================
 #  STEP5 =  azimutal extension/carto creation                            
