@@ -17,7 +17,6 @@ anglex = 0.
 angley = angle
 anglez = 0.
 
-
 #grille cylindrique d'axe Z
 a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5)) 
 
@@ -41,7 +40,7 @@ ret = C.isNamePresent(t, 'centers:Density')
 if ret != 1: # Density not present
     state = Internal.getNodeFromType(t, 'ReferenceState_t')
     if state is None:
-        raise ValueError, 'Reference state is missing in input cgns.'
+        raise ValueError('Reference state is missing in input cgns.')
     vars = ['Density', 'MomentumX', 'MomentumY', 'MomentumZ',
             'EnergyStagnationDensity']
     for v in vars:
@@ -50,7 +49,7 @@ if ret != 1: # Density not present
             val = float(node[1][0])
             C._initVars(t, 'centers:'+v, val)
         else:
-            raise ValueError, v + ' is missing in ReferenceState.'
+            raise ValueError(v + ' is missing in ReferenceState.')
     if Model == 'NSTurbulent':
         vars = ['TurbulentSANuTildeDensity']
         for v in vars:

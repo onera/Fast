@@ -1572,7 +1572,7 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
     elif format == "store": lft = 3
     residu = fasts.display_ss_iteration( zones, metrics, cvg_numpy, nitrun, nssiter, lft)
 
-    if gmres == None: return None
+    if gmres is None: return None
     else: return residu
 #==============================================================================
 # Interface for Vtune/Advisor collection control
@@ -2908,12 +2908,12 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
           if ompmode ==1:
             ithread = param_int[ PtZoneomp  +  i ]
             if ithread != -2:
-               tps_zone_percell+=timer_omp[ ADR + 1+ithread ]
+               tps_zone_percell += timer_omp[ ADR + 1+ithread ]
                if timer_omp[ ADR + 1+ithread ] > tps_zone_percell_max: 
                     tps_zone_percell_max = timer_omp[ ADR + 1+ithread ]
                     ithread_max          = ithread
           else:
-            tps_zone_percell+=timer_omp[ ADR + 1+i ]
+            tps_zone_percell += timer_omp[ ADR + 1+i ]
             if timer_omp[ ADR + 1+i ] > tps_zone_percell_max: 
                  tps_zone_percell_max = timer_omp[ ADR + 1+i ]
                  ithread_max          = i
@@ -2965,10 +2965,8 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
           f.write(z[0]+','+str(param_int[20])+","+str(param_int[21])+","+str(param_int[22])+","+str(param_int[25])+","+str(param_int[27])+","+str(param_int[29])+","+str(param_int[33])+'\n')
  f.close()
 
- if RECORD is not None:
-   return tape
- else:
-   return None
+ if RECORD is not None: return tape
+ else: return None
 
 #==============================================================================
 # compute rk3 dtloc 

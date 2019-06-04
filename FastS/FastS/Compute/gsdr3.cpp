@@ -411,7 +411,7 @@ E_Float deb_calcul;
 #ifdef _OPENMP  
           E_Float     lhs_end = omp_get_wtime();
 #else  
-          E_Float     lhs_end = 0.:
+          E_Float     lhs_end = 0.;
 #endif
           timer_omp[ cpu_perthread +1 ] += lhs_end- rhs_end;
           // if(ithread==1) printf(" time lhs= %g \n",lhs_end - rhs_end );
