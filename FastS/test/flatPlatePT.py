@@ -27,10 +27,10 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
 nit = 30000 ; time = 0.
 
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
-    if (it%20 == 0):
-        print '- %d - %g'%(it, time)
+    if it%20 == 0:
+        print('- %d - %g'%(it, time))
         CPlot.display(t, dim=2, mode=3, scalarField=2)
     time += numz['time_step']
 

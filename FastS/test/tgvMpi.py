@@ -286,13 +286,12 @@ C.convertPyTree2File(t, 't_'+str(rank)+'.cgns')
 C.convertPyTree2File(tc, 'tc_'+str(rank)+'.cgns')
 
 nit = 1000; time = 0.
-for it in xrange(nit):
+for it in range(nit):
     FastSmpi._compute(t, metrics, it, tc, graph)
     #FastSmpi._compute(t, metrics, it)
-    if (rank == 0 and it%50 == 0):
-        print '- %d - %f -'%(it, time); sys.stdout.flush()
+    if rank == 0 and it%50 == 0:
+        print('- %d - %f -'%(it, time)); sys.stdout.flush()
         FastS.display_temporal_criteria(t, metrics, it)
     #time += numz['time_step']
 t1 = C.node2Center(t)
 Cmpi.convertPyTree2File(t1, 't.cgns')
-

@@ -6,6 +6,9 @@ import Transform.PyTree as T
 import Connector.PyTree as X
 import numpy
 
+try: range = xrange
+except: pass
+
 # Nb de tranches
 NbTranche = 2
 # Nb de coeurs/tranche
@@ -19,17 +22,16 @@ FILE_CONNECT= 'tc_NSLam.cgns'
 # TRANSLATION DE L'ARBRE SOLUTION
 t = C.convertFile2PyTree(FILE_DATA)
 
-print 'TRANSLATION ET COPIE de RESTART EN TRANCHES'
-for tranche in xrange(NbTranche):
+print('TRANSLATION ET COPIE de RESTART EN TRANCHES')
+for tranche in range(NbTranche):
 
    dz =Lz
    if tranche==0: dz =0
-   print 'Tranche', tranche,' translatee de ', dz*tranche
+   print('Tranche', tranche,' translatee de ', dz*tranche)
    T._translate(t,(0,0,dz))
 
-   ##################
    # CHANGEMENT DE NOM DES ZONES
-   print 'CHANGEMENT DE NOM DES ZONES DES TRANCHES'
+   print('CHANGEMENT DE NOM DES ZONES DES TRANCHES')
    zones = Internal.getNodesFromType(t, 'Zone_t')
    for z in zones:
         if tranche==0:
@@ -71,7 +73,7 @@ for tranche in xrange(NbTranche):
            
         # Change le num des procs
         proc = Internal.getNodeFromName2(z,'proc')
-	if proc is not None and tranche != 0:
+        if proc is not None and tranche != 0:
            proc[1][0,0] = proc[1][0,0]+ numberofproc
 
    for pr in range(numberofproc*tranche,numberofproc*(tranche+1)):
@@ -79,7 +81,7 @@ for tranche in xrange(NbTranche):
        zout=[]
        for z in zones:
           proc = Internal.getNodeFromName2(z,'proc')
-	  if proc is not None:
+          if proc is not None:
              if pr==proc[1][0,0]: 
                zout.append(z)
           else:
@@ -96,12 +98,12 @@ for tranche in xrange(NbTranche):
 # TRANSLATION DE L'ARBRE CONNECTIVITE
 t = C.convertFile2PyTree(FILE_CONNECT)
 
-print 'TRANSLATION ET COPIE de RESTART EN TRANCHES'
-for tranche in xrange(NbTranche):
+print('TRANSLATION ET COPIE de RESTART EN TRANCHES')
+for tranche in range(NbTranche):
 
    dz =Lz
    if tranche==0: dz =0
-   print 'Tranche', tranche,' translatee de ', dz*tranche
+   print('Tranche', tranche,' translatee de ', dz*tranche)
    T._translate(t,(0,0,dz))
 
 
@@ -201,12 +203,10 @@ for tranche in xrange(NbTranche):
            
         # Change le num des procs
         proc = Internal.getNodeFromName2(z,'proc')
-	if proc is not None:
+        if proc is not None:
            proc[1][0,0] = proc[1][0,0]+ numberofproc*tranche
 
    if tranche == 0:
       C.convertPyTree2File(t, 'tc_'+str(NbTranche)+'Tranches.cgns')
    else:
       Filter.writeNodesFromPaths('tc_'+str(NbTranche)+'Tranches.cgns', ['CGNSTree/Base']*len(zones), zones, format='bin_cgns')
-
-

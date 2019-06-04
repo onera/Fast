@@ -3,8 +3,8 @@ import sys
 
 #  python generate_correction.py  repertoire_flux
 n = len(sys.argv)
-if (n != 2):
-    print 'Flux name folder is required as argument: python generate_flu.py  fluxFolder' 
+if n != 2:
+    print('Flux name folder is required as argument: python generate_flu.py  fluxFolder')
     sys.exit()
 
 dico= {}
@@ -15,7 +15,7 @@ dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','SA','euler']
 
 rep = sys.argv[1]
 if rep not in dico.keys():
-    print 'Flux option not described in the dictionnary' 
+    print('Flux option not described in the dictionnary')
     sys.exit()
 
 Model      = dico[ rep ]['model']
@@ -43,12 +43,10 @@ srcs= open('../../srcs.py','w')
 c = 0
 for l in lines_srcs: 
    if 'FastS/Compute/src_term.for' in l: c_index = c
-   c+=1
-c_index +=1
+   c += 1
+c_index += 1
 lines_srcs_beg = lines_srcs[0:c_index]
 lines_srcs_end = lines_srcs[c_index:]
-
-
 
 c = 0
 for l in lines_select: 

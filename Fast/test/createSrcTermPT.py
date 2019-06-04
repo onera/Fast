@@ -12,7 +12,7 @@ import Converter.Internal as Internal
 import Post.PyTree as P
 import time
 
-mach=0.
+mach = 0.
 npts = 251
 h = 100./(npts-1)
 smin = -50.
@@ -59,7 +59,6 @@ C._addBC2Zone(t, 'period', 'BCautoperiod', 'kmax')
 C._initVars(t,'{centers:r2}=({centers:CoordinateX}-%g)**2+({centers:CoordinateY}-%g)**2+({centers:CoordinateZ}-%g)**2'%(x0,y0,z0))
 
 # Numerics
-source = 1
 numb = {}
 numb["temporal_scheme"]    = "explicit"
 numb["ss_iteration"]       = 10
@@ -68,29 +67,25 @@ numz = {}
 numz["time_step"]          = 0.000044
 numz["time_step_nature"]   = "global"
 numz["scheme"]             = "roe"
-numz["source"]		   = source
+numz["source"]             = 1
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
-print "warmup"
 (t, tc, metrics) = FastS.warmup(t, None)
 
-print "compute"
 nit = 2730
 timeStep = numz['time_step']
-for it in xrange(nit):
-    # create source term
-    if source == 1:
-	omt    = omega*temps+phi
-	eps    = amp*sin(omt)
-	C._initVars(t,'{centers:Density_src}=%g*exp(-%g*(({centers:r2}<%g)*{centers:r2}+({centers:r2}>%g)*%g))*{centers:vol}'%(eps,alpha,rcrit,rcrit,rcrit))
-	C._initVars(t,'{centers:MomentumX_src}=0.')
-	C._initVars(t,'{centers:MomentumY_src}=0.')
-	C._initVars(t,'{centers:MomentumZ_src}=0.')
-	C._initVars(t,'{centers:EnergyStagnationDensity_src}={centers:Temperature}*{centers:Density_src}*%g'%gam3)
-    #######
+for it in range(nit):
+    # update source term
+    omt    = omega*temps+phi
+    eps    = amp*sin(omt)
+    C._initVars(t,'{centers:Density_src}=%g*exp(-%g*(({centers:r2}<%g)*{centers:r2}+({centers:r2}>%g)*%g))*{centers:vol}'%(eps,alpha,rcrit,rcrit,rcrit))
+    C._initVars(t,'{centers:MomentumX_src}=0.')
+    C._initVars(t,'{centers:MomentumY_src}=0.')
+    C._initVars(t,'{centers:MomentumZ_src}=0.')
+    C._initVars(t,'{centers:EnergyStagnationDensity_src}={centers:Temperature}*{centers:Density_src}*%g'%gam3)
     FastS._compute(t, metrics, it)
-    if (it%5 == 0):
-        print '- %d - %g'%(it, temps)
+    if it%5 == 0:
+        print('- %d - %g'%(it, temps))
         CPlot.display(t, offscreen=0, dim=3, mode='Scalar', scalarField='centers:Density', isoScales=['centers:Density',25,1.19996,1.200006], isoEdges=1,posCam=(0.,0.,120.5), posEye=(0.,0.,0.5), dirCam=(0.,1.,0.))#,export="export.mpeg")
     time.sleep(0.1)
     temps += timeStep

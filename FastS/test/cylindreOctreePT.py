@@ -101,9 +101,9 @@ t = I.initConst(t, MInf=MInf, alphaZ=alpha, loc='centers')
 (t, tc, metrics)  = FastS.warmup(t, tc)
 
 nit = 1000
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, nit, tc)
     if it%100 == 0:
-        print '- %d -'%it ; sys.stdout.flush()
+        print('- %d -'%it); sys.stdout.flush()
         CPlot.display(t, dim=2, mode=3, scalarField=1)
 C.convertPyTree2File(t, "out.cgns")

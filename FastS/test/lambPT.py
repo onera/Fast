@@ -35,7 +35,7 @@ param_int[31] = 150
 
 nit = 10 ; time = 0.
 timeStep = numz['time_step']
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
     if it%1 == 0:
         print('- %d - %g'%(it, time))

@@ -80,10 +80,10 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 (t, tc, metrics) = FastS.warmup(t, tc)
 
 nit = 1000
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it, tc)
-    if (it%20 == 0):
-        print '- %d -'%it ; sys.stdout.flush()
+    if it%20 == 0:
+        print('- %d -'%it); sys.stdout.flush()
         CPlot.display(t, dim=2, mode=3, scalarField=1)
 
 C.convertPyTree2File(t, "out.cgns")

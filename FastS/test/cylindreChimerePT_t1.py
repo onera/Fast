@@ -79,14 +79,11 @@ t = C.addState(t, MInf=MInf, alphaZ=alpha)
 t = I.initConst(t, MInf=MInf, alphaZ=alpha, loc='centers')
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
-
 (t, tc, metrics) = FastS.warmup(t, tc)
-import sys
-#sys.exit()
 
 nit = 250
 
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it, tc)
 
 Internal._rmNodesByName(t, '.Solver#Param')

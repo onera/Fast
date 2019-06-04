@@ -46,9 +46,9 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 graph = {'graphID':graph, 'graphIBCD':None, 'procDict':procDict,  'procList':[0] }
 
 nit = 1000 ; time = 0.
-for it in xrange(nit):
+for it in range(nit):
     FastSmpi._compute(t, metrics, it, tc, graph)
-    if (rank == 0 and it%10 == 0):
-        print '- %d - %g -'%(it, time); sys.stdout.flush()
+    if rank == 0 and it%10 == 0:
+        print('- %d - %g -'%(it, time)); sys.stdout.flush()
     time += numz['time_step']
 Cmpi.convertPyTree2File(t, 'out.cgns')

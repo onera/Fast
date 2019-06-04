@@ -16,9 +16,9 @@ t = C.newPyTree(['Base',a])
 
 U0 = 140.67
 P0 = 89280.81
-L0 =1.  
-R0 =1.111711
-T0 =279.15
+L0 = 1.  
+R0 = 1.111711
+T0 = 279.15
 t = C.addState(t, 'GoverningEquations', 'NSLaminar')
 t = C.addState(t, UInf=U0, RoInf=R0, PInf=P0, LInf=L0, alphaZ=0., adim='dim3')
 
@@ -133,7 +133,6 @@ ro_ref = Internal.getNodeFromName2( zones_ref[0], "ViscosityEddy" )[1]
 zones = Internal.getZones(t)
 ro = Internal.getNodeFromName2( zones[0], "ViscosityEddy" )[1]
 
-print 'shape ro', ro.shape
 
 '''   for j in range( ro.shape[1] ):
     for i in range( ro.shape[0] ):
@@ -144,17 +143,15 @@ j=82
 #for j in range( 78, ro.shape[1]-10 ):
 for k in range( ro.shape[2] ):
              #print i-1,j-1,k-1, ro_ref[i,j,k] - ro[i,j,k]
-             print k-1, j-1, ro[i,j,k]
+             print(k-1, j-1, ro[i,j,k])
       
              #ro[i,j,k] = ro[i,j,k] - ro_ref[i,j,k]
 C.convertPyTree2File(t, "bug.cgns")
 import sys;sys.exit()
 
-
-
 nit = 1; time = 0.
 timeStep = numz['time_step']
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
     time += timeStep
 

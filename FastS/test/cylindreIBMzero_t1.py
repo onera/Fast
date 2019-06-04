@@ -19,8 +19,8 @@ distrib = G.cart((0,0,0),(1/(NJ-1.),1,1),(NJ,1,1))
 distrib = G.enforcePlusX(distrib,2.e-5,15,25)
 a = G.map(a, distrib, dir=2)
 
-a1 = T.subzone(a,(1,1,1),(NI/2,-1,-1)); a1[0] = 'cyl1'
-a2 = T.subzone(a,(NI/2,1,1),(NI,-1,-1)); a2[0] = 'cyl2'
+a1 = T.subzone(a,(1,1,1),(NI//2,-1,-1)); a1[0] = 'cyl1'
+a2 = T.subzone(a,(NI//2,1,1),(NI,-1,-1)); a2[0] = 'cyl2'
 t = C.newPyTree(["Base",a1,a2])
 t = X.connectMatch(t)
 
@@ -60,16 +60,15 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 surf = G.cylinder((1,1,0), 0.35, 25., 360., 0., 0.5, (NI,1,2))
 tsurf = C.newPyTree(['Surf']); tsurf[2][1][2]=[surf]
 
-t    = FastS.setIBCData_zero(t, tsurf, dim=2)
+t = FastS.setIBCData_zero(t, tsurf, dim=2)
 #C.convertPyTree2File(t,"toto.cgns")
 #import sys; sys.exit()
 # Prim vars, solver tag, compact, metrics
 (t,  tc, metrics) = FastS.warmup(t, tc )
 
 # Compute
-for it in xrange(1,100):
-#for it in xrange(1,5):
-  print 'it=',it 
+for it in range(1,100):
+  print('it=',it) 
   FastS._compute(t, metrics, it, tc)
   if it%20==0:
        FastS.display_temporal_criteria(t, metrics, it)

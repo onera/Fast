@@ -27,7 +27,7 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 nit = 1000; time = 0.
 timeStep = numz['time_step']
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
     time += timeStep
 

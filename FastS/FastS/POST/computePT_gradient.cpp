@@ -101,9 +101,20 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
        { 
         // check var
         PyObject* var    = PyList_GetItem(vars       , nv  ); 
-        char* var_c      = PyString_AsString(var); 
+        char* var_c;
+        if (PyString_Check(var)) var_c = PyString_AsString(var);
+#if PY_VERSION_HEX >= 0x03000000
+        else if (PyUnicode_Check(var)) var_c = PyBytes_AsString(PyUnicode_AsUTF8String(var));
+#endif
+        else var_c = NULL; 
         PyObject* vargrad= PyList_GetItem(varsgrad   , nv*3);
-        char* vargrad_c  = PyString_AsString(vargrad); 
+        char* vargrad_c; 
+        if (PyString_Check(vargrad)) vargrad_c = PyString_AsString(vargrad);
+#if PY_VERSION_HEX >= 0x03000000
+        else if (PyUnicode_Check(vargrad)) vargrad_c = PyBytes_AsString(PyUnicode_AsUTF8String(vargrad));
+#endif
+        else vargrad_c = NULL; 
+
 
         PyObject* sol_center;
         sol_center        = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");

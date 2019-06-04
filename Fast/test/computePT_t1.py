@@ -35,11 +35,11 @@ t, metrics = Fast.metric(t)
 
 nit = 100; time = 0.
 timeStep = Fast.getValueFromTag(t, 'timeStep')
-for it in xrange(nit):
+for it in range(nit):
     t = Fast.applyBC(t, metrics)
     t = Fast.compute(t, metrics)
     if it%10 == 0:
-        print '- %d - %g'%(it, time)
+        print('- %d - %g'%(it, time))
     time += timeStep
 
 t = Fast.applyBC(t, metrics)

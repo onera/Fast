@@ -38,11 +38,11 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 zones = Internal.getZones(t)
 
 nit = 30; time = 0.
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
-    if it ==0 : residu_0 = FastS.display_temporal_criteria(t, metrics, it, gmres=True)
-    if (it%1 == 0):
-        print 'it=', it
+    if it ==0: residu_0 = FastS.display_temporal_criteria(t, metrics, it, gmres=True)
+    if it%1 == 0:
+        print('it=', it)
         residu = FastS.display_temporal_criteria(t, metrics, it, format='double', gmres=True)
         ratio2 = residu['L2']/residu_0['L2']; ratioo = residu['Loo']/residu_0['Loo']; r= max(ratio2,ratioo)
         for z in zones:
@@ -50,7 +50,7 @@ for it in xrange(nit):
             cfl = Internal.getNodeFromName1(num,'Parameter_real')[1][15]
             cflmax = min( 1./r*cfl , 500000000000.)
             Internal.getNodeFromName1(num,'Parameter_real')[1][15]=max(mycfl, cflmax)
-            print 'cfl', max(mycfl, cflmax)
+            print('cfl', max(mycfl, cflmax))
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

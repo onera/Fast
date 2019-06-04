@@ -251,7 +251,6 @@ def allocate_metric(t):
                Internal.addChild(z, grid_init, pos=1) # first
         metrics.append(fasts.allocate_metric(z, nssiter))
     return metrics
-
 #
 #==============================================================================
 # alloue retourne tableau ssor
@@ -391,9 +390,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #
     # Compactage arbre transfert et mise a jour HOOK
     #
-
-
-
     if tc is not None:
        X.miseAPlatDonorTree__(zones, tc, graph=graph,list_graph=list_graph) 
     
@@ -1426,8 +1422,8 @@ def _computeVariables(t, metrics, varlist, order=2):
     """Compute given variables."""
     global FIRST_IT, HOOK
 
-    if   isinstance(varlist, basestring): vars = [varlist]
-    elif isinstance(varlist, list      ): vars = varlist
+    if   isinstance(varlist, str): vars = [varlist]
+    elif isinstance(varlist, list): vars = varlist
     else: raise ValueError("_computeVariables: last argument must be a string or list of strings.")
 
     lcompact_Q    = False
@@ -1495,8 +1491,8 @@ def _computeGrad(t, metrics, varlist, order=2):
     """Compute gradient of fiven variables."""
     global FIRST_IT, HOOK
 
-    if isinstance(varlist, basestring): vars = [varlist]
-    elif isinstance(varlist, list    ): vars = varlist
+    if isinstance(varlist, str): vars = [varlist]
+    elif isinstance(varlist, list): vars = varlist
     else: raise ValueError("_computeGrad: last argument must be a string or list of strings.")
 
     var_loc = []
@@ -1648,12 +1644,12 @@ def _BCcompact(t):
             size_int  = 1 +  Nb_bc*2 + 9*Nb_bc
             size_real = 0
             for bc in bcs:
-                
+                btype = Internal.getValue(bc)
                 ## Si la bc est une wall_viscous_transition on ajoute un data qui est un vecteur contenant des nombres random
-                if (''.join(bc[1]) == 'BCWallViscous_transition'):
+                if btype == 'BCWallViscous_transition':
                     ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
-                    range_= ptrange[0][1]
-                    nb_cell = max([range_[0][1] - range_[0][0],1])* max([range_[1][1] - range_[1][0],1])*max([range_[2][1] - range_[2][0],1])
+                    wrange  = ptrange[0][1]
+                    nb_cell = max([wrange[0][1] - wrange[0][0],1])* max([wrange[1][1] - wrange[1][0],1])*max([wrange[2][1] - wrange[2][0],1])
                     rand = numpy.zeros((1,nb_cell), dtype=numpy.float64)
                     Internal.createUniqueChild(bc, 'random_vec', 'DataArray_t', rand)
                 
@@ -2566,9 +2562,7 @@ def createStressNodes(t, BC=None, windows=None):
                         ptrg = [ 'PointRange', wrange,  [], 'IndexRange_t']
                       
                      dim = Internal.getValue(ptrg)
-                     #print 'ptrg',ptrg
-                     #print 'dim ', dim
-
+                     
                      #dir=0,...5
                      idir = Ghost.getDirection__(dimbase, [ptrg])
                      if windows[0] is not None:

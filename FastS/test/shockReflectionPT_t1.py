@@ -40,7 +40,7 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 #nit = 2300
 nit = 23
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it, NIT=100)
 
 Internal._rmNodesByName(t, '.Solver#Param')

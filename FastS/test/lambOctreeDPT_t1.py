@@ -14,8 +14,7 @@ import sys
 MInf = 0.7
 
 rank = Cmpi.rank; size = Cmpi.size
-FILE = 'lamb.cgns'
-FILED = 'lambD.cgns'
+FILE = 'lamb.cgns'; FILED = 'lambD.cgns'
 # lecture du squelette
 t = Cmpi.convertFile2SkeletonTree(FILE)
 tc = Cmpi.convertFile2SkeletonTree(FILED)
@@ -55,20 +54,16 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 graph1 ={'graphID':graph, 'graphIBCD':None, 'procDict':procDict}
 #(t, tc, metrics) = FastS.warmup(t, tc, graph=graph)
 (t, tc, metrics) = FastS.warmup(t, tc, graph=None)
-#sys.exit()
 
 if rank==0:
-  print 'graph', graph['graphID'],  graph['graphIBCD']
-  print 'dict ', procDict
-#C.convertPyTree2File(t , 't_test'+str(rank)+'.cgns')
-#C.convertPyTree2File(tc, 'tc_test'+str(rank)+'.cgns')
-#sys.exit()
+  print('graph', graph['graphID'],  graph['graphIBCD'])
+  print('dict ', procDict)
 
 nit = 1000; time = 0.
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it, tc)
-    if (rank == 0 and it%100 == 0):
-        print '- %d - %g -'%(it, time); sys.stdout.flush()
+    if rank == 0 and it%100 == 0:
+        print('- %d - %g -'%(it, time)); sys.stdout.flush()
     time += numz['time_step']
 
 Internal._rmNodesByName(t, '.Solver#Param')

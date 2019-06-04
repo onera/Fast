@@ -9,6 +9,8 @@ try:
 except:
     raise ImportError("Fast.Internal: requires Converter and Post module.")
 
+try: range = xrange
+except: pass
 
 try:
     OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
@@ -33,7 +35,7 @@ def _setNum2Zones(a, num):
     for z in zones:
         cont = Internal.createUniqueChild(z, '.Solver#define', 
                                           'UserDefinedData_t')
-        for k in num.keys(): # some checks?
+        for k in num: # some checks?
             Internal.createUniqueChild(cont, k, 'DataArray_t', num[k])
     return None
 
@@ -49,7 +51,7 @@ def _setNum2Base(a, num):
     for b in bases:
         cont = Internal.createUniqueChild(b, '.Solver#define', 
                                           'UserDefinedData_t')
-        for k in num.keys(): # some checks?
+        for k in num: # some checks?
             Internal.createUniqueChild(cont, k, 'DataArray_t', num[k])
     return None
 
@@ -77,7 +79,7 @@ def _reorder(t, tc=None, omp_mode=0):
 
           #Tri les zone par taille decroissante
           new_zones =[]
-          for z in xrange(len(size_zone)):
+          for z in range(len(size_zone)):
               vmax    = max( size_zone )
               pos_max = size_zone.index( vmax )
               new_zones.append( zones[pos_max])
@@ -542,7 +544,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #         param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
 #    
 #    ptr = drodm1.reshape((nijk*5), order='Fortran') # no copy I hope
-#    for c in xrange(5):
+#    for c in range(5):
 #        print'c=',c
 #        #print 'a0',a[0]
 #        # Copy elements
@@ -848,8 +850,8 @@ def getBCData__(node):
 # de l'arbre
 #==============================================================================
 def getBC__(node, state):
-    range = Internal.getNodesFromName(node, 'PointRange')
-    win = Internal.range2Window(range[0][1])
+    wrange = Internal.getNodesFromName(node, 'PointRange')
+    win = Internal.range2Window(wrange[0][1])
     btype = Internal.getValue(node) # attention aux familles
     data = None
     statel = getBCData__(node)
@@ -871,10 +873,10 @@ def checkKeys(d, keys):
         k = keys[i[0]]
         val = Internal.getValue(i)
         if k == 0: # must be int
-          if not isinstance(val, (int, long)):
+          if not isinstance(val, (int)):
             fail = True; print('Error: Fast: keyword %s requires an int.'%i[0])
         elif k == 1: # must be float but we accept int
-          if not isinstance(val, (float, int, long)):
+          if not isinstance(val, (float, int)):
             fail = True; print('Error: Fast: keyword %s requires a float.'%i[0])
         elif k == 2: # must be any string
           if not isinstance(val, string):

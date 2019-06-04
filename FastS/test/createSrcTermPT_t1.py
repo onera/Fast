@@ -13,7 +13,7 @@ import Post.PyTree as P
 import time
 import KCore.test as test
 
-mach=0.
+mach = 0.
 npts = 251
 h = 100./(npts-1)
 smin = -50.
@@ -50,8 +50,6 @@ alpha  = 0.174#log(coefa)/(coefb*coefb)
 omega  = 2.*pi/per
 seuil = exp(-alpha*30.)
 
-#
-
 C._addBC2Zone(t, 'period', 'BCautoperiod', 'imin')
 C._addBC2Zone(t, 'period', 'BCautoperiod', 'imax')
 C._addBC2Zone(t, 'period', 'BCautoperiod', 'jmin')
@@ -71,27 +69,24 @@ numz = {}
 numz["time_step"]          = 0.000044
 numz["time_step_nature"]   = "global"
 numz["scheme"]             = "roe"
-numz["source"]		   = source
+numz["source"]         = source
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
 nit = 100
 timeStep = numz['time_step']
-for it in xrange(nit):
+for it in range(nit):
     # create source term
     if source == 1:
-	omt    = omega*temps+phi
-	eps    = amp*sin(omt)
-	C._initVars(t,'{centers:Density_src}=%g*exp(-%g*(({centers:r2}<%g)*{centers:r2}+({centers:r2}>%g)*%g))*{centers:vol}'%(eps,alpha,rcrit,rcrit,rcrit))
-	C._initVars(t,'{centers:MomentumX_src}=0.')
-	C._initVars(t,'{centers:MomentumY_src}=0.')
-	C._initVars(t,'{centers:MomentumZ_src}=0.')
-	C._initVars(t,'{centers:EnergyStagnationDensity_src}={centers:Temperature}*{centers:Density_src}*%g'%gam3)
-    #######
+        omt    = omega*temps+phi
+        eps    = amp*sin(omt)
+        C._initVars(t,'{centers:Density_src}=%g*exp(-%g*(({centers:r2}<%g)*{centers:r2}+({centers:r2}>%g)*%g))*{centers:vol}'%(eps,alpha,rcrit,rcrit,rcrit))
+        C._initVars(t,'{centers:MomentumX_src}=0.')
+        C._initVars(t,'{centers:MomentumY_src}=0.')
+        C._initVars(t,'{centers:MomentumZ_src}=0.')
+        C._initVars(t,'{centers:EnergyStagnationDensity_src}={centers:Temperature}*{centers:Density_src}*%g'%gam3)
     FastS._compute(t, metrics, it)
     temps += timeStep
 
 test.testT(t, 1)
-
-

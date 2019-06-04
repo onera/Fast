@@ -17,6 +17,6 @@ tc = C.node2Center(t)
 tc = X.setInterpData(t, tc, loc='centers', storage='inverse')
 C.convertPyTree2File(tc, 'tc.cgns')
 t,tc,NP,pDict,graphID,graphIBCD = FUtils.loadData(split='single', filedir='.')
-print 'NP = ', NP
-print 'procDict = ', pDict
-print 'graphID = ', graphID
+print('NP = %d'%NP)
+print('procDict = ', pDict)
+print('graphID = ', graphID)

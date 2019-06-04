@@ -81,34 +81,27 @@ numz["time_step"]          = 0.01
 numz["scheme"]             = "ausmpred"
 numz["niveaux_temps"]      = 1 # Explicit local : nbre niveaux en temps (=1 si explicit global)
 
-
-
 internal._setNum2Zones(t, numz) 
 internal._setNum2Base(t, numb)
-
 
 zones = Internal.getNodesFromType2(t, 'Zone_t')
 
 for z in zones:   
-    if(z[0]=='cart.0'):
+    if z[0] == 'cart.0':
       dtloc = Internal.getNodeFromName1(z, '.Solver#define')  # noeud
       level = Internal.getNodeFromName1(dtloc, 'niveaux_temps')  # noeud
       Internal.setValue(level,2)
 
-
-
 (t,tc,metrics) = FastS.warmup(t,tc)
-
 
 nit=100; times = 0.
 timeStep = numz['time_step']
-for it in xrange(nit):
+for it in range(nit):
     #FastS._computeguillaume1(t, metrics, it,tc,layer='c')
     FastS._compute(t, metrics, it,tc,layer='c')
-    if (it%10 == 0):
-        print '- %d - %f'%(it, times)
+    if it%10 == 0:
+        print('- %d - %f'%(it, times))
         FastS.display_temporal_criteria(t, metrics, it)
-    times+=timeStep
-
+    times += timeStep
 
 test.testT(t, 1)

@@ -26,8 +26,6 @@ else:
     import FastS.PyTree as FastS
     rank=0
 
-
-
 runs         =  5   
 NIT_internal = 10
 
@@ -79,7 +77,7 @@ for k in range(0,71,1):
 
 shifttab=shifttab + [128,256,384,512,640,768,1442]
 
-sample       = len(shifttab)
+sample = len(shifttab)
 
 for size in sizeIJK:
 
@@ -170,7 +168,7 @@ for size in sizeIJK:
 
        time20[ itshift+run*sample ] = FastS.display_cpu_efficiency(t, mask_cpu=-0.45, mask_cell=0.0008, FILEOUT='listZonesSlow_test'+str(rank)+'.dat', RECORD=True)
 
-       print "time per cell",time20[ itshift+run*sample ] ,  'run=', run,' shift=',shift 
+       print("time per cell",time20[ itshift+run*sample ] ,  'run=', run,' shift=',shift)
        
        for hook in FastS.PyTree.HOOK: del(hook)
        FastS.PyTree.FIRST_IT = 0
@@ -197,6 +195,4 @@ for size in sizeIJK:
    f.write(str(Nbthread)+","+str(sizeI-5)+","+str(sizeJ-5)+","+str(sizeK-5)+","+str(min(timeshift))+","+str(shifttab[ny.argmin(timeshift)])+'\n')
    f.close()
 
-print 'option numerique=', temporal, scheme, eqs, typezone
-
-sys.exit()
+print('option numerique=', temporal, scheme, eqs, typezone)

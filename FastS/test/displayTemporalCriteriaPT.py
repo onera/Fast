@@ -31,7 +31,7 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 (t, tc, metrics) = FastS.warmup(t, None)
 
 # Compute
-for it in xrange(1,5):
+for it in range(1,5):
     FastS._compute(t, metrics, it)
     FastS.display_temporal_criteria(t, metrics, it)
 

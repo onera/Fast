@@ -107,13 +107,13 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 nit = 25
 #t = C.convertFile2PyTree("restart.cgns")
 #FastS._compact(t, container=Internal.__FlowSolutionCenters__)
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it, tc)
 
 FastS.display_cpu_efficiency(t, mask_cpu=-0.05, mask_cell=0.008, FILEOUT=LOCAL+'/listZonesSlow.dat')
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
-C.convertPyTree2File(t, 'out.cgns')
+#C.convertPyTree2File(t, 'out.cgns')
 
 test.testT(t, 1)

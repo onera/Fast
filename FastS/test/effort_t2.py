@@ -19,9 +19,9 @@ distrib = G.cart((0,0,0),(1/(NJ-1.),1,1),(NJ,1,1))
 distrib = G.enforcePlusX(distrib,2.e-5,15,25)
 a = G.map(a,distrib,dir=2)
 
-a1 = T.subzone(a,(1,1,1),(NI/2,-1,-1)); a1[0] = 'cyl1'
-a2 = T.subzone(a,(NI/2,1,1),(NI,-1,-1)); a2[0] = 'cyl2'
-t = C.newPyTree(["Base"]); t[2][1][2] = [a1,a2]
+a1 = T.subzone(a,(1,1,1),(NI//2,-1,-1)); a1[0] = 'cyl1'
+a2 = T.subzone(a,(NI//2,1,1),(NI,-1,-1)); a2[0] = 'cyl2'
+t = C.newPyTree(["Base",a1,a2])
 t = X.connectMatch(t)
 Internal._addGhostCells(t,t,2,2)
 C._rmBCOfType(t, 'BCMatch')
@@ -62,7 +62,7 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
 teff = FastS.createStressNodes(t, BC=['BCWall'])
 
-for it in xrange(1,200): FastS._compute(t, metrics, it, tc)
+for it in range(1,200): FastS._compute(t, metrics, it, tc)
 
 effort = FastS._computeStress(t, teff, metrics)
 #on supprime ghost de l'arbre effort car valeur non initialisee
@@ -74,4 +74,3 @@ test.testT(teff, 1)
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 2)
-

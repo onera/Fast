@@ -30,22 +30,29 @@
     PyObject* numerics, const char* value,
     E_Int& retInt, E_Float& retFloat, char*& retChar)
 {
-  int ret = PyDict_Contains(numerics, PyString_FromString(value));
+  PyObject* val = PyString_FromString(value);
+  int ret = PyDict_Contains(numerics, val);
   if (ret <= 0) return 0;
 
-  PyObject* o = PyDict_GetItem(numerics, PyString_FromString(value));
-
-  if (PyString_Check(o) == true)
+  PyObject* o = PyDict_GetItem(numerics, val);
+  if (PyString_Check(o))
   {
     ret = 3;
     retChar = PyString_AsString(o);
   }
-  else if (PyInt_Check(o) == true)
+#if PY_VERSION_HEX >= 0x03000000
+  else if (PyUnicode_Check(o))
+  {
+    ret = 3;
+    retChar = PyBytes_AsString(PyUnicode_AsUTF8String(o));
+  }
+#endif
+  else if (PyInt_Check(o))
   {
     ret = 1;
     retInt = PyInt_AsLong(o);
   }
-  else if (PyFloat_Check(o) == true)
+  else if (PyFloat_Check(o))
   {
     ret = 2;
     retFloat = PyFloat_AsDouble(o);

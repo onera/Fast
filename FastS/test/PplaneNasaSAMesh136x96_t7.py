@@ -28,10 +28,10 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
 nit = 500; time = 0.
 #nit = 10; time = 0.
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
-    if (it%50 == 0):
-        print '- %d - %g'%(it, time)
+    if it%50 == 0:
+        print('- %d - %g'%(it, time))
         FastS.display_temporal_criteria(t, metrics, it, format='double')
     time += numz['time_step']
 

@@ -61,7 +61,7 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 (t,  tc, metrics) = FastS.warmup(t, tc )
 
 # Compute
-for it in xrange(1,50): FastS._compute(t, metrics, it, tc)
+for it in range(1,50): FastS._compute(t, metrics, it, tc)
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

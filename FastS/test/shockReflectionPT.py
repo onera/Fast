@@ -41,8 +41,8 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 C.convertPyTree2File(t, 'out.cgns')
 
 nit = 2300
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
-    if (it%20 == 0):
-        print '- %d -'%(it)
+    if it%20 == 0:
+        print('- %d -'%(it))
         CPlot.display(t, dim=2, mode=3, scalarField=0)

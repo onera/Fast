@@ -43,11 +43,9 @@ for b in Internal.getBases(t):
         for target in ZoneTarget:
            if target in z[0]:
               ZoneNames.append(b[0]+'/'+z[0])
-print ZoneNames
 Cmpi._readZones(t, FILE, zoneNames=ZoneNames)
-t  = Cmpi.convert2PartialTree(t)
+t = Cmpi.convert2PartialTree(t)
 #sys.exit()
-
 
 t = Internal.addGhostCells(t, t, NGhostCells, adaptBCs=1, fillCorner=0)
 dim =3
@@ -83,10 +81,10 @@ for etage in etages:
 del t
 
 IT_DEB=int(sys.argv[1]);  IT_FIN=int(sys.argv[2])
-print '----------------'
-print 'Plan chimere instationnaire', etages
-print 'Nbre de pas de temps a calculer: ', TimeLevelPerio
-print 'Calcul des raccord', etages, ' entre les pas de temps ', IT_DEB,' et ', IT_FIN
+print('----------------')
+print('Plan chimere instationnaire', etages)
+print('Nbre de pas de temps a calculer: ', TimeLevelPerio)
+print('Calcul des raccord', etages, ' entre les pas de temps ', IT_DEB,' et ', IT_FIN)
  
 THETARAD= THETADEG*math.pi/180.
 DTHETA  = THETARAD/float(TimeLevelPerio) 

@@ -50,13 +50,12 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
 nit = 102; time = 0.
 timeStep = numz['time_step']
-for it in xrange(1,nit):
-    #print 'it=', it
+for it in range(1,nit):
+    #print('it=', it)
     FastS._compute(t, metrics, it)
-    
     if it%10 == 0: FastS.display_temporal_criteria(t, metrics, it)
     time += timeStep
-    if it%100 == 0:print time
+    if it%100 == 0: print(time)
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

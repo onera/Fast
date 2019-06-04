@@ -47,7 +47,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
   vector<PyArrayObject*> hook;
   PyObject* metrics  = PyList_New(0); 
 
-  E_Float* iptx;  E_Float* ipty;  E_Float* iptz;
+  E_Float* iptx; E_Float* ipty; E_Float* iptz;
 
   //* tableau pour stocker dimension sous-domaine omp *//
   E_Int threadmax_sdm = 1;
@@ -119,7 +119,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     ipt_param_int[ NIJK_XYZ +2]  = nk;
     ipt_param_int[ NIJK_XYZ +3]  = ific_xyz;
     ipt_param_int[ NIJK_XYZ +4]  = ific_xyz;
-    if(nk == 2) ipt_param_int[ NIJK_XYZ +4]=0;
+    if (nk == 2) ipt_param_int[ NIJK_XYZ +4]=0;
 
     //* tableau pour stocker rop du domaine *//
     ipt_param_int[ NIJK   ]  = ni-1;
@@ -127,7 +127,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     ipt_param_int[ NIJK +2]  = nk-1;
     ipt_param_int[ NIJK +3]  = ific;
     ipt_param_int[ NIJK +4]  = ific;
-    if(nk == 2) ipt_param_int[ NIJK +4]= 0;
+    if (nk == 2) ipt_param_int[ NIJK +4]= 0;
 
     //* tableau pour stocker dimension rop du domaine sans Ghostcell*//
     ipt_param_int[ IJKV   ]  = ipt_param_int[ NIJK   ]-2*ipt_param_int[ NIJK +3];
@@ -145,9 +145,8 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
 
     
     //FldArrayI  degener(ipt_param_int[ NDIMDX_XYZ ]); E_Int* ipt_degener = degener.begin();
-    PyObject* degener    = K_NUMPY::buildNumpyArray(  ipt_param_int[ NDIMDX_XYZ ]             , 1, 1, 1);
+    PyObject* degener    = K_NUMPY::buildNumpyArray(ipt_param_int[ NDIMDX_XYZ ], 1, 1, 1);
     E_Int*   ipt_degener = K_NUMPY::getNumpyPtrI( degener );
-
 
     nature_geom_dom_(ipt_param_int+NIJK_XYZ, ipt_param_int[ NDIMDX_XYZ ], iptx, ipty, iptz , ipt_degener, lale, ipt_param_real, // IN
                      ipt_param_int+NIJK_MTR, ndimdx_mtr, neq_ij, neq_k, typ_zone);                             // OUT
@@ -245,21 +244,26 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
            ipt_param_int[ NIJK_VENT+4]  = ipt_param_int[ NIJK_XYZ+4];
        }
 
-    // On remonte la valeur de type zone dans l'arbre
+     // On remonte la valeur de type zone dans l'arbre
      o = K_PYTREE::getNodeFromName1(numerics, "type_zone");
      if (o == NULL) { PyErr_SetString(PyExc_ValueError, "metric: type zone is missing or is invalid."); return 0; }
      E_Int* d = K_PYTREE::getValueAI(o, hook); d[0] = typ_zone;
-     PyObject* zname_py = PyList_GetItem(zone, 0); char* zname = PyString_AsString(zname_py);
-
-     if      (typ_zone == 0) {printf("typezone: 3D curvilinear, %s (%d, %d, %d) \n", zname, ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
-     else if (typ_zone == 1) {printf("typezone: 3D, homogenous k direction with constant step,  %s(%d, %d, %d) \n",  zname,ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
-     else if (typ_zone == 2) {printf("typezone: 3D cartesian with constant step,  %s(%d, %d, %d) \n",  zname,ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
-     else if (typ_zone == 3) {printf("typezone: 2D curvilinear, %s (%d, %d, %d) \n",  zname,ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
+     PyObject* zname_py = PyList_GetItem(zone, 0); 
+     char* zname;
+     if (PyString_Check(zname_py)) zname = PyString_AsString(zname_py);
+#if PY_VERSION_HEX >= 0x03000000
+     else if (PyUnicode_Check(zname_py)) zname = PyBytes_AsString(PyUnicode_AsUTF8String(zname_py));
+#endif
+     else zname = NULL;
+     if      (typ_zone == 0) {printf("typezone: 3D curvilinear, %s (%d, %d, %d)\n", zname, ipt_param_int[ IJKV ], ipt_param_int[ IJKV +1], ipt_param_int[ IJKV +2]);}
+     else if (typ_zone == 1) {printf("typezone: 3D, homogenous k direction with constant step, %s (%d, %d, %d)\n", zname,ipt_param_int[ IJKV ], ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
+     else if (typ_zone == 2) {printf("typezone: 3D cartesian with constant step, %s (%d, %d, %d)\n",  zname,ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
+     else if (typ_zone == 3) {printf("typezone: 2D curvilinear, %s (%d, %d, %d)\n", zname, ipt_param_int[ IJKV ], ipt_param_int[ IJKV +1], ipt_param_int[ IJKV +2]);}
 
      //
      //* Declare memoire pour metric: normales + volume)
      //
-     PyObject* ipti; 
+     PyObject* ipti;
 
      E_Int neq_mtr = 2*neq_ij+ neq_k + 1; // ti+ tj+ tk+ vol
      ipti  = K_NUMPY::buildNumpyArray( ndimdx_mtr, neq_mtr, 0, 1);  
@@ -323,22 +327,22 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
 #endif
         //E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
         E_Int Nbre_socket   = 1;                       // nombre de proc (socket) sur le noeud a memoire partagee
-        if( Nbre_thread_actif < Nbre_socket ) Nbre_socket = 1;
+        if (Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
 
-        E_Int thread_parsock  =  Nbre_thread_actif/Nbre_socket;
-        E_Int socket          = (ithread-1)/thread_parsock +1;
-        E_Int  ithread_sock   = ithread-(socket-1)*thread_parsock;
+        //E_Int thread_parsock  =  Nbre_thread_actif/Nbre_socket;
+        //E_Int socket          = (ithread-1)/thread_parsock +1;
+        //E_Int  ithread_sock   = ithread-(socket-1)*thread_parsock;
 
-        E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm    + (ithread-1)*3; 
-        E_Int* ipt_ind_sdm_thread     = ipt_ind_sdm     + (ithread-1)*6;
-        E_Int* ipt_ind_coe_thread     = ipt_ind_coe     + (ithread-1)*6;
-        E_Int* ipt_ind_grad_thread    = ipt_ind_grad    + (ithread-1)*6;
+        //E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm    + (ithread-1)*3; 
+        //E_Int* ipt_ind_sdm_thread     = ipt_ind_sdm     + (ithread-1)*6;
+        //E_Int* ipt_ind_coe_thread     = ipt_ind_coe     + (ithread-1)*6;
+        //E_Int* ipt_ind_grad_thread    = ipt_ind_grad    + (ithread-1)*6;
 
         E_Int* ipt_ind_dm_loc        = ipt_ind_dm1     + (ithread-1)*6;
-        E_Int* ipt_ind_dm_socket     = ipt_ind_dm_omp  + (ithread-1)*12;
-        E_Int* ipt_ind_dm_omp_thread = ipt_ind_dm_socket  + 6;
+        //E_Int* ipt_ind_dm_socket     = ipt_ind_dm_omp  + (ithread-1)*12;
+        //E_Int* ipt_ind_dm_omp_thread = ipt_ind_dm_socket  + 6;
 
-        E_Float*  ipt_rot_ale_thread = ipt_rot_ale  + (ithread-1)*12;
+        //E_Float*  ipt_rot_ale_thread = ipt_rot_ale  + (ithread-1)*12;
 
         ipt_ind_dm_loc[0]   = 1; 
         ipt_ind_dm_loc[2]   = 1; 

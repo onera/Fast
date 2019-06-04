@@ -92,7 +92,6 @@ internal._setNum2Base(t, numb)
 
 #C.convertPyTree2File(t, 'essai.cgns')
 
-
 zones = Internal.getNodesFromType2(t, 'Zone_t')
 
 for z in zones:   
@@ -102,18 +101,15 @@ for z in zones:
       level = Internal.getNodeFromName1(dtloc, 'niveaux_temps')  # noeud
       Internal.setValue(level,int(niveau))
 
-
 (t,tc,metrics) = FastS.warmup(t,tc)
-
 
 nit=100; times = 0.
 timeStep = numz['time_step']
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it,tc,layer='c')
-    if (it%10 == 0):
-        print '- %d - %f'%(it, times)
+    if it%10 == 0:
+        print('- %d - %f'%(it, times))
         FastS.display_temporal_criteria(t, metrics, it)
-    times+=timeStep
-
+    times += timeStep
 
 test.testT(t, 1)

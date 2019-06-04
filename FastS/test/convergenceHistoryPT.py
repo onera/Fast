@@ -32,7 +32,7 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 (t, tc, metrics) = FastS.warmup(t, None)
 
 # Number or records to store residuals 
-nrec = 100/modulo_verif
+nrec = 100//modulo_verif
 
 #To remove old ConvergenceHistory nodes 
 t = C.rmNodes(t, "ZoneConvergenceHistory")
@@ -43,9 +43,9 @@ FastS.createConvergenceHistory(t, nrec)
 nit = 100; time = 0
 time_step = Internal.getNodeFromName(t, 'time_step')
 time_step = Internal.getValue(time_step)
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it, tc)
-    if (it%modulo_verif == 0):
+    if it%modulo_verif == 0:
     	FastS.display_temporal_criteria(t, metrics, it)
     time += time_step
 
@@ -53,4 +53,3 @@ for it in xrange(nit):
 Internal.createUniqueChild(t, 'Iteration', 'DataArray_t', value=nit)
 Internal.createUniqueChild(t, 'Time', 'DataArray_t', value=time)
 C.convertPyTree2File(t, 'out.cgns')
-
