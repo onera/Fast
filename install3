@@ -38,11 +38,11 @@ do
   then
       cd $mod
       if [ "$1" = "" -o "$1" = "all" ]; then
-          ./install
+          ./install3
       fi
       if [ "$1" = "doc" -o "$1" = "all" ]; then
           cd doc
-          ./install 1 2
+          ./install3 1 2
           cd ..
       fi
       cd ..
@@ -54,6 +54,6 @@ done
 # Fini avec la doc KCore pour genindex...
 if [ "$1" = "doc" -o "$1" = "all" ]; then
     cd ../Modules/KCore/doc
-    ./install 1 2
+    ./install3 1 2
     cd ../..
 fi
