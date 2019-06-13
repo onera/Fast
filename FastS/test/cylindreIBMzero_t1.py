@@ -66,7 +66,7 @@ t = FastS.setIBCData_zero(t, tsurf, dim=2)
 
 # Compute
 for it in range(1,100):
-  print('it='%it) 
+  #print('it='%it) 
   FastS._compute(t, metrics, it, tc)
   if it%20==0:
        FastS.display_temporal_criteria(t, metrics, it)

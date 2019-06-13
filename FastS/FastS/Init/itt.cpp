@@ -20,7 +20,7 @@
 // Grille cartesienne reguliere
 # include "fastS.h"
 #ifdef vtune
-#include "ittnotify.h"
+//#include "ittnotify.h"
 #endif
 
 using namespace std;
@@ -42,8 +42,8 @@ PyObject* K_FASTS::itt(PyObject* self, PyObject* args)
 
   //printf( "itt");
 #ifdef vtune
-  if(flag==0) __itt_resume();
-  else        __itt_pause();
+//  if(flag==0) __itt_resume();
+//  else        __itt_pause();
 #endif
 
   Py_INCREF(Py_None);

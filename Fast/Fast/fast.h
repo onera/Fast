@@ -27,6 +27,9 @@ using namespace K_FLD;
 
 namespace K_FAST
 { 
+
+  PyObject* _motionlaw(              PyObject* self, PyObject* args);
+
   //===========
   // - Check -
   //===========

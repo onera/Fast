@@ -69,7 +69,7 @@ c
       REAL_E psi(nptpsi)
 
       REAL_E temps, norm_kry, cfl(3), param_real(0:*)
-      REAL_E drodmstk(20000,param_int(NEQ)), rostk(20000,param_int(NEQ))
+c      REAL_E drodmstk(20000,param_int(NEQ)), rostk(20000,param_int(NEQ))
 
 C Var loc
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"

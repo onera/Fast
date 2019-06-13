@@ -24,6 +24,7 @@
 // ============================================================================
 static PyMethodDef Pyfast [] =
 {
+  {"_motionlaw"          , K_FAST::_motionlaw          ,  METH_VARARGS},
   {NULL, NULL}
 };
 

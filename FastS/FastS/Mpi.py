@@ -1,7 +1,7 @@
 # FastS + MPI
 import PyTree
 import fasts
-from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createPrimVars, _createPrimVars, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _buildOwnData, _init_metric, allocate_metric, _BCcompact, _motionlaw, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp, allocate_ssor, setIBCData_zero, display_cpu_efficiency
+from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _BCcompact, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp, allocate_ssor, setIBCData_zero, display_cpu_efficiency
 import timeit
 import time as Time
 import numpy
@@ -362,15 +362,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
               bcType = PyTree.HOOKIBC[0]; Gamma=PyTree.HOOKIBC[1]; Cv=PyTree.HOOKIBC[2]; Mus=PyTree.HOOKIBC[3]; Cs=PyTree.HOOKIBC[4]; Ts=PyTree.HOOKIBC[5]
        
-              #tic = Time.time()              
-              if (rk==3 and exploc==2):
-                 if nstep <= nitmax: 
-                      for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
-              else:
-                 if nstep <= 3: 
-                      for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
-              #toc = Time.time() - tic
-
+              for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
               # #recuperation Nb pas instationnaire dans tc
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
@@ -390,8 +382,8 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
        # if (rank == 0 ): t0=timeit.default_timer()
        #apply BC
        #tic = Time.time()
-       if (exploc != 2):
-           _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0], rk=1, exploc=1)
+       if rk != 3 and exploc != 2:
+           _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        #toc = Time.time() - tic
        # if (rank == 0 ):
        #     t1=timeit.default_timer()
@@ -419,7 +411,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     FastI._reorder(t, tc, ompmode)
 
     # Construction param_int et param_real des zones
-    _buildOwnData(t, Padding)
+    FastI._buildOwnData(t, Padding)
 
     # determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)
@@ -453,7 +445,20 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # compact + align + init numa
     rmConsVars=True
     adjoint   =Adjoint
-    t = createPrimVars(t, ompmode, rmConsVars, adjoint)
+
+    t, FIRST_IT, zones2compact = FastI.createPrimVars(t, ompmode, rmConsVars, adjoint)
+    PyTree.HOOK['FIRST_IT']= FIRST_IT
+    #compactage des champs en fonction option de calcul  
+    count = -1
+    if ompmode == 1: count = 0          
+    for data in zones2compact:
+        if ompmode == 1: count += 1
+        zone    = data[0]
+        varnames= data[1]
+        for fields in varnames:
+            _compact(zone, fields=fields, mode=count)
+
+    #t = createPrimVars(t, ompmode, rmConsVars, adjoint)
 
     zones = Internal.getZones(t) # car create primvar rend zones caduc
 

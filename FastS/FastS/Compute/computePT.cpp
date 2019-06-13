@@ -161,7 +161,7 @@ else
   E_Float** ipti;          E_Float** iptj;         E_Float** iptk;    E_Float** iptvol;
   E_Float** ipti0;         E_Float** iptj0;        E_Float** iptk0;   E_Float** iptsrc;
   E_Float** ipti_df;       E_Float** iptj_df;      E_Float** iptk_df ; E_Float** iptvol_df;
-  E_Float** iptdist;       E_Float** iptventi;     E_Float** iptventj; E_Float** iptventk;
+  E_Float** iptventi;      E_Float** iptventj;     E_Float** iptventk;
   E_Float** iptrdm;        E_Float** iptkrylov;    E_Float** iptkrylov_transfer;
   E_Float** iptro_sfd;     E_Float** iptdelta;     E_Float** iptfd; E_Float** iptro_zgris; E_Float** iptro_res;
   E_Float** iptCellN  ;    E_Float** iptCellN_IBC; E_Float** ipt_cfl_zones; 

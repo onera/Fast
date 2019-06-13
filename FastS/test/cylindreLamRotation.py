@@ -6,6 +6,7 @@ import Connector.PyTree as X
 import Converter.PyTree as C
 import FastS.PyTree as FastS
 import Fast.PyTree as Fast
+import Fast.Internal as FastI
 import Converter.Internal as Internal
 import Fast.Utils as Utils
 import KCore.Adim as Adim
@@ -259,7 +260,7 @@ for it in xrange(NIT_REP, NIT_REP+NIT):
 	teta = omgrpm*time_ale
 	tetap= omgrpm
     
-	FastS._motionlaw(t, teta, tetap)
+	FastI._motionlaw(t, teta, tetap)
     
     FastS._compute(t, metrics, it, tc)
     

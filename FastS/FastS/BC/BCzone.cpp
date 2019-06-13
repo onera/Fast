@@ -345,7 +345,6 @@ E_Int K_FASTS::BCzone(
                             ipt_ijkv, param_int + pt_bc + BC_FEN, ipt_ind_dm, ipt_ind_dm_thread,           // IN
                             ipt_ind_CL, ipt_ind_CL119 );// OUT
 
-            E_Int bc_type = param_int[pt_bc + BC_TYPE];
             E_Float* ipt_data;
 	    
 	    if (lrhs == 2)

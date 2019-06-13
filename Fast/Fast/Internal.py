@@ -2,10 +2,13 @@
 """
 import numpy
 import os
+import fast
+
 try:
     import Converter.PyTree as C
     import Converter.Internal as Internal
     import Post.PyTree as P
+    import math
 except:
     raise ImportError("Fast.Internal: requires Converter and Post module.")
 
@@ -47,7 +50,7 @@ def setNum2Base(t, num):
     return tp
 
 def _setNum2Base(a, num):
-    bases = Internal.getNodesFromType2(a, 'CGNSBase_t')
+    bases = Internal.getNodesFromType1(a, 'CGNSBase_t')
     for b in bases:
         cont = Internal.createUniqueChild(b, '.Solver#define', 
                                           'UserDefinedData_t')
@@ -122,9 +125,131 @@ def _reorder(t, tc=None, omp_mode=0):
            base[2] = new_zones + orig
 
 #==============================================================================
+# Converti les variables conservatives de l'arbre en variables primitives
+# compactees
+# IN: t: arbre devant contenir les variables conservatives aux centres
+# IN: adim: etat de reference, on utilise uniquement cvInf pour la temperature.
+# IN: rmConsVars: if True, remove the conservative variables
+#==============================================================================
+def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
+    tp = Internal.copyRef(t)
+    first_iter , vars_zones = _createPrimVars(tp, omp_mode, rmConsVars, Adjoint)
+    return tp, first_iter, vars_zones
+
+#==============================================================================
+def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
+    vars_zones=[]
+    bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
+    for b in bases:  
+        zones = Internal.getNodesFromType1(b, 'Zone_t')
+        count = -1
+        if omp_mode == 1: count = 0
+        for z in zones:
+            if omp_mode == 1: count += 1
+
+            #Sauvegarde noeud specifique car delete par init!!! Christophe??
+            FA_intext=  Internal.getNodeFromPath(z, 'NFaceElements/IntExt')
+            if FA_intext is not None:
+               FA_indx  =  Internal.getNodeFromPath(z, 'NFaceElements/ElementIndex')
+               NG_intext=  Internal.getNodeFromPath(z, 'NGonElements/IntExt')
+               NG_indx  =  Internal.getNodeFromPath(z, 'NGonElements/FaceIndex')
+               NG_pe    =  Internal.getNodeFromPath(z, 'NGonElements/ParentElements')
+
+            sa,FIRST_IT     = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint)
+
+            if FA_intext is not None:
+               Internal.getNodeFromPath(z, 'NFaceElements')[2] +=[FA_indx, FA_intext] 
+               Internal.getNodeFromPath(z, 'NGonElements' )[2] +=[NG_pe, NG_indx, NG_intext] 
+
+            #HOOK['FIRST_IT']= FIRST_IT
+            source = 0
+            a = Internal.getNodeFromName2(z,'Density_src')
+            if a is not None: source = 1
+            sfd = 0
+            a = Internal.getNodeFromName2(z, 'sfd')
+            if a is not None: sfd = Internal.getValue(a)
+            extract_res = 0
+            a = Internal.getNodeFromName2(z, 'extract_res')
+            if a is not None: extract_res = Internal.getValue(a)
+
+            vars_p=['Density', 'VelocityX', 'VelocityY','VelocityZ', 'Temperature']
+            vars_c=['Density', 'MomentumX', 'MomentumY','MomentumZ', 'EnergyStagnationDensity']
+            if sa: 
+               vars_p.append('TurbulentSANuTilde')
+               vars_c.append('TurbulentSANuTildeDensity')
+
+            vars=[]
+            for level in ['', '_M1', '_P1']:  #champs primitives
+               fields2compact =[]
+               for v in vars_p:
+                 fields2compact.append('centers:'+v+level)
+               vars.append(fields2compact)
+            if source == 1:                   #terme source volumique
+               fields2compact =[]
+               for v in vars_c:
+                 fields2compact.append('centers:'+v+'_src')
+               vars.append(fields2compact)
+            if sfd == 1:                       #sfd
+               fields2compact =[]
+               for v in vars_p:
+                 fields2compact.append('centers:'+v+'_f')
+               vars.append(fields2compact)
+            if extract_res == 1:
+               fields2compact =[]
+               for v in vars_c:
+                 fields2compact.append('centers:Res_'+v)
+               vars.append(fields2compact)
+    
+            # on compacte les variables "visqueuse"
+            loc             ='centers:'
+            fields         = [loc+'ViscosityEddy',loc+'TurbulentDistance', loc+'zgris']
+            for sufix in ['0','N']:
+               for i in range(1,7):
+                  fields.append(loc+'drodm'+sufix+'_'+str(i))
+
+            fields2compact = []
+            for field in fields: 
+               if C.isNamePresent(z, field) == 1: fields2compact.append(field)
+            if len(fields2compact) != 0: vars.append(fields2compact)
+
+            # on compacte les variables SA debug
+            fields         = [loc+'delta',loc+'fd']
+            fields2compact = []
+            for field in fields: 
+               if C.isNamePresent(z, field) == 1: fields2compact.append(field)
+            if len(fields2compact) != 0: vars.append(fields2compact)
+
+
+            # on compacte CellN
+            fields2compact =[]
+            if  (C.isNamePresent(z, loc+'cellN') == 1): fields2compact.append(loc+'cellN')
+            if len(fields2compact)!= 0 : vars.append(fields2compact)
+            # on compacte CellN_IBC
+            fields2compact =[]
+            if  (C.isNamePresent(z, loc+'cellN_IBC') == 1): fields2compact.append(loc+'cellN_IBC')
+            if len(fields2compact)!= 0 : vars.append(fields2compact)
+
+            #  adjoint 
+            if  C.isNamePresent(z, 'centers:dpCLp_dpDensity') == 1: 
+               fields =['dpCDp_dp', 'dpCLp_dp', 'rhsIterAdjCLp_R', 'rhsIterAdjCDp_R','AdjCLp_R', 'AdjCDp_R','incAdj_R']
+
+               for field in fields:
+                  fields2compact =[]
+                  for v in vars_c:
+                      fields2compact.append('centers:'+field+v)
+                  vars.append(fields2compact)
+
+               vars.append(['dpCLp_dpX','dpCLp_dpY','dpCLp_dpZ','dpCDp_dpX','dpCDp_dpY','dpCDp_dpZ']) 
+ 
+            ##on stocke zone et variable car fonction compact specific fastS ou FastP: ne peut peut etre appelee ici
+            vars_zones.append( [z, vars] )
+
+    return FIRST_IT, vars_zones
+
+#==============================================================================
 # Init/create primitive Variable 
 #==============================================================================
-def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
+def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     import timeit
     # Get model
     model = "Euler"
@@ -454,6 +579,640 @@ def _createPrimVars(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     return sa, FIRST_IT
 
 #==============================================================================
+# Construit les datas possedees par FastP
+#==============================================================================
+def _buildOwnData(t, Padding):
+    # Data for each Base
+    bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
+
+    #init time et No iteration
+    it0 =0; temps=0.; timelevel_motion= 0; timelevel_target= 0
+    first = Internal.getNodeFromName1(t, 'Iteration')
+    if first is not None: it0 = Internal.getValue(first)
+    first = Internal.getNodeFromName1(t, 'Time')
+    if first is not None: temps = Internal.getValue(first)
+    first = Internal.getNodeFromName1(t, 'TimeLevelMotion')
+    if first is not None: timelevel_motion = Internal.getValue(first)
+    first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
+    if first is not None: timelevel_target = Internal.getValue(first)
+
+    # Ecriture d un vecteur contenant le niveau en temps de chaque zone
+    # Determination du niveau en temps le plus grand 
+    
+    levelg=[]; leveld=[]; val=1; i=0
+    veclevel = []; mod="";posg=[] 
+    for b in bases:
+           zones = Internal.getNodesFromType1(b, 'Zone_t')
+           for z in zones:
+               a = Internal.getNodeFromName2(z, 'GoverningEquations')
+               if a is not None: mod = Internal.getValue(a)
+               if mod == "nsspalart" or mod == "NSTurbulent": neq=6
+               else: neq = 5
+               d = Internal.getNodeFromName1(z, '.Solver#define')
+               if d is not None:
+                    a = Internal.getNodeFromName1(d, 'niveaux_temps')
+                    if a is not None: val = Internal.getValue(a)
+                    else : val=1
+               veclevel.append(val)
+               posg.append(0)
+               i += 1
+    if posg==[]:
+        for a in xrange(0,i):
+            posg.append(0)
+
+    maxlevel = max(veclevel)
+
+    levelg = numpy.roll(veclevel,1)
+    levelg[0] = 0
+
+    leveld = numpy.roll(veclevel,-1)
+    leveld[i-1] = 0
+
+    # Available keys for bases and zones
+    # 0: requires and int, 1: requires a float, 2: requires any string, 
+    # 3: requires array/list of ints, 4: requires array/list of floats,
+    # []: requires given strings
+    keys4Base = {
+    'temporal_scheme':['explicit', 'implicit', 'implicit_local'],
+    'ss_iteration':0,
+    'rk':0, 
+    'modulo_verif':0,
+    'exp_local':0,
+    'time_begin_ale':1,
+    'omp_mode':0
+    }
+    keys4Zone = {
+    'scheme':['ausmpred', 'senseur', 'roe_min', 'roe', 'roe_nul', 'roe_kap'],
+    'implicit_solver':['lussor', 'gmres'],
+    'nb_relax':0,
+    'nb_krylov':0,
+    'nb_restart':0,
+    'motion':['none', 'rigid', 'deformation'],
+    'rotation':4,
+    'time_step':1,
+    'io_thread':0,
+    'sgsmodel': ['smsm','Miles'],
+    'ransmodel': ['SA','SA_comp','SA_diff'],
+    'cache_blocking_I':0,
+    'cache_blocking_J':0,
+    'cache_blocking_K':0,
+    'shiftvar':0,
+    'time_step_nature':['local', 'global'],
+    'ssdom_IJK':3,
+    'lu_match':1,
+    'epsi_newton':1,
+    'epsi_linear':1,
+    'inj1_newton_tol':1,
+    'inj1_newton_nit':0,
+    'cfl':1, 
+    'niveaux_temps':0, 
+    'psiroe':1, 
+    'prandtltb':1, 
+    'sfd':0, 
+    'sfd_chi':1, 
+    'sfd_delta':1, 
+    'sfd_init_iter':0, 
+    'slope':["o1", "o3", "minmod"],
+    'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3", "zdes3_w"],
+    'snear': 1, # ignored
+    'DES_debug':['none','active'],
+    'extract_res':0,
+    'IBC':3,
+    'source':0,
+    'Cups':4
+    }
+
+
+    for b in bases:
+        # Base define data
+        d = Internal.getNodeFromName1(b, '.Solver#define')
+
+        # - defaults -
+        temporal_scheme = "implicit"
+        ss_iteration    = 30
+        rk              = 3
+        modulo_verif    = 200
+        restart_fields  = 1
+        exploc          = 0
+        t_init_ale      = temps
+        timelevel_prfile= 0
+
+        if d is not None:
+            checkKeys(d, keys4Base)
+            a = Internal.getNodeFromName1(d, 'temporal_scheme')
+            if a is not None: temporal_scheme = Internal.getValue(a)
+            a = Internal.getNodeFromName1(d, 'ss_iteration')
+            if a is not None: ss_iteration = Internal.getValue(a)
+            if temporal_scheme == "implicit_local": modulo_verif = 7
+            a = Internal.getNodeFromName1(d, 'modulo_verif')
+            if a is not None: modulo_verif = Internal.getValue(a)
+            a = Internal.getNodeFromName1(d, 'restart_fields')
+            if a is not None: restart_fields = Internal.getValue(a)
+            a = Internal.getNodeFromName1(d, 'rk')
+            if a is not None: rk = Internal.getValue(a)
+            if temporal_scheme == "implicit" or temporal_scheme =="implicit_local": rk=3
+            a = Internal.getNodeFromName1(d, 'exp_local')
+            if a is not None: exploc = Internal.getValue(a)
+            if temporal_scheme == "implicit" or temporal_scheme =="implicit_local": exploc=0
+            a = Internal.getNodeFromName1(d, 'it_exp_local')         
+            if a is not None: itexploc = Internal.getValue(a)
+            a = Internal.getNodeFromName1(d, 'time_begin_ale')
+            if a is not None: t_init_ale = Internal.getValue(a) 
+
+          
+        # Base ownData (generated)
+        o = Internal.createUniqueChild(b, '.Solver#ownData', 
+                                       'UserDefinedData_t')
+        if temporal_scheme == "explicit": nssiter = 3
+        elif temporal_scheme == "implicit": nssiter = ss_iteration+1
+        elif temporal_scheme == "implicit_local": nssiter = ss_iteration+1
+        else: print('Warning: FastS: invalid value %s for key temporal_scheme.'%temporal_scheme)
+        try: ss_iteration = int(ss_iteration)
+        except: print('Warning: FastS: invalid value %s for key ss_iteration.'%ss_iteration)
+        try: modulo_verif = int(modulo_verif)
+        except: print('Warning: FastS: invalid value %s for key modulo_verif.'%modulo_verif)
+        if (rk == 1 and exploc==0 and temporal_scheme == "explicit"): nssiter = 1 # explicit global
+        if (rk == 2 and exploc==0 and temporal_scheme == "explicit"): nssiter = 2 # explicit global
+        if (rk == 3 and exploc==0 and temporal_scheme == "explicit"): nssiter = 3 # explicit global
+        if (rk == 4 and exploc==0 and temporal_scheme == "explicit"): nssiter = 4 # explicit global
+        if (rk == 5 and exploc==0 and temporal_scheme == "explicit"): nssiter = 5 # explicit global
+        if (rk == 6 and exploc==0 and temporal_scheme == "explicit"): nssiter = 6 # explicit global
+        if (rk == 12 and exploc==0 and temporal_scheme == "explicit"): nssiter = 12 # explicit global
+        if (rk==2 and exploc == 1 and temporal_scheme == "explicit"): nssiter = rk*maxlevel # explicit local
+        if (rk==2 and exploc == 2 and temporal_scheme == "explicit"): nssiter = rk*maxlevel # explicit local (schema de Constantinescu)
+        if (rk==2 and exploc == 3 and temporal_scheme == "explicit"): nssiter = 3*maxlevel # explicit local (schema de Constantinescu avec rk3 pour methode de base)
+        if (rk==3 and exploc == 2 and temporal_scheme == "explicit"): nssiter = 4*maxlevel # explicit local (schema a pas de temps local d ordre 3)
+        if (rk==2 and exploc == 4 and temporal_scheme == "explicit"): nssiter = rk*maxlevel # explicit local rk2 (schema test)
+        if (rk==2 and exploc == 5 and temporal_scheme == "explicit"): nssiter = rk*maxlevel # schema de Tang & Warnecke
+
+        itexploc=0
+        dtdim = nssiter + 7
+        datap = numpy.empty((dtdim), numpy.int32) 
+        datap[0] = nssiter 
+        datap[1] = modulo_verif
+        datap[2] = restart_fields-1
+        datap[3] = timelevel_motion
+        datap[4] = timelevel_target 
+        datap[5] = timelevel_prfile
+        datap[6:dtdim-1] = 1
+        datap[dtdim-1] = rk
+        Internal.createUniqueChild(o, '.Solver#dtloc', 'DataArray_t', datap)
+
+    # Data for each zone
+    #==== Check if padding file exists (potential cache associativity issue)
+    pad   = False
+    if Padding is not None:
+      try:
+          f       = open(Padding,'rb')
+          pad     = True
+      except IOError as e:
+          print('Padding file not found, using default values.')
+          pad   = False
+      if pad: 
+          lines_f = f.readlines()
+
+          sizeIJK=[]
+          shiftvars=[]
+          for l in lines_f:
+             mots = l.split(',')
+             sizeIJK.append([ int( mots[1] ),  int( mots[2] ),  int( mots[3]) ] )
+             shiftvars.append( int( mots[5] ) )
+
+          f.close()
+
+    bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
+    
+    i=0
+    for b in bases:
+        zones = Internal.getNodesFromType2(b, 'Zone_t')
+        nzones=len(zones)
+        for z in zones:
+            shiftvar   = 0
+            #=== check for a padding file  (cache associativity issue)
+            dims = Internal.getZoneDim(z)
+            if pad:
+                  iv = dims[1]-5
+                  jv = dims[2]-5
+                  kv = dims[3]-5
+                  target = [iv,jv,kv]
+                  if target in sizeIJK:
+                       l        = sizeIJK.index( target)
+                       shiftvar =  shiftvars[l]
+
+            # zone ownData (generated)
+            o = Internal.createUniqueChild(z, '.Solver#ownData', 
+                                           'UserDefinedData_t')
+
+            # - defaults -
+            model    = "Euler"
+            ransmodel= 'SA'
+            sgsmodel = "Miles"
+            des      = "none"
+            implicit_solver = "lussor"
+            nbr_relax = 1
+            nbr_krylov    = 20
+            nbr_restart   =  1
+            lu_match      =  0
+            temporal_scheme = "implicit"
+            scheme          = "ausmpred"
+            slope           = "o3"
+            motion          = "none"
+            filtrage        = "off"
+            io_th      = 0
+            cacheblckI = 2048
+            cacheblckJ = 2
+            cacheblckK = 7
+            dtnature   = "global"
+            dtc        = -0.000001
+            epsi_newton  = 0.1 
+            epsi_linear  = 0.01 
+            psiroe       = 0.1
+            cfl          = 1.
+            rotation     = [ 0.,0.,0., 0.,0.,0.,0.,0.]
+            ssdom_IJK    = [240,20,900]
+            sfd          = 0
+            sfd_chi      = 0.
+            sfd_delta    = 1.e15
+            sfd_init_iter= 1
+            nit_inflow   = 10
+            epsi_inflow  = 1.e-5
+            DES_debug    = 0
+            extract_res  = 0
+            ibc          = numpy.zeros( 7, dtype=numpy.int32)
+            source       = 0
+            cups         = [1.,1.]
+            
+            a = Internal.getNodeFromName2(z, 'GoverningEquations')
+            if a is not None: model = Internal.getValue(a)
+            else:
+                a = Internal.getNodeFromName2(b, 'GoverningEquations')
+                if a is not None: model = Internal.getValue(a)
+            a = Internal.getNodeFromName2(z, 'DES')
+            if a is not None: des = Internal.getValue(a)
+            else:
+                a = Internal.getNodeFromName2(z, 'des')
+                if a is not None: des = Internal.getValue(a)
+                else:
+                    a = Internal.getNodeFromName2(b, 'DES')
+                    if a is not None: des = Internal.getValue(a)
+                    else:
+                        a = Internal.getNodeFromName2(b, 'des')
+                        if a is not None: des = Internal.getValue(a)
+            ref = None
+            a = Internal.getNodeFromName1(z, 'ReferenceState')
+            if a is not None: ref = a
+            else:
+                a = Internal.getNodeFromName1(b, 'ReferenceState')
+                if a is not None: ref = a
+            adim = None
+            if ref is not None: 
+              adim      = C.getState(ref)
+              prandtltb = adim[18]        #prandtl laminar 
+            else: 
+              print('FastS: Warning: can not find a refState.')
+              print('FastS: Warning: Prandtl turb by default= 1.')
+              prandtltb = 1.
+
+            d = Internal.getNodeFromName1(z, '.Solver#define')
+            if d is not None:
+                checkKeys(d, keys4Zone)
+                a = Internal.getNodeFromName2(b, 'temporal_scheme')
+                if a is not None: temporal_scheme = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'implicit_solver')
+                if a is not None: implicit_solver = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'nb_relax')
+                if a is not None: nbr_relax = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'nb_krylov')
+                if a is not None: nbr_krylov = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'nb_restart')
+                if a is not None: nbr_restart = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'lu_match')
+                if a is not None: lu_match = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'scheme')
+                if a is not None: scheme = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'slope')
+                if a is not None: slope  = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'motion')
+                if a is not None: motion = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'rotation')
+                if a is not None: rotation = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'filtrage')
+                if a is not None: filtrage = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'io_thread')
+                if a is not None: io_th = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'cache_blocking_I')
+                if a is not None: cacheblckI = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'cache_blocking_J')
+                if a is not None: cacheblckJ = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'cache_blocking_K')
+                if a is not None: cacheblckK = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'shiftvar')
+                if a is not None: shiftvar = Internal.getValue(a)                
+                a = Internal.getNodeFromName1(d, 'time_step_nature')            
+                if a is not None: dtnature = Internal.getValue(a)                
+                a = Internal.getNodeFromName1(d, 'sgsmodel')
+                if a is not None: sgsmodel = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'time_step')
+                if a is not None: dtc = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'inj1_newton_tol')
+                if a is not None: epsi_inflow = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'inj1_newton_nit')
+                if a is not None: nit_inflow = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'epsi_newton')
+                if a is not None: epsi_newton = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'epsi_linear')
+                if a is not None: epsi_linear = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'cfl')
+                if a is not None: cfl = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'ssdom_IJK')
+                if a is not None: ssdom_IJK = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'prandtltb')
+                if a is not None: prandtltb = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'psiroe')
+                if a is not None: psiroe = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'sfd')
+                if a is not None: sfd = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'sfd_chi')
+                if a is not None: sfd_chi = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'sfd_delta')
+                if a is not None: sfd_delta = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'sfd_init_iter')
+                if a is not None: sfd_init_iter = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'ransmodel')
+                if a is not None: ransmodel = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'DES_debug')
+                if a is not None: 
+                    tmp = Internal.getValue(a)
+                    if tmp == 'active': DES_debug =1
+                a = Internal.getNodeFromName1(d, 'extract_res')
+                if a is not None: extract_res = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'IBC')
+                if a is not None: ibc = a[1]
+                a = Internal.getNodeFromName1(d, 'source')
+                if a is not None: source = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'Cups')
+                if a is not None: cups = Internal.getValue(a)  
+               
+            iflow  = 1
+            ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0;
+            azgris = 0.01; addes = 0.2; ratiom = 10000.
+
+            if   model == "Euler"     or model == "euler":     iflow = 1
+            elif model == "NSLaminar" or model == "nslaminar": iflow = 2
+            elif model == "NSLes"     or model == "nsles":     iflow = 2
+
+            elif model == "nsspalart" or model == "NSTurbulent": 
+                iflow = 3;
+                if   ransmodel == 'SA_comp':
+                    ides = 1
+                elif ransmodel == 'SA_diff':
+                    ides = 8
+
+                if des != 'none':
+                    if   des == "ZDES1"   or des == "zdes1":   ides = 2
+                    elif des == "ZDES1_w" or des == "zdes1_w": ides = 3
+                    elif des == "ZDES2"   or des == "zdes2":   ides = 4
+                    elif des == "ZDES2_w" or des == "zdes2_w": ides = 5
+                    elif des == "ZDES3"   or des == "zdes3":   ides = 6
+                    elif des == "ZDES3_w" or des == "zdes3_w": ides = 7
+            else:
+                 print('Warning: FastS: model %s is invalid.'%model)
+
+            iles = 0
+            if sgsmodel == 'smsm': iles = 1
+
+
+            size_ssdom_I = 1000000
+            size_ssdom_J = 1000000
+            size_ssdom_K = 1000000
+
+            if temporal_scheme == "explicit": itypcp = 2
+            else: itypcp = 1
+
+            if temporal_scheme == "implicit_local": 
+                itypcp = 1
+                #ssdom_IJK = [80,15,80]
+                a = Internal.getNodeFromName1(d, 'ssdom_IJK')
+                if a is not None: 
+                    ssdom_IJK = Internal.getValue(a)
+                size_ssdom_I = ssdom_IJK[0]
+                size_ssdom_J = ssdom_IJK[1]
+                size_ssdom_K = ssdom_IJK[2]
+
+            islope=2
+            if   slope == "o1"    : islope = 1
+            elif slope == "o3"    : islope = 2
+            elif slope == "minmod": islope = 3
+
+            kfludom = 1
+            if   scheme == "ausmpred" : kfludom = 1
+            elif scheme == "senseur"  : kfludom = 2
+            elif scheme == "dfcentre6": kfludom = 3
+            elif scheme == "roe_kap"  :
+              kfludom = 5
+              islope  = 2
+            elif scheme == "roe_min": 
+              kfludom = 5
+              islope  = 3
+            elif scheme == "roe_nul": 
+              kfludom = 5
+              islope  = 1
+            elif scheme == "roe": 
+              kfludom = 5
+            elif(scheme == "ausmpred_pattern")  :  
+                kfludom = 7
+
+            else: print( 'Warning: FastS: scheme %s is invalid.'%scheme)
+
+            lale   = 0; size_ale =0;
+            if    motion == "none"       : lale = 0
+            elif  motion == "rigid"      : lale = 1; size_ale = 11
+            elif  motion == "deformation": lale = 2
+            else: print( 'Warning: FastS: motion %s is invalid.'%motion)
+
+            iflagflt = 0
+            if filtrage == "on": iflagflt = 1
+
+            dtloc = 0
+            if dtnature == "global": dtloc = 0
+            elif dtnature == "local": dtloc = 1
+            else: print( 'Warning: FastS: time_step_nature %s is invalid.'%dtnature)
+
+            ImplicitSolverNum = 0
+            if implicit_solver == "lussor": ImplicitSolverNum = 0
+            elif implicit_solver == "gmres": ImplicitSolverNum = 1
+            else: print( 'Warning: FastS: implicit_solver %s is invalid.'%implicit_solver)
+
+            # creation noeud parametre integer
+            # Determination de levelg et leveld             
+            levelg=0
+            leveld=0
+
+            
+            datap = numpy.empty(84, numpy.int32)
+            datap[0:25]= -1
+
+            #Structure ou polyhedric
+            ngon   = Internal.getNodeFromName1(z   , 'NGonElements')
+            if ngon is not None:
+               nface  = Internal.getNodeFromName1(z   , 'NFaceElements')
+               #Nombre de vextex
+               grid      = Internal.getNodeFromName1(z    , 'GridCoordinates')
+               coordx    = Internal.getNodeFromName1(grid , 'CoordinateX')
+               nvtx      = numpy.size( coordx[1])
+               datap[0 ] = nvtx
+
+               #Nombre de face
+               ng_intext   = Internal.getNodeFromName1(ngon, 'IntExt')[1]
+               NF_I0  = ng_intext[0]
+               NF_RAC = ng_intext[1]
+               NF_BC1 = ng_intext[2]
+               NF_I1  = ng_intext[3]
+               NF_BC0 = ng_intext[4]
+               NF_I2  = ng_intext[5]
+
+               datap[1 ] = NF_I0+ NF_I1 + NF_I2 + NF_RAC + NF_BC0 + NF_BC1  #nombre de face total
+               datap[2 ] = NF_I0                                            #Face couche zero (sans BC et rac)
+               datap[3 ] = NF_I1                                            #Face couche  un  (sans BC et rac)
+               datap[4 ] = NF_RAC                                           #Face couche zero (BC)
+               datap[5 ] = NF_BC0                                           #Face couche zero (BC)
+               datap[6 ] = NF_BC1                                           #Face couche  un  (BC)
+
+               nf_intext = Internal.getNodeFromName1(nface, 'IntExt')[1]
+               NG_0  = nf_intext[0]  #element couche zero
+               NG_1  = nf_intext[1]  #element couche 1
+               NG_2  = nf_intext[2]  #element couche 2
+               NG_3  = nf_intext[3]  #element couche 1 de type raccord
+               NG_4  = nf_intext[4]  #element couche 2 de type raccord
+               #datap[7 ] = NG_0 + NG_1 + NG_2 + NF_BC0 + NF_BC1 # elements total (avec les element BC )
+               datap[7 ] = NG_0 + NG_1 + NG_2  # elements total (avec les element BC et racc )
+               datap[8 ] = NG_0
+               datap[9 ] = NG_1
+               datap[10] = NG_3
+            
+               #size ElementConnectivity (NGON)
+               ngon_elconn = Internal.getNodeFromName1(ngon, 'ElementConnectivity')
+               ngon_elconn_size = numpy.size( ngon_elconn[1])
+               datap[11 ]  = ngon_elconn_size
+               #size ElementConnectivity (NFACE)
+               nfac_elconn = Internal.getNodeFromName1(nface, 'ElementConnectivity')
+               nfac_elconn_size = numpy.size( nfac_elconn[1])
+               datap[12]  = nfac_elconn_size
+
+            datap[25]  = 0     # zone 3D curvi par defaut
+            datap[26]  = 0     # Vent 3D par defaut
+            datap[27]  = iflow
+            datap[28]  = iles
+            datap[29]  = itypcp
+            datap[30]  = size_ssdom_I
+            datap[31]  = size_ssdom_J
+            datap[32]  = size_ssdom_K
+            datap[33]  = kfludom
+            datap[34]  = lale
+            datap[35]  = iflagflt
+            datap[36:45]= -1
+            datap[45]  = io_th    
+            datap[46]  = dtloc
+            datap[47]  = ides  
+            datap[48]  = idist 
+            datap[49]  = ispax
+            datap[50]  = izgris
+            datap[51]  = iprod
+	    datap[52]  = rk
+            datap[53]  = veclevel[i]
+            datap[54]  = exploc
+            datap[55]  = itexploc
+            datap[56]  = levelg
+            datap[57]  = leveld
+            datap[58]  = nssiter
+            datap[59]  = cacheblckI
+            datap[60]  = cacheblckJ
+            datap[61]  = cacheblckK
+            datap[62]  = sfd
+            datap[63]  = sfd_init_iter
+            datap[64]  = islope
+            datap[65]  = nit_inflow
+            datap[66]  = shiftvar
+            datap[67]  = extract_res
+            datap[68]  = DES_debug     #index 69 et 70 pour PT_BC et PT_OMP
+            datap[71]   = nbr_relax
+            datap[72]   = nbr_restart
+            datap[73]   = nbr_krylov
+            datap[74]   = ImplicitSolverNum
+            datap[75]   = lu_match          
+            datap[76:83]= ibc[0:7]
+            datap[83]   = source
+
+            i += 1
+         
+	    Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
+            
+            # creation noeud parametre real 
+            #size_real = 23 +  size_ale   
+            size_real = 41
+            datap = numpy.zeros(size_real, numpy.float64)
+            if dtc < 0: 
+                print( 'Warning: time_step set to default value (0.0001).')
+                dtc = 0.0001
+            datap[0] = dtc
+            
+            if adim is not None:
+                pinf    = adim[5]
+                ainf    = math.sqrt(adim[11]*pinf/adim[0])
+                datap[ 1]=  adim[11]    # gamma
+                datap[ 2]=  adim[ 7]    # cv
+                datap[ 3]=  adim[ 0]    # roinf
+                datap[ 4]=  adim[ 5]    # pinf
+                datap[ 5]=  math.sqrt(adim[1]**2 + adim[2]**2 + adim[3]**2) / adim[0] # uinf
+                datap[ 6]=  adim[6]      # Tinf
+                datap[ 7]=  adim[ 8]     # Minf
+                datap[ 8]=  adim[14]     # roNutildeinf
+                datap[ 9]=  adim[ 9]     # Re
+                datap[10]=  adim[18]     # Pr
+                datap[11]=  adim[15]     # Mus
+                datap[12]=  adim[17]     # Ts (sutherland)
+                datap[13]=  adim[16]     # Cs (sutherland)
+                datap[19]= adim[1]/adim[0] # Vx inf
+                datap[20]= adim[2]/adim[0] # Vy inf
+                datap[21]= adim[3]/adim[0] # Vz inf
+            else: datap[1:14] = 0. ; datap[19:22] = 0.
+
+            datap[14]=  epsi_newton
+            datap[15]=  cfl        
+            datap[16]=  azgris
+            datap[17]=  addes
+            datap[18]=  ratiom
+            datap[22]=  temps
+ 
+            if lale ==1: 
+                datap[23:31]=  rotation[0:8]
+                datap[29]   = datap[29]*2.  *math.pi
+                datap[30]   = datap[30]/180.*math.pi
+                datap[31]   = t_init_ale
+                datap[32]   = 0.     #teta
+                datap[33]   = 0.     #tetap
+
+            datap[34]=  psiroe
+            datap[35]=  sfd_chi
+            datap[36]=  sfd_delta
+            datap[37]=  epsi_inflow
+            datap[38]=  prandtltb
+            datap[39]=  epsi_linear
+            datap[40]=  cups[1] # on garde la valeur max, pas la moyenne
+
+            Internal.createUniqueChild(o, 'Parameter_real', 'DataArray_t', datap)
+
+            # More
+            Internal.createUniqueChild(o, 'CFL_minmaxmoy', 'DataArray_t', [0.,0.,0.])
+            Internal.createUniqueChild(o, 'type_zone'    , 'DataArray_t',  0)
+            Internal.createUniqueChild(o, 'model', 'DataArray_t', model)
+            Internal.createUniqueChild(o, 'temporal_scheme', 'DataArray_t', temporal_scheme)
+            Internal.createUniqueChild(o, 'exp_local', 'DataArray_t', exploc)
+            Internal.createUniqueChild(o, 'rk', 'DataArray_t', rk)
+
+    return None
+
+#==============================================================================
 # create work arrays
 #==============================================================================
 def createWorkArrays__(zones, dtloc, FIRST_IT):
@@ -507,8 +1266,10 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
             ndimplan = max( ndimplan, dimJK)
         else: 
             nijk = dims[2]+shiftvar
-            ndimplan = nijk     ### a revoir
+            print('dtloc fastP: revoir dim tab jeanmasson')
+            ndimplan = 10     ### a revoir
 
+        #print 'zone,taille =', z[0], nijk
 
         ndimt   +=     neq*nijk       # surdimensionne ici
         ndimcoe += neq_coe*nijk       # surdimensionne ici
@@ -590,6 +1351,14 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['linelets_int']   = None
     hook['linelets_real']  = None
     return hook
+
+#==============================================================================
+# loi horaire (ALE) 
+#==============================================================================
+def _motionlaw(t, teta, tetap):
+    zones = Internal.getZones(t)
+    fast._motionlaw(zones, teta, tetap)
+    return None
 
 #==============================================================================
 # Retourne un tag suivant bcname
@@ -972,10 +1741,7 @@ def switchPointers3__(zones,nitmax):
         niveau = Internal.getValue(level)
 
         cycle = nitmax/niveau
-        #print 'cycle= ',cycle
         if cycle==nitmax :
-
-            #print 'switch zone= ', z[0]
 
             sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
             own =  Internal.getNodeFromName1(z, '.Solver#ownData')

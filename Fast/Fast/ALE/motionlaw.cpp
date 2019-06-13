@@ -18,7 +18,7 @@
 */
 
 
-# include "fastS.h"
+# include "fast.h"
 # include "param_solver.h"
 # include "string.h"
 #ifdef _OPENMP
@@ -30,7 +30,7 @@ using namespace K_FLD;
 //=============================================================================
 // Compute pour l'interface pyTree
 //=============================================================================
-PyObject* K_FASTS::_motionlaw(PyObject* self, PyObject* args)
+PyObject* K_FAST::_motionlaw(PyObject* self, PyObject* args)
 {
   PyObject* zones; E_Float teta;  E_Float tetap;
 

@@ -61,6 +61,7 @@ C Var loc
       omp_mode = 0
       nitrun   = 0
 
+
 #include "FastS/HPC_LAYER/SIZE_MIN.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
@@ -88,8 +89,7 @@ c
       elseif(param_int(IFLOW).eq.3) then
 
           call vispalart(ndo, param_int, param_real, ind_coe,
-     &                   ti, tj, tk, vol, dist, xmut,rop)
-
+     &                   xmut,rop)
       endif
                
 #include "FastS/HPC_LAYER/SYNCHRO_GO.for"

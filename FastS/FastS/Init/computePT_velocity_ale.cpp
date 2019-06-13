@@ -185,14 +185,16 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
 
              // Distribution de la sous-zone sur les threads
              //E_Int type_decoup =2;
-             E_Int lmin = 10;
+             E_Int lmin          = 10;
              if (ipt_param_int[nd][ ITYPCP ] == 2) lmin = 4;
+
              indice_boucle_lu_(ndo, socket , Nbre_socket, lmin,
                               ipt_ind_dm_loc, 
                               ipt_topology_socket, ipt_ind_dm_socket );
 
             E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
-            E_Int Nbre_thread_actif_loc, ithread_loc;
+            E_Int Nbre_thread_actif_loc = Nbre_thread_actif;
+            E_Int  ithread_loc = ithread;
             if (omp_mode == 1)
             { 
               E_Int nitcfg=1; E_Int nd_subzone =0;
@@ -210,7 +212,7 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
 
             E_Int* ipt_lok_thread   = ipt_lok   + nd_current*mx_synchro*Nbre_thread_actif;
 
-             printf("couc %d %d \n", nd, ithread);
+             //printf("couc %d %d \n", nd, ithread);
 
              init_ventijk_( nd, nidom,  Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, omp_mode,
                           ipt_param_int[nd], ipt_param_real[nd],

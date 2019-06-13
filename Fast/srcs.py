@@ -3,6 +3,7 @@
 #==============================================================================
 cpp_srcs = ['Fast/checkVariables.cpp',
             'Fast/checkNumericsValue.cpp',
+            'Fast/ALE/motionlaw.cpp',
             'Fast/Eos/perfect.cpp']
 
 #==============================================================================

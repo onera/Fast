@@ -119,14 +119,6 @@ void K_FASTS::setInterpTransfersFastS(
     E_Int nbcomID  = param_int_tc[2+nbcomIBC];
     E_Int shift_graph = nbcomIBC + nbcomID + 2;
 
-    //cout << param_int_tc[16+1] << endl;
-    //cout << "shift_graph= " << shift_graph << endl;
-    //if (rk ==3 and exploc==2)
-      //{
-	//nbcomID = param_int_tc[2+nbcomIBC+ nstep];
-      // }
-
- 
     //cout << "nbcomIBC= " << nbcomIBC << endl;
 
 #ifdef _MPI
@@ -946,11 +938,7 @@ void K_FASTS::setInterpTransfersInter(
 	      else if (levelD == levelR and num_passage == 1)
 		{
 		  //cout << "coucou " << endl;
-		  if (nstep%cyclD==cyclD/2-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==0) or nstep%cyclD==cyclD-1)
-		    {
-		      autorisation_transferts[pass_inst][irac_auto]=1;
-		      
-		    }
+		  if (nstep%cyclD==cyclD/2-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==0) or nstep%cyclD==cyclD-1) { autorisation_transferts[pass_inst][irac_auto]=1; }
 		  else {continue;}
 		}
 	      // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse (cas du deuxieme passage)   
@@ -1429,15 +1417,11 @@ void K_FASTS::getTransfersInter(
               ilistrecv =
                   recv_listRc[irac]
                              [irecv];  //+ eq*ipt_ndimdxD[recv_nozone[irac]];
-              ipt_roD[recv_nozone[irac]][ilistrecv] = recv_frp[irac][irecv];
-              ipt_roD[recv_nozone[irac]][ilistrecv + decal] =
-                  recv_frp[irac][irecv + 1 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 2 * decal] =
-                  recv_frp[irac][irecv + 2 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 3 * decal] =
-                  recv_frp[irac][irecv + 3 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 4 * decal] =
-                  recv_frp[irac][irecv + 4 * sz];
+              ipt_roD[recv_nozone[irac]][ilistrecv          ] = recv_frp[irac][irecv];
+              ipt_roD[recv_nozone[irac]][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * sz];
+              ipt_roD[recv_nozone[irac]][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * sz];
+              ipt_roD[recv_nozone[irac]][ilistrecv + 3*decal] = recv_frp[irac][irecv + 3 * sz];
+              ipt_roD[recv_nozone[irac]][ilistrecv + 4*decal] = recv_frp[irac][irecv + 4 * sz];
               //}
             }  // end for (int irecv
           } else if (recv_nvarloc[irac] == 6) {
@@ -1446,17 +1430,12 @@ void K_FASTS::getTransfersInter(
               ilistrecv =
                   recv_listRc[irac]
                              [irecv];  //+ eq*ipt_ndimdxD[recv_nozone[irac]];
-              ipt_roD[recv_nozone[irac]][ilistrecv] = recv_frp[irac][irecv];
-              ipt_roD[recv_nozone[irac]][ilistrecv + decal] =
-                  recv_frp[irac][irecv + 1 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 2 * decal] =
-                  recv_frp[irac][irecv + 2 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 3 * decal] =
-                  recv_frp[irac][irecv + 3 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 4 * decal] =
-                  recv_frp[irac][irecv + 4 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 5 * decal] =
-                  recv_frp[irac][irecv + 5 * sz];
+              ipt_roD[recv_nozone[irac]][ilistrecv          ] = recv_frp[irac][irecv];
+              ipt_roD[recv_nozone[irac]][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * sz];
+              ipt_roD[recv_nozone[irac]][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * sz];
+              ipt_roD[recv_nozone[irac]][ilistrecv + 3*decal] = recv_frp[irac][irecv + 3 * sz];
+              ipt_roD[recv_nozone[irac]][ilistrecv + 4*decal] = recv_frp[irac][irecv + 4 * sz];
+              ipt_roD[recv_nozone[irac]][ilistrecv + 5*decal] = recv_frp[irac][irecv + 5 * sz];
             }  // end for (int irecv
           }
 

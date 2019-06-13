@@ -118,7 +118,7 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
   FldArrayF  rot(ndimdx_max*neq_rot);
   E_Float* iptrot = rot.begin();
 
-  //printf("thread =%d\n",threadmax_sdm);
+  //printf("thread =%g\n", iptro[0][0]);
   //FldArrayI compteur(     threadmax_sdm); E_Int* ipt_compteur   =  compteur.begin();
   FldArrayI ijkv_sdm(   3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(   3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
@@ -146,8 +146,8 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
       // ---------------------------------------------------------------------
       for (E_Int nd = 0; nd < nidom; nd++)
         {  
-           if(ipt_param_int[nd][ILES]==1)
-           {
+           //if(ipt_param_int[nd][ILES]==1)
+           //{
              E_Int* ipt_lok_thread   = ipt_lok   + nd*mx_synchro*Nbre_thread_actif;
             
              E_Int* ipt_ind_dm_loc         = ipt_ind_dm         + (ithread-1)*6;
@@ -164,7 +164,10 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
              E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
 
              // Distribution de la sous-zone sur les threads
-             E_Int lmin =8;
+             E_Int lmin =10;
+	     if (ipt_param_int[nd][ITYPCP] == 2) lmin = 4;
+             if (ipt_param_int[nd][ILES]==1 and lmin==4) lmin=8;
+
              indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
                                ipt_ind_dm_loc, 
                                ipt_topology_socket, ipt_ind_dm_socket );
@@ -174,7 +177,7 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
                      ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
                      ipt_topology_socket, ipt_lok_thread ,
                      iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptmut[nd], iptdist[nd], iptrot);
-           }
+           //}
  
         }// boucle zone 
 # include "HPC_LAYER/INIT_LOCK.h"

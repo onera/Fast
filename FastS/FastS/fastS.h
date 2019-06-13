@@ -82,7 +82,7 @@ namespace K_FASTS
   PyObject* computePT_my(            PyObject* self, PyObject* args);
   PyObject* compute_effort(          PyObject* self, PyObject* args);
   PyObject* _movegrid(               PyObject* self, PyObject* args);
-  PyObject* _motionlaw(              PyObject* self, PyObject* args);
+  //PyObject* _motionlaw(              PyObject* self, PyObject* args);
   PyObject* compute_dpJ_dpW(         PyObject* self, PyObject* args);
   PyObject* work_thread_distribution(PyObject* self, PyObject* args);
  // PyObject* compute_RhsIterAdjoint(  PyObject* self, PyObject* args);
@@ -163,9 +163,10 @@ namespace K_FASTS
     E_Float**  iptvol_df, 
     E_Float**  iptventi, E_Float**  iptventj, E_Float** iptventk,  
     E_Float**& iptrdm,
-    E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*   iptwig, E_Float* iptstat_wig,
-    E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res,E_Float**& iptdrodm_trans,
-    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& taille_tabs, E_Float*& stock, E_Float*& drodmstock, E_Float*& constk, E_Float**  iptsrc);
+    E_Float*   iptroflt     , E_Float*  iptroflt2    , E_Float*   iptwig         , E_Float* iptstat_wig       ,
+    E_Float*   iptdrodm     , E_Float*  iptcoe       , E_Float* iptmules         , E_Float**& iptdelta        , E_Float**& iptro_res    , E_Float**& iptdrodm_trans  ,
+    E_Int*&    ipt_param_bci, E_Float*& ipt_param_bcf, E_Int*&  ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real,
+    E_Int& taille_tabs      , E_Float*& stock        , E_Float*& drodmstock      , E_Float*& constk           , E_Float**  iptsrc);
 
 
   //=============
