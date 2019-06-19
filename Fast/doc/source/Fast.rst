@@ -220,16 +220,13 @@ Actions
 
 ----------------------------------------------------
 
-.. py:function:: Fast.PyTree.load(fileName='t.cgns', fileNameC= 'tc.cgns', fileNameS='tstat.cgns', split='single', NP=0)
+.. py:function:: Fast.PyTree.load(fileName='t.cgns', fileNameC='tc.cgns', fileNameS='tstat.cgns', split='single')
     
     Load computation tree t from file. 
     Optionaly load tc (connectivity file) or tstat (statistics file).
     Returns also the graph as a dictionary {'graphID', 'graphIBC', 'procDict', 'procList'}.
-    If you run in mpi, NP must be the number of processor.
-    If you run in seq mode, NP must be 0 or a negative number.
-    If split='single', a single file is written.
-    If split='multiple', different files are created
-    depending on the proc number of each zone (restart/restart_0.cgns, ...).
+    If split='single', a single file is loaded.
+    If split='multiple', mulitple file format is loaded (restart/restart_0.cgns, ...).
 
     :param a: input data
     :type a: pyTree
@@ -237,8 +234,6 @@ Actions
     :type fileName: string
     :param split: 'single' or 'multiple'
     :type split: string
-    :param NP: number of processors
-    :type NP: int
     :return: t, tc, ts, graph
     :rtype: tuple
 

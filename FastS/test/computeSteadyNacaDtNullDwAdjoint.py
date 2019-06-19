@@ -19,7 +19,7 @@ NP = 0               # NP: 0: Seq, NP> 0: running with mpi, distributed on NP pr
 rank=0               # sequential 8 cores
 it0 = 0
 
-t_m129,tc_m129,ts,graph=Fast.load(DOSSIER+'restart_129'+SUFFIXE+'.cgns',DOSSIER+'tc_m129.cgns', 'ts.cgns', split='single', restart=False, NP=NP)
+t_m129,tc_m129,ts,graph=Fast.load(DOSSIER+'restart_129'+SUFFIXE+'.cgns',DOSSIER+'tc_m129.cgns', 'ts.cgns', split='single', restart=False)
 
 modulo_verif = 1
 mycfl = 0.00000001

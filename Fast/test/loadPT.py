@@ -22,7 +22,7 @@ if Cmpi.rank == 0:
     C.convertPyTree2File(tc, 'tc.cgns')
 Cmpi.barrier()
 
-t,tc,ts,graph = Fast.load('t.cgns', 'tc.cgns', split='single', NP=0)
+t,tc,ts,graph = Fast.load('t.cgns', 'tc.cgns', split='single')
 
 #print t
 #print tc

@@ -267,9 +267,6 @@ if rank ==0: print "proc", graph
 
 
 
-#t,tc,ts,graph=Fast.load(FILE, FILED, split='single', 
-#                        restart=False, NP=size)
-
 # Numerics
 numb = {}
 numb["temporal_scheme"] = "explicit"

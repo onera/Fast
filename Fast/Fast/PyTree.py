@@ -12,6 +12,8 @@ try:
 except:
     raise ImportError("Fast.PyTree: requires Converter module.")
 
+import Converter.Mpi as Cmpi
+
 # Solveurs disponibles
 FASTP = True
 try: import FastP.PyTree as FastP
@@ -172,7 +174,7 @@ def adaptCellNForGC(t, depth, metrics):
 # the communication graph for IBM transfers
 #==============================================================================
 def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
-         restart=False, NP=0, cartesian=False):
+         restart=False, cartesian=False):
     """Load tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -198,8 +200,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
     if extS == '': extS = '.cgns'
 
     graph = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
-    if NP > 0: # mpi run
-        import Converter.Mpi as Cmpi
+    if Cmpi.size > 1: # mpi run
         import Distributor2.PyTree as D2
         rank = Cmpi.rank; size = Cmpi.size
         
@@ -333,7 +334,6 @@ def save(t, fileName='restart', split='single',
 
     if split != 'single':
         if NP > 0: # mpirun
-            import Converter.Mpi as Cmpi
             if Cmpi.rank == 0:
                 if not os.path.exists(fileName): os.makedirs(fileName)
             Cmpi.barrier()
@@ -371,13 +371,12 @@ def save(t, fileName='restart', split='single',
                 C._rmVars(z, 'centers:Density_M1')
                 C._rmVars(z, 'centers:VelocityX_M1')
                 C._rmVars(z, 'centers:VelocityY_M1')
-                C._rmVars(z, 'centers:VelocityZ_M1' )
+                C._rmVars(z, 'centers:VelocityZ_M1')
                 C._rmVars(z, 'centers:Temperature_M1')
                 C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
 
     # save
-    if NP > 0: # mpi run
-        import Converter.Mpi as Cmpi
+    if Cmpi.size > 1: # mpi run
         if split == 'single':  # output in a single file
             Cmpi.convertPyTree2File(t2, fileName+'.cgns')
         else:
@@ -390,7 +389,6 @@ def save(t, fileName='restart', split='single',
             C.convertPyTree2File(t2, fileName+'.cgns')
         else:
             # Get and save graph
-            import Converter.Mpi as Cmpi
             import Distributor2.PyTree as D2
             graphID = Cmpi.computeGraph(t2, type='ID')
             graphIBCD = Cmpi.computeGraph(t2, type='IBCD')
@@ -448,7 +446,6 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
 
     graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
     if mpirun: # mpi run
-        import Converter.Mpi as Cmpi
         import Distributor2.PyTree as D2
         rank = Cmpi.rank; size = Cmpi.size
         
@@ -537,7 +534,6 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
     graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
     list_graph=[]
     if mpirun: # mpi run
-        import Converter.Mpi as Cmpi
         import Distributor2.PyTree as D2
         rank = Cmpi.rank; size = Cmpi.size
         
@@ -687,7 +683,6 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
 
     # save
     if mpirun: # mpi run
-        import Converter.Mpi as Cmpi
         if split == 'single':  # output in a single file
             FILE = fileName+'.cgns'
             Cmpi.convertPyTree2File(t2, FILE)
@@ -739,7 +734,6 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
 
     graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
     if mpirun: # mpi run
-        import Converter.Mpi as Cmpi
         import Distributor2.PyTree as D2
         rank = Cmpi.rank; size = Cmpi.size
         
@@ -871,7 +865,6 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
 
     # save
     if mpirun: # mpi run
-        import Converter.Mpi as Cmpi
         if split == 'single':  # output in a single file
             FILE = directory+'/'+fileName+'.cgns'
             Cmpi.convertPyTree2File(t2, FILE)
