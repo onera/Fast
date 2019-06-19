@@ -176,14 +176,26 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
     """Load tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
-    baseName = os.path.splitext(baseName)[0] # name without extension
+    spl = os.path.splitext(baseName)
+    baseName = spl[0] # name without extension
+    ext      = spl[1] # extension
     fileName = os.path.splitext(fileName)[0] # full path without extension
+    
     baseNameC = os.path.basename(fileNameC)
-    baseNameC = os.path.splitext(baseNameC)[0] # name without extension
+    spl = os.path.splitext(baseNameC)
+    baseNameC = spl[0] # name without extension
+    extC      = spl[1] # extension
     fileNameC = os.path.splitext(fileNameC)[0] # full path without extension
+
     baseNameS = os.path.basename(fileNameS)
-    baseNameS = os.path.splitext(baseNameS)[0] # name without extension
+    spl = os.path.splitext(baseNameS)
+    baseNameS = spl[0] # name without extension
+    extS      = spl[1] # extension
     fileNameS = os.path.splitext(fileNameS)[0] # full path without extension
+
+    if ext == '': ext = '.cgns'
+    if extC == '': extC = '.cgns'
+    if extS == '': extS = '.cgns'
 
     graph = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
     if NP > 0: # mpi run
@@ -193,7 +205,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
         
         if split == 'single':
             # Load connect (tc)
-            FILE = fileNameC+'.cgns'
+            FILE = fileNameC+extC
             tc = Cmpi.convertFile2SkeletonTree(FILE)
             tc = Cmpi.readZones(tc, FILE, rank=rank)
             graphID = Cmpi.computeGraph(tc, type='ID')
@@ -203,16 +215,15 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
             tc = Cmpi.convert2PartialTree(tc, rank=rank)
             # Load data (t)
-            FILE = fileName+'.cgns'
-            if restart and os.access('restart.cgns', os.F_OK):
-                FILE = 'restart.cgns'
+            FILE = fileName+ext
+            if restart and os.access('restart.cgns', os.F_OK): FILE = 'restart.cgns'
             if os.access(FILE, os.F_OK):
                 t = Cmpi.convertFile2SkeletonTree(FILE)
                 t = Cmpi.readZones(t, FILE, rank=rank)
                 t = Cmpi.convert2PartialTree(t)
             else: t = None
             # Load stat (ts)
-            FILE = fileNameS+'.cgns'
+            FILE = fileNameS+extS
             if os.access(FILE, os.F_OK):
                 ts = Cmpi.convertFile2SkeletonTree(FILE)
                 ts = Cmpi.readZones(ts, FILE, rank=rank)
@@ -229,7 +240,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             FILE = '%s/%s_%d.cgns'%(fileNameC, baseNameC, rank)
             if os.access(FILE, os.F_OK): tc = C.convertFile2PyTree(FILE)
             else:
-                FILE = fileNameC+'.cgns'
+                FILE = fileNameC+extC
                 tc = Cmpi.convertFile2SkeletonTree(FILE)
                 tc = Cmpi.readZones(tc, FILE, rank=rank)        
                 graphID = Cmpi.computeGraph(tc, type='ID',reduction=False)
@@ -239,51 +250,50 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
                 graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
                 tc = Cmpi.convert2PartialTree(tc)
             # Load data (t)
-            FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
-            if restart and os.access('restart/restart_%d.cgns'%rank, os.F_OK):
-                FILE = 'restart/restart_%d.cgns'%rank
+            FILE = '%s/%s_%d%s'%(fileName, baseName, rank, ext)
+            if restart and os.access('restart/restart_%d%s'%(rank,ext), os.F_OK):
+                FILE = 'restart/restart_%d%s'%(rank,ext)
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
             else: t = None
             # Load stat (ts)
-            FILE = '%s/%s_%d.cgns'%(fileNameS, baseNameS, rank)
+            FILE = '%s/%s_%d%s'%(fileNameS, baseNameS, rank, ext)
             if os.access(FILE, os.F_OK): ts = C.convertFile2PyTree(FILE)
             else: ts = None
     else: # sequential run
         if split == 'single':
             # Load Connectivity (tc)
-            FILE = fileNameC+'.cgns'
+            FILE = fileNameC+extC
             if os.access(FILE, os.F_OK): tc = C.convertFile2PyTree(FILE)
             else: tc = None
             # Load Data (t)
-            FILE = fileName+'.cgns'
-            if restart and os.access('restart.cgns', os.F_OK):
-                FILE = 'restart.cgns'
+            FILE = fileName+ext
+            if restart and os.access('restart.cgns', os.F_OK): FILE = 'restart.cgns'
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
             else: t = None
             # Load Stat (ts)
-            FILE = fileNameS+'.cgns'
+            FILE = fileNameS+extS
             if os.access(FILE, os.F_OK): ts = C.convertFile2PyTree(FILE)
             else: ts = None
         else: # multiple
             # Load connectivity (tc)
             ret = 1; no = 0; tc = []
             while ret == 1:
-                FILE = '%s/%s_%d.cgns'%(fileNameC, baseNameC, no)
+                FILE = '%s/%s_%d%s'%(fileNameC, baseNameC, no, extC)
                 if not os.access(FILE, os.F_OK): ret = 0
                 if ret == 1: tc.append(C.convertFile2PyTree(FILE))
                 no += 1
             if tc != []: tc = Internal.merge(tc)
             else: 
-                FILE = fileNameC+'.cgns'
+                FILE = fileNameC+extC
                 if os.access(FILE, os.F_OK): tc = C.convertFile2PyTree(FILE)
                 else: tc = None
             # Load data (t)
             ret = 1; no = 0; t = []
             while ret == 1:
-                FILEIN = '%s/%s_%d.cgns'%(fileName, baseName, no)
+                FILEIN = '%s/%s_%d%s'%(fileName, baseName, no, ext)
                 if os.access(FILEIN, os.F_OK): FILE = FILEIN
-                elif restart and os.access('restart/restart_%d.cgns'%no, os.F_OK): 
-                    FILE = 'restart/restart_%d.cgns'%no
+                elif restart and os.access('restart/restart_%d%s'%(no, ext), os.F_OK): 
+                    FILE = 'restart/restart_%d%s'%(no,ext)
                 else: ret = 0
                 if ret == 1: t.append(C.convertFile2PyTree(FILE))
                 no += 1
@@ -292,7 +302,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             # Load stat (ts)
             ret = 1; no = 0; ts = []
             while ret == 1:
-                FILE = '%s/%s_%d.cgns'%(fileNameS, baseNameS, no)
+                FILE = '%s/%s_%d%s'%(fileNameS, baseNameS, no, extS)
                 if not os.access(FILEIN, os.F_OK): ret = 0 
                 if ret == 1: ts.append(C.convertFile2PyTree(FILE))
                 no += 1
@@ -346,22 +356,24 @@ def save(t, fileName='restart', split='single',
     if flowsol is not None:
         vars = Internal.getNodesFromType1(flowsol, 'DataArray_t')
         for var in vars:
-            if (('Kry' in var[0]) and not('Kry_0' in var[0])):
+            if ('Kry' in var[0]) and not('Kry_0' in var[0]):
                 C._rmVars(t2, 'centers:'+var[0])
 
     for z in zones:
         node = Internal.getNodeFromName1(z, '.Solver#define')
         if node is not None:
-            node = Internal.getNodeFromName1(node, 'temporal_scheme')
-            if node is not None:
-                integ = Internal.getValue(node)
-                if integ == 'explicit':
-                    C._rmVars(z, 'centers:Density_M1')
-                    C._rmVars(z, 'centers:VelocityX_M1')
-                    C._rmVars(z, 'centers:VelocityY_M1')
-                    C._rmVars(z, 'centers:VelocityZ_M1' )
-                    C._rmVars(z, 'centers:Temperature_M1')
-                    C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
+            integ = 'None'; nature = 'None'
+            n = Internal.getNodeFromName1(node, 'temporal_scheme')
+            if n is not None: integ = Internal.getValue(n)
+            n = Internal.getNodeFromName1(node, 'time_step_nature')
+            if n is not None: nature = Internal.getValue(n)
+            if integ == 'explicit' or nature == 'local':
+                C._rmVars(z, 'centers:Density_M1')
+                C._rmVars(z, 'centers:VelocityX_M1')
+                C._rmVars(z, 'centers:VelocityY_M1')
+                C._rmVars(z, 'centers:VelocityZ_M1' )
+                C._rmVars(z, 'centers:Temperature_M1')
+                C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
 
     # save
     if NP > 0: # mpi run
@@ -565,9 +577,6 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
                         graphN_={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
                         list_graph.append(graphN_)
                         i += 1
-
-                
-
                 #print graphID_[1]
             
             t = Cmpi.readZones(t, FILE, rank=rank)
@@ -655,16 +664,18 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
     for z in zones:
         node = Internal.getNodeFromName1(z, '.Solver#define')
         if node is not None:
-            node = Internal.getNodeFromName1(node, 'temporal_scheme')
-            if node is not None:
-                integ = Internal.getValue(node)
-                if integ == 'explicit':
-                    C._rmVars(z, 'centers:Density_M1')
-                    C._rmVars(z, 'centers:VelocityX_M1')
-                    C._rmVars(z, 'centers:VelocityY_M1')
-                    C._rmVars(z, 'centers:VelocityZ_M1' )
-                    C._rmVars(z, 'centers:Temperature_M1')
-                    C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
+            integ = 'None'; nature = 'None'
+            n = Internal.getNodeFromName1(node, 'temporal_scheme')
+            if n is not None: integ = Internal.getValue(n)
+            n = Internal.getNodeFromName1(node, 'time_step_nature')
+            if n is not None: nature = Internal.getValue(n)
+            if integ == 'explicit' or nature == 'local':
+                C._rmVars(z, 'centers:Density_M1')
+                C._rmVars(z, 'centers:VelocityX_M1')
+                C._rmVars(z, 'centers:VelocityY_M1')
+                C._rmVars(z, 'centers:VelocityZ_M1' )
+                C._rmVars(z, 'centers:Temperature_M1')
+                C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
     dtloc = Internal.getNodeFromName3(t2, '.Solver#dtloc')
     if dtloc is not None:
         node =  Internal.getNodeFromName1(t, 'TimeLevelMotion')
@@ -727,7 +738,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
     import Converter.PyTree as C
 
     graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
-    if mpirun == True: # mpi run
+    if mpirun: # mpi run
         import Converter.Mpi as Cmpi
         import Distributor2.PyTree as D2
         rank = Cmpi.rank; size = Cmpi.size
@@ -743,9 +754,9 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
                 procList  = D2.getProcList(t,  sort=True)
                 graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
             t = Cmpi.readZones(t, FILE, rank=rank)
-            zones=Internal.getZones(t)
+            zones = Internal.getZones(t)
             t = Cmpi.convert2PartialTree(t, rank=rank)
-            zones=Internal.getZones(t)
+            zones = Internal.getZones(t)
 
         else: # load 1 fichier par proc
             if graph:
@@ -837,16 +848,18 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
     for z in zones:
         node = Internal.getNodeFromName1(z, '.Solver#define')
         if node is not None:
-            node = Internal.getNodeFromName1(node, 'temporal_scheme')
-            if node is not None:
-                integ = Internal.getValue(node)
-                if integ == 'explicit':
-                    C._rmVars(z, 'centers:Density_M1')
-                    C._rmVars(z, 'centers:VelocityX_M1')
-                    C._rmVars(z, 'centers:VelocityY_M1')
-                    C._rmVars(z, 'centers:VelocityZ_M1' )
-                    C._rmVars(z, 'centers:Temperature_M1')
-                    C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
+            integ = 'None'; nature = 'None'
+            n = Internal.getNodeFromName1(node, 'temporal_scheme')
+            if n is not None: integ = Internal.getValue(n)
+            n = Internal.getNodeFromName1(node, 'time_step_nature')
+            if n is not None: nature = Internal.getValue(n)
+            if integ == 'explicit' or nature == 'local':
+                C._rmVars(z, 'centers:Density_M1')
+                C._rmVars(z, 'centers:VelocityX_M1')
+                C._rmVars(z, 'centers:VelocityY_M1')
+                C._rmVars(z, 'centers:VelocityZ_M1' )
+                C._rmVars(z, 'centers:Temperature_M1')
+                C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
 
     if dtloc is not None:
        node =  Internal.getNodeFromName1(t, 'TimeLevelMotion')
@@ -857,7 +870,7 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
        else: Internal.createUniqueChild(t, 'TimeLevelTarget', 'DataArray_t', value=dtloc[4])
 
     # save
-    if mpirun == True: # mpi run
+    if mpirun: # mpi run
         import Converter.Mpi as Cmpi
         if split == 'single':  # output in a single file
             FILE = directory+'/'+fileName+'.cgns'

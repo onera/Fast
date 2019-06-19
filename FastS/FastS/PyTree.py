@@ -46,7 +46,6 @@ varsM    = ['Density_M1']
 #==============================================================================
 # generation maillage pour tble
 #==============================================================================
-
 def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
     fasts._stretch(coord,nbp,x1,x2,dx1,dx2,ityp)
     return None
@@ -444,7 +443,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4]) 
     _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1) 
-   
+    if tc is not None: C._rmVars(tc, 'FlowSolution')
 
     #
     # initialisation Mut
@@ -458,12 +457,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolutionCenters__], fields=None, mode=None, init=True):
     #global  CACHELINE
     if  mode is not None:
-      if mode == -1: 
-        thread_numa = 0
-      else:
-        thread_numa = 1
-    else:                    
-      thread_numa = 0
+      if mode == -1: thread_numa = 0
+      else: thread_numa = 1
+    else: thread_numa = 0
 
     zones = Internal.getZones(t)
     for z in zones:
@@ -1676,7 +1672,7 @@ def _movegrid(t):
 #==============================================================================
 def createConvergenceHistory(t, nrec):
     """Create a node in tree to store convergence history."""
-    varsR   = [ 'RSD_L2','RSD_oo']
+    varsR   = ['RSD_L2','RSD_oo']
     bases   = Internal.getNodesFromType1(t, 'CGNSBase_t')
     curIt   = 0
     for b in bases:
@@ -1783,7 +1779,7 @@ def createStressNodes(t, BC=None, windows=None):
               if BC is not None:
                  bc = Internal.getNodeFromName1(z, "ZoneBC")
                  list_bc =[]
-                 if (bc is not None): list_bc = bc[2]
+                 if bc is not None: list_bc = bc[2]
               else:
                  list_bc =['window']
               ific    = 2
@@ -2026,7 +2022,7 @@ def setIBCData_zero(t, surf, dim=None):
   # Matrice de masquage (arbre d'assemblage)
   nbodies = len(bodies)
   BM = numpy.ones((1,nbodies),dtype=numpy.int32)
-  if dim == None:
+  if dim is None:
      sol= Internal.getNodeFromName1(zones[0],'FlowSolution#Centers')
      nk = Internal.getNodeFromName1(sol,'Density')[1].shape[2]
      if nk ==1 : dim = 2
