@@ -24,8 +24,8 @@ Cmpi.barrier()
 
 t,tc,ts,graph = Fast.load('t.cgns', 'tc.cgns', split='single')
 
-#print t
-#print tc
-#print ts
-#print 'procDict = ', graph['procDict']
-#print 'graphID = ', graph['graphID']
+#print(t)
+#print(tc)
+#print(ts)
+#print('procDict = ', graph['procDict'])
+#print('graphID = ', graph['graphID'])

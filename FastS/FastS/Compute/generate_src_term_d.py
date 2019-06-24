@@ -5,14 +5,14 @@ import shlex
 
 #  python generate_correction.py  repertoire_flux
 n = len(sys.argv)
-'''if (n != 2):
-    print 'Flux name folder is required as argument: python generate_flu.py  fluxFolder' 
+'''if n != 2:
+    print('Flux name folder is required as argument: python generate_flu.py  fluxFolder')
     sys.exit()
 
 dico= {}
 rep = sys.argv[1]
-if rep not in dico.keys():
-    print 'Flux option not described in the dictionnary' 
+if rep not in dico():
+    print('Flux option not described in the dictionnary')
     sys.exit()
 '''
 rep ='SA'
@@ -31,9 +31,9 @@ for model  in models:
         input_file  = rep_build+'/'+model+'.f'
         output_file = model
         output_rep  = rep
-        print'input  file', input_file
-        print'output file', output_file
-        print'output file', output_file
+        print('input  file', input_file)
+        print('output file', output_file)
+        print('output file', output_file)
 
         if model == 'vispalart':
           var_in  = 'rop'
@@ -104,7 +104,7 @@ for model  in models:
              if 'FastS/Compute/'+input_file in l: c_index = c
              c+=1
            c_index +=1
-           #print 'c_index flu', c_index, len(lines_srcs)
+           #print('c_index flu', c_index, len(lines_srcs))
            lines_srcs_beg = lines_srcs[0:c_index]
            lines_srcs_end = lines_srcs[c_index:]
            b = lines_srcs_beg + ["            'FastS/Compute/"+tapenade_file+"',\n"] + lines_srcs_end

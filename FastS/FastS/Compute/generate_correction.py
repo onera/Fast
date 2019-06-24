@@ -14,7 +14,7 @@ dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','SA','euler']
 dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3']}
 
 rep = sys.argv[1]
-if rep not in dico.keys():
+if rep not in dico:
     print('Flux option not described in the dictionnary')
     sys.exit()
 

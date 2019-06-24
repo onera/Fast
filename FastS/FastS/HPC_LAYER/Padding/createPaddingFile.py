@@ -31,13 +31,13 @@ Data = np.empty(1000*1000+2,dtype='int32')
 Data2D = np.empty([1000,1000],dtype='int32')
 
 for k in data.keys():
-    print "Case:",k
+    print("Case:",k)
     i1 = int(data[k][1,0,0])
     i2 = int(data[k][1,-1,-1])
     j1 = int(data[k][2,0,0])
     j2 = int(data[k][2,-1,-1])
-    print "i1, i2",i1,i2
-    print "j1, j2",j1,j2    
+    print("i1, i2",i1,i2)
+    print("j1, j2",j1,j2)    
     Data2D[i1:i2+1,j1:j2+1] = data[k][5,:,:].astype('int32')
 
 Data[0] = 1000

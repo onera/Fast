@@ -3,8 +3,8 @@ import sys
 
 #  python generate_flu.py  repertoire_flux
 n = len(sys.argv)
-if (n != 2):
-    print 'Flux name folder is required as argument: python generate_flu.py  fluxFolder' 
+if n != 2:
+    print('Flux name folder is required as argument: python generate_flu.py  fluxFolder')
     sys.exit()
 
 dico= {}
@@ -14,8 +14,8 @@ dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','SA','euler']
 dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3']}
 
 rep = sys.argv[1]
-if rep not in dico.keys():
-    print 'Flux option not described in the dictionnary' 
+if rep not in dico:
+    print('Flux option not described in the dictionnary')
     sys.exit()
 
 Model      = dico[ rep ]['model']

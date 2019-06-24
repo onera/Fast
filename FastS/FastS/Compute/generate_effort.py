@@ -3,8 +3,8 @@ import sys
 
 #  python generate_effort.py  repertoire_flux
 n = len(sys.argv)
-if (n != 2):
-    print 'Flux name folder is required as argument: python generate_flu.py  fluxFolder' 
+if n != 2:
+    print('Flux name folder is required as argument: python generate_flu.py  fluxFolder' )
     sys.exit()
 
 dico= {}
@@ -14,8 +14,8 @@ dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','euler'], 'Ty
 dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3']}
 
 rep = sys.argv[1]
-if rep not in dico.keys():
-    print 'Flux option not described in the dictionnary' 
+if rep not in dico:
+    print('Flux option not described in the dictionnary')
     sys.exit()
 
 Model      = dico[ rep ]['model']
@@ -78,7 +78,7 @@ for ale in TypeMotion:
 
                         fout = rep+'/'+typezone+'/'+'eff_'+flux+ale1+eq+'_'+slope+'_'+typezone+'.for'
                         fo = open(fout,"w")                  # ouvrir le fichier de sortie
-                        print rep,' Scheme: file',fout, 'generated'
+                        print(rep,' Scheme: file',fout, 'generated')
 
                         for i in range( len(lines) ):
                              lines[i]=lines[i].replace("FLUX_CONV", rep)

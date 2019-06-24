@@ -309,7 +309,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
                 no += 1
             if ts != []: ts = Internal.merge(ts)
             else: ts = None
-    if cartesian: 
+    if cartesian: # peut etre inutile (fait dans convert2File?)
         import Compressor.PyTree as Compressor
         Compressor._uncompressCartesian(t)
     
@@ -509,7 +509,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
             if t != []: t = Internal.merge(t)
             else: t = None
 
-    if cartesian:
+    if cartesian: # peut etre inutile (fait dans convert2File?)
         import Compressor.PyTree as Compressor
         Compressor._uncompressCartesian(t)
         

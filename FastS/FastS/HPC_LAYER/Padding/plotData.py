@@ -52,17 +52,17 @@ minJ = 1000
 maxJ = 0
 
 for k in data.keys():
-    print "Case:",k
-    print "Shape ",data[k].shape
-    print "imin,imax ",data[k][1,0,0],data[k][1,-1,-1]
-    print "jmin,jmax ",data[k][2,0,0],data[k][2,-1,-1]
-    if(data[k][1,0,0]<=minI):  minI=data[k][1,0,0]
-    if(data[k][1,-1,-1]>=maxI):maxI=data[k][1,-1,-1]
-    if(data[k][2,0,0]<=minJ):  minJ=data[k][2,0,0]
-    if(data[k][2,-1,-1]>=maxJ):maxJ=data[k][2,-1,-1]
+    print("Case:",k))
+    print("Shape ",data[k].shape)
+    print("imin,imax ",data[k][1,0,0],data[k][1,-1,-1])
+    print("jmin,jmax ",data[k][2,0,0],data[k][2,-1,-1])
+    if data[k][1,0,0]<=minI:  minI=data[k][1,0,0]
+    if data[k][1,-1,-1]>=maxI:maxI=data[k][1,-1,-1]
+    if data[k][2,0,0]<=minJ:  minJ=data[k][2,0,0]
+    if data[k][2,-1,-1]>=maxJ:maxJ=data[k][2,-1,-1]
 
-print "Min Max I",minI,maxI
-print "Min Max J",minJ,maxJ
+print("Min Max I",minI,maxI)
+print("Min Max J",minJ,maxJ)
 
 #------------------------------- Set figure properties ---------------------
 
@@ -160,7 +160,7 @@ if(Iplt+Jplt==0):
             plt.savefig('effectivesize_2D_noshift_'+k+'.png')
             plt.cla()
     else:
-        print "NRY !!! "
+        print("NRY !!! ")
 
 else:
     kcolors = 5
@@ -169,10 +169,10 @@ else:
             kcolors = kcolors + 20
             ipos = np.argwhere(X[k][:,0]==Iplt)
             if len(ipos) == 0: 
-                print "I position not found for case "+k+", X is ",X[k][:,0]
+                print("I position not found for case "+k+", X is ",X[k][:,0])
                 sys.exit()                
             ipos = np.squeeze(ipos)
-            print map2d[k][ipos,:]
+            print(map2d[k][ipos,:])
             plt.plot(Y[k][ipos,:],map2d[k][ipos,:],                                                                                                             
                  marker='o',                                                                                                                    
                  markersize=10,                                                                                                                 
@@ -186,7 +186,7 @@ else:
             kcolors = kcolors + 20
             jpos = np.argwhere(Y[k][0,:]==Jplt)
             if len(jpos) == 0: 
-                print "J position not found for case "+k+", Y is ",Y[k][0,:]
+                print("J position not found for case "+k+", Y is ",Y[k][0,:])
                 sys.exit()                
             jpos = np.squeeze(jpos)
             plt.plot(X[k][:,jpos],map2d[k][:,jpos],                                                                                                             

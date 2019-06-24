@@ -5,14 +5,14 @@ import shlex
 
 #  python generate_correction.py  repertoire_flux
 n = len(sys.argv)
-'''if (n != 2):
-    print 'Flux name folder is required as argument: python generate_flu.py  fluxFolder' 
+'''if n != 2:
+    print(Flux name folder is required as argument: python generate_flu.py  fluxFolder')
     sys.exit()
 
 dico= {}
 rep = sys.argv[1]
 if rep not in dico.keys():
-    print 'Flux option not described in the dictionnary' 
+    print('Flux option not described in the dictionnary') 
     sys.exit()
 '''
 rep1 = '/FastS/BC'
@@ -46,9 +46,9 @@ for model  in models:
         input_file  = rep_build+'/'+model+'.f'
         output_file = model
         output_rep  = rep
-        print'input  file', input_file
-        print'output file', output_file
-        print'output file', output_file
+        print('input  file', input_file)
+        print('output file', output_file)
+        print('output file', output_file)
 
         var_in  = 'rop'
         var_out = 'rop'
@@ -63,7 +63,7 @@ for model  in models:
         tapenade_file = rep1+'/'+output_file+'_d.for'
         tapenade_file1= '../..'+tapenade_file
         fi= open(tapenade_file1,'r')
-        print 'fich=', tapenade_file1
+        print('fich=', tapenade_file1)
         lines = fi.readlines()
         fi.close()
         #supression operation sur drodm
@@ -103,7 +103,7 @@ for model  in models:
              if 'FastS/BC/'+input_file in l: c_index = c
              c+=1
            c_index +=1
-           #print 'c_index flu', c_index, len(lines_srcs)
+           #print('c_index flu', c_index, len(lines_srcs))
            lines_srcs_beg = lines_srcs[0:c_index]
            lines_srcs_end = lines_srcs[c_index:]
            b = lines_srcs_beg + ["            '"+tapenade_file[1:]+"',\n"] + lines_srcs_end

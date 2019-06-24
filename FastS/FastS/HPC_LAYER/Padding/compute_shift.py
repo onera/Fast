@@ -42,9 +42,9 @@ timeshift[:] = 1000
 for sizeI in xrange(Imin,Imax,1):
     for sizeJ in xrange(Jmin,Jmax,1):
 
-        print "#########################"+'\n'
-        print "Sizes: ",sizeI,sizeJ,sizeK,'\n'
-        print "#########################"+'\n'
+        print("#########################"+'\n')
+        print("Sizes: ",sizeI,sizeJ,sizeK,'\n')
+        print("#########################"+'\n')
 
         scale=1.0/(sizeK-5)/(sizeI-5)/(sizeJ-5)/3.0*int(Nbthread)
 
@@ -54,15 +54,15 @@ for sizeI in xrange(Imin,Imax,1):
 
         for shift in shifttab:
 
-            print "#########################"+'\n'
-            print "Shift is : ",shift,        '\n'
-            print "#########################"+'\n'
+            print("#########################"+'\n')
+            print("Shift is : ",shift,        '\n')
+            print("#########################"+'\n')
 
-            print shift,(sizeI-5)*(sizeJ-5)
+            print(shift,(sizeI-5)*(sizeJ-5))
             if shift >= (sizeI-5)*(sizeJ-5): 
                 itshift=itshift+1
                 continue
-            if ( (sizeI <= 40) or (sizeJ <= 40)):
+            if ((sizeI <= 40) or (sizeJ <= 40)):
                 if shift >= 100:
                     itshift=itshift+1
                     continue
@@ -103,16 +103,16 @@ for sizeI in xrange(Imin,Imax,1):
                 t0=timeit.default_timer()
                 FastS._compute(t, metrics, 1, tc=None, NIT=40)
                 t1=timeit.default_timer()
-                print "Compute time",(t1-t0)*scale/40
+                print("Compute time",(t1-t0)*scale/40)
                 time20[it]=(t1-t0)*scale/40
 #                if (it%10 == 0):
 #                    FastS.display_temporal_criteria(t, metrics, it)                        
-#                    print '- %d - %f'%(it, time)
+#                    print('- %d - %f'%(it, time))
 #                    time += timeStep
    #         FastS.itt('pause')
             del(t,metrics,numz,numb)
             t11=timeit.default_timer()
-            print "Compute time all",(t11-t00)/40
+            print("Compute time all",(t11-t00)/40)
            
             for a in FastS.HOOK: del(a)
             FastS.FIRST_IT = 0
