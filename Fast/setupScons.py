@@ -21,20 +21,35 @@ Dist.writeSetupCfg()
 # Test if kcore exists =======================================================
 (kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
 
+# Test if connector exists =======================================================
+(connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
+
 from KCore.config import *
+
+# Test if libmpi exists ======================================================
+(mpi, mpiIncDir, mpiLibDir) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
 
 # Compilation des fortrans ====================================================
 prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir]
-libraries = ["fast", "kcore"]
+libraryDirs = ["build/"+prod, kcoreLibDir,connectorLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir,connectorIncDir]
+libraries = ["fast", "kcore","connector"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
+
+ADDITIONALCPPFLAGS=[]
+if mpi:
+    libraryDirs.append(mpiLibDir)
+    includeDirs.append(mpiIncDir)
+    ADDITIONALCPPFLAGS = ['-D_MPI']
+    if Dist.getSystem()[0] == 'mingw': libraries.append('msmpi')
+    else:
+      libraries.append('mpi');# libraries.append('mpi_cxx')
     
 # Extensions ==================================================================
 listExtensions = []

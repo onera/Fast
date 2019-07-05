@@ -39,7 +39,7 @@ from KCore.config import *
 
 # Setting libraryDirs and libraries ===========================================
 libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, fastLibDir, connectorLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, connectorIncDir, pythonIncDir]
+includeDirs = [numpyIncDir, kcoreIncDir, connectorIncDir, pythonIncDir,fastIncDir]
 libraries = ["kcore", "fast","connector"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
@@ -126,7 +126,7 @@ if f77compiler == 'ifort':
    if   (cacheLine != 1 ): f77Args += ' -align array%dbyte '%cacheLine
    if   (simd == 'SSE4.2' ): f77Args += ' -xSSE4.2 '
    elif (simd == 'AVX2'   ): f77Args += ' -xCORE-AVX2 '
-   elif (simd == 'AVX512' ): f77Args += ' -xCORE-AVX512 '
+   elif (simd == 'AVX512' ): f77Args += ' -xCORE-AVX512 -qopt-zmm-usage=high'
    elif (simd == 'MIC'    ): f77Args += ' -xMIC-AVX512 '
    else:  f77Args += ' -xHost '
 

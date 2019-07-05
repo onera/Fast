@@ -170,7 +170,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
 #==============================================================================
 #def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
-def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1, list_graph=None, tps_calcul=None, tps_com_transferts=None):
+def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, list_graph=None, tps_calcul=None, tps_com_transferts=None):
     #if graph is not None:
     #    procDict  = graph['procDict']
     #    graphID   = graph['graphID']
@@ -360,15 +360,13 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
               if hook1['neq_max'] == 5: varType = 2
               else                    : varType = 21
 
-              bcType = PyTree.HOOKIBC[0]; Gamma=PyTree.HOOKIBC[1]; Cv=PyTree.HOOKIBC[2]; Mus=PyTree.HOOKIBC[3]; Cs=PyTree.HOOKIBC[4]; Ts=PyTree.HOOKIBC[5]
-       
               for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
               # #recuperation Nb pas instationnaire dans tc
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
               Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
-                                        nstep, nitmax, rk, exploc, num_passage, bcType=bcType, varType=varType, compact=1,
-                                        graph=graphIBCD, procDict=procDict, Gamma=Gamma, Cv=Cv, MuS=Mus, Cs=Cs, Ts=Ts)
+                                        nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1,
+                                        graph=graphIBCD, procDict=procDict)
               type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
               Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                         nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict)
@@ -458,25 +456,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         for fields in varnames:
             _compact(zone, fields=fields, mode=count)
 
-    #t = createPrimVars(t, ompmode, rmConsVars, adjoint)
-
-    zones = Internal.getZones(t) # car create primvar rend zones caduc
-
-    #Allocation HOOKIBC
-    if PyTree.HOOKIBC is None: PyTree.HOOKIBC = FastI.getIBCInfo__(t)
-
-    if PyTree.HOOK["neq_max"] == 5: varType = 2
-    else                          : varType = 21
-
-    PyTree.HOOK['param_int_ibc'][0] = varType
-    PyTree.HOOK['param_int_ibc'][1] = PyTree.HOOKIBC[0]
-    PyTree.HOOK['param_real_ibc'][0]= PyTree.HOOKIBC[1]
-    PyTree.HOOK['param_real_ibc'][1]= PyTree.HOOKIBC[2]
-    PyTree.HOOK['param_real_ibc'][2]= PyTree.HOOKIBC[3]
-    PyTree.HOOK['param_real_ibc'][3]= PyTree.HOOKIBC[4]
-    PyTree.HOOK['param_real_ibc'][4]= PyTree.HOOKIBC[5]
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
+    zones = Internal.getZones(t) # car create primvar rend zones caduc
     c   = 0
     ale = False
     for z in zones:
@@ -496,7 +478,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if ale == True and infos_ale is not None:
         print("ale actif. Teta et tetap=", infos_ale)
         teta = infos_ale[0];  tetap = infos_ale[1]
-        _motionlaw(t, teta, tetap)
+        FastI._motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
     #
     # Compactage arbre transfert

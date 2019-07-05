@@ -1,8 +1,8 @@
 # include "fastS.h"
+# include "fast.h"
 # include "param_solver.h"
 # include "connector.h"
 # include <string.h>
-//# include <CMP/include/pending_message_container.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -13,7 +13,6 @@
 
 using namespace K_FLD;
 using namespace std;
-using namespace K_CONNECTOR;
 
 #undef TimeShow
 //#define TimeShow
@@ -42,7 +41,7 @@ E_Int K_FASTS::gsdr3(
   E_Int& nb_pulse     , 
   E_Float& temps,
   E_Int* ipt_ijkv_sdm  ,
-  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int* ndimdx_transfer, E_Float* timer_omp,
+  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int& vartype, E_Float* timer_omp,
   E_Int*     iptludic  , E_Int*   iptlumax      ,
   E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom  ,
   E_Float* ipt_VectG      , E_Float* ipt_VectY   , E_Float** iptssor       , E_Float** iptssortmp    , E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
@@ -58,8 +57,9 @@ E_Int K_FASTS::gsdr3(
   E_Float**  iptventi        , E_Float**  iptventj        , E_Float** iptventk     ,
   E_Float**& iptrdm          ,
   E_Float*   iptroflt        , E_Float*   iptroflt2       , E_Float*  iptwig       , E_Float*   iptstat_wig  ,
-  E_Float*   iptdrodm        , E_Float*   iptcoe          , E_Float*  iptrot       , E_Float**& iptdelta , E_Float**& iptro_res, E_Float**& iptdrodm_transfer,
-  E_Int*&    param_int_ibc   , E_Float*&  param_real_ibc  , E_Int*&   param_int_tc , E_Float*& param_real_tc, E_Int*& linelets_int, E_Float*& linelets_real, E_Int& taille_tabs, E_Float*& stock, E_Float*& drodmstock, E_Float*& constk, E_Float** iptsrc)
+  E_Float*   iptdrodm        , E_Float*   iptcoe          , E_Float*  iptrot       , E_Float**& iptdelta     , E_Float**& iptro_res, E_Float**& iptdrodm_transfer,
+  E_Int*&    param_int_tc    , E_Float*& param_real_tc    , E_Int*& linelets_int   , E_Float*& linelets_real , 
+  E_Int&     taille_tabs     , E_Float*& stock            , E_Float*& drodmstock   , E_Float*& constk        , E_Float** iptsrc)
 
 
  {
@@ -451,7 +451,6 @@ if(lexit_lu ==0 && layer_mode==1)
 
   //Swap (call to setInterpTransfer)
 
-  E_Float Pr = param_real[0][PRANDT];
   //E_Float trans_begin = omp_get_wtime();
 
 
@@ -461,8 +460,10 @@ E_Float tmps;
     
   if (param_int[0][EXPLOC] == 0)
     {
-      setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,
-                          param_int_ibc, param_real_ibc, linelets_int, linelets_real, Pr, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
+      //setInterpTransfersFastS(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+      //                        linelets_int, linelets_real, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
+      K_FAST::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+                                   linelets_int, linelets_real, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
     }//test exploc==0
 
  
@@ -484,8 +485,10 @@ E_Float tmps;
 	   } 
        }
 
-     setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,
-                          param_int_ibc, param_real_ibc, linelets_int, linelets_real, Pr, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
+      //setInterpTransfersFastS(iptro_CL    , vartype      , param_int_tc, param_real_tc, param_int    , param_real,
+      //                       linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
+      K_FAST::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+                             linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
 
 
      recup3para_c(iptro, param_int_tc, param_real_tc, param_int, stock, nitcfg, omp_mode, taille_tabs, nidom);
@@ -493,8 +496,10 @@ E_Float tmps;
      numpassage=2;
      if (nitcfg%2==0)
       {
-     	setInterpTransfersFastS(iptro_CL, ndimdx_transfer, param_int_tc, param_real_tc ,
-                        param_int_ibc, param_real_ibc, linelets_int, linelets_real, Pr, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
+        //setInterpTransfersFastS(iptro_CL    , vartype      , param_int_tc, param_real_tc, param_int    , param_real,
+        //                        linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
+        K_FAST::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+                               linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
       }
  
 

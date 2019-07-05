@@ -1220,8 +1220,8 @@ E_Int K_FASTS::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin
                    { //K vers J 
                     dim_loc = cells_tg/(nijk[0]*nijk[2]/topo[1]);
                     res     = nijk[1]-(topo[2]-1)*dim_loc;
-                     printf("JJJ %d %d %d %d %d \n", topo[0],topo[1],topo[2], res, dim_loc);
-                    if(res >= lmin && dim_loc >= lmin ){ E_Int tmp=topo[2]; topo[2]=topo[1]; topo[1]=tmp; printf("cou1 \n"); return test=1; }
+                     //printf("JJJ %d %d %d %d %d \n", topo[0],topo[1],topo[2], res, dim_loc);
+                    if(res >= lmin && dim_loc >= lmin ){ E_Int tmp=topo[2]; topo[2]=topo[1]; topo[1]=tmp; /*printf("cou1 \n");*/ return test=1; }
                    }
     
     //on test si on peut intervertir la direction J vers I et K vers J
@@ -1231,7 +1231,7 @@ E_Int K_FASTS::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin
     if(res >= lmin && dim_loc >= lmin ){ //K vers J 
                     dim_loc = cells_tg/(nijk[0]*nijk[2]/topo[1]);
                     res     = nijk[1]-(topo[2]-1)*dim_loc;
-                    if(res >= lmin && dim_loc >= lmin ){ topo[0]=topo[1];  topo[1]= topo[2]; printf("cou2 \n"); return test=1;}
+                    if(res >= lmin && dim_loc >= lmin ){ topo[0]=topo[1];  topo[1]= topo[2]; /*printf("cou2 \n");*/ return test=1;}
                    }
 
     //on test si on peut intervertir la direction J vers J et K vers I
@@ -1241,7 +1241,7 @@ E_Int K_FASTS::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin
     if(res >= lmin && dim_loc >= lmin){ //K vers I 
                     dim_loc = cells_tg/(nijk[1]*nijk[2]);
                     res     = nijk[0]-(topo[2]-1)*dim_loc;
-                    if(res >= lmin && dim_loc >= lmin ){ topo[0]=topo[2]; topo[2]=1; printf("cou3 \n"); return test=1;}
+                    if(res >= lmin && dim_loc >= lmin ){ topo[0]=topo[2]; topo[2]=1; /*printf("cou3 \n");*/ return test=1;}
                    }
   }
   //

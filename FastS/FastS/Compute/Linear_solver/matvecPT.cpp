@@ -68,23 +68,17 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
  // 
  // 
  //
- PyObject* pyParam_int_ibc; PyObject* pyParam_real_ibc; PyObject* pyParam_int_tc;PyObject* pyParam_real_tc; PyObject* iskipArray;
+ PyObject* pyParam_int_tc;PyObject* pyParam_real_tc; PyObject* iskipArray;
  PyObject* pyLinlets_int; PyObject* pyLinlets_real; 
- FldArrayI* param_int_ibc; FldArrayI* param_int_tc;  E_Int*  ipt_param_int_tc ; FldArrayI* iskip_lu;
- FldArrayF* param_real_tc; FldArrayF* param_real_ibc;
+ FldArrayI* param_int_tc;  E_Int*  ipt_param_int_tc ; FldArrayI* iskip_lu;
+ FldArrayF* param_real_tc;
  FldArrayF* linelets_real; FldArrayI* linelets_int;
- E_Int*   ipt_param_int_ibc; E_Int* ipt_iskip_lu;
- E_Float* ipt_param_real_ibc; E_Float* ipt_param_real_tc;
+ E_Int* ipt_iskip_lu;
+ E_Float* ipt_param_real_tc;
  E_Float* ipt_linelets_real; E_Int* ipt_linelets_int;
 
  E_Int lssiter_loc; E_Int lexit_lu;  E_Int lssiter_verif;
  E_Int it_target = iptdtloc[4];
-
- pyParam_int_ibc = PyDict_GetItemString(work,"param_int_ibc");
- pyParam_real_ibc = PyDict_GetItemString(work,"param_real_ibc");
-
- K_NUMPY::getFromNumpyArray(pyParam_int_ibc, param_int_ibc, true); ipt_param_int_ibc = param_int_ibc->begin();
- K_NUMPY::getFromNumpyArray(pyParam_real_ibc, param_real_ibc, true); ipt_param_real_ibc = param_real_ibc->begin();
 
  pyParam_int_tc = PyDict_GetItemString(work,"param_int_tc");
  pyParam_real_tc= PyDict_GetItemString(work,"param_real_tc"); 
@@ -184,8 +178,6 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
   E_Int neq_max       = 5;
   E_Int iorder_flt    =10;
   E_Float temps;
-
-  FldArrayI tab_ndimdx_transfer(nidom*3);  E_Int* ndimdx_transfer=  tab_ndimdx_transfer.begin();
 
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
@@ -301,11 +293,6 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
     if (ipt_param_int[nd][ IFLAGFLT ]    == 1     ) kfiltering = 1;
     if (ipt_param_int[nd][ IFLOW ] >= 2 &&  ipt_param_int[nd][ ILES ] == 1 && ipt_param_int[nd][ IJKV+ 2] > 1) kles = 1;
 
-    //initialisation tableau de travail pour transfert
-    ndimdx_transfer[nd]          = ipt_param_int[nd][ NDIMDX  ];
-    ndimdx_transfer[nd + nidom]  = ipt_param_int[nd][ NIJK    ];
-    ndimdx_transfer[nd + nidom*2]= ipt_param_int[nd][ NIJK +1 ];
-
      //Recherche domaine a filtrer
      if (ipt_param_int[nd][ IFLAGFLT ] == 1) 
           { kfiltering     = 1; 
@@ -316,6 +303,10 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
   } // boucle zone
   
 //  // Reservation tableau travail temporaire pour calcul du champ N+1
+
+  E_Int vartype = 2;
+  if(neq_max == 6){ vartype = 21;}
+
 
   /// Tableau pour filtrage Visbal
   if (kfiltering == 0) neq_max = 0;
@@ -469,7 +460,7 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
             nb_pulse           ,                
             temps              ,
             ipt_ijkv_sdm       , 
-            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, ndimdx_transfer, timer_omp,
+            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, vartype, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
             ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size, ipt_drodmd, 
@@ -487,7 +478,7 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
             iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta      , iptro_res,
             iptdrodm_transfer  ,
-            ipt_param_int_ibc  , ipt_param_real_ibc     , ipt_param_int_tc  , ipt_param_real_tc , ipt_linelets_int, ipt_linelets_real);
+            ipt_param_int_tc   , ipt_param_real_tc , ipt_linelets_int, ipt_linelets_real);
 
   delete [] iptx; delete [] ipt_param_int;
 
@@ -504,9 +495,6 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
 
   if (pyLinlets_int  != Py_None) { RELEASESHAREDN( pyLinlets_int , linelets_int ); }
   if (pyLinlets_real != Py_None) { RELEASESHAREDN( pyLinlets_real, linelets_real); }
-
-  RELEASESHAREDN( pyParam_int_ibc , param_int_ibc);
-  RELEASESHAREDN( pyParam_real_ibc, param_real_ibc);
 
   RELEASEHOOK(hook)
 

@@ -112,4 +112,6 @@ for it in range(nit):
         FastS.display_temporal_criteria(t, metrics, it)
     times += timeStep
 
+Internal._rmNodesByName(t, '.Solver#Param')
+Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)

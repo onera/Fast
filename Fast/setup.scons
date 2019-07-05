@@ -26,17 +26,34 @@ installPath = Dist.getInstallPath(prefix)
 # Test if kcore exists =======================================================
 (kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
 
+# Test if connector exists ==================================================
+(connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
+
+# Test if libmpi exists ======================================================
+(mpi, mpiIncDir, mpiLibDir) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
+
 from KCore.config import *
 
 # Setting libraryDirs and libraries ===========================================
-libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, pythonIncDir]
-libraries = ["kcore"]
+libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, connectorLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir, connectorIncDir, pythonIncDir]
+libraries = ["kcore","connector"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 
+print 'mpi', mpi
+if mpi:
+    libraryDirs.append(mpiLibDir)
+    includeDirs.append(mpiIncDir)
+    ADDITIONALCPPFLAGS = ['-D_MPI']
+else:	       
+    ADDITIONALCPPFLAGS = []
+
+if mpi: libraries.append('mpi')
+
+print 'includeDir', includeDirs
 # Env =========================================================================
 import srcs
 if Dist.getSystem()[0] == 'mingw': tools = ['mingw']
@@ -50,7 +67,10 @@ env = Environment(tools=tools, CC=cc, CXX=cxx, AR=AR, CFLAGS=[], CXXFLAGS=[],
                   LINKFLAGS=Dist.getLinkArgs(),
                   ENV=Dist.getEnvForScons())
 env.Replace(CPPPATH=["Fast"]+additionalIncludePaths+includeDirs)
-env.Replace(CPPFLAGS=Dist.getCppArgs())
+
+# Pre processing du C
+cppArgs = Dist.getCppArgs()+['-g']
+env.Replace(CPPFLAGS=cppArgs+ADDITIONALCPPFLAGS)
 
 env = Dist.createFortranBuilder(env, [kcoreIncDir])
 ppf = Dist.createFortranFiles(env, srcs)

@@ -80,14 +80,12 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
  // 
  // 
  //
- PyObject* pyParam_int_ibc; PyObject* pyParam_real_ibc; PyObject* pyParam_int_tc;PyObject* pyParam_real_tc; PyObject* iskipArray;
+ PyObject* pyParam_int_tc;PyObject* pyParam_real_tc; PyObject* iskipArray;
  PyObject* pyLinlets_int; PyObject* pyLinlets_real; 
- FldArrayI* param_int_ibc; FldArrayI* param_int_tc;  E_Int*  ipt_param_int_tc ; FldArrayI* iskip_lu;
- FldArrayF* param_real_tc; FldArrayF* param_real_ibc;
- FldArrayF* linelets_real; FldArrayI* linelets_int;
- E_Int*   ipt_param_int_ibc; E_Int* ipt_iskip_lu;
- E_Float* ipt_param_real_ibc; E_Float* ipt_param_real_tc;
- E_Float* ipt_linelets_real; E_Int* ipt_linelets_int;
+ FldArrayI* param_int_tc;  FldArrayI* iskip_lu;  FldArrayI* linelets_int;
+ FldArrayF* param_real_tc; FldArrayF* linelets_real;
+ E_Int* ipt_iskip_lu;  E_Int*  ipt_param_int_tc ;
+ E_Float* ipt_param_real_tc; E_Float* ipt_linelets_real; E_Int* ipt_linelets_int;
 
  E_Int lssiter_loc; E_Int lexit_lu;  E_Int lssiter_verif;
  E_Int it_target = iptdtloc[4];
@@ -97,14 +95,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
  if(nitrun % iptdtloc[1] == 0 || nitrun == 1) lcfl =1;
 
  if( layer_mode ==1)
-
  {
-    pyParam_int_ibc = PyDict_GetItemString(work,"param_int_ibc");
-    pyParam_real_ibc = PyDict_GetItemString(work,"param_real_ibc");
-
-    K_NUMPY::getFromNumpyArray(pyParam_int_ibc, param_int_ibc, true); ipt_param_int_ibc = param_int_ibc->begin();
-    K_NUMPY::getFromNumpyArray(pyParam_real_ibc, param_real_ibc, true); ipt_param_real_ibc = param_real_ibc->begin();
-
     pyParam_int_tc = PyDict_GetItemString(work,"param_int_tc");
     pyParam_real_tc= PyDict_GetItemString(work,"param_real_tc"); 
 
@@ -226,8 +217,6 @@ else
   E_Int iorder_flt    =10;
   E_Float temps;
 
-
-  FldArrayI tab_ndimdx_transfer(nidom*3);  E_Int* ndimdx_transfer=  tab_ndimdx_transfer.begin();
 
   for (E_Int nd = 0; nd < nidom; nd++)
   {
@@ -360,11 +349,6 @@ else
     if (ipt_param_int[nd][ IFLAGFLT ]    == 1     ) kfiltering = 1;
     if (ipt_param_int[nd][ IFLOW ] >= 2 &&  ipt_param_int[nd][ ILES ] == 1 && ipt_param_int[nd][ IJKV+ 2] > 1) kles = 1;
 
-    //initialisation tableau de travail pour transfert
-    ndimdx_transfer[nd]          = ipt_param_int[nd][ NDIMDX  ];
-    ndimdx_transfer[nd + nidom]  = ipt_param_int[nd][ NIJK    ];
-    ndimdx_transfer[nd + nidom*2]= ipt_param_int[nd][ NIJK +1 ];
-
      //Recherche domaine a filtrer
      if (ipt_param_int[nd][ IFLAGFLT ] == 1) 
           { kfiltering     = 1; 
@@ -374,7 +358,9 @@ else
           }
   } // boucle zone
   
-
+  //on determine le type de variable pour les transferts match,...
+  E_Int vartype = 2;
+  if(neq_max == 6){ vartype = 21;}
 
 //  // Reservation tableau travail temporaire pour calcul du champ N+1
 
@@ -582,7 +568,7 @@ else
             nb_pulse           ,                
             temps              ,
             ipt_ijkv_sdm       , 
-            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, ndimdx_transfer, timer_omp,
+            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, vartype, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
             ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size , ipt_drodmd, 
@@ -600,7 +586,7 @@ else
             iptrdm             ,
             iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta         , iptro_res, iptdrodm_transfer  ,
-            ipt_param_int_ibc  , ipt_param_real_ibc, ipt_param_int_tc , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real,
+            ipt_param_int_tc   , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real,
             taille_tabs        , iptstk           , iptdrodmstk       , iptcstk          , iptsrc);
 
 
@@ -643,7 +629,6 @@ else
                ipt_cfl_zones[nd][1] = min( ipt_cfl_zones[nd][1], ipt_cfl_thread[1]);
                ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]+ ipt_cfl_thread[2];
               }
-	   //cout << ipt_cfl_zones[nd][2] << endl;
            ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]/scale;
            //printf("cpPT cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[nd][0],ipt_cfl_zones[nd][1],ipt_cfl_zones[nd][2]);
          }
@@ -657,7 +642,6 @@ else
 	       if (nstep%cycl == 0)
 		 {
 		   ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]/float(ipt_param_int[nd][LEVEL]);
-	     //cout << "zone " << nd <<" "<< ipt_param_real[nd][TEMPS] << endl;
 		 }
 	     }
 	 }
@@ -707,9 +691,6 @@ else
     if (pyLinlets_real != Py_None) { RELEASESHAREDN( pyLinlets_real, linelets_real); }
 
     if(lcfl ==1) RELEASESHAREDN( iskipArray, iskip_lu);
-
-    RELEASESHAREDN( pyParam_int_ibc , param_int_ibc);
-    RELEASESHAREDN( pyParam_real_ibc, param_real_ibc);
   }
 
   RELEASEHOOK(hook)

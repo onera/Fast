@@ -7,7 +7,6 @@ __version__ = FastS.__version__
 FIRST_IT = 0
 OMP_MODE = 0
 HOOK     = None
-HOOKIBC  = None
 
 import numpy
 import os
@@ -55,6 +54,7 @@ def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
 def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
+#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
     """Compute a given number of iterations."""
     global FIRST_IT, HOOK
 
@@ -285,7 +285,7 @@ def _init_metric(t, metrics, hook, omp_mode):
 def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None):
     """Perform necessary operations for the solver to run."""
 
-    global FIRST_IT, HOOK, HOOKIBC
+    global FIRST_IT, HOOK
     # Get omp_mode
     ompmode = OMP_MODE
     node = Internal.getNodeFromName2(t, '.Solver#define')
@@ -353,22 +353,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     zones = Internal.getZones(t) # car create primvar rend zones caduc
 
-
-    #Allocation HOOKIBC et mise a jour des infos pour IBC depuis fonction C
-    if HOOKIBC is None: HOOKIBC = FastI.getIBCInfo__(t)
-
     if HOOK["neq_max"] == 5: varType = 2
     else                   : varType = 21
-
-
-    HOOK['param_int_ibc'][0] = varType
-    HOOK['param_int_ibc'][1] = HOOKIBC[0]
-    HOOK['param_real_ibc'][0]= HOOKIBC[1]
-    HOOK['param_real_ibc'][1]= HOOKIBC[2]
-    HOOK['param_real_ibc'][2]= HOOKIBC[3]
-    HOOK['param_real_ibc'][3]= HOOKIBC[4]
-    HOOK['param_real_ibc'][4]= HOOKIBC[5]
-    
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     c   = 0
@@ -820,13 +806,11 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
               if hook1["neq_max"] == 5: varType = 2
               else                    : varType = 21
 
-              bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
-
               for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
-              Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, bcType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, Gamma,Cv,Mus,Cs,Ts)#,timecount)
+              Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
 
        #apply BC
        #t0=timeit.default_timer()
@@ -2225,7 +2209,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
 #==============================================================================
 def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
 
-    global FIRST_IT, HOOK, HOOKIBC
+    global FIRST_IT, HOOK
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -2250,7 +2234,6 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
     dtloc = Internal.getValue(dtloc) # tab numpy
     nitmax = int(dtloc[0])   
    
-    bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
 
     #### a blinder...
     itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
@@ -2359,7 +2342,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 #==============================================================================
 def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
 
-    global FIRST_IT, HOOK, HOOKIBC
+    global FIRST_IT, HOOK
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -2387,7 +2370,6 @@ def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
     dtloc = Internal.getValue(dtloc) # tab numpy
     nitmax = int(dtloc[0])   
     #print('nitmax= %d'%nitmax)
-    bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
  
     #### a blinder...
     itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
@@ -2597,7 +2579,7 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
 #==============================================================================
 def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
-    global FIRST_IT, HOOK, HOOKIBC
+    global FIRST_IT, HOOK
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -2616,8 +2598,6 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
     nitmax = int(dtloc[0])                 
     orderRk = int(dtloc[len(dtloc)-1])
     
-    bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
-
 
     if tc is not None:
          bases = Internal.getNodesFromType1(tc, 'CGNSBase_t')  # noeud
@@ -2646,11 +2626,11 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
   # if nit_adjoint == 1 :
        # if indFunc == 1 :
        #      vars = ['dpCLp_dpDensity']
-       #      Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)
+       #      Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, type_transfert, no_transfert)
 
        # if indFunc == 2 : 
        #      vars = ['dpCDp_dpDensity']
-       #      Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)
+       #      Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType,  type_transfert, no_transfert)
 
        # if vars is not None:
             # compute_dpJ_dpW = True       #dpJ_dpW is already computed
@@ -2680,7 +2660,7 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 #       type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
 #       no_transfert   = 1  # dans la list des transfert point a point
 
-#    Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)
+#    Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, type_transfert, no_transfert)
 
 
 #    #-----------------------------------------------------------------
@@ -2703,7 +2683,7 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
   
        fasts.compute_LorUAdjoint(zones, metrics, nitrun, nstep, indFunc, omp_mode, hook1)
 
-       Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, bcType, type_transfert, no_transfert,Gamma,Cv,Mus,Cs,Ts)
+       Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, type_transfert, no_transfert)
        enddo 
     #-----------------------------------------------------------------
     #  4 update
@@ -2723,7 +2703,7 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
 def _computedJdX(t, metrics, nitrun, tc=None, graph=None, indFunc):
-    global FIRST_IT, HOOK, HOOKIBC
+    global FIRST_IT, HOOK
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -2742,7 +2722,6 @@ def _computedJdX(t, metrics, nitrun, tc=None, graph=None, indFunc):
     nitmax = int(dtloc[0])                 
     orderRk = int(dtloc[len(dtloc)-1])
     
-    bcType = HOOKIBC[0]; Gamma=HOOKIBC[1]; Cv=HOOKIBC[2]; Mus=HOOKIBC[3]; Cs=HOOKIBC[4]; Ts=HOOKIBC[5]
 
     if tc is not None:
          bases = Internal.getNodesFromType1(tc, 'CGNSBase_t')  # noeud

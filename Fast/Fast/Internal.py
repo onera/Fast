@@ -156,11 +156,11 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                NG_pe    =  Internal.getNodeFromPath(z, 'NGonElements/ParentElements')
 
             sa,FIRST_IT     = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint)
-
+            
             if FA_intext is not None:
                Internal.getNodeFromPath(z, 'NFaceElements')[2] +=[FA_indx, FA_intext] 
                Internal.getNodeFromPath(z, 'NGonElements' )[2] +=[NG_pe, NG_indx, NG_intext] 
-
+            
             #HOOK['FIRST_IT']= FIRST_IT
             source = 0
             a = Internal.getNodeFromName2(z,'Density_src')
@@ -278,9 +278,11 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
         if C.isNamePresent(zone, 'centers:TurbulentDistance') != 1: 
             raise ValueError("createPrimVars: TurbulentDistance field required at cell centers for RANS computations.")
     
+
     rgp = (adim[11]-1.)*adim[7]
     t0=timeit.default_timer()
     if C.isNamePresent(zone, 'centers:VelocityX'  ) != 1: P._computeVariables(zone, ['centers:VelocityX'  ], rgp=rgp)
+
     ''' 
     t1=timeit.default_timer()
     print("cout calcul VX= ", t1-t0, zone[0])
@@ -402,6 +404,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     print("cout calcul NuP1= ", t1-t0, zone[0])
     t0=timeit.default_timer()
     '''
+
 
     sfd = 0
     a = Internal.getNodeFromName2(zone, 'sfd')
@@ -841,7 +844,14 @@ def _buildOwnData(t, Padding):
             ibc          = numpy.zeros( 7, dtype=numpy.int32)
             source       = 0
             cups         = [1.,1.]
+            meshtype     = 1  #stuctured
             
+            a = Internal.getNodeFromName1(z, 'ZoneType')
+            tmp = Internal.getValue(a)
+            if tmp == 'Unstructured':
+              meshtype =2
+              print('Warning: : zone %s is unstructured.'%z[0])
+
             a = Internal.getNodeFromName2(z, 'GoverningEquations')
             if a is not None: model = Internal.getValue(a)
             else:
@@ -982,9 +992,12 @@ def _buildOwnData(t, Padding):
             if sgsmodel == 'smsm': iles = 1
 
 
-            size_ssdom_I = 1000000
-            size_ssdom_J = 1000000
-            size_ssdom_K = 1000000
+            #par defaut valeur petite, car determine le niveau de parallelisme pour calcul residu en implicit et explict
+            #si valeur grande, alors calcul sequentiel de cprdus1
+            size_ssdom_I = 100
+            size_ssdom_J = 10
+            size_ssdom_K = 10
+
 
             if temporal_scheme == "explicit": itypcp = 2
             else: itypcp = 1
@@ -1049,7 +1062,7 @@ def _buildOwnData(t, Padding):
             leveld=0
 
             
-            datap = numpy.empty(84, numpy.int32)
+            datap = numpy.empty(85, numpy.int32)
             datap[0:25]= -1
 
             #Structure ou polyhedric
@@ -1142,6 +1155,7 @@ def _buildOwnData(t, Padding):
             datap[75]   = lu_match          
             datap[76:83]= ibc[0:7]
             datap[83]   = source
+            datap[84]   = meshtype
 
             i += 1
          
@@ -1323,11 +1337,6 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     lok      = numpy.zeros(verrou     , dtype=numpy.int32  )
     iskip_lu = numpy.empty(dtloc[0]*2 , dtype=numpy.int32  )   # (dtloc[0] = nitmax
 
-    #tableau pour ibc from C function
-    param_int_ibc  = numpy.empty((2), numpy.int32)         
-    param_real_ibc = numpy.empty((5), numpy.float64)
-
-
     hook = {}
     hook['wiggle']         = wig
     hook['coe']            = coe
@@ -1343,8 +1352,6 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['TIMER_OMP']      = timerOmp
     hook['FIRST_IT']       = FIRST_IT
     hook['neq_max']        = neq_max
-    hook['param_int_ibc']  = param_int_ibc
-    hook['param_real_ibc'] = param_real_ibc
     hook['param_int_tc']   = None
     hook['param_real_tc']  = None
     hook['mpi']            = 0     
@@ -1389,35 +1396,6 @@ def tagBC(bcname):
     tag = -1
     print("Warning: unknown BC type %s."%bcname)
   return tag
-
-#==============================================================================
-# Retourne la liste des parametres necessaires aux transferts IBC 
-# OUT: [bcType, Gamma, Cv, MuS, Cs, Ts]
-# Pour l'instant, on recupere ces variables du premier reference state
-#==============================================================================
-def getIBCInfo__(t):
-    model = "Euler"
-    zones = Internal.getZones(t)
-    a = Internal.getNodeFromName2(zones[0], 'model')
-    model = Internal.getValue(a)
-    if model == "Euler": bcType = 0
-    elif model == "NSLaminar": bcType = 3
-    else: bcType = 3 # 1: lineaire, 2: loi log, 3: Musker
-
-    state = Internal.getNodeFromName(t, 'ReferenceState')
-    if state is None: raise ValueError("getIBCInfo: ReferenceState is missing in t.")
-    
-    Gamma = Internal.getNodeFromName1(state,'Gamma')
-    Gamma = Internal.getValue(Gamma)
-    cvInf = Internal.getNodeFromName1(state,'Cv')
-    cvInf = Internal.getValue(cvInf)
-    Mus   = Internal.getNodeFromName1(state,'Mus')
-    Mus   = Internal.getValue(Mus)
-    Cs    = Internal.getNodeFromName1(state,'Cs')
-    Cs    = Internal.getValue(Cs)
-    Ts    = Internal.getNodeFromName1(state,'Ts')
-    Ts    = Internal.getValue(Ts)
-    return [bcType, Gamma, cvInf, Mus, Cs, Ts]
 
 #==============================================================================
 # echange M1 <- current, current <- P1, P1 <- M1

@@ -18,7 +18,7 @@
 */
 
 #include "connector.h"
-#include "fastS.h"
+#include "fast.h"
 #include "param_solver.h"
 
 #ifdef _MPI
@@ -60,7 +60,7 @@ static std::pair<RecvQueue*, SendQueue*>* pair_of_queue = NULL;
 static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_IBC = NULL;
 #endif
 
-void K_FASTS::init_TransferInter(
+void K_FAST::init_TransferInter(
     std::pair<RecvQueue*, SendQueue*>*& pair_of_queue) {
   int szCom;
   MPI_Comm_size(MPI_COMM_WORLD, &szCom);
@@ -70,7 +70,7 @@ void K_FASTS::init_TransferInter(
 //      std::make_pair(pt_RecvQueue, pt_SendQueue));
 }
 
-void K_FASTS::del_TransferInter(
+void K_FAST::del_TransferInter(
     std::pair<RecvQueue*, SendQueue*>*& pair_of_queue) {
   delete pair_of_queue->first;
   delete pair_of_queue->second;
@@ -81,7 +81,7 @@ void K_FASTS::del_TransferInter(
 //=============================================================================
 // Idem: in place + from zone + tc compact au niveau base
 //=============================================================================
-void K_FASTS::setInterpTransfersFastS(
+void K_FAST::setInterpTransfersFast(
   E_Float**& iptro_tmp, E_Int& vartype         , E_Int*& param_int_tc, E_Float*& param_real_tc , E_Int**& param_int     , E_Float**& param_real,
   E_Int*& linelets_int, E_Float*& linelets_real, E_Int& it_target    , E_Int& nidom            , E_Float*& ipt_timecount, E_Int& mpi,
   E_Int& nstep        , E_Int& nitmax          , E_Int& rk           , E_Int& exploc           , E_Int& numpassage)
@@ -136,8 +136,8 @@ void K_FASTS::setInterpTransfersFastS(
        
       if (pair_of_queue == NULL)
       {
-         K_FASTS::init_TransferInter(pair_of_queue);
-         K_FASTS::init_TransferInter(pair_of_queue_IBC);
+         K_FAST::init_TransferInter(pair_of_queue);
+         K_FAST::init_TransferInter(pair_of_queue_IBC);
       }
 
       #ifdef TimeShow
@@ -178,7 +178,7 @@ void K_FASTS::setInterpTransfersFastS(
           nb_send_buffer += 1;
           TypeTransfert = 1;  
           #ifdef _MPI      
-          K_FASTS::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+          K_FAST::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
   	       			           param_int    , param_real   , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
                                            pair_of_queue_IBC, ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer); 
           #endif
@@ -195,7 +195,7 @@ void K_FASTS::setInterpTransfersFastS(
       dest       = param_int_tc[ech];
       if (dest == rank)  // Intra Process
       { TypeTransfert = 1;
-	K_FASTS::setInterpTransfersIntra(iptro_tmp    , vartype    , param_int_tc, param_real_tc,
+	K_FAST::setInterpTransfersIntra(iptro_tmp    , vartype    , param_int_tc, param_real_tc,
                                          param_int    , param_real , linelets_int, linelets_real, TypeTransfert, it_target, nidom, ip2p, 
                                          ipt_timecount, nstep      , nitmax      , rk           , exploc       , numpassage); 
       }
@@ -209,7 +209,7 @@ void K_FASTS::setInterpTransfersFastS(
     if (mpi)
     {
       //comm multi processus: wait + remplissage
-      K_FASTS::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
+      K_FAST::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
 
       #ifdef TimeShow
        time_out = omp_get_wtime();
@@ -257,7 +257,7 @@ void K_FASTS::setInterpTransfersFastS(
           {             
             TypeTransfert = 0;
             cpt_send_buffer += 1;
-            K_FASTS::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+            K_FAST::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
   	        	                     param_int    , param_real   , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
                                              pair_of_queue, ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, cpt_send_buffer); 
           }
@@ -273,7 +273,7 @@ void K_FASTS::setInterpTransfersFastS(
       if (dest == rank)  // Intra Process
       {        
         TypeTransfert = 0;
-        K_FASTS::setInterpTransfersIntra(iptro_tmp, vartype   , param_int_tc, param_real_tc ,
+        K_FAST::setInterpTransfersIntra(iptro_tmp, vartype   , param_int_tc, param_real_tc ,
                                          param_int, param_real, linelets_int, linelets_real, TypeTransfert , it_target, nidom, ip2p, ipt_timecount, nstep, nitmax, rk, exploc, numpassage); 
       }    
     }
@@ -287,7 +287,7 @@ void K_FASTS::setInterpTransfersFastS(
     {
 
        //comm multi processus: wait + remplissage
-       K_FASTS::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue);
+       K_FAST::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue);
 
        #ifdef TimeShow
         time_out         = omp_get_wtime();
@@ -312,7 +312,7 @@ void K_FASTS::setInterpTransfersFastS(
 //=============================================================================
 // Idem: in place + from zone + tc compact au niveau base
 //=============================================================================
-void K_FASTS::setInterpTransfersIntra(
+void K_FAST::setInterpTransfersIntra(
 
     E_Float**& ipt_ro, E_Int& varType, E_Int*& ipt_param_int_tc,
     E_Float*& ipt_param_real_tc, E_Int**& param_int, E_Float**& param_real, E_Int*& linelets_int, E_Float*& linelets_real,
@@ -500,6 +500,9 @@ void K_FASTS::setInterpTransfersIntra(
 
           E_Int cnNfldD = 0;
           E_Int* ptrcnd = NULL;
+
+
+          //printf("nvarloc %d %d %d \n",nvars_loc  ,NoD, NoR );
 
           for (E_Int eq = 0; eq < nvars_loc; eq++) {
             vectOfRcvFields[eq] = ipt_ro[NoR] + eq * param_int[NoR][ NDIMDX];
@@ -723,7 +726,7 @@ void K_FASTS::setInterpTransfersIntra(
 // Retourne une liste de numpy directement des champs interpoles
 // in place + from zone + tc compact
 //=============================================================================
-void K_FASTS::setInterpTransfersInter(
+void K_FAST::setInterpTransfersInter(
     E_Float**& ipt_ro   , E_Int& varType   , E_Int*& ipt_param_int_tc, E_Float*& ipt_param_real_tc,
     E_Int**& param_int  , E_Float**& param_real, E_Int*& linelets_int    , E_Float*& linelets_real, 
     E_Int& TypeTransfert, E_Int& it_target, E_Int& nidom, E_Int& NoTransfert,
@@ -1302,7 +1305,7 @@ if (has_data_to_send) {
 // Retourne une liste de numpy directement des champs interpoles
 // in place + from zone + tc compact
 //=============================================================================
-void K_FASTS::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*& ipt_param_int_tc, std::pair<RecvQueue*, SendQueue*>*& pair_of_queue) {
+void K_FAST::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*& ipt_param_int_tc, std::pair<RecvQueue*, SendQueue*>*& pair_of_queue) {
   
   // Attente finalisation de la réception :
   assert(pair_of_queue != NULL);

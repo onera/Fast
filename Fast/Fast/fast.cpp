@@ -79,28 +79,3 @@ extern "C"
 #endif
   }
 }
-//=============================================================================
-/* Fonctions fortran declarees dans Fast mais non appelees dans Fast   
-   Used to force some functions to belong to fast library  */
-//=============================================================================
-void K_FAST::testFooFast()
-{
-  E_Int i; E_Float f;
-  cptimestepconv_(i, f, NULL, NULL, NULL, NULL, NULL, NULL, f, f);
-  cptimestepconvmotion_(i, NULL, NULL, NULL, f,  NULL, NULL, NULL, NULL, NULL, NULL, f, f);
-  cptimesteptur_(i, NULL, f, NULL, NULL, NULL, NULL, f, f, f, f);
-  denconvec_(i, NULL, NULL, NULL, NULL, NULL, NULL,NULL, NULL, NULL);
-  pressure_(i, NULL, NULL, NULL, NULL, NULL, f, NULL);
-  cons2velocity_(i, NULL, NULL, NULL, NULL,NULL, NULL, NULL);
-  viscosity_(i, f, f, NULL, NULL);
-  heatcoef_(i, f, f, NULL, NULL);
-  temp_(i, f, NULL, NULL, NULL, NULL, NULL, NULL);
-  heatflux_(i, NULL, NULL, NULL, NULL, NULL, NULL, NULL); 
-  visctensor_(i, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  densfluxdiff_(i, NULL, NULL, NULL, NULL, NULL, NULL, 
-                NULL, NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL);
-  setallbvaluesatf_(i, i, NULL, f, i, i, i, i);
-  extrapallbvaluesf_(i, i, NULL, i, i, i, i);
-}

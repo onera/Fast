@@ -89,4 +89,6 @@ for it in range(nit):
     FastS._compute(t, metrics, it)
     temps += timeStep
 
+Internal._rmNodesByName(t, '.Solver#Param')
+Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)

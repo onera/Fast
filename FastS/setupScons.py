@@ -24,6 +24,9 @@ Dist.writeSetupCfg()
 # Test if connector exists =======================================================
 (connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
 
+# Test if fast exists =======================================================
+(fastVersion, fastIncDir, fastLibDir) = Dist.checkFast()
+
 from KCore.config import *
 
 # Test if libmpi exists ======================================================
@@ -34,9 +37,9 @@ prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir, connectorLibDir, '.']
-includeDirs = [numpyIncDir, kcoreIncDir, connectorIncDir]
-libraries = ["fastS1", "fastS2", "fastS3","fastS4", "fastS5", "fastS1", "fastS2", "fastS3", "fastS4", "fastS5", "fastS1", "fastS2", "fastS3", "fastS4", "fastS5",  "connector", "kcore"]
+libraryDirs = ["build/"+prod, kcoreLibDir, connectorLibDir, fastLibDir, '.']
+includeDirs = [numpyIncDir, kcoreIncDir, connectorIncDir, fastIncDir]
+libraries = ["fastS1", "fastS2", "fastS3","fastS4", "fastS5", "fastS1", "fastS2", "fastS3", "fastS4", "fastS5", "fastS1", "fastS2", "fastS3", "fastS4", "fastS5",  "fast", "connector", "fast",  "kcore"]
 
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
@@ -48,7 +51,8 @@ if mpi:
     includeDirs.append(mpiIncDir)
     ADDITIONALCPPFLAGS = ['-D_MPI']
     if Dist.getSystem()[0] == 'mingw': libraries.append('msmpi')
-    else: libraries.append('mpi')
+    else:
+         libraries.append('mpi'); #libraries.append('mpi_cxx')
 
 ##   
 ## Modif pour calcul MPI sur poste GC   

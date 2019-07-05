@@ -20,6 +20,17 @@
 # ifndef _FAST_FAST_H_
 # define _FAST_FAST_H_
 
+
+#ifdef _MPI
+#include "CMP/include/pending_message_container.hpp"
+#include "CMP/include/recv_buffer.hpp"
+#include "CMP/include/send_buffer.hpp"
+#include "setInterpTransfersD.h"
+typedef typename CMP::PendingMsgContainer<CMP::RecvBuffer> RecvQueue;
+typedef typename CMP::PendingMsgContainer<CMP::SendBuffer> SendQueue;
+#endif
+
+# include "connector.h"
 # include "kcore.h"
 # include "Fortran.h"
 
@@ -28,74 +39,49 @@ using namespace K_FLD;
 namespace K_FAST
 { 
 
-  PyObject* _motionlaw(              PyObject* self, PyObject* args);
-
-  //===========
-  // - Check -
-  //===========
   // Check a value in Numerics Dictionary
   E_Int checkNumericsValue(PyObject* numerics, const char* value,
                            E_Int& retInt, E_Float& retFloat, char*& retChar);
-  /* IN: varString: chaine de variables correspondant a f
-     IN: f: champ
-     Rend les ptrs sur les coords et leur position dans f (commence a 1)
-  */
-  E_Int checkCoordinates(
-    char* varString, FldArrayF& f,
-    E_Int* pos,
-    E_Float*& x, E_Float*& y, E_Float*& z);
-  E_Int checkCoordinates(
-    char* varString, std::vector<E_Float*>& f,
-    E_Int* posCoords,
-    E_Float*& x, E_Float*& y, E_Float*& z);
-   /* IN: varString: chaine de variables correspondant a f
-     IN: f: champ
-     Rend un ptr sur "vol" 
-  */
-   E_Int checkVariable(
-    char* varString, FldArrayF& f,
-    const char* varName, E_Int* pos, E_Float*& var);
-  E_Int checkVariable(
-    char* varString, std::vector<E_Float*>& f,
-    const char* varName, E_Int* pos, E_Float*& var);
 
-  /* IN: varString: chaine de variables correspondant a f
-     IN: f: champ
-     Rend les ptrs sur "vol", "surfx", "surfy", "surfz" 
-  */
-  E_Int checkMetric(
-    char* varString, FldArrayF& f,
-    E_Int* pos,
-    E_Float*& vol, E_Float*& surfx, E_Float*& surfy, E_Float*& surfz);
-  E_Int checkMetric(
-    char* varString, std::vector<E_Float*>& f,
-    E_Int* pos,
-    E_Float*& vol, E_Float*& surfx, E_Float*& surfy, E_Float*& surfz);
 
-  /* IN: varString: chaine de variables correspondant a f
-     IN: f: champ
-     Rend des ptrs sur certains champs et leur position dans f (commence a 1)
-  */
-  E_Int checkConsVariables(
-    char* varString, FldArrayF& f,
-    E_Int* posVars,
-    E_Float*& ro, E_Float*& rou, E_Float*& rov, E_Float*& row, E_Float*& roE,
-    E_Float*& cellN, E_Float*& sx, E_Float*& sy, E_Float*& sz);
-  E_Int checkConsVariables(
-    char* varString, std::vector<E_Float*>& f,
-    E_Int* posVars,
-    E_Float*& ro, E_Float*& rou, E_Float*& rov, E_Float*& row, E_Float*& roE,
-    E_Float*& cellN, E_Float*& sx, E_Float*& sy, E_Float*& sz);
+  PyObject* _motionlaw( PyObject* self, PyObject* args);
 
-  //==========
-  // - State -
-  //==========
-  E_Float gamma();
-  E_Float prandtl();// Prandtl number
-  E_Float betaSuth(E_Float  muSuth, E_Float CSuth, E_Float TSuth);
-  E_Float Cp(E_Float Cv);
-  E_Float Rgp(E_Float Cv);
+
+  //==============================
+  // - Transfer with CMP library -
+  //==============================
+
+  /* Call to transfers from FastS */
+
+  void setInterpTransfersFast(
+  E_Float**& iptro_tmp    , E_Int& vartype             , E_Int*& param_int_tc, E_Float*& param_real_tc , E_Int**& param_int     , E_Float**& param_real,
+  E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& it_target    , E_Int& nidom            , E_Float*& ipt_timecount, E_Int& mpi           ,
+  E_Int& nitcfg           , E_Int& nssiter             , E_Int& rk           , E_Int& exploc           , E_Int& numpassage );
   
-  void testFooFast();
+  /* Transferts FastS Intra process */
+  void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int& vartype         , E_Int*& ipt_param_int   , E_Float*& ipt_param_real   ,
+                              E_Int**& param_int, E_Float**& param_real  , E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
+                              E_Int& NoTransfert, E_Float*& ipt_timecount,
+                              E_Int& nitcfg     , E_Int& nssiter         , E_Int& rk, E_Int& exploc, E_Int& numpassage );
+
+  #ifdef _MPI
+  /* Transferts FastS Inter process */
+  void setInterpTransfersInter(E_Float**& ipt_ro , E_Int& vartype        , E_Int*& ipt_param_int   , E_Float*& ipt_param_real   ,
+                               E_Int**& param_int, E_Float**& param_real , E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
+                               E_Int& NoTransfert,
+                               std::pair<RecvQueue*, SendQueue*>*& pair_of_queue,
+                               E_Float*& ipt_timecount,
+                               E_Int& nitcfg, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& numpassage , E_Int& nb_send_buffer);
+
+  /* Get Transfert Inter process */
+  void getTransfersInter(E_Float**& ipt_roD, E_Int**& param_int, E_Int*& param_int_tc , std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
+
+  /* Init Transfert Inter process */
+  void init_TransferInter(std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
+
+  /* Delete Transfert Inter process */
+  void del_TransferInter(std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
+  #endif
+
 }
 #endif

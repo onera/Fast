@@ -147,7 +147,7 @@ namespace K_FASTS
     E_Int& nb_pulse     ,
     E_Float& temps,
     E_Int* ipt_ijkv_sdm , 
-    E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int* ndimdx_trans, E_Float* timer_omp,
+    E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int& vartype, E_Float* timer_omp,
     E_Int* iptludic             , E_Int* iptlumax, 
     E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom,
     E_Float* ipt_VectG          , E_Float* ipt_VectY     , E_Float** ipt_ssor          , E_Float** ipt_ssortmp, E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
@@ -163,10 +163,10 @@ namespace K_FASTS
     E_Float**  iptvol_df, 
     E_Float**  iptventi, E_Float**  iptventj, E_Float** iptventk,  
     E_Float**& iptrdm,
-    E_Float*   iptroflt     , E_Float*  iptroflt2    , E_Float*   iptwig         , E_Float* iptstat_wig       ,
-    E_Float*   iptdrodm     , E_Float*  iptcoe       , E_Float* iptmules         , E_Float**& iptdelta        , E_Float**& iptro_res    , E_Float**& iptdrodm_trans  ,
-    E_Int*&    ipt_param_bci, E_Float*& ipt_param_bcf, E_Int*&  ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real,
-    E_Int& taille_tabs      , E_Float*& stock        , E_Float*& drodmstock      , E_Float*& constk           , E_Float**  iptsrc);
+    E_Float*   iptroflt      , E_Float*  iptroflt2        , E_Float*   iptwig         , E_Float* iptstat_wig       ,
+    E_Float*   iptdrodm      , E_Float*  iptcoe           , E_Float* iptmules         , E_Float**& iptdelta        , E_Float**& iptro_res    , E_Float**& iptdrodm_trans  ,
+    E_Int*&  ipt_param_int_tc, E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int  , E_Float*& ipt_linelets_real,
+    E_Int& taille_tabs       , E_Float*& stock            , E_Float*& drodmstock      , E_Float*& constk           , E_Float**  iptsrc);
 
 
   //=============
@@ -182,7 +182,7 @@ namespace K_FASTS
     E_Int& nb_pulse     ,
     E_Float& temps,
     E_Int* ipt_ijkv_sdm , 
-    E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int* ndimdx_trans, E_Float* timer_omp,
+    E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int& vartype, E_Float* timer_omp,
     E_Int* iptludic             , E_Int* iptlumax, 
     E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom,
     E_Float* ipt_VectG          , E_Float* ipt_VectY     , E_Float** ipt_ssor          , E_Float** ipt_ssortmp, E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
@@ -201,7 +201,7 @@ namespace K_FASTS
     E_Float*   iptroflt, E_Float*  iptroflt2, E_Float*   iptwig, E_Float* iptstat_wig,
     E_Float*   iptdrodm, E_Float*  iptcoe   , E_Float* iptmules, E_Float**& iptdelta, E_Float**& iptro_res,
     E_Float**& iptdrodm_trans,
-    E_Int*&    ipt_param_bci, E_Float*&   ipt_param_bcf , E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real);
+    E_Int*&    ipt_param_int_tc , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real);
 
 
   //==============================
@@ -211,23 +211,28 @@ namespace K_FASTS
   /* Call to transfers from FastS */
 
   void setInterpTransfersFastS(
-  E_Float**& iptro_tmp, E_Int*& ipt_ndimdx_trans, E_Int*& param_int_tc, E_Float*& param_real_tc ,
-  E_Int*& param_bci, E_Float*& param_bcf, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Float& Pr, E_Int& it_target, E_Int& nidom, E_Float*& ipt_timecount, E_Int& mpi, E_Int& nitcfg, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& numpassage );
+  E_Float**& iptro_tmp    , E_Int& vartype             , E_Int*& param_int_tc, E_Float*& param_real_tc , E_Int**& param_int     , E_Float**& param_real,
+  //E_Float*& iptro_tmp    , E_Int& vartype             , E_Int*& param_int_tc, E_Float*& param_real_tc , E_Int**& param_int     , E_Float**& param_real,
+  E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& it_target    , E_Int& nidom            , E_Float*& ipt_timecount, E_Int& mpi           ,
+  E_Int& nitcfg           , E_Int& nssiter             , E_Int& rk           , E_Int& exploc           , E_Int& numpassage );
   
   /* Transferts FastS Intra process */
-  void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
-                              E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Float& Pr, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
-                              E_Int& NoTransfert, E_Float*& ipt_timecount, E_Int& nitcfg, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& numpassage );
+  void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int& vartype         , E_Int*& ipt_param_int   , E_Float*& ipt_param_real   ,
+                              E_Int**& param_int, E_Float**& param_real  , E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
+                              E_Int& NoTransfert, E_Float*& ipt_timecount,
+                              E_Int& nitcfg     , E_Int& nssiter         , E_Int& rk, E_Int& exploc, E_Int& numpassage );
 
   #ifdef _MPI
   /* Transferts FastS Inter process */
-  void setInterpTransfersInter(E_Float**& ipt_ro, E_Int*& ipt_ndimdx, E_Int*& ipt_param_int, E_Float*& ipt_param_real ,
-                                E_Int*&    ipt_parambci, E_Float*& ipt_parambcf, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Float& Pr, E_Int& TypeTransfert, E_Int& nitrun, 
-                                E_Int& nidom, E_Int& NoTransfert,std::pair<RecvQueue*, SendQueue*>*& pair_of_queue, E_Float*& ipt_timecount, E_Int& nitcfg, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& numpassage );
+  void setInterpTransfersInter(E_Float**& ipt_ro , E_Int& vartype        , E_Int*& ipt_param_int   , E_Float*& ipt_param_real   ,
+                               E_Int**& param_int, E_Float**& param_real , E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
+                               E_Int& NoTransfert,
+                               std::pair<RecvQueue*, SendQueue*>*& pair_of_queue,
+                               E_Float*& ipt_timecount,
+                               E_Int& nitcfg, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& numpassage, E_Int& cpt_send_buffer );
 
   /* Get Transfert Inter process */
-  void getTransfersInter(E_Float**& ipt_roD, E_Int*& ipt_ndimdxD, E_Int*& ipt_param_int ,
-                          std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
+  void getTransfersInter(E_Float**& ipt_roD, E_Int**& param_int, E_Int*& param_int_tc , std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
 
   /* Init Transfert Inter process */
   void init_TransferInter(std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);

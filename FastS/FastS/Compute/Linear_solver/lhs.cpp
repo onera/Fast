@@ -21,6 +21,10 @@
             flush_real_( size , iptcoe + shift_coe);
           }
           //sortie de la carte d residu du Newton
+          //
+          //
+          //
+          //Investiger pourquoi resultat depend de SIZE_SSDOM
 #include  "Compute/residus_navier.h"
           nd_current +=1;
 
