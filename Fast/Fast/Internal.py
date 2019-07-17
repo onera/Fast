@@ -1083,8 +1083,10 @@ def _buildOwnData(t, Padding):
                NF_I1  = ng_intext[3]
                NF_BC0 = ng_intext[4]
                NF_I2  = ng_intext[5]
+               NF_TOT = ng_intext[6]
 
-               datap[1 ] = NF_I0+ NF_I1 + NF_I2 + NF_RAC + NF_BC0 + NF_BC1  #nombre de face total
+               #datap[1 ] = NF_I0+ NF_I1 + NF_I2 + NF_RAC + NF_BC0 + NF_BC1  #nombre de face total
+               datap[1 ] = NF_TOT                                           #nombre de face total
                datap[2 ] = NF_I0                                            #Face couche zero (sans BC et rac)
                datap[3 ] = NF_I1                                            #Face couche  un  (sans BC et rac)
                datap[4 ] = NF_RAC                                           #Face couche zero (BC)
@@ -1093,12 +1095,13 @@ def _buildOwnData(t, Padding):
 
                nf_intext = Internal.getNodeFromName1(nface, 'IntExt')[1]
                NG_0  = nf_intext[0]  #element couche zero
-               NG_1  = nf_intext[1]  #element couche 1
-               NG_2  = nf_intext[2]  #element couche 2
-               NG_3  = nf_intext[3]  #element couche 1 de type raccord
-               NG_4  = nf_intext[4]  #element couche 2 de type raccord
+               NG_1  = nf_intext[1]  #element couche 1 de type raccord
+               NG_2  = nf_intext[2]  #element couche 2 de type raccord
+               NG_3  = nf_intext[3]  #element couche 1 et 2 de type BC
+               #NG_4  = nf_intext[4]  #element couche 2 de type raccord
+
                #datap[7 ] = NG_0 + NG_1 + NG_2 + NF_BC0 + NF_BC1 # elements total (avec les element BC )
-               datap[7 ] = NG_0 + NG_1 + NG_2  # elements total (avec les element BC et racc )
+               datap[7 ] = NG_0 + NG_1 + NG_2 +NG_3  # elements total (avec les element BC et racc )
                datap[8 ] = NG_0
                datap[9 ] = NG_1
                datap[10] = NG_3
@@ -1392,6 +1395,7 @@ def tagBC(bcname):
   elif bcname == "BCOutpres":               tag =16;
   elif bcname == "BCInj1":                  tag =17;
   elif bcname == "BCRacinf":                tag =18;
+  elif bcname == "BCInflowLund":            tag =19;
   else:
     tag = -1
     print("Warning: unknown BC type %s."%bcname)
