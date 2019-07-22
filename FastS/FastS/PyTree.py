@@ -413,8 +413,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #
     if tmy is not None:
         sol = Internal.getNodesFromName3(tmy, 'FlowSolution#Centers')
-        var = Internal.getNodesFromType1(sol[0] , 'DataArray_t')
-        varmy=[]
+        var = Internal.getNodesFromType1(sol[0], 'DataArray_t')
+        varmy = []
         for v in var: varmy.append('centers:'+v[0])
         _compact(tmy, fields=varmy)
 

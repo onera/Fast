@@ -459,7 +459,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                 graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
                 graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
                 procDict  = D2.getProcDict(t)
-                procList  = D2.getProcList(t,  sort=True)
+                procList  = D2.getProcList(t, sort=True)
                 graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
             t = Cmpi.readZones(t, FILE, rank=rank)
             t = Cmpi.convert2PartialTree(t, rank=rank)

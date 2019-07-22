@@ -73,5 +73,5 @@ for it in range(1,100):
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
-#C.convertPyTree2File(t,'ibm.cgns')
+C.convertPyTree2File(t,'ibm.cgns')
 test.testT(t,1)

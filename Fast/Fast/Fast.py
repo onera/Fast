@@ -1,2 +1,2 @@
-__version__ = '2.9'
+__version__ = '3.0'
 __author__ = "Stephanie Peron, Ivan Mary, Christophe Benoit"
