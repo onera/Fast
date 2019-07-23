@@ -682,7 +682,8 @@ def _buildOwnData(t, Padding):
     'extract_res':0,
     'IBC':3,
     'source':0,
-    'Cups':4
+    'Cups':4,
+    'ratiom':1
     }
 
 
@@ -844,6 +845,7 @@ def _buildOwnData(t, Padding):
             ibc          = numpy.zeros( 7, dtype=numpy.int32)
             source       = 0
             cups         = [1.,1.]
+            ratiom       = 10000.
             meshtype     = 1  #stuctured
             
             a = Internal.getNodeFromName1(z, 'ZoneType')
@@ -962,10 +964,12 @@ def _buildOwnData(t, Padding):
                 if a is not None: source = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'Cups')
                 if a is not None: cups = Internal.getValue(a)  
+                a = Internal.getNodeFromName1(d, 'ratiom')
+                if a is not None: ratiom = Internal.getValue(a)  
                
             iflow  = 1
             ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0;
-            azgris = 0.01; addes = 0.2; ratiom = 10000.
+            azgris = 0.01; addes = 0.2
 
             if   model == "Euler"     or model == "euler":     iflow = 1
             elif model == "NSLaminar" or model == "nslaminar": iflow = 2

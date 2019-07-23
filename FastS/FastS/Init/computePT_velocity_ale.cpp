@@ -132,7 +132,7 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
 
    if( ipt_param_int[nd][ NDIMDX ] > ndimdx ){ ndimdx = ipt_param_int[nd][ NDIMDX ]; } 
   }
-  
+
 //
 //  
 //  Reservation tableau travail temporaire pour calcul du champ N+1
@@ -211,8 +211,6 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
             }
 
             E_Int* ipt_lok_thread   = ipt_lok   + nd_current*mx_synchro*Nbre_thread_actif;
-
-             //printf("couc %d %d \n", nd, ithread);
 
              init_ventijk_( nd, nidom,  Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, omp_mode,
                           ipt_param_int[nd], ipt_param_real[nd],

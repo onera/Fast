@@ -198,6 +198,11 @@ Actions
         + 1  (read a source terme in the FlowSolution#Centers node. The conservative variables centers:Density_src, centers:MomentumX_src, centers:MomentumY_src, centers:MomentumZ_src and centers:EnergyStagnationDensity_src are used.)
         + default value is 0
 
+    - **'ratiom'**:
+
+        + cut-off max of mut/mu   
+        + default value is 10000.
+
     *Example of use:*
 
     * `Set numerics to zone (pyTree) <Examples/Fast/setNum2ZonesPT.py>`_:
