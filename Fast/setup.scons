@@ -43,7 +43,6 @@ libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 
-print 'mpi', mpi
 if mpi:
     libraryDirs.append(mpiLibDir)
     includeDirs.append(mpiIncDir)
@@ -53,7 +52,6 @@ else:
 
 if mpi: libraries.append('mpi')
 
-print 'includeDir', includeDirs
 # Env =========================================================================
 import srcs
 if Dist.getSystem()[0] == 'mingw': tools = ['mingw']
