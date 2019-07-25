@@ -2,7 +2,7 @@
 """
 import numpy
 import os
-import fast
+from . import fast
 
 try:
     import Converter.PyTree as C
@@ -1138,7 +1138,7 @@ def _buildOwnData(t, Padding):
             datap[49]  = ispax
             datap[50]  = izgris
             datap[51]  = iprod
-	    datap[52]  = rk
+            datap[52]  = rk
             datap[53]  = veclevel[i]
             datap[54]  = exploc
             datap[55]  = itexploc
@@ -1166,14 +1166,14 @@ def _buildOwnData(t, Padding):
 
             i += 1
          
-	    Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
+            Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
             
             # creation noeud parametre real 
             #size_real = 23 +  size_ale   
             size_real = 41
             datap = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
-                print( 'Warning: time_step set to default value (0.0001).')
+                print('Warning: time_step set to default value (0.0001).')
                 dtc = 0.0001
             datap[0] = dtc
             

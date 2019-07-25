@@ -78,10 +78,10 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 (t,  tc, metrics) = FastS.warmup(t, tc )
 
 # Compute
-for it in xrange(1,40): 
+for it in range(1,40): 
    FastS._compute(t, metrics, it, tc)
    if it%modulo_verif == 0:
-        print 'it=', it
+        print('it=%d'%it)
         FastS.display_temporal_criteria(t, metrics, it, format='double')
 
 Internal._rmNodesByName(t, '.Solver#Param')

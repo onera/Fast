@@ -20,7 +20,6 @@ t = Cmpi.convertFile2SkeletonTree(FILE)
 tc = Cmpi.convertFile2SkeletonTree(FILED)
 
 # equilibrage
-print 'size mpi', size
 (t, dic) = D2.distribute(t, NProc=size, algorithm='fast', useCom=0)
 tc = D2.copyDistribution(tc, t)
 graph = Cmpi.computeGraph(tc, type='ID')

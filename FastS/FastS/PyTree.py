@@ -2098,7 +2098,7 @@ def rmGhostCells(t, depth, adaptBCs=1):
 #==============================================================================
 def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FILEOUT='listZonesSlow.dat', RECORD=None):
 
- bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
+ bases = Internal.getNodesFromType1(t      , 'CGNSBase_t')       # noeud
  own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
  dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
 
@@ -2165,6 +2165,9 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       if RECORD is not None:
           tape = tps_zone_percell/echant/NbreThreads
 
+      tps_zone_percell = max(tps_zone_percell, 1.e-11)
+      tps_zone_percell_max = max(tps_zone_percell_max, 1.e-11)
+      
       perfo = numpy.empty(2, dtype=numpy.float64)
       perfo[0]= int(echant*NbreThreads/tps_zone_percell)
       perfo[1]= int(echant/tps_zone_percell_max);
