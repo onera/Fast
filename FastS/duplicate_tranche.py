@@ -5,208 +5,226 @@ import Converter.Filter as Filter
 import Transform.PyTree as T
 import Connector.PyTree as X
 import numpy
-
-try: range = xrange
-except: pass
+import Distributor2.PyTree as D2
 
 # Nb de tranches
 NbTranche = 2
-# Nb de coeurs/tranche
-numberofproc=4
 # Largeur d'une tranche
-Lz = 0.0008
+Lz = 0.02
 
-FILE_DATA   = 't_NSLam.cgns'
-FILE_CONNECT= 'tc_NSLam.cgns'
+prefixFile = 't_%d.cgns'
+prefixFileC = 'tc_%d.cgns'
+
+FILE_DATA   = 'restart_domaine1_6.cgns'
+FILE_CONNECT= 'tc_ivan3D.cgns'
+
+numberofproc = 6
 
 # TRANSLATION DE L'ARBRE SOLUTION
-t = C.convertFile2PyTree(FILE_DATA)
+t0 = C.convertFile2PyTree(FILE_DATA)
 
-print('TRANSLATION ET COPIE de RESTART EN TRANCHES')
-for tranche in range(NbTranche):
+'''
+c=0
+for z in Internal.getZones(t0):
+   D2._addProcNode(z, c)
+   procz = Internal.getNodeFromName2(z,'proc')
+   procz = Internal.getValue(procz)
+   numberofproc = max(procz+1,numberofproc)
+   c+=1
+'''
+
+print 'Nb de coeurs par tranche = ',  numberofproc
+
+print 'TRANSLATION ET COPIE de RESTART EN TRANCHES'
+for tranche in xrange(NbTranche):
 
    dz =Lz
    if tranche==0: dz =0
-   print('Tranche', tranche,' translatee de ', dz*tranche)
-   T._translate(t,(0,0,dz))
+   print 'Tranche', tranche,' translatee de ', dz*tranche
+   t = T.translate(t0,(0,0,tranche*dz))
 
+   ##################
    # CHANGEMENT DE NOM DES ZONES
-   print('CHANGEMENT DE NOM DES ZONES DES TRANCHES')
-   zones = Internal.getNodesFromType(t, 'Zone_t')
+   print 'CHANGEMENT DE NOM DES ZONES DES TRANCHES'
+   zones = Internal.getZones(t)
    for z in zones:
-        if tranche==0:
-           z[0]='tr'+str(tranche)+'_'+z[0]
-        else:
-           tmp  = z[0].split('_')
-           name = 'tr'+str(tranche)
-           for i in range(1, len(tmp)):
-              name+='_'+tmp[i]
-           z[0]=name
-
+        z[0]='tr'+str(tranche)+'_'+z[0]
+       
         #modif des nom de zone des connectivite
         connect = Internal.getNodeFromType1(z,'ZoneGridConnectivity_t')
         matchs  = Internal.getNodesFromType1(connect,'GridConnectivity1to1_t')
-        matchs  = matchs +  Internal.getNodesFromType1(connect,'GridConnectivity_t')
+        matchs += Internal.getNodesFromType1(connect,'GridConnectivity_t')
         for match in matchs:
            name = Internal.getValue(match)
            perio= Internal.getNodeFromName1(match,'GridConnectivityProperty')
            name2= str(tranche)
+            
            if perio is not None:
               rg = Internal.getNodeFromName1(match,'PointRange')[1]
               # kmin
               if rg[2,0] == 1:
                  name2 = str(tranche-1)
-                 if tranche == 0: name2 = str(NbTranche-1)
-              # kmax
-              else:
+                 if tranche == 0: 
+                    name2 = str(NbTranche-1)
+                    perio[2][0][2][2][1][2] = perio[2][0][2][2][1][2]*NbTranche
+                    print 'PERIO', perio[2][0][2][2][1][2]
+                 else:  
+                    Internal._rmNodesFromName(match,'GridConnectivityProperty')    
+              else: # kmax
                  name2 = str(tranche+1)
-                 if tranche == NbTranche-1: name2 = str('0')
+                 if tranche == NbTranche-1: 
+                    name2 = str('0')
+                    perio[2][0][2][2][1][2] = perio[2][0][2][2][1][2]*NbTranche
+                    print 'PERIO', perio[2][0][2][2][1][2]
+                 else: Internal._rmNodesFromName(match,'GridConnectivityProperty')    
 
-           if tranche==0:
-              name ='tr'+name2+'_'+name
-           else:
-              tmp  = name.split('_')
-              name = 'tr'+name2
-              for i in range(1, len(tmp)):
-                 name+='_'+tmp[i]
+           name ='tr'+name2+'_'+name
            Internal.setValue(match,name)
-           
+
         # Change le num des procs
         proc = Internal.getNodeFromName2(z,'proc')
-        if proc is not None and tranche != 0:
-           proc[1][0,0] = proc[1][0,0]+ numberofproc
+	if proc is not None and tranche != 0:
+           proc[1][0] = proc[1][0]+ numberofproc
 
-   for pr in range(numberofproc*tranche,numberofproc*(tranche+1)):
+   for pr in xrange(numberofproc*tranche,numberofproc*(tranche+1)):
        tp = C.newPyTree(['Base'])
        zout=[]
+       
        for z in zones:
           proc = Internal.getNodeFromName2(z,'proc')
-          if proc is not None:
-             if pr==proc[1][0,0]: 
+	  if proc is not None:
+             if pr==proc[1][0]: 
                zout.append(z)
           else:
-            zout.append(z)
+             zout.append(z)
        floweq = Internal.getNodeFromName2(t,'FlowEquationSet')
        if floweq is not None: zout.append(floweq)
        refstat= Internal.getNodeFromName2(t,'ReferenceState')
        if floweq is not None: zout.append(refstat)
        tp[2][1][2] += zout
-            
-       C.convertPyTree2File(tp, 't'+str(pr)+'.cgns')
-
+      
+       C.convertPyTree2File(tp, './2TRANCHE/'+prefixFile%(pr))
 
 # TRANSLATION DE L'ARBRE CONNECTIVITE
-t = C.convertFile2PyTree(FILE_CONNECT)
+t2 = C.convertFile2PyTree(FILE_CONNECT)
 
-print('TRANSLATION ET COPIE de RESTART EN TRANCHES')
-for tranche in range(NbTranche):
+'''
+c=0
+for z in Internal.getZones(t2):
+   D2._addProcNode(z, c)
+'''
+
+tp = C.newPyTree(['Base'])
+#Internal._rmNodesByName(t,'IDPER*')
+print 'TRANSLATION ET COPIE de RESTART EN TRANCHES'
+for tranche in xrange(0,NbTranche):
+
+   t = Internal.copyTree(t2)
 
    dz =Lz
-   if tranche==0: dz =0
-   print('Tranche', tranche,' translatee de ', dz*tranche)
-   T._translate(t,(0,0,dz))
-
+   print 'Tranche', tranche,' translatee de ', dz*tranche
+   T._translate(t,(0,0,dz*tranche))
 
    ##################
    # CHANGEMENT DE NOM DES ZONES
    print 'CHANGEMENT DE NOM DES ZONES DES TRANCHES'
-   zones = Internal.getNodesFromType(t, 'Zone_t')
+   zones = Internal.getZones(t)
    for z in zones:
-        if tranche==0:
-           z[0]='tr'+str(tranche)+'_'+z[0]
-        else:
-           tmp  = z[0].split('_')
-           name = 'tr'+str(tranche)
-           for i in range(1, len(tmp)):
-              name+='_'+tmp[i]
-           z[0]=name
+        nameSave = z[0]
+        z[0]='tr'+str(tranche)+'_'+z[0]
 
         #modif des nom de zone des connectivite
         matchs  = Internal.getNodesFromType1(z,'ZoneSubRegion_t')
+        print "ZNAME",z[0]
         for match in matchs:
            name = Internal.getValue(match)
-           name2= str(tranche)
 
-           if tranche != 0:
-              tmp  = name.split('_')
-              name =''
-              for i in range(1, len(tmp)):
-                    if i ==  len(tmp) -1:
-                      name+= tmp[i]
-                    else:
-                      name+= tmp[i]+'_'
+           #raccord perio
+           if name == nameSave:
+             #split du raccord en 2
+             if NbTranche > 2:
 
-           if match[0][0:5] == 'IDPER' and tranche>=0:
-              donor = Internal.getNodeFromName1(match,'PointListDonor')[1]
-              kmin = donor[0]
-              kmax = donor[donor.size -1]
-              matchNew = Internal.copyTree(match)
-              #print 'period',matchNew[0],  matchNew[2]
-              # kmin
-              if kmin < kmax:
-                 trM =  'tr'+str(tranche-1)+'_'+name 
-                 trP =  'tr'+str(tranche+1)+'_'+name 
-                 if tranche == 0: 
-                     trM = 'tr'+str(NbTranche-1)+'_'+name
+                 ptlist    = Internal.getNodeFromName1(match,'PointList')
+                 ptlistD   = Internal.getNodeFromName1(match,'PointListDonor')
+                 interpD   = Internal.getNodeFromName1(match,'InterpolantsDonor')
+                 interpType= Internal.getNodeFromName1(match,'InterpolantsType')
 
-                 elif tranche == NbTranche-1: 
-                     trP = 'tr0_'+name
+                 new_sz = numpy.size(ptlist[1])/2
 
-                 match[0]   = 'IDPERM' + trM
-                 matchNew[0]= 'IDPERP' + trP
-                 Internal.setValue(match   ,trM)
-                 Internal.setValue(matchNew,trP)
-              # kmax
-              else:
-                 trM =  'tr'+str(tranche+1)+'_'+name 
-                 trP =  'tr'+str(tranche-1)+'_'+name 
-                 if tranche == 0: 
-                     trP = 'tr'+str(NbTranche-1)+'_'+name
+                 ptlist_G     = numpy.empty( new_sz, numpy.int32)
+                 ptlist_D     = numpy.empty( new_sz, numpy.int32)
+                 ptlistD_G    = numpy.empty( new_sz, numpy.int32)
+                 ptlistD_D    = numpy.empty( new_sz, numpy.int32)
+                 interpType_G = numpy.ones(  new_sz, numpy.int32)
+                 interpType_D = numpy.ones(  new_sz, numpy.int32)
+                 interpD_G    = numpy.ones( new_sz, numpy.float64)
+                 interpD_D    = numpy.ones( new_sz, numpy.float64)
 
-                 elif tranche == NbTranche-1: 
-                     trM = 'tr0_'+name
+                 ptlist_G[:]     = ptlist[1][    0 :  new_sz]
+                 ptlist_D[:]     = ptlist[1][new_sz:2*new_sz]
+                 ptlistD_G[:]    = ptlistD[1][    0 :  new_sz]
+                 ptlistD_D[:]    = ptlistD[1][new_sz:2*new_sz]
 
-                 match[0]   = 'IDPERP' + trM
-                 matchNew[0]= 'IDPERM' + trP
-                 Internal.setValue(match   ,trM)
-                 Internal.setValue(matchNew,trP)
+                 p0     = ptlist[1][0]
+                 p1     = ptlist[1][new_sz]
+                 
+                 ptlist[1] = ptlist_G
+                 ptlistD[1]= ptlistD_G
+                 interpD[1]= interpD_G
+                 interpType[1]= interpType_G
 
-              Internal.createChild(z, matchNew[0], 'ZoneSubRegion_t', value=trP, children=matchNew[2])
+                 match1 = Internal.copyTree(match)
+                 ptlist    = Internal.getNodeFromName1(match1,'PointList')
+                 ptlistD   = Internal.getNodeFromName1(match1,'PointListDonor')
+                 ptlist[1] = ptlist_D
+                 ptlistD[1]= ptlistD_D
 
-              #resize des numpy: 1 numpy(N)=(N/2)
-              np_list=['PointList','PointListDonor','InterpolantsDonor','InterpolantsType']
-              for var in np_list:
-                 tmp1  = Internal.getNodeFromName1(match,var)
-                 tmp2  = Internal.getNodeFromName1(matchNew,var)
-                 size  = tmp1[1].size/2
-                 if var[0:7]== 'Interp':
-                    newtab1 = numpy.empty(size, dtype=numpy.float64)
-                    newtab2 = numpy.empty(size, dtype=numpy.float64)
+                 if p0 < p1:
+                     trG   = tranche-1
+                     trD   = tranche+1
+                     if trG==-1: trG = NbTranche-1
+                     if trD== NbTranche: trD = 0
                  else:
-                    newtab1 = numpy.empty(size, dtype=numpy.int32)
-                    newtab2 = numpy.empty(size, dtype=numpy.int32)
+                     trG   = tranche+1
+                     trD   = tranche-1
+                     if trD==-1: trD = NbTranche-1
+                     if trG== NbTranche: trG = 0
 
-                 if kmin < kmax:
-                    newtab2[0:size]    = tmp1[1][0:size]
-                    newtab1[0:size]    = tmp1[1][size:2*size]
-                 else:
-                    newtab2[0:size]    = tmp1[1][size:2*size]
-                    newtab1[0:size]    = tmp1[1][0:size]
-
-                 tmp1[1]= newtab1
-                 tmp2[1]= newtab2
+                 name2 = str(trG)
+                 nameG='tr'+name2+'_'+name
+                 match[0] =  'ID_'+nameG
+                 Internal.setValue(match,nameG)
                 
+                 name2 = str(trD)
+                 nameD ='tr'+name2+'_'+name
+                 match1[0] =  'ID_'+nameD
+                 Internal.setValue(match1,nameD)
+                 z[2].append(match1)
+
+
+             else:
+               if tranche==0            : name2 = str(NbTranche-1)
+               elif tranche==NbTranche-1: name2 = str(0)
+               name ='tr'+name2+'_'+name
+               match[0] =  'ID_'+name
+               Internal.setValue(match,name)
+
            else:
-              name ='tr'+name2+'_'+name
-              match[0] =  'ID_'+name
-              Internal.setValue(match,name)
-           
+             name2= str(tranche)
+             name ='tr'+name2+'_'+name
+             match[0] =  'ID_'+name
+             Internal.setValue(match,name)
+        
         # Change le num des procs
         proc = Internal.getNodeFromName2(z,'proc')
-        if proc is not None:
-           proc[1][0,0] = proc[1][0,0]+ numberofproc*tranche
+	if proc is not None and tranche != 0:
+           proc[1][0] = proc[1][0]+ numberofproc
 
-   if tranche == 0:
-      C.convertPyTree2File(t, 'tc_'+str(NbTranche)+'Tranches.cgns')
-   else:
-      Filter.writeNodesFromPaths('tc_'+str(NbTranche)+'Tranches.cgns', ['CGNSTree/Base']*len(zones), zones, format='bin_cgns')
+   zout=zones
+   tp[2][1][2] += zout
+
+floweq = Internal.getNodeFromName2(t,'FlowEquationSet')
+if floweq is not None: tp[2][1][2].append(floweq)
+refstat= Internal.getNodeFromName2(t,'ReferenceState')
+if floweq is not None: tp[2][1][2].append(refstat)
+C.convertPyTree2File(tp,'./2TRANCHE/tc_Nbtranche'+str(NbTranche)+'.cgns')

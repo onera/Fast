@@ -1939,7 +1939,7 @@ def createStressNodes(t, BC=None, windows=None):
 # Calcul des effort (in place)
 #
 #==============================================================================
-def _computeStress(t, teff, metrics):
+def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     """Compute efforts in teff."""
     global FIRST_IT, HOOK
     zones     = Internal.getZones(t)
@@ -1963,10 +1963,12 @@ def _computeStress(t, teff, metrics):
 
     else:  hook1  = HOOK
 
-    effort = numpy.empty(8, numpy.float64)
+    effort  = numpy.empty(8, numpy.float64)
+    pos_eff = numpy.empty(3, numpy.float64)
+    pos_eff[0] = xyz_ref[0]; pos_eff[1] = xyz_ref[1]; pos_eff[2] = xyz_ref[2]
 
     #print 'ompmode=', ompmode
-    fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, ompmode)
+    fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, pos_eff, ompmode)
 
     return effort
 

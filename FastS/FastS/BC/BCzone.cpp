@@ -440,6 +440,26 @@ E_Int K_FASTS::BCzone(
                                          ipt_data6, iptsize_data[0], inc_bc, size_work );
                      }
 
+                } else if ( bc_type == 19 ) {//inflow Lund
+                    DEFAULT_STATE( "BCInflow" )
+                    // MUSCL
+                    E_Float c4, c5, c6;
+                    c4 = 5. / 6.;
+                    c5 = 2. / 6.;
+                    c6 = -1. / 6.;
+
+#                   include "BC/INCREMENT_BC.h"
+
+                    E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
+
+                    E_Float* ipt_fieldinflow   = ipt_data;
+                    E_Float* ipt_fieldplanlund = ipt_data +   iptsize_data[0]*param_int[NEQ];
+                    E_Float* ipt_paramlund     = ipt_data + 2*iptsize_data[0]*param_int[NEQ];
+
+                       bvbs_inflow_lund_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
+                                          iptijk, iptrop, ipt_fieldinflow, ipt_fieldplanlund, ipt_paramlund,
+                                         iptsize_data[0], inc_bc, size_work );
+
                 } else if ( bc_type == 2 ) {
                     DEFAULT_STATE( "BCSupersonic" )
                     // MUSCL

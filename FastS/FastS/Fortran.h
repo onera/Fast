@@ -387,6 +387,13 @@ extern "C"
                                     E_Float* state1    , E_Float* state2   , E_Float* state3, E_Float* state4, E_Float* state5, E_Float* state6, 
 	         	            E_Int& size_data   , E_Int* inc_bc     , E_Int& size_work);
 
+   void     bvbs_inflow_lund_(    E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
+                                  E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
+                                  E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, 
+                                  E_Float* roIn      , E_Float* roLund   , E_Float* param_lund, 
+	         	          E_Int& size_data   , E_Int* inc_bc     , E_Int& size_work);
+
+
    void     bvbs_inflow_fich_(    E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Int* param_int ,E_Int* ind_loop  ,
                                   E_Float* param_real, E_Float& c4   , E_Float& c5, E_Float& c6,
                                   E_Float* iptventi  , E_Float* iptijk   , E_Float* iptro, 
@@ -486,4 +493,7 @@ extern "C"
                               E_Float* iptwig           , E_Float* iptstat_wig ,
                               E_Float* iptdrodm         , E_Float* iptcoe     , 
                               E_Float* dpJ_dpW          , E_Float* rhsIter    , E_Float* Adj);
-}
+
+ void mj_lund_planrecyl_(E_Int& nd, E_Int& idir, E_Int* param_int , E_Int* ind_fen,  E_Int* ind_dm_th, E_Int* inc_bc, E_Int& size_data, E_Float* lund_param, E_Float* rop, E_Float* rof2 );
+
+  }

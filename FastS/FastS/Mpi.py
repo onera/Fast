@@ -497,6 +497,16 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         PyTree.HOOK['ssors'] = ssors
     else:
         PyTree.HOOK['ssors'] = None
+
+    # Compactage arbre moyennes stat
+    #
+    if tmy is not None:
+        sol = Internal.getNodesFromName3(tmy, 'FlowSolution#Centers')
+        var = Internal.getNodesFromType1(sol[0] , 'DataArray_t')
+        varmy=[]
+        for v in var: varmy.append('centers:'+v[0])
+        _compact(tmy, fields=varmy)
+
     #
     # remplissage ghostcells
     #
@@ -514,8 +524,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     fasts._computePT_mut(zones, metrics, hook1)
 
-    if tmy is None: return (t, tc, metrics)
-    else: return (t, tc, metrics, tmy)
+    return (t, tc, metrics)
 
 #==============================================================================
 # For periodic unsteady chimera join, parameter must be updated peridicaly 

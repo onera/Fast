@@ -18,7 +18,7 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
 teff = FastS.createStressNodes(t, BC=['BCWall'])
 
-effort = FastS._computeStress(t, teff, metrics)
+effort = FastS._computeStress(t, teff, metrics, xyz_ref=(1.,1.,1.) )
 
 Internal._rmNodesByName(teff, '.Solver#Param')
 Internal._rmNodesByName(teff, '.Solver#ownData')

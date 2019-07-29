@@ -523,6 +523,7 @@ E_Float tmps;
  
 for (E_Int nd = 0; nd < nidom; nd++)
   {
+   // flag pour transfert optimiser explicit local
    autorisation_bc[nd]=0;
    if (rk == 3 and exploc == 2) 
       {
@@ -534,12 +535,58 @@ for (E_Int nd = 0; nd < nidom; nd++)
 	else if((nitcfg_stk%cycl == 1 or nitcfg_stk%cycl == cycl/2  or nitcfg_stk%cycl== cycl-1) and cycl == 4 ) { nitcfg = 1; autorisation_bc[nd] = 1; }
       } 
     else {autorisation_bc[nd] = 1;}
-  }
+
+    if(nitcfg==nitcfg_last-1)
+    {
+     ///mise a jour moyenne plan Lund si necessaire
+     E_Int pt_bcs = param_int[nd][PT_BC];
+     E_Int nb_bc  = param_int[nd][ pt_bcs ];
+     E_Float* ipt_data;
+     for ( E_Int ndf = 0; ndf < nb_bc; ndf++ )
+     {
+      E_Int pt_bc  = param_int[nd][pt_bcs+ 1 + ndf];
+
+      E_Int idir   = param_int[nd][pt_bc + BC_IDIR];
+      E_Int nbdata = param_int[nd][pt_bc + BC_NBDATA];
+      E_Int bc_type= param_int[nd][pt_bc + BC_TYPE];
+
+      if(bc_type==19) 
+      { 
+         E_Int* iptsize_data = param_int[nd] + pt_bc + BC_NBDATA + 1;
+         E_Int* ind_fen      = param_int[nd] + pt_bc + BC_FEN;
+         E_Int  inc_bc[3];
+         if ( idir <= 2 ) 
+         { inc_bc[0] = ind_fen[3] - ind_fen[2] + 1; // nombre element de la fenetre dans la direction J
+           inc_bc[1] = ind_fen[2]; // debut indice j
+           inc_bc[2] = ind_fen[4]; // debut indice k
+         }  
+         else if ( idir <= 4 )
+         { inc_bc[0] = ind_fen[1] - ind_fen[0] + 1; // nombre element de la fenetre dans la direction I
+           ind_fen[0]; // debut indice i
+           inc_bc[2] = ind_fen[4]; // debut indice k
+         }  
+         else
+         {inc_bc[0] = ind_fen[1] - ind_fen[0] + 1; // nombre element de la fenetre dans la direction I
+          inc_bc[1] = ind_fen[0]; // debut indice i
+          inc_bc[2] = ind_fen[2]; // debut indice j
+         }
+
+         if ( nbdata != 0 ) ipt_data = param_real[nd] + param_int[nd][pt_bcs + 1 + ndf + nb_bc];
+
+         E_Float* iptAvgPlanLund = ipt_data + 5*iptsize_data[0];
+         E_Float* iptParamLund   = ipt_data + 10*iptsize_data[0];
+
+         E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
+
+         mj_lund_planrecyl_(nd, idir, param_int[nd] , ind_fen, ipt_ind_dm_loc, inc_bc, iptsize_data[0],
+                            iptParamLund,  iptro[nd], iptAvgPlanLund); 
+      }//lund
+     }//ndf
+    }//nit_last
+  }//loop zone
  
 
-//lrhs=0; lcorner=0; 
-
- E_Int lrhs=0; E_Int lcorner=0; 
+E_Int lrhs=0; E_Int lcorner=0; 
 #pragma omp parallel default(shared)
  {
 #ifdef _OPENMP
@@ -604,12 +651,8 @@ for (E_Int nd = 0; nd < nidom; nd++)
 				 ipt_ind_dm_loc,
 				 ipt_topology_socket, ipt_ind_dm_thread);
 	     }
-
-	    
 	   if (autorisation_bc[nd] == 1)
-
 	    {
-  
 	       E_Int ierr = BCzone(nd, lrhs , nitcfg_stk, lcorner, param_int[nd], param_real[nd], npass,
 				   ipt_ind_dm_loc, ipt_ind_dm_thread, 
 				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
@@ -618,8 +661,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
 				   iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd]);
 
 	       correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptro_CL[nd]);
-
-	    }
+	    }//autorisation
 
            //Reinitialisation verrou omp
            //

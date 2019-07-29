@@ -42,7 +42,7 @@ c.....Metrique
 
         ! modification de vitesse normale par ajout
         ! de stabilisation de type Rhie-Chow
-        u   = 0.25*(qn1+qn2)- c2*sk*(p2-p1)*wig( l+ wig_k)
+        u  = 0.25*(qn1+qn2)- c2*sk*(p2-p1)*(opt0*wig( l+ wig_k)+1.-opt0)
 
         tdu = max(abs(u),c1*sk)*wig( l+ wig_k)
 

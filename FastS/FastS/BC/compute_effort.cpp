@@ -32,12 +32,12 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 {
-  PyObject *zones; PyObject *zones_eff; PyObject *metrics; PyObject* work;  PyObject* effarray;
+  PyObject *zones; PyObject *zones_eff; PyObject *metrics; PyObject* work;  PyObject* effarray;  PyObject* pos_eff;
   E_Int omp_mode;
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOOOl", &zones, &zones_eff, &metrics, &work, &effarray, &omp_mode)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOOOOOl", &zones, &zones_eff, &metrics, &work, &effarray, &pos_eff, &omp_mode)) return NULL;
 #else
-  if (!PyArg_ParseTuple(args, "OOOOOi", &zones, &zones_eff, &metrics, &work, &effarray, &omp_mode)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOOOOOi", &zones, &zones_eff, &metrics, &work, &effarray, &pos_eff, &omp_mode)) return NULL;
 #endif
 
 
@@ -82,9 +82,10 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
   vector<PyArrayObject*> hook;
 
   /// Tableau pour stockage senseur oscillation
-  PyObject* wigArray = PyDict_GetItemString(work,"wiggle"); FldArrayF* wig; FldArrayF* eff;
+  PyObject* wigArray = PyDict_GetItemString(work,"wiggle"); FldArrayF* wig; FldArrayF* eff; FldArrayF* pos;
   K_NUMPY::getFromNumpyArray(wigArray, wig, true); E_Float* iptwig = wig->begin();
   K_NUMPY::getFromNumpyArray(effarray, eff, true); E_Float* ipteff = eff->begin();
+  K_NUMPY::getFromNumpyArray(pos_eff , pos, true); E_Float* xyz_ref= pos->begin();
 
   
   ///
@@ -173,10 +174,6 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
    } // boucle zone arbre effort
 
 
-  FldArrayF  xyz_ref(3); E_Float* ipt_xyz_ref = xyz_ref.begin();
-  xyz_ref[0]=0.; xyz_ref[1]=0.;xyz_ref[2]=0.;
-
-
   E_Int  Nbre_thread_max = 1;
 #ifdef _OPENMP
   Nbre_thread_max = omp_get_max_threads();
@@ -238,7 +235,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
                            ipt_thread_topology, ind_loop);
 
        bceffort_( nd, ithread, ipt_param_int[nd_ns], ipt_param_real[nd_ns], ipt_param_int_eff[nd],
-                  ind_loop, effort_omp, ipt_xyz_ref,
+                  ind_loop, effort_omp, xyz_ref,
                   iptro[nd_ns]   , iptflu[nd]     , iptwig +shift_wig, iptmut[nd_ns]  ,   
                   iptx[nd_ns]    , ipty[nd_ns]    , iptz[nd_ns]      ,
                   ipti[nd_ns]    , iptj[nd_ns]    , iptk[nd_ns]      , iptvol[nd_ns]  ,
@@ -272,6 +269,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 
   RELEASESHAREDN( wigArray  , wig  );
   RELEASESHAREDN( effarray, eff);
+  RELEASESHAREDN( pos_eff , pos);
   RELEASEHOOK(hook)
 
   Py_INCREF(Py_None);
