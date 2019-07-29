@@ -683,6 +683,7 @@ def _buildOwnData(t, Padding):
     'IBC':3,
     'source':0,
     'Cups':4,
+    'senseurType':0,
     'ratiom':1
     }
 
@@ -847,6 +848,7 @@ def _buildOwnData(t, Padding):
             cups         = [1.,1.]
             ratiom       = 10000.
             meshtype     = 1  #stuctured
+            senseurtype  = 1  #version celia laurent du schema senseur
             
             a = Internal.getNodeFromName1(z, 'ZoneType')
             tmp = Internal.getValue(a)
@@ -966,6 +968,8 @@ def _buildOwnData(t, Padding):
                 if a is not None: cups = Internal.getValue(a)  
                 a = Internal.getNodeFromName1(d, 'ratiom')
                 if a is not None: ratiom = Internal.getValue(a)  
+                a = Internal.getNodeFromName1(d, 'senseurType')
+                if a is not None: senseurtype = Internal.getValue(a)  
                
             iflow  = 1
             ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0;
@@ -1066,7 +1070,7 @@ def _buildOwnData(t, Padding):
             leveld=0
 
             
-            datap = numpy.empty(85, numpy.int32)
+            datap = numpy.empty(86, numpy.int32)
             datap[0:25]= -1
 
             #Structure ou polyhedric
@@ -1083,8 +1087,8 @@ def _buildOwnData(t, Padding):
                ng_intext   = Internal.getNodeFromName1(ngon, 'IntExt')[1]
                NF_I0  = ng_intext[0]
                NF_RAC = ng_intext[1]
-               NF_BC1 = ng_intext[2]
-               NF_I1  = ng_intext[3]
+               NF_I1  = ng_intext[2]
+               NF_BC1 = ng_intext[3]
                NF_BC0 = ng_intext[4]
                NF_I2  = ng_intext[5]
                NF_TOT = ng_intext[6]
@@ -1163,6 +1167,7 @@ def _buildOwnData(t, Padding):
             datap[76:83]= ibc[0:7]
             datap[83]   = source
             datap[84]   = meshtype
+            datap[85]   = senseurtype
 
             i += 1
          

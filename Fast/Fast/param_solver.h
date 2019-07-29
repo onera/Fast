@@ -129,6 +129,7 @@
 #define IBC          76
 #define SRC          83
 #define MESHTYPE     84
+#define SENSORTYPE   85
 
 #define BC_TYPE	      0
 #define BC_IDIR       1
