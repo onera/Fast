@@ -6,7 +6,7 @@ import FastS.PyTree as FastS
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import KCore.test as test
-import sys
+test.TOLERANCE = 1.e-10
 
 t = C.convertFile2PyTree('Pplane_136_96.cgns')
 t = C.addState(t, MInf=0.2, ReInf=25.e6, MutSMuInf=15)

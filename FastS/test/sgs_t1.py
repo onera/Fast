@@ -36,7 +36,7 @@ ret = C.isNamePresent(t, 'centers:Density')
 if ret != 1: # Density not present
     state = Internal.getNodeFromType(t, 'ReferenceState_t')
     if state is None:
-        raise ValueError, 'Reference state is missing in input cgns.'
+        raise ValueError('Reference state is missing in input cgns.')
     vars = ['Density', 'MomentumX', 'MomentumY', 'MomentumZ',
             'EnergyStagnationDensity']
     for v in vars:
@@ -45,9 +45,7 @@ if ret != 1: # Density not present
             val = float(node[1][0])
             C._initVars(t, 'centers:'+v, val)
         else:
-            raise ValueError, v + ' is missing in ReferenceState.'
-
-
+            raise ValueError(v + ' is missing in ReferenceState.')
 
 # Ajout des ghost cells
 C.addState2Node__(t, 'EquationDimension', dim)
