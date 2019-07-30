@@ -36,7 +36,7 @@ c***********************************************************************
 
 
 c     Var loc
-      INTEGER_E i,j,k,ndo, icp,nitmin,iseuil,ndfin,b,ind
+      INTEGER_E i,j,k,ndo, icp,nitmin,iseuil,ndfin,b,ind,count,no_sdm
 
       ind=param_int(NSSITER)/param_int(LEVEL)      
       
@@ -447,8 +447,22 @@ c$$$            END IF
          ind_dm(2, ndfin, nitcfg)   = ijkv(1)
          ind_dm(4, ndfin, nitcfg)   = ijkv(2)
          ind_dm(6, ndfin, nitcfg)   = ijkv(3)
-         
-         nisdom_residu( nitcfg)     = 1
+ 
+         !!!  necessaire pour calcul residu OK
+         count = 0
+         do k=1,ijkv_lu(3)
+         do j=1,ijkv_lu(2)
+         do i=1,ijkv_lu(1)
+           no_sdm= i + (j-1)*ijkv_lu(1) +(k-1)*ijkv_lu(1)*ijkv_lu(2)
+
+           count            = count + 1
+           no_lu(  count  ) = no_sdm
+         enddo
+         enddo
+         enddo
+
+         nisdom_residu( nitcfg ) = count
+         !nisdom_residu( nitcfg)     = 1
 
 C     !$       write(*,'(a16,9i4)')'loop sousdom RK3 ',
 C     !$   &    nd,ind_dm(1,ndfin,nitcfg),ind_dm(2,ndfin,nitcfg),
