@@ -32,14 +32,13 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 {
-  PyObject *zones; PyObject *zones_eff; PyObject *metrics; PyObject* work;  PyObject* effarray;  PyObject* pos_eff;
+  PyObject *zones; PyObject *zones_eff; PyObject *metrics; PyObject* work; PyObject* effarray; PyObject* pos_eff;
   E_Int omp_mode;
 #if defined E_DOUBLEINT
   if (!PyArg_ParseTuple(args, "OOOOOOl", &zones, &zones_eff, &metrics, &work, &effarray, &pos_eff, &omp_mode)) return NULL;
 #else
   if (!PyArg_ParseTuple(args, "OOOOOOi", &zones, &zones_eff, &metrics, &work, &effarray, &pos_eff, &omp_mode)) return NULL;
 #endif
-
 
   E_Int**   ipt_param_int;
   
