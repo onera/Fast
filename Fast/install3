@@ -38,7 +38,8 @@ if [ $? -eq 0 ]; then
     scons3 install prefix="$INSTALLPATH" "$SCONSOPT"
     [ $? != 0 ] && exit;
     #touch Fast/fast.cpp
-    rm -f build/lib.*/Fast/fast*.*
+    rm -f build/lib.*/Fast/fast.*
+    rm -f build/lib.*/Fast/fast-*.*
     python3 setupScons.py install --prefix="$INSTALLPATH"
 else
     python3 setup.py install --prefix="$INSTALLPATH"
