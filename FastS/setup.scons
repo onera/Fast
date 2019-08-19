@@ -33,7 +33,7 @@ installPath = Dist.getInstallPath(prefix)
 (fastVersion, fastIncDir, fastLibDir) = Dist.checkFast()
 
 # Test if libmpi exists ======================================================
-(mpi, mpiIncDir, mpiLibDir) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
+(mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
 
 from KCore.config import *
 
@@ -53,7 +53,7 @@ if mpi:
 else:	       
     ADDITIONALCPPFLAGS = []
 
-if mpi: libraries.append('mpi')
+if mpi: libraries += mpiLibs
 
 # Builder fortran
 #==============================================================================

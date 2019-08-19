@@ -30,7 +30,7 @@ Dist.writeSetupCfg()
 from KCore.config import *
 
 # Test if libmpi exists ======================================================
-(mpi, mpiIncDir, mpiLibDir) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
+(mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
 
 # Compilation des fortrans ====================================================
 prod = os.getenv("ELSAPROD")
@@ -50,10 +50,8 @@ if mpi:
     libraryDirs.append(mpiLibDir)
     includeDirs.append(mpiIncDir)
     ADDITIONALCPPFLAGS = ['-D_MPI']
-    if Dist.getSystem()[0] == 'mingw': libraries.append('msmpi')
-    else:
-         libraries.append('mpi'); #libraries.append('mpi_cxx')
-
+    libraries += mpiLibs
+    
 ##   
 ## Modif pour calcul MPI sur poste GC   
 ##   

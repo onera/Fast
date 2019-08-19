@@ -93,7 +93,7 @@ Actions
     - **'scheme'**: possible values are
  
         + 'ausmpred' (see  p49 https://tel.archives-ouvertes.fr/pastel-00834850/document)
-        + 'sensor'   (see  p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
+        + 'senseur'   (see  p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
         + 'roe'
         + default value is 'ausmpred'
 
@@ -104,6 +104,11 @@ Actions
         + 'minmod'  (only valid for roe scheme)
         + default value is 'o3'
 
+    - **'senseurType'**:  only valid for 'senseur' scheme. Possible values are
+
+        + 0 : correction for speed only
+        + 1 : correction for speed, density and pressure
+        
     - **'motion'**: possible values are
 
         + 'none' (no motion)

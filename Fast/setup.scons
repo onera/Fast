@@ -30,7 +30,7 @@ installPath = Dist.getInstallPath(prefix)
 (connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
 
 # Test if libmpi exists ======================================================
-(mpi, mpiIncDir, mpiLibDir) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
+(mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
 
 from KCore.config import *
 
@@ -50,7 +50,7 @@ if mpi:
 else:	       
     ADDITIONALCPPFLAGS = []
 
-if mpi: libraries.append('mpi')
+if mpi: libraries += mpiLibs
 
 # Env =========================================================================
 import srcs
