@@ -21,7 +21,10 @@ Dist.writeSetupCfg()
 # Test if kcore exists =======================================================
 (kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
 
-# Test if connector exists =======================================================
+# Test if xcore exists =======================================================
+(xcoreVersion, xcoreIncDir, xcoreLibDir) = Dist.checkXCore()
+
+# Test if connector exists =====================================================
 (connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
 
 from KCore.config import *
@@ -34,9 +37,9 @@ prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir,connectorLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir,connectorIncDir]
-libraries = ["fast", "kcore","connector"]
+libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir]
+libraries = ["fast", "kcore", "xcore", "connector"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
