@@ -5,7 +5,6 @@ import Initiator.PyTree as I
 import CPlot.PyTree as CPlot
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
-import Converter.Internal as Internal
 import time
 
 mach = 0.

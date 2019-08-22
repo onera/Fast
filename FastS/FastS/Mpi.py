@@ -1,7 +1,7 @@
 # FastS + MPI
-import PyTree
-import fasts
-from PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _BCcompact, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp, allocate_ssor, setIBCData_zero, display_cpu_efficiency
+from . import PyTree
+from . import fasts
+from .PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _BCcompact, _movegrid, _computeVelocityAle, checkBalance, itt, HOOK, distributeThreads, _build_omp, allocate_ssor, setIBCData_zero, display_cpu_efficiency
 import timeit
 import time as Time
 import numpy
@@ -20,6 +20,9 @@ try:
     import math
 except:
     raise ImportError("FastS: requires Converter, Connector and Distributor2 modules.")
+
+try: range = xrange
+except: pass
 
 #==============================================================================
 #def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, tps_calcul=None, tps_com_transferts=None):
@@ -68,8 +71,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                 pt_ech      = param_int_tc[comm_P2P + shift_graph]
                 dest        = param_int_tc[pt_ech]
 
-      for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
-
+      for nstep in range(1, nitmax+1): # pas RK ou ssiterations
 
          hook1 = PyTree.HOOK.copy()
          distrib_omp = 0
@@ -224,7 +226,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1
       #tps_calcul = 0.0
       #tps_com_transferts = 0.0 
         
-      for nstep in xrange(1, nitmax+1): # pas RK ou ssiterations
+      for nstep in range(1, nitmax+1): # pas RK ou ssiterations
 
          if graph is not None:
              procDict  = list_graph[nstep-1]['procDict']
@@ -265,7 +267,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1
             #toc2=Time.time()-tic              
 
             #tic=Time.time()
-            #for comm_P2P in xrange(1,param_int[0]+1):
+            #for comm_P2P in range(1,param_int[0]+1):
             no_transfert = 1#comm_P2P
             process = Cmpi.rank
             #print Cmpi.rank, comm_P2P
@@ -286,7 +288,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1
             
 
             #tic=Time.time()
-            #for comm_P2P in xrange(1,param_int[0]+1):
+            #for comm_P2P in range(1,param_int[0]+1):
             no_transfert = 1#comm_P2P           
             fasts.recup3para_mpi(zones,zonesD,param_int,param_real,hook1,rostk,0,nstep,ompmode,taille_tabs,no_transfert) 
             #toc4=Time.time()-tic
@@ -412,7 +414,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     FastI._buildOwnData(t, Padding)
 
     # determination taille des zones a integrer (implicit ou explicit local)
-    #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)
+    #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
     zones = Internal.getZones(t)
@@ -430,8 +432,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     _BCcompact(t) 
 
     #determination taille des zones a integrer (implicit ou explicit local)
-    #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: xrange(22,1000)
-    for nstep in xrange(1, int(dtloc[0])+1):
+    #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
+    for nstep in range(1, int(dtloc[0])+1):
         hook1 = PyTree.HOOK.copy()
         distrib_omp = 1
         hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, 1, nstep, distrib_omp) )
