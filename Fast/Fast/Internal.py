@@ -155,7 +155,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                NG_indx  =  Internal.getNodeFromPath(z, 'NGonElements/FaceIndex')
                NG_pe    =  Internal.getNodeFromPath(z, 'NGonElements/ParentElements')
 
-            sa,FIRST_IT     = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint)
+            sa, lbmflag, neq_lbm, FIRST_IT  = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint)
             
             if FA_intext is not None:
                Internal.getNodeFromPath(z, 'NFaceElements')[2] +=[FA_indx, FA_intext] 
@@ -179,7 +179,14 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                vars_c.append('TurbulentSANuTildeDensity')
 
             vars=[]
-            for level in ['', '_M1', '_P1']:  #champs primitives
+            timelevel = ['', '_M1', '_P1']
+            if lbmflag == True : 
+               fields2compact =[]
+               for i in range(1,neq_lbm+1):
+                 fields2compact.append('centers:Q'+str(i))
+               vars.append(fields2compact)
+               timelevel = ['']
+            for level in timelevel:  #champs primitives
                fields2compact =[]
                for v in vars_p:
                  fields2compact.append('centers:'+v+level)
@@ -278,43 +285,20 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
         if C.isNamePresent(zone, 'centers:TurbulentDistance') != 1: 
             raise ValueError("createPrimVars: TurbulentDistance field required at cell centers for RANS computations.")
     
+    if (not (model == 'LBMLaminar' or model == 'lbmlaminar')): lbm = False
+    else: lbm = True
 
     rgp = (adim[11]-1.)*adim[7]
     t0=timeit.default_timer()
     if C.isNamePresent(zone, 'centers:VelocityX'  ) != 1: P._computeVariables(zone, ['centers:VelocityX'  ], rgp=rgp)
 
-    ''' 
-    t1=timeit.default_timer()
-    print("cout calcul VX= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
     if C.isNamePresent(zone, 'centers:VelocityY'  ) != 1: P._computeVariables(zone, ['centers:VelocityY'  ], rgp=rgp)
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul VY= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
     if C.isNamePresent(zone, 'centers:VelocityZ'  ) != 1: P._computeVariables(zone, ['centers:VelocityZ'  ], rgp=rgp)
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul VZ= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
     if C.isNamePresent(zone, 'centers:Temperature') != 1: P._computeVariables(zone, ['centers:Temperature'], rgp=rgp)
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul T = ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
 
     if (sa and C.isNamePresent(zone, 'centers:TurbulentSANuTilde') != 1): 
         if C.isNamePresent(zone, 'centers:TurbulentSANuTildeDensity') != 1: C._initVars(zone, '{centers:TurbulentSANuTilde}= %20.16g/{centers:Density}'%adim[14])
         else: C._initVars(zone, '{centers:TurbulentSANuTilde}= {centers:TurbulentSANuTildeDensity}/{centers:Density}')
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul Nu = ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
 
     if rmConsVars:
         C._rmVars(zone, 'centers:MomentumX')
@@ -323,88 +307,30 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
         C._rmVars(zone, 'centers:EnergyStagnationDensity')
         C._rmVars(zone, 'centers:TurbulentSANuTildeDensity')
 
-    '''
-    t1=timeit.default_timer()
-    print("cout rmvars    = ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
 
-    #on test s'il existe 2 niveau en temps dans l'arbre pour appliquer la bonne formule de derivee temporelle a la premere iteration
     FIRST_IT = 1
-    if C.isNamePresent(zone, 'centers:Density_M1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_M1')  ; FIRST_IT=0
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul RoM1= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
-    if C.isNamePresent(zone, 'centers:VelocityX_M1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_M1'); FIRST_IT=0
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul VXM1= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
-    if C.isNamePresent(zone, 'centers:VelocityY_M1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_M1'); FIRST_IT=0
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul VYM1= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
-    if C.isNamePresent(zone, 'centers:VelocityZ_M1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_M1'); FIRST_IT=0
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul VZM1= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
-    if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul TM1 = ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
-    if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_M1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_M1'); FIRST_IT=0
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul NuM1= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
+    if model != 'LBMLaminar':
+       neq_lbm = 0
+       #on test s'il existe 2 niveau en temps dans l'arbre pour appliquer la bonne formule de derivee temporelle a la premere iteration
+       if C.isNamePresent(zone, 'centers:Density_M1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_M1')  ; FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:VelocityX_M1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_M1'); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:VelocityY_M1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_M1'); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:VelocityZ_M1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_M1'); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
+       if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_M1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_M1'); FIRST_IT=0
 
-    if C.isNamePresent(zone, 'centers:Density_P1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_P1')  
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul RoP1= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
-    if C.isNamePresent(zone, 'centers:VelocityX_P1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_P1')
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul VXP1= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
-    if C.isNamePresent(zone, 'centers:VelocityY_P1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_P1')
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul VYP1= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
-    if C.isNamePresent(zone, 'centers:VelocityZ_P1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_P1')
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul VZP1= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
-    if C.isNamePresent(zone, 'centers:Temperature_P1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_P1')
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul TP1 = ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
-    if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_P1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_P1')
-    '''
-    t1=timeit.default_timer()
-    print("cout calcul NuP1= ", t1-t0, zone[0])
-    t0=timeit.default_timer()
-    '''
+       if C.isNamePresent(zone, 'centers:Density_P1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_P1')  
+       if C.isNamePresent(zone, 'centers:VelocityX_P1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_P1')
+       if C.isNamePresent(zone, 'centers:VelocityY_P1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_P1')
+       if C.isNamePresent(zone, 'centers:VelocityZ_P1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_P1')
+       if C.isNamePresent(zone, 'centers:Temperature_P1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_P1')
+       if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_P1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_P1')
+    else:
+       neq_lbm = Internal.getNodeFromName2(zone, 'Parameter_int')[1][86]
 
+       #print 'Internal fast: neq_LBM=', neq_lbm
+       for i in range(1,neq_lbm+1):
+           if C.isNamePresent(zone, 'centers:Q'+str(i)) != 1: C._initVars(zone, 'centers:Q'+str(i), 1.)
 
     sfd = 0
     a = Internal.getNodeFromName2(zone, 'sfd')
@@ -579,7 +505,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
 
 
 
-    return sa, FIRST_IT
+    return sa, lbm, neq_lbm, FIRST_IT
 
 #==============================================================================
 # Construit les datas possedees par FastP
@@ -795,10 +721,15 @@ def _buildOwnData(t, Padding):
             shiftvar   = 0
             #=== check for a padding file  (cache associativity issue)
             dims = Internal.getZoneDim(z)
-            if pad:
-                  iv = dims[1]-5
-                  jv = dims[2]-5
-                  kv = dims[3]-5
+            if dims[3] == 'NGON':
+               ngon=True
+            else: 
+               ngon = False
+               iv = dims[1]-5
+               jv = dims[2]-5
+               kv = dims[3]-5
+               if kv == -3 : kv =1
+               if pad: 
                   target = [iv,jv,kv]
                   if target in sizeIJK:
                        l        = sizeIJK.index( target)
@@ -975,6 +906,12 @@ def _buildOwnData(t, Padding):
             ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0;
             azgris = 0.01; addes = 0.2
 
+            if not ngon:
+              neq_lbm=19
+              if kv == 1: neq_lbm=9  # calcul 2d
+            else:
+              neq_lbm=0
+
             if   model == "Euler"     or model == "euler":     iflow = 1
             elif model == "NSLaminar" or model == "nslaminar": iflow = 2
             elif model == "NSLes"     or model == "nsles":     iflow = 2
@@ -993,8 +930,11 @@ def _buildOwnData(t, Padding):
                     elif des == "ZDES2_w" or des == "zdes2_w": ides = 5
                     elif des == "ZDES3"   or des == "zdes3":   ides = 6
                     elif des == "ZDES3_w" or des == "zdes3_w": ides = 7
+
+            elif model == "LBMLaminar" or model == "lbmlaminar": 
+                iflow   = 4
             else:
-                 print('Warning: FastS: model %s is invalid.'%model)
+                 print('Warning: Fast: model %s is invalid.'%model)
 
             iles = 0
             if sgsmodel == 'smsm': iles = 1
@@ -1070,7 +1010,7 @@ def _buildOwnData(t, Padding):
             leveld=0
 
             
-            datap = numpy.empty(86, numpy.int32)
+            datap = numpy.empty(87, numpy.int32)
             datap[0:25]= -1
 
             #Structure ou polyhedric
@@ -1168,6 +1108,7 @@ def _buildOwnData(t, Padding):
             datap[83]   = source
             datap[84]   = meshtype
             datap[85]   = senseurtype
+            datap[86]   = neq_lbm
 
             i += 1
          

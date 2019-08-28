@@ -333,6 +333,8 @@ void K_FAST::setInterpTransfersIntra(
   E_Int nvars;
   if (varType <= 3 && varType >= 1)
     nvars = 5;
+  else if (varType == 4)
+    nvars = param_int[0][NEQ_LBM];
   else
     nvars = 6;
   
@@ -761,6 +763,8 @@ void K_FAST::setInterpTransfersInter(
 
   if (varType <= 3 && varType >= 1)
     nvars = 5;
+  else if (varType == 4)
+    nvars = param_int[0][NEQ_LBM];
   else
     nvars = 6;
 
@@ -1349,34 +1353,48 @@ void K_FAST::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*& 
           E_Int decal = param_int[ recv_nozone[irac] ] [ NDIMDX ];
 
           if (recv_nvarloc[irac] == 5) {
-#pragma omp for
-            for (int irecv = 0; irecv < sz; ++irecv) {
+            #pragma omp for
+            for (int irecv = 0; irecv < sz; ++irecv) 
+               {
 
-              ilistrecv = recv_listRc[irac] [irecv]; 
- 
-              ipt_roD[recv_nozone[irac]][ilistrecv          ] = recv_frp[irac][irecv];
-              ipt_roD[recv_nozone[irac]][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 3*decal] = recv_frp[irac][irecv + 3 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 4*decal] = recv_frp[irac][irecv + 4 * sz];
-            }  // end for (int irecv
-          } else if (recv_nvarloc[irac] == 6) {
-#pragma omp for
-            for (int irecv = 0; irecv < sz; ++irecv) {
+                ilistrecv = recv_listRc[irac] [irecv]; 
+  
+                ipt_roD[recv_nozone[irac]][ilistrecv          ] = recv_frp[irac][irecv];
+                ipt_roD[recv_nozone[irac]][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * sz];
+                ipt_roD[recv_nozone[irac]][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * sz];
+                ipt_roD[recv_nozone[irac]][ilistrecv + 3*decal] = recv_frp[irac][irecv + 3 * sz];
+                ipt_roD[recv_nozone[irac]][ilistrecv + 4*decal] = recv_frp[irac][irecv + 4 * sz];
+               }
+          } 
+          else if (recv_nvarloc[irac] == 6) {
+            #pragma omp for
+            for (int irecv = 0; irecv < sz; ++irecv) 
+               {
 
-              ilistrecv = recv_listRc[irac] [irecv]; 
+                ilistrecv = recv_listRc[irac] [irecv]; 
+  
+                ipt_roD[recv_nozone[irac]][ilistrecv          ] = recv_frp[irac][irecv];
+                ipt_roD[recv_nozone[irac]][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * sz];
+                ipt_roD[recv_nozone[irac]][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * sz];
+                ipt_roD[recv_nozone[irac]][ilistrecv + 3*decal] = recv_frp[irac][irecv + 3 * sz];
+                ipt_roD[recv_nozone[irac]][ilistrecv + 4*decal] = recv_frp[irac][irecv + 4 * sz];
+                ipt_roD[recv_nozone[irac]][ilistrecv + 5*decal] = recv_frp[irac][irecv + 5 * sz];
+               }
+          } 
+          else  {
+            for (int eq = 0; eq < recv_nvarloc[irac]; ++eq)
+               {
+                #pragma omp for
+                for (int irecv = 0; irecv < sz; ++irecv)
+                  {
+                   ilistrecv = recv_listRc[irac] [irecv]; 
 
-              ipt_roD[recv_nozone[irac]][ilistrecv          ] = recv_frp[irac][irecv];
-              ipt_roD[recv_nozone[irac]][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 3*decal] = recv_frp[irac][irecv + 3 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 4*decal] = recv_frp[irac][irecv + 4 * sz];
-              ipt_roD[recv_nozone[irac]][ilistrecv + 5*decal] = recv_frp[irac][irecv + 5 * sz];
-            }  // end for (int irecv
-          }
-
-        }  // end omp parallel
-      }  // end for ( int irac = ....
+                   ipt_roD[recv_nozone[irac]][ilistrecv + eq*decal] = recv_frp[irac][irecv + eq * sz];
+                  }  
+               }
+          }//else
+        }// end omp parallel
+      }// end for ( int irac = ....
 
 #if defined(PROFILE_TRANSFERT)
       end = omp_get_wtime();
