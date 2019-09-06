@@ -1420,11 +1420,11 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
     #if (model == 'nsspalart' or model =='NSTurbulent'): neq = 6
     neq_max = 6
    
-    cvg_numpy = numpy.empty((nzones,2*neq_max) , dtype=numpy.float64)
+    cvg_numpy = numpy.empty((nzones,2*neq_max), dtype=numpy.float64)
     # sortie sur stdout "simple precision" 
-    if format is None: lft = 1
+    lft = 1
     # sortie sur stdout "double precision" 
-    elif format == "double": lft = 0
+    if format == "double": lft = 0
     # sortie sur Fichier Fortran binaire
     elif format == "flush": lft = -1
     # sortie sur Fichier Fortran binaire
