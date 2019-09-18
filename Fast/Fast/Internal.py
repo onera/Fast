@@ -185,6 +185,10 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                for i in range(1,neq_lbm+1):
                  fields2compact.append('centers:Q'+str(i))
                vars.append(fields2compact)
+               fields2compact =[]
+               for i in range(1,neq_lbm+1):
+                 fields2compact.append('centers:Q'+str(i)+'_M1')
+               vars.append(fields2compact)
                timelevel = ['']
             for level in timelevel:  #champs primitives
                fields2compact =[]
@@ -330,7 +334,8 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
 
        #print 'Internal fast: neq_LBM=', neq_lbm
        for i in range(1,neq_lbm+1):
-           if C.isNamePresent(zone, 'centers:Q'+str(i)) != 1: C._initVars(zone, 'centers:Q'+str(i), 1.)
+           if C.isNamePresent(zone, 'centers:Q'+str(i)) != 1: C._initVars(zone, 'centers:Q'+str(i), 0.)
+           if C.isNamePresent(zone, 'centers:Q'+str(i)+'_M1') != 1: C._initVars(zone, 'centers:Q'+str(i)+'_M1', 0.)
 
     sfd = 0
     a = Internal.getNodeFromName2(zone, 'sfd')
@@ -1208,6 +1213,8 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         model  = Internal.getValue(a)
         neq = 5
         if model == 'nsspalart' or model =='NSTurbulent': neq = 6
+        param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
+        if model == 'LBMLaminar' : neq = param_int[86]
         
         if scheme == 'implicit' or scheme == 'implicit_local':   neq_coe = neq     
         else:                                                    neq_coe = 1    # explicit
