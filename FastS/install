@@ -38,6 +38,7 @@ if [ $? -eq 0 ]; then
     [ $? != 0 ] && exit;
     #touch FastS/fastS.cpp
     rm -f build/lib.*/FastS/fasts.*
+    rm -f build/lib.*/FastS/fasts-*.*
     python setupScons.py install --prefix="$INSTALLPATH"
 else
     python setup.py install --prefix="$INSTALLPATH"
