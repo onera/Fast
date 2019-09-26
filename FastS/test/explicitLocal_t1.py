@@ -19,7 +19,6 @@ import numpy
 import math
 import timeit
 import pickle
-import time as Time
 import KCore.test as test
 
 
