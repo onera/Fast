@@ -69,6 +69,9 @@ env = Environment(tools=tools, CC=cc, CXX=cxx, AR=AR, CFLAGS=[], CXXFLAGS=[],
                   ENV=Dist.getEnvForScons())
 env.Replace(CPPPATH=["Fast"]+additionalIncludePaths+includeDirs)
 
+ELSAPROD = os.environ.get('ELSAPROD', 'x86_r8')
+env.SConsignFile('build/'+ELSAPROD+'/.sconsign.dblite')
+
 # Pre processing du C
 cppArgs = Dist.getCppArgs()+['-g']
 env.Replace(CPPFLAGS=cppArgs+ADDITIONALCPPFLAGS)
