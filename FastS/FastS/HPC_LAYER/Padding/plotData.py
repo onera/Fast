@@ -52,7 +52,7 @@ minJ = 1000
 maxJ = 0
 
 for k in data.keys():
-    print("Case:",k))
+    print("Case:",k)
     print("Shape ",data[k].shape)
     print("imin,imax ",data[k][1,0,0],data[k][1,-1,-1])
     print("jmin,jmax ",data[k][2,0,0],data[k][2,-1,-1])

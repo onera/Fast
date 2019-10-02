@@ -59,7 +59,6 @@ C._initVars(a, '{centers:VelocityZ} = 0.')
 C._initVars(a, '{centers:Temperature}=%f'%T0)
 
 t = C.newPyTree(['Base']) ; t[2][1][2] += [a]
-print t[2][1][2][0][0] 
 t[2][1][2][0][0] ='cart'+str(rank)
 t = C.addState(t, 'GoverningEquations', 'NSLaminar')
 t = C.addState(t, MInf=0.1, ReInf=1600, adim='adim2funk')
@@ -130,7 +129,7 @@ for key in proc.keys():
    dirs= proc[key]
    nfen= len(dirs)
    #print "dirs", dirs,nfen, rank
-   if rank == 0:  print "dirs", dirs,nfen, rank
+   if rank == 0:  print("dirs", dirs,nfen, rank)
    o = Internal.createUniqueChild( z , 'ID_cart'+key, 'ZoneSubRegion_t', 'cart'+key  )
    subRegion = Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
    o = Internal.createChild( subRegion[c] , 'ZoneRole', 'DataArray_t', 'Donor')
@@ -146,7 +145,6 @@ for key in proc.keys():
    l = 0
    ni   = (N-1+4)
    ninj = ni*ni
-   print 'ni, ninj=', ni, ninj
    for  dir in dirs:
 
      if dir == 'imin':
@@ -204,7 +202,6 @@ procDict={}
 graphID ={}
 procs={}
 for i in range(size):
-  print 'i=',i 
   proc ={}
   procDict['cart'+str(i)]= i
   procList.append(['cart'+str(i)])
@@ -252,7 +249,6 @@ for i in range(size):
   procs[i]= proc
  
  
-#print procs
 graph={}
 graph['graphID']=procs
 graph['graphIBCD']={}
@@ -261,7 +257,7 @@ graph['procList']=procList
 
 rank = Cmpi.rank
 
-if rank ==0: print "proc", graph
+if rank ==0: print("proc", graph)
 #for s in subRegions:
 #   print "rac",s[0], rank
 

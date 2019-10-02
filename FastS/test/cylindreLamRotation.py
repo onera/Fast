@@ -155,10 +155,10 @@ NTOUR    = 1
 NIT_TOUR = 360
 RED_DT   = 0.10
 time_step = RED_DT*2.*math.pi/(NIT_TOUR*abs(omgrpm))
-print'+++++++++++++++++++++++++'
-print'time_step = ',time_step
-print'niter     e= ',NIT
-print'+++++++++++++++++++++++++'
+print('+++++++++++++++++++++++++')
+print('time_step = ',time_step)
+print('niter     e= ',NIT)
+print('+++++++++++++++++++++++++')
 
 teta      = 0.
 tetap     = 0.
@@ -215,7 +215,7 @@ if steady == 'no' :
 time = time0
 
 
-print'it_init, it_fin :',NIT_REP-1,NIT_REP+NIT-1
+print('it_init, it_fin :',NIT_REP-1,NIT_REP+NIT-1)
 
 #Initialisation parametre vitesse d entrainememnt
 time_ale = time + 0.5*time_step
@@ -256,20 +256,17 @@ modulo_convNewt =  modulo_verif
 for it in xrange(NIT_REP, NIT_REP+NIT):
 #for it in xrange(NIT):
     if steady == 'no':
-	time_ale = time + 0.5*time_step
-	teta = omgrpm*time_ale
-	tetap= omgrpm
-    
-	FastI._motionlaw(t, teta, tetap)
+      time_ale = time + 0.5*time_step
+      teta = omgrpm*time_ale
+      tetap= omgrpm
+      FastI._motionlaw(t, teta, tetap)
     
     FastS._compute(t, metrics, it, tc)
     
-    if (it%modulo_convNewt == 0):
+    if it%modulo_convNewt == 0:
       FastS.display_temporal_criteria(t, metrics, it)
-    
-    
 
-    if (it%modulo_debit == 0):
+    if it%modulo_debit == 0:
       # Extraction debits	
 
       #FastS._applyBC(t,metrics)
@@ -288,17 +285,15 @@ for it in xrange(NIT_REP, NIT_REP+NIT):
     
     
       #CV.setValue(debit_amont, ((it-NIT_REP+1)/modulo_verif ,1,1), [it,-1*debit_in])
-      print  "debit amont =", -1*debit_in
+      print("debit amont =", -1*debit_in)
     
       #CV.setValue(debit_aval, ((it-NIT_REP+1)/modulo_verif,1,1), [it,debit_out])
-      print  "debit aval =", debit_out
+      print("debit aval =", debit_out)
       
-      print  "debit wall =", debit_wall, debit_in+debit_out
-
+      print("debit wall =", debit_wall, debit_in+debit_out)
     
-    
-    if (it%modulo_debit) == 0:
-        print "it,time,omega*t = ",it,time,omgrpm*time*180/math.pi
+    if it%modulo_debit == 0:
+        print("it,time,omega*t = ",it,time,omgrpm*time*180/math.pi)
     
     FastS._movegrid(t)
     
@@ -335,4 +330,3 @@ C._rmVars(t, vars)
 #C.convertPyTree2File(t, 'out.cgns')
 
 test.testT(t, 1)
-

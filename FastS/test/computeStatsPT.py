@@ -33,7 +33,7 @@ tmy = FastS.createStatNodes(t, dir='k')
 
 # Compute
 for nitrun in range(1,200):
-    print 'it=', nitrun
+    print('it=', nitrun)
     FastS._compute(t, metrics, nitrun)
     FastS._computeStats(t, tmy, metrics)
 C.convertPyTree2File(tmy, 'stat.cgns')

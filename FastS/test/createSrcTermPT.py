@@ -71,26 +71,24 @@ numz["scheme"]             = "roe"
 numz["source"]		   = source
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
-print "warmup"
 (t, tc, metrics) = FastS.warmup(t, None)
 
-print "compute"
 nit = 2730
 timeStep = numz['time_step']
 for it in xrange(nit):
     # create source term
     if source == 1:
-	omt    = omega*temps+phi
-	eps    = amp*sin(omt)
-	C._initVars(t,'{centers:Density_src}=%g*exp(-%g*(({centers:r2}<%g)*{centers:r2}+({centers:r2}>%g)*%g))*{centers:vol}'%(eps,alpha,rcrit,rcrit,rcrit))
-	C._initVars(t,'{centers:MomentumX_src}=0.')
-	C._initVars(t,'{centers:MomentumY_src}=0.')
-	C._initVars(t,'{centers:MomentumZ_src}=0.')
-	C._initVars(t,'{centers:EnergyStagnationDensity_src}={centers:Temperature}*{centers:Density_src}*%g'%gam3)
+        omt    = omega*temps+phi
+        eps    = amp*sin(omt)
+        C._initVars(t,'{centers:Density_src}=%g*exp(-%g*(({centers:r2}<%g)*{centers:r2}+({centers:r2}>%g)*%g))*{centers:vol}'%(eps,alpha,rcrit,rcrit,rcrit))
+        C._initVars(t,'{centers:MomentumX_src}=0.')
+        C._initVars(t,'{centers:MomentumY_src}=0.')
+        C._initVars(t,'{centers:MomentumZ_src}=0.')
+        C._initVars(t,'{centers:EnergyStagnationDensity_src}={centers:Temperature}*{centers:Density_src}*%g'%gam3)
     #######
     FastS._compute(t, metrics, it)
-    if (it%5 == 0):
-        print '- %d - %g'%(it, temps)
+    if it%5 == 0:
+        print('- %d - %g'%(it, temps))
         CPlot.display(t, offscreen=0, dim=3, mode='Scalar', scalarField='centers:Density', isoScales=['centers:Density',25,1.19996,1.200006], isoEdges=1,posCam=(0.,0.,120.5), posEye=(0.,0.,0.5), dirCam=(0.,1.,0.))#,export="export.mpeg")
     time.sleep(0.1)
     temps += timeStep

@@ -33,19 +33,19 @@ for z in Internal.getZones(t0):
    c+=1
 '''
 
-print 'Nb de coeurs par tranche = ',  numberofproc
+print('Nb de coeurs par tranche = ', numberofproc)
 
-print 'TRANSLATION ET COPIE de RESTART EN TRANCHES'
+print('TRANSLATION ET COPIE de RESTART EN TRANCHES')
 for tranche in xrange(NbTranche):
 
    dz =Lz
    if tranche==0: dz =0
-   print 'Tranche', tranche,' translatee de ', dz*tranche
+   print('Tranche', tranche,' translatee de ', dz*tranche)
    t = T.translate(t0,(0,0,tranche*dz))
 
    ##################
    # CHANGEMENT DE NOM DES ZONES
-   print 'CHANGEMENT DE NOM DES ZONES DES TRANCHES'
+   print('CHANGEMENT DE NOM DES ZONES DES TRANCHES')
    zones = Internal.getZones(t)
    for z in zones:
         z[0]='tr'+str(tranche)+'_'+z[0]
@@ -67,7 +67,7 @@ for tranche in xrange(NbTranche):
                  if tranche == 0: 
                     name2 = str(NbTranche-1)
                     perio[2][0][2][2][1][2] = perio[2][0][2][2][1][2]*NbTranche
-                    print 'PERIO', perio[2][0][2][2][1][2]
+                    print('PERIO', perio[2][0][2][2][1][2])
                  else:  
                     Internal._rmNodesFromName(match,'GridConnectivityProperty')    
               else: # kmax
@@ -75,7 +75,7 @@ for tranche in xrange(NbTranche):
                  if tranche == NbTranche-1: 
                     name2 = str('0')
                     perio[2][0][2][2][1][2] = perio[2][0][2][2][1][2]*NbTranche
-                    print 'PERIO', perio[2][0][2][2][1][2]
+                    print('PERIO', perio[2][0][2][2][1][2])
                  else: Internal._rmNodesFromName(match,'GridConnectivityProperty')    
 
            name ='tr'+name2+'_'+name
@@ -83,7 +83,7 @@ for tranche in xrange(NbTranche):
 
         # Change le num des procs
         proc = Internal.getNodeFromName2(z,'proc')
-	if proc is not None and tranche != 0:
+        if proc is not None and tranche != 0:
            proc[1][0] = proc[1][0]+ numberofproc
 
    for pr in xrange(numberofproc*tranche,numberofproc*(tranche+1)):
@@ -92,7 +92,7 @@ for tranche in xrange(NbTranche):
        
        for z in zones:
           proc = Internal.getNodeFromName2(z,'proc')
-	  if proc is not None:
+          if proc is not None:
              if pr==proc[1][0]: 
                zout.append(z)
           else:
@@ -116,18 +116,18 @@ for z in Internal.getZones(t2):
 
 tp = C.newPyTree(['Base'])
 #Internal._rmNodesByName(t,'IDPER*')
-print 'TRANSLATION ET COPIE de RESTART EN TRANCHES'
+print('TRANSLATION ET COPIE de RESTART EN TRANCHES')
 for tranche in xrange(0,NbTranche):
 
    t = Internal.copyTree(t2)
 
    dz =Lz
-   print 'Tranche', tranche,' translatee de ', dz*tranche
+   print('Tranche', tranche,' translatee de ', dz*tranche)
    T._translate(t,(0,0,dz*tranche))
 
    ##################
    # CHANGEMENT DE NOM DES ZONES
-   print 'CHANGEMENT DE NOM DES ZONES DES TRANCHES'
+   print('CHANGEMENT DE NOM DES ZONES DES TRANCHES')
    zones = Internal.getZones(t)
    for z in zones:
         nameSave = z[0]
@@ -135,7 +135,6 @@ for tranche in xrange(0,NbTranche):
 
         #modif des nom de zone des connectivite
         matchs  = Internal.getNodesFromType1(z,'ZoneSubRegion_t')
-        print "ZNAME",z[0]
         for match in matchs:
            name = Internal.getValue(match)
 
@@ -217,7 +216,7 @@ for tranche in xrange(0,NbTranche):
         
         # Change le num des procs
         proc = Internal.getNodeFromName2(z,'proc')
-	if proc is not None and tranche != 0:
+        if proc is not None and tranche != 0:
            proc[1][0] = proc[1][0]+ numberofproc
 
    zout=zones

@@ -40,7 +40,7 @@ lines_FIn = FIn.readlines()
 sizeIJK=[]
 for l in lines_FIn:
   mots = l.split(',')
-  print mots[0],  mots[1], mots[2], mots[3]
+  print(mots[0],  mots[1], mots[2], mots[3])
   sizeIJK.append([ int( mots[1] ),  int( mots[2] ),  int( mots[3]) ] )
 FIn.close
 typezone = int(mots[4])
@@ -98,9 +98,9 @@ for size in sizeIJK:
    timeshift=ny.zeros(len(shifttab), ny.float64) 
 
 
-   print "#########################"+'\n'
-   print "Sizes: ",sizeI,sizeJ,sizeK,'\n'
-   print "#########################"+'\n'
+   print("#########################"+'\n')
+   print("Sizes: ",sizeI,sizeJ,sizeK,'\n')
+   print("#########################"+'\n')
 
    mach = 0.7
    adim = Adim.adim1(MInf=mach)
@@ -126,11 +126,11 @@ for size in sizeIJK:
      itshift=0
      for shift in shifttab:
 
-       #print "#########################"+'\n'
-       #print "Shift is : ",shift,        '\n'
-       print "#########################"+'\n'
+       #print("#########################"+'\n')
+       #print("Shift is : ",shift,        '\n')
+       print("#########################"+'\n')
 
-       #print shift,(sizeI-5)*(sizeJ-5)
+       #print(shift,(sizeI-5)*(sizeJ-5))
           
        t = C.newPyTree(['Base']) ; t[2][1][2] += [a]
        C._addState(t, MInf=mach)
@@ -164,7 +164,7 @@ for size in sizeIJK:
        t1=timeit.default_timer()
 
        #cout = (t1-t0)*scale/NIT_internal
-       #print "time per cell",cout,  'run=', run,' shift=',shift 
+       #print("time per cell",cout,  'run=', run,' shift=',shift)
 
        time20[ itshift+run*sample ] = FastS.display_cpu_efficiency(t, mask_cpu=-0.45, mask_cell=0.0008, FILEOUT='listZonesSlow_test'+str(rank)+'.dat', RECORD=True)
 
