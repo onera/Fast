@@ -539,7 +539,7 @@ def _createTBLESA(tc,nbpts_linelets=45):
          print('TBLE data missing in tc, they will be built...')
             
          # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)  
-         Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin+1)     
+         Nbpts_Dtot = size_IBC//(nbpts_linelets*nfields_lin+1)     
          _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=numpy.int32)            
      
          HOOK['linelets_int'] = _addrIBC
@@ -1696,7 +1696,7 @@ def extractConvergenceHistory(t, fileout):
         it = Internal.getNodeFromPath(t,i+"/ZoneConvergenceHistory/IterationNumber")
         a = Internal.getNodeFromPath(t, i+"/ZoneConvergenceHistory/RSD_L2")
         nrec = it[1].size
-        neq = a[1].size/nrec
+        neq = a[1].size//nrec
         RSD_L2 = numpy.reshape(a[1],(neq,nrec),order='F')
         #a = C.convertPyTree2Array(i+"/ZoneConvergenceHistory/RSD_oo", t)
         a = Internal.getNodeFromPath(t, i+"/ZoneConvergenceHistory/RSD_oo")

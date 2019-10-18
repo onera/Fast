@@ -252,9 +252,9 @@ node_debit_wall = SPCH.prepareDebit2Fast(t_debit_wall)
 #sys.exit()
 
 modulo_debit = 100
-modulo_convNewt =  modulo_verif
-for it in xrange(NIT_REP, NIT_REP+NIT):
-#for it in xrange(NIT):
+modulo_convNewt = modulo_verif
+for it in range(NIT_REP, NIT_REP+NIT):
+#for it in range(NIT):
     if steady == 'no':
       time_ale = time + 0.5*time_step
       teta = omgrpm*time_ale

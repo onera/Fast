@@ -398,7 +398,7 @@ def save(t, fileName='restart', split='single',
             objet = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList}
 
             # Rebuild local trees
-            for i in xrange(max(1,-NP)):
+            for i in range(max(1,-NP)):
                 tl = Internal.copyRef(t2)
                 bases = Internal.getNodesFromType1(tl, 'CGNSBase_t')
                 for b in bases:
@@ -701,7 +701,7 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
         else:
             if NP == 0: NP = -getMaxProc(t2)-1
             if not os.path.exists(fileName): os.makedirs(fileName)
-            for i in xrange(max(1,-NP)):
+            for i in range(max(1,-NP)):
                 tl = Internal.copyRef(t2)
                 bases = Internal.getNodesFromType1(tl, 'CGNSBase_t')
                 for b in bases:

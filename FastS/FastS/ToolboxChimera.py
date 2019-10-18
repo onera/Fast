@@ -35,7 +35,7 @@ def blankByBodies(t, tb, loc, dim, gridType='single'):
     BM = numpy.ones((nbases,nbodies),dtype=numpy.int32)
     if gridType=='composite':
         if nbodies < nbases:
-           for nob in xrange(nbodies): BM[nob,nob]=0
+           for nob in range(nbodies): BM[nob,nob]=0
     if blankalgo == 'xray' or DIM == 2:
         XRAYDIM1 = 2000; XRAYDIM2 = XRAYDIM1
         if DIM == 2:  XRAYDIM2 = 2
@@ -75,24 +75,24 @@ def _blankCellsInRange(z, win, NGhostCells):
     
     cellNT = cellN[1][0,:]
     if nk == 2:
-        for j in xrange(jl1,jl2):
-            for i in xrange(il1,il2):
+        for j in range(jl1,jl2):
+            for i in range(il1,il2):
                 ind = i + j*nic
                 cellNT[ind]=0.
 
-        for j in xrange(jl3,jl4):
-            for i in xrange(il3,il4):
+        for j in range(jl3,jl4):
+            for i in range(il3,il4):
                 ind = i + j*nic
                 cellNT[ind]=2.
     else:
-        for k in xrange(kl1,kl2):
-            for j in xrange(jl1,jl2):
-                for i in xrange(il1,il2):
+        for k in range(kl1,kl2):
+            for j in range(jl1,jl2):
+                for i in range(il1,il2):
                     ind = i + j*nic+k*nicnjc
                     cellNT[ind]=0.
-        for k in xrange(kl3,kl4):
-            for j in xrange(jl3,jl4):
-                for i in xrange(il3,il4):
+        for k in range(kl3,kl4):
+            for j in range(jl3,jl4):
+                for i in range(il3,il4):
                     ind = i + j*nic+k*nicnjc
                     cellNT[ind]=2.
     C.setFields([cellN],z,loc='centers')
@@ -190,7 +190,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
 
     coef_secure = 1.3
     ReceptCyl={}
-    for it in xrange(IT_DEB, IT_FIN):
+    for it in range(IT_DEB, IT_FIN):
         print('-----------')
         print('theta(radians,degree,it) = ', it*DTHETA,' ,', it*DTHETA/math.pi*180,' ,', it)
         print('-----------')
@@ -354,7 +354,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
              elif c==1: source='C'
              else     : source='P'
 
-             for nozd in xrange(len(bloc_Perio[2])):
+             for nozd in range(len(bloc_Perio[2])):
                zdperio = bloc_Perio[2][nozd]
                if zdperio[3] == "Zone_t":
                   zname  = zdperio[0].split('_Perio')[0]

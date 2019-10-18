@@ -36,7 +36,7 @@ for z in Internal.getZones(t0):
 print('Nb de coeurs par tranche = ', numberofproc)
 
 print('TRANSLATION ET COPIE de RESTART EN TRANCHES')
-for tranche in xrange(NbTranche):
+for tranche in range(NbTranche):
 
    dz =Lz
    if tranche==0: dz =0
@@ -86,7 +86,7 @@ for tranche in xrange(NbTranche):
         if proc is not None and tranche != 0:
            proc[1][0] = proc[1][0]+ numberofproc
 
-   for pr in xrange(numberofproc*tranche,numberofproc*(tranche+1)):
+   for pr in range(numberofproc*tranche,numberofproc*(tranche+1)):
        tp = C.newPyTree(['Base'])
        zout=[]
        
@@ -117,7 +117,7 @@ for z in Internal.getZones(t2):
 tp = C.newPyTree(['Base'])
 #Internal._rmNodesByName(t,'IDPER*')
 print('TRANSLATION ET COPIE de RESTART EN TRANCHES')
-for tranche in xrange(0,NbTranche):
+for tranche in range(0,NbTranche):
 
    t = Internal.copyTree(t2)
 
