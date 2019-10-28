@@ -79,6 +79,7 @@ namespace K_FASTS
   PyObject* computePT_variables(     PyObject* self, PyObject* args);
   PyObject* computePT_gradient(      PyObject* self, PyObject* args);
   PyObject* computePT_velocity_ale(  PyObject* self, PyObject* args);
+  PyObject* copy_velocity_ale(       PyObject* self, PyObject* args);
   PyObject* computePT_my(            PyObject* self, PyObject* args);
   PyObject* compute_effort(          PyObject* self, PyObject* args);
   PyObject* _movegrid(               PyObject* self, PyObject* args);
@@ -154,7 +155,7 @@ namespace K_FASTS
     E_Float* ipt_Hessenberg     , E_Float** iptkrylov    , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
     E_Float*   ipt_cfl          ,
     E_Float**  iptx             , E_Float**  ipty        , E_Float** iptz,
-    E_Float**  iptCellN         , E_Float**  iptCellN_IBC,
+    E_Float**  iptCellN         , E_Float**  iptCellN_IBC, E_Int**  iptdegen,
     E_Float**& iptro, E_Float**& iptro_m1, E_Float**&  iptrotmp,  E_Float**& iptro_sfd,
     E_Float**  iptmut, E_Float*  ipt_mutd,
     E_Float**  ipti, E_Float**  iptj, E_Float** iptk, E_Float** iptvol, 

@@ -44,7 +44,7 @@ c***********************************************************************
       REAL_E param_real(0:*)
 
 C Var loc
-      INTEGER_E option, iflow_loc
+      INTEGER_E option, iflow_loc, ale
 
       if(ind_loop(1).gt.ind_loop(2)) return 
       if(ind_loop(3).gt.ind_loop(4)) return 
@@ -53,7 +53,9 @@ C Var loc
       iflow_loc = param_int(IFLOW)
       if(iflow_loc.eq.2) iflow_loc = 1
 
-       option =1000*param_int(LALE)
+      ale = min(param_int(LALE),1)
+
+       option =1000*ale
      &        + 100*param_int(SLOPE)
      &        +  10*iflow_loc
      &        +      param_int(ITYPZONE)

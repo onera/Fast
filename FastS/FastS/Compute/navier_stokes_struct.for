@@ -145,7 +145,7 @@ c       endif
 
            IF(nitcfg.eq.1) then
 
-              if(param_int(LALE).ge.1) then ! mise a jour Vent et tijk
+              if(param_int(LALE).eq.1) then ! mise a jour Vent et tijk si mvt corps solide
                 call mjr_ale(ndo,nitcfg, ithread,
      &                        param_int, param_real,
      &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,

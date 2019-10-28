@@ -81,8 +81,8 @@ C Var loc
      & flu1,flu2,flu3,flu4,flu5,flu6,p1,p2,qen,sigma_1,ck_vent,
      & div,f1,f2,f3,f4,f5,f6,fv,fv5,volinv,test,cmus1,temp01,coesut,
      & tix,tiy,tiz,tix1,tiy1,tiz1,tjx,tjy,tjz,tjx1,tjy1,tjz1,tkx,
-     & tky,tkz,tkx1,tky1,tkz1,xmutvol,cvisq,rgp,son,c,opt0,
-     & gradU_nx,gradU_ny,gradU_nz, gradV_nx,gradV_ny,gradV_nz,
+     & tky,tkz,tkx1,tky1,tkz1,xmutvol,cvisq,rgp,son,c,opt0,ventx,venty,
+     & gradU_nx,gradU_ny,gradU_nz, gradV_nx,gradV_ny,gradV_nz,ventz,
      & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
      & qn,r,v,w,h,q,r_1,psiroe,avmin, xktvol, xmulam, xmutur, xmutot

@@ -242,7 +242,7 @@ def allocate_metric(t):
         num = Internal.getNodeFromName1(z, '.Solver#ownData')
         if num is None:
             raise ValueError("metric: numerics is missing for zone %s."%z[0])
-        if motion == 'rigid':
+        if motion == 'rigid' or  motion == 'deformation':
             grids = Internal.getNodesFromType1(z, 'GridCoordinates_t')
             if len(grids) == 1:
                grid_init = Internal.copyTree(grids[0])
@@ -274,7 +274,12 @@ def _init_metric(t, metrics, hook, omp_mode):
 
     fasts.init_metric(zones, metrics, hook, omp_mode)
     
-    for metric in metrics: del metric[7]
+    c=0
+    for metric in metrics:
+       z = zones[c]
+       param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
+       if param_int[34]!= 2: del metric[7]  # on efface l'info sur maille degen si pas besoin de recalculer metric mesh deforme
+       c+=1
 
     return None
 
@@ -327,8 +332,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         distrib_omp = 1
         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep, distrib_omp) )   
     
-    #print("APRES hook.update")
-
     #init metric
     _init_metric(t, metrics, hook1, ompmode)
 
@@ -351,12 +354,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
             _compact(zone, fields=fields, mode=count)
 
 
-    zones = Internal.getZones(t) # car create primvar rend zones caduc
-
-    if HOOK["neq_max"] == 5: varType = 2
-    else                   : varType = 21
-
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
+    zones = Internal.getZones(t) # car create primvar rend zones caduc
     c   = 0
     ale = False
     for z in zones:
@@ -369,6 +368,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
             metrics[c][2] = ro[1]
         else: ale = True
         c += 1
+
 
     #
     # mise a jour vitesse entrainememnt
@@ -396,8 +396,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
        # Add linelets arrays in the HOOK for ODE-based WallModel (IBC)
        nbpts_linelets = 45
        _createTBLESA(tc,nbpts_linelets)
-
-   
     else:
         HOOK['param_real_tc'] = None
         HOOK['param_int_tc']  = None  
@@ -1641,6 +1639,29 @@ def _computeVelocityAle(t, metrics):
     if  node is not None: ompmode = Internal.getValue(node)
 
     fasts.computePT_velocity_ale(zones,  metrics, HOOK, ompmode)
+    return None
+
+#==============================================================================
+# init velocity (ALE) from DADS maillage deformable
+#==============================================================================
+def copy_velocity_ale(t, metrics, it=0):
+    global FIRST_IT, HOOK
+
+    dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
+    dtloc = Internal.getValue(dtloc)                       # tab numpy
+
+    zones = Internal.getZones(t)
+    # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
+    f_it = FIRST_IT
+    if HOOK is None: HOOK = FastI.createWorkArrays__(zones, dtloc, f_it ); FIRST_IT = f_it;
+    
+    bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
+    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(node, 'omp_mode')
+    ompmode = OMP_MODE
+    if  node is not None: ompmode = Internal.getValue(node)
+
+    fasts.copy_velocity_ale(zones,  metrics, HOOK, ompmode, it)
     return None
 
 #==============================================================================

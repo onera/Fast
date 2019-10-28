@@ -179,9 +179,9 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     { rot_z  = 0.; rot_tot= 0.; }
 
     ipt_param_int[ ITYPVENT ] = 0;
-    if  (rot_z   < 1.e-14)             ipt_param_int[ ITYPVENT ] = 1; 
-    if  (rot_tot < 1.e-14)             ipt_param_int[ ITYPVENT ] = 2; 
-    if  (ipt_param_int[ ITYPZONE ]==3) ipt_param_int[ ITYPVENT ] = 3; 
+    if  (rot_z   < 1.e-14)             ipt_param_int[ ITYPVENT ] = 1; //rot axe z
+    if  (rot_tot < 1.e-14)             ipt_param_int[ ITYPVENT ] = 2; //translation
+    if  (ipt_param_int[ ITYPZONE ]==3) ipt_param_int[ ITYPVENT ] = 3; // maillage 2d
 
      //printf("vent type= %d  \n", ipt_param_int[ ITYPVENT ]);
 
@@ -461,12 +461,9 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
   PyList_Append(metrics , rdm);         Py_DECREF(rdm);
   PyList_Append(metrics , ind_dm);      Py_DECREF(ind_dm );
   PyList_Append(metrics , it_lu_ssdom); Py_DECREF(it_lu_ssdom);
-
-  //PyObject* degen  = K_NUMPY::buildNumpyArray(  degener, 1);
-  //PyList_Append(metrics , degen);     Py_DECREF(degen);
   PyList_Append(metrics , degener);     Py_DECREF(degener);
 
-  if (lale==1)   { Py_DECREF(ipti0); Py_DECREF(iptventi); }
+  if (lale>=1)   { Py_DECREF(ipti0); Py_DECREF(iptventi); }
   if (kfludom==3){ Py_DECREF(ipti_df); }
 
   RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL);

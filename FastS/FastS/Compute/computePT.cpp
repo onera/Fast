@@ -145,7 +145,7 @@ else
   FldArrayI n0_flt(nidom); E_Int* ipt_n0_flt = n0_flt.begin();
 
 
-  E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_it_lu_ssdom;
+  E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_it_lu_ssdom; E_Int** ipt_degen;
   
   E_Float** ipt_param_real  ;
   E_Float** iptx;          E_Float** ipty;         E_Float** iptz;    E_Float** iptro; E_Float** iptro_m1; E_Float** iptro_p1; E_Float** iptmut;
@@ -155,13 +155,14 @@ else
   E_Float** iptventi;      E_Float** iptventj;     E_Float** iptventk;
   E_Float** iptrdm;        E_Float** iptkrylov;    E_Float** iptkrylov_transfer;
   E_Float** iptro_sfd;     E_Float** iptdelta;     E_Float** iptfd; E_Float** iptro_zgris; E_Float** iptro_res;
-  E_Float** iptCellN  ;    E_Float** iptCellN_IBC; E_Float** ipt_cfl_zones; 
+  E_Float** iptCellN  ;    E_Float** iptCellN_IBC; E_Float** ipt_cfl_zones;
   E_Float** iptssor;       E_Float** iptssortmp;
   E_Float** ipt_gmrestmp;  E_Float** iptdrodm_transfer;
 
-  ipt_param_int     = new E_Int*[nidom*3];
+  ipt_param_int     = new E_Int*[nidom*4];
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
+  ipt_degen         = ipt_it_lu_ssdom + nidom;
 
   iptx              = new E_Float*[nidom*36];
   ipty              = iptx               + nidom;
@@ -334,6 +335,9 @@ else
     ipt_ind_dm[ nd ]      =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
     ipt_it_lu_ssdom[ nd ] =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_ITLU) );
 
+    if(ipt_param_int[nd][ LALE ] == 2){ ipt_degen[ nd ] = K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_DEGEN) );}
+    else{ ipt_degen[ nd ] =  NULL;}
+ 
     if(lcfl  == 1 && nstep_deb ==1 ) 
     { 
        PyObject* t2 = K_PYTREE::getNodeFromName1(numerics, "CFL_minmaxmoy");
@@ -571,11 +575,11 @@ else
             ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, vartype, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
-            ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size , ipt_drodmd, 
-	          ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp  , ipt_givens,
+            ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size , ipt_drodmd,
+	    ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp  , ipt_givens,
             ipt_cfl            ,
             iptx               , ipty             , iptz              ,
-            iptCellN           , iptCellN_IBC     ,
+            iptCellN           , iptCellN_IBC     , ipt_degen         ,
             iptro              , iptro_m1         , iptro_p1          , iptro_sfd     ,
             //roN                , roM1             , roP1              , iptro_sfd     ,
             iptmut             , ipt_xmutd        ,

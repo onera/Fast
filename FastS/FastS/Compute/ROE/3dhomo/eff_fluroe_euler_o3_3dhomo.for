@@ -81,7 +81,7 @@ C Var loc
      & flu1,flu2,flu3,flu4,flu5,flu6,p1,p2,qen,sigma_1,ck_vent,
      & div,f1,f2,f3,f4,f5,f6,fv,fv5,volinv,test,cmus1,temp01,coesut,
      & tix,tiy,tiz,tix1,tiy1,tiz1,tjx,tjy,tjz,tjx1,tjy1,tjz1,tkx,
-     & tky,tkz,tkx1,tky1,tkz1,xmutvol,gam3,gam4,cvisq,rgp,
+     & tky,tkz,tkx1,tky1,tkz1,xmutvol,gam3,gam4,cvisq,rgp,opt0,
      & gradU_nx,gradU_ny,gradU_nz, gradV_nx,gradV_ny,gradV_nz,
      & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
@@ -149,6 +149,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       c1     = 0.02*uref         ! modif suite chant metrique et suppression tc dans flux final
       c2     = 0.02/(uref*roref) ! modif suite chant metrique et suppression tc dans flux final
       c3     = -2.
+      opt0   =param_int(SENSORTYPE)
 
       !    roff MUSCL
       c6     = 1./6.

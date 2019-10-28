@@ -54,13 +54,15 @@ c***********************************************************************
       REAL_E psi(nptpsi)
 
 C Var loc
-      INTEGER_E option
+      INTEGER_E option, ale
 
       if(ind_loop(1).gt.ind_loop(2)) return 
       if(ind_loop(3).gt.ind_loop(4)) return 
       if(ind_loop(5).gt.ind_loop(6)) return
 
-      option =  1000*param_int(LALE)
+      ale = min(param_int(LALE),1)
+
+      option =  1000*ale
      &        +  100*param_int(SLOPE)
      &        +   10*param_int(IFLOW)
      &        +      param_int(ITYPZONE)

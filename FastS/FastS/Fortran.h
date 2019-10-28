@@ -8,7 +8,7 @@ extern "C"
                          E_Int& lale      , E_Float* param_real, E_Int* nijk_mtr  , E_Int& ndimdx_mtr,
                          E_Int& neq_ij    , E_Int& neq_k     , E_Int& typ_zone);
 
-  void skmtr_( E_Int& nd      , E_Int* ipt_param_int, E_Float*  ipt_param_real,  E_Float* rot_ale,
+  void skmtr_( E_Int& nd      , E_Int* ipt_param_int, E_Float*  ipt_param_real,
                E_Float* x     , E_Float* y          , E_Float* z  , E_Int* degener   , E_Float* dist,
                E_Float* ti    , E_Float* tj         , E_Float* tk , E_Float* ti0     , E_Float*  tj0, E_Float* tk0, E_Float* vol, E_Float* venti, E_Float* ventj, E_Float* ventk,
                E_Int* ijkv_sdm  , 
@@ -159,6 +159,9 @@ extern "C"
                       E_Float* iptventi         , E_Float* iptventj    , E_Float* iptventk       ,  
                       E_Float* iptx             , E_Float* ipty         , E_Float* iptz    );
 
+  void copy_ventijk_( E_Int& ndo                , E_Int& ithread      , E_Int* ipt_param_int, E_Float* ipt_param_real , 
+                      E_Int* ipt_ind_dm         , E_Int* ipt_inddm_omp,
+                      E_Float* iptventi         , E_Float* iptventj   , E_Float* iptventk   ,  E_Float* iptvent_vertex);
 
   void post_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   , E_Int& neq_grad,
               E_Int* ipt_param_int      , E_Float* ipt_param_real  ,  E_Float& tke      , E_Float& enst     ,  E_Float& compteur  ,

@@ -48,7 +48,7 @@ E_Int K_FASTS::gsdr3(
   E_Float* ipt_Hessenberg, E_Float** iptkrylov      , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
   E_Float*   ipt_cfl,
   E_Float**  iptx            , E_Float**  ipty            , E_Float**    iptz      ,
-  E_Float**  iptCellN        , E_Float**  iptCellN_IBC    ,
+  E_Float**  iptCellN        , E_Float**  iptCellN_IBC    , E_Int** ipt_degen      ,
   E_Float**& iptro           , E_Float**& iptro_m1        , E_Float**&  iptrotmp   , E_Float**& iptrof       ,
   E_Float**  iptmut          , E_Float*   ipt_mutd        ,
   E_Float**  ipti            , E_Float**  iptj            , E_Float** iptk         , E_Float** iptvol        ,
@@ -301,7 +301,7 @@ E_Float deb_calcul;
                   {
                      for (E_Int nd = 0; nd < nidom; nd++) //mise a jour metric et vent ale zone cart et 3dhom(3dfull et 2d a la volee)
                          {
-                           if(param_int[nd][LALE]>=1)
+                           if(param_int[nd][LALE]==1) //maillage indeformable
                              {
                                mjr_ale_3dhomocart_(nd, param_int[nd] ,   param_real[nd]   ,
                                                   socket             ,  Nbre_socket       , ithread_sock        , thread_parsock,
@@ -312,8 +312,12 @@ E_Float deb_calcul;
                                                   iptventi[nd]       , iptventj[nd]       , iptventk[nd]        );
                                  //modifier mjr_ale_3dhomocart_ pour faire sauter barrier
                                  #pragma omp barrier
-                             } //ale
-                          }    //zone
+                             }
+                         }//zone
+
+                   // calcul metric si maillage deformable
+                   //  
+#include           "Metric/cp_metric.cpp"
                    }
 
 

@@ -16,7 +16,7 @@ C
 C    You should have received a copy of the GNU General Public License
 C    along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 C ============================================================================
-      SUBROUTINE skmtr(ndom, param_int, param_real, rot,
+      SUBROUTINE skmtr(ndom, param_int, param_real,
      &                 x, y, z, degener, dist,
      &                 ti, tj, tk,ti0, tj0, tk0, vol,venti,ventj,ventk,
      &                 ijkv_sdm,
@@ -42,7 +42,7 @@ C_IN
      & socket,param_int(0:*)
 
       REAL_E x(param_int( NDIMDX_XYZ )),y(param_int( NDIMDX_XYZ )),
-     &       z(param_int( NDIMDX_XYZ )), param_real(0:*), rot(4,3)    
+     &       z(param_int( NDIMDX_XYZ )), param_real(0:*)
 C_OUT
       REAL_E  ti(param_int( NDIMDX_MTR ),param_int( NEQ_IJ )) 
       REAL_E ti0(param_int( NDIMDX_MTR ),param_int( NEQ_IJ )) 

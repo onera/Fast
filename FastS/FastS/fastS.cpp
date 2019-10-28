@@ -45,6 +45,7 @@ static PyMethodDef Pyfasts [] =
   {"computePT_variables" , K_FASTS::computePT_variables ,  METH_VARARGS},
   {"computePT_gradient"  , K_FASTS::computePT_gradient  ,  METH_VARARGS},
   {"computePT_velocity_ale"  , K_FASTS::computePT_velocity_ale  ,  METH_VARARGS},
+  {"copy_velocity_ale"   , K_FASTS::copy_velocity_ale   ,  METH_VARARGS},
   {"compute_effort"      , K_FASTS::compute_effort      ,  METH_VARARGS},
   {"souszones_list"      , K_FASTS::souszones_list      ,  METH_VARARGS},
   {"souszones_list2"     , K_FASTS::souszones_list2     ,  METH_VARARGS},

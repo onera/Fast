@@ -69,7 +69,7 @@ for ale in TypeMotion:
       for slope in TypeSlope:
          for typezone in TypeMesh:
 
-			option =  1000*opt_ale[ ale]  +  100*opt_slp[slope] +  10*opt_mod[eq] + opt_mesh[ typezone]
+                        option =  1000*opt_ale[ ale]  +  100*opt_slp[slope] +  10*opt_mod[eq] + opt_mesh[ typezone]
 
                         # ouvrir le fichier input
                         f     = open('template_FluxAndBalance.for','r')
@@ -78,13 +78,13 @@ for ale in TypeMotion:
 
                         fout = rep+'/'+typezone+'/'+flux+ale1+eq+'_'+slope+'_'+typezone+'.for'
                         fo = open(fout,"w")                  # ouvrir le fichier de sortie
-                        print rep,' Scheme: file',fout, 'generated'
+                        print (rep,' Scheme: file',fout, 'generated')
 
                         for i in range( len(lines) ):
                              lines[i]=lines[i].replace("FLUX_CONV", rep)
 
-			# suppression fluk en 2d et metrique k (pour que mode debug soit OK)
-			if typezone == '2d': 
+                        # suppression fluk en 2d et metrique k (pour que mode debug soit OK)
+                        if typezone == '2d': 
                                 c = 0
                                 for l in lines:
                                     if '3D only' in l: lines = lines[:c] + lines[c+1:]; c-=1
@@ -94,8 +94,8 @@ for ale in TypeMotion:
                                 for i in range( len(lines) ):
                                       lines[i]=lines[i].replace("tcz = tk(lt)","").replace("sk      = abs (tcz)","")
 
-			# suppression minmod
-			if slope != 'minmod': 
+                        # suppression minmod
+                        if slope != 'minmod': 
                                 c = 0
                                 for l in lines:
                                     if 'avmin(c,r)' in l: lines = lines[:c] + lines[c+1:]; c-=1
@@ -103,8 +103,8 @@ for ale in TypeMotion:
                                 for i in range( len(lines) ):
                                      lines[i]=lines[i].replace("psiroe,avmin", 'psiroe')
                           
-			# suppression Vitesse entrainement si ale=faux
-			if ale == '':
+                        # suppression Vitesse entrainement si ale=faux
+                        if ale == '':
                                 c = 0
                                 for l in lines:
                                     if 'ALE only' in l: lines = lines[:c] + lines[c+1:]; c-=1
@@ -112,9 +112,9 @@ for ale in TypeMotion:
                                 #lines = lines[:71] + lines[72:92] + lines[93:178] + lines[183:]
                                 for i in range( len(lines) ):
                                       lines[i]=lines[i].replace("lven= indven( i, j, k)","")
-			eq2=''
-			# Viscous flux suppression for Euler
-			if eq == 'euler': 
+                        eq2=''
+                        # Viscous flux suppression for Euler
+                        if eq == 'euler': 
                                 c = 0
                                 for l in lines:
                                     if 'Rans' in l: lines = lines[:c] + lines[c+1:]; c-=1
@@ -123,18 +123,18 @@ for ale in TypeMotion:
                                 for l in lines:
                                     if 'fluVis' in l: lines = lines[:c] + lines[c+1:]; c-=1
                                     c+=1
-			elif eq == 'lamin':
+                        elif eq == 'lamin':
                                 c = 0
                                 for l in lines:
                                     if 'Rans' in l: lines = lines[:c] + lines[c+1:]; c-=1
                                     c+=1
-			# Folder modification
-			elif eq == 'SA':
+                        # Folder modification
+                        elif eq == 'SA':
                                 for i in range( len(lines) ):
                                    lines[i]=lines[i].replace("fluVisc","SA/fluVisc").replace("assemble","SA/assemble").replace("flu_send","SA/flu_send")
-				eq2=eq+'_'
+                                eq2=eq+'_'
 
-			# creation subroutine fortran du flux
+                        # creation subroutine fortran du flux
                         name_routine = flux+ale1+eq+'_'+slope+'_'+typezone
                         name_fluEuler= 'fluFaceEuler' +ale1 +slope+ '_'+typezone
                         name_fluRans = 'fluFace'  +eq +ale1 +slope+ '_'+typezone
@@ -154,7 +154,7 @@ for ale in TypeMotion:
                         #Include generation 
                         Direction = ['i', 'j', 'k']
                         if (typezone == '2d'): Direction = ['i', 'j']
-			for dir  in Direction:
+                        for dir  in Direction:
  
                                 #Euler flux face
                                 feuler= open(rep+'/fluFaceEuler.for','r')                         # Template flux Euler
@@ -166,7 +166,7 @@ for ale in TypeMotion:
 
 				###include flux face 5 eq
 
-				if typezone == '2d':
+                                if typezone == '2d':
                                         for i in range( len(lines_euler) ):
                                             lines_euler[i]=lines_euler[i].replace("etat_GD",'etat_GD_2d').replace("etat_roe_GD",'etat_roe_GD_2d')
                                         c = 0
@@ -186,8 +186,8 @@ for ale in TypeMotion:
                                       lines_euler[i]=lines_euler[i].replace("qn_3dfull_i"       , 'qn'+ale1+typezone+'_'+dir)
                                       lines_euler[i]=lines_euler[i].replace("!3D only"          , '')
 
-                        	for l in lines_euler: feulero.write(l)
-                        	feulero.close()                               # fermer le fichier output Euler
+                                for l in lines_euler: feulero.write(l)
+                                feulero.close()                          # fermer le fichier output Euler
 
                                 #viscous flux 5 eq (prandtl turbulent)
                                 if eq not in ['euler','lamin']:

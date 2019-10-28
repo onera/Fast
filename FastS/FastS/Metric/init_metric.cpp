@@ -49,16 +49,16 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
   E_Int** ipt_ind_dm; E_Int** ipt_degen;
   
-  E_Float** ipt_param_real;
+  E_Float** param_real;
   E_Float** ipty;       E_Float** iptz;  
   E_Float** ipti;       E_Float** iptj;     E_Float** iptk;    E_Float** iptvol;
   E_Float** ipti_df;    E_Float** iptj_df;  E_Float** iptk_df; E_Float** iptvol_df;
   E_Float** ipti0;      E_Float** iptj0;    E_Float** iptk0;   
   E_Float** iptventi;   E_Float** iptventj; E_Float** iptventk; E_Float** iptdist;
 
-  E_Int* ipt_param_int[nidom*3];
+  E_Int* param_int[nidom*3];
 
-  ipt_ind_dm        = ipt_param_int   + nidom;
+  ipt_ind_dm        = param_int   + nidom;
   ipt_degen         = ipt_ind_dm      + nidom;
 
   E_Float* iptx[nidom*19];
@@ -78,8 +78,8 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
   iptventi          = iptvol_df       + nidom;
   iptventj          = iptventi        + nidom;
   iptventk          = iptventj        + nidom;
-  ipt_param_real    = iptventk        + nidom;
-  iptdist           = ipt_param_real  + nidom;
+  param_real    = iptventk        + nidom;
+  iptdist           = param_real  + nidom;
 
   vector<PyArrayObject*> hook;
 
@@ -94,9 +94,9 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
     /* Get numerics from zone */
     PyObject* numerics    = K_PYTREE::getNodeFromName1(zone, ".Solver#ownData");
     PyObject*          t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"); 
-    ipt_param_int[nd]     = K_PYTREE::getValueAI(t, hook);
+    param_int[nd]     = K_PYTREE::getValueAI(t, hook);
                        t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
-    ipt_param_real[nd]    = K_PYTREE::getValueAF(t, hook);
+    param_real[nd]    = K_PYTREE::getValueAF(t, hook);
 
     /*-------------------------------------*/
     /* Extraction (x,y,z): pour forcage spatia */
@@ -106,7 +106,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
     /* get distance paroi */
 
     //Pointeur visqeux: mut, dist, zgris sont en acces compact
-    if(ipt_param_int[nd][ IFLOW ] ==  3)
+    if(param_int[nd][ IFLOW ] ==  3)
       { PyObject* sol_center;
         sol_center  = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
         t           = K_PYTREE::getNodeFromName1(sol_center, "TurbulentDistance");
@@ -119,12 +119,12 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
     E_Float* dummy;
     E_Int lale, kfludom;
-    lale = ipt_param_int[nd][LALE]; kfludom = ipt_param_int[nd][KFLUDOM];
-    GET_TI(METRIC_TI  , metric, ipt_param_int[nd], ipti [nd]  , iptj [nd]  , iptk [nd]  , iptvol[nd]   )
-    if (lale==1)
+    lale = param_int[nd][LALE]; kfludom = param_int[nd][KFLUDOM];
+    GET_TI(METRIC_TI  , metric, param_int[nd], ipti [nd]  , iptj [nd]  , iptk [nd]  , iptvol[nd]   )
+    if (lale>=1)
      {
-       GET_TI(METRIC_TI0 , metric, ipt_param_int[nd], ipti0[nd]  , iptj0[nd]  , iptk0[nd]  , dummy )
-       GET_VENT( METRIC_VENT, metric, ipt_param_int[nd], iptventi[nd], iptventj[nd], iptventk[nd] )
+       GET_TI(METRIC_TI0 , metric, param_int[nd], ipti0[nd]  , iptj0[nd]  , iptk0[nd]  , dummy )
+       GET_VENT( METRIC_VENT, metric, param_int[nd], iptventi[nd], iptventj[nd], iptventk[nd] )
      }
     else
      {   ipti0[nd]    = ipti[nd]; iptj0[nd]=iptj[nd]; iptk0[nd]=iptk[nd]; 
@@ -132,7 +132,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
      }
     if(kfludom == 3)  
      {
-       GET_TI(METRIC_TIDF, metric, ipt_param_int[nd], ipti_df[nd], iptj_df[nd], iptk_df[nd], iptvol_df[nd])
+       GET_TI(METRIC_TIDF, metric, param_int[nd], ipti_df[nd], iptj_df[nd], iptk_df[nd], iptvol_df[nd])
      }
     else
      {   ipti_df[nd]    = ipti[nd]; iptj_df[nd]=iptj[nd]; iptk_df[nd]=iptk[nd]; 
@@ -189,8 +189,6 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
         E_Int* ipt_topology_socket_thread =  ipt_topology_socket + (ithread-1)*3;
 
-        E_Float*  ipt_rot_ale_thread = ipt_rot_ale  + (ithread-1)*12;
-
         E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp; E_Int ithread_loc; E_Int Nbre_thread_actif_loc;
         if (omp_mode == 1)
             { 
@@ -198,22 +196,22 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
               for (E_Int nd = 0; nd < nidom; nd++)
               {
 #              include "Metric/indice_omp1.h" 
-               cp_tijk_( ipt_param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], ind_mtr);
+               cp_tijk_( param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], ind_mtr);
               }
        	      #pragma omp barrier
               // loop calcul volume
               for (E_Int nd = 0; nd < nidom; nd++)
               {
 #              include "Metric/indice_omp1.h" 
-               cp_vol_(  ipt_param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], ind_mtr);
+               cp_vol_(  param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], ind_mtr);
 
                for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
                 for (E_Int j = ind_mtr[2]; j <= ind_mtr[3]; j++){ 
                  for (E_Int i = ind_mtr[0]; i <= ind_mtr[1]; i++){ 
 
-                   E_Int l =  (i+ ipt_param_int[nd][NIJK_MTR+3]-1)*ipt_param_int[nd][NIJK_MTR]
-                            + (j+ ipt_param_int[nd][NIJK_MTR+3]-1)*ipt_param_int[nd][NIJK_MTR+1]
-                            + (k+ ipt_param_int[nd][NIJK_MTR+4]-1)*ipt_param_int[nd][NIJK_MTR+2];
+                   E_Int l =  (i+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR]
+                            + (j+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR+1]
+                            + (k+ param_int[nd][NIJK_MTR+4]-1)*param_int[nd][NIJK_MTR+2];
                    iptvol[nd][l] = K_FUNC::E_max(iptvol[nd][l], 1.e-30);
                  }
                 }
@@ -225,24 +223,24 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
               {
 
 #              include "Metric/indice_omp1.h" 
-               if (ipt_param_int[nd][ ITYPZONE ] != 2  && ithread_loc == 1)
+               if (param_int[nd][ ITYPZONE ] != 2  && ithread_loc == 1)
                 {
                  ipt_ind_dm_loc[0]   = 1; 
                  ipt_ind_dm_loc[2]   = 1; 
                  ipt_ind_dm_loc[4]   = 1; 
-                 if(ipt_param_int[nd][ ITYPZONE ] == 0) 
+                 if(param_int[nd][ ITYPZONE ] == 0) 
                    {
-                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
-                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
-                    ipt_ind_dm_loc[5]   = ipt_param_int[nd][ IJKV+2 ];
+                    ipt_ind_dm_loc[1]   = param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[5]   = param_int[nd][ IJKV+2 ];
                    }
-                 else if(ipt_param_int[nd][ ITYPZONE ] == 1) 
+                 else if(param_int[nd][ ITYPZONE ] == 1) 
                    {
-                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
-                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[1]   = param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = param_int[nd][ IJKV+1 ];
                     ipt_ind_dm_loc[5]   = 1;
                    }
-                 else if(ipt_param_int[nd][ ITYPZONE ] == 2) 
+                 else if(param_int[nd][ ITYPZONE ] == 2) 
                    {
                     ipt_ind_dm_loc[1]   = 1 ;
                     ipt_ind_dm_loc[3]   = 1; 
@@ -250,25 +248,25 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                    }
                  else
                    {
-                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
-                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[1]   = param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = param_int[nd][ IJKV+1 ];
                     ipt_ind_dm_loc[5]   = 1 ;
                    }
 
-                 E_Int* ipt_nijk_xyz = ipt_param_int[nd]+ NIJK_XYZ;
-                 E_Int* ipt_nijk_mtr = ipt_param_int[nd]+ NIJK_MTR;
-                 E_Int* ipt_nijk     = ipt_param_int[nd]+ NIJK;
+                 E_Int* ipt_nijk_xyz = param_int[nd]+ NIJK_XYZ;
+                 E_Int* ipt_nijk_mtr = param_int[nd]+ NIJK_MTR;
+                 E_Int* ipt_nijk     = param_int[nd]+ NIJK;
 
-                 tijk_extrap_( ipt_param_int[nd][ NDIMDX_MTR ], ipt_param_int[nd][ NDIMDX_XYZ ] , ipt_nijk_xyz, ipt_nijk_mtr,
-                               ipt_param_int[nd][ NEQ_IJ ]    , ipt_param_int[nd][ NEQ_K ],
+                 tijk_extrap_( param_int[nd][ NDIMDX_MTR ], param_int[nd][ NDIMDX_XYZ ] , ipt_nijk_xyz, ipt_nijk_mtr,
+                               param_int[nd][ NEQ_IJ ]    , param_int[nd][ NEQ_K ],
                                ipt_ind_dm_loc,
                                ipt_degen[nd] ,
                                ipti[nd]      , iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd]); 
 
-                 if(ipt_param_int[nd][ IFLOW ] ==3)
-                   { ipt_ind_dm_loc[1]= ipt_param_int[nd][ IJKV ]; ipt_ind_dm_loc[3]= ipt_param_int[nd][ IJKV+1 ]; ipt_ind_dm_loc[5]= ipt_param_int[nd][IJKV+2];
+                 if(param_int[nd][ IFLOW ] ==3)
+                   { ipt_ind_dm_loc[1]= param_int[nd][ IJKV ]; ipt_ind_dm_loc[3]= param_int[nd][ IJKV+1 ]; ipt_ind_dm_loc[5]= param_int[nd][IJKV+2];
 
-                     dist_extrap_( ipt_param_int[nd][ NDIMDX ], ipt_param_int[nd][ NDIMDX_XYZ ] , ipt_nijk, ipt_nijk_xyz,
+                     dist_extrap_( param_int[nd][ NDIMDX ], param_int[nd][ NDIMDX_XYZ ] , ipt_nijk, ipt_nijk_xyz,
                                     ipt_ind_dm_loc, ipt_degen[nd] , iptdist[nd]);
                    }
                 }
@@ -279,24 +277,24 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
               for (E_Int nd = 0; nd < nidom; nd++)
               {
                 E_Int lmin = 10;
-                if (ipt_param_int[nd][ ITYPCP ] == 2) lmin = 4;
+                if (param_int[nd][ ITYPCP ] == 2) lmin = 4;
 
                 ipt_ind_dm_loc[0]   = 1; 
                 ipt_ind_dm_loc[2]   = 1; 
                 ipt_ind_dm_loc[4]   = 1; 
-                if(ipt_param_int[nd][ ITYPZONE ] == 0) 
+                if(param_int[nd][ ITYPZONE ] == 0) 
                    {
-                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
-                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
-                    ipt_ind_dm_loc[5]   = ipt_param_int[nd][ IJKV+2 ];
+                    ipt_ind_dm_loc[1]   = param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[5]   = param_int[nd][ IJKV+2 ];
                    }
-                else if(ipt_param_int[nd][ ITYPZONE ] == 1) 
+                else if(param_int[nd][ ITYPZONE ] == 1) 
                    {
-                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
-                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[1]   = param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = param_int[nd][ IJKV+1 ];
                     ipt_ind_dm_loc[5]   = 1;
                    }
-                else if(ipt_param_int[nd][ ITYPZONE ] == 2) 
+                else if(param_int[nd][ ITYPZONE ] == 2) 
                    {
                     ipt_ind_dm_loc[1]   = 1 ;
                     ipt_ind_dm_loc[3]   = 1; 
@@ -304,8 +302,8 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                    }
                 else
                    {
-                    ipt_ind_dm_loc[1]   = ipt_param_int[nd][ IJKV   ];
-                    ipt_ind_dm_loc[3]   = ipt_param_int[nd][ IJKV+1 ];
+                    ipt_ind_dm_loc[1]   = param_int[nd][ IJKV   ];
+                    ipt_ind_dm_loc[3]   = param_int[nd][ IJKV+1 ];
                     ipt_ind_dm_loc[5]   = 1 ;
                    }
 
@@ -313,7 +311,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                                    ipt_ind_dm_loc, 
                                    ipt_topology_socket_thread, ipt_ind_dm_socket );
 
-                 skmtr_( nd, ipt_param_int[nd], ipt_param_real[nd], ipt_rot_ale_thread,
+                 skmtr_( nd, param_int[nd], param_real[nd],
 	                iptx[nd], ipty[nd], iptz[nd], ipt_degen[nd], iptdist[nd],
                         ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], iptventi[nd], iptventj[nd], iptventk[nd],
                         ipt_ijkv_sdm_thread,
@@ -325,21 +323,21 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
                  // cutoff vol
                  #pragma omp for
-                 for (E_Int i = 0; i < ipt_param_int[nd][NDIMDX_MTR]; i++) { iptvol[nd][i] = K_FUNC::E_max(iptvol[nd][i], 1.e-30);}
+                 for (E_Int i = 0; i < param_int[nd][NDIMDX_MTR]; i++) { iptvol[nd][i] = K_FUNC::E_max(iptvol[nd][i], 1.e-30);}
 
-	         if( ipt_param_int[nd][KFLUDOM] == 3)
+	         if( param_int[nd][KFLUDOM] == 3)
 	         {
 
        	          #pragma omp single
      	          {
                   //* tableau pour calculer dimension metric DF du domaine *//
-                  FldArrayF  iptmpi(   ipt_param_int[nd][ NDIMDX_XYZ ]);
-                  FldArrayF  iptmpj(   ipt_param_int[nd][ NDIMDX_XYZ ]);
-                  FldArrayF  iptmpk(   ipt_param_int[nd][ NDIMDX_XYZ ]);
-                  FldArrayF iptmpi2(   ipt_param_int[nd][ NDIMDX_XYZ ]);
-                  FldArrayF iptmpj2(   ipt_param_int[nd][ NDIMDX_XYZ ]);
-                  FldArrayF iptmpk2(   ipt_param_int[nd][ NDIMDX_XYZ ]);
-                  FldArrayF  iptmtr( 9*ipt_param_int[nd][ NDIMDX_XYZ ]);
+                  FldArrayF  iptmpi(   param_int[nd][ NDIMDX_XYZ ]);
+                  FldArrayF  iptmpj(   param_int[nd][ NDIMDX_XYZ ]);
+                  FldArrayF  iptmpk(   param_int[nd][ NDIMDX_XYZ ]);
+                  FldArrayF iptmpi2(   param_int[nd][ NDIMDX_XYZ ]);
+                  FldArrayF iptmpj2(   param_int[nd][ NDIMDX_XYZ ]);
+                  FldArrayF iptmpk2(   param_int[nd][ NDIMDX_XYZ ]);
+                  FldArrayF  iptmtr( 9*param_int[nd][ NDIMDX_XYZ ]);
 
                   E_Float* tmpi = iptmpi.begin();
                   E_Float* tmpj = iptmpj.begin();
@@ -349,11 +347,11 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                   E_Float* tmpk2= iptmpk2.begin();
                   E_Float* mtr  = iptmtr.begin();
 
-                  skmtr_df_( ipt_param_int[nd]+NIJK_XYZ, ipt_param_int[nd]+NIJK_MTR,
-	                     ipt_param_int[nd][ NDIMDX_XYZ ], iptx[nd], ipty[nd], iptz[nd], 
+                  skmtr_df_( param_int[nd]+NIJK_XYZ, param_int[nd]+NIJK_MTR,
+	                     param_int[nd][ NDIMDX_XYZ ], iptx[nd], ipty[nd], iptz[nd], 
 	                     tmpi,tmpj,tmpk,tmpi2,tmpj2,tmpk2, mtr,
-	                     ipt_param_int[nd][ NEQ_IJ ], ipt_param_int[nd][ NEQ_K ],
-		             ipt_param_int[nd][ NDIMDX_MTR], ipti_df[nd],iptj_df[nd],iptk_df[nd], iptvol_df[nd]);
+	                     param_int[nd][ NEQ_IJ ], param_int[nd][ NEQ_K ],
+		             param_int[nd][ NDIMDX_MTR], ipti_df[nd],iptj_df[nd],iptk_df[nd], iptvol_df[nd]);
                   } //omp single
 	         } // if kflu=DF
               }//zone
