@@ -70,8 +70,7 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
   ipt_param_int     = new  E_Int*[nidom];
 
   vector<PyArrayObject*> hook;
-
-  FldArrayF ventVtx(200000); E_Float* ipt_ventVtx = ventVtx.begin();
+  vector<PyArrayObject*> motion;
 
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
@@ -90,9 +89,11 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
 
     GET_VENT( METRIC_VENT, metric, ipt_param_int[nd], iptventi[nd], iptventj[nd], iptventk[nd] )
 
-   if( ipt_param_int[nd][ NDIMDX ] > ndimdx ){ ndimdx = ipt_param_int[nd][ NDIMDX ]; } 
+    if( ipt_param_int[nd][ NDIMDX ] > ndimdx ){ ndimdx = ipt_param_int[nd][ NDIMDX ]; } 
 
-    iptvent_vertex[nd] = ipt_ventVtx;
+    PyObject* motion    = K_PYTREE::getNodeFromName1(zone   , "Motion");
+                     t  = K_PYTREE::getNodeFromName1(motion , "VelocityX");
+    iptvent_vertex[nd]  = K_PYTREE::getValueAF(t, hook);
   }
 
 //
@@ -136,16 +137,6 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
             ipt_ind_dm_loc[3] = ipt_param_int[nd][ IJKV+1];
             ipt_ind_dm_loc[5] = ipt_param_int[nd][ IJKV+2];
 
-
-           E_Float time = 0.005*it;
-           E_Float vit  = 0.05*sin(time);
-           //printf("vitesse %f \n",vit);
-
-           #pragma omp for
-           for (E_Int i= 0; i < ipt_param_int[nd][ NDIMDX_XYZ ]; i++)
-              {  ipt_ventVtx[i]                                  = 0;
-                 ipt_ventVtx[i+ ipt_param_int[nd][ NDIMDX_XYZ ] ]= vit ;
-              }
 
             if( (ipt_param_int[nd][ ITYPVENT ]== 1 && ipt_param_int[nd][ ITYPZONE ] == 1) || ipt_param_int[nd][ ITYPZONE ] == 3)
             {  ipt_ind_dm_loc[5] =1; }//champ de vitesse 2D

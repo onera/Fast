@@ -247,8 +247,8 @@ else
     //Pointeur maillage
     //
     //
-    if(ipt_param_int[nd][ LALE ]== 0){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
-    else                             { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
+    if(ipt_param_int[nd][ LALE ]== 0 || ipt_param_int[nd][ LALE ]== 2 ){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
+    else                                                               { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
 
     //
     //Pointeur var primitive + visco + distance paroi + cellN
