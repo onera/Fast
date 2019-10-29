@@ -171,6 +171,9 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             extract_res = 0
             a = Internal.getNodeFromName2(z, 'extract_res')
             if a is not None: extract_res = Internal.getValue(a)
+            motion = None 
+            a = Internal.getNodeFromName2(z, 'motion')
+            if a is not None: motion = Internal.getValue(a)
 
             vars_p=['Density', 'VelocityX', 'VelocityY','VelocityZ', 'Temperature']
             vars_c=['Density', 'MomentumX', 'MomentumY','MomentumZ', 'EnergyStagnationDensity']
@@ -199,6 +202,11 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                fields2compact =[]
                for v in vars_c:
                  fields2compact.append('centers:'+v+'_src')
+               vars.append(fields2compact)
+            if motion == 'deformation':     #ale deformable
+               fields2compact =[]
+               for v in ['VelocityX','VelocityY','VelocityZ']:
+                 fields2compact.append('Motion:'+v)
                vars.append(fields2compact)
             if sfd == 1:                       #sfd
                fields2compact =[]
@@ -336,6 +344,31 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
        for i in range(1,neq_lbm+1):
            if C.isNamePresent(zone, 'centers:Q'+str(i)) != 1: C._initVars(zone, 'centers:Q'+str(i), 0.)
            if C.isNamePresent(zone, 'centers:Q'+str(i)+'_M1') != 1: C._initVars(zone, 'centers:Q'+str(i)+'_M1', 0.)
+
+    #gestion ale maillage deformable
+    ale=0
+    b = Internal.getNodeFromName1(zone, '.Solver#define')
+    if b is not None:
+       a = Internal.getNodeFromName1(b, 'motion')
+       if a is not None: ale = Internal.getValue(a)
+       if ale =='deformation':
+          Motion = Internal.getNodeFromName1(zone, 'Motion')
+          vx = None
+          if Motion is not None: vx = Internal.getNodeFromName1(Motion, 'VelocityX')
+          else :
+              Internal.createNode('Motion', 'ArbitraryGridMotion_t', value=None, children=[], parent=zone) 
+              Motion   = Internal.getNodeFromType1(zone, 'ArbitraryGridMotion_t')
+              Internal.createNode('ArbitraryGridMotion', 'ArbitraryGridMotionType_t', value='DeformingGrid', children=[], parent=Motion) 
+
+          if vx is None: 
+              a             = Internal.getNodeFromName1(zone, 'GridCoordinates')
+              size_velocity = numpy.size( Internal.getNodeFromName1(a, 'CoordinateX')[1])
+              datax = numpy.zeros(size_velocity, numpy.float64)
+              datay = numpy.zeros(size_velocity, numpy.float64)
+              dataz = numpy.zeros(size_velocity, numpy.float64)
+              Internal.createUniqueChild(Motion, 'VelocityX', 'DataArray_t', datax)
+              Internal.createUniqueChild(Motion, 'VelocityY', 'DataArray_t', datay)
+              Internal.createUniqueChild(Motion, 'VelocityZ', 'DataArray_t', dataz)
 
     sfd = 0
     a = Internal.getNodeFromName2(zone, 'sfd')
@@ -1460,6 +1493,8 @@ def getField2Compact__(z, field):
         container = Internal.__FlowSolutionNodes__ ; name = field[0]
     elif field[0] == 'nodes': 
         container = Internal.__FlowSolutionNodes__ ; name = field[1]
+    elif field[0] == 'Motion': 
+        container = 'Motion' ; name = field[1]
     else: 
         container = Internal.__FlowSolutionCenters__ ; name = field[1]
     conts = Internal.getNodesFromName(z, container)
