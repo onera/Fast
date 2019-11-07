@@ -104,14 +104,14 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
         char* var_c;
         if (PyString_Check(var)) var_c = PyString_AsString(var);
 #if PY_VERSION_HEX >= 0x03000000
-        else if (PyUnicode_Check(var)) var_c = PyBytes_AsString(PyUnicode_AsUTF8String(var));
+        else if (PyUnicode_Check(var)) var_c = PyUnicode_AsUTF8(var);
 #endif
         else var_c = NULL; 
         PyObject* vargrad= PyList_GetItem(varsgrad   , nv*3);
         char* vargrad_c; 
         if (PyString_Check(vargrad)) vargrad_c = PyString_AsString(vargrad);
 #if PY_VERSION_HEX >= 0x03000000
-        else if (PyUnicode_Check(vargrad)) vargrad_c = PyBytes_AsString(PyUnicode_AsUTF8String(vargrad));
+        else if (PyUnicode_Check(vargrad)) vargrad_c = PyUnicode_AsUTF8(vargrad);
 #endif
         else vargrad_c = NULL; 
 
