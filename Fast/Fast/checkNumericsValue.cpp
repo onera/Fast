@@ -44,7 +44,7 @@
   else if (PyUnicode_Check(o))
   {
     ret = 3;
-    retChar = PyUnicode_AsUTF8(o);
+    retChar = (char*)PyUnicode_AsUTF8(o);
   }
 #endif
   else if (PyInt_Check(o))

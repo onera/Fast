@@ -1338,9 +1338,9 @@ void K_FAST::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*& 
       recv_nozone.resize(recv_nrac);
       recv_nvarloc.resize(recv_nrac);
       recv_listRc.resize(recv_nrac);
-      size_t sz;
+      //size_t sz;
 
-      for (E_Int irac = 0; irac < recv_nrac; ++irac) {
+      for (E_Int irac = 0; irac < recv_nrac; ++irac) { 
         recv_buffer >> recv_nozone[irac] >> recv_frp[irac] >> recv_listRc[irac];
 
         std::size_t sz = recv_listRc[irac].size();
@@ -1354,7 +1354,7 @@ void K_FAST::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*& 
 
           if (recv_nvarloc[irac] == 5) {
             #pragma omp for
-            for (int irecv = 0; irecv < sz; ++irecv) 
+            for (size_t irecv = 0; irecv < sz; ++irecv) 
                {
 
                 ilistrecv = recv_listRc[irac] [irecv]; 
@@ -1368,7 +1368,7 @@ void K_FAST::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*& 
           } 
           else if (recv_nvarloc[irac] == 6) {
             #pragma omp for
-            for (int irecv = 0; irecv < sz; ++irecv) 
+            for (size_t irecv = 0; irecv < sz; ++irecv) 
                {
 
                 ilistrecv = recv_listRc[irac] [irecv]; 
@@ -1385,7 +1385,7 @@ void K_FAST::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*& 
             for (int eq = 0; eq < recv_nvarloc[irac]; ++eq)
                {
                 #pragma omp for
-                for (int irecv = 0; irecv < sz; ++irecv)
+                for (size_t irecv = 0; irecv < sz; ++irecv)
                   {
                    ilistrecv = recv_listRc[irac] [irecv]; 
 

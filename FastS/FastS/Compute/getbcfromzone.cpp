@@ -59,7 +59,7 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
       node = PyList_GetItem(bc, 3);
       if (PyString_Check(node)) str  = PyString_AsString(node);  // type
 #if PY_VERSION_HEX >= 0x03000000
-      else if (PyUnicode_Check(node)) str = PyUnicode_AsUTF8(node); 
+      else if (PyUnicode_Check(node)) str = (char*)PyUnicode_AsUTF8(node); 
 #endif
       else str = NULL;
       if (K_STRING::cmp(str, "BC_t") == 0)
@@ -101,7 +101,7 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
           node  = PyList_GetItem( param, 3);
           if (PyString_Check(node)) str = PyString_AsString(node);
 #if PY_VERSION_HEX >= 0x03000000
-          else if (PyUnicode_Check(node)) str = PyUnicode_AsUTF8(node);
+          else if (PyUnicode_Check(node)) str = (char*)PyUnicode_AsUTF8(node);
 #endif
           else str = NULL;
           if (K_STRING::cmp(str, "IndexRange_t") == 0)
@@ -128,7 +128,7 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
               node    = PyList_GetItem( dataset, 3);
               if (PyString_Check(node)) str = PyString_AsString(node);
 #if PY_VERSION_HEX >= 0x03000000
-              else if (PyUnicode_Check(node)) str = PyUnicode_AsUTF8(node);
+              else if (PyUnicode_Check(node)) str = (char*)PyUnicode_AsUTF8(node);
 #endif
               else str = NULL;
               if (K_STRING::cmp(str, "BCData_t") == 0)
@@ -142,7 +142,7 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
                   node     = PyList_GetItem(datarray, 3);
                   if (PyString_Check(node)) str = PyString_AsString(node);
 #if PY_VERSION_HEX >= 0x03000000
-                  else if (PyUnicode_Check(node)) str = PyUnicode_AsUTF8(node);
+                  else if (PyUnicode_Check(node)) str = (char*)PyUnicode_AsUTF8(node);
 #endif
                   else str = NULL;
                   if (K_STRING::cmp(str, "DataArray_t") == 0)
@@ -150,7 +150,7 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
                     node = PyList_GetItem(datarray, 0); // var name
                     if (PyString_Check(node)) str = PyString_AsString(node);
 #if PY_VERSION_HEX >= 0x03000000
-                    else if (PyUnicode_Check(node)) str = PyUnicode_AsUTF8(node);
+                    else if (PyUnicode_Check(node)) str = (char*)PyUnicode_AsUTF8(node);
 #endif
                     else str = NULL;
                     E_Float* f = K_PYTREE::getValueAF(datarray, hook);

@@ -252,7 +252,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
      char* zname;
      if (PyString_Check(zname_py)) zname = PyString_AsString(zname_py);
 #if PY_VERSION_HEX >= 0x03000000
-     else if (PyUnicode_Check(zname_py)) zname = PyUnicode_AsUTF8(zname_py);
+     else if (PyUnicode_Check(zname_py)) zname = (char*)PyUnicode_AsUTF8(zname_py);
 #endif
      else zname = NULL;
      if      (typ_zone == 0) {printf("typezone: 3D curvilinear, %s (%d, %d, %d)\n", zname, ipt_param_int[ IJKV ], ipt_param_int[ IJKV +1], ipt_param_int[ IJKV +2]);}
