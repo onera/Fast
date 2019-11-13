@@ -727,10 +727,9 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
 def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpirun=False):
     """Load tree and connectivity tree."""
     import os.path
-    baseName = os.path.basename(fileName)
-    baseName = os.path.splitext(baseName)[0] # name without extension
-    fileName = os.path.splitext(fileName)[0] # full path without extension
     import Converter.PyTree as C
+
+    fileName = os.path.splitext(fileName)[0] # full path without extension
 
     graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
     if mpirun: # mpi run
@@ -782,7 +781,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
             #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
             FILE = '%s/%s%d.cgns'%(directory, fileName, rank)
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else: tc= None
+            else: t= None
 
     else: # sequential run
         if split == 'single':

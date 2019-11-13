@@ -1087,7 +1087,8 @@ def _buildOwnData(t, Padding):
                #NG_4  = nf_intext[4]  #element couche 2 de type raccord
 
                #datap[7 ] = NG_0 + NG_1 + NG_2 + NF_BC0 + NF_BC1 # elements total (avec les element BC )
-               datap[7 ] = NG_0 + NG_1 + NG_2 +NG_3  # elements total (avec les element BC et racc )
+               datap[7 ] = NG_0 + NG_1 + NG_2 +NG_3  # elements total (avec les element BC et racc ) NELTS
+               datap[41] = NG_0 + NG_1 + NG_2 +NG_3  # elements total (avec les element BC et racc ) NDIMDX pour partage transfert Fast
                datap[8 ] = NG_0
                datap[9 ] = NG_1
                datap[10] = NG_3
@@ -1112,7 +1113,11 @@ def _buildOwnData(t, Padding):
             datap[33]  = kfludom
             datap[34]  = lale
             datap[35]  = iflagflt
-            datap[36:45]= -1
+            if ngon is not None:
+               datap[36:41]= -1
+               datap[42:45]= -1
+            else:
+               datap[36:45]= -1
             datap[45]  = io_th    
             datap[46]  = dtloc
             datap[47]  = ides  
