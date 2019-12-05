@@ -387,7 +387,9 @@ E_Float deb_calcul;
 	   
 
           } //Fin boucle sur zones pour calcul RHS
-
+#ifdef _WIN32
+#pragma omp barrier
+#endif
           //
           //timer pour omp "dynamique"
           //
