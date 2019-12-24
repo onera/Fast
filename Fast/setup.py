@@ -57,7 +57,7 @@ listExtensions.append(
 # setup ======================================================================
 setup(
     name="Fast",
-    version="3.0",
+    version="3.1",
     description="Fast Navier-Stokes solver.",
     author="Onera",
     package_dir={"":"."},
