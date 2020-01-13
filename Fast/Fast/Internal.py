@@ -1391,6 +1391,8 @@ def tagBC(bcname):
   elif bcname == "BCInj1":                  tag =17;
   elif bcname == "BCRacinf":                tag =18;
   elif bcname == "BCInflowLund":            tag =19;
+  elif bcname == "BCInjMFR":                tag =20;
+  elif bcname == "BCOutMFR":                tag =21;
   else:
     tag = -1
     print("Warning: unknown BC type %s."%bcname)
