@@ -381,8 +381,8 @@ E_Int K_FASTS::BCzone(
                 E_Int eq_deb                             = 1;
                 if ( bc_type == 14 && lrhs_loc == 0 ) eq_deb = 6;
 
-                if ( lrhs_loc == 1 && ( bc_type == 0 || bc_type == 1 || bc_type == 2 || bc_type == 10 || bc_type == 11 ||
-                                    bc_type == 14 || bc_type == 16 || bc_type == 17 ) )
+                if ( lrhs_loc == 1 && ( bc_type == 0 || bc_type == 1  || bc_type == 2  || bc_type == 10 || bc_type == 11 ||
+                                       bc_type == 14 || bc_type == 16 || bc_type == 17 || bc_type == 20 || bc_type == 21 ) )
                     bc_type = 0;  // si rhs, on extrapole sauf si wall
 
                 if ( bc_type == 0 ) {
@@ -460,6 +460,47 @@ E_Int K_FASTS::BCzone(
                                           iptijk, iptrop, ipt_fieldinflow, ipt_fieldplanlund, ipt_paramlund,
                                          iptsize_data[0], inc_bc, size_work );
 
+                // Added romain Paris           /////////////////////////////////////////////////////
+              } else if ( bc_type == 20 ) {//inj MFR
+                   DEFAULT_STATE( "BCInjMFR" )
+                   // MUSCL
+                   E_Float c4, c5, c6;
+                   c4 = 5. / 6.;
+                   c5 = 2. / 6.;
+                   c6 = -1. / 6.;
+
+#                   include "BC/INCREMENT_BC.h"
+
+                   E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
+
+                   E_Float* ipt_d0x = ipt_data;                     // d0x
+                   E_Float* ipt_d0y = ipt_data +   iptsize_data[0]; // d0y
+                   E_Float* ipt_d0z = ipt_data + 2*iptsize_data[0]; // d0z
+                   E_Float* ipt_qp  = ipt_data + 3*iptsize_data[0]; // qp
+                   E_Float* ipt_ha  = ipt_data + 4*iptsize_data[0]; // ha
+                   E_Float* ipt_nue  = ipt_data + 5*iptsize_data[0];// nue
+
+                      bvbs_injmfr_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
+                                         iptijk, iptrop, ipt_d0x, ipt_d0y, ipt_d0z, ipt_qp, ipt_ha, ipt_nue,
+                                        iptsize_data[0], inc_bc );
+                } else if ( bc_type == 21 ) {//out MFR
+                     DEFAULT_STATE( "BCOutMFR" )
+                     // MUSCL
+                     E_Float c4, c5, c6;
+                     c4 = 5. / 6.;
+                     c5 = 2. / 6.;
+                     c6 = -1. / 6.;
+
+#                   include "BC/INCREMENT_BC.h"
+
+                     E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
+
+                     E_Float* ipt_qp  = ipt_data;
+
+                        bvbs_outmfr_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
+                                           iptijk, iptrop, ipt_qp,
+                                          iptsize_data[0], inc_bc );
+                ////////////////////////////////////////////////////////////////////////////
                 } else if ( bc_type == 2 ) {
                     DEFAULT_STATE( "BCSupersonic" )
                     // MUSCL
@@ -468,8 +509,30 @@ E_Int K_FASTS::BCzone(
                     c5 = 2. / 6.;
                     c6 = -1. / 6.;
 
-                    bvbs_inflow_supersonic_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6,
+
+                    if (iptsize_data[0] <=6)
+                     {
+                      bvbs_inflow_supersonic_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6,
                                              ipventijk, iptijk, iptrop, ipt_data );
+                     }
+                    else
+                     { 
+#                      include "BC/INCREMENT_BC.h"
+
+                       E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
+
+                       E_Float* ipt_data1 = ipt_data;                       //ro
+                       E_Float* ipt_data2 = ipt_data1 + iptsize_data[0];    //rou
+                       E_Float* ipt_data3 = ipt_data2 + iptsize_data[0];    //rov
+                       E_Float* ipt_data4 = ipt_data3 + iptsize_data[0];
+                       E_Float* ipt_data5 = ipt_data4 + iptsize_data[0];    //roe
+                       E_Float* ipt_data6 = ipt_data5 + iptsize_data[0];    //nutilde
+
+                       bvbs_inflow_supersonic_fich_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
+                                          iptijk, iptrop, ipt_data1, ipt_data2, ipt_data3, ipt_data4, ipt_data5,
+                                         ipt_data6, iptsize_data[0], inc_bc, size_work );
+                     }
+
                 } else if ( bc_type == 3 || ( bc_type == 4 && param_int[IFLOW] == 1 ) || bc_type == 5 ) {
                     E_Float mobile_coef            = 1.;
                     if ( nbdata != 0 ) mobile_coef = ipt_data[0];
@@ -480,8 +543,8 @@ E_Int K_FASTS::BCzone(
                     E_Float mobile_coef            = 1.;
                     if ( nbdata != 0 ) mobile_coef = ipt_data[0];
 
-                    bvbs_wall_viscous_adia_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, ipventijk, iptijk,
-                                             iptrop );
+                    bvbs_wall_viscous_adia_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, ipventijk, iptijk, iptrop );
+
                 } else if ( bc_type == 12 && param_int[IFLOW] > 1 ) {
 #                   include "BC/INCREMENT_BC.h"
                     E_Float mobile_coef            = 1.;

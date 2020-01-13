@@ -1,0 +1,7 @@
+      rop(l,1) =  rofich(li)
+      rop(l,2) =   rufich(li)/rofich(li)
+      rop(l,3) =   rvfich(li)/rofich(li)
+      rop(l,4) =   rwfich(li)/rofich(li)
+      rop(l,5) =  (refich(li) - 0.5*(rufich(li)*rufich(li)+rvfich(li)
+     & *rvfich(li)+rwfich(li)*rwfich(li))/rofich(li) ) 
+     & /(rofich(li)*param_real(CVINF))

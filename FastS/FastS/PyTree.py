@@ -247,7 +247,7 @@ def allocate_metric(t):
             if len(grids) == 1:
                grid_init = Internal.copyTree(grids[0])
                grid_init[0] = 'GridCoordinates#Init'
-               Internal.addChild(z, grid_init, pos=1) # first
+               Internal.addChild(z, grid_init, pos=-1) # last
         metrics.append(fasts.allocate_metric(z, nssiter))
     return metrics
 #
@@ -353,7 +353,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         for fields in varnames:
             _compact(zone, fields=fields, mode=count)
 
-
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     zones = Internal.getZones(t) # car create primvar rend zones caduc
     c   = 0
@@ -368,7 +367,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
             metrics[c][2] = ro[1]
         else: ale = True
         c += 1
-
 
     #
     # mise a jour vitesse entrainememnt
@@ -426,6 +424,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4]) 
+
     _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1) 
     if tc is not None: C._rmVars(tc, 'FlowSolution')
 
@@ -1661,7 +1660,17 @@ def copy_velocity_ale(t, metrics, it=0):
     ompmode = OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
 
-    fasts.copy_velocity_ale(zones,  metrics, HOOK, ompmode, it)
+    #on filtre les zones non deformables
+    zones_aleDeformation=[]; metric_aleDeformation=[]
+    c=0
+    for z in zones:
+      tmp = Internal.getNodeFromName1(z,'Motion')
+      if tmp is not None:
+          zones_aleDeformation.append(z)
+          metric_aleDeformation.append(metrics[c])
+      c+=1
+
+    fasts.copy_velocity_ale(zones_aleDeformation, metric_aleDeformation , HOOK, ompmode, it)
     return None
 
 #==============================================================================

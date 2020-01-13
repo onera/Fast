@@ -73,6 +73,11 @@ c      write(*,*)'idir=', idir,nijk(4),nijk(5),ndimdx
 c      write(*,*)'nijk=', nijk
 c      write(*,*)'loop=', ind_loop
 
+
+      gamm1   = param_real(GAMMA) - 1.
+      gamm1_1 = 1./gamm1
+      cvinv   = 1./param_real(CVINF)
+
       snorm =-1.
       if(mod(idir,2).eq.0) snorm = 1.
 
