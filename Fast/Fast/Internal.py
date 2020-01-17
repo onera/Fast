@@ -1797,3 +1797,24 @@ def switchPointers3__(zones,nitmax):
 
             # P1 <- temp
             caP1[1] = ta; cbP1[1] = tb; ccP1[1] = tc; cdP1[1] = td; ceP1[1] = te
+
+
+#==============================================================================
+# echange M1 <- current, current <- P1, P1 <- M1
+#==============================================================================
+def switchPointersLBM__(zones, neq_lbm):
+    
+     for z in zones:
+        sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+        for i in range(1,neq_lbm+1):
+            caM1 = Internal.getNodeFromName1(sol, 'Q'+str(i)+'_M1')
+            ca   = Internal.getNodeFromName1(sol, 'Q'+str(i))
+
+            # sauvegarde M1
+            ta = caM1[1]; 
+
+            # M1 <- current
+            caM1[1] = ca[1];
+
+            # current <- P1
+            ca[1] = ta
