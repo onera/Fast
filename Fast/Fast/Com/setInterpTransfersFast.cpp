@@ -395,12 +395,12 @@ void K_FAST::setInterpTransfersIntra(
 	  // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse   
 	  if (levelD > levelR and num_passage == 1)		
 	    {
-	      if (nstep%cyclD==cyclD-1 or nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1) { autorisation_transferts[pass_inst][irac_auto]=1; }
+	      if (nstep%cyclD==cyclD-1 || (nstep%cyclD==cyclD/2 && (nstep/cyclD)%2==1)) { autorisation_transferts[pass_inst][irac_auto]=1; }
 	    }
 	  // Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
 	  else if (levelD < levelR and num_passage == 1) 
 	    {
-	      if (nstep%cyclD==1 or nstep%cyclD==cyclD/4 or nstep%cyclD== cyclD/2-1 or nstep%cyclD== cyclD/2+1 or nstep%cyclD== cyclD/2+cyclD/4 or nstep%cyclD== cyclD-1)
+	      if (nstep%cyclD==1 || nstep%cyclD==cyclD/4 || nstep%cyclD== cyclD/2-1 || nstep%cyclD== cyclD/2+1 || nstep%cyclD== cyclD/2+cyclD/4 || nstep%cyclD== cyclD-1)
 		{ autorisation_transferts[pass_inst][irac_auto]=1; }
 	    }
 	  // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse
