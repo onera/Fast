@@ -402,13 +402,24 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
         {
             E_Int socket_tg = c%nb_socket;
 
+	    E_Int th_current =  __NUMTHREADS__ -1 -c%__NUMTHREADS__;
+            E_Int sens =-1;
+            E_Int dirr = c/ __NUMTHREADS__;
+            if (dirr%2==0) {sens=1; th_current=c%__NUMTHREADS__;}
+            //printf("verif=  dirr= %d , sens= %d,  thcurrent= %d, zone= %d,  \n ", dirr, sens, th_current,  c);
+            
 	    E_Int th_count   = 0;
-	    E_Int th_current = socket_tg*core_per_socket;
+	    //E_Int th_current = socket_tg*core_per_socket;
+
             E_Int lgo = 1;
 	    while(lgo==1)
               { //printf("th_current mono th %d %d \n", lgo, c);
 
                 if(size_c/marge <=  remaind[th_current]) lgo = 0;
+
+                //on ajuste le sens de parcours pour la recherche de place si on est au limite min ou max des threads
+                if (th_current==0                && sens==-1) sens= 1;
+                if (th_current==__NUMTHREADS__-1 && sens== 1) sens=-1;
 
                 if(lgo==1 && th_count == __NUMTHREADS__-1)
                    {
@@ -418,13 +429,13 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                      for (E_Int th = 0; th < __NUMTHREADS__; th++)
                        {  
                         if(remaind[th] > th_max){ th_max = remaind[th]; th_current = th;}
-                        //print 'traitememnt residu affecte au thread', th_current, remaind[str(th)], th
                        }
                    }
                 if(lgo==1)
-                { th_current +=1;
+                { th_current +=sens;
                   th_count   +=1;
-                  if(th_current==__NUMTHREADS__-1) th_current = 0;
+                  if(th_current==__NUMTHREADS__-1 && sens==1) th_current = 0;
+                  if(th_current== 0 && sens==-1) th_current = __NUMTHREADS__-1;
                 }
               }// while go
   
@@ -819,7 +830,11 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
                   E_Int socket_tg  = c%nb_socket;
                   E_Int th_count   = 0;
-	          E_Int th_current = socket_tg*core_per_socket;
+	          E_Int th_current =  __NUMTHREADS__ -1 -c%__NUMTHREADS__;
+                  E_Int sens =-1;
+                  E_Int dirr = c/ __NUMTHREADS__;
+                  if (dirr%2==0) {sens=1; th_current=c%__NUMTHREADS__;}
+	          //E_Int th_current = socket_tg*core_per_socket;
 
 		  //E_Int th_current = 0;
 		  E_Int szi= dim_i[i];
@@ -833,9 +848,16 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
 	          //On cherche de la place sur un des socket, puis sur le suivant si pas de candidat local
 	          while( (size_loc/marge > remaind[th_current] || list_affected[th_current]!=-1)  && th_count < __NUMTHREADS__-1) 
-                    { th_current +=1; 
+                    { 
+                      //on ajuste le sens de parcours pour la recherche de place si on est au limite min ou max des threads
+                      if (th_current==0                && sens==-1) sens= 1;
+                      if (th_current==__NUMTHREADS__-1 && sens== 1) sens=-1;
+
+                      th_current +=sens; 
                       th_count   +=1;
-                      if(th_current==__NUMTHREADS__-1) th_current = 0;
+                      if(th_current==__NUMTHREADS__-1 && sens==1) th_current = 0;
+                      if(th_current== 0 && sens==-1) th_current = __NUMTHREADS__-1;
+                      //if(th_current==__NUMTHREADS__-1) th_current = 0;
                     }
                 
                   if(th_count == __NUMTHREADS__-1)

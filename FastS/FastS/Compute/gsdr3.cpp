@@ -695,11 +695,11 @@ E_Int lrhs=0; E_Int lcorner=0;
     //
     //omp "dynamic" balance
     //
-    if(nitrun%5==0)
-    {  
-#include "HPC_LAYER/OPTIMIZE_DISTRIB_OMP.h"
-
-    }
+//    if(nitrun%5==0)
+//    {  
+//#include "HPC_LAYER/OPTIMIZE_DISTRIB_OMP.h"
+//
+//    }
 
    delete [] ipt_timecount;
    return ibord_ale;
