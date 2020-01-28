@@ -23,19 +23,19 @@ a1 = T.subzone(a,(1,1,1),(NI//2,-1,-1)); a1[0] = 'cyl1'
 a2 = T.subzone(a,(NI//2,1,1),(NI,-1,-1)); a2[0] = 'cyl2'
 t = C.newPyTree(["Base",a1,a2])
 t = X.connectMatch(t)
-t = Internal.addGhostCells(t,t,2,2)
-t = C.rmBCOfType(t, 'BCMatch')
-t = C.addBC2Zone(t,'overlap','BCOverlap','imin')
-t = C.addBC2Zone(t,'overlap','BCOverlap','imax')
-t = C.addBC2Zone(t,'wall','BCWall','jmin')
-t = C.fillEmptyBCWith(t, 'far', 'BCFarfield', dim=3)
+Internal._addGhostCells(t,t,2,2)
+C._rmBCOfType(t, 'BCMatch')
+C._addBC2Zone(t,'overlap','BCOverlap','imin')
+C._addBC2Zone(t,'overlap','BCOverlap','imax')
+C._addBC2Zone(t,'wall','BCWall','jmin')
+C._fillEmptyBCWith(t, 'far', 'BCFarfield', dim=3)
 
 adim = Adim.adim1(MInf=MInf, ReInf=40000., MutSMuInf=15)
-t = X.applyBCOverlaps(t, depth=2)
+X._applyBCOverlaps(t, depth=2)
 tc = C.node2Center(t)
 tc = X.setInterpData(t,tc,nature=1,loc='centers',storage='inverse',sameName=1)
-tc = Internal.rmNodesByName(tc, 'GridCoordinates')
-tc = Internal.rmNodesByName(tc, 'FlowSolution')
+Internal._rmNodesByName(tc, 'GridCoordinates')
+Internal._rmNodesByName(tc, 'FlowSolution')
 C._addState(t, MInf=MInf, alphaZ=0.)
 C._addState(t, 'GoverningEquations', 'NSTurbulent')
 I._initConst(t, MInf=MInf, loc='centers')
@@ -44,7 +44,7 @@ C._randomizeVar(t, 'centers:MomentumX', 0.01, 0.01)
 
 # distance a la paroi
 tb = C.newPyTree(['Body']); tb[2][1][2].append(G.cylinder((0,0,0), 0.5, 25., 360., 0., 0.5, (NI,1,2)))
-t = DTW.distance2Walls(t, tb, loc='centers', type='ortho')
+DTW._distance2Walls(t, tb, loc='centers', type='ortho')
 
 # Numerics
 numb = {}
