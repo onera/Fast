@@ -463,26 +463,26 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
             if param_int is None:
                 raise ValueError("_compact: Parameter_int is missing for zone %s."%z[0])
             for a in val:
-                #a[1] = a[1].reshape((size), order='Fortran')
+                #a[1] = a[1].reshape((size), order='F')
                 a1 = a[1]
                 ## marc a1 = a[1]
                 #print 'a0',a[0],a[1].shape
                 # Copy elements
-                ptr = a1.reshape((size), order='Fortran') # no copy I hope
+                ptr = a1.reshape((size), order='F') # no copy I hope
                 if init: fasts.initNuma( ptr, eq, param_int, c, thread_numa )
                 #fasts.initNuma( ptr, eq, param_int, c )
-                ## marc ptr = a1.reshape((size), order='Fortran') # no copy I hope
+                ## marc ptr = a1.reshape((size), order='F') # no copy I hope
                 ## marc fasts.initNuma( ptr, eq, param_int, c )
                 #fasts.initNuma( a[1], eq, param_int, c )
                 #fasts.initNuma( ptr , eq, param_int, c )
                 #eq[c*size:(c+1)*size] = ptr[:]   
                 # Replace numpys with slice
                 a[1] = eq[c*(size)+c*param_int[1][66]:(c+1)*(size)+c*param_int[1][66]]
-                a[1] = a[1].reshape(sh, order='Fortran')
+                a[1] = a[1].reshape(sh, order='F')
                 ## marc a[1] = eq[c*size:(c+1)*size]
-                ## marc a[1] = a[1].reshape(sh, order='Fortran')
+                ## marc a[1] = a[1].reshape(sh, order='F')
                 #print 'a1',a[0],a[1].shape
-                ##a[1] = a[1].reshape( (size), order='Fortran')
+                ##a[1] = a[1].reshape( (size), order='F')
                 #print 'a',a[0],a[1].shape 
 
                 c += 1

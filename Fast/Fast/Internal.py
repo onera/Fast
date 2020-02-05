@@ -1316,7 +1316,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #    for z in zones:
 #         param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
 #    
-#    ptr = drodm1.reshape((nijk*5), order='Fortran') # no copy I hope
+#    ptr = drodm1.reshape((nijk*5), order='F') # no copy I hope
 #    for c in range(5):
 #        print'c=',c
 #        #print 'a0',a[0]
@@ -1324,12 +1324,12 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #        fasts.initNuma( ptr, drodm, param_int, c )
 #        # Replace numpys with slice
 #        #drodm1 = drodm[c*nijk:(c+1)*nijk]
-#        #a[1] = a[1].reshape(sh, order='Fortran')
+#        #a[1] = a[1].reshape(sh, order='F')
 #
 #    drodm1 = drodm[0:ndimt]
 #    print "verif", ndimt, (132**3)*5, drodm1.shape
-#    #drodm1 = drodm1.reshape((132,132,132,5), order='Fortran')
-#    drodm1 = drodm1.reshape((132*132*132*5), order='Fortran')
+#    #drodm1 = drodm1.reshape((132,132,132,5), order='F')
+#    drodm1 = drodm1.reshape((132*132*132*5), order='F')
 #    print drodm1.shape
 
     lok      = numpy.zeros(verrou     , dtype=numpy.int32  )
