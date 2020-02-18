@@ -62,14 +62,40 @@ c$$$      compteur = compteur +  (ind_loop(2) -ind_loop(1)+1)*
 c$$$     &                       (ind_loop(4) -ind_loop(3)+1)*
 c$$$     &                       (ind_loop(6) -ind_loop(5)+1)
 
-      DO k = ind_loop(5), ind_loop(6)
-      DO j = ind_loop(3), ind_loop(4)
-CC#include "FastS/POST/loopI_begin.for"
-#include "FastS/Compute/loopI_begin.for"
+      if(param_int(ITYPZONE).eq.2) then ! zone cartesienne
 
-          compteur = compteur + vol(lt)
+        DO k = ind_loop(5), ind_loop(6)
+        DO j = ind_loop(3), ind_loop(4)
+#include "FastS/POST/loopI_begin.for"
+
+          compteur = compteur + vol(1)
 
           !print*, compteur , vol(lt)
+
+          rho        = rop(l+ V1)
+          u1         = rop(l+ V2)
+          u2         = rop(l+ V3) 
+          u3         = rop(l+ V4)
+
+          tke        = tke + 0.5*rho*(u1*u1+u2*u2+u3*u3)*vol(1)
+
+          w1         = (dvardc(l + Vdwdy) - dvardc(l + Vdvdz))
+          w2         = (dvardc(l + Vdudz) - dvardc(l + Vdwdx))
+          w3         = (dvardc(l + Vdvdx) - dvardc(l + Vdudy))
+
+          enst       =enst + 0.5*rho*(w1*w1+w2*w2+w3*w3)*vol(1)
+
+        end do
+        end do
+        end do
+
+      else
+
+        DO k = ind_loop(5), ind_loop(6)
+        DO j = ind_loop(3), ind_loop(4)
+#include "FastS/POST/loopI_begin.for"
+
+          compteur = compteur + vol(lt)
 
           rho        = rop(l+ V1)
           u1         = rop(l+ V2)
@@ -87,5 +113,6 @@ CC#include "FastS/POST/loopI_begin.for"
         end do
         end do
         end do
-   
+      endif
+
       end
