@@ -5,7 +5,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
       //setInterpTransfersFastS(iptdrodm_transfer, vartype, param_int_tc,
       //                   param_real_tc, param_int, param_real, linelets_int, linelets_real,
       // 			 it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
-      K_FAST::setInterpTransfersFast(iptdrodm_transfer, vartype, param_int_tc,
+      K_FASTC::setInterpTransfersFast(iptdrodm_transfer, vartype, param_int_tc,
                          param_real_tc, param_int, param_real, linelets_int, linelets_real,
       			 it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
     }
@@ -17,6 +17,9 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
             E_Float* ipt_ssor_shift; E_Float* ipt_ssortmp_shift; E_Int ssor_size;
             for (E_Int nd = 0; nd < nidom; nd++)
             {
+
+             if (param_int[nd][ITYPZONE] != 4)  //on skippe les eventuelles zone non structurees
+             {
                E_Float* ipt_CL = iptro_CL[nd];
 
 #ifdef _OPENMP
@@ -53,14 +56,14 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
                       {  //
                          // CL sur rhs pour implicitation
 			 E_Int lrhs=1; E_Int lcorner=1; E_Int mjrnewton=1;
-                         BCzone( nd, lrhs, nitcfg, lcorner, 
-                                 param_int[nd], param_real[nd],
-                                 npass,
-                                 ipt_ind_dm_loc         , ipt_ind_dm_thread      ,
-                                 ipt_ind_CL_thread      , ipt_ind_CL119          , ipt_ind_CLgmres, ipt_shift_lu,
-                                 iptdrodm + shift_zone  , ipti[nd]               , iptj[nd]       , iptk[nd]          ,
-                                 iptx[nd]               , ipty[nd]               , iptz[nd]       ,
-                                 iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd]);
+                         K_FASTS::BCzone( nd, lrhs, nitcfg, lcorner, 
+                                          param_int[nd], param_real[nd],
+                                          npass,
+                                          ipt_ind_dm_loc         , ipt_ind_dm_thread      ,
+                                          ipt_ind_CL_thread      , ipt_ind_CL119          , ipt_ind_CLgmres, ipt_shift_lu,
+                                          iptdrodm + shift_zone  , ipti[nd]               , iptj[nd]       , iptk[nd]          ,
+                                          iptx[nd]               , ipty[nd]               , iptz[nd]       ,
+                                          iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd]);
                  
                          if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu , iptdrodm + shift_zone );
 
@@ -116,7 +119,8 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
                    nd_current +=1;
                      
 #include       "HPC_LAYER/OMP_MODE_END.h"
-                 //  } //fin boucle sous-zone
+
+             }//maillage structure
 
              shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
              shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];

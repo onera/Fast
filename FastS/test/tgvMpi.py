@@ -5,7 +5,7 @@
 #
 import Connector.PyTree as X
 import Generator.PyTree as G
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import FastS.Mpi as FastSmpi
 import Converter.PyTree as C
@@ -270,7 +270,7 @@ numb["modulo_verif"]    = 50
 numz = {}
 numz["time_step"]          = 0.003
 numz["scheme"]             = "senseur"
-Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 #Initialisation parametre calcul: calcul metric + var primitive + compactage + alignement + placement DRAM
 (t, tc, metrics) = FastSmpi.warmup(t, tc, graph)

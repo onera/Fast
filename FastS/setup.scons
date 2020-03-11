@@ -33,7 +33,7 @@ installPath = Dist.getInstallPath(prefix)
 (connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
 
 # Test if fast exists =======================================================
-(fastVersion, fastIncDir, fastLibDir) = Dist.checkFast()
+(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkFastC()
 
 # Test if libmpi exists ======================================================
 (mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
@@ -41,9 +41,9 @@ installPath = Dist.getInstallPath(prefix)
 from KCore.config import *
 
 # Setting libraryDirs and libraries ===========================================
-libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, xcoreLibDir, fastLibDir, connectorLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, pythonIncDir,fastIncDir]
-libraries = ["kcore", "xcore", "fast", "connector"]
+libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, xcoreLibDir, fastcLibDir, connectorLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, pythonIncDir,fastcIncDir]
+libraries = ["kcore", "xcore", "fastc", "connector"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
@@ -193,18 +193,18 @@ for f in for_srcs5:
     ofile = env.Fortran(target=ffile)
     ppf5.append(ofile[0])
 
+env.Command('merge.l', 'merge.ar', "sed -e s/ELSAPROD/%s/g merge.ar > merge.l"%ELSAPROD)
+env.Command('libfasts.a', ['libfastS1.a', 'libfastS2.a', 'libfastS3.a', 'libfastS4.a', 'libfastS5.a','merge.l'], "ar -M < merge.l")
+
 #==============================================================================
 myMod1 = env.StaticLibrary('fastS1', srcs.cpp_srcs+ppf1)
 myMod2 = env.StaticLibrary('fastS2', ppf2)
 myMod3 = env.StaticLibrary('fastS3', ppf3)
 myMod4 = env.StaticLibrary('fastS4', ppf4)
 myMod5 = env.StaticLibrary('fastS5', ppf5)
+myMod = 'libfasts.a'
 modDir = installPath+'/FastS/'
-dp1 = env.Install(modDir, myMod1)
-dp2 = env.Install(modDir, myMod2)
-dp3 = env.Install(modDir, myMod3)
-dp4 = env.Install(modDir, myMod4)
-dp5 = env.Install(modDir, myMod5)
-dp6 = env.Install(modDir, Glob('FastS/*.py'))
+dp1 = env.Install(modDir, myMod)
+dp2 = env.Install(modDir, Glob('FastS/*.py'))
 
-env.Alias(target="install", source=[dp1,dp2,dp3,dp4,dp5,dp6])
+env.Alias(target="install", source=[dp1,dp2])

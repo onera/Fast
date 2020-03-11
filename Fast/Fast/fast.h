@@ -16,10 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 # ifndef _FAST_FAST_H_
 # define _FAST_FAST_H_
-
 
 #ifdef _MPI
 #include "CMP/include/pending_message_container.hpp"
@@ -38,50 +36,37 @@ using namespace K_FLD;
 
 namespace K_FAST
 { 
+  // Fonctions
+  // =========
+  PyObject* _computePT(              PyObject* self, PyObject* args);
 
-  // Check a value in Numerics Dictionary
-  E_Int checkNumericsValue(PyObject* numerics, const char* value,
-                           E_Int& retInt, E_Float& retFloat, char*& retChar);
-
-
-  PyObject* _motionlaw( PyObject* self, PyObject* args);
-
-
-  //==============================
-  // - Transfer with CMP library -
-  //==============================
-
-  /* Call to transfers from FastS */
-
-  void setInterpTransfersFast(
-  E_Float**& iptro_tmp    , E_Int& vartype             , E_Int*& param_int_tc, E_Float*& param_real_tc , E_Int**& param_int     , E_Float**& param_real,
-  E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& it_target    , E_Int& nidom            , E_Float*& ipt_timecount, E_Int& mpi           ,
-  E_Int& nitcfg           , E_Int& nssiter             , E_Int& rk           , E_Int& exploc           , E_Int& numpassage );
-  
-  /* Transferts FastS Intra process */
-  void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int& vartype         , E_Int*& ipt_param_int   , E_Float*& ipt_param_real   ,
-                              E_Int**& param_int, E_Float**& param_real  , E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
-                              E_Int& NoTransfert, E_Float*& ipt_timecount,
-                              E_Int& nitcfg     , E_Int& nssiter         , E_Int& rk, E_Int& exploc, E_Int& numpassage );
-
-  #ifdef _MPI
-  /* Transferts FastS Inter process */
-  void setInterpTransfersInter(E_Float**& ipt_ro , E_Int& vartype        , E_Int*& ipt_param_int   , E_Float*& ipt_param_real   ,
-                               E_Int**& param_int, E_Float**& param_real , E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
-                               E_Int& NoTransfert,
-                               std::pair<RecvQueue*, SendQueue*>*& pair_of_queue,
-                               E_Float*& ipt_timecount,
-                               E_Int& nitcfg, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& numpassage , E_Int& nb_send_buffer);
-
-  /* Get Transfert Inter process */
-  void getTransfersInter(E_Float**& ipt_roD, E_Int**& param_int, E_Int*& param_int_tc , std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
-
-  /* Init Transfert Inter process */
-  void init_TransferInter(std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
-
-  /* Delete Transfert Inter process */
-  void del_TransferInter(std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
-  #endif
-
+  E_Int gsdr3( 
+    E_Int**& ipt_param_int , E_Float**& ipt_param_real, 
+    E_Int& nidom        , E_Int& nitrun       , E_Int& nstep    , E_Int& nstep_last, E_Int& nssiter      , E_Int& it_target , E_Int& first_it,
+    E_Int& kimpli       , E_Int& lssiter_verif, E_Int& lexit_lu , E_Int& omp_mode  , E_Int& layer_mode   , E_Int& mpi       ,
+    E_Int& nisdom_lu_max, E_Int& mx_nidom     , E_Int& ndimt_flt, E_Int& ndimt_grad, E_Int& threadmax_sdm, E_Int& mx_synchro, 
+    E_Int& nb_pulse     ,
+    E_Float& temps,
+    E_Int* ipt_ijkv_sdm , 
+    E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int& vartype, E_Float* timer_omp,
+    E_Int* iptludic             , E_Int* iptlumax, 
+    E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom, E_Int** ipt_ng_pe,
+    E_Float* ipt_VectG          , E_Float* ipt_VectY     , E_Float** ipt_ssor          , E_Float** ipt_ssortmp, E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
+    E_Float* ipt_Hessenberg     , E_Float** iptkrylov    , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
+    E_Float*   ipt_cfl          ,
+    E_Float**  iptx             , E_Float**  ipty        , E_Float** iptz,
+    E_Float**  iptCellN         , E_Float**  iptCellN_IBC, E_Int**  iptdegen,
+    E_Float**& iptro, E_Float**& iptro_m1, E_Float**&  iptrotmp,  E_Float**& iptro_sfd,
+    E_Float**  iptmut, E_Float*  ipt_mutd,
+    E_Float**  ipti, E_Float**  iptj, E_Float** iptk, E_Float** iptvol, 
+    E_Float**  ipti0, E_Float**  iptj0, E_Float** iptk0,     
+    E_Float**  ipti_df, E_Float**  iptj_df, E_Float** iptk_df, 
+    E_Float**  iptvol_df, 
+    E_Float**  iptventi, E_Float**  iptventj, E_Float** iptventk,  
+    E_Float**& iptrdm,
+    E_Float*   iptroflt      , E_Float*  iptroflt2        , E_Float*   iptgrad        , E_Float*   iptwig         , E_Float* iptstat_wig       ,
+    E_Float*   iptdrodm      , E_Float*  iptcoe           , E_Float* iptmules         , E_Float**& iptdelta        , E_Float**& iptro_res    , E_Float**& iptdrodm_trans  ,
+    E_Int*&  ipt_param_int_tc, E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int  , E_Float*& ipt_linelets_real,
+    E_Int& taille_tabs       , E_Float*& stock            , E_Float*& drodmstock      , E_Float*& constk           , E_Float**  iptsrc);
 }
 #endif

@@ -146,7 +146,7 @@ if( param_int_tc != NULL)
       //setInterpTransfersFastS(iptkrylov_transfer, vartype, param_int_tc,
 //			      param_real_tc, param_int, param_real, linelets_int, linelets_real,
  //        		      it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
-      K_FAST::setInterpTransfersFast(iptkrylov_transfer, vartype, param_int_tc,
+      K_FASTC::setInterpTransfersFast(iptkrylov_transfer, vartype, param_int_tc,
 			      param_real_tc, param_int, param_real, linelets_int, linelets_real,
          		      it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
     }

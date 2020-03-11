@@ -3,7 +3,7 @@
 #
 import Generator.PyTree as G
 import Converter.PyTree as C
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import Post.PyTree as P
 import Connector.PyTree as X
@@ -19,7 +19,7 @@ NP = 0               # NP: 0: Seq, NP> 0: running with mpi, distributed on NP pr
 rank=0               # sequential 8 cores
 it0 = 0
 
-t_m129,tc_m129,ts,graph=Fast.load(DOSSIER+'restart_129'+SUFFIXE+'.cgns',DOSSIER+'tc_m129.cgns', 'ts.cgns', split='single', restart=False)
+t_m129,tc_m129,ts,graph=FastC.load(DOSSIER+'restart_129'+SUFFIXE+'.cgns',DOSSIER+'tc_m129.cgns', 'ts.cgns', split='single', restart=False)
 
 modulo_verif = 1
 mycfl = 0.00000001
@@ -37,7 +37,7 @@ numz['cache_blocking_J']   = 1000
 numz['cache_blocking_K']   = 1000
 numz["io_thread"]          =    1
 
-Fast._setNum2Zones(t_m129, numz); Fast._setNum2Base(t_m129, numb)
+FastC._setNum2Zones(t_m129, numz); FastC._setNum2Base(t_m129, numb)
 
 #(t_m129, tc_m129, metrics) = FastS.warmup(t_m129,tc_m129, graph=graph)
 
@@ -130,8 +130,8 @@ print('Q2Inf = %f , Href = %f'%(Q2Inf,Href))
 
 #===================================================================================
 
-#Fast.save(t_m129, DOSSIER+'restart_129'+'.cgns', split='single', NP=NP)
+#FastC.save(t_m129, DOSSIER+'restart_129'+'.cgns', split='single', NP=NP)
 C.convertPyTree2File(t_eff, DOSSIER+'effort_m129_adj'+SUFFIXE+'.cgns')
-Fast.save(t_m129, DOSSIER+'restart_129_bis'+'.cgns', split='single', NP=NP)
+FastC.save(t_m129, DOSSIER+'restart_129_bis'+'.cgns', split='single', NP=NP)
 
 #===================================================================================

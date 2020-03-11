@@ -4,7 +4,7 @@ import Generator.PyTree as G
 import Converter.PyTree as C
 import Initiator.PyTree as I
 import CPlot.PyTree as CPlot
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import Post.PyTree as P
 import Connector.PyTree as X
@@ -36,7 +36,7 @@ numz = {}
 numz["time_step_nature"]          = 'local'
 numz["time_step"]          = 0.01
 numz["scheme"]             = "ausmpred"
-Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz) ; FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 

@@ -8,7 +8,7 @@ import numpy
 import Dist2Walls.PyTree as DTW
 import Transform.PyTree as T
 import Initiator.PyTree as I
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import CPlot.PyTree as CPlot
 import Converter.Internal as Internal
@@ -75,7 +75,7 @@ tc = C.rmVars(tc, 'cellN') # tres important pour l'instant
 t = C.addState(t, 'GoverningEquations', 'Euler')
 t = C.addState(t, MInf=MInf, alphaZ=alpha)
 t = I.initConst(t, MInf=MInf, alphaZ=alpha, loc='centers')
-Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz) ; FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, tc)
 

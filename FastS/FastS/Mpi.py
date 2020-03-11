@@ -1,7 +1,7 @@
 # FastS + MPI
 from . import PyTree
 from . import fasts
-from .PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _BCcompact, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, HOOK, distributeThreads, _build_omp, allocate_ssor, setIBCData_zero, display_cpu_efficiency
+from .PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, distributeThreads, allocate_ssor, setIBCData_zero, display_cpu_efficiency
 import timeit
 import time as Time
 import numpy
@@ -15,7 +15,7 @@ try:
     import Connector.Mpi as Xmpi
     import Connector.PyTree as X
     import Connector
-    import Fast.Internal as FastI
+    import FastC.PyTree as FastC
     import os
     import math
 except:
@@ -73,9 +73,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
 
-         hook1 = PyTree.HOOK.copy()
+         hook1 = FastC.HOOK.copy()
          distrib_omp = 0
-         hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, nitrun, nstep, distrib_omp) )
+         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
          nidom_loc = hook1["nidom_tot"]
 
          skip = 0
@@ -103,7 +103,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
                _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0], rk=rk, exploc=exploc)    
 
-               FastI.switchPointers2__(zones,nitmax,nstep)
+               FastC.switchPointers2__(zones,nitmax,nstep)
                 
                # Ghostcell
                if (nitmax%3 != 0) : # Tous les schemas sauf constantinescu RK3
@@ -144,28 +144,28 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
       nstep_fin = nitmax
       layer_mode= 1
       nit_c     = NIT
-      PyTree.HOOK["mpi"] = 1
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, PyTree.HOOK)
+      FastC.HOOK["mpi"] = 1
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, FastC.HOOK)
 
     #switch pointer a la fin du pas de temps
     if exploc==2 and tc is not None and rk==3:
          if layer == 'Python':
-             FastI.switchPointers__(zones, 1, 3)
+             FastC.switchPointers__(zones, 1, 3)
          else:
-             FastI.switchPointers3__(zones,nitmax)
+             FastC.switchPointers3__(zones,nitmax)
     else:
          case = NIT%3
          #case = 2
-         if case != 0 and itypcp < 2: FastI.switchPointers__(zones, case)
-         if case != 0 and itypcp ==2: FastI.switchPointers__(zones, case, nitmax%2+2)
+         if case != 0 and itypcp < 2: FastC.switchPointers__(zones, case)
+         if case != 0 and itypcp ==2: FastC.switchPointers__(zones, case, nitmax%2+2)
 
     # Difference avec sequentiel: pourquoi??
     #case = NIT%3
-    #if case != 0: FastI.switchPointers__(zones, case, order=orderRk)
+    #if case != 0: FastC.switchPointers__(zones, case, order=orderRk)
 
     # flag pour derivee temporelle 1er pas de temps implicit
-    PyTree.HOOK["FIRST_IT"]  = 1
-    PyTree.FIRST_IT          = 1
+    FastC.HOOK["FIRST_IT"]  = 1
+    FastC.FIRST_IT          = 1
     return None
     #return tps_calcul, tps_com_transferts
 
@@ -237,9 +237,9 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1
 
          #print 'nstep= ', nstep
 
-         hook1 = PyTree.HOOK.copy()
+         hook1 = FastC.HOOK.copy()
          distrib_omp = 0
-         hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, nitrun, nstep, distrib_omp) )
+         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
          nidom_loc = hook1["nidom_tot"]
 
          skip = 0
@@ -274,7 +274,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1
             #tic=Time.time()
             fasts.dtlocal2para_mpi(zones,zonesD,param_int,param_real,hook1,rostk,drodmstk,constk,0,nstep,ompmode,taille_tabs,no_transfert,process)
           
-            FastI.switchPointers2__(zones,nitmax,nstep)
+            FastC.switchPointers2__(zones,nitmax,nstep)
             #toc3=Time.time()-tic
                 
             # Ghostcell
@@ -315,25 +315,25 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1
       nstep_fin = nitmax
       layer_mode= 1
       nit_c     = NIT
-      PyTree.HOOK["mpi"] = 1
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, PyTree.HOOK)
+      FastC.HOOK["mpi"] = 1
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, FastC.HOOK)
 
-      FastI.switchPointers3__(zones,nitmax)
-      #FastI.switchPointers__(zones, 1, 3)                       
+      FastC.switchPointers3__(zones,nitmax)
+      #FastC.switchPointers__(zones, 1, 3)                       
    
     if (layer == 'Python') :
-      #FastI.switchPointers3__(zones,nitmax)
-      FastI.switchPointers__(zones, 1, 3)
+      #FastC.switchPointers3__(zones,nitmax)
+      FastC.switchPointers__(zones, 1, 3)
 
     # switch pointers
     #case = NIT%3
     #tic=Time.time()
-    #if case != 0: FastI.switchPointers__(zones,1,3)
+    #if case != 0: FastC.switchPointers__(zones,1,3)
     #toc5=Time.time()-tic
     #tps_calcul = tps_calcul + toc5
     # flag pour derivee temporelle 1er pas de temps implicit
-    PyTree.HOOK["FIRST_IT"]  = 1
-    PyTree.FIRST_IT          = 1
+    FastC.HOOK["FIRST_IT"]  = 1
+    FastC.FIRST_IT          = 1
 
     #print 'rang, tps calcul : ', Cmpi.rank, tps_calcul
     #print 'rang, tps transfert : ', Cmpi.rank, tps_com_transferts
@@ -408,37 +408,37 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         if  node is not None: ompmode = Internal.getValue(node)
 
     # Reordone les zones pour garantir meme ordre entre t et tc
-    FastI._reorder(t, tc, ompmode)
+    FastC._reorder(t, tc, ompmode)
 
     # Construction param_int et param_real des zones
-    FastI._buildOwnData(t, Padding)
+    FastC._buildOwnData(t, Padding)
 
     # determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
     zones = Internal.getZones(t)
-    f_it = PyTree.FIRST_IT
-    if PyTree.HOOK is None: PyTree.HOOK = FastI.createWorkArrays__(zones, dtloc, f_it ); PyTree.FIRST_IT = f_it
+    f_it = FastC.FIRST_IT
+    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
 
     # allocation d espace dans param_int pour stockage info openmp
-    _build_omp(t) 
+    FastC._build_omp(t) 
 
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
     metrics = allocate_metric(t)
 
     # Contruction BC_int et BC_real pour CL
-    _BCcompact(t) 
+    FastC._BCcompact(t) 
 
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     for nstep in range(1, int(dtloc[0])+1):
-        hook1 = PyTree.HOOK.copy()
+        hook1 = FastC.HOOK.copy()
         distrib_omp = 1
-        hook1.update(  fasts.souszones_list(zones, metrics, PyTree.HOOK, 1, nstep, distrib_omp) )
+        hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, distrib_omp) )
 
-    _init_metric(t, metrics, hook1, ompmode)
+    _init_metric(t, metrics, ompmode)
 
     ssors = allocate_ssor(t, metrics, hook1, ompmode)
 
@@ -446,8 +446,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     rmConsVars=True
     adjoint   =Adjoint
 
-    t, FIRST_IT, zones2compact = FastI.createPrimVars(t, ompmode, rmConsVars, adjoint)
-    PyTree.HOOK['FIRST_IT']= FIRST_IT
+    t, FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint)
+    FastC.HOOK['FIRST_IT']= FIRST_IT
     #compactage des champs en fonction option de calcul  
     count = -1
     if ompmode == 1: count = 0          
@@ -480,7 +480,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if ale == True and infos_ale is not None:
         print("ale actif. Teta et tetap=", infos_ale)
         teta = infos_ale[0];  tetap = infos_ale[1]
-        FastI._motionlaw(t, teta, tetap)
+        FastC._motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
     #
     # Compactage arbre transfert
@@ -488,17 +488,17 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if tc is not None:      
        X.miseAPlatDonorTree__(zones, tc, graph=graph,list_graph=list_graph)
 
-       PyTree.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int')[1]
+       FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int')[1]
        param_real_tc               = Internal.getNodeFromName1( tc, 'Parameter_real')
-       if param_real_tc is not None: PyTree.HOOK['param_real_tc']= param_real_tc[1]
+       if param_real_tc is not None: FastC.HOOK['param_real_tc']= param_real_tc[1]
     else:
-        PyTree.HOOK['param_real_tc'] = None
-        PyTree.HOOK['param_int_tc']  = None 
+        FastC.HOOK['param_real_tc'] = None
+        FastC.HOOK['param_int_tc']  = None 
 
     if ssors is not []:
-        PyTree.HOOK['ssors'] = ssors
+        FastC.HOOK['ssors'] = ssors
     else:
-        PyTree.HOOK['ssors'] = None
+        FastC.HOOK['ssors'] = None
 
     # Compactage arbre moyennes stat
     #
@@ -614,7 +614,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
         if  node is not None: ompmode = Internal.getValue(node)
 
        # Reordone les zones pour garantir meme ordre entre t et tc
-       FastI._reorder(t, tc, ompmode)
+       FastC._reorder(t, tc, ompmode)
 
        # Compactage arbre transfert
        zones = Internal.getZones(t)

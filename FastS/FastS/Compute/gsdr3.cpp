@@ -1,5 +1,5 @@
 # include "fastS.h"
-# include "fast.h"
+# include "fastc.h"
 # include "param_solver.h"
 # include "connector.h"
 # include <string.h>
@@ -468,7 +468,7 @@ E_Float tmps;
     {
       //setInterpTransfersFastS(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
       //                        linelets_int, linelets_real, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
-      K_FAST::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+      K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
                                    linelets_int, linelets_real, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
     }//test exploc==0
 
@@ -493,7 +493,7 @@ E_Float tmps;
 
       //setInterpTransfersFastS(iptro_CL    , vartype      , param_int_tc, param_real_tc, param_int    , param_real,
       //                       linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
-      K_FAST::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+      K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
                              linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
 
 
@@ -504,7 +504,7 @@ E_Float tmps;
       {
         //setInterpTransfersFastS(iptro_CL    , vartype      , param_int_tc, param_real_tc, param_int    , param_real,
         //                        linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
-        K_FAST::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+        K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
                                linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
       }
  

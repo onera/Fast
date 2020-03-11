@@ -4,9 +4,7 @@ from . import fasts
 from . import FastS
 __version__ = FastS.__version__
 
-FIRST_IT = 0
 OMP_MODE = 0
-HOOK     = None
 
 import numpy
 import os
@@ -15,7 +13,7 @@ try:
     import Converter.Internal as Internal
     import Connector
     import Connector.PyTree as X
-    import Fast.Internal as FastI
+    import FastC.PyTree as FastC
     import KCore
     import math
     import time as Time
@@ -56,7 +54,6 @@ def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
 def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 #def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
     """Compute a given number of iterations."""
-    global FIRST_IT, HOOK
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -99,14 +96,13 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                 pt_ech      = param_int_tc[comm_P2P + shift_graph]
                 dest        = param_int_tc[pt_ech] 
        
-      #nitmaxs = 3    
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
 
          #print('nstep=%d'%nstep)
 
-         hook1 = HOOK.copy()
+         hook1 = FastC.HOOK.copy()
          distrib_omp = 0
-         hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
+         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
          nidom_loc = hook1["nidom_tot"]
         
          skip      = 0
@@ -130,7 +126,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
                _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])    
 
-               FastI.switchPointers2__(zones,nitmax,nstep)
+               FastC.switchPointers2__(zones,nitmax,nstep)
                 
                # Ghostcell
                if nitmax%3 != 0: # Tous les schemas sauf constantinescu RK3
@@ -170,27 +166,27 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
       nit_c     = NIT
 
       if tc is None:
-          HOOK['param_int_tc']  = None
-          HOOK['param_real_tc'] = None
+          FastC.HOOK['param_int_tc']  = None
+          FastC.HOOK['param_real_tc'] = None
 
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , HOOK)
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , FastC.HOOK)
 
 
     #switch pointer a la fin du pas de temps
     if exploc==2 and tc is not None and rk==3:
          if layer == 'Python':
-             FastI.switchPointers__(zones, 1, 3)
+             FastC.switchPointers__(zones, 1, 3)
          else:
-             FastI.switchPointers3__(zones,nitmax)
+             FastC.switchPointers3__(zones,nitmax)
     else:
          case = NIT%3
          #case = 2
-         if case != 0 and itypcp < 2: FastI.switchPointers__(zones, case)
-         if case != 0 and itypcp ==2: FastI.switchPointers__(zones, case, nitmax%2+2)
+         if case != 0 and itypcp < 2: FastC.switchPointers__(zones, case)
+         if case != 0 and itypcp ==2: FastC.switchPointers__(zones, case, nitmax%2+2)
 
     # flag pour derivee temporelle 1er pas de temps implicit
-    HOOK["FIRST_IT"]  = 1
-    FIRST_IT          = 1
+    FastC.HOOK["FIRST_IT"]  = 1
+    FastC.FIRST_IT          = 1
 
     return None
 
@@ -200,7 +196,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
 def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
-    global FIRST_IT, HOOK
+    
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -217,10 +213,10 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
 
     nstep = 1
 
-    hook1       = HOOK.copy()
+    hook1       = FastC.HOOK.copy()
     distrib_omp = 0
     nitrun      = 0
-    hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
+    hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
         
     fasts._matvecPT(zones, metrics, nitrun, no_vect_test, ompmode, hook1)
 
@@ -269,10 +265,10 @@ def allocate_ssor(t, metrics, hook, ompmode):
 #==============================================================================
 # alloue retourne la metrique
 #==============================================================================
-def _init_metric(t, metrics, hook, omp_mode):
+def _init_metric(t, metrics, omp_mode):
     zones        = Internal.getZones(t)
 
-    fasts.init_metric(zones, metrics, hook, omp_mode)
+    fasts.init_metric(zones, metrics, omp_mode)
     
     c=0
     for metric in metrics:
@@ -290,7 +286,7 @@ def _init_metric(t, metrics, hook, omp_mode):
 def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None):
     """Perform necessary operations for the solver to run."""
 
-    global FIRST_IT, HOOK
+    
     # Get omp_mode
     ompmode = OMP_MODE
     node = Internal.getNodeFromName2(t, '.Solver#define')
@@ -300,20 +296,20 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         
 
     # Reordone les zones pour garantir meme ordre entre t et tc
-    FastI._reorder(t, tc, ompmode)
+    FastC._reorder(t, tc, ompmode)
 
     # Construction param_int et param_real des zones
-    FastI._buildOwnData(t, Padding)
+    FastC._buildOwnData(t, Padding)
 
     #init hook necessaire pour info omp
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
     zones = Internal.getZones(t)
-    f_it = FIRST_IT
-    if HOOK is None: HOOK = FastI.createWorkArrays__(zones, dtloc, f_it ); FIRST_IT = f_it
+    f_it = FastC.FIRST_IT
+    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
 
     # allocation d espace dans param_int pour stockage info openmp
-    _build_omp(t) 
+    FastC._build_omp(t) 
 
 
     # alloue metric: tijk, ventijk, ssiter_loc
@@ -321,19 +317,20 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     metrics = allocate_metric(t)
 
     # Contruction BC_int et BC_real pour CL
-    _BCcompact(t) 
+    FastC._BCcompact(t) 
 
 
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     #print 'int(dtloc[0])= ', int(dtloc[0])
     for nstep in range(1, int(dtloc[0])+1):
-        hook1       = HOOK.copy()
+        hook1       = FastC.HOOK.copy()
         distrib_omp = 1
-        hook1.update(  fasts.souszones_list(zones, metrics, HOOK, 1, nstep, distrib_omp) )   
+        hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, distrib_omp) )   
     
     #init metric
-    _init_metric(t, metrics, hook1, ompmode)
+    print(ompmode)
+    _init_metric(t, metrics, ompmode)
 
     ssors = allocate_ssor(t, metrics, hook1, ompmode)
 
@@ -341,8 +338,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     rmConsVars=True
     adjoint=Adjoint
 
-    t, FIRST_IT, zones2compact = FastI.createPrimVars(t, ompmode, rmConsVars, adjoint)
-    HOOK['FIRST_IT']= FIRST_IT
+    t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint)
+    FastC.HOOK['FIRST_IT']= FastC.FIRST_IT
     #compactage des champs en fonction option de calcul  
     count = -1
     if ompmode == 1: count = 0          
@@ -375,34 +372,34 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if ale == True and infos_ale is not None:
         print("ale actif. Teta et tetap=", infos_ale)
         teta = infos_ale[0];  tetap = infos_ale[1]
-        FastI._motionlaw(t, teta, tetap)
+        FastC._motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
     #t1=timeit.default_timer()
     #print "cout mise a jour vitesse entr= ", t1-t0
  
     #
-    # Compactage arbre transfert et mise a jour HOOK
+    # Compactage arbre transfert et mise a jour FastC.HOOK
     #
     if tc is not None:
        X.miseAPlatDonorTree__(zones, tc, graph=graph,list_graph=list_graph) 
     
-       HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
+       FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
        param_real_tc        = Internal.getNodeFromName1( tc, 'Parameter_real')
-       if param_real_tc is not None: HOOK['param_real_tc']= param_real_tc[1]
+       if param_real_tc is not None: FastC.HOOK['param_real_tc']= param_real_tc[1]
 
 
-       # Add linelets arrays in the HOOK for ODE-based WallModel (IBC)
+       # Add linelets arrays in the FastC.HOOK for ODE-based WallModel (IBC)
        nbpts_linelets = 45
        _createTBLESA(tc,nbpts_linelets)
     else:
-        HOOK['param_real_tc'] = None
-        HOOK['param_int_tc']  = None  
+        FastC.HOOK['param_real_tc'] = None
+        FastC.HOOK['param_int_tc']  = None  
 
 
     if ssors is not []:
-        HOOK['ssors'] = ssors
+        FastC.HOOK['ssors'] = ssors
     else:
-        HOOK['ssors'] = None
+        FastC.HOOK['ssors'] = None
 
     
     # Compactage arbre moyennes stat
@@ -446,7 +443,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
 
     zones = Internal.getZones(t)
     for z in zones:
-        ars = FastI.getFields2Compact__(z, containers, fields)
+        ars = FastC.getFields2Compact__(z, containers, fields)
         sh = None ; size = None
         val = [] # valid fields
         for a in ars:
@@ -502,9 +499,9 @@ def _createTBLESA(tc,nbpts_linelets=45):
       linelets_int_tc  = Internal.getNodeFromName(tc,'linelets_int')
       linelets_real_tc = Internal.getNodeFromName(tc,'linelets_real')
       if linelets_int_tc is not None:
-         HOOK['linelets_int'] = Internal.getValue(linelets_int_tc)                  
+         FastC.HOOK['linelets_int'] = Internal.getValue(linelets_int_tc)                  
       if linelets_real_tc is not None:   
-         HOOK['linelets_real']= Internal.getValue(linelets_real_tc)
+         FastC.HOOK['linelets_real']= Internal.getValue(linelets_real_tc)
 
       zones_tc = Internal.getZones(tc)             
          
@@ -532,14 +529,14 @@ def _createTBLESA(tc,nbpts_linelets=45):
       # print "Nb Rac =",count_racIBC-1 
                                    
       if size_IBC > 0: 
-        if HOOK['linelets_int'] is None:   # No TBLE Data in tc
+        if FastC.HOOK['linelets_int'] is None:   # No TBLE Data in tc
          print('TBLE data missing in tc, they will be built...')
             
          # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)  
          Nbpts_Dtot = size_IBC//(nbpts_linelets*nfields_lin+1)     
          _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=numpy.int32)            
      
-         HOOK['linelets_int'] = _addrIBC
+         FastC.HOOK['linelets_int'] = _addrIBC
             
          linelets = numpy.zeros(size_IBC + Nbpts_Dtot, dtype=numpy.float64)  
 
@@ -652,10 +649,10 @@ def _createTBLESA(tc,nbpts_linelets=45):
                                      shift = shift + Nbpts_D*(nbpts_linelets*nfields_lin + 1)                                     
 
             
-         HOOK['linelets_real'] = linelets 
+         FastC.HOOK['linelets_real'] = linelets 
 
-         Internal.createUniqueChild(tc, 'linelets_real', 'DataArray_t', HOOK['linelets_real'])
-         Internal.createUniqueChild(tc, 'linelets_int', 'DataArray_t', HOOK['linelets_int'])
+         Internal.createUniqueChild(tc, 'linelets_real', 'DataArray_t', FastC.HOOK['linelets_real'])
+         Internal.createUniqueChild(tc, 'linelets_int', 'DataArray_t', FastC.HOOK['linelets_int'])
 
       return None    
 
@@ -733,7 +730,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
         if  node is not None: ompmode = Internal.getValue(node)
 
        # Reordone les zones pour garantir meme ordre entre t et tc
-       FastI._reorder(t, tc, ompmode)
+       FastC._reorder(t, tc, ompmode)
 
        # Compactage arbre transfert
        g = None; l = None
@@ -1260,16 +1257,16 @@ def initStats(filename):
 # compute enstropy et TKE in place
 #==============================================================================
 def _computeEnstrophy(t, metrics, time):
-    global FIRST_IT, HOOK
+    
 
     zones = Internal.getZones(t)
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
 
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
-    if HOOK is None: HOOK = FastI.createWorkArrays__(zones, dtloc, FIRST_IT)
+    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
 
-    (enstrophie, tke) = fasts.computePT_enstrophy(zones,  metrics, HOOK )
+    (enstrophie, tke) = fasts.computePT_enstrophy(zones,  metrics, FastC.HOOK )
 
     return (enstrophie, tke)
 
@@ -1278,7 +1275,7 @@ def _computeEnstrophy(t, metrics, time):
 #==============================================================================
 def _computeVariables(t, metrics, varlist, order=2):
     """Compute given variables."""
-    global FIRST_IT, HOOK
+    
 
     if   isinstance(varlist, str): vars = [varlist]
     elif isinstance(varlist, list): vars = varlist
@@ -1338,8 +1335,8 @@ def _computeVariables(t, metrics, varlist, order=2):
        dtloc = Internal.getValue(dtloc)                       # tab numpy
 
        # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
-       if HOOK is None: HOOK = FastI.createWorkArrays__(zones, dtloc, FIRST_IT)
-       fasts.computePT_variables(zones,  metrics, HOOK, flag, order)
+       if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
+       fasts.computePT_variables(zones,  metrics, FastC.HOOK, flag, order)
     return None
 
 #==============================================================================
@@ -1347,7 +1344,7 @@ def _computeVariables(t, metrics, varlist, order=2):
 #==============================================================================
 def _computeGrad(t, metrics, varlist, order=2):
     """Compute gradient of fiven variables."""
-    global FIRST_IT, HOOK
+    
 
     if isinstance(varlist, str): vars = [varlist]
     elif isinstance(varlist, list): vars = varlist
@@ -1393,8 +1390,8 @@ def _computeGrad(t, metrics, varlist, order=2):
        dtloc = Internal.getValue(dtloc)                       # tab numpy
 
        # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
-       if HOOK is None: HOOK = FastI.createWorkArrays__(zones, dtloc, FIRST_IT)
-       fasts.computePT_gradient(zones,  metrics, var_loc, vargrad, HOOK, order)
+       if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
+       fasts.computePT_gradient(zones,  metrics, var_loc, vargrad, FastC.HOOK, order)
     return None
 
 #==============================================================================
@@ -1454,182 +1451,18 @@ def checkKeys(d, keys):
             print('Warning: FastS: keyword %s is invalid.'%i[0])
 
 #==============================================================================
-# Construit les donnees compactees pour traiter les BC
-#==============================================================================
-def _build_omp(t):
-    # Data for each Base
-    bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
-
-    #dimensionnememnt tableau
-    size_param_int =[]
-    #size_int       = HOOK['MX_SSZONE']*(OMP_NUM_THREADS*7+4)
-    size_int       = HOOK['MX_OMP_SIZE_INT']
-    for b in bases:
-        zones = Internal.getZones(b)
-        for z in zones:
-            
-            o = Internal.getNodeFromName1( z, '.Solver#ownData')
-
-            #on concatene les donnes omp dans param_int
-            param_int = Internal.getNodeFromName1( o, 'Parameter_int')
-            size = numpy.shape(param_int[1])
-            c = 1
-            for s in size: c=c*s
-            size_param_int.append(c)
-
-            datap = numpy.zeros(size_int+c, numpy.int32)
-            datap[0:c]   = param_int[1][0:c]
-            datap[69]    = c     # debut tableau omp dans param_int
-            param_int[1] = datap
-
-#==============================================================================
-# Construit les donnees compactees pour traiter les BC
-#==============================================================================
-def _BCcompact(t):
-    # Data for each Base
-    bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
-    
-    #dimensionnememnt tableau
-    size_param_int =[]
-    size_param_real=[]
-    for b in bases:
-        zones = Internal.getZones(b)
-        nzones=len(zones)
-        for z in zones:
-
-            bcs   = Internal.getNodesFromType2(z, 'BC_t')
-            Nb_bc = len(bcs)
-            size_int  = 1 +  Nb_bc*2 + 9*Nb_bc
-            size_real = 0
-            for bc in bcs:
-                btype = Internal.getValue(bc)
-                ## Si la bc est une wall_viscous_transition on ajoute un data qui est un vecteur contenant des nombres random
-                if btype == 'BCWallViscous_transition':
-                    ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
-                    wrange  = ptrange[0][1]
-                    nb_cell = max([wrange[0][1] - wrange[0][0],1])* max([wrange[1][1] - wrange[1][0],1])*max([wrange[2][1] - wrange[2][0],1])
-                    rand = numpy.zeros((1,nb_cell), dtype=numpy.float64)
-                    Internal.createUniqueChild(bc, 'random_vec', 'DataArray_t', rand)
-                
-                bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
-                Nb_data = len(bcdata)
-                for data in bcdata:
-                   size = numpy.shape(data[1])
-                   c = 1
-                   for s in size: c=c*s
-                   # a sortie de la boucle: voir fastP
-                   size_int  = size_int  + Nb_data
-
-                   size_real = size_real + c
-
-            # zone ownData (generated)
-            o = Internal.getNodeFromName1( z, '.Solver#ownData')
-
-            #on concatene les donnes BC dans param_int et param_real
-            param_int = Internal.getNodeFromName1( o, 'Parameter_int')
-            size = numpy.shape(param_int[1])
-
-            c = 1
-            for s in size: c=c*s
-            size_param_int.append(c)
-
-            datap = numpy.zeros(size_int+c, numpy.int32)
-            datap[0:c]   = param_int[1][0:c]
-            param_int[1] = datap
-
-            param_real = Internal.getNodeFromName1( o, 'Parameter_real')
-            size = numpy.shape(param_real[1])
-            c = 1
-            for s in size: c=c*s
-            size_param_real.append(c)
-
-            if size_real != 0:
-                datap = numpy.zeros(size_real+c, numpy.float64)
-                datap[0:c]    = param_real[1][0:c]
-                param_real[1] = datap
-
-
-    #Init param BC
-    no = 0
-    for b in bases:
-        zones = Internal.getNodesFromType1(b, 'Zone_t')
-        nzones=len(zones)
-        for z in zones:
-
-            o         = Internal.getNodeFromName1( z, '.Solver#ownData')
-            bcs       = Internal.getNodesFromType2(z, 'BC_t')
-            param_int = Internal.getNodeFromName1( o, 'Parameter_int')[1]
-            param_real= Internal.getNodeFromName1( o, 'Parameter_real')[1]
-
-            Nb_bc = len(bcs)
-
-            #pt_bcs_int = 64
-            #pt_bcs_real= 37
-            pt_bcs_int   =  size_param_int[no]
-            param_int[70]=  pt_bcs_int
-
-            pt_bcs_real=  size_param_real[no] 
-            param_int[ pt_bcs_int ] = Nb_bc
-            i         = 1
-            size_int  = 1 + 2*Nb_bc  # shift pour nb_bc et pointeur BC_int et BC_real
-            size_real = 0
-            no       += 1
-            for bc in bcs:
-                param_int[ pt_bcs_int +i       ] = size_int  + pt_bcs_int
-                param_int[ pt_bcs_int +i +Nb_bc] = size_real + pt_bcs_real
-
-                pt_bc                            =  param_int[ pt_bcs_int +i ] 
-
-                param_int[pt_bc] = FastI.tagBC( Internal.getValue(bc) )
-
-                Ptrange = Internal.getNodeFromType1( bc , 'IndexRange_t')
-                indrange= Internal.getValue(Ptrange)
-                ind_bc  = numpy.zeros(6, numpy.int32)
-                ind_bc[0] = indrange[0][0]
-                ind_bc[1] = indrange[0][1]
-                ind_bc[2] = indrange[1][0]
-                ind_bc[3] = indrange[1][1]
-                ind_bc[4] = indrange[2][0]
-                ind_bc[5] = indrange[2][1]
-
-                fasts.PygetRange( ind_bc,  param_int, pt_bc+ 1)
-
-
-                bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
-                Nb_data = len(bcdata)
-                param_int[pt_bc + 8] = Nb_data
-                j = 1
-                ctot = 0
-                for data in bcdata:
-                   size = numpy.shape(data[1])
-                   c = 1
-                   for s in size: c=c*s
-                   ctot = ctot +c
-                   param_int[pt_bc + 8 + j ] = ctot
-                   deb = pt_bcs_real+size_real
-                   param_real[ deb:deb+c ]= data[1].flat[0:c]
-                   data[1]                = param_real[ deb:deb+c ] # wrong shape?
-                   size_real = size_real + c
-                   j = j+1
-
-                size_int  = size_int  + 9 + Nb_data
-                i         = i + 1
-
-    return None
-    
-#==============================================================================
 # init velocity (ALE)
 #==============================================================================
 def _computeVelocityAle(t, metrics):
-    global FIRST_IT, HOOK
+    
 
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
 
     zones = Internal.getZones(t)
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
-    f_it = FIRST_IT
-    if HOOK is None: HOOK = FastI.createWorkArrays__(zones, dtloc, f_it ); FIRST_IT = f_it;
+    f_it = FastC.FIRST_IT
+    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it;
     
     bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
@@ -1637,22 +1470,22 @@ def _computeVelocityAle(t, metrics):
     ompmode = OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
 
-    fasts.computePT_velocity_ale(zones,  metrics, HOOK, ompmode)
+    fasts.computePT_velocity_ale(zones,  metrics, FastC.HOOK, ompmode)
     return None
 
 #==============================================================================
 # init velocity (ALE) from DADS maillage deformable
 #==============================================================================
 def copy_velocity_ale(t, metrics, it=0):
-    global FIRST_IT, HOOK
+    
 
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
 
     zones = Internal.getZones(t)
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
-    f_it = FIRST_IT
-    if HOOK is None: HOOK = FastI.createWorkArrays__(zones, dtloc, f_it ); FIRST_IT = f_it;
+    f_it = FastC.FIRST_IT
+    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it;
     
     bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
@@ -1670,7 +1503,7 @@ def copy_velocity_ale(t, metrics, it=0):
           metric_aleDeformation.append(metrics[c])
       c+=1
 
-    fasts.copy_velocity_ale(zones_aleDeformation, metric_aleDeformation , HOOK, ompmode, it)
+    fasts.copy_velocity_ale(zones_aleDeformation, metric_aleDeformation , FastC.HOOK, ompmode, it)
     return None
 
 #==============================================================================
@@ -1971,7 +1804,7 @@ def createStressNodes(t, BC=None, windows=None):
 #==============================================================================
 def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     """Compute efforts in teff."""
-    global FIRST_IT, HOOK
+    
     zones     = Internal.getZones(t)
     zones_eff = Internal.getZones(teff)
     
@@ -1982,16 +1815,16 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     if  node is not None: ompmode = Internal.getValue(node)
     
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
-    if HOOK is None: 
+    if FastC.HOOK is None: 
             dtloc  = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
-            HOOK   = FastI.createWorkArrays__(zones, dtloc, FIRST_IT)
+            FastC.HOOK   = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
             nitrun =0; nstep =1
 
             distrib_omp = 0
-            hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
+            hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
 
-    else:  hook1  = HOOK
+    else:  hook1  = FastC.HOOK
 
     effort  = numpy.empty(8, numpy.float64)
     pos_eff = numpy.empty(3, numpy.float64)
@@ -2077,7 +1910,7 @@ def setIBCData_zero(t, surf, dim=None):
       
         numz["IBC"]  = ibc
 
-        FastI._setNum2Zones(z, numz)
+        FastC._setNum2Zones(z, numz)
      else:
         C._rmVars(z, ['centers:cellN_IBC'])
 
@@ -2142,7 +1975,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
  dtloc = Internal.getValue(dtloc) # tab numpy
  ss_iteration  = int(dtloc[0]) 
 
- timer_omp = HOOK["TIMER_OMP"]
+ timer_omp = FastC.HOOK["TIMER_OMP"]
  ADR = OMP_NUM_THREADS*2*(ss_iteration)
  echant    =  timer_omp[ ADR ]
  if echant == 0.:
@@ -2244,7 +2077,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
 #==============================================================================
 def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
 
-    global FIRST_IT, HOOK
+    
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -2306,9 +2139,9 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 
             # determination taille des zones a integrer (implicit ou explicit local)
 
-            hook1  = HOOK.copy()
+            hook1  = FastC.HOOK.copy()
             distrib_omp = 0
-            hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
+            hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
             nidom_loc = hook1["nidom_tot"]
             
             skip      = 0
@@ -2331,7 +2164,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
                 elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
                 _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])    
 
-                FastI.switchPointers2__(zones,nitmax,nstep)
+                FastC.switchPointers2__(zones,nitmax,nstep)
                 
                 # Ghostcell
                 if (nitmax%3 != 0) : # Tous les schemas sauf constantinescu RK3
@@ -2356,17 +2189,17 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
       nstep_fin = nitmax
       layer_mode= 1
       nit_c     = NIT
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , HOOK)
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , FastC.HOOK)
 
-      FastI.switchPointers3__(zones,nitmax)
+      FastC.switchPointers3__(zones,nitmax)
                          
     # switch pointers
     if (layer == 'Python') :
-        FastI.switchPointers__(zones, 1, 3)
+        FastC.switchPointers__(zones, 1, 3)
 
     # flag pour derivee temporelle 1er pas de temps implicit
-    HOOK["FIRST_IT"]  = 1
-    FIRST_IT = 1
+    FastC.HOOK["FIRST_IT"]  = 1
+    FastC.FIRST_IT = 1
 
 
     return None
@@ -2377,7 +2210,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 #==============================================================================
 def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
 
-    global FIRST_IT, HOOK
+    
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -2446,9 +2279,9 @@ def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
             #print('nstep '%nstep)             
             # determination taille des zones a integrer (implicit ou explicit local)
 
-            hook1  = HOOK.copy()
+            hook1  = FastC.HOOK.copy()
             distrib_omp = 0
-            hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
+            hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
             nidom_loc = hook1["nidom_tot"]
 
             skip      = 0
@@ -2490,14 +2323,14 @@ def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
       nstep_fin = nitmax
       layer_mode= 1
       nit_c     = NIT
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , HOOK)
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , FastC.HOOK)
 
         
     # switch pointers
-    FastI.switchPointers__(zones,1,2)
+    FastC.switchPointers__(zones,1,2)
     # flag pour derivee temporelle 1er pas de temps implicit
-    HOOK["FIRST_IT"]  = 1
-    FIRST_IT = 1
+    FastC.HOOK["FIRST_IT"]  = 1
+    FastC.FIRST_IT = 1
 
     return None
 
@@ -2589,20 +2422,20 @@ def _decoupe(t):
 #==============================================================================
 def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
 
-    global FIRST_IT, HOOK
+    
 
     zones     = Internal.getZones(t)
     zones_eff = Internal.getZones(teff)
 
-    if HOOK is None: 
+    if FastC.HOOK is None: 
             dtloc  = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
-            HOOK   = FastI.createWorkArrays__(zones, dtloc, FIRST_IT); 
+            FastC.HOOK   = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT); 
             nitrun =0; nstep =1;
-            hook1  = HOOK.copy()
+            hook1  = FastC.HOOK.copy()
             distrib_omp = 0
-            hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nitrun, nstep, distrib_omp) )
-    else:   hook1  = HOOK
+            hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
+    else:   hook1  = FastC.HOOK
 
     fasts.compute_dpJ_dpW(zones, zones_eff, metrics, hook1, cosAoA, sinAoA, surfinv)
     return None
@@ -2614,7 +2447,7 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
 #==============================================================================
 def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
-    global FIRST_IT, HOOK
+    
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -2647,9 +2480,9 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
                     zonesD += tmp
 
 #    nstep=1
-#    hook1  = HOOK.copy()
-#    hook1.update(  fasts.souszones_list(zones, metrics, HOOK, nit_adjoint, nstep) )
-#    hook1  = HOOK
+#    hook1  = FastC.HOOK.copy()
+#    hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nit_adjoint, nstep) )
+#    hook1  = FastC.HOOK
     
 
    #--------------------------------------------------------------------------
@@ -2738,7 +2571,7 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
 def _computedJdX(t, metrics, nitrun, tc=None, graph=None, indFunc):
-    global FIRST_IT, HOOK
+
 
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud

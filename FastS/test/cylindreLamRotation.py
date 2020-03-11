@@ -5,10 +5,10 @@ import Generator.PyTree as G
 import Connector.PyTree as X
 import Converter.PyTree as C
 import FastS.PyTree as FastS
-import Fast.PyTree as Fast
-import Fast.Internal as FastI
+import FastC.PyTree as FastC
+import FastC.Internal as FastI
 import Converter.Internal as Internal
-import Fast.Utils as Utils
+import FastC.Utils as Utils
 import KCore.Adim as Adim
 import KCore.test as test
 import numpy
@@ -186,8 +186,8 @@ numz["scheme"]             = "ausmpred"
 numz["time_step_nature"]   = "local"
 numz["cfl"]                = 10
 
-Fast._setNum2Zones(t, numz)
-Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz)
+FastC._setNum2Base(t, numb)
 
 
 # Number or records to store residuals 

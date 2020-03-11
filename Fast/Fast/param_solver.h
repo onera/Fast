@@ -34,7 +34,11 @@
                                                   t   = K_PYTREE::getNodeFromName1(sol  , "CoordinateZ"    );  \
                                                   z   = K_PYTREE::getValueAF(t, hook);                         }
 
+#define GET_TI_NG(pos, metric, para, ti, tj, tk, vol) { ti  = K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, pos ) ); \
+                                                     vol = K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, pos+1));   }
 
+#define GET_VENT_NG(pos, metric, para, vi, vj, vk) { vi  = K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, pos ) ); \
+                                                  E_Int c=0; if(para[LALE] == 1){ c=1;}                        }
 
 #define BCDEGENERATELINE          0
 #define BCEXTRAPOLATE             0
@@ -70,7 +74,17 @@
 
 #define NIJK          0
 #define NIJK_MTR      5
+
+#define NELTS         7
+#define NELTS_0       8
+#define NELTS_1       9
+#define NELTS_1_RAC  10
 #define NIJK_XYZ     10
+ 
+#define NGON_ELCON_SIZE  11
+#define NFACE_ELCON_SIZE 12
+
+
 #define NIJK_VENT    15
 #define IJKV         20
 #define EFF_LOOP     23   
@@ -210,3 +224,10 @@
 #define METRIC_ITLU  6   
 #define METRIC_DEGEN 7   
 
+#define METRIC_TI_NG    0   
+#define METRIC_VOL_NG   1   
+#define METRIC_TI0_NG   2   
+#define METRIC_VENT_NG  3   
+#define METRIC_RDM_NG   4   
+#define METRIC_INDM_NG  5   
+#define METRIC_ITLU_NG  6  

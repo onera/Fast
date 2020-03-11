@@ -3,7 +3,7 @@ import Converter.PyTree as C
 import Generator.PyTree as G
 import Geom.PyTree as D
 import FastS.PyTree as FastS
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import Initiator.PyTree as I
 import KCore.Adim as Adim
 import Converter.Internal as Internal
@@ -72,7 +72,7 @@ numz = {}
 numz["time_step"]          = 0.001
 numz["scheme"]             = "ausmpred"
 numz["lu_match"]           = 1
-Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 # Prim vars, solver tag, compact, metrics
 (t,  tc, metrics) = FastS.warmup(t, tc )

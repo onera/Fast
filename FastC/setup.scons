@@ -1,0 +1,89 @@
+import distutils.sysconfig, os
+import KCore.Dist as Dist
+from KCore.config import *
+#==============================================================================
+# Fast requires:
+# ELSAPROD variable defined in environment
+# C++ compiler
+# Fortran compiler: defined in config.py
+# Numpy
+# KCore library
+#==============================================================================
+
+# Get prefix from command line
+prefix = ARGUMENTS.get('prefix', '')
+installPath = Dist.getInstallPath(prefix)
+
+# Get compilers from Distutils ================================================
+(cc, cxx, opt, basecflags, ccshared, ldshared, so_ext) = Dist.getDistUtilsCompilers()
+
+# Python ======================================================================
+(pythonVersion, pythonIncDir, pythonLibDir, pythonLibs) = Dist.checkPython()
+
+# Test if numpy exists =======================================================
+(numpyVersion, numpyIncDir, numpyLibDir) = Dist.checkNumpy()
+
+# Test if kcore exists =======================================================
+(kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
+
+# Test if xcore exists =======================================================
+(xcoreVersion, xcoreIncDir, xcoreLibDir) = Dist.checkXCore()
+
+# Test if connector exists ==================================================
+(connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
+
+# Test if libmpi exists ======================================================
+(mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
+
+from KCore.config import *
+
+# Setting libraryDirs and libraries ===========================================
+libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, xcoreLibDir, connectorLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, pythonIncDir]
+libraries = ["kcore", "xcore", "connector"]
+(ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
+libraryDirs += paths; libraries += libs
+(ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
+libraryDirs += paths; libraries += libs
+
+if mpi:
+    libraryDirs.append(mpiLibDir)
+    includeDirs.append(mpiIncDir)
+    ADDITIONALCPPFLAGS = ['-D_MPI']
+else:	       
+    ADDITIONALCPPFLAGS = []
+
+if mpi: libraries += mpiLibs
+
+# Env =========================================================================
+import srcs
+if Dist.getSystem()[0] == 'mingw': tools = ['mingw']
+else: tools = None
+AR = Dist.getAR()
+env = Environment(tools=tools, CC=cc, CXX=cxx, AR=AR, CFLAGS=[], CXXFLAGS=[],
+                  FORTRAN=f77compiler,
+                  LIBPATH=additionalLibPaths+libraryDirs,
+                  LIBS=libraries+additionalLibs,
+                  SHLIBSUFFIX=so_ext, SHLIBPREFIX='',
+                  LINKFLAGS=Dist.getLinkArgs(),
+                  ENV=Dist.getEnvForScons())
+env.Replace(CPPPATH=["FastC"]+additionalIncludePaths+includeDirs)
+
+ELSAPROD = os.environ.get('ELSAPROD', 'x86_r8')
+env.SConsignFile('build/'+ELSAPROD+'/.sconsign.dblite')
+
+# Pre processing du C
+cppArgs = Dist.getCppArgs()+['-g']
+env.Replace(CPPFLAGS=cppArgs+ADDITIONALCPPFLAGS)
+
+env = Dist.createFortranBuilder(env, [kcoreIncDir])
+ppf = Dist.createFortranFiles(env, srcs)
+
+#==============================================================================
+
+myMod = env.StaticLibrary('fastc', srcs.cpp_srcs+ppf)
+modDir = installPath+'/FastC/'
+dp1 = env.Install(modDir, myMod)
+dp2 = env.Install(modDir, Glob('FastC/*.py'))
+
+env.Alias(target="install", source=[dp1,dp2])

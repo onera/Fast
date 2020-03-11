@@ -21,6 +21,9 @@ Dist.writeSetupCfg()
 # Test if kcore exists =======================================================
 (kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
 
+# Test if fastc exists =======================================================
+(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkFastC()
+
 from KCore.config import *
 
 # Compilation des fortrans ====================================================
@@ -38,9 +41,9 @@ prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir, fastLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, fastIncDir]
-libraries = ["MetricF", "ComputeF", "kcore", "fast"]
+libraryDirs = ["build/"+prod, kcoreLibDir, fastcLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir, fastcIncDir]
+libraries = ["MetricF", "ComputeF", "kcore", "fastc"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)

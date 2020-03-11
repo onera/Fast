@@ -51,5 +51,8 @@ else
     [ $? != 0 ] && exit;
 fi
 
+# Install libfast
+python installLib.py
+
 # Test installation
 python test/t1.py

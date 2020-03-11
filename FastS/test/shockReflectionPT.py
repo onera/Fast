@@ -4,7 +4,7 @@ import Generator.PyTree as G
 import Converter.PyTree as C
 import Converter.Internal as Internal
 import Initiator.PyTree as I
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import CPlot.PyTree as CPlot
 import Transform.PyTree as T
@@ -34,7 +34,7 @@ C._addState(t, MInf=MInf)
 
 numb = {'temporal_scheme':'explicit', 'ss_iteration':20}
 numz = {'time_step':0.0007*2., 'scheme':'ausmpred'}
-Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 

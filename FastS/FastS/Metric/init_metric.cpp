@@ -37,13 +37,12 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 {
   if (__activation__ == 0) { PyErr_SetString(PyExc_NotImplementedError, STUBMSG); return NULL; }
 
-  PyObject* zones;  PyObject* metrics; PyObject* work; E_Int omp_mode;
+  PyObject* zones;  PyObject* metrics; E_Int omp_mode;
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOl", &zones, &metrics, &work, &omp_mode)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOl", &zones, &metrics, &omp_mode)) return NULL; 
 #else
-  if (!PyArg_ParseTuple(args, "OOOi", &zones, &metrics, &work, &omp_mode)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOi", &zones, &metrics, &omp_mode)) return NULL; 
 #endif
-  PyObject* tmp = PyDict_GetItemString(work,"MX_SSZONE");     E_Int mx_sszone     = PyLong_AsLong(tmp);
 
   E_Int nidom    = PyList_Size(zones);
 

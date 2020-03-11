@@ -45,6 +45,9 @@ void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
      E_Int itypcp;
      for (E_Int nd = 0; nd < nidom; nd++)
      {    
+
+       if (param_int[nd][ITYPZONE] ==4) { nidom_tot +=1; continue;} //on skippe les zone non structuree
+
        E_Int ijkv_lu[3];
        ijkv_lu[0] = K_FUNC::E_max( 1, param_int[nd][ IJKV    ]/param_int[nd][ SIZE_SSDOM   ]);
        ijkv_lu[1] = K_FUNC::E_max( 1, param_int[nd][ IJKV +1 ]/param_int[nd][ SIZE_SSDOM +1]);
@@ -154,14 +157,21 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
 
     // get metric
     PyObject* metric     = PyList_GetItem(metrics, nd); // metric du domaine i
-    ipt_ind_dm[nd]       =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
-    ipt_it_lu_ssdom[nd]  =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_ITLU) );
+    if(ipt_param_int[nd][ITYPZONE]==4 ) 
+      {
+        ipt_ind_dm[ nd ]      =  NULL;
+        ipt_it_lu_ssdom[ nd ] =  NULL;
+      }
+    else{
+         ipt_ind_dm[nd]       =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
+         ipt_it_lu_ssdom[nd]  =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_ITLU) );
+       }
   }
 
   souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun, nstep, nidom_tot, lexit_lu, lssiter_verif);
 
-  //calcul distri si implicit ou explicit local + modulo verif
-  if( distrib_omp==1 || (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2))  && (nitrun%iptdtloc[1] == 0 || nitrun == 1) )
+  //calcul distri si implicit ou explicit local + modulo verif et maillage structuré
+  if( (distrib_omp==1 || (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2))  && (nitrun%iptdtloc[1] == 0 || nitrun == 1)) && ipt_param_int[0][ITYPZONE] !=4)
   {
     E_Int display = 0;
     if (nstep==1) display = 1;

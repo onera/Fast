@@ -12,7 +12,7 @@
               // loop calcul normale
               for (E_Int nd = 0; nd < nidom; nd++)
               {
-               if(param_int[nd][LALE]==2)
+               if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
                {
 #                include "Metric/indice_omp1.h" 
                  cp_tijk_( param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], ind_mtr);
@@ -26,7 +26,7 @@
               // loop calcul volume
               for (E_Int nd = 0; nd < nidom; nd++)
               {
-               if(param_int[nd][LALE]==2)
+               if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
                {
 #                include "Metric/indice_omp1.h" 
                  cp_vol_(  param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], ind_mtr);
@@ -52,7 +52,7 @@
               // loop extrapolation
               for (E_Int nd = 0; nd < nidom; nd++)
               {
-               if(param_int[nd][LALE]==2)
+               if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
                {
 #               include "Metric/indice_omp1.h" 
                 if (param_int[nd][ ITYPZONE ] != 2  && ithread_loc == 1)
@@ -109,7 +109,7 @@
             { //omp_mode 0
               for (E_Int nd = 0; nd < nidom; nd++)
               {
-               if(param_int[nd][LALE]==2)
+               if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
                {
                 E_Int lmin = 10;
                 if (param_int[nd][ ITYPCP ] == 2) lmin = 4;

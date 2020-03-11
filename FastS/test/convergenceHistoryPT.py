@@ -2,7 +2,7 @@
 import Converter.PyTree as C
 import Generator.PyTree as G
 import FastS.PyTree as FastS
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import Initiator.PyTree as I
@@ -27,7 +27,7 @@ numz["time_step_nature"]   = "local"
 numz["cfl"]                = 4.0
 numz["scheme"]             = "roe"
 numz["slope"]              = "minmod"
-Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz) ; FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 

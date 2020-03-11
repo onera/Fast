@@ -67,7 +67,6 @@ static PyMethodDef Pyfasts [] =
   {"display_ss_iteration", K_FASTS::display_ss_iteration,  METH_VARARGS},
   {"_applyBC"            , K_FASTS::_applyBC            ,  METH_VARARGS},
   {"itt"                 , K_FASTS::itt                 ,  METH_VARARGS},
-  {"PygetRange"          , K_FASTS::PygetRange          ,  METH_VARARGS},
   {"compute_dpJ_dpW"       , K_FASTS::compute_dpJ_dpW       ,  METH_VARARGS},
   {"work_thread_distribution", K_FASTS::work_thread_distribution,  METH_VARARGS},
   {"distributeThreads"       , K_FASTS::distributeThreads       ,  METH_VARARGS},

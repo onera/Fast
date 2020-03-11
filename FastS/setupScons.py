@@ -28,7 +28,7 @@ Dist.writeSetupCfg()
 (connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
 
 # Test if fast exists =======================================================
-(fastVersion, fastIncDir, fastLibDir) = Dist.checkFast()
+(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkFastC()
 
 from KCore.config import *
 
@@ -40,9 +40,9 @@ prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastLibDir, '.']
-includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastIncDir]
-libraries = ["fastS1", "fastS2", "fastS3","fastS4", "fastS5", "fastS1", "fastS2", "fastS3", "fastS4", "fastS5", "fastS1", "fastS2", "fastS3", "fastS4", "fastS5",  "fast", "connector", "fast", "xcore", "kcore"]
+libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir, '.']
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir]
+libraries = [ "fasts", "fastc", "connector", "xcore", "kcore"]
 
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs

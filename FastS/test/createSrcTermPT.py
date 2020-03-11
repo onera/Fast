@@ -6,7 +6,7 @@ import Initiator.PyTree as I
 import Geom.PyTree as D
 import Transform.PyTree as T
 import CPlot.PyTree as CPlot
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import Converter.Internal as Internal
 import Post.PyTree as P
@@ -69,7 +69,7 @@ numz["time_step"]          = 0.000044
 numz["time_step_nature"]   = "global"
 numz["scheme"]             = "roe"
 numz["source"]		   = source
-Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
@@ -93,5 +93,5 @@ for it in range(nit):
     time.sleep(0.1)
     temps += timeStep
 
-Fast.save(t,'restart.cgns')
+FastC.save(t,'restart.cgns')
 import os;os._exit(1)

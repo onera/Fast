@@ -1,7 +1,7 @@
 # - compute (pyTree) -
 # - Lamb vortex on octree -
 import Connector.PyTree as X
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import FastS.Mpi as FastSmpi
 import Converter.PyTree as C
@@ -39,7 +39,7 @@ numb["temporal_scheme"]    = "explicit"
 numz = {}
 numz["time_step"]          = 0.01
 numz["scheme"]             = "ausmpred"
-Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, tc)
 

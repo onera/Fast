@@ -252,10 +252,6 @@ namespace K_FASTS
   //=======
   /* For applyBC */
 
-  E_Int getDir(E_Int* ijkv,  E_Int* ind_fen);
-  E_Int getRange( E_Int* ind_cgns,  E_Int* ind_fen, E_Int* param_int);
-
-
   E_Int getbcfromzone(PyObject* zone, 
                       std::vector<E_Int>& data_pos, 
                       std::vector<E_Float*>& data_bc, 
