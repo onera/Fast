@@ -1,0 +1,8 @@
+create build/ELSAPROD/libfasts.a
+addlib build/ELSAPROD/libfastS1.a
+addlib build/ELSAPROD/libfastS2.a
+addlib build/ELSAPROD/libfastS3.a
+addlib build/ELSAPROD/libfastS4.a
+addlib build/ELSAPROD/libfastS5.a
+save
+end
