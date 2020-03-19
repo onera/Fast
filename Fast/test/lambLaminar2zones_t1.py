@@ -13,15 +13,12 @@ import Fast.PyTree as Fast
 import Initiator.PyTree as I
 import Connector.PyTree as X
 import Post.PyTree as P
-import CPlot.PyTree as CPlot
-import sys
 
 a = G.cartNGon((0,0,0), (0.1,0.1,1), (200,200,3))
 t = C.newPyTree(['Base',a])
 C._fillEmptyBCWith(t, 'extrap', 'BCExtrapolate', dim=3)
 
-
-#C.convertPyTree2File(t, 'out_avtsplit.cgns')
+#C.convertPyTree2File(t, 'out_avtsplit.cgns'
 t = T.splitNParts(t, 2)
 
 t = X.connectMatch(t,dim=3)
