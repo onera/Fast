@@ -212,7 +212,7 @@ void K_FASTC::setInterpTransfersFast(
       K_FASTC::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
 
       #ifdef TimeShow
-       time_out = omp_get_wtime();
+       E_Float time_out = omp_get_wtime();
        ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
        time_in= omp_get_wtime();
       #endif
@@ -244,7 +244,7 @@ void K_FASTC::setInterpTransfersFast(
       }
 
       #ifdef TimeShow
-       time_out = omp_get_wtime();
+       E_Float time_out = omp_get_wtime();
        ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;  
       #endif
 
@@ -290,7 +290,7 @@ void K_FASTC::setInterpTransfersFast(
        K_FASTC::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue);
 
        #ifdef TimeShow
-        time_out         = omp_get_wtime();
+        E_Float time_out         = omp_get_wtime();
         ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
 
         outputfile << "Time in getTransfersInter "     << ipt_timecount[4] << std::endl;
@@ -758,8 +758,7 @@ void K_FASTC::setInterpTransfersInter(
 
   E_Int* ipt_cnd = NULL;  // ONLY FOR STRUCTURED
 
-  E_Int imd, jmd, imdjmd, kmd, nvars, ndimdxD;
-  E_Float* iptroD;
+  E_Int nvars;
 
   if (varType <= 3 && varType >= 1)
     nvars = 5;
@@ -831,9 +830,6 @@ void K_FASTC::setInterpTransfersInter(
   E_Int count_rac = 0;
   E_Int nbRcvPts_mx = 0;
   E_Int ibcTypeMax  = 0;
-  E_Int debut_rac;
-  E_Int cycl;
-
   
   for  (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++) 
     {
@@ -923,10 +919,9 @@ void K_FASTC::setInterpTransfersInter(
   //cout << "count_rac= " << count_rac << "  dest= " << dest << endl;
   //cout << has_data_to_send << endl;
 
-E_Float time_out;
 if (has_data_to_send) {
 #ifdef TimeShow
- time_out = omp_get_wtime();
+ E_Float time_out = omp_get_wtime();
  ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
  time_in  = omp_get_wtime();
 #endif
@@ -1017,7 +1012,7 @@ if (has_data_to_send) {
 //cout << "coucou" << endl;
 
 #ifdef TimeShow
-    time_out = omp_get_wtime();
+    E_Float time_out = omp_get_wtime();
     ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
     time_in  = omp_get_wtime();
 #endif    
@@ -1268,7 +1263,7 @@ if (has_data_to_send) {
   }    // omp
   
  #ifdef TimeShow
-    time_out = omp_get_wtime();
+    E_Float time_out = omp_get_wtime();
     ipt_timecount[2] = ipt_timecount[2] + time_out - time_in;
     time_in = omp_get_wtime();
  #endif
@@ -1289,7 +1284,7 @@ if (has_data_to_send) {
    }
   
 #ifdef TimeShow
-    time_out = omp_get_wtime();
+    E_Float time_out = omp_get_wtime();
     ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
 #endif
 
