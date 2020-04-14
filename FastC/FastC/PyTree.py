@@ -7,6 +7,13 @@ from . import fastc
 FIRST_IT = 0
 HOOK     = None
 
+# transfered variables
+varsN    = ['Density']
+varsP    = ['Density_P1']
+varsM    = ['Density_M1']
+varsPLBM = ['Q1']
+varsMLBM = ['Q1_M1']
+varsMacro= ['Density']
 
 try:
     import Converter.PyTree as C
@@ -717,6 +724,7 @@ def _buildOwnData(t, Padding):
         o = Internal.createUniqueChild(b, '.Solver#ownData', 
                                        'UserDefinedData_t')
         if temporal_scheme == "explicit": nssiter = 3
+        elif temporal_scheme == "explicit_lbm": nssiter = 1
         elif temporal_scheme == "implicit": nssiter = ss_iteration+1
         elif temporal_scheme == "implicit_local": nssiter = ss_iteration+1
         else: print('Warning: FastS: invalid value %s for key temporal_scheme.'%temporal_scheme)
@@ -1428,94 +1436,28 @@ def tagBC(bcname):
 #==============================================================================
 def switchPointers__(zones, case, order=3):
     
-    if order == 1 or order == 3:
-        for z in zones:
-            sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
-            own =  Internal.getNodeFromName1(z, '.Solver#ownData')
-            ca = Internal.getNodeFromName1(sol, 'Density')
-            cb = Internal.getNodeFromName1(sol, 'VelocityX')
-            cc = Internal.getNodeFromName1(sol, 'VelocityY')
-            cd = Internal.getNodeFromName1(sol, 'VelocityZ')
-            ce = Internal.getNodeFromName1(sol, 'Temperature')
+    if order == 2: return None
+    elif order == 1 or order == 3:
+      for z in zones:
+          sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+          own =  Internal.getNodeFromName1(z, '.Solver#ownData')
+          vars=['Density','VelocityX','VelocityY','VelocityZ','Temperature']
+          model  = Internal.getNodeFromName1(own, 'model')
+          model  = Internal.getValue(model)
+          if model == 'nsspalart' or model=='NSTurbulent':
+            vars.append('TurbulentSANuTilde')
 
-            caM1 = Internal.getNodeFromName1(sol, 'Density_M1')
-            cbM1 = Internal.getNodeFromName1(sol, 'VelocityX_M1')
-            ccM1 = Internal.getNodeFromName1(sol, 'VelocityY_M1')
-            cdM1 = Internal.getNodeFromName1(sol, 'VelocityZ_M1')
-            ceM1 = Internal.getNodeFromName1(sol, 'Temperature_M1')
-
-            caP1 = Internal.getNodeFromName1(sol, 'Density_P1')
-            cbP1 = Internal.getNodeFromName1(sol, 'VelocityX_P1')
-            ccP1 = Internal.getNodeFromName1(sol, 'VelocityY_P1')
-            cdP1 = Internal.getNodeFromName1(sol, 'VelocityZ_P1')
-            ceP1 = Internal.getNodeFromName1(sol, 'Temperature_P1')
-
-            model  = Internal.getNodeFromName1(own, 'model')
-            model  = Internal.getValue(model)
+          for v in vars:
+            ca   = Internal.getNodeFromName1(sol, v)
+            caM1 = Internal.getNodeFromName1(sol, v+'_M1')
+            caP1 = Internal.getNodeFromName1(sol, v+'_P1')
 
             if case ==1:
-              # sauvegarde M1
-              ta = caM1[1]; tb = cbM1[1]; tc = ccM1[1]; td = cdM1[1]; te = ceM1[1]
-
-              # M1 <- current
-              caM1[1] = ca[1]; cbM1[1] = cb[1]; ccM1[1] = cc[1]; cdM1[1] = cd[1]; ceM1[1] = ce[1]
-
-              # current <- P1
-              ca[1] = caP1[1]; cb[1] = cbP1[1]; cc[1] = ccP1[1]; cd[1] = cdP1[1]; ce[1] = ceP1[1]
-
-              # P1 <- temp
-              caP1[1] = ta; cbP1[1] = tb; ccP1[1] = tc; cdP1[1] = td; ceP1[1] = te
-
-              if model == 'nsspalart' or model=='NSTurbulent': 
-                cf   =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde')
-                cfM1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_M1')
-                cfP1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_P1')
-                tf   = cfM1[1]; cfM1[1] = cf[1]; cf[1] = cfP1[1]; cfP1[1] = tf
-
+               #sauvegarde M1   #M1 <- current    # current <- P1   # P1 <- temp 
+               ta = caM1[1];    caM1[1] = ca[1];  ca[1] = caP1[1];  caP1[1] = ta  
             elif case ==2:
-              # sauvegarde  P1
-              ta = caP1[1]; tb = cbP1[1]; tc = ccP1[1]; td = cdP1[1]; te = ceP1[1]
-
-              # P1 <-  current    
-              caP1[1] = ca[1]; cbP1[1] = cb[1]; ccP1[1] = cc[1]; cdP1[1] = cd[1]; ceP1[1] = ce[1]
-
-              # current <- M1
-              ca[1] = caM1[1]; cb[1] = cbM1[1]; cc[1] = ccM1[1]; cd[1] = cdM1[1]; ce[1] = ceM1[1]
-
-              # M1 <- temp
-              caM1[1] = ta; cbM1[1] = tb; ccM1[1] = tc; cdM1[1] = td; ceM1[1] = te
-
-              if model == 'nsspalart' or model=='NSTurbulent': 
-                cf   =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde')
-                cfM1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_M1')
-                cfP1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_P1')
-                tf   = cfP1[1]; cfP1[1] = cf[1];  cf[1]= cfM1[1]; cfM1[1] = tf
-
-    elif order == 2:
-        #print 'adapter switch poinyer'
-        for z in zones:
-            caP1 = Internal.getNodeFromName2(z, 'Density_P1')
-            cbP1 = Internal.getNodeFromName2(z, 'VelocityX_P1')
-            ccP1 = Internal.getNodeFromName2(z, 'VelocityY_P1')
-            cdP1 = Internal.getNodeFromName2(z, 'VelocityZ_P1')
-            ceP1 = Internal.getNodeFromName2(z, 'Temperature_P1')
-        
-            caM1 = Internal.getNodeFromName2(z, 'Density_M1')
-            cbM1 = Internal.getNodeFromName2(z, 'VelocityX_M1')
-            ccM1 = Internal.getNodeFromName2(z, 'VelocityY_M1')
-            cdM1 = Internal.getNodeFromName2(z, 'VelocityZ_M1')
-            ceM1 = Internal.getNodeFromName2(z, 'Temperature_M1')
-
-            #caP1[1] = caM1[1]; cbP1[1] = cbM1[1]; ccP1[1] = ccM1[1]; cdP1[1] = cdM1[1]; ceP1[1] = ceM1[1]
-
-            model  = Internal.getNodeFromName2(z, 'model')
-            model  = Internal.getValue(model)
-
-            if model == 'nsspalart' or model == 'NSTurbulent': 
-                cfM1 =  Internal.getNodeFromName2(z, 'TurbulentSANuTilde_M1')
-                cfP1 =  Internal.getNodeFromName2(z, 'TurbulentSANuTilde_P1')
-                cfP1[1] = cfM1[1]
-
+               #sauvegarde P1   #P1 <- current    # current <- M1   # M1 <- temp 
+               ta = caP1[1];    caP1[1] = ca[1];  ca[1] = caM1[1];  caM1[1] = ta
 #==============================================================================
 # Compact vars in Container or defined in fields
 #==============================================================================

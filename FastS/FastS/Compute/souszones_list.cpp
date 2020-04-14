@@ -46,6 +46,7 @@ void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
      for (E_Int nd = 0; nd < nidom; nd++)
      {    
 
+       itypcp = param_int[nd][ ITYPCP ];
        if (param_int[nd][ITYPZONE] ==4) { nidom_tot +=1; continue;} //on skippe les zone non structuree
 
        E_Int ijkv_lu[3];
@@ -64,7 +65,6 @@ void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
        E_Int*   ipt_it_bloc       = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*iptdtloc[0] + iptdtloc[0]*2;  //it_bloc(nidom)
 
 
-       itypcp = param_int[nd][ ITYPCP ];
        {  
            FldArrayI ijk_lu(param_int[nd][ MXSSDOM_LU ]*3); E_Int* ipt_ijk_lu  = ijk_lu.begin();
  

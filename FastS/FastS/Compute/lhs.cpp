@@ -18,7 +18,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
             for (E_Int nd = 0; nd < nidom; nd++)
             {
 
-             if (param_int[nd][ITYPZONE] != 4)  //on skippe les eventuelles zone non structurees
+             if (param_int[nd][ITYPZONE] != 4 and param_int[nd][IFLOW] != 4)  //on skippe les eventuelles zone non structurees ou LBM
              {
                E_Float* ipt_CL = iptro_CL[nd];
 

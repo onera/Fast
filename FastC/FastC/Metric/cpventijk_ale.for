@@ -23,7 +23,7 @@ c_O    ventk
 c***********************************************************************
       implicit none
 
-#include "FastS/param_solver.h"
+#include "FastC/param_solver.h"
 
       INTEGER_E ndom,ind_loop(6),param_int(0:*)
 
@@ -41,8 +41,8 @@ c Var Local
       REAL_E cax,cay,caz,cenix,ceniy,ceniz,cenjx,cenjy,cenjz,
      & cenkx,cenky,cenkz,vtrans(3)
       
-#include "FastS/formule_xyz_param.h"
-#include "FastS/formule_vent_param.h"
+#include "FastC/formule_xyz_param.h"
+#include "FastC/formule_vent_param.h"
 
       vtrans= 0.
 

@@ -21,6 +21,20 @@ Dist.writeSetupCfg()
 # Test if kcore exists =======================================================
 (kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
 
+# Test if xcore exists =======================================================
+(xcoreVersion, xcoreIncDir, xcoreLibDir) = Dist.checkXCore()
+
+# Test if connector exists ==================================================
+(connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
+
+# Test if fastc exists =====================================================
+(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkFastC()
+
+# Test if fasts exists =====================================================
+(fastsVersion, fastsIncDir, fastsLibDir) = Dist.checkFastS()
+
+
+
 from KCore.config import *
 
 # Compilation des fortrans ====================================================
@@ -33,9 +47,9 @@ prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir]
-libraries = ["FastF", "kcore"]
+libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastpLibDir, fastlbmLibDir ]
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, pythonIncDir,  fastcIncDir, fastsIncDir, fastpIncDir, fastlbmIncDir]
+libraries = ["fastc", "fasts", "fastp", "fastlbm", "kcore", "xcore", "connector"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)

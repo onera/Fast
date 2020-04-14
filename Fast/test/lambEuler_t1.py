@@ -48,6 +48,7 @@ numz["scheme"]             = "ausmpred"
 
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
+print('NEQQQQ=') 
 #P._computeVariables(t, ['centers:VelocityX'  ])
 (t, tc, metrics) = Fast.warmup(t)
 #C.convertPyTree2File(t, 'outwithGH.cgns')

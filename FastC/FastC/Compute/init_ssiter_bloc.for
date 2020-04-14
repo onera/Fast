@@ -21,7 +21,7 @@ c     _A    ssiter_loc = list des domaines reellement calculee a la ssiteration 
 c***********************************************************************
       implicit none
 
-#include "FastS/param_solver.h"
+#include "FastC/param_solver.h"
 
       INTEGER_E nd , nitcfg, nssiter,itypcp,
      &     lssiter_loc, mx_ssdom_lu,

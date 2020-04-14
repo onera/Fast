@@ -29,7 +29,7 @@ c_O    omega  :  vecteur vitesse angulaire du maillage
 c***********************************************************************
       implicit none
 
-#include "FastS/param_solver.h"
+#include "FastC/param_solver.h"
 
       REAL_E  param_real(0:*), rot(4,3)
       INTEGER_E translation_pur

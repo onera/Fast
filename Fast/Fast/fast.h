@@ -67,6 +67,7 @@ namespace K_FAST
     E_Float*   iptroflt      , E_Float*  iptroflt2        , E_Float*   iptgrad        , E_Float*   iptwig         , E_Float* iptstat_wig       ,
     E_Float*   iptdrodm      , E_Float*  iptcoe           , E_Float* iptmules         , E_Float**& iptdelta        , E_Float**& iptro_res    , E_Float**& iptdrodm_trans  ,
     E_Int*&  ipt_param_int_tc, E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int  , E_Float*& ipt_linelets_real,
-    E_Int& taille_tabs       , E_Float*& stock            , E_Float*& drodmstock      , E_Float*& constk           , E_Float**  iptsrc);
+    E_Int& taille_tabs       , E_Float*& stock            , E_Float*& drodmstock      , E_Float*& constk           , E_Float**  iptsrc,
+    E_Float*   feq           , E_Float**& feq_transfer );
 }
 #endif

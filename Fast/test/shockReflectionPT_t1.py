@@ -5,9 +5,11 @@ import Converter.PyTree as C
 import Converter.Internal as Internal
 import Initiator.PyTree as I
 import Fast.PyTree as Fast
+import FastS.PyTree as FastS
 import Transform.PyTree as T
 import KCore.Adim as Adim
 import KCore.test as test
+import sys
 
 MInf = 2.9
 adim = Adim.adim1(MInf)
@@ -40,8 +42,10 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 #nit = 2300
 nit = 23
+#nit=1
 for it in range(nit):
     Fast._compute(t, metrics, it, NIT=100)
+    #Fast._compute(t, metrics, it, NIT=1)
 
 
 Internal._rmNodesByName(t, '.Solver#Param')

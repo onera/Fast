@@ -151,7 +151,7 @@ else
   E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_it_lu_ssdom; E_Int** ipt_degen;  E_Int** ipt_ng_pe;
   
   E_Float** ipt_param_real  ;
-  E_Float** iptx;          E_Float** ipty;         E_Float** iptz;    E_Float** iptro; E_Float** iptro_m1; E_Float** iptro_p1; E_Float** iptmut;
+  E_Float** iptx;          E_Float** ipty;         E_Float** iptz;    E_Float** iptro; E_Float** iptroQ_m1; E_Float** iptroQ_p1; E_Float** iptmut;
   E_Float** ipti;          E_Float** iptj;         E_Float** iptk;    E_Float** iptvol;
   E_Float** ipti0;         E_Float** iptj0;        E_Float** iptk0;   E_Float** iptsrc;
   E_Float** ipti_df;       E_Float** iptj_df;      E_Float** iptk_df ; E_Float** iptvol_df;
@@ -172,9 +172,9 @@ else
   ipty              = iptx               + nidom;
   iptz              = ipty               + nidom;
   iptro             = iptz               + nidom;
-  iptro_m1          = iptro              + nidom;
-  iptro_p1          = iptro_m1           + nidom;
-  iptro_sfd         = iptro_p1           + nidom;
+  iptroQ_m1         = iptro              + nidom;
+  iptroQ_p1         = iptroQ_m1          + nidom;
+  iptro_sfd         = iptroQ_p1          + nidom;
   iptdelta          = iptro_sfd          + nidom;
   iptro_res         = iptdelta           + nidom;
   iptmut            = iptro_res          + nidom;
@@ -262,11 +262,22 @@ else
     sol_center   = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
     t            = K_PYTREE::getNodeFromName1(sol_center, "Density");
     iptro[nd]    = K_PYTREE::getValueAF(t, hook);
-    t            = K_PYTREE::getNodeFromName1(sol_center, "Density_M1");
-    iptro_m1[nd] = K_PYTREE::getValueAF(t, hook);
-    t            = K_PYTREE::getNodeFromName1(sol_center, "Density_P1");
-    iptro_p1[nd] = K_PYTREE::getValueAF(t, hook);
-    t            = K_PYTREE::getNodeFromName1(sol_center, "cellN");
+    if ( ipt_param_int[nd][ IFLOW ]== 4) 
+      {
+        t             = K_PYTREE::getNodeFromName1(sol_center, "Q1");
+        iptroQ_p1[nd] = K_PYTREE::getValueAF(t, hook);
+        t             = K_PYTREE::getNodeFromName1(sol_center, "Q1_M1");
+        iptroQ_m1[nd] = K_PYTREE::getValueAF(t, hook);
+      }
+    else
+      {
+        t             = K_PYTREE::getNodeFromName1(sol_center, "Density_M1");
+        iptroQ_m1[nd] = K_PYTREE::getValueAF(t, hook);
+        t             = K_PYTREE::getNodeFromName1(sol_center, "Density_P1");
+        iptroQ_p1[nd] = K_PYTREE::getValueAF(t, hook);
+      }
+
+    t = K_PYTREE::getNodeFromName1(sol_center, "cellN");
     if (t == NULL) iptCellN[nd] = NULL;
     else iptCellN[nd] = K_PYTREE::getValueAF(t, hook);
     t            = K_PYTREE::getNodeFromName1(sol_center, "Density_src");
@@ -384,7 +395,8 @@ else
   //on determine le type de variable pour les transferts match,...
   E_Int vartype = 2;
   if(neq_max == 6){ vartype = 21;}
-  ///   en lbM vartype = 4; Verifier consequence
+  if(ipt_param_int[0][ IFLOW ] ==4){ vartype = 4;}  
+  /// codage vartype a generaliser pour couplage NS/LBM
 
 //  // Reservation tableau travail temporaire pour calcul du champ N+1
 
@@ -603,7 +615,7 @@ else
             ipt_cfl            ,
             iptx               , ipty             , iptz              ,
             iptCellN           , iptCellN_IBC     , ipt_degen         ,
-            iptro              , iptro_m1         , iptro_p1          , iptro_sfd     ,
+            iptro              , iptroQ_m1        , iptroQ_p1         , iptro_sfd     ,
             //roN                , roM1             , roP1              , iptro_sfd     ,
             iptmut             , ipt_xmutd        ,
             ipti               , iptj             , iptk              , iptvol        , 
@@ -614,7 +626,8 @@ else
             iptroflt           , iptroflt2        , iptgrad           , iptwig            , iptstat_wig   ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta         , iptro_res, iptdrodm_transfer  ,
             ipt_param_int_tc   , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real,
-            taille_tabs        , iptstk           , iptdrodmstk       , iptcstk          , iptsrc);
+            taille_tabs        , iptstk           , iptdrodmstk       , iptcstk          , iptsrc, 
+            iptdrodm           , iptdrodm_transfer);
 
        if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
        {
@@ -693,10 +706,19 @@ else
    //switch pointer
    //E_Float** ptsav = roM1; roM1 = roN; roN = roP1; roP1 = ptsav;
    for (E_Int nd = 0; nd < nidom ; nd++)
-      { E_Float* ptsave  = iptro_m1[nd]; 
-	iptro_m1[nd]= iptro[nd]; 
-        iptro[nd]   = iptro_p1[nd];
-        iptro_p1[nd]= ptsave;}
+      { E_Float* ptsave  = iptroQ_m1[nd];
+        if(ipt_param_int[nd][ IFLOW ] ==4)
+        { 
+         iptroQ_m1[nd]= iptroQ_p1[nd]; 
+         iptroQ_p1[nd]= ptsave;
+        }
+        else
+        {
+	 iptroQ_m1[nd]= iptro[nd]; 
+         iptro[nd]    = iptroQ_p1[nd];
+         iptroQ_p1[nd]= ptsave;
+        }
+      }
 
   }//loop nit_c
 

@@ -22,7 +22,7 @@ c     OUT
 c=======================================================================
       implicit none
 
-#include "FastP/param_solver.h"
+#include "FastC/param_solver.h"
 
       INTEGER_E neq_mtr, idir, ic,jc,kc,kc_vent, param_int(0:*)
 

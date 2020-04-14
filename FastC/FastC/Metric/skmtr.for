@@ -31,7 +31,7 @@ C_IN
       IMPLICIT NONE
 
       include "omp_lib.h"
-#include "FastS/param_solver.h"
+#include "FastC/param_solver.h"
 
       INTEGER_E ndom                                 
       INTEGER_E ithread, ijkv_sdm(3), ind_sdm(6),
@@ -68,9 +68,8 @@ C_LOCAL
      & jmax,kmax,imax,translation_pur,lmin
       REAL_E ix,iy,iz,eps
 
-#include "FastS/param_solver.h"
-#include "FastS/formule_mtr_param.h"
-#include "FastS/formule_xyz_param.h"
+#include "FastC/formule_mtr_param.h"
+#include "FastC/formule_xyz_param.h"
  
       l_initmtr=.false.
 !!!

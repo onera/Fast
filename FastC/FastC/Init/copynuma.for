@@ -27,7 +27,7 @@ c_/    drodm  : increment des variables conservatives
 c***********************************************************************
       implicit none
 
-#include "FastS/param_solver.h"
+#include "FastC/param_solver.h"
 
       INTEGER_E ind_loop(6), ni,nj,shiftvar,ific,jfic,kfic
 

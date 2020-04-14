@@ -1,5 +1,6 @@
 # include "fastS.h"
 # include "fastP.h"
+# include "fastLBM.h"
 # include "fastc.h"
 # include "fast.h"
 # include "../Fast/param_solver.h"
@@ -61,7 +62,8 @@ E_Int K_FAST::gsdr3(
   E_Float*   iptroflt        , E_Float*   iptroflt2       , E_Float*  iptgrad      , E_Float*  iptwig       , E_Float*   iptstat_wig  ,
   E_Float*   iptdrodm        , E_Float*   iptcoe          , E_Float*  iptrot       , E_Float**& iptdelta     , E_Float**& iptro_res, E_Float**& iptdrodm_transfer,
   E_Int*&    param_int_tc    , E_Float*& param_real_tc    , E_Int*& linelets_int   , E_Float*& linelets_real , 
-  E_Int&     taille_tabs     , E_Float*& stock            , E_Float*& drodmstock   , E_Float*& constk        , E_Float** iptsrc )
+  E_Int&     taille_tabs     , E_Float*& stock            , E_Float*& drodmstock   , E_Float*& constk        , E_Float** iptsrc,
+  E_Float*   feq             , E_Float**& feq_transfer )
 
 
  {
@@ -121,51 +123,47 @@ E_Int K_FAST::gsdr3(
       ////  Verifier iptro_CL pour nitcfg> 1 en implicite
       //
       //
-      E_Float** iptro_ssiter;
+      //E_Float** iptro_ssiter;
+      E_Float** iptro_ssiter  = new E_Float*[nidom];
       E_Int ishift,lfwmean;
-      E_Float** iptro_CL; 
+      //E_Float** iptro_CL; 
+      //E_Float* iptro_CL[nidom];
+      E_Float** iptro_CL  = new E_Float*[nidom];
 
       E_Int rk =  param_int[0][RK];
       E_Int exploc = param_int[0][EXPLOC];
       E_Int numpassage = 1;
 
-      if (param_int[0][EXPLOC]== 1 and param_int[0][ITYPCP]==2 or param_int[0][EXPLOC]== 2 and param_int[0][ITYPCP]==2 or param_int[0][EXPLOC]== 4 and param_int[0][ITYPCP]==2 or param_int[0][EXPLOC]== 5 and param_int[0][ITYPCP]==2 ) // J-Scheme + Constantinescu rk2 + rk3 local + rk2local test + Tang & Warnecke
-	   {
-	   if (nitcfg%2 != 0){iptro_ssiter = iptro;  iptro_CL = iptrotmp; ishift  =1; lfwmean  = 1; }
-	   else
-	     {
-	        if (nitcfg != param_int[0][NSSITER]){iptro_ssiter = iptrotmp;  iptro_CL = iptro; ishift  = -1; lfwmean = 0;}
-               else {iptro_ssiter  = iptrotmp; iptro_CL = iptro;}
-              }
-
-	   }
-
-      else if (param_int[0][EXPLOC]== 3 and param_int[0][ITYPCP]==2) // constantinescu base sur rk3
-	   {
-	   if (nitcfg%3 == 1){iptro_ssiter = iptro;  iptro_CL = iptrotmp; ishift  =1; lfwmean  = 1; }
-	   else if (nitcfg%3 == 2){iptro_ssiter = iptrotmp;  iptro_CL = iptro_m1; ishift  =1; lfwmean  = 1; }
-	   else
-	     {
-	        if (nitcfg != param_int[0][NSSITER]){iptro_ssiter = iptro_m1;  iptro_CL = iptro; ishift  = -1; lfwmean = 0;}
-               else {iptro_ssiter  = iptro_m1; iptro_CL = iptro;}
-              }
-
-	   }
-
-      else  // Explicit global ou Implicit
+      for (E_Int nd = 0; nd < nidom; nd++)
+      {
+        if ( param_int[nd][IFLOW]!= 4)
+         {
+           // J-Scheme + Constantinescu rk2 + rk3 local + rk2local test + Tang & Warnecke
+           if( param_int[0][ITYPCP]==2 and ( param_int[0][EXPLOC]== 1 or param_int[0][EXPLOC]== 2 or param_int[0][EXPLOC]== 4 or param_int[0][EXPLOC]== 5) )
 	    {
+	      if (nitcfg%2 != 0){iptro_ssiter[nd] = iptro[nd];  iptro_CL[nd] = iptrotmp[nd]; ishift  =1; lfwmean  = 1; }
+	      else {
+	            if (nitcfg != param_int[0][NSSITER]){iptro_ssiter[nd] = iptrotmp[nd]; iptro_CL[nd] = iptro[nd]; ishift  = -1; lfwmean = 0;}
+                    else                                {iptro_ssiter[nd] = iptrotmp[nd]; iptro_CL[nd] = iptro[nd];}
+                   }
 
-	       if( nitcfg == 1) { iptro_ssiter = iptro;  iptro_CL = iptrotmp; ishift  = 1; lfwmean  = 1; }
-	       else
-	       {      
-		 if (param_int[0][ ITYPCP ] < 2                ) {iptro_ssiter = iptrotmp; ishift =-1; lfwmean  = 0; iptro_CL = iptrotmp;} // Implicite
-		 if (param_int[0][ ITYPCP ] == 2 && nitcfg%2==0 && nitcfg != param_int[0][ NSSITER ] ) {iptro_ssiter = iptrotmp;  iptro_CL = iptro; ishift =-1; lfwmean  = 0;} // Explicite
-		 else if (param_int[0][ ITYPCP ] == 2 && nitcfg%2==0 && nitcfg == param_int[0][ NSSITER ] ) {iptro_ssiter = iptrotmp;  iptro_CL = iptro;} // Explicite
-		 if  (param_int[0][ ITYPCP ] == 2 && nitcfg%2==1 && nitcfg != param_int[0][ NSSITER ]) {iptro_ssiter = iptro;  iptro_CL = iptrotmp; ishift =-1; lfwmean  = 0;} // Explicite
-		 else if  (param_int[0][ ITYPCP ] == 2 && nitcfg%2==1 && nitcfg == param_int[0][ NSSITER ]) {iptro_ssiter = iptro;  iptro_CL = iptrotmp;} // Explicite
+	    }
+           else  // Explicit global ou Implicit
+	    {
+	      if( nitcfg == 1) { iptro_ssiter[nd] = iptro[nd];  iptro_CL[nd] = iptrotmp[nd]; ishift  = 1; lfwmean  = 1; }
+	      else
+	      {      
+               if (param_int[0][ ITYPCP ] < 2                )                                            {iptro_ssiter[nd] = iptrotmp[nd];  iptro_CL[nd] = iptrotmp[nd]; ishift =-1; lfwmean  = 0;} // Implicit
+               if (param_int[0][ ITYPCP ] == 2 && nitcfg%2==0 && nitcfg != param_int[nd][ NSSITER ] )      {iptro_ssiter[nd] = iptrotmp[nd];  iptro_CL[nd] = iptro[nd];    ishift =-1; lfwmean  = 0;} // Explicite
+	       else if (param_int[0][ ITYPCP ] == 2 && nitcfg%2==0 && nitcfg == param_int[nd][ NSSITER ] ) {iptro_ssiter[nd] = iptrotmp[nd];  iptro_CL[nd] = iptro[nd];                             } // Explicite
+               if  (param_int[0][ ITYPCP ] == 2 && nitcfg%2==1 && nitcfg != param_int[nd][ NSSITER ])      {iptro_ssiter[nd] = iptro[nd];     iptro_CL[nd] = iptrotmp[nd]; ishift =-1; lfwmean  = 0;} // Explicite
+               else if  (param_int[0][ ITYPCP ] == 2 && nitcfg%2==1 && nitcfg == param_int[nd][ NSSITER ]) {iptro_ssiter[nd] = iptro[nd];     iptro_CL[nd] = iptrotmp[nd];                          } // Explicite
 	      }
 	    }
+         }//NS ou LBM
+        else{ iptro_ssiter[nd] = iptrotmp[nd];  iptro_CL[nd] = iptrotmp[nd]; }
 
+      }//zone
 
       //
       //Calcul taille tableau ssor par thread et mise a jour Nombre sous_iter pour implicit
@@ -380,6 +378,7 @@ E_Float deb_calcul;
            if (param_int[nd][ITYPCP] == 2) lmin = 4;
 
 
+
           if (param_int[nd][ITYPZONE] == 4)
            {
              if ( ithread == 1)
@@ -389,7 +388,13 @@ E_Float deb_calcul;
              }
            }
           else{
-#include     "../../FastS/FastS/Compute/rhs.cpp"
+              if (param_int[nd][IFLOW] == 4){
+               lmin =1;
+#include       "../../FastLBM/FastLBM/Compute/rhs.cpp"
+              }
+              else{
+#include       "../../FastS/FastS/Compute/rhs.cpp"
+              }
            }
           shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
           shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
@@ -450,7 +455,6 @@ E_Float deb_calcul;
 
 
  
-
   //
   //
   //FillGhostcell si mise a jour necessaire et transfer dans C layer 
@@ -500,8 +504,6 @@ E_Float tmps;
      numpassage=2;
      if (nitcfg%2==0)
       {
-        //setInterpTransfersFastS(iptro_CL    , vartype      , param_int_tc, param_real_tc, param_int    , param_real,
-        //                        linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
         K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
                                linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
       }
@@ -512,7 +514,7 @@ E_Float tmps;
   
 
 
-
+  //
   //E_Float trans_end = omp_get_wtime();
   //E_Float trans_duree = trans_end - trans_begin;
   //cout << "tps_trans  : "<< trans_duree  << endl;
@@ -540,7 +542,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
       } 
     else {autorisation_bc[nd] = 1;}
 
-    if(nitcfg==nitcfg_last-1 and param_int[nd][ITYPZONE] !=4)
+    if(nitcfg==nitcfg_last-1 and param_int[nd][ITYPZONE] !=4  and param_int[nd][IFLOW] !=4)
     {
      ///mise a jour moyenne plan Lund si necessaire
      E_Int pt_bcs = param_int[nd][PT_BC];
@@ -589,6 +591,8 @@ for (E_Int nd = 0; nd < nidom; nd++)
     }//nit_last
   }//loop zone
  
+  E_Int ndim=0;
+  //return ndim;
 
 E_Int lrhs=0; E_Int lcorner=0; 
 #pragma omp parallel default(shared)
@@ -645,28 +649,39 @@ E_Int lrhs=0; E_Int lcorner=0;
 	       ipt_topology_socket = ipt_topology       + (ithread-1)*3;
 	       ipt_ind_dm_socket   = ipt_ind_dm_omp     + (ithread-1)*12;
 	       ipt_ind_dm_thread   = ipt_ind_dm_socket  +6;
+
+	       E_Int lmin = 10;
+	       if (param_int[nd][ITYPCP] == 2) lmin = 4;
+
+               indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, lmin,
+                                 ipt_ind_dm_loc,
+                                 ipt_topology_socket, ipt_ind_dm_thread);
 	     }
 
 	   if (autorisation_bc[nd] == 1)
 	    {
-               if (param_int[nd][ITYPZONE ] !=4) 
+               if (param_int[nd][ITYPZONE ] !=4) // zone structuree
                 {
+                  if(param_int[nd][IFLOW] != 4)
+                    {
+	              E_Int ierr = K_FASTS::BCzone(nd, lrhs , nitcfg_stk, lcorner, param_int[nd], param_real[nd], npass,
+                                                   ipt_ind_dm_loc, ipt_ind_dm_thread, 
+                                                   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
+                                                   iptro_CL[nd] , ipti[nd]            , iptj[nd]    , iptk[nd]       ,
+                                                   iptx[nd]     , ipty[nd]            , iptz[nd]    ,
+				                   iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd]);
 
-	          E_Int lmin = 10;
-	          if (param_int[nd][ITYPCP] == 2) lmin = 4;
-
-                  indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, lmin,
-                                    ipt_ind_dm_loc,
-                                    ipt_topology_socket, ipt_ind_dm_thread);
-
-	          E_Int ierr = K_FASTS::BCzone(nd, lrhs , nitcfg_stk, lcorner, param_int[nd], param_real[nd], npass,
-			   	               ipt_ind_dm_loc, ipt_ind_dm_thread, 
-				               ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
-			                       iptro_CL[nd] , ipti[nd]            , iptj[nd]    , iptk[nd]       ,
-				               iptx[nd]     , ipty[nd]            , iptz[nd]    ,
-				               iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd]);
-
-	          correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptro_CL[nd]);
+	              correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptro_CL[nd]);
+                    }
+                   else
+                    {
+                     E_Int ierr = K_FASTLBM::BCzone(nd, lrhs , nitcfg_stk, lcorner, param_int[nd], param_real[nd], npass,
+                                                    ipt_ind_dm_loc, ipt_ind_dm_thread, 
+                                                    ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
+                                                    iptro_CL[nd] , ipti[nd]            , iptj[nd]    , iptk[nd]       ,
+                                                    iptx[nd]     , ipty[nd]            , iptz[nd]    ,
+                                                    iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd]); 
+                    }
                 }
                else
                 {
@@ -712,7 +727,8 @@ E_Int lrhs=0; E_Int lcorner=0;
 //
 //    }
 
-   delete [] ipt_timecount;
+
+   delete [] ipt_timecount; delete [] iptro_CL;  delete [] iptro_ssiter; 
    return ibord_ale;
 
 }

@@ -49,8 +49,8 @@ c Var loc
       REAL_E    du3dx1,du3dx2,du3dx3,cmu,nu,c4,cvgam,rho,rho_1,t,rg
       REAL_E    rho_cn,rou_cn,rov_cn,row_cn,p_cn,mu_cn,t_cn,nu_cn
 
-#include "FastS/formule.h"
-#include "FastS/formule_mtr.h"
+#include "FastC/formule.h"
+#include "FastC/formule_mtr.h"
 
       INTEGER_E indmy
       indmy(i_3,j_3,k_3) =  1
@@ -143,7 +143,7 @@ c      write(*,'(a,2f18.9)')'cn,cm',cn*c3,cnm
              do j=jdeb,jfin
 !DEC$ IVDEP
              do i=ideb,ifin
-#include      "FastS/STAT/cpmys_rij_ufavre_3d.for"
+#include      "FastC/STAT/cpmys_rij_ufavre_3d.for"
              end do
              end do
              end do
@@ -153,7 +153,7 @@ c      write(*,'(a,2f18.9)')'cn,cm',cn*c3,cnm
              do j=jdeb,jfin
 !DEC$ IVDEP
              do i=ideb,ifin
-#include      "FastS/STAT/cpmys_rij_ufavre_2d.for"
+#include      "FastC/STAT/cpmys_rij_ufavre_2d.for"
              end do
              end do
          endif       !2d/3D 

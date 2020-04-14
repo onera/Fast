@@ -23,7 +23,7 @@ c     ti,tj,tk,si,sj,sk,vol
 c***********************************************************************
       implicit none
 
-#include "FastS/param_solver.h"
+#include "FastC/param_solver.h"
 
       INTEGER_E ind_loop(6),param_int(0:*)
 
@@ -52,8 +52,8 @@ c Var loc
      & tkx20,tkx21,tky20,tky21,tkz20,tkz21
 
 
-#include "FastS/formule_mtr_param.h"
-#include "FastS/formule_xyz_param.h"
+#include "FastC/formule_mtr_param.h"
+#include "FastC/formule_xyz_param.h"
 
       inci = 1
       incj = param_int( NIJK_XYZ ) 

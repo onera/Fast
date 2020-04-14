@@ -23,7 +23,7 @@ c_O    ventk
 c***********************************************************************
       implicit none
 
-#include "FastS/param_solver.h"
+#include "FastC/param_solver.h"
 
       INTEGER_E nd,ind_loop(6), param_int(0:*)
 
@@ -39,7 +39,7 @@ c***********************************************************************
 c Var Local
       INTEGER_E i,j,k,l1,l2,l3,v1mtr,v2mtr,v3mtr,li,lj,lk
       
-#include "FastS/formule_mtr_param.h"
+#include "FastC/formule_mtr_param.h"
 
       li   = 0
       lj   = 0

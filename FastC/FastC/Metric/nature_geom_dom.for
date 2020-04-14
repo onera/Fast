@@ -23,7 +23,7 @@ c_O    neq_k    : nombre de composante pour les metriques des facettes k
 c***********************************************************************
       implicit none
 
-#include "FastS/param_solver.h"
+#include "FastC/param_solver.h"
       REAL_E souszero
 c      parameter(souszero=1e-10)
       parameter(souszero=2e-8)
@@ -41,7 +41,7 @@ c Var loc
       REAL_E xtest,ytest,ztest1,ztest2,ztest3,ztest4,xm,ym,zm,cible,
      & degen1,degen2,degen3,degen4
 
-#include "FastS/formule_xyz.h"
+#include "FastC/formule_xyz.h"
 
          !do k=1-nijk_xyz(5), nijk_xyz(3) -nijk_xyz(5) 
          !do j=1-nijk_xyz(4), nijk_xyz(2) -nijk_xyz(4) 

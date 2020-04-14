@@ -132,7 +132,7 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 	}// test NB_RELAX
     }//loop zone
   
-  if (ipt_param_int[NB_RELAX] > 1 || ipt_param_int[LU_MATCH]==1 )
+  if ( nidom != 0 && (ipt_param_int[NB_RELAX] > 1 || ipt_param_int[LU_MATCH]==1 ) )
     { 
       Py_DECREF(ssor);
       Py_DECREF(ssortmp);

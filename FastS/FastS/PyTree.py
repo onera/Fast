@@ -34,12 +34,6 @@ except: pass
 # Variable alignement pour vectorisation
 #CACHELINE = Dist.getCacheLine()
 
-# transfered variables
-varsN    = ['Density']
-varsP    = ['Density_P1']
-varsM    = ['Density_M1']
-#varsN_SA = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature', 'TurbulentSANuTilde']
-
 #==============================================================================
 # generation maillage pour tble
 #==============================================================================
@@ -150,8 +144,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
             else:
               #Ghostcell
-              vars = varsP
-              if nstep%2 == 0 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
+              vars = FastC.varsP
+              if nstep%2 == 0 and itypcp == 2 : vars = FastC.varsN  # Choix du tableau pour application transfer et BC
               timelevel_target = int(dtloc[4])
               #t0=Time.time()
               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
@@ -180,7 +174,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
              FastC.switchPointers3__(zones,nitmax)
     else:
          case = NIT%3
-         #case = 2
          if case != 0 and itypcp < 2: FastC.switchPointers__(zones, case)
          if case != 0 and itypcp ==2: FastC.switchPointers__(zones, case, nitmax%2+2)
 
@@ -2338,7 +2331,7 @@ def _computeguillaume2(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
 #==============================================================================
 # temps d'estimation rk
 #==============================================================================
-def _temps_estim(t,varsN,varP,drodm_,coe_,nstep):
+def _temps_estim(t,varN,varP,drodm_,coe_,nstep):
     #if (nstep == 1):
     zones = Internal.getZones(t)
     #else:
@@ -2371,8 +2364,8 @@ def _temps_estim(t,varsN,varP,drodm_,coe_,nstep):
          z = C.initVars(z, 'centers:temps', 0.)
          dim = Internal.getZoneDim(z)
          node   = Internal.getNodeFromName1(z ,'FlowSolution#Centers')
-         var_P1 = Internal.getNodeFromName1(node, varsP[0])
-         var_N  = Internal.getNodeFromName1(node, varsN[0])
+         var_P1 = Internal.getNodeFromName1(node, varP[0])
+         var_N  = Internal.getNodeFromName1(node, varN[0])
          ndimdx = (dim[1]-1)*(dim[2]-1)*(dim[3]-1)
          drodm  = numpy.copy(drodm_[index[i]:index[i] + ndimdx])
          coe    = numpy.copy(coe_[index_[i]:index_[i] + ndimdx])

@@ -25,8 +25,8 @@ C_LOCAL
      & lmtri,lmtrj,lmtr0i,lmtr0j,lmtrk,lmtr0k,ind_loop(6),ne,ind0,ind1,
      & ind3
 
-#include "FastS/formule_mtr.h"
-#include "FastS/formule_xyz.h"
+#include "FastC/formule_mtr.h"
+#include "FastC/formule_xyz.h"
 
 
       do npass=1,2

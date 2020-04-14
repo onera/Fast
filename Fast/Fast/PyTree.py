@@ -60,11 +60,17 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     FastC._build_omp(t) 
 
     
-    zones_unstr =[]; zones_str = []
+    zones_unstr =[]; zones_str = []; zones_ns = []; zones_lbm = []
     for z in zones:
        ztype = Internal.getValue(  Internal.getNodeFromName(z, 'ZoneType') )
        if ztype=='Structured':
          zones_str.append(z)
+         param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
+         if param_int[27] == 4:   #IFLOW=4
+            zones_lbm.append(z)
+         else:
+            zones_ns.append(z)
+            
        else:
          zones_unstr.append(z)
 
@@ -72,17 +78,20 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     # init         : ssiter_loc
     metrics = allocate_metric(t)
 
-    metrics_str=[]; metrics_unstr=[]
+    metrics_str=[]; metrics_unstr=[]; metrics_ns = []; metrics_lbm = []
     c  =0
     for z in zones:
        ztype = Internal.getValue(  Internal.getNodeFromName(z, 'ZoneType') )
        if ztype=='Structured':
          metrics_str.append( metrics[c])
+         param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
+         if param_int[27] == 4:   #IFLOW=4
+            metrics_lbm.append(z)
+         else:
+            metrics_ns.append(z)
        else:
          metrics_unstr.append( metrics[c])
        c+=1
-
-
     # Contruction BC_int et BC_real pour CLa
     FastC._BCcompact(zones_str) 
     FastC._BCcompactNG(zones_unstr) 
@@ -99,7 +108,6 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     #init metric 
     FastS.fasts.init_metric(zones_str  , metrics_str  , ompmode)
     FastP.fastp.init_metric(zones_unstr, metrics_unstr)
-
 
     # compact + align + init numa
     rmConsVars=True
@@ -122,11 +130,16 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 
     #on recupere les zones a nouveau car create primvar rend zones caduc
     zones = Internal.getZones(t)
-    zones_str, zones_unstr, metrics_str, metrics_unstr = tri_zones( zones, metrics)
+    #zones_str, zones_unstr, metrics_str, metrics_unstr = tri_zones( zones, metrics)
+    infos_zones = tri_zones( zones, metrics)  #info-zone: dico 4 item contenant la list [ zones, metrics] pour Struct, unstruc, LBM, NS
+    # init Q variables from macro variable if lbm
+    #FastLBM._init_Q(infos_zones["LBM"][0])
+    FastLBM._init_Q(infos_zones["LBM"][0])
 
     #allocate tab ssor en structure
+    zones_str   = infos_zones["struct"][0]
+    metrics_str = infos_zones["struct"][1]
     ssors = FastS.fasts.allocate_ssor(zones_str, metrics_str, nssiter, hook1, ompmode)
-
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     c   = 0
@@ -185,7 +198,6 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
         for v in var: varmy.append('centers:'+v[0])
         _compact(tmy, fields=varmy)
 
-
     #
     # remplissage ghostcells
     #
@@ -196,14 +208,23 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4]) 
 
-    _fillGhostcells(zones, tc,  zones_str, metrics_str, zones_unstr, metrics_unstr, timelevel_target, ['Density'], nstep,  ompmode, hook1) 
+    if   len( infos_zones["LBM"][0]) ==0:  vars=FastC.varsN + FastC.varsMLBM
+    elif len( infos_zones["NS"][0]) ==0 and len( infos_zones["unstruct"][0]) ==0: vars=FastC.varsMLBM + FastC.varsN
+    else:
+      print("echange NS-LBM a coder")
+      import sys; sys.exit()
+    
+    _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep,  ompmode, hook1) 
     if tc is not None: C._rmVars(tc, 'FlowSolution')
 
     #
     # initialisation Mut
     #
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
-    FastS.fasts._computePT_mut(zones_str, metrics_str, hook1)
+    FastS.fasts._computePT_mut(infos_zones['struct'][0], infos_zones['struct'][1], hook1)
+    #FastP.fastp._computePT_mut(infos_zones['unstruct'][0], infos_zones['unstruct'][1], hook1)
+    print("decommenter _computePT_mut dans warmup Fast pour zone non structuré")
+
 
     return (t, tc, metrics)
 
@@ -232,7 +253,12 @@ def allocate_metric(t):
 
         ztype = Internal.getValue(  Internal.getNodeFromName(z, 'ZoneType') )
         if ztype=='Structured':
-           metrics.append(FastS.fasts.allocate_metric(z, nssiter))
+           param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
+
+           if param_int[27] == 4:   #IFLOW=4
+              metrics.append( FastLBM.fastlbm.allocate_metric(z, nssiter))
+           else:
+              metrics.append( FastS.fasts.allocate_metric(z, nssiter))
         else:
            metrics.append(FastP.fastp.allocate_metric(z, nssiter))
     return metrics
@@ -282,7 +308,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
     return None
 
 #==============================================================================
-def _fillGhostcells(zones, tc, zones_str, metrics_str, zones_unstr, metrics_unstr, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=1, num_passage=1): 
+def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmode, hook1, nitmax=1, rk=1, exploc=1, num_passage=1): 
 
    if hook1['lexit_lu'] ==0:
 
@@ -296,19 +322,19 @@ def _fillGhostcells(zones, tc, zones_str, metrics_str, zones_unstr, metrics_unst
               param_int = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
               zonesD    = Internal.getZones(tc)
 
-              if hook1["neq_max"] == 5: varType = 2
+              if hook1["neq_max"] == 5: varType =  2
               else                    : varType = 21
-
-              for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
+              if vars[0] == 'Q1_M1'   : varType =  4
+              #for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
+              C._cpVars(zones, 'centers:'+vars[0], zonesD, vars[0])
 
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
               X.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
-
        #apply BC
        if rk != 3 and exploc != 2:
-          FastS.fasts._applyBC(zones_str  , metrics_str  , hook1, nstep, omp_mode, vars[0])
-          FastP.fastp._applyBC(zones_unstr, metrics_unstr, hook1, nstep, omp_mode, vars[0])
+          _applyBC(infos_zones, hook1, nstep, ompmode, var= vars)    
+
             
 
    return None
@@ -331,11 +357,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     dtloc   = Internal.getValue(dtloc) # tab numpy
     nitmax  = int(dtloc[0])                 
 
-    zones = Internal.getZones(t)
-    zones_str, zones_unstr, metrics_str, metrics_unstr = tri_zones( zones, metrics)
+    zones       = Internal.getZones(t)
+    infos_zones = tri_zones( zones, metrics)
 
     #### a blinder...
     param_int_firstZone = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1]
+    iflow  = param_int_firstZone[27]
     itypcp = param_int_firstZone[29]
     rk     = param_int_firstZone[52]
     exploc = param_int_firstZone[54]
@@ -363,9 +390,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
          hook1 = FastC.HOOK.copy()
          distrib_omp = 0
-         hook1.update(  FastS.fasts.souszones_list(zones_str, metrics_unstr, FastC.HOOK, nitrun, nstep, distrib_omp) )
+         #hook1.update(  FastS.fasts.souszones_list(zones_str, metrics_str, FastC.HOOK, nitrun, nstep, distrib_omp) )
+         hook1.update(  FastS.fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
 
          #nidom_loc = hook1["nidom_tot"] + len(zones_unstr)
+         nidom_loc = hook1["nidom_tot"]
+         #print("nidom_loc=", nidom_loc)
         
          skip      = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
@@ -377,7 +407,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             layer_mode= 0
             nit_c     = 1
             #t0=Time.time()
-            Fast.fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
+            fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
             #print('t_compute = %f'%(Time.time() - t0))
 
             # dtloc GJeanmasson
@@ -386,7 +416,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
                if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
-               _applyBC(zones_str, zones_unstr, metrics_str, metrics_unstr, hook1, nstep, ompmode, var=vars[0])    
+               _applyBC(infos_zones, hook1, nstep, ompmode, var=vars[0])    
 
                FastC.switchPointers2__(zones_str,nitmax,nstep)
                 
@@ -395,26 +425,28 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                    if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
                    elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
                    timelevel_target = int(dtloc[4])
-                   _fillGhostcells(zones, tc, zones_str, metrics_str, zones_unstr, metrics_unstr, timelevel_target, vars, nstep, ompmode, hook1, nitmax, rk, exploc)
+                   _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmode, hook1, nitmax, rk, exploc)
             
                FastS.fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
 
                if nstep%2 == 0:
                    timelevel_target = int(dtloc[4])
                    vars = ['Density'  ]
-                   _fillGhostcells(zones, tc,  zones_str, metrics_str, zones_unstr, metrics_unstr, timelevel_target, vars, nstep, nitmax, hook1, nitmax, rk, exploc, 2)
+                   _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep, nitmax, hook1, nitmax, rk, exploc, 2)
 
                if    nstep%2 == 0 and itypcp == 2 : vars = ['Density'  ] 
                elif  nstep%2 == 1 and itypcp == 2 : vars = ['Density_P1'] 
-               _applyBC(zones_str, zones_unstr, metrics_str, metrics_unstr, hook1, nstep, ompmode,  var=vars[0])
+               _applyBC(infos_zones, hook1, nstep, ompmode,  var=vars[0])
 
 
             else:
               #Ghostcell
-              vars = varsP
-              if nstep%2 == 0 and itypcp == 2 : vars = varsN  # Choix du tableau pour application transfer et BC
+              varsNS = FastC.varsP 
+              if nstep%2 == 0 and itypcp == 2 : varsNS = FastC.varsN  # Choix du tableau pour application transfer et BC
+              vars = varsNS + FastC.varsMLBM
+              if iflow == 4: vars= FastC.varsMLBM + varsNS
               timelevel_target = int(dtloc[4])
-              _fillGhostcells(zones, tc,  zones_str, metrics_str, zones_unstr, metrics_unstr, timelevel_target, vars, nstep, ompmode, hook1)
+              _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep, ompmode, hook1)
 
       dtloc[3] +=1    #time_level_motion
       dtloc[4] +=1    #time_level_target
@@ -429,19 +461,24 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
           FastC.HOOK['param_real_tc'] = None
 
       fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , FastC.HOOK)
-      #FastP.fastp._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, FastC.HOOK)
 
+    zones_ns    = infos_zones["NS"][0]
+    metrics_ns  = infos_zones["NS"][1]
+    zones_lbm   = infos_zones["LBM"][0]
+    metrics_lbm = infos_zones["LBM"][1]
     #switch pointer a la fin du pas de temps
     if exploc==2 and tc is not None and rk==3:
          if layer == 'Python':
-             FastC.switchPointers__(zones, 1, 3)
+             FastC.switchPointers__(zones_ns, 1, 3)
          else:
-             FastC.switchPointers3__(zones,nitmax)
+             FastC.switchPointers3__(zones_ns,nitmax)
     else:
          case = NIT%3
-         #case = 2
-         if case != 0 and itypcp < 2: FastC.switchPointers__(zones, case)
-         if case != 0 and itypcp ==2: FastC.switchPointers__(zones, case, nitmax%2+2)
+         if case != 0 and itypcp < 2: FastC.switchPointers__(zones_ns, case)
+         if case != 0 and itypcp ==2: FastC.switchPointers__(zones_ns, case, nitmax%2+2)
+
+    if  NIT%2 != 0:
+      FastC.switchPointersLBM__(zones_lbm, FastLBM.NQ)
 
     # flag pour derivee temporelle 1er pas de temps implicit
     FastC.HOOK["FIRST_IT"]  = 1
@@ -452,23 +489,19 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 #==============================================================================
 # applyBC
 #==============================================================================
-def _applyBC(zones_str, zones_unstr, metrics_str, metrics_unstr, hook1, nstep,omp_mode, var="Density"):
+def _applyBC(infos_zones, hook1, nstep, ompmode, var=["Density","Q1"]):
 
-    zones_ns =[]; zones_lbm = []; metrics_lbm=[]; metrics_ns=[]
-    c=0
-    for z in zones_str:
-       param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]  # noeud
-       if param_int[27]== 4:  #IFLOW=LBM) 
-         zones_lbm.append(z)
-         metrics_lbm.append( metrics[c])
-       else:
-         zones_ns.append(z)
-         metrics_ns.append( metrics[c])
-       c+=1
+    if 'Q' in var[0]: 
+         varlbm =  var[0]
+         varns  =  var[1]
+    else: 
+         varlbm =  var[1]
+         varns  =  var[0]
+
+    FastS.fasts._applyBC(infos_zones["struct"][0]  , infos_zones["struct"][1]    , hook1, nstep, ompmode, varns  )
+    FastLBM.fastlbm._applyBC(infos_zones["LBM"][0] , infos_zones["LBM"][1]       , hook1, nstep, ompmode, varlbm )
+    FastP.fastp._applyBC(infos_zones["unstruct"][0], infos_zones["unstruct"][1]  , hook1, nstep, ompmode, varns  )
     
-    fasts._applyBC(zones_ns   , metrics_ns   , hook1, nstep, omp_mode, var)
-    fastlbm._applyBC(zones_lbm, metrics_lbm  , hook1, nstep, omp_mode, var)
-    fastp._applyBC(zones_unstr, metrics_unstr, hook1, nstep, omp_mode, var)
 
     return None
 
@@ -477,16 +510,31 @@ def _applyBC(zones_str, zones_unstr, metrics_str, metrics_unstr, hook1, nstep,om
 #==============================================================================
 def tri_zones(zones, metrics):
 
-    metrics_str=[]; metrics_unstr=[]; zones_unstr =[]; zones_str = []
+    infos_zones = {}
+    zones_unstr =[]; zones_str = []; zones_ns = []; zones_lbm = []
+    metrics_unstr =[]; metrics_str = []; metrics_ns = []; metrics_lbm = []
+
     c=0
     for z in zones:
        ztype = Internal.getValue(  Internal.getNodeFromName(z, 'ZoneType') )
        if ztype=='Structured':
          zones_str.append(z)
          metrics_str.append( metrics[c])
+         param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
+         if param_int[27] == 4:   #IFLOW=4
+            zones_lbm.append(z)
+            metrics_lbm.append( metrics[c] )
+         else:
+            zones_ns.append(z)
+            metrics_ns.append( metrics[c] )
        else:
          zones_unstr.append(z)
          metrics_unstr.append( metrics[c])
+         zones_ns.append(z)
+         metrics_ns.append( metrics[c] )
        c+=1
-    return zones_str, zones_unstr, metrics_str, metrics_unstr
-
+    infos_zones['struct'  ]=[zones_str, metrics_str]
+    infos_zones['unstruct']=[zones_unstr, metrics_unstr]
+    infos_zones['LBM'     ]=[zones_lbm, metrics_lbm]
+    infos_zones['NS'      ]=[zones_ns , metrics_ns]
+    return infos_zones

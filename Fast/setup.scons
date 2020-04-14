@@ -41,15 +41,18 @@ installPath = Dist.getInstallPath(prefix)
 # Test if fastp exists =====================================================
 (fastpVersion, fastpIncDir, fastpLibDir) = Dist.checkFastP()
 
+# Test if fastlbm exists =====================================================
+(fastlbmVersion, fastlbmIncDir, fastlbmLibDir) = Dist.checkFastLBM()
+
 # Test if libmpi exists ======================================================
 (mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
 
 from KCore.config import *
 
 # Setting libraryDirs and libraries ===========================================
-libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastpLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, pythonIncDir,  fastcIncDir, fastsIncDir, fastpIncDir]
-libraries = ["fastc", "fasts", "fastp", "kcore", "xcore", "connector"]
+libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastpLibDir, fastlbmLibDir ]
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, pythonIncDir,  fastcIncDir, fastsIncDir, fastpIncDir, fastlbmIncDir ]
+libraries = ["fastc", "fasts", "fastp", "fastlbm", "kcore", "xcore", "connector"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
