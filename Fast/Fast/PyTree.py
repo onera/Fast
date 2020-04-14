@@ -265,7 +265,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
             for a in val:
                 a1 = a[1]
                 # Copy elements
-                ptr = a1.reshape((size), order='Fortran') # no copy I hope
+                ptr = a1.reshape((size), order='F') # no copy I hope
 
                 if init: 
                   if ztype=='Structured':
@@ -276,7 +276,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
 
                 # Replace numpys with slice
                 a[1] = eq[c*(size)+c*param_int[1][66]:(c+1)*(size)+c*param_int[1][66]]
-                a[1] = a[1].reshape(sh, order='Fortran')
+                a[1] = a[1].reshape(sh, order='F')
 
                 c += 1
     return None

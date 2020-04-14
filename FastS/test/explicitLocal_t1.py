@@ -7,7 +7,7 @@ import Generator.PyTree as G
 import Initiator.PyTree as I
 import CPlot.PyTree as CPlot
 import Fast.PyTree as Fast_
-import Fast.Internal as internal
+import FastC.PyTree as internal
 import FastS.PyTree as FastS
 import Post.PyTree as P
 import Fast.Utils
