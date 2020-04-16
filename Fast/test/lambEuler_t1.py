@@ -87,7 +87,7 @@ C._initVars(t, '{centers:VelocityY} = {centers:VelocityY} + 0.7')
 # Time Steps
 #nit =  50  ; time = 0.
 nit =  50  ; time = 0.
-for it in range(nit): 
+for it in range(nit):
     print('nit=',it)
     Fast._compute(t, metrics, nit)
 

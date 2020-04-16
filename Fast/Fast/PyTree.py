@@ -223,8 +223,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     FastS.fasts._computePT_mut(infos_zones['struct'][0], infos_zones['struct'][1], hook1)
     #FastP.fastp._computePT_mut(infos_zones['unstruct'][0], infos_zones['unstruct'][1], hook1)
-    print("decommenter _computePT_mut dans warmup Fast pour zone non structuré")
-
+    print("decommenter _computePT_mut dans warmup Fast pour zone non structure.")
 
     return (t, tc, metrics)
 

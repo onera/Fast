@@ -547,7 +547,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
      ///mise a jour moyenne plan Lund si necessaire
      E_Int pt_bcs = param_int[nd][PT_BC];
      E_Int nb_bc  = param_int[nd][ pt_bcs ];
-     E_Float* ipt_data;
+     E_Float* ipt_data=NULL;
      for ( E_Int ndf = 0; ndf < nb_bc; ndf++ )
      {
       E_Int pt_bc  = param_int[nd][pt_bcs+ 1 + ndf];
