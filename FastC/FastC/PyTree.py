@@ -33,7 +33,6 @@ except: OMP_NUM_THREADS = 1
 
 import Converter.Mpi as Cmpi
 
-
 MX_SYNCHRO = 1000
 MX_SSZONE  = 10
 MX_OMP_SIZE_INT = 250*OMP_NUM_THREADS

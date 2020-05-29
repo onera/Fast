@@ -1,5 +1,5 @@
 #! /bin/sh
-echo 'Installing Fast tests and doc'
+echo 'Installing FastC tests and doc'
 if ([ $# -eq 0 ])
 then
     if [ "$CASSIOPEE" = "" ]; then
