@@ -221,7 +221,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                vars.append(fields2compact)
     
             # on compacte les variables "visqueuse"
-            loc             ='centers:'
+            loc            ='centers:'
             fields         = [loc+'ViscosityEddy',loc+'TurbulentDistance', loc+'zgris']
             for sufix in ['0','N']:
                for i in range(1,7):
@@ -239,15 +239,15 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                if C.isNamePresent(z, field) == 1: fields2compact.append(field)
             if len(fields2compact) != 0: vars.append(fields2compact)
 
-
             # on compacte CellN
-            fields2compact =[]
-            if  (C.isNamePresent(z, loc+'cellN') == 1): fields2compact.append(loc+'cellN')
-            if len(fields2compact)!= 0 : vars.append(fields2compact)
+            fields2compact = []
+            if  C.isNamePresent(z, loc+'cellN') == 1: fields2compact.append(loc+'cellN')
+            if len(fields2compact) != 0: vars.append(fields2compact)
+            
             # on compacte CellN_IBC
-            fields2compact =[]
-            if  (C.isNamePresent(z, loc+'cellN_IBC') == 1): fields2compact.append(loc+'cellN_IBC')
-            if len(fields2compact)!= 0 : vars.append(fields2compact)
+            fields2compact = []
+            if  C.isNamePresent(z, loc+'cellN_IBC') == 1: fields2compact.append(loc+'cellN_IBC')
+            if len(fields2compact) != 0: vars.append(fields2compact)
 
             #  adjoint 
             if  C.isNamePresent(z, 'centers:dpCLp_dpDensity') == 1: 
@@ -263,7 +263,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
  
             ##on stocke zone et variable car fonction compact specific fastS ou FastP: ne peut peut etre appelee ici
             vars_zones.append( [z, vars] )
-
+            
     return FIRST_IT, vars_zones
 
 #==============================================================================
@@ -341,7 +341,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     else:
        neq_lbm = Internal.getNodeFromName2(zone, 'Parameter_int')[1][86]
 
-       #print 'Internal fast: neq_LBM=', neq_lbm
+       #print('Internal fast: neq_LBM=', neq_lbm)
        for i in range(1,neq_lbm+1):
            if C.isNamePresent(zone, 'centers:Q'+str(i)) != 1: C._initVars(zone, 'centers:Q'+str(i), 0.)
            if C.isNamePresent(zone, 'centers:Q'+str(i)+'_M1') != 1: C._initVars(zone, 'centers:Q'+str(i)+'_M1', 0.)
@@ -442,7 +442,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     implicit_solver = 'none'
     a = Internal.getNodeFromName2(zone, 'implicit_solver')
     if a is not None: implicit_solver = Internal.getValue(a)
-    if (implicit_solver == 'gmres'):
+    if implicit_solver == 'gmres':
         #on nettoie l'arbre des vecteur de krylov residuel.Evite la phase de compactage
         flowsol = Internal.getNodeFromName1(zone, 'FlowSolution#Centers')
         if flowsol is not None:
@@ -541,8 +541,6 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
        if C.isNamePresent(zone, 'centers:MomentumZ_src') != 1:   C._initVars(zone, 'centers:MomentumZ_src', 0.)
        if C.isNamePresent(zone, 'centers:EnergyStagnationDensity_src') != 1: C._initVars(zone, 'centers:EnergyStagnationDensity_src', 0.)
        if (sa and C.isNamePresent(zone, 'centers:TurbulentSANuTildeDensity_src') != 1): C._initVars(zone, 'centers:TurbulentSANuTildeDensity_src', 0.)
-
-
 
     return sa, lbm, neq_lbm, FIRST_IT
 
@@ -726,11 +724,11 @@ def _buildOwnData(t, Padding):
         elif temporal_scheme == "explicit_lbm": nssiter = 1
         elif temporal_scheme == "implicit": nssiter = ss_iteration+1
         elif temporal_scheme == "implicit_local": nssiter = ss_iteration+1
-        else: print('Warning: FastS: invalid value %s for key temporal_scheme.'%temporal_scheme)
+        else: print('Warning: Fast: invalid value %s for key temporal_scheme.'%temporal_scheme)
         try: ss_iteration = int(ss_iteration)
-        except: print('Warning: FastS: invalid value %s for key ss_iteration.'%ss_iteration)
+        except: print('Warning: Fast: invalid value %s for key ss_iteration.'%ss_iteration)
         try: modulo_verif = int(modulo_verif)
-        except: print('Warning: FastS: invalid value %s for key modulo_verif.'%modulo_verif)
+        except: print('Warning: Fast: invalid value %s for key modulo_verif.'%modulo_verif)
         if (rk == 1 and exploc==0 and temporal_scheme == "explicit"): nssiter = 1 # explicit global
         if (rk == 2 and exploc==0 and temporal_scheme == "explicit"): nssiter = 2 # explicit global
         if (rk == 3 and exploc==0 and temporal_scheme == "explicit"): nssiter = 3 # explicit global
@@ -766,7 +764,7 @@ def _buildOwnData(t, Padding):
           f       = open(Padding,'rb')
           pad     = True
       except IOError as e:
-          print('Padding file not found, using default values.')
+          print('Warning: Fast: Padding file not found, using default values.')
           pad   = False
       if pad: 
           lines_f = f.readlines()
@@ -855,7 +853,7 @@ def _buildOwnData(t, Padding):
             tmp = Internal.getValue(a)
             if tmp == 'Unstructured':
               meshtype =2
-              print('Warning: : zone %s is unstructured.'%z[0])
+              print('Warning: Fast: zone %s is unstructured.'%z[0])
 
             a = Internal.getNodeFromName2(z, 'GoverningEquations')
             if a is not None: model = Internal.getValue(a)
@@ -884,8 +882,8 @@ def _buildOwnData(t, Padding):
               adim      = C.getState(ref)
               prandtltb = adim[18]        #prandtl laminar 
             else: 
-              print('FastS: Warning: can not find a refState.')
-              print('FastS: Warning: Prandtl turb by default= 1.')
+              print('Warning: Fast: can not find a refState.')
+              print('Warning: Fast: Prandtl turb by default= 1.')
               prandtltb = 1.
 
             d = Internal.getNodeFromName1(z, '.Solver#define')
@@ -1051,16 +1049,16 @@ def _buildOwnData(t, Padding):
               islope  = 1
             elif scheme == "roe": 
               kfludom = 5
-            elif(scheme == "ausmpred_pattern")  :  
+            elif scheme == "ausmpred_pattern":  
                 kfludom = 7
 
-            else: print( 'Warning: FastS: scheme %s is invalid.'%scheme)
+            else: print( 'Warning: Fast: scheme %s is invalid.'%scheme)
 
             lale   = 0; size_ale =0;
             if    motion == "none"       : lale = 0
             elif  motion == "rigid"      : lale = 1; size_ale = 11
             elif  motion == "deformation": lale = 2
-            else: print( 'Warning: FastS: motion %s is invalid.'%motion)
+            else: print('Warning: Fast: motion %s is invalid.'%motion)
 
             iflagflt = 0
             if filtrage == "on": iflagflt = 1
@@ -1068,12 +1066,12 @@ def _buildOwnData(t, Padding):
             dtloc = 0
             if dtnature == "global": dtloc = 0
             elif dtnature == "local": dtloc = 1
-            else: print( 'Warning: FastS: time_step_nature %s is invalid.'%dtnature)
+            else: print('Warning: FastS: time_step_nature %s is invalid.'%dtnature)
 
             ImplicitSolverNum = 0
             if implicit_solver == "lussor": ImplicitSolverNum = 0
             elif implicit_solver == "gmres": ImplicitSolverNum = 1
-            else: print( 'Warning: FastS: implicit_solver %s is invalid.'%implicit_solver)
+            else: print('Warning: FastS: implicit_solver %s is invalid.'%implicit_solver)
 
             # creation noeud parametre integer
             # Determination de levelg et leveld             
@@ -1195,7 +1193,7 @@ def _buildOwnData(t, Padding):
             size_real = 41
             datap = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
-                print('Warning: time_step set to default value (0.0001).')
+                print('Warning: Fast: time_step set to default value (0.0001).')
                 dtc = 0.0001
             datap[0] = dtc
             
@@ -1427,7 +1425,7 @@ def tagBC(bcname):
   elif bcname == "BCOutMFR":                tag =21;
   else:
     tag = -1
-    print("Warning: unknown BC type %s."%bcname)
+    print("Warning: Fast: unknown BC type %s."%bcname)
   return tag
 
 #==============================================================================
@@ -1629,9 +1627,9 @@ def switchPointers2__(zones,nitmax,nstep):
         niveau = Internal.getValue(level)
 
         cycle = nitmax/niveau
-        if nstep%cycle==0 and nstep!=nitmax :
+        if nstep%cycle==0 and nstep != nitmax:
 
-            #print 'switch zone= ', z[0]
+            #print('switch zone= ', z[0])
 
             sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
             own =  Internal.getNodeFromName1(z, '.Solver#ownData')

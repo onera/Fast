@@ -322,7 +322,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, distrib_omp) )   
     
     #init metric
-    print(ompmode)
+    #print(ompmode)
     _init_metric(t, metrics, ompmode)
 
     ssors = allocate_ssor(t, metrics, hook1, ompmode)
