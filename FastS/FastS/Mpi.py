@@ -25,7 +25,6 @@ try: range = xrange
 except: pass
 
 #==============================================================================
-#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, tps_calcul=None, tps_com_transferts=None):
 def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     if graph is not None:
         procDict  = graph['procDict']
@@ -128,10 +127,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             else:
                # Ghostcell
                #tic=Time.time()  
-               vars = PyTree.varsP
-               if  nstep == 2 and itypcp == 2 : vars = PyTree.varsN  # Choix du tableau pour application transfer et BC
+               vars = FastC.varsP
+               if  nstep == 2 and itypcp == 2 : vars = FastC.varsN  # Choix du tableau pour application transfer et BC
                timelevel_target = int(dtloc[4])
-               tic=Time.time()
+               
                _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict)
                #print 't_transferts, rank= ', Time.time() - t0, Cmpi.rank
                #toc1_=Time.time()-tic  
@@ -139,6 +138,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                #tps_calcul = tps_calcul + toc1 + toc3  
                #tps_com_transferts = tps_com_transferts + toc1_ - toc3 
 
+      dtloc[3] +=1    #time_level_motion
+      dtloc[4] +=1    #time_level_target
     else: 
       nstep_deb = 1
       nstep_fin = nitmax
@@ -261,8 +262,8 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1
  
 
             #tic=Time.time()
-            if    (nstep%2 == 0)  and itypcp == 2 : vars = PyTree.varsN 
-            elif  (nstep%2 == 1)  and itypcp == 2 : vars = PyTree.varsP 
+            if    (nstep%2 == 0)  and itypcp == 2 : vars = FastC.varsN 
+            elif  (nstep%2 == 1)  and itypcp == 2 : vars = FastC.varsP 
             _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0], rk=rk, exploc=explocal)
             #toc2=Time.time()-tic              
 
@@ -280,8 +281,8 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1
             # Ghostcell
             #tic=Time.time()
             if (nstep != nitmax) : # Tous les schemas sauf constantinescu RK3
-                 if    (nstep%2 == 0)  and itypcp == 2 : vars = PyTree.varsN  # Choix du tableau pour application transfer et BC
-                 elif  (nstep%2 == 1)  and itypcp == 2 : vars = PyTree.varsP
+                 if    (nstep%2 == 0)  and itypcp == 2 : vars = FastC.varsN  # Choix du tableau pour application transfer et BC
+                 elif  (nstep%2 == 1)  and itypcp == 2 : vars = FastC.varsP
                  timelevel_target = int(dtloc[4])
                  _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, nitmax, rk, explocal)
             #toc1_=Time.time()-tic
@@ -296,7 +297,7 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1
             #tic=Time.time()
             if (nstep%2==0) :
                 timelevel_target = int(dtloc[4])
-                vars = PyTree.varsN
+                vars = FastC.varsN
                 if graph is not None:
                     procDict  = list_graph[nitmax+nstep-1]['procDict']
                     graphID   = list_graph[nitmax+nstep-1]['graphID']
@@ -563,6 +564,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
     #
     if timelevel_target == timelevel_perfile or tc is None: 
 
+       #print('timelevel_target=',timelevel_target)
        rank = Cmpi.rank
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
@@ -598,7 +600,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        graphID   = Cmpi.computeGraph(tc, type='ID')
        graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
        procDict  = D2.getProcDict(tc)
-       procList  = D2.getProcList(tc)
+       procList  = D2.getProcList(tc, sort=True)
        graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
 
        tc = Cmpi.convert2PartialTree(tc, rank=rank)
@@ -618,8 +620,6 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        # Compactage arbre transfert
        zones = Internal.getZones(t)
-       g     = graph['procDict']
-       l     = graph['procList']
        
        X.miseAPlatDonorTree__(zones, tc, graph=graph)
 
@@ -629,7 +629,9 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
     #
     #timelevel_motion larger than number of timelevels for 360degre 
     #
-    if timelevel_motion > timelevel_360: dtloc[3] = 0  # remise a zero du compteur si 360degres 
+    if timelevel_motion > timelevel_360:
+       print('remise a ZERO dans updateUnstaeady')
+       dtloc[3] = 0  # remise a zero du compteur si 360degres 
 
     return tc, graph
 

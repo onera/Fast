@@ -728,7 +728,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        # Compactage arbre transfert
        g = None; l = None
        zones=Internal.getZones(t)
-       X.miseAPlatDonorTree__(zones, tc, procDict=g, procList=l)
+       X.miseAPlatDonorTree__(zones, tc, graph=g)
 
        #Remise zero target
        if dtloc is not None: dtloc[4] = 0
@@ -1343,8 +1343,9 @@ def _computeGrad(t, metrics, varlist, order=2):
     elif isinstance(varlist, list): vars = varlist
     else: raise ValueError("_computeGrad: last argument must be a string or list of strings.")
 
-    var_loc = []
-    vargrad = []
+    var_zones = []
+    vargrad   = []
+    lgrad     = False
 
     ##verifie si les noeuds existent dans l'arbre
     zones = Internal.getZones(t)
@@ -1354,7 +1355,8 @@ def _computeGrad(t, metrics, varlist, order=2):
         dim   = Internal.getZoneDim(z)
         size = (dim[1]-1)*(dim[2]-1)*(dim[3]-1)
         solution = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
-     
+        cgrad=0
+        var_loc = []
         for var in vars:
             node = Internal.getNodeFromName1(solution, var)
             #verifie si la variable existe dans l'arbre
@@ -1362,6 +1364,7 @@ def _computeGrad(t, metrics, varlist, order=2):
                print("no", var, "in tree: gradient is not computed.")
             else:
                var_loc.append(var)
+               lgrad    = True
                lcompact = False
                vargrad.append('gradx'+var)
                vargrad.append('grady'+var)
@@ -1375,16 +1378,18 @@ def _computeGrad(t, metrics, varlist, order=2):
                       Internal.createChild(solution, grad, 'DataArray_t', tmp)
                       lcompact = True
 
-               if lcompact: _compact(z, fields=['centers:'+vargrad[0],'centers:'+vargrad[1],'centers:'+vargrad[2]])
+               if lcompact: _compact(z, fields=['centers:'+vargrad[cgrad],'centers:'+vargrad[cgrad+1],'centers:'+vargrad[cgrad+2]])
+               cgrad+=3
         nd += 1
+        var_zones.append(var_loc)
       
-    if var_loc != []:
+    if lgrad:
        dtloc = Internal.getNodeFromName3(t , '.Solver#dtloc')  # noeud
        dtloc = Internal.getValue(dtloc)                       # tab numpy
 
        # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
        if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
-       fasts.computePT_gradient(zones,  metrics, var_loc, vargrad, FastC.HOOK, order)
+       fasts.computePT_gradient(zones,  metrics, var_zones, vargrad, FastC.HOOK, order)
     return None
 
 #==============================================================================

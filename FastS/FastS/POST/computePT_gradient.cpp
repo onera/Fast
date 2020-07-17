@@ -49,7 +49,16 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
   PyObject* tmp = PyDict_GetItemString(work, "MX_SYNCHRO"); E_Int mx_synchro    = PyLong_AsLong(tmp); 
 
   E_Int nidom        = PyList_Size(zones);
-  E_Int nivar        = PyList_Size(vars);
+
+  //recherche nombre maximale de gradient a calculer sur l'ensemble des zones
+  E_Int nivarMax=0;  
+  E_Int nivar[nidom];
+  for (E_Int nd = 0; nd < nidom; nd++)
+    { PyObject* tmp    = PyList_GetItem(vars       , nd  );
+       nivar[nd]       = PyList_Size(tmp);
+       if(nivar[nd] > nivarMax) nivarMax=nivar[nd];
+    }
+
   E_Int ndimdx       = 0;
   E_Int neq_grad     = 3;
 
@@ -76,10 +85,11 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
   iptvort           = iptvol_df      + nidom;
   //iptenst           = iptvort        + nidom;
  
-  iptvar            = new  E_Float*[nidom*nivar];
-  iptgra            = new  E_Float*[nidom*nivar];
+  iptvar            = new  E_Float*[nidom*nivarMax];
+  iptgra            = new  E_Float*[nidom*nivarMax];
 
   ipt_param_int     = new  E_Int*[nidom];
+
 
   vector<PyArrayObject*> hook;
 
@@ -97,10 +107,11 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
     ipt_param_real[nd]    = K_PYTREE::getValueAF(t, hook);
 
     /* Get var et grad from zone */
-    for (E_Int nv = 0; nv < nivar; nv++)
+    PyObject* varzone = PyList_GetItem(vars       , nd  );
+    for (E_Int nv = 0; nv < nivar[nd]; nv++)
        { 
         // check var
-        PyObject* var    = PyList_GetItem(vars       , nv  ); 
+        PyObject* var    = PyList_GetItem(varzone     , nv  ); 
         char* var_c;
         if (PyString_Check(var)) var_c = PyString_AsString(var);
 #if PY_VERSION_HEX >= 0x03000000
@@ -120,10 +131,10 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
         sol_center        = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
 
         t                  = K_PYTREE::getNodeFromName1(sol_center, var_c);
-        iptvar[nv+nd*nivar]= K_PYTREE::getValueAF(t, hook);
+        iptvar[nv+nd*nivarMax]= K_PYTREE::getValueAF(t, hook);
 
         t                  = K_PYTREE::getNodeFromName1(sol_center, vargrad_c);
-        iptgra[nv+nd*nivar]= K_PYTREE::getValueAF(t, hook);
+        iptgra[nv+nd*nivarMax]= K_PYTREE::getValueAF(t, hook);
         }
 
     // Check metrics
@@ -169,7 +180,7 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
       // ---------------------------------------------------------------------
         for (E_Int nd = 0; nd < nidom; nd++)
           {  
-            for (E_Int nv = 0; nv < nivar; nv++)
+            for (E_Int nv = 0; nv < nivar[nd]; nv++)
                  { 
                   E_Int* ipt_lok_thread   = ipt_lok   + nd*mx_synchro*Nbre_thread_actif;
             
@@ -198,7 +209,7 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
                              ipt_param_int[nd]  , ipt_param_real[nd], ipt_ijkv_sdm_thread,
                              ipt_ind_dm_loc     , ipt_ind_dm_socket , ipt_ind_dm_omp_thread,
                              ipt_topology_socket, ipt_lok_thread    ,
-                             iptvar[nv+nd*nivar], ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptgra[nv+nd*nivar]);  
+                             iptvar[nv+nd*nivarMax], ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptgra[nv+nd*nivarMax]);  
               }// boucle var  
           }// boucle zone 
 # include "HPC_LAYER/INIT_LOCK.h"

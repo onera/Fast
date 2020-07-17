@@ -9,7 +9,7 @@ ni = 155; dx = 100./(ni-1); dz = 0.01
 a1 = G.cart((-50,-50,0.), (dx,dx,dz), (ni,ni,2))
 a1 = C.fillEmptyBCWith(a1, 'far', 'BCFarfield', dim=2)
 a1 = I.initConst(a1, MInf=0.4, loc='centers')
-a1 = C.addState(a1, 'GoverningEquations', 'Euler')
+a1 = C.addState(a1, 'GoverningEquations', 'NSLaminar')
 a1 = C.addState(a1, MInf=0.4)
 t = C.newPyTree(['Base', a1])
 
@@ -26,9 +26,11 @@ FastC._setNum2Zones(t, numz) ; FastC._setNum2Base(t, numb)
 (t, tc, metrics) = FastS.warmup(t, None)
 
 # Compute
-for it in range(1,200):
+for it in range(1,2):
     FastS._compute(t, metrics, it)
-    FastS._computeGrad(t, metrics, ['Density'])
+    FastS._computeVariables(t, metrics, ['dDensitydt'])
+    FastS._computeGrad(t, metrics, ['VelocityX','VelocityY','VelocityZ'])
+    FastS._computeGrad(t, metrics, ['Density','Temperature'])
 
 # Save
 C.convertPyTree2File(t, 'out.cgns')
