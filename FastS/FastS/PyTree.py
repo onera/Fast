@@ -45,7 +45,7 @@ def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
 # compute in place
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
+def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=None):
 #def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
     """Compute a given number of iterations."""
 
@@ -70,8 +70,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     itypcp = param_int_firstZone[29]
     rk     = param_int_firstZone[52]
     exploc = param_int_firstZone[54]
-    #### a blinder...
-                
+    #### a blinder...            
      
     if nitrun == 1: print('Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode))
 
@@ -116,8 +115,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             if exploc==2 and tc is not None and rk==3:
                fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
 
-               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
-               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
+               if    (nstep%2 == 0)  and itypcp == 2: vars = ['Density'  ] 
+               elif  (nstep%2 == 1)  and itypcp == 2: vars = ['Density_P1'] 
                _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])    
 
                FastC.switchPointers2__(zones,nitmax,nstep)
@@ -138,22 +137,38 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
                if    nstep%2 == 0 and itypcp == 2 : vars = ['Density'  ] 
                elif  nstep%2 == 1 and itypcp == 2 : vars = ['Density_P1'] 
-               _applyBC(zones,metrics, hook1, nstep, ompmode,  var=vars[0])
-
-
+               _applyBC(zones, metrics, hook1, nstep, ompmode, var=vars[0])
 
             else:
               #Ghostcell
               vars = FastC.varsP
-              if nstep%2 == 0 and itypcp == 2 : vars = FastC.varsN  # Choix du tableau pour application transfer et BC
+              if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
               timelevel_target = int(dtloc[4])
               #t0=Time.time()
               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
+              # Add unsteady Chimera transfers here
+              if ucData is not None:
+                import Connector.Mpi as Xmpi
+                VARS = ['Density_P1', 'VelocityX_P1', 'VelocityY_P1', 'VelocityZ_P1', 'Temperature_P1']
+                if nstep%2 == 0 and itypcp == 2: VARS = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
+                for v in VARS: C._cpVars(t, 'centers:'+v, tc, v)
+                C._cpVars(t, "centers:cellN", tc, "cellN")
+                (graphX, intersectionDict, dictOfADT, 
+                dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
+                time, procDict) = ucData
+                Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
+                    dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                    dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                    dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
+                    time=time, absFrame=True,
+                    procDict=procDict, cellNName='cellN#Motion')
               #print('t_transferts = %f'%(Time.time() - t0)
 
       dtloc[3] +=1    #time_level_motion
       dtloc[4] +=1    #time_level_target
-    else: 
+    else:
       nstep_deb = 1
       nstep_fin = nitmax
       layer_mode= 1
@@ -163,15 +178,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
           FastC.HOOK['param_int_tc']  = None
           FastC.HOOK['param_real_tc'] = None
 
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , FastC.HOOK)
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, FastC.HOOK)
 
-
-    #switch pointer a la fin du pas de temps
+    # switch pointer a la fin du pas de temps
     if exploc==2 and tc is not None and rk==3:
-         if layer == 'Python':
-             FastC.switchPointers__(zones, 1, 3)
-         else:
-             FastC.switchPointers3__(zones,nitmax)
+         if layer == 'Python': FastC.switchPointers__(zones, 1, 3)
+         else: FastC.switchPointers3__(zones, nitmax)
     else:
          case = NIT%3
          if case != 0 and itypcp < 2: FastC.switchPointers__(zones, case)

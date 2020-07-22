@@ -130,7 +130,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                vars = FastC.varsP
                if  nstep == 2 and itypcp == 2 : vars = FastC.varsN  # Choix du tableau pour application transfer et BC
                timelevel_target = int(dtloc[4])
-               
+               #tic=Time.time()
+
                _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict)
                #print 't_transferts, rank= ', Time.time() - t0, Cmpi.rank
                #toc1_=Time.time()-tic  
