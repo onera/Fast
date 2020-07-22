@@ -51,7 +51,7 @@ if prod is None: prod = 'xx'
 # Setting libraryDirs, include dirs and libraries =============================
 libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastpLibDir, fastlbmLibDir]
 includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir, fastsIncDir, fastpIncDir, fastlbmIncDir]
-libraries = ["fast", "fasts", "fastp", "fastlbm", "fastc", "connector","xcore", "kcore"]
+libraries = ["fast", "fasts", "fastp", "fastlbm", "fastc", "connector", "xcore", "kcore"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
@@ -79,7 +79,7 @@ listExtensions.append(
 # setup ======================================================================
 setup(
     name="Fast",
-    version="3.1",
+    version="3.2",
     description="Fast NS and LBM solvers.",
     author="Onera",
     package_dir={"":"."},
