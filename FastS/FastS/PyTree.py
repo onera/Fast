@@ -17,6 +17,7 @@ try:
     import KCore
     import math
     import time as Time
+    import Connector.Mpi as Xmpi
 
     #import timeit
     #import KCore.Dist as Dist
@@ -88,11 +89,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                 comm_P2P    = param_int_tc[0]
                 pt_ech      = param_int_tc[comm_P2P + shift_graph]
                 dest        = param_int_tc[pt_ech] 
-       
+
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
-
-         #print('nstep=%d'%nstep)
-
          hook1 = FastC.HOOK.copy()
          distrib_omp = 0
          hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
@@ -148,7 +146,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
               # Add unsteady Chimera transfers here
               if ucData is not None:
-                import Connector.Mpi as Xmpi
                 VARS = ['Density_P1', 'VelocityX_P1', 'VelocityY_P1', 'VelocityZ_P1', 'Temperature_P1']
                 if nstep%2 == 0 and itypcp == 2: VARS = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
                 for v in VARS: C._cpVars(t, 'centers:'+v, tc, v)
@@ -324,7 +321,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t) 
 
-
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     #print 'int(dtloc[0])= ', int(dtloc[0])
@@ -343,8 +339,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     rmConsVars=True
     adjoint=Adjoint
 
+
     t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint)
     FastC.HOOK['FIRST_IT']= FastC.FIRST_IT
+
     #compactage des champs en fonction option de calcul  
     count = -1
     if ompmode == 1: count = 0          
@@ -381,7 +379,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         _computeVelocityAle(t,metrics)
     #t1=timeit.default_timer()
     #print "cout mise a jour vitesse entr= ", t1-t0
- 
     #
     # Compactage arbre transfert et mise a jour FastC.HOOK
     #
@@ -399,7 +396,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     else:
         FastC.HOOK['param_real_tc'] = None
         FastC.HOOK['param_int_tc']  = None  
-
 
     if ssors is not []:
         FastC.HOOK['ssors'] = ssors

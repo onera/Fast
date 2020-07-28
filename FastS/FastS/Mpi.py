@@ -25,7 +25,7 @@ try: range = xrange
 except: pass
 
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
+def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=None):
     if graph is not None:
         procDict  = graph['procDict']
         graphID   = graph['graphID']
@@ -71,7 +71,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                 dest        = param_int_tc[pt_ech]
 
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
-
          hook1 = FastC.HOOK.copy()
          distrib_omp = 0
          hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
@@ -128,12 +127,30 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                # Ghostcell
                #tic=Time.time()  
                vars = FastC.varsP
-               if  nstep == 2 and itypcp == 2 : vars = FastC.varsN  # Choix du tableau pour application transfer et BC
+               if  nstep%2 == 0 and itypcp == 2 : vars = FastC.varsN  # Choix du tableau pour application transfer et BC
                timelevel_target = int(dtloc[4])
                #tic=Time.time()
 
                _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict)
-               #print 't_transferts, rank= ', Time.time() - t0, Cmpi.rank
+
+               # add unsteady Chimera transfers (motion) here
+               if ucData is not None:
+                   VARS = ['Density_P1', 'VelocityX_P1', 'VelocityY_P1', 'VelocityZ_P1', 'Temperature_P1']
+                   if nstep%2 == 0 and itypcp == 2: VARS = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
+                   for v in VARS: C._cpVars(t, 'centers:'+v, tc, v)
+                   C._cpVars(t, "centers:cellN", tc, "cellN")
+                   (graphX, intersectionDict, dictOfADT, 
+                    dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                    dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                    dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
+                    time, procDict) = ucData
+                   Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
+                                  dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                                  dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                                  dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
+                                  time=time, absFrame=True,
+                                  procDict=procDict, cellNName='cellN#Motion')
+               #print('t_transferts, rank= ', Time.time() - t0, Cmpi.rank)
                #toc1_=Time.time()-tic  
                         
                #tps_calcul = tps_calcul + toc1 + toc3  
