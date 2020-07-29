@@ -148,7 +148,7 @@ else
   FldArrayI n0_flt(nidom); E_Int* ipt_n0_flt = n0_flt.begin();
 
 
-  E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_it_lu_ssdom; E_Int** ipt_degen;  E_Int** ipt_ng_pe;
+  E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_it_lu_ssdom; E_Int** ipt_degen;  E_Int** ipt_ng_pe; E_Int** ipt_nfconn; E_Int** ipt_nfindex;
   
   E_Float** ipt_param_real  ;
   E_Float** iptx;          E_Float** ipty;         E_Float** iptz;    E_Float** iptro; E_Float** iptroQ_m1; E_Float** iptroQ_p1; E_Float** iptmut;
@@ -162,11 +162,13 @@ else
   E_Float** iptssor;       E_Float** iptssortmp;
   E_Float** ipt_gmrestmp;  E_Float** iptdrodm_transfer;
 
-  ipt_param_int     = new E_Int*[nidom*5];
+  ipt_param_int     = new E_Int*[nidom*7];
   ipt_ind_dm        = ipt_param_int   + nidom;
   ipt_it_lu_ssdom   = ipt_ind_dm      + nidom;
   ipt_degen         = ipt_it_lu_ssdom + nidom;
   ipt_ng_pe         = ipt_degen       + nidom;
+  ipt_nfconn        = ipt_ng_pe       + nidom;
+  ipt_nfindex       = ipt_nfconn      + nidom;
 
   iptx              = new E_Float*[nidom*36];
   ipty              = iptx               + nidom;
@@ -256,8 +258,13 @@ else
     //
     PyObject* sol_center; PyObject* t; PyObject* ngon;
     ngon         = K_PYTREE::getNodeFromName1(zone      , "NGonElements"); 
-    if (ngon == NULL) ipt_ng_pe[nd]= NULL;
-    else { t            = K_PYTREE::getNodeFromName1( ngon     , "ParentElements"); ipt_ng_pe[nd]= K_PYTREE::getValueAI(t, hook);}
+    if (ngon == NULL) {ipt_ng_pe[nd]= NULL;ipt_nfconn[nd]=NULL;ipt_nfindex[nd]=NULL; }
+    else {
+           t    = K_PYTREE::getNodeFromName1( ngon , "ParentElements");      ipt_ng_pe[nd]= K_PYTREE::getValueAI(t, hook);
+           ngon = K_PYTREE::getNodeFromName1( zone , "NFaceElements"); 
+           t    = K_PYTREE::getNodeFromName1( ngon , "ElementConnectivity"); ipt_nfconn[nd] = K_PYTREE::getValueAI(t, hook);
+           t    = K_PYTREE::getNodeFromName1( ngon , "ElementIndex");        ipt_nfindex[nd]= K_PYTREE::getValueAI(t, hook);
+         }
 
     sol_center   = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
     t            = K_PYTREE::getNodeFromName1(sol_center, "Density");
@@ -609,7 +616,7 @@ else
             ipt_ijkv_sdm       , 
             ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, vartype, timer_omp,
             iptludic           , iptlumax         ,
-            ipt_ind_dm         , ipt_it_lu_ssdom  , ipt_ng_pe         ,
+            ipt_ind_dm         , ipt_it_lu_ssdom  , ipt_ng_pe         , ipt_nfconn    , ipt_nfindex     ,
             ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size , ipt_drodmd,
 	    ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp  , ipt_givens,
             ipt_cfl            ,

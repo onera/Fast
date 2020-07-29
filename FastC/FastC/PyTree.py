@@ -1423,6 +1423,7 @@ def tagBC(bcname):
   elif bcname == "BCInflowLund":            tag =19;
   elif bcname == "BCInjMFR":                tag =20;
   elif bcname == "BCOutMFR":                tag =21;
+  elif bcname == "BCOverlap":               tag =22;
   else:
     tag = -1
     print("Warning: Fast: unknown BC type %s."%bcname)
@@ -1893,9 +1894,9 @@ def _BCcompactNG(t):
             BC0_end =  BC1_end + param_int[ NF_BC0]
            
             '''
-            print 'FACE',param_int[ NF_I0] ,  param_int[ NF_RAC] , param_int[ NF_I1]
-            print 'BC1',BC1_deb,BC1_end
-            print 'BC0',BC0_deb,BC0_end
+            print('FACE',param_int[ NF_I0] ,  param_int[ NF_RAC] , param_int[ NF_I1])
+            print('BC1',BC1_deb,BC1_end)
+            print('BC0',BC0_deb,BC0_end)
             '''
 
             NFACE1   =0
@@ -1906,7 +1907,7 @@ def _BCcompactNG(t):
             FACE0_deb = ptlist[0] 
             FACE0_fin = ptlist[0]-1
             search0   = True  
-            search1   = True  
+            search1   = True 
             for l in range(size_fen):
                if ptlist[l] >=  BC1_deb and  ptlist[l] <= BC1_end:
                   FACE1_fin = ptlist[l]

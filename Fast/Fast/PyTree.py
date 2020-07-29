@@ -224,7 +224,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     FastS.fasts._computePT_mut(infos_zones['struct'][0], infos_zones['struct'][1], hook1)
     #FastP.fastp._computePT_mut(infos_zones['unstruct'][0], infos_zones['unstruct'][1], hook1)
     print("decommenter _computePT_mut dans warmup Fast pour zone non structure.")
-
+       
     return (t, tc, metrics)
 
 #==============================================================================
@@ -537,3 +537,36 @@ def tri_zones(zones, metrics):
     infos_zones['LBM'     ]=[zones_lbm, metrics_lbm]
     infos_zones['NS'      ]=[zones_ns , metrics_ns]
     return infos_zones
+
+#==============================================================================
+# Display
+#==============================================================================
+def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
+    zones        = Internal.getZones(t)
+    dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
+    dtloc_numpy  = Internal.getValue(dtloc)
+    nssiter      = int(dtloc_numpy[0])
+    nzones	 = len(zones)
+ 
+    neq_max = 6
+   
+    cvg_numpy = numpy.empty((nzones,2*neq_max), dtype=numpy.float64)
+    # sortie sur stdout "simple precision" 
+    lft = 1
+    # sortie sur stdout "double precision" 
+    if format == "double": lft = 0
+    # sortie sur Fichier Fortran binaire
+    elif format == "flush": lft = -1
+    # sortie sur Fichier Fortran binaire
+    elif format == "ascii": lft = -2
+    # enregistrement dans l'arbre uniquement
+    elif format == "store": lft = 3
+
+    infos_zones = tri_zones( zones, metrics)  #info-zone: dico 4 keys contenant la list [ zones, metrics] pour Struct, unstruc, LBM, NS
+
+    residu = FastS.fasts.display_ss_iteration( infos_zones['struct'][0]  , infos_zones['struct'][1], cvg_numpy, nitrun, nssiter, lft)
+    residu = FastP.fastp.display_ss_iteration( infos_zones['unstruct'][0], infos_zones['unstruct'][1], cvg_numpy, nitrun, nssiter, lft)
+
+    if gmres is None: return None
+    else: return residu
+
