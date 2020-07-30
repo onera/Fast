@@ -40,6 +40,16 @@ c
         s_1   = 1./sn
         qn    = tcx*u + tcy*v + tcz*w - qen
 
+        tn=sqrt(tcx**2+tcy**2)
+c
+c        if(tn.eq.0.)then
+c          tnx=1.
+c          tny=0.
+c        else
+c          tnx= tcx/tn
+c          tny= tcx/tn
+c        endif
+
         if(sn.eq.0.)then
           tnx=1.
           tny=0.
