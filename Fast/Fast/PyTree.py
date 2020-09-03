@@ -6,7 +6,7 @@ __version__ = Fast.__version__
 
 OMP_MODE = 0
 
-try: 
+try:
     import FastC.PyTree as FastC
     from FastC.PyTree import _setNum2Zones, _setNum2Base, load, save, loadFile, saveFile, loadTree, saveTree
      

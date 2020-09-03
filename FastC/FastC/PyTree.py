@@ -2274,11 +2274,13 @@ def save(t, fileName='restart', split='single',
     C._rmVars(t2, 'centers:VelocityZ_P1')
     C._rmVars(t2, 'centers:Temperature_P1')
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
+    zones = Internal.getZones(t2)
+    for z in zones: Internal._rmNodeByPath(z, '.Solver#ownData')
     if cartesian: 
         import Compressor.PyTree as Compressor
         Compressor._compressCartesian(t2)
-    
-    zones = Internal.getZones(t2)
+        #Compressor._compressCellN(t2)
+
     flowsol = Internal.getNodeFromName1(zones[0], 'FlowSolution#Centers')
     if flowsol is not None:
         vars = Internal.getNodesFromType1(flowsol, 'DataArray_t')
@@ -2579,11 +2581,13 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
     C._rmVars(t2, 'centers:VelocityZ_P1')
     C._rmVars(t2, 'centers:Temperature_P1')
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
+    zones = Internal.getZones(t2)
+    for z in zones: Internal._rmNodeByPath(z, '.Solver#ownData')
     if cartesian:
         import Compressor.PyTree as Compressor
         Compressor._compressCartesian(t2)
-        
-    zones = Internal.getZones(t2)
+        #Compressor._compressCellN(t2)
+
     for z in zones:
         node = Internal.getNodeFromName1(z, '.Solver#define')
         if node is not None:
@@ -2601,6 +2605,7 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
                 C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
     dtloc = Internal.getNodeFromName3(t2, '.Solver#dtloc')
     if dtloc is not None:
+        dtloc = dtloc[1]
         node =  Internal.getNodeFromName1(t, 'TimeLevelMotion')
         if node is not None: node[1][0]= dtloc[3]
         else: Internal.createUniqueChild(t, 'TimeLevelMotion', 'DataArray_t', value=dtloc[3])
