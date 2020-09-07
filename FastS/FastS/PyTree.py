@@ -378,7 +378,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         FastC._motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
     #t1=timeit.default_timer()
-    #print "cout mise a jour vitesse entr= ", t1-t0
+    #print("cout mise a jour vitesse entr= ", t1-t0)
     #
     # Compactage arbre transfert et mise a jour FastC.HOOK
     #
