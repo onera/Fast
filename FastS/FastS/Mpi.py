@@ -77,7 +77,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
          nidom_loc = hook1["nidom_tot"]
 
          skip = 0
-         if (hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1): skip = 1
+         if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
 
          # calcul Navier Stokes + appli CL
          if nidom_loc > 0 and skip ==0:
@@ -90,35 +90,35 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
             #tic=Time.time()
             fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
             #toc1=Time.time()-tic  
-            #print 't_compute, rank= ', Time.time() - t0, Cmpi.rank
+            #print('t_compute, rank= ', Time.time() - t0, Cmpi.rank)
 
 
             #dtloc GJeanmasson
             if exploc==2 and tc is not None and rk==3:
                fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
 
-               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
-               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
+               if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
+               elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
                _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0], rk=rk, exploc=exploc)    
 
                FastC.switchPointers2__(zones,nitmax,nstep)
                 
                # Ghostcell
-               if (nitmax%3 != 0) : # Tous les schemas sauf constantinescu RK3
-                   if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
-                   elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
+               if nitmax%3 != 0: # Tous les schemas sauf constantinescu RK3
+                   if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
+                   elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
                    timelevel_target = int(dtloc[4])
                    _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc)
             
                fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
 
-               if (nstep%2==0) :
+               if nstep%2 == 0:
                    timelevel_target = int(dtloc[4])
                    vars = ['Density'  ]
                    _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc, 2)
 
-               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
-               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
+               if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
+               elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
                _applyBC_(zones,metrics, hook1, nstep, ompmode,  var=vars[0])
 
 
@@ -127,7 +127,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                # Ghostcell
                #tic=Time.time()  
                vars = FastC.varsP
-               if  nstep%2 == 0 and itypcp == 2 : vars = FastC.varsN  # Choix du tableau pour application transfer et BC
+               if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
                timelevel_target = int(dtloc[4])
                #tic=Time.time()
 

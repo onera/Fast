@@ -16,12 +16,12 @@ except:
 try:
     import Converter.PyTree as C
     import Converter.Internal as Internal
-    import FastP.PyTree as FastP
     import FastS.PyTree as FastS  
+    import FastP.PyTree as FastP
     import FastLBM.PyTree as FastLBM
     import Connector.PyTree as X
 except:
-    raise ImportError("Fast.PyTree: requires Converter and FastSP modules.")
+    raise ImportError("Fast.PyTree: requires Converter and FastS/P modules.")
 
 import numpy
 

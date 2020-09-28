@@ -70,7 +70,7 @@ extern "C"
   PyMODINIT_FUNC initfast()
 #endif
   {
-    __activation__ = K_KCORE::activation("0");
+    //__activation__ = K_KCORE::activation("0");
 #if PY_MAJOR_VERSION >= 3
     PyObject* module = PyModule_Create(&moduledef);
 #else

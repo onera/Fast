@@ -29,7 +29,6 @@ static PyMethodDef Pyfastc [] =
   {NULL, NULL}
 };
 
-
 #if PY_MAJOR_VERSION >= 3
 #define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
 struct module_state {
