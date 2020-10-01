@@ -612,7 +612,7 @@ def _buildOwnData(t, Padding):
                posg.append(0)
                i += 1
     if posg==[]:
-        for a in xrange(0,i):
+        for a in range(i):
             posg.append(0)
 
     maxlevel = max(veclevel)
