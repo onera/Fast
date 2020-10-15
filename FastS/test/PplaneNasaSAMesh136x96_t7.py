@@ -6,7 +6,6 @@ import FastS.PyTree as FastS
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import KCore.test as test
-import sys
 
 t = C.convertFile2PyTree('Pplane_136_96.cgns')
 t = C.addState(t, MInf=0.2, ReInf=25.e6, MutSMuInf=15)
@@ -24,7 +23,6 @@ numz = {'ssdom_IJK': [600, 30, 20000],
 Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
-#import sys; sys.exit()
 
 nit = 500; time = 0.
 #nit = 10; time = 0.
