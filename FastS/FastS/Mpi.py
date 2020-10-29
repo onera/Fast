@@ -140,31 +140,18 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                    for v in VARS: C._cpVars(t, 'centers:'+v, tc, v)
                    C._cpVars(t, "centers:cellN", tc, "cellN")
 
-                   if len(ucData)== 11: 
-                       (graphX, intersectionDict, dictOfADT, 
-                        dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                        dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-                        dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
-                        time, procDict) = ucData
-                       Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
-                                      dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                                      dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-                                      dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
-                                      time=time, absFrame=True,
-                                      procDict=procDict, cellNName='cellN#Motion')
-                   elif len(ucData)==12:
-                       (graphX, intersectionDict, dictOfADT, 
-                        dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                        dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-                        dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
-                        time, procDict, interpInDnrFrame) = ucData
-                       Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
-                                      dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                                      dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-                                      dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
-                                      time=time, absFrame=True,
-                                      procDict=procDict, cellNName='cellN#Motion', 
-                                      interpInDnrFrame=interpInDnrFrame)
+                   (graphX, intersectionDict, dictOfADT, 
+                    dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                    dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                    dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
+                    time, procDict, interpInDnrFrame) = ucData
+                   Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
+                                  dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                                  dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                                  dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
+                                  time=time, absFrame=True,
+                                  procDict=procDict, cellNName='cellN#Motion', 
+                                  interpInDnrFrame=interpInDnrFrame)
                #print('t_transferts, rank= ', Time.time() - t0, Cmpi.rank)
                #toc1_=Time.time()-tic  
                         
