@@ -60,7 +60,7 @@
      & add the following python command:'
             write(*,'(a)')'#'
             write(*,'(a)')'#'
-            write(*,'(a,i5)')'import FastC.PyTree as FastC',
+            write(*,'(a,i5)')'import FastC.PyTree as FastC'
             write(*,'(a,i5)')'FastC.MX_SYNCHRO=',
      & lok_shap(3)*size_max+1
             write(*,*)'------'
