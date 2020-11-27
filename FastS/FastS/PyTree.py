@@ -376,7 +376,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #t0=timeit.default_timer()
     if ale == True and infos_ale is not None:
         print("ale actif. Teta et tetap=", infos_ale)
-        teta = infos_ale[0];  tetap = infos_ale[1]
+        teta = infos_ale[0]; tetap = infos_ale[1]
         FastC._motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
     #t1=timeit.default_timer()
@@ -1505,13 +1505,13 @@ def copy_velocity_ale(t, metrics, it=0):
     zones_aleDeformation=[]; metric_aleDeformation=[]
     c=0
     for z in zones:
-      tmp = Internal.getNodeFromName1(z,'Motion')
+      tmp = Internal.getNodeFromName1(z, 'Motion')
       if tmp is not None:
           zones_aleDeformation.append(z)
           metric_aleDeformation.append(metrics[c])
       c+=1
 
-    fasts.copy_velocity_ale(zones_aleDeformation, metric_aleDeformation , FastC.HOOK, ompmode, it)
+    fasts.copy_velocity_ale(zones_aleDeformation, metric_aleDeformation, FastC.HOOK, ompmode, it)
     return None
 
 #==============================================================================
@@ -2000,7 +2000,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
     echant    =  timer_omp[ ADR ]
     param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
     solver_def= Internal.getNodeFromName2(z, '.Solver#define')
-    if ompmode ==1:
+    if ompmode == 1:
        Ptomp       = param_int[69]
        PtrIterOmp  = param_int[Ptomp] 
        PtZoneomp   = param_int[PtrIterOmp]
@@ -2008,12 +2008,12 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
     else:
        NbreThreads = OMP_NUM_THREADS
 
-    if diag== 'compact':
+    if diag == 'compact':
       tps_zone_percell     =0.
       tps_zone_percell_max =0.
       ithread_max          = 0
       for i in range(OMP_NUM_THREADS):
-          if ompmode ==1:
+          if ompmode == 1:
             ithread = param_int[ PtZoneomp  +  i ]
             if ithread != -2:
                tps_zone_percell += timer_omp[ ADR + 1+ithread ]
@@ -2106,7 +2106,6 @@ def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="Python", 
     r_k = Internal.getNodeFromName1(node, 'rk') 
     rk = Internal.getValue(r_k)
 
-    
     dtloc = Internal.getValue(dtloc) # tab numpy
     nitmax = int(dtloc[0])   
    

@@ -16,9 +16,9 @@
 
            !on calcule l'inverse de la surface de la facette
 
-            u  =  rop(ldjr,2)
-            v  =  rop(ldjr,3)
-            w  =  rop(ldjr,4)
+            u  =  rop(ldjr,2) - ventx*c_ale*0.5
+            v  =  rop(ldjr,3) - venty*c_ale*0.5
+            w  =  rop(ldjr,4) - ventz*c_ale*0.5                      
 
             qn = (u*tcx+v*tcy+w*tcz)
 
@@ -31,8 +31,8 @@
             wa = 2.*wt -w
 
             rop(l,1) = rop(ldjr,1)
-            rop(l,2) = ventx*c_ale + ua
-            rop(l,3) = venty*c_ale + va
-            rop(l,4) = ventz*c_ale + wa
+            rop(l,2) = ventx*c_ale*0.5 + ua
+            rop(l,3) = venty*c_ale*0.5 + va
+            rop(l,4) = ventz*c_ale*0.5 + wa
 
             rop(l,5) = rop(ldjr,5)

@@ -49,6 +49,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
      &                   ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale)
 
       c_ale=c_ale*2.*mobile_coef
+      
       if(lrhs.eq.1) c_ale = 0.
 
       IF (idir.eq.1) THEN
@@ -90,7 +91,6 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
        iref = 2*ind_loop(1) - 1
 
        if(param_int(NEQ).eq.5) then
-
 
           do 120 k = ind_loop(5), ind_loop(6)
           do 120 j = ind_loop(3), ind_loop(4)
