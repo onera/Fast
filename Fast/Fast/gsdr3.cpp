@@ -367,7 +367,6 @@ E_Float deb_calcul;
 		  {
 		    ndim = ndim + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
 		  }
-
 	      }
 	    else
 	       {   
@@ -377,15 +376,10 @@ E_Float deb_calcul;
            E_Int lmin = 10;
            if (param_int[nd][ITYPCP] == 2) lmin = 4;
 
-
-
           if (param_int[nd][ITYPZONE] == 4)
            {
-             if ( ithread == 1)
-             {
 #include       "../../FastP/FastP/Compute/rhs.cpp"
                shift_grad = shift_grad + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ]*3;
-             }
            }
           else{
               if (param_int[nd][IFLOW] == 4){
@@ -686,12 +680,12 @@ E_Int lrhs=0; E_Int lcorner=0;
                else
                 {
                      E_Int lrhs=0; E_Int lcorner=0;
-                     if (ithread ==1) K_FASTP::BCzone( nd, lrhs, lcorner,
-                                                        param_int[nd], param_real[nd],
-                                                        npass, temps,
-                                                        ipt_ind_CL119  , 
-                                                        ipt_ng_pe[nd]          , iptro_CL[nd]   ,
-                                                        ipti[nd] , iptventi[nd], iptx[nd] , ipty[nd] , iptz[nd] );
+                     K_FASTP::BCzone( nd, ithread, lrhs, lcorner,
+                                      param_int[nd], param_real[nd],
+                                      npass, temps,
+                                      ipt_ind_CL119  , 
+                                      ipt_ng_pe[nd]          , iptro_CL[nd]   ,
+                                      ipti[nd] , iptventi[nd], iptx[nd] , ipty[nd] , iptz[nd] );
                 }
 	    }//autorisation
 

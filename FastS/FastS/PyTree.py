@@ -1896,6 +1896,8 @@ def setIBCData_zero(t, surf, dim=None):
      #cellN_node[0]= 'cellN_IBC'
      cellN_IBC = cellN_node[1]
 
+     Internal._rmNodesByName(z,"IBC")
+
      if 0 in cellN_IBC:
         ibc = numpy.ones( 7, dtype=numpy.int32)
         itemindex = numpy.where( cellN_IBC==0 )

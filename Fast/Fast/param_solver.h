@@ -145,6 +145,7 @@
 #define MESHTYPE     84
 #define SENSORTYPE   85
 #define NEQ_LBM      86
+#define SCHEDULER    87
 
 #define BC_TYPE	      0
 #define BC_IDIR       1

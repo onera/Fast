@@ -182,6 +182,8 @@ c      c7     = c4/c5
 
       norm =2./(param_real(ROINF)*param_real(VINF)**2)
 
+      write(*,*)'norm=',1/norm
+
       sens = norm
       sens1=1.
       if(mod(param_int_eff(EFF_IDIR),2).eq.1) then
@@ -260,6 +262,8 @@ c      c7     = c4/c5
          ENDDO
         ENDDO
 
+      write(*,*)'norm=',1/norm,p1p2
+
       ELSEIF(param_int_eff(EFF_IDIR).le.4) THEN
 
         inc_x1 = 1                                         !(i+1,j,k  )
@@ -308,6 +312,7 @@ c      c7     = c4/c5
            enddo
          ENDDO
         ENDDO
+      write(*,*)'norm=',1/norm,p1p2
 
       ELSE
 

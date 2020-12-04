@@ -13,8 +13,9 @@ import Fast.PyTree as Fast
 import Initiator.PyTree as I
 import Connector.PyTree as X
 import Post.PyTree as P
+import sys
 
-a = G.cartNGon((0,0,0), (0.1,0.1,1), (200,200,3))
+a = G.cartNGon((0,0,0), (0.1,0.1,1), (180,180,3))
 t = C.newPyTree(['Base',a])
 C._fillEmptyBCWith(t, 'extrap', 'BCExtrapolate', dim=3)
 
@@ -32,22 +33,18 @@ t = GC.addGhostCellsNG(t, nlayers=ncouche)
 mach = 0.7
 C._addState(t, 'GoverningEquations', 'NSLaminar')
 C._addState(t, MInf=mach, ReInf=30.)
-I._initLamb(t, position=(4.,4.), Gamma=2., MInf=mach, loc='centers')
 
 tc = C.node2Center(t)
-#-----------------------------------------------------------------------------
-# SP : a-t-on besoin des coordonnees et des NGON/NFaces pour tc  dans FastP ? 
-# sinon, decommenter les 2 lignes ci-dessous, ca allege...
-#-------------------------------------------------------------
-#
 X._setInterpData(t,tc,loc='centers',storage='inverse',itype='abutting')
 
+I._initLamb(t, position=(4.,4.), Gamma=2., MInf=mach, loc='centers')
 
 
 # Numerics
 numb = {}
 numb["temporal_scheme"]    = "explicit"
 numb["ss_iteration"]       = 20
+numb["modulo_verif"]       = 5
 numz = {}
 numz["time_step"]         = 0.03
 numz["scheme"]            = "ausmpred"
@@ -64,14 +61,12 @@ for z in zones:
    Elt4     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][4]
    print('nb elt 0  1  2 3 4= ', Elt0, Elt1, Elt2, Elt3,Elt4, z[0])
    Index = list(range(Elt0+Elt1)) + list(range(Elt0+Elt1+Elt3,Elt0+Elt1+Elt3+ Elt2 ))
-   #Index = list(range(Elt0+Elt1)) 
-   #Index = list(range(Elt0)) 
-   #print('Index',z[0],Index)
    znew.append( T.subzone(z, Index , type='elements'))
 
 
 #(t, tc, metrics) = FastP.warmup(t, tc)
 (t, tc, metrics) = Fast.warmup(t, tc)
+
 
 zones = Internal.getZones(t)
 
@@ -87,6 +82,11 @@ nit =  25  ; time = 0.
 for it in range(nit): 
     Fast._compute(t, metrics,  nit, tc,layer='C')
 
+    if it%5==0:
+       Fast.display_temporal_criteria(t, metrics, it)
+
+C.convertPyTree2File(t, 'out.cgns')
+sys.exit()
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

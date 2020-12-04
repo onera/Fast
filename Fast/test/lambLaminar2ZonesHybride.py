@@ -36,7 +36,7 @@ I._initLamb(t, position=(45.,25.), Gamma=2., MInf=mach, loc='centers')
 numb = {}
 numb["temporal_scheme"]    = "explicit"
 numb["ss_iteration"]       = 20
-#numb["omp_mode"]          = 1
+numb["modulo_verif"]       = 1
 numz = {}
 numz["time_step"]          = 0.03
 numz["scheme"]             = "ausmpred"
@@ -56,7 +56,7 @@ nit = 300  ; time = 0.
 for it in range(nit): 
     Fast._compute(t, metrics, it, tc)
     
-    if it%20==0:
+    if it%1==0:
        Fast.display_temporal_criteria(t, metrics, it)
     
 C.convertPyTree2File(t, 'out.cgns')

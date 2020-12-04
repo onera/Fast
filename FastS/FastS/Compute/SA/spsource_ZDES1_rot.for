@@ -44,7 +44,6 @@ c***********************************************************************
       REAL_E ti( param_int(NDIMDX_MTR) , param_int(NEQ_IJ) ),
      &       tj( param_int(NDIMDX_MTR) , param_int(NEQ_IJ) ),
      &       tk( param_int(NDIMDX_MTR) , param_int(NEQ_K ) )
-      REAL_E delta(param_int(NDIMDX))
 
       REAL_E dlng(param_int(NDIMDX)),vol(param_int(NDIMDX_MTR))
 

@@ -545,34 +545,54 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     return sa, lbm, neq_lbm, FIRST_IT
 
 #==============================================================================
-# Construit les donnees compactees pour traiter les BC
+# Construit les donnees compactees pour traiter les verrou et plage omp
 #==============================================================================
 def _build_omp(t):
     # Data for each Base
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
 
     #dimensionnememnt tableau
-    size_param_int =[]
-    #size_int       = HOOK['MX_SSZONE']*(OMP_NUM_THREADS*7+4)
     size_int       = HOOK['MX_OMP_SIZE_INT']
     for b in bases:
         zones = Internal.getZones(b)
         for z in zones:
             
-            o = Internal.getNodeFromName1( z, '.Solver#ownData')
+            o    = Internal.getNodeFromName1( z, '.Solver#ownData')
+            dims = Internal.getZoneDim(z)
 
             #on concatene les donnes omp dans param_int
             param_int = Internal.getNodeFromName1( o, 'Parameter_int')
             size = numpy.shape(param_int[1])
             c = 1
             for s in size: c=c*s
-            size_param_int.append(c)
 
-            datap = numpy.zeros(size_int+c, numpy.int32)
+            size_scheduler = 0
+            if dims[3] == 'NGON':
+               CellScheduler = Internal.getNodeFromName1( z, 'CellScheduler')[1]
+               size_scheduler= numpy.size(CellScheduler)
+
+            #print("SIZE int", size_int,"c=", c,"size_sched=",  size_scheduler)
+            datap = numpy.zeros(size_int + c + size_scheduler, numpy.int32)
+
             datap[0:c]   = param_int[1][0:c]
-            datap[69]    = c     # debut tableau omp dans param_int
+            datap[69]    = c                   # debut tableau omp dans param_int
+            datap[87]    = c + size_int        # debut cellscheduler omp dans param_int
             param_int[1] = datap
 
+            if dims[3] == 'NGON':
+               size = numpy.shape(CellScheduler)
+               c = 0
+               deb = param_int[1][87] 
+               for l in range(size[3]):
+                 for k in range(size[2]):
+                   for j in range(size[1]):
+                     for i in range(size[0]):
+                       #print("deb+c", deb+c, c, l,k,j,i,param_int[1][87] )
+                       param_int[1][ deb +c ]= CellScheduler[ i, j, k, l]
+                       c +=1
+               CellScheduler = param_int[1][ deb:deb+size_scheduler ]
+
+    return None
 #==============================================================================
 # Construit les datas possedees par FastP
 #==============================================================================
@@ -1079,7 +1099,7 @@ def _buildOwnData(t, Padding):
             leveld=0
 
             
-            datap = numpy.empty(87, numpy.int32)
+            datap = numpy.empty(88, numpy.int32)
             datap[0:25]= -1
 
             #Structure ou polyhedric
@@ -1099,7 +1119,6 @@ def _buildOwnData(t, Padding):
                NF_I1  = ng_intext[2]
                NF_BC1 = ng_intext[3]
                NF_BC0 = ng_intext[4]
-               NF_I2  = ng_intext[5]
                NF_TOT = ng_intext[6]
 
                #datap[1 ] = NF_I0+ NF_I1 + NF_I2 + NF_RAC + NF_BC0 + NF_BC1  #nombre de face total
@@ -1132,6 +1151,10 @@ def _buildOwnData(t, Padding):
                nfac_elconn = Internal.getNodeFromName1(nface, 'ElementConnectivity')
                nfac_elconn_size = numpy.size( nfac_elconn[1])
                datap[12]  = nfac_elconn_size
+               #Nb cache bloc
+               Nb_Cache_Bloc = numpy.shape(Internal.getNodeFromName1(z, 'CellScheduler')[1])[2]
+               print("Nb_Cache_Bloc",Nb_Cache_Bloc)
+               datap[13]  = Nb_Cache_Bloc
 
             datap[25]  = 0     # zone 3D curvi par defaut
             datap[26]  = 0     # Vent 3D par defaut
@@ -1183,6 +1206,7 @@ def _buildOwnData(t, Padding):
             datap[84]   = meshtype
             datap[85]   = senseurtype
             datap[86]   = neq_lbm
+            datap[87]   = -1
 
             i += 1
          
@@ -1792,24 +1816,20 @@ def _BCcompactNG(t):
     size_param_int =[]
     size_param_real=[]
     zones = Internal.getZones(t)
-    nzones=len(zones)
     for z in zones:
 
-        bcs   = Internal.getNodesFromType2(z, 'BC_t')
+        bcs           = Internal.getNodesFromType2(z, 'BC_t')
+        FaceScheduler = Internal.getNodeFromName1(z, 'FaceScheduler')[1]
         Nb_bc = len(bcs)
-        #size_int  = 1 +  Nb_bc*2 + 9*Nb_bc
-        size_int  = 1 +  Nb_bc*2 + 8*Nb_bc    # Nbc, pt BC, ptdata, type, NFACE0, facedeb0, facefin0, Nface1, facedeb1, facefin1, nbdata
-        #size_int  = 1 +  Nb_bc*2 + 3*Nb_bc    # Nbc, pt BC, ptdata, type, Nface , nbdata
+        size_int  =  numpy.size(FaceScheduler)
         size_real = 0
         for bc in bcs:
-            ptlist  = Internal.getNodeFromName1(bc, 'PointList')[1]
-            size_fen= numpy.size(ptlist)
-            size_int= size_int  + size_fen
-
             bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
             Nb_data = len(bcdata)
-            size_int= size_int  + Nb_data 
+            #size_int= size_int  + Nb_data 
             for data in bcdata:
+               print("Data in BC not implemented in FastP")
+               import sys; sys.exit()
                size = numpy.shape(data[1])
                c = 1
                for s in size: c=c*s
@@ -1825,6 +1845,7 @@ def _BCcompactNG(t):
         for s in size: c=c*s
         size_param_int.append(c)
 
+        #print("BC size facesched", size_int, "old param int=",c)
         datap = numpy.zeros(size_int+c, numpy.int32)
         datap[0:c]   = param_int[1][0:c]
         param_int[1] = datap
@@ -1843,119 +1864,30 @@ def _BCcompactNG(t):
     #Init param BC
     no = 0
     zones = Internal.getZones(t)
-    nzones=len(zones)
     for z in zones:
 
-        o         = Internal.getNodeFromName1( z, '.Solver#ownData')
-        bcs       = Internal.getNodesFromType2(z, 'BC_t')
-        param_int = Internal.getNodeFromName1( o, 'Parameter_int')[1]
-        param_real= Internal.getNodeFromName1( o, 'Parameter_real')[1]
-
-        Nb_bc = len(bcs)
+        o             = Internal.getNodeFromName1( z, '.Solver#ownData')
+        param_int     = Internal.getNodeFromName1( o, 'Parameter_int')[1]
+        FaceScheduler = Internal.getNodeFromName1(z, 'FaceScheduler')[1]
 
         pt_bcs_int   =  size_param_int[no]
         param_int[70]=  pt_bcs_int
+        no           += 1
 
-        pt_bcs_real=  size_param_real[no] 
-        param_int[ pt_bcs_int ] = Nb_bc
+        size = numpy.shape(FaceScheduler)
+        size_scheduler = 1
+        for s in size: size_scheduler=size_scheduler*s
 
-        i         = 1
-        # a modifier pour tenir compte ptlist
-        size_int  = 1 + 2*Nb_bc  # shift pour nb_bc et pointeur BC_int et BC_real
-        size_real = 0
-        no       += 1
-        for bc in bcs:
-            param_int[ pt_bcs_int +i       ] = size_int  + pt_bcs_int
-            param_int[ pt_bcs_int +i +Nb_bc] = size_real + pt_bcs_real
-
-            #print('pt bc', pt_bcs_int +i)
-
-            pt_bc                            =  param_int[ pt_bcs_int +i ] 
-
-            param_int[pt_bc] = tagBC( Internal.getValue(bc) )
-
-            ptlist  = Internal.getNodeFromName1(bc, 'PointList')[1]
-            bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
-
-            size_fen= numpy.size(ptlist)
-            ptlist = ptlist.reshape(size_fen)
-
-            Nb_data = len(bcdata)
-
-
-            NF_I0 = 2
-            NF_RAC= 4
-            NF_I1 = 3
-            NF_BC1= 6
-            NF_BC0= 5
-            BC1_deb =  param_int[ NF_I0] +  param_int[ NF_RAC] + param_int[ NF_I1] +1
-            BC1_end =  BC1_deb + param_int[ NF_BC1]  - 1
-            BC0_deb =  BC1_end + 1
-            BC0_end =  BC1_end + param_int[ NF_BC0]
-           
-            '''
-            print('FACE',param_int[ NF_I0] ,  param_int[ NF_RAC] , param_int[ NF_I1])
-            print('BC1',BC1_deb,BC1_end)
-            print('BC0',BC0_deb,BC0_end)
-            '''
-
-            NFACE1   =0
-            NFACE0   =0
-            FACE1_deb=0
-            FACE1_fin=-1
-
-            FACE0_deb = ptlist[0] 
-            FACE0_fin = ptlist[0]-1
-            search0   = True  
-            search1   = True 
-            for l in range(size_fen):
-               if ptlist[l] >=  BC1_deb and  ptlist[l] <= BC1_end:
-                  FACE1_fin = ptlist[l]
-                  NFACE1   +=1
-                  if search1:
-                    FACE1_deb = ptlist[l]
-                    search1   = False
-
-               if ptlist[l] >=  BC0_deb and  ptlist[l] <= BC0_end:
-                  FACE0_fin = ptlist[l]
-                  NFACE0   +=1
-                  if search0:
-                    FACE0_deb = ptlist[l]
-                    search0   = False
-
-            param_int[pt_bc + 1] = NFACE0
-            param_int[pt_bc + 2] = FACE0_deb
-            param_int[pt_bc + 3] = FACE0_fin
-            param_int[pt_bc + 4] = NFACE1
-            param_int[pt_bc + 5] = FACE1_deb
-            param_int[pt_bc + 6] = FACE1_fin
-
-            print("Nbr face0=", NFACE0, "Face deb=",FACE0_deb, "Face fin=", FACE0_fin,"nbr indirection=",  NFACE0- (FACE0_fin- FACE0_deb+1) )
-            print("Nbr face1=", NFACE1, "Face deb=",FACE1_deb, "Face fin=", FACE1_fin,"nbr indirection=",  NFACE1- (FACE1_fin- FACE1_deb+1) )
-
-            param_int[pt_bc + 7] = Nb_data
-            j = 1
-            ctot = 0
-            for data in bcdata:
-               size = numpy.shape(data[1])
-               c = 1
-               for s in size: c=c*s
-               ctot = ctot +c
-               param_int[pt_bc + 7 + j ] = ctot
-               deb = pt_bcs_real+size_real
-               param_real[ deb:deb+c ]= data[1].flat[0:c]
-               data[1]                = param_real[ deb:deb+c ] # wrong shape?
-               size_real = size_real + c
-               j = j+1
-                
-            deb = pt_bc + 8 + Nb_data
-            ptlist = ptlist.reshape(size_fen)
-
-            param_int[ deb:deb+size_fen ]= ptlist[ 0:size_fen]
-            ptlist                       = param_int[ deb:deb+size_fen ] # wrong shape?
-
-            size_int  = size_int + 8 + Nb_data + size_fen
-            i         = i + 1
+        deb = pt_bcs_int
+        c   = 0
+        for l in range(size[3]):
+         for k in range(size[2]):
+          for j in range(size[1]):
+            for i in range(size[0]):
+              param_int[ deb +c ]= FaceScheduler[ i, j, k, l]
+              #print("verif fsched=",FaceScheduler[ i, j, k, l],l,k,j,i, "deb=",deb,"c=",c)
+              c +=1
+        FaceScheduler = param_int[ deb:deb+size_scheduler ] # wrong shape?
 
 #==============================================================================
 # Construit les donnees compactees pour traiter les BC

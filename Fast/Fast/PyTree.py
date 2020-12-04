@@ -5,7 +5,7 @@ from . import Fast
 __version__ = Fast.__version__
 
 OMP_MODE = 0
-
+import os
 try:
     import FastC.PyTree as FastC
     from FastC.PyTree import _setNum2Zones, _setNum2Base, load, save, loadFile, saveFile, loadTree, saveTree
@@ -23,14 +23,32 @@ try:
 except:
     raise ImportError("Fast.PyTree: requires Converter and FastS/P modules.")
 
+try:
+    OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
+    OMP_NUM_THREADS = int(OMP_NUM_THREADS)
+except: OMP_NUM_THREADS = 1
+
 import numpy
 
 #==============================================================================
 # Initialisation parametre calcul: calcul metric + var primitive + compactage 
 # + alignement + placement DRAM
 #==============================================================================
-def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None):
+def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, SizeBlockTarget=1000):
     """Perform necessary operations for the solver to run."""
+
+    # renumerotation cellule/face si necessaire pour HPC (threading et cache blocking)
+    node = Internal.getNodeFromName(t, 'HpcSplitInfo')
+    lsplit = True
+    if node is not None:
+       Nthread = node[1][0]
+       Ncache  = node[1][1]
+
+       if Ncache == SizeBlockTarget and Nthread == OMP_NUM_THREADS: lsplit = False
+
+       print("INFOSPLIT initial: Nthread=",Nthread,'Ncache=',Ncache,'NewSplit=',lsplit)
+
+    if lsplit: t,tc = FastP.SplitThreadCache(t, tc, SizeBlockTarget)
 
     #global FastC.FIRST_IT, FastC.HOOK
     # Get omp_mode
@@ -107,7 +125,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     
     #init metric 
     FastS.fasts.init_metric(zones_str  , metrics_str  , ompmode)
-    FastP.fastp.init_metric(zones_unstr, metrics_unstr)
+    FastP.fastp.init_metric(zones_unstr, metrics_unstr, FastC.HOOK)
 
     # compact + align + init numa
     rmConsVars=True
@@ -296,8 +314,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
                   if ztype=='Structured':
                     FastS.fasts.initNuma( ptr, eq, param_int, c, thread_numa )
                   else:
-                    #fastp.initNuma( ptr, eq, param_int, c, thread_numa )
-                    eq[c*size:(c+1)*size] = ptr[:]
+                    FastP.fastp.initNuma( ptr, eq, param_int, c, thread_numa ) 
 
                 # Replace numpys with slice
                 a[1] = eq[c*(size)+c*param_int[1][66]:(c+1)*(size)+c*param_int[1][66]]

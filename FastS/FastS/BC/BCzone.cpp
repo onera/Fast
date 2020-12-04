@@ -227,7 +227,7 @@ E_Int K_FASTS::BCzone(
 
 	//cout << "bc_type= " << bc_type << endl;
 
-        //printf("ptbc= %d , idir= %d , ndom= %d , bctype=  %d, nstep= %d \n", pt_bc, idir,nd,  bc_type, nstep );
+        //printf("ptbc= %d , idir= %d , ndom= %d , bctype=  %d, nstep= %d , nbdata= %d \n", pt_bc, idir,nd,  bc_type, nstep,nbdata );
 
         E_Int* iptsize_data = param_int + pt_bc + BC_NBDATA + 1;
 
@@ -327,7 +327,7 @@ E_Int K_FASTS::BCzone(
                     c5 = 2. / 6.;
                     c6 = -1. / 6.;
 
-                    if (iptsize_data[0] <=6)
+                    if ( nbdata ==0 || ( nbdata !=0 && iptsize_data[0] <=6) )
                      {
                       bvbs_inflow_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk, iptijk,
                                    iptrop, ipt_data );

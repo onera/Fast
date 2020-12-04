@@ -36,7 +36,7 @@
             mobile_coef = 1.
             iptdata = param_int( param_int(PT_BC) + 1 + ndf + nb_bc)
             if (nbdata.ne.0) mobile_coef = param_real( iptdata )
-            
+
             if(idir.le.2) THEN
              incijk     =1
              call bflwallslip(ndom,idir, mobile_coef, param_int(NEQ_IJ),
