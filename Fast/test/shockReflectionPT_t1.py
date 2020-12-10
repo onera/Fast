@@ -5,11 +5,9 @@ import Converter.PyTree as C
 import Converter.Internal as Internal
 import Initiator.PyTree as I
 import Fast.PyTree as Fast
-import FastS.PyTree as FastS
 import Transform.PyTree as T
 import KCore.Adim as Adim
 import KCore.test as test
-import sys
 
 MInf = 2.9
 adim = Adim.adim1(MInf)

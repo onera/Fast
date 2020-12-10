@@ -8,7 +8,6 @@ import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import Post.PyTree as P
 import Converter.Internal as Internal
-import sys
 
 mach = 0.7
 a = G.cart((0,0,0), (0.5,0.5,0.25), (200,100,2))

@@ -40,9 +40,9 @@ for z in zones_debit:
     density  = Internal.getNodesFromName1(sol,'Density')[1] 
     debit   +=  numpy.sum(density)
 
-print 'the mass flow rate accross the Inflow BC is', debit
+print('the mass flow rate accross the Inflow BC is', debit)
 
 # compute of the mass flow rate with numerical flux new fashion
-print 'the mass flow rate accross the Inflow BC is', zones_debit[7]
+print('the mass flow rate accross the Inflow BC is', zones_debit[7])
 
 C.convertPyTree2File(debit_inflow, 'debit.cgns')

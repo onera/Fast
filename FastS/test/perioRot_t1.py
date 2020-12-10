@@ -4,10 +4,7 @@ import Generator.PyTree as G
 import Connector.PyTree as X
 import Converter.PyTree as C
 import FastS.PyTree as FastS
-import Fast.PyTree as Fast
 import Converter.Internal as Internal
-import Fast.Utils as Utils
-import KCore.Adim as Adim
 import KCore.test as test
 
 angle = 45.

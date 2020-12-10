@@ -1,8 +1,6 @@
 # - cylinder (pyTree) -
-import Initiator.PyTree as I
 import Converter.PyTree as C
 import Generator.PyTree as G
-import Connector.PyTree as X
 import Converter.PyTree as C
 import FastS.PyTree as FastS
 import Fast.PyTree as Fast

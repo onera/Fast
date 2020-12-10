@@ -5,8 +5,8 @@ import shlex
 
 #  python generate_correction.py  repertoire_flux
 n = len(sys.argv)
-if (n != 2):
-    print 'Flux name folder is required as argument: python generate_flu.py  fluxFolder' 
+if n != 2:
+    print('Flux name folder is required as argument: python generate_flu.py  fluxFolder')
     sys.exit()
 
 dico= {}
@@ -17,8 +17,8 @@ dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','SA','euler']
 dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','SA','euler'], 'TypeMotion':[''], 'TypeMesh':['2d'], 'TypeSlope':['o3']}
 
 rep = sys.argv[1]
-if rep not in dico.keys():
-    print 'Flux option not described in the dictionnary' 
+if rep not in dico:
+    print('Flux option not described in the dictionnary') 
     sys.exit()
 
 rep_build='/stck1/stck7/stck7.3/imary/Cassiopee/Apps/PModules/FastS/build/x86_r8/FastS/Compute/'+rep
@@ -64,15 +64,14 @@ for ale in TypeMotion:
    for eq in Model:
       for slope in TypeSlope:
          for typezone in TypeMesh:
-
-			option =  1000*opt_ale[ ale]  +  100*opt_slp[slope] +  10*opt_mod[eq] + opt_mesh[ typezone]
+                        option =  1000*opt_ale[ ale]  +  100*opt_slp[slope] +  10*opt_mod[eq] + opt_mesh[ typezone]
 
                         input_file  = rep_build+'/'+typezone+'/corr_'+flux+ale1+eq+'_'+slope+'_'+typezone+'.f'
                         output_file = 'corr_'+flux+ale1+eq+'_'+slope+'_'+typezone
                         output_rep  = rep+'/'+typezone
-                        print'input  file', input_file
-                        print'output file', output_file
-                        print'output file', output_file
+                        print('input  file', input_file)
+                        print('output file', output_file)
+                        print('output file', output_file)
 
                         var_in  = 'rop'
                         var_out = 'drodm'

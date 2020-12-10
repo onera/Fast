@@ -1899,6 +1899,7 @@ def _BCcompact(t):
     size_param_real=[]
     zones = Internal.getZones(t)
     nzones=len(zones)
+    familyBCTypes = C.getFamilyBCNamesDict(t)
     for z in zones:
 
         bcs   = Internal.getNodesFromType2(z, 'BC_t')
@@ -1914,7 +1915,7 @@ def _BCcompact(t):
                 nb_cell = max([wrange[0][1] - wrange[0][0],1])* max([wrange[1][1] - wrange[1][0],1])*max([wrange[2][1] - wrange[2][0],1])
                 rand = numpy.zeros((1,nb_cell), dtype=numpy.float64)
                 Internal.createUniqueChild(bc, 'random_vec', 'DataArray_t', rand)
-                
+              
             bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
             Nb_data = len(bcdata)
             for data in bcdata:
@@ -1927,10 +1928,10 @@ def _BCcompact(t):
                size_real = size_real + c
 
         # zone ownData (generated)
-        o = Internal.getNodeFromName1( z, '.Solver#ownData')
+        o = Internal.getNodeFromName1(z, '.Solver#ownData')
 
         #on concatene les donnes BC dans param_int et param_real
-        param_int = Internal.getNodeFromName1( o, 'Parameter_int')
+        param_int = Internal.getNodeFromName1(o, 'Parameter_int')
         size = numpy.shape(param_int[1])
 
         c = 1
@@ -1941,7 +1942,7 @@ def _BCcompact(t):
         datap[0:c]   = param_int[1][0:c]
         param_int[1] = datap
 
-        param_real = Internal.getNodeFromName1( o, 'Parameter_real')
+        param_real = Internal.getNodeFromName1(o, 'Parameter_real')
         size = numpy.shape(param_real[1])
         c = 1
         for s in size: c=c*s
@@ -1983,9 +1984,18 @@ def _BCcompact(t):
 
             pt_bc                            =  param_int[ pt_bcs_int +i ] 
 
-            param_int[pt_bc] = tagBC( Internal.getValue(bc) )
+            btype = Internal.getValue(bc)
+            if btype == 'FamilySpecified':
+              n = Internal.getNodeFromType1(bc, 'FamilyName_t')
+              if n is None: raise ValueError('compact: familyName missing in %s.'%bc[0])
+              name = Internal.getValue(n)
+              if name in familyBCTypes: btype = familyBCTypes[name]
+              else: raise ValueError('compact: %s is not a defined familyName.'%name)
+              #print('getting family btype=', btype)
+            
+            param_int[pt_bc] = tagBC( btype )
 
-            Ptrange = Internal.getNodeFromType1( bc , 'IndexRange_t')
+            Ptrange = Internal.getNodeFromType1(bc, 'IndexRange_t')
             indrange= Internal.getValue(Ptrange)
             ind_bc  = numpy.zeros(6, numpy.int32)
             ind_bc[0] = indrange[0][0]
@@ -1995,8 +2005,7 @@ def _BCcompact(t):
             ind_bc[4] = indrange[2][0]
             ind_bc[5] = indrange[2][1]
 
-            fastc.PygetRange( ind_bc,  param_int, pt_bc+ 1)
-
+            fastc.PygetRange(ind_bc,  param_int, pt_bc+ 1)
 
             bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
             Nb_data = len(bcdata)

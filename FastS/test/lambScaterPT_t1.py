@@ -5,8 +5,6 @@ import Converter.PyTree as C
 import Initiator.PyTree as I
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
-import Post.PyTree as P
-import KCore.Adim as Adim
 import KCore.test as test
 import Converter.Internal as Internal
 

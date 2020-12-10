@@ -3,7 +3,6 @@
 #
 #mpirun -x OMP_NUM_THREADS -np 8 python tgv_mpi.py
 #
-import Connector.PyTree as X
 import Generator.PyTree as G
 import FastC.PyTree as FastC
 import FastS.PyTree as FastS

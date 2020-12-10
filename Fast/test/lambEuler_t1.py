@@ -12,8 +12,6 @@ import FastP.PyTree as FastP
 import Initiator.PyTree as I
 import Connector.PyTree as X
 import Post.PyTree as P
-import CPlot.PyTree as CPlot
-import sys
 
 a = G.cartNGon((0,0,0), (1,1,1), (100,100,3))
 t = C.newPyTree(['Base',a])
