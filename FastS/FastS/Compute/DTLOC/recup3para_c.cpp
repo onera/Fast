@@ -101,7 +101,7 @@ void K_FASTS::recup3para_c(E_Float**& iptro, E_Int*& param_int_tc,
 	    E_Int NoR      =  param_int_tc[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
 
             //Si omp_mode=1, on modifie la distribution du travail pour ameliorer le numa
-#           include "distrib_omp.h"
+	    //#           include "distrib_omp.h"
 
 	    E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
 

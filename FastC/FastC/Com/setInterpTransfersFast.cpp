@@ -120,8 +120,29 @@ void K_FASTC::setInterpTransfersFast(
     RecvQueue* pt_rcv_queue_IBC = NULL;
 
 
+    
+    E_Int nbcomID_nstep;
     E_Int nbcomIBC_nstep; E_Int pt_deb;
-    if (rk ==3 and exploc==2 and mpi)
+
+
+
+      if (exploc==1 and mpi)
+      //if (rk ==3 and exploc==2 and mpi)
+      {
+       pt_deb         = param_int_tc[2+nbcomIBC+nstep+(numpassage-1)*nitmax] + 2 +nbcomIBC+1;
+       nbcomID_nstep  = param_int_tc[ pt_deb ];
+      }
+      else
+      {
+	pt_deb        = nbcomIBC + 2;
+        nbcomID_nstep = nbcomID;
+
+      }
+    
+   
+    
+    if (exploc==1 and mpi)
+    //if (rk ==3 and exploc==2 and mpi)
       {
         pt_deb         = param_int_tc[1+nstep+(numpassage-1)*nitmax] + 2;
         nbcomIBC_nstep = param_int_tc[ pt_deb ];
@@ -131,7 +152,9 @@ void K_FASTC::setInterpTransfersFast(
         nbcomIBC_nstep = nbcomIBC;
       }
 
-    if (mpi)
+
+    if (mpi and (nbcomID_nstep != 0 or nbcomIBC_nstep != 0))
+    //if (mpi)
     {
        
       if (pair_of_queue == NULL)
@@ -173,6 +196,7 @@ void K_FASTC::setInterpTransfersFast(
       {
         E_Int ech  = param_int_tc[ip2p + shift_graph];
         dest       = param_int_tc[ech];
+
         if (dest != rank)  // Inter Process
         {
           nb_send_buffer += 1;
@@ -206,7 +230,7 @@ void K_FASTC::setInterpTransfersFast(
     #endif
 
     #ifdef _MPI
-    if (mpi)
+     if (mpi and nbcomIBC_nstep != 0)
     {
       //comm multi processus: wait + remplissage
       K_FASTC::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
@@ -216,17 +240,26 @@ void K_FASTC::setInterpTransfersFast(
        ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
        time_in= omp_get_wtime();
       #endif
+    }
 
-      E_Int nbcomID_nstep; 
-      if (rk ==3 and exploc==2 and mpi)
+      if (exploc==1 and mpi)
+      //if (rk ==3 and exploc==2 and mpi)
       {
        pt_deb         = param_int_tc[2+nbcomIBC+nstep+(numpassage-1)*nitmax] + 2 +nbcomIBC+1;
        nbcomID_nstep  = param_int_tc[ pt_deb ];
       }
       else
-      { pt_deb        = nbcomIBC + 2;
+      {
+	pt_deb        = nbcomIBC + 2;
         nbcomID_nstep = nbcomID;
+
       }
+
+
+     if (mpi and nbcomID_nstep != 0)
+      //if (mpi)
+    {
+      
       if (pt_rcv_queue->size() == 0 )
       for (E_Int ircv = 1; ircv < nbcomID_nstep +1; ++ircv)
         {
@@ -283,7 +316,7 @@ void K_FASTC::setInterpTransfersFast(
     #endif
 
     #ifdef _MPI
-    if (mpi)
+     if (mpi and nbcomID_nstep != 0)
     {
 
        //comm multi processus: wait + remplissage
@@ -304,10 +337,15 @@ void K_FASTC::setInterpTransfersFast(
         time_in = omp_get_wtime();
        #endif
 
-    } // MPI Second part (InterCOM ID)
-    #endif      
 
+
+    } // MPI Second part (InterCOM ID)
+    #endif
+
+    
   } //if  param_int_tc != Null
+
+
 }
 //=============================================================================
 // Idem: in place + from zone + tc compact au niveau base
@@ -385,7 +423,8 @@ void K_FASTC::setInterpTransfersIntra(
       E_Int irac_auto= irac-irac_deb;
       autorisation_transferts[pass_inst][irac_auto]=0;
 
-      if(rk==3 and exploc == 2) // Si on est en explicit local, on va autoriser les transferts entre certaines zones en fonction de la ss-ite courante
+      if(exploc == 1)
+      //if(rk==3 and exploc == 2) // Si on est en explicit local, on va autoriser les transferts entre certaines zones en fonction de la ss-ite courante
 	{
 	  E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
 	  E_Int levelD = ipt_param_int_tc[debut_rac + 25];
@@ -847,8 +886,8 @@ void K_FASTC::setInterpTransfersInter(
 	  E_Int irac_auto= irac-irac_deb;
 	  autorisation_transferts[pass_inst][irac_auto]=0;	  
 
-
-	  if(rk==3 and exploc == 2) // Si on est en explicit local, on va autoriser les transferts entre certaines zones en fonction de la ss-ite courante
+	  if(exploc == 1)
+	  //if(rk==3 and exploc == 2) // Si on est en explicit local, on va autoriser les transferts entre certaines zones en fonction de la ss-ite courante
 	    {
 	      E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;     
 	      E_Int levelD = ipt_param_int_tc[debut_rac + 25];

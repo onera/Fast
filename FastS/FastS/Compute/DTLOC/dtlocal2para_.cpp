@@ -250,7 +250,9 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
 	       }
 	 
 	     if (nstep%cycle==cycle/2 and (nstep/cycle)%2==0 ) /// Recuperation des valeurs stockées en position 0 (yn ou yinterpolé suivant la parité du cycle) et stockage de y2 ou y6
-	       {   
+	       { 
+
+
 		 //// Recuperation et transformation de f(yn) + coeff*f(y1) pour obtenir alpha*f(yn) + beta*f(y1)
 		 ind=2;
                  tab1 = iptdrodm + shift_zone[NoD];
@@ -498,18 +500,14 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
 //// are you sure???
 //// are you sure???
 #pragma omp barrier // On attend que tous les threads aient écrit la solution dans iptro[NoD]
-//// are you sure???
-//// are you sure???
-//// are you sure???
-//// are you sure???
-//// are you sure???
-//// are you sure???
+
 	       }
 
 
       }
 
      else if (ipt_param_int[debut_rac + 25] > ipt_param_int[debut_rac + 24])/// Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse 
+
        {
 
 	     E_Int pos;
@@ -554,6 +552,7 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
 		 interp_rk3local4para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts,donorPts_, tab1, tab2, tab3, taillefenetre, coeff);  
 
 #pragma omp barrier // On attend que tous les threads aient écrit la solution dans iptro[NoD]
+
 	       }
        }
     }
@@ -571,10 +570,15 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /*
+if(param_intt[0][ EXPLOCTYPE ] == 1)
+
+  {
+
+
+    E_Int taille;
   
 #pragma omp parallel default(shared) //private(cycle)
-  {
+    {
 #ifdef _OPENMP
     E_Int  ithread           = omp_get_thread_num() +1;
     E_Int  Nbre_thread_actif = omp_get_num_threads();
@@ -582,272 +586,275 @@ PyObject* K_FASTS::dtlocal2para_(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-   E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
-   if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
+    E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
+    if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
 
-   E_Int Nbre_thread_actif_loc, ithread_loc;
-   if( omp_mode == 1) { Nbre_thread_actif_loc = 1;                 ithread_loc = 1;}
-   else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
+    E_Int Nbre_thread_actif_loc, ithread_loc;
+    if( omp_mode == 1) { Nbre_thread_actif_loc = 1;                 ithread_loc = 1;}
+    else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
 
-   E_Int topology[3];
-   topology[0]=0;
-   topology[1]=0;
-   topology[2]=0;
+    E_Int topology[3];
+    topology[0]=0;
+    topology[1]=0;
+    topology[2]=0;
 
 
-   if (ipt_param_int[ech] == process) // Transferts intra processus
+    if (ipt_param_int[ech] == process) // Transferts intra processus
      
-     {   
+      {
 
-       for  (E_Int irac=0; irac< nrac; irac++) // Boucle sur les différents raccords (frontières)
 
-	 {
+     	taille=taille_tabs/nrac;
 
-	   E_Int timelevel = ipt_param_int[ ech +3 ]; 
-	   //E_Int shift_rac =  ech + 2 + irac;
-	   E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
+	for  (E_Int irac=0; irac< nrac; irac++) // Boucle sur les différents raccords (frontières)
 
-	   E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
-	   E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
-	   E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 +1 ];
+	  {
 
-	   E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;       
+	    E_Int timelevel = ipt_param_int[ ech +3 ]; 
+	    //E_Int shift_rac =  ech + 2 + irac;
+	    E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
 
-	   //E_Int cycle = param_intt[NoD][NSSITER]/param_intt[NoD][LEVEL];
-	   //E_Int cycleR = param_intt[NoR][NSSITER]/param_intt[NoR][LEVEL];
+	    E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
+	    E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
+	    E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 +1 ];
 
-	   E_Int cycle  = param_intt[NoD][NSSITER]/ipt_param_int[debut_rac + 25];
-	   E_Int cycleR = param_intt[NoR][NSSITER]/ipt_param_int[debut_rac + 24];
+	    E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;       
+
+	    //E_Int cycle = param_intt[NoD][NSSITER]/param_intt[NoD][LEVEL];
+	    //E_Int cycleR = param_intt[NoR][NSSITER]/param_intt[NoR][LEVEL];
+
+	    E_Int cycle  = param_intt[NoD][NSSITER]/ipt_param_int[debut_rac + 25];
+	    E_Int cycleR = param_intt[NoR][NSSITER]/ipt_param_int[debut_rac + 24];
 
  
-	   //  if (param_intt[NoD][LEVEL] < param_intt[NoR][LEVEL])  /// Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
-	   if (ipt_param_int[debut_rac + 25] < ipt_param_int[debut_rac + 24]) 
-	     {
+	    //  if (param_intt[NoD][LEVEL] < param_intt[NoR][LEVEL])  /// Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
+	    if (ipt_param_int[debut_rac + 25] < ipt_param_int[debut_rac + 24]) 
+	      {
 
-	       E_Int pos;E_Int ind;
-	       pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
-	       E_Int donorPts_[6]; 
-	       donorPts_[0] =  ipt_param_int[debut_rac + 0];
-	       donorPts_[1] =  ipt_param_int[debut_rac + 1];
-	       donorPts_[2] =  ipt_param_int[debut_rac + 2];
-	       donorPts_[3] =  ipt_param_int[debut_rac + 3];
-	       donorPts_[4] =  ipt_param_int[debut_rac + 4];
-	       donorPts_[5] =  ipt_param_int[debut_rac + 5];
-	       int dir = ipt_param_int[debut_rac + 6];
-
-
-	       donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
-	       donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
-
-	       //cout << "receveurs_cons= " << donorPts_[0]<<" "<< donorPts_[1] <<" "<< donorPts_[2]<<" "<< donorPts_[3] << endl;
-
-	       E_Int taillefenetreR;
-	       taillefenetreR = (donorPts_[1] - donorPts_[0] + 1)*(donorPts_[3] - donorPts_[2] + 1)*(donorPts_[5] - donorPts_[4] + 1); 
-
-	       E_Int ipt_ind_dm_omp_thread[6]; 
-
-	       indice_boucle_lu_(NoD, ithread_loc, Nbre_thread_actif_loc, param_intt[NoD][ ITYPCP ],
-				 donorPts_,
-				 topology, ipt_ind_dm_omp_thread);
-	       E_Int donorPts[6];
-	       donorPts[0]=ipt_ind_dm_omp_thread[0];
-	       donorPts[1]=ipt_ind_dm_omp_thread[1];
-	       donorPts[2]=ipt_ind_dm_omp_thread[2];
-	       donorPts[3]=ipt_ind_dm_omp_thread[3];
-	       donorPts[4]=ipt_ind_dm_omp_thread[4];
-	       donorPts[5]=ipt_ind_dm_omp_thread[5];
+		E_Int pos;E_Int ind;
+		pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
+		E_Int donorPts_[6]; 
+		donorPts_[0] =  ipt_param_int[debut_rac + 0];
+		donorPts_[1] =  ipt_param_int[debut_rac + 1];
+		donorPts_[2] =  ipt_param_int[debut_rac + 2];
+		donorPts_[3] =  ipt_param_int[debut_rac + 3];
+		donorPts_[4] =  ipt_param_int[debut_rac + 4];
+		donorPts_[5] =  ipt_param_int[debut_rac + 5];
+		int dir = ipt_param_int[debut_rac + 6];
 
 
-	       if (nstep%cycleR==1 or nstep%cycleR==cycleR/2 or nstep%cycleR==cycleR-1)
-		 {
+		donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
+		donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
+
+		//cout << "receveurs_cons= " << donorPts_[0]<<" "<< donorPts_[1] <<" "<< donorPts_[2]<<" "<< donorPts_[3] << endl;
+
+		E_Int taillefenetreR;
+		taillefenetreR = (donorPts_[1] - donorPts_[0] + 1)*(donorPts_[3] - donorPts_[2] + 1)*(donorPts_[5] - donorPts_[4] + 1); 
+
+		E_Int ipt_ind_dm_omp_thread[6]; 
+
+		indice_boucle_lu_(NoD, ithread_loc, Nbre_thread_actif_loc, param_intt[NoD][ ITYPCP ],
+				  donorPts_,
+				  topology, ipt_ind_dm_omp_thread);
+		E_Int donorPts[6];
+		donorPts[0]=ipt_ind_dm_omp_thread[0];
+		donorPts[1]=ipt_ind_dm_omp_thread[1];
+		donorPts[2]=ipt_ind_dm_omp_thread[2];
+		donorPts[3]=ipt_ind_dm_omp_thread[3];
+		donorPts[4]=ipt_ind_dm_omp_thread[4];
+		donorPts[5]=ipt_ind_dm_omp_thread[5];
 
 
-		   if ((nstep/cycleR)%2 == 0)
-		     {
-		       ind=2;
-		     }
-		   else
-		     {
-		       ind=1;
-		     }
-		   //cout << "receveurs= " << donorPts_[0]<<" "<< donorPts_[1] <<" "<< donorPts_[2]<<" "<< donorPts_[3] << endl;
-		   //cout << "ind= " << ind << endl;
-		   conservrk3local3para_(param_intt[NoR],donorPts,donorPts_,iptdrodm + shift_zone[NoR],iptcoe+shift_coe[NoR], iptcstk+irac*taille,taillefenetreR,nstep,ind);
-
-		 }
+		if (nstep%cycleR==1 or nstep%cycleR==cycleR/2 or nstep%cycleR==cycleR-1)
+		  {
 
 
-	       pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
+		    if ((nstep/cycleR)%2 == 0)
+		      {
+			ind=2;
+		      }
+		    else
+		      {
+			ind=1;
+		      }
+		    //cout << "receveurs= " << donorPts_[0]<<" "<< donorPts_[1] <<" "<< donorPts_[2]<<" "<< donorPts_[3] << endl;
+		    //cout << "ind= " << ind << endl;
+		    conservrk3local3para_(param_intt[NoR],donorPts,donorPts_,iptdrodm + shift_zone[NoR],iptcoe+shift_coe[NoR], iptcstk+irac*taille,taillefenetreR,nstep,ind);
+
+		  }
+
+
+		pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
 	      
 
 
-	       donorPts_[0] =  ipt_param_int[debut_rac + 7];
-	       donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
-	       donorPts_[2] =  ipt_param_int[debut_rac + 9];
-	       donorPts_[3] =  ipt_param_int[debut_rac + 10];
-	       donorPts_[4] =  ipt_param_int[debut_rac + 11];
-	       donorPts_[5] =  ipt_param_int[debut_rac + 12];
-	       dir = ipt_param_int[debut_rac + 13];
+		donorPts_[0] =  ipt_param_int[debut_rac + 7];
+		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
+		donorPts_[2] =  ipt_param_int[debut_rac + 9];
+		donorPts_[3] =  ipt_param_int[debut_rac + 10];
+		donorPts_[4] =  ipt_param_int[debut_rac + 11];
+		donorPts_[5] =  ipt_param_int[debut_rac + 12];
+		dir = ipt_param_int[debut_rac + 13];
 
-	       //cout << "donneurs= "<<  donorPts_[0] <<" "<< donorPts_[1] <<" "<< donorPts_[2] <<" "<< donorPts_[3] <<" "<<dir<< endl;
+		//cout << "donneurs= "<<  donorPts_[0] <<" "<< donorPts_[1] <<" "<< donorPts_[2] <<" "<< donorPts_[3] <<" "<<dir<< endl;
 
 
-	       //donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = 1 + 0.5*(dir+abs(dir))*(param_intt[NoD][NIJK]-1-4) ;
-	       //donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = 1 + 0.5*(dir+abs(dir))*(param_intt[NoD][NIJK]-1-4);
+		//donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = 1 + 0.5*(dir+abs(dir))*(param_intt[NoD][NIJK]-1-4) ;
+		//donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = 1 + 0.5*(dir+abs(dir))*(param_intt[NoD][NIJK]-1-4);
 
 
 	     
-	       donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
-	       donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
+		donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
+		donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
 
-	       //cout << "donneurs_conserv= "<<  donorPts_[0] <<" "<< donorPts_[1] <<" "<< donorPts_[2] <<" "<< donorPts_[3] << endl;
+		//cout << "donneurs_conserv= "<<  donorPts_[0] <<" "<< donorPts_[1] <<" "<< donorPts_[2] <<" "<< donorPts_[3] << endl;
 
-	       E_Int taillefenetreD;	     
-	       taillefenetreD = (donorPts_[1] - donorPts_[0] + 1)*(donorPts_[3] - donorPts_[2] + 1)*(donorPts_[5] - donorPts_[4] + 1); 
+		E_Int taillefenetreD;	     
+		taillefenetreD = (donorPts_[1] - donorPts_[0] + 1)*(donorPts_[3] - donorPts_[2] + 1)*(donorPts_[5] - donorPts_[4] + 1); 
 
 	     
-	       indice_boucle_lu_(NoD, ithread_loc, Nbre_thread_actif_loc, param_intt[NoD][ ITYPCP ],
-				 donorPts_,
-				 topology, ipt_ind_dm_omp_thread);
+		indice_boucle_lu_(NoD, ithread_loc, Nbre_thread_actif_loc, param_intt[NoD][ ITYPCP ],
+				  donorPts_,
+				  topology, ipt_ind_dm_omp_thread);
 
-	       donorPts[0]=ipt_ind_dm_omp_thread[0];
-	       donorPts[1]=ipt_ind_dm_omp_thread[1];
-	       donorPts[2]=ipt_ind_dm_omp_thread[2];
-	       donorPts[3]=ipt_ind_dm_omp_thread[3];
-	       donorPts[4]=ipt_ind_dm_omp_thread[4];
-	       donorPts[5]=ipt_ind_dm_omp_thread[5];
+		donorPts[0]=ipt_ind_dm_omp_thread[0];
+		donorPts[1]=ipt_ind_dm_omp_thread[1];
+		donorPts[2]=ipt_ind_dm_omp_thread[2];
+		donorPts[3]=ipt_ind_dm_omp_thread[3];
+		donorPts[4]=ipt_ind_dm_omp_thread[4];
+		donorPts[5]=ipt_ind_dm_omp_thread[5];
 
-	       if (nstep%cycle==1 or nstep%cycle==cycle/2 or nstep%cycle==cycle-1)
-		 {
-
-
-		   E_Int ind=2;
-		   conservrk3local3para_(param_intt[NoD],donorPts,donorPts_,iptdrodm + shift_zone[NoD],iptcoe+shift_coe[NoD], iptcstk+irac*taille+5*taillefenetreR,taillefenetreD,nstep,ind);
-
-		 }
+		if (nstep%cycle==1 or nstep%cycle==cycle/2 or nstep%cycle==cycle-1)
+		  {
 
 
-	       donorPts_[0] =  ipt_param_int[debut_rac + 7];
-	       donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
-	       donorPts_[2] =  ipt_param_int[debut_rac + 9];
-	       donorPts_[3] =  ipt_param_int[debut_rac + 10];
-	       donorPts_[4] =  ipt_param_int[debut_rac + 11];
-	       donorPts_[5] =  ipt_param_int[debut_rac + 12];
-	       //int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
+		    E_Int ind=2;
+		    conservrk3local3para_(param_intt[NoD],donorPts,donorPts_,iptdrodm + shift_zone[NoD],iptcoe+shift_coe[NoD], iptcstk+irac*taille+5*taillefenetreR,taillefenetreD,nstep,ind);
 
-	       //donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = 1 + 0.5*(dir+abs(dir))*(param_intt[NoD][NIJK]-4-1) ;
-	       //donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = 1 + 0.5*(dir+abs(dir))*(param_intt[NoD][NIJK]-4-1);
-
-	       taillefenetreD = (donorPts_[1] - donorPts_[0] + 1)*(donorPts_[3] - donorPts_[2] + 1)*(donorPts_[5] - donorPts_[4] + 1); 
+		  }
 
 
-	       indice_boucle_lu_(NoD, ithread_loc, Nbre_thread_actif_loc, param_intt[NoD][ ITYPCP ],
-				 donorPts_,
-				 topology, ipt_ind_dm_omp_thread);
+		donorPts_[0] =  ipt_param_int[debut_rac + 7];
+		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
+		donorPts_[2] =  ipt_param_int[debut_rac + 9];
+		donorPts_[3] =  ipt_param_int[debut_rac + 10];
+		donorPts_[4] =  ipt_param_int[debut_rac + 11];
+		donorPts_[5] =  ipt_param_int[debut_rac + 12];
+		//int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
 
-	       donorPts[0]=ipt_ind_dm_omp_thread[0];
-	       donorPts[1]=ipt_ind_dm_omp_thread[1];
-	       donorPts[2]=ipt_ind_dm_omp_thread[2];
-	       donorPts[3]=ipt_ind_dm_omp_thread[3];
-	       donorPts[4]=ipt_ind_dm_omp_thread[4];
-	       donorPts[5]=ipt_ind_dm_omp_thread[5];
+		//donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = 1 + 0.5*(dir+abs(dir))*(param_intt[NoD][NIJK]-4-1) ;
+		//donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = 1 + 0.5*(dir+abs(dir))*(param_intt[NoD][NIJK]-4-1);
 
-	       //dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 20*irac + 13];
-	       //donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
-	       //donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
+		taillefenetreD = (donorPts_[1] - donorPts_[0] + 1)*(donorPts_[3] - donorPts_[2] + 1)*(donorPts_[5] - donorPts_[4] + 1); 
 
 
-	       E_Int donorPts__[6]; 
-	       donorPts__[0] =  ipt_param_int[debut_rac + 0];
-	       donorPts__[1] =  ipt_param_int[debut_rac + 1] ;
-	       donorPts__[2] =  ipt_param_int[debut_rac + 2];
-	       donorPts__[3] =  ipt_param_int[debut_rac + 3];
-	       donorPts__[4] =  ipt_param_int[debut_rac + 4];
-	       donorPts__[5] =  ipt_param_int[debut_rac + 5];
-	       //dir = ipt_param_int[ech + 4 +timelevel*2 + 1 + nrac*16 + 20*irac + 6];
-	       //donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
-	       //donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
+		indice_boucle_lu_(NoD, ithread_loc, Nbre_thread_actif_loc, param_intt[NoD][ ITYPCP ],
+				  donorPts_,
+				  topology, ipt_ind_dm_omp_thread);
 
-	       E_Int* transfo;
-	       transfo = &ipt_param_int[debut_rac + 14];
+		donorPts[0]=ipt_ind_dm_omp_thread[0];
+		donorPts[1]=ipt_ind_dm_omp_thread[1];
+		donorPts[2]=ipt_ind_dm_omp_thread[2];
+		donorPts[3]=ipt_ind_dm_omp_thread[3];
+		donorPts[4]=ipt_ind_dm_omp_thread[4];
+		donorPts[5]=ipt_ind_dm_omp_thread[5];
+
+		//dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 20*irac + 13];
+		//donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
+		//donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
+
+
+		E_Int donorPts__[6]; 
+		donorPts__[0] =  ipt_param_int[debut_rac + 0];
+		donorPts__[1] =  ipt_param_int[debut_rac + 1] ;
+		donorPts__[2] =  ipt_param_int[debut_rac + 2];
+		donorPts__[3] =  ipt_param_int[debut_rac + 3];
+		donorPts__[4] =  ipt_param_int[debut_rac + 4];
+		donorPts__[5] =  ipt_param_int[debut_rac + 5];
+		//dir = ipt_param_int[ech + 4 +timelevel*2 + 1 + nrac*16 + 20*irac + 6];
+		//donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
+		//donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
+
+		E_Int* transfo;
+		transfo = &ipt_param_int[debut_rac + 14];
   
 
-	       E_Int trans1 =  ipt_param_int[debut_rac + 14];
-	       E_Int trans2 =  ipt_param_int[debut_rac + 15];
-	       E_Int trans3 =  ipt_param_int[debut_rac + 16];
+		E_Int trans1 =  ipt_param_int[debut_rac + 14];
+		E_Int trans2 =  ipt_param_int[debut_rac + 15];
+		E_Int trans3 =  ipt_param_int[debut_rac + 16];
 	       
 
-	       E_Int pt1 =  ipt_param_int[debut_rac + 17];
-	       E_Int pt2 =  ipt_param_int[debut_rac + 18];
-	       E_Int pt3 =  ipt_param_int[debut_rac + 19];
+		E_Int pt1 =  ipt_param_int[debut_rac + 17];
+		E_Int pt2 =  ipt_param_int[debut_rac + 18];
+		E_Int pt3 =  ipt_param_int[debut_rac + 19];
 
-	       E_Int ratio1 =  ipt_param_int[debut_rac + 21];
-	       E_Int ratio2 =  ipt_param_int[debut_rac + 22];
-	       E_Int ratio3 =  ipt_param_int[debut_rac + 23];
+		E_Int ratio1 =  ipt_param_int[debut_rac + 21];
+		E_Int ratio2 =  ipt_param_int[debut_rac + 22];
+		E_Int ratio3 =  ipt_param_int[debut_rac + 23];
 
-	       //cout << ratio1 <<" "<<ratio2<<" "<<ratio3<< endl;
+		//cout << ratio1 <<" "<<ratio2<<" "<<ratio3<< endl;
 
 
-	       if (nstep%cycle==cycle-1) /// Opération pour assurer la conservativité
-		 {
+		if (nstep%cycle==cycle-1) /// Opération pour assurer la conservativité
+		  {
 
 
 #pragma omp barrier // On attend que tous les threads aient calculé leur bilan de flux
-		   //cout << "zone "<< NoD<< endl;
+		    //cout << "zone "<< NoD<< endl;
 
-		   //cout <<  "receveurs= " <<  donorPts__[0]<<" "<< donorPts__[1] <<" "<< donorPts__[2]<<" "<< donorPts__[3] <<" "<< donorPts__[4]<<" "<< donorPts__[5]<<endl;
+		    //cout <<  "receveurs= " <<  donorPts__[0]<<" "<< donorPts__[1] <<" "<< donorPts__[2]<<" "<< donorPts__[3] <<" "<< donorPts__[4]<<" "<< donorPts__[5]<<endl;
 
-		   //cout << "transfo= "    << *transfo << " "<<*(transfo+1)<<" "<<*(transfo+2) << " "<< irac << endl;
-		   //cout << NoD  <<" "<<  NoR  << " "<< irac << endl;
-		   //cout << "dir= " << dir << endl;
-		   //cout << "donneurs= "   <<  donorPts_[0]<<" "<< donorPts_[1] <<" "<< donorPts_[2]<<" "<< donorPts_[3] <<" "<< donorPts_[4]<<" "<< donorPts_[5]<<endl;
+		    //cout << "transfo= "    << *transfo << " "<<*(transfo+1)<<" "<<*(transfo+2) << " "<< irac << endl;
+		    //cout << NoD  <<" "<<  NoR  << " "<< irac << endl;
+		    //cout << "dir= " << dir << endl;
+		    //cout << "donneurs= "   <<  donorPts_[0]<<" "<< donorPts_[1] <<" "<< donorPts_[2]<<" "<< donorPts_[3] <<" "<< donorPts_[4]<<" "<< donorPts_[5]<<endl;
 
-		   conservrk3local4para_(param_intt[NoD],param_intt[NoR],iptcoe+shift_coe[NoD],iptcoe+shift_coe[NoR],param_realt[NoD],donorPts,donorPts_,donorPts__,iptro_p1[NoD],iptcstk+irac*taille+5*taillefenetreR,iptcstk+irac*taille,taillefenetreR,taillefenetreD,nstep,dir,pt1,pt2,pt3,transfo,ratio1,ratio2,ratio3);
+		    conservrk3local4para_(param_intt[NoD],param_intt[NoR],iptcoe+shift_coe[NoD],iptcoe+shift_coe[NoR],param_realt[NoD],donorPts,donorPts_,donorPts__,iptro_p1[NoD],iptcstk+irac*taille+5*taillefenetreR,iptcstk+irac*taille,taillefenetreR,taillefenetreD,nstep,dir,pt1,pt2,pt3,transfo,ratio1,ratio2,ratio3);
 
-		 }
+		  }
 
-	     }
+	      }
 
-	 }
+	  }
 
-     }// fin boucle processus
+      }// fin boucle processus
 
-   else // Transferts inter processus
+    else // Transferts inter processus
 
-     {
+      {
 
-      for  (E_Int irac=0; irac< nrac; irac++) // Boucle sur les différents raccords (frontières)
+	for  (E_Int irac=0; irac< nrac; irac++) // Boucle sur les différents raccords (frontières)
 
-	 {
+	  {
 
-	   E_Int timelevel = ipt_param_int[ ech +3 ]; 
-	   //E_Int shift_rac =  ech + 2 + irac;
-	   E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
+	    E_Int timelevel = ipt_param_int[ ech +3 ]; 
+	    //E_Int shift_rac =  ech + 2 + irac;
+	    E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
 
-	   E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
-	   E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
-	   E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 +1 ];
+	    E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
+	    E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
+	    E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 +1 ];
 
-	   E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;       
+	    E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;       
 
-	   //E_Int cycle = param_intt[NoD][NSSITER]/param_intt[NoD][LEVEL];
-	   //E_Int cycleR = param_intt[NoR][NSSITER]/param_intt[NoR][LEVEL];
+	    //E_Int cycle = param_intt[NoD][NSSITER]/param_intt[NoD][LEVEL];
+	    //E_Int cycleR = param_intt[NoR][NSSITER]/param_intt[NoR][LEVEL];
 
-	   E_Int cycle  = param_intt[NoD][NSSITER]/ipt_param_int[debut_rac + 25];
-	   E_Int cycleR = param_intt[NoR][NSSITER]/ipt_param_int[debut_rac + 24];
+	    E_Int cycle  = param_intt[NoD][NSSITER]/ipt_param_int[debut_rac + 25];
+	    E_Int cycleR = param_intt[NoR][NSSITER]/ipt_param_int[debut_rac + 24];
 
  	                                                                      
-	 }
+	  }
 
 
 
 
-     }
+      }
   
 
- }//fin zone omp
-  */
+  }//fin zone omp
   
+  }
   
  //RELEASESHAREDN( constk  , cstk );
  //RELEASESHAREDN( drodmstock  , drodmstk );

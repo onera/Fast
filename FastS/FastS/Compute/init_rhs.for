@@ -54,8 +54,7 @@ c***********************************************************************
 Calcul des coeffcients : Explicit global
 c***********************************************************************
 
-      if (param_int(EXPLOC)==0) then
- 
+
       if (b.eq.3) then ! Runge-Kutta ordre 3
        
          if (nitcfg.eq.2) then
@@ -81,22 +80,6 @@ c***********************************************************************
          end if
       end if
 
-c***********************************************************************
-Calcul des coeffcients : Explicit local (RK 2)
-c***********************************************************************
-
-      else if (param_int(EXPLOC)==1) then
-         if (MOD(nitcfg,ind).eq.0) then
-            coefH=-1.
-            !print*, 'coefH=',coefH
-         else if (MOD(nitcfg,ind).eq.1) then
-            coefH=0.
-            !print*, 'coefH=',coefH
-         else if (MOD(nitcfg,ind).eq.2) then
-            coefH=-1.
-            !print*, 'coefH=',coefH
-         end if         
-      end if
 
 
       IF(param_int(ITYPCP).le.1.or.nitcfg.eq.1) THEN

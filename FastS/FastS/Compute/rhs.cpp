@@ -15,7 +15,7 @@
 
           ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
           nb_subzone    = ipt_nidom_loc [nitcfg-1];                                            //nbre sous-zone a la sousiter courante
-
+	 
 
            // cout <<  nb_subzone  << endl; 
 
@@ -90,9 +90,7 @@
 	    //clock_t start, end;
 	    
             //start = clock();
-
-            //E_Float ns_begin = omp_get_wtime();
-
+	    
             navier_stokes_struct_( ndo,    nidom, Nbre_thread_actif_loc, ithread_loc, ithread, omp_mode, layer_mode, Nbre_socket, socket, mx_synchro , 
                                    lssiter_verif, lexit_lu             ,nptpsi      , nitcfg , nssiter , nitrun    , first_it   , nb_pulse  , flagCellN,
                                   param_int[nd] , param_real[nd] ,
@@ -107,18 +105,13 @@
                                   ipti0[nd]               , iptj0[nd]               , iptk0[nd]           , iptvol_df[nd]    ,
                                   iptventi[nd]            , iptventj[nd]            , iptventk[nd]        ,
                                   iptwig   + shift_wig    , iptstat_wig + shift_wig , iptrot+ shift_wig   ,
-				  iptdrodm + shift_rk4 + shift_zone   , iptcoe  + shift_coe     , iptdelta[nd]        , iptro_res[nd]  , iptsrc[nd]   );
-
-
-//E_Float ns_end = omp_get_wtime();
+				  iptdrodm + shift_zone   , iptcoe  + shift_coe     , iptdelta[nd]        , iptro_res[nd]  , iptsrc[nd]   );
 
             //end = clock();
             //E_Float ns_duree;
 //            E_Float ns_duree2;
 //E_Float nb_pts = (ipt_ind_dm_omp_thread[1]+1)*(ipt_ind_dm_omp_thread[3]+1)*(ipt_ind_dm_omp_thread[5]+1);
 //ns_duree  = (ns_end - ns_begin);///nb_pts;
-//          ns_duree2 = (ns_end - ns_begin);
-//cout << "tps_ns  : "<< ns_duree  << endl;
             //cout <<"zone : "<< ndo <<" "<< "tps2 : "<< ns_duree2 << endl;
 
             //Flush Rhs

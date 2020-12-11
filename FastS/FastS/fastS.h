@@ -283,10 +283,17 @@ namespace K_FASTS
   // - explicite local -
   //====================
 
-void dtlocal2para_c(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int,
-		    E_Float*& param_real, E_Int**& param_intt, E_Float**& param_realt,
-		    E_Float*& iptdrodm,  E_Float*& iptdrodmcoe, E_Float*& iptstk, E_Float*& iptdrodmstk,
-		    E_Float*& iptcstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom);
+  //void dtlocal2para_c(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int,
+  //	    E_Float*& param_real, E_Int**& param_intt, E_Float**& param_realt,
+  //		    E_Float*& iptdrodm,  E_Float*& iptdrodmcoe, E_Float*& iptstk, E_Float*& iptdrodmstk,
+  //		    E_Float*& iptcstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom, E_Int& mx_sszone, E_Int*& ipt_ssor_size);
+
+void dtlocal2para_c(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int, E_Float*& param_real,  E_Int**& param_intt, E_Float**& param_realt,
+                      E_Float*& iptdrodm,  E_Float*& iptdrodmcoe, E_Float*& iptstk, E_Float*& iptdrodmstk, E_Float*& iptcstk,  E_Int& nstep, 
+  		      E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom);
+
+
+
 
 void BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int,
 		    E_Float*& param_real, E_Int**& param_intt, E_Float**& param_realt,

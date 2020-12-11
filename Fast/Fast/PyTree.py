@@ -8,7 +8,7 @@ OMP_MODE = 0
 import os
 try:
     import FastC.PyTree as FastC
-    from FastC.PyTree import _setNum2Zones, _setNum2Base, load, save, loadFile, saveFile, loadTree, saveTree
+    from FastC.PyTree import _setNum2Zones, _setNum2Base, load, save, loadFile, loadFileG, saveFile, loadTree, saveTree
      
 except: 
     raise ImportError("Fast.PyTree: requires FastC module.")

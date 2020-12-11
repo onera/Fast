@@ -26,16 +26,26 @@ except: pass
 
 #==============================================================================
 def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=None):
-    if graph is not None:
+
+    if isinstance(graph, list):
+        #test pour savoir si graph est une liste de dictionnaires (explicite local)
+        #ou juste un dictionnaire (explicite global, implicite)
+        grapheliste=True
+    else:
+        grapheliste=False
+    
+    if graph is not None and grapheliste==False:
         procDict  = graph['procDict']
         graphID   = graph['graphID']
         graphIBCD = graph['graphIBCD']
+    
     else: 
         procDict=None; graphID=None; graphIBCD=None
 
     base = Internal.getNodeFromType1(t   ,"CGNSBase_t")
     own  = Internal.getNodeFromName1(base, '.Solver#ownData')  
     dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')
+
 
     zones= Internal.getZones(t)
 
@@ -57,7 +67,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
     if layer == "Python": 
 
-      if exploc==2 and tc is not None and rk==3:
+      if exploc==1 and tc is not None:
+      #if exploc==2 and tc is not None and rk==3:
          tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
          if tc_compact is not None:
                 param_real_tc= tc_compact[1]
@@ -94,27 +105,52 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
 
             #dtloc GJeanmasson
-            if exploc==2 and tc is not None and rk==3:
-               fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
+            #if exploc==2 and tc is not None and rk==3:
+            if exploc==1 and tc is not None:
 
-               if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
-               elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
+
+               no_transfert = 1#comm_P2P
+               process = Cmpi.rank
+
+               zonesD    = Internal.getZones(tc)
+               
+               fasts.dtlocal2para_mpi(zones,zonesD,param_int_tc,param_real_tc,hook1,rostk,drodmstk,constk,0,nstep,ompmode,taille_tabs,no_transfert,process)
+
+               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
+               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
+
                _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0], rk=rk, exploc=exploc)    
 
                FastC.switchPointers2__(zones,nitmax,nstep)
                 
                # Ghostcell
-               if nitmax%3 != 0: # Tous les schemas sauf constantinescu RK3
-                   if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
-                   elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
-                   timelevel_target = int(dtloc[4])
-                   _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc)
-            
+
+               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
+               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
+               timelevel_target = int(dtloc[4])
+
+               if graph is not None and graphelist == True:
+                       procDict  = list_graph[nstep-1]['procDict']
+                       graphID   = list_graph[nstep-1]['graphID']
+                       graphIBCD = list_graph[nstep-1]['graphIBCD']
+               else: 
+                       procDict=None; graphID=None; graphIBCD=None          
+                   
+               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc)
+
+               no_transfert = 1#comm_P2P      
+
                fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
 
                if nstep%2 == 0:
                    timelevel_target = int(dtloc[4])
                    vars = ['Density'  ]
+                   if graph is not None:
+                       procDict  = list_graph[nitmax+nstep-1]['procDict']
+                       graphID   = list_graph[nitmax+nstep-1]['graphID']
+                       graphIBCD = list_graph[nitmax+nstep-1]['graphIBCD']
+                   else: 
+                       procDict=None; graphID=None; graphIBCD=None      
                    _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc, 2)
 
                if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
@@ -123,12 +159,17 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
 
 
-            else:
+            else: ### Autres schémas
                # Ghostcell
                #tic=Time.time()  
+
                vars = FastC.varsP
                if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
+
                timelevel_target = int(dtloc[4])
+              
+
+               print ('target= ', timelevel_target)
                #tic=Time.time()
 
                _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict)
@@ -153,13 +194,13 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                                   procDict=procDict, cellNName='cellN#Motion', 
                                   interpInDnrFrame=interpInDnrFrame)
                #print('t_transferts, rank= ', Time.time() - t0, Cmpi.rank)
+
                #toc1_=Time.time()-tic  
-                        
-               #tps_calcul = tps_calcul + toc1 + toc3  
-               #tps_com_transferts = tps_com_transferts + toc1_ - toc3 
+
 
       dtloc[3] +=1    #time_level_motion
       dtloc[4] +=1    #time_level_target
+
     else: 
       nstep_deb = 1
       nstep_fin = nitmax
@@ -169,7 +210,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
       fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, FastC.HOOK)
 
     #switch pointer a la fin du pas de temps
-    if exploc==2 and tc is not None and rk==3:
+    if exploc==1 and tc is not None :
+    #if exploc==2 and tc is not None and rk==3:
          if layer == 'Python':
              FastC.switchPointers__(zones, 1, 3)
          else:
@@ -190,180 +232,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
     return None
     #return tps_calcul, tps_com_transferts
 
-
 #==============================================================================
-#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
-def _computeguillaume1(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, list_graph=None, tps_calcul=None, tps_com_transferts=None):
-    #if graph is not None:
-    #    procDict  = graph['procDict']
-    #    graphID   = graph['graphID']
-    #    graphIBCD = graph['graphIBCD']
-    #else: 
-    #    procDict=None; graphID=None; graphIBCD=None
-
-    base = Internal.getNodeFromType1(t,"CGNSBase_t")
-    own  = Internal.getNodeFromName1(base, '.Solver#ownData') 
-    dtloc= Internal.getNodeFromName1(own, '.Solver#dtloc')
-    zones= Internal.getZones(t)
-    node = Internal.getNodeFromName(t, '.Solver#define')
-    node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode = PyTree.OMP_MODE
-    if node is not None: ompmode = Internal.getValue(node)
-    dtloc   = Internal.getValue(dtloc) # tab numpy
-    nitmax  = int(dtloc[0])
-    orderRk = int(dtloc[len(dtloc)-1])
-
-    node = Internal.getNodeFromName1(base, '.Solver#define')
-    exp_local = Internal.getNodeFromName1(node, 'exp_local') 
-    explocal = Internal.getValue(exp_local)
-    r_k = Internal.getNodeFromName1(node, 'rk') 
-    rk = Internal.getValue(r_k)
-
-    #### a blinder...
-    itypcp = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1][29]
-    #### a blinder...
-
-    if tc is not None:
-         bases = Internal.getNodesFromType1(tc, 'CGNSBase_t')  # noeud
-         tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
-         #print tc_compact
-         if tc_compact is not None:
-                param_real= tc_compact[1]
-                param_int = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
-
-    if (layer=='Python'):
-        taille_tabs = 2000000000
-        rostk = numpy.empty(taille_tabs, dtype=numpy.float64)  # tableau de stockage des valeurs 
-        drodmstk = numpy.empty(taille_tabs, dtype=numpy.float64) # tableau de stockage des flux (drodm)
-        constk = numpy.empty(taille_tabs, dtype=numpy.float64) # tableau de stockage des flux (conservativite
-
-    zonesD    = Internal.getZones(tc)
-
-    nitmaxs = 1
-
-    if layer == "Python": 
-
- 
-      #tps_calcul = 0.0
-      #tps_com_transferts = 0.0 
-        
-      for nstep in range(1, nitmax+1): # pas RK ou ssiterations
-
-         if graph is not None:
-             procDict  = list_graph[nstep-1]['procDict']
-             graphID   = list_graph[nstep-1]['graphID']
-             graphIBCD = list_graph[nstep-1]['graphIBCD']
-         else: 
-             procDict=None; graphID=None; graphIBCD=None          
-
-         #print 'nstep= ', nstep
-
-         hook1 = FastC.HOOK.copy()
-         distrib_omp = 0
-         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
-         nidom_loc = hook1["nidom_tot"]
-
-         skip = 0
-         if (hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1): skip = 1
-
-         # calcul Navier Stokes + appli CL
-         if nidom_loc > 0 and skip ==0:
-            # Navier-Stokes
-            nstep_deb = nstep
-            nstep_fin = nstep
-            layer_mode= 0
-            nit_c     = 1
-            
-            #tic=timeit.default_timer()
-            #tic=Time.time()
-            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
-            #toc1=timeit.default_timer()-tic 
-            #toc1=Time.time()-tic           
- 
-
-            #tic=Time.time()
-            if    (nstep%2 == 0)  and itypcp == 2 : vars = FastC.varsN 
-            elif  (nstep%2 == 1)  and itypcp == 2 : vars = FastC.varsP 
-            _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0], rk=rk, exploc=explocal)
-            #toc2=Time.time()-tic              
-
-            #tic=Time.time()
-            #for comm_P2P in range(1,param_int[0]+1):
-            no_transfert = 1#comm_P2P
-            process = Cmpi.rank
-            #print Cmpi.rank, comm_P2P
-            #tic=Time.time()
-            fasts.dtlocal2para_mpi(zones,zonesD,param_int,param_real,hook1,rostk,drodmstk,constk,0,nstep,ompmode,taille_tabs,no_transfert,process)
-          
-            FastC.switchPointers2__(zones,nitmax,nstep)
-            #toc3=Time.time()-tic
-                
-            # Ghostcell
-            #tic=Time.time()
-            if (nstep != nitmax) : # Tous les schemas sauf constantinescu RK3
-                 if    (nstep%2 == 0)  and itypcp == 2 : vars = FastC.varsN  # Choix du tableau pour application transfer et BC
-                 elif  (nstep%2 == 1)  and itypcp == 2 : vars = FastC.varsP
-                 timelevel_target = int(dtloc[4])
-                 _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, nitmax, rk, explocal)
-            #toc1_=Time.time()-tic
-            
-
-            #tic=Time.time()
-            #for comm_P2P in range(1,param_int[0]+1):
-            no_transfert = 1#comm_P2P           
-            fasts.recup3para_mpi(zones,zonesD,param_int,param_real,hook1,rostk,0,nstep,ompmode,taille_tabs,no_transfert) 
-            #toc4=Time.time()-tic
-
-            #tic=Time.time()
-            if (nstep%2==0) :
-                timelevel_target = int(dtloc[4])
-                vars = FastC.varsN
-                if graph is not None:
-                    procDict  = list_graph[nitmax+nstep-1]['procDict']
-                    graphID   = list_graph[nitmax+nstep-1]['graphID']
-                    graphIBCD = list_graph[nitmax+nstep-1]['graphIBCD']
-                else: 
-                    procDict=None; graphID=None; graphIBCD=None      
-                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, graphID, graphIBCD, procDict, nitmax, rk, explocal, 2)
-            #toc2_=Time.time()-tic 
-
-            #tps_calcul = tps_calcul + toc1 + toc2 + toc4  + toc3 
-            #tps_com_transferts = tps_com_transferts + toc1 #toc2_+ toc1_ 
-
-
-    else: 
-      nstep_deb = 1
-      nstep_fin = nitmax
-      layer_mode= 1
-      nit_c     = NIT
-      FastC.HOOK["mpi"] = 1
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, FastC.HOOK)
-
-      FastC.switchPointers3__(zones,nitmax)
-      #FastC.switchPointers__(zones, 1, 3)                       
-   
-    if (layer == 'Python') :
-      #FastC.switchPointers3__(zones,nitmax)
-      FastC.switchPointers__(zones, 1, 3)
-
-    # switch pointers
-    #case = NIT%3
-    #tic=Time.time()
-    #if case != 0: FastC.switchPointers__(zones,1,3)
-    #toc5=Time.time()-tic
-    #tps_calcul = tps_calcul + toc5
-    # flag pour derivee temporelle 1er pas de temps implicit
-    FastC.HOOK["FIRST_IT"]  = 1
-    FastC.FIRST_IT          = 1
-
-    #print 'rang, tps calcul : ', Cmpi.rank, tps_calcul
-    #print 'rang, tps transfert : ', Cmpi.rank, tps_com_transferts
-    return tps_calcul, tps_com_transferts
-    #return None
-#==============================================================================
-
-
-def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=1, num_passage=1): 
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=0, num_passage=1): 
 
    rank=Cmpi.rank
 
@@ -385,6 +255,8 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
               for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
+              print('fillGC: timeleveltarget= ', timelevel_target)
+
               # #recuperation Nb pas instationnaire dans tc
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
               Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
@@ -403,7 +275,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
        # if (rank == 0 ): t0=timeit.default_timer()
        #apply BC
        #tic = Time.time()
-       if rk != 3 and exploc != 2:
+       if(exploc != 1):
            _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        #toc = Time.time() - tic
        # if (rank == 0 ):
@@ -414,10 +286,23 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 #==============================================================================
 def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None):
 
-    if graph is not None:
+
+    
+    if isinstance(graph, list):
+        #test pour savoir si graph est une liste de dictionnaires (explicite local)
+        #ou juste un dictionnaire (explicite global, implicite)
+        grapheliste=True
+    else:
+        grapheliste=False
+    
+    if graph is not None and grapheliste==False:
         procDict  = graph['procDict']
         graphID   = graph['graphID']
         graphIBCD = graph['graphIBCD']
+    elif graph is not None and grapheliste==True:
+        procDict  = graph[0]['procDict']
+        graphID   = graph[0]['graphID']
+        graphIBCD = graph[0]['graphIBCD']
     else: 
         procDict=None; graphID=None; graphIBCD=None
 
@@ -434,10 +319,15 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # Construction param_int et param_real des zones
     FastC._buildOwnData(t, Padding)
 
+    
     # determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
+
+    
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
-    dtloc = Internal.getValue(dtloc)                       # tab numpy
+    dtloc = Internal.getValue(dtloc)# tab numpy
+    #print('dtloc= ', dtloc)
+    
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
@@ -451,7 +341,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t) 
-
+ 
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     for nstep in range(1, int(dtloc[0])+1):
@@ -469,6 +359,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     t, FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint)
     FastC.HOOK['FIRST_IT']= FIRST_IT
+
     #compactage des champs en fonction option de calcul  
     count = -1
     if ompmode == 1: count = 0          
@@ -537,9 +428,12 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     nstep             = 1
     nitrun            = 0
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
-    timelevel_target = int(dtloc[4]) 
+    timelevel_target = int(dtloc[4])
 
     _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, ompmode, hook1,graphID, graphIBCD, procDict)
+
+
+    #sys.exit()    
 
     #
     # initialisation Mut
@@ -552,13 +446,14 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 #==============================================================================
 # For periodic unsteady chimera join, parameter must be updated peridicaly 
 #==============================================================================
-def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_steady.cgns', directory='.'):
+def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_steady.cgns', directory='.', iteration=0):
 
     bases = Internal.getNodesFromType1(t      , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
+    #print('own= ', own)
     dtloc = None
     if own is not None: dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
-
+   
     #on cree les noeud infos insta pour chimere perio s'il n'existe pas 
     TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget'] 
     for opt in TimeLevelOpts:
@@ -567,11 +462,23 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
     if dtloc is not None:
       dtloc            = Internal.getValue(dtloc) # tab numpy
+
       timelevel_motion = dtloc[3]
       timelevel_target = dtloc[4]
+
+
     else:
       timelevel_motion = Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0]
       timelevel_target = Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0]
+
+
+    #print("timelevel_motion= ", timelevel_motion)
+    #print("timelevel_target= ", timelevel_target)
+
+    if iteration == 0:    
+       timelevel_motion = Internal.getNodeFromName1(t, 'Iteration')[1][0] - 1
+    else:
+       timelevel_motion = iteration
 
     timelevel_period = timelevelInfos["TimeLevelPeriod"]
     timelevel_360    = timelevelInfos["TimeLevel360"]
@@ -589,6 +496,11 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
 
+       #print('root,timelevel_motion, tmp = ', root, timelevel_motion, tmp)
+       #root = 60
+    
+       iteration = timelevel_motion
+   
        FILE = tc_steady
        if os.access(FILE, os.F_OK): 
           tc = Cmpi.convertFile2SkeletonTree(FILE)
@@ -599,17 +511,30 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
           tc_inst = Cmpi.convertFile2SkeletonTree(FILE)
           tc_inst = Cmpi.readZones(tc_inst, FILE, rank=rank)
 
+       if dtloc is not None:
+           dtloc[4]=dtloc[4]%timelevel_perfile
+
        #
        #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
        #
+       if timelevel_motion >= timelevel_period:
+            No_period = timelevel_motion//timelevel_period
+            iteration = timelevel_motion - No_period*timelevel_period 
+       else:
+            iteration = timelevel_motion
+
+
        if timelevel_motion >= timelevel_period: 
           bases  = Internal.getNodesFromType1(tc_inst , 'CGNSBase_t')       # noeud
+          Rotors  = ['Base02', 'Base04', 'Base06']
+          Stators = ['Base01', 'Base03', 'Base05', 'Base07']
+
 
           sign =-1
           if omega > 0: sign = 1
           for base in bases:
-            if   base[0]=='Rotor': teta = -2*math.pi*timelevel_period/timelevel_360*No_period*sign
-            elif base[0]=='Stator':teta =  2*math.pi*timelevel_period/timelevel_360*No_period*sign
+            if   base[0] in Rotors  : teta = -2*math.pi*timelevel_period/timelevel_360*No_period*sign
+            elif base[0] in Stators : teta =  2*math.pi*timelevel_period/timelevel_360*No_period*sign
             zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
             for z in zones:
               angles = Internal.getNodesFromName2(z, 'RotationAngle')
@@ -617,15 +542,28 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        tc = Internal.merge( [tc, tc_inst] )
 
-       graphID   = Cmpi.computeGraph(tc, type='ID')
+       #if (rank==32):
+       #    C.convertPyTree2File(tc, 'tc_merged_32.cgns')
+
+       
+
+       graphID   = Cmpi.computeGraph(tc, type='ID', it=iteration)
        graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
        procDict  = D2.getProcDict(tc)
+
        procList  = D2.getProcList(tc, sort=True)
+
+       if rank==0 :  print ('proclist= ', procList)
+   
+
        graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
 
-       tc = Cmpi.convert2PartialTree(tc, rank=rank)
+       #if rank==0:print('Calcul du graph pour l iteration', iteration)
+       #if rank==0:print('graph[32]= ', graphID[32])
 
-       #
+       tc = Cmpi.convert2PartialTree(tc, rank=rank)
+ 
+
        #Compactage tc
        # 
        # Get omp_mode
@@ -640,18 +578,377 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        # Compactage arbre transfert
        zones = Internal.getZones(t)
+
+       #Remise zero target
+       #if dtloc is not None: dtloc[4] = 0
        
        X.miseAPlatDonorTree__(zones, tc, graph=graph)
 
        #Remise zero target
-       if dtloc is not None: dtloc[4] = 0
+       #if dtloc is not None: dtloc[4] = 0
+       #print('COUCOU, dtloc= ', dtloc )
        
-    #
     #timelevel_motion larger than number of timelevels for 360degre 
     #
+
+    else:
+       rank = Cmpi.rank
+
+
+       if timelevel_motion >= timelevel_period:
+            No_period = timelevel_motion//timelevel_period
+            iteration = timelevel_motion - No_period*timelevel_period 
+       else:
+            iteration = timelevel_motion
+    
+       if rank==0:print('calcul du graph it', iteration)
+
+
+          
+       graphID   = Cmpi.computeGraph(tc, type='ID', it=iteration)
+       graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
+       procDict  = D2.getProcDict(tc)
+       procList  = D2.getProcList(tc, sort=True)
+
+       if rank==0:print('Recalcul du graph pour l iteration', iteration)
+
+
+       graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+
+
     if timelevel_motion > timelevel_360:
        print('remise a ZERO dans updateUnstaeady')
        dtloc[3] = 0  # remise a zero du compteur si 360degres 
 
     return tc, graph
+
+#====================================================================================
+# Calcule la CFL en chaque maille et la met dans l'arbre t pour dtloc instationnaire
+#====================================================================================
+def computeCFL_dtlocal(t):
+
+    import math
+    import Transform.PyTree as T        
+    from mpi4py import MPI  
+ 
+    t = C.initVars(t,'centers:CFL', 0.)
+
+    dimPb = 3
+    node = Internal.getNodeFromName(t, 'EquationDimension')
+    if node is not None: dimPb = Internal.getValue(node)
+
+    liste_BCPeriodiques = []
+    
+    """
+    BCMatch = Internal.getNodesFromType(t, 'GridConnectivity1to1_t')
+    for match in BCMatch:
+        perio = Internal.getNodesFromName(match, 'GridConnectivityProperty')
+        if perio != [] :
+            rotCenter  = Internal.getNodeFromName(perio, 'RotationCenter')[1]
+            rotAngle   = Internal.getNodeFromName(perio, 'RotationAngle')[1]
+            translation = Internal.getNodeFromName(perio, 'Translation')[1]
+         
+            list1 = [abs(translation).tolist(),abs(rotAngle).tolist(),rotCenter.tolist()]
+ 
+            if (list1 not in liste_BCPeriodiques) :            
+                 liste_BCPeriodiques.append(list1)
+  
+    """
+
+               
+    print(liste_BCPeriodiques)
+                 
+    print('av warmup')
+
+    (t,tc,metrics) = warmup(t,tc=None)
+
+    print('ap warmup')
+
+    zones = Internal.getZones(t)
+
+    dim = Internal.getZoneDim(zones[0])
+    
+    print('dimPb= ', dimPb)
+    
+    fasts.prep_cfl(zones, metrics,1,1,1)
+
+    #t = Internal.rmGhostCells(t, t, 2)
+    """
+    C._rmVars(t, 'Temperature_M1')
+    C._rmVars(t, 'Temperature_P1')
+    C._rmVars(t, 'Density_M1')
+    C._rmVars(t, 'Density_P1')
+    C._rmVars(t, 'VelocityX_M1')
+    C._rmVars(t, 'VelocityX_P1')
+    C._rmVars(t, 'VelocityY_M1')
+    C._rmVars(t, 'VelocityY_P1')
+    C._rmVars(t, 'VelocityZ_M1')
+    C._rmVars(t, 'VelocityZ_P1')
+    """
+
+    cflmax_glob = 0.0
+    cflmin_glob = 1.0e15 
+
+    for z in zones:
+        dim = Internal.getZoneDim(z)
+        zp = T.subzone(z, (3,3,3), (dim[1]-2,dim[2]-2,dim[3]-2))
+        cflmax = C.getMaxValue(zp, 'centers:CFL')
+        cflmin = C.getMinValue(zp, 'centers:CFL')
+        if (cflmax > cflmax_glob):cflmax_glob = cflmax
+        if (cflmin < cflmin_glob):cflmin_glob = cflmin
+
+    dtmin = 1.0/cflmax
+    dtmax = 1.0/cflmin
+
+    dts = numpy.array([dtmin,dtmax])
+    dts_rcv = numpy.empty(6, dtype='d')
+
+    MPI.COMM_WORLD.Allgather(dts,dts_rcv)
+
+    dtmax = max(dts_rcv)
+    dtmin = min(dts_rcv)
+    
+
+    timeLevel_max = math.floor(math.log((dtmax/dtmin))/math.log(2))
+
+    print('dtmin, dtmax, Maxlevel = ', dtmin,',',dtmax,',',timeLevel_max)
+
+    return (t,dtmin,timeLevel_max)
+
+#==============================================================================
+# decoupe maillage pour dtloc instationnaire
+#==============================================================================
+def _decoupe2(t, niveauMax, dtmin):
+
+    import Transform.PyTree as T
+
+    fes = Internal.getNodeFromName2(t,'FlowEquationSet')
+    rs = Internal.getNodeFromName2(t,'ReferenceState')
+
+    dtmin = 100000.
+    taille_bloc = 25
+    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t') 
+    zones = []
+    zones_decoupe = []
+
+    dicoTps = {}
+    numZone = []
+
+    """
+    liste_BCPeriodiques = []
+    
+    BCMatch = Internal.getNodesFromType(t, 'GridConnectivity1to1_t')
+    for match in BCMatch:
+        perio = Internal.getNodesFromName(match, 'GridConnectivityProperty')
+        if perio != [] :
+            rotCenter  = Internal.getNodeFromName(perio, 'RotationCenter')[1]
+            rotAngle   = Internal.getNodeFromName(perio, 'RotationAngle')[1]
+            translation = Internal.getNodeFromName(perio, 'Translation')[1]
+         
+            list1 = [abs(translation).tolist(),abs(rotAngle).tolist(),rotCenter.tolist()]
+ 
+            if (list1 not in liste_BCPeriodiques) :            
+                 liste_BCPeriodiques.append(list1)
+         
+    print(liste_BCPeriodiques)
+    """     
+
+    for b in bases:
+        zones += Internal.getNodesFromType1(b, 'Zone_t')
+
+    somme = 0
+    numZone.append(somme)
+    
+    for z in zones:
+
+        C._addVars(z,'centers:niveaux_temps')
+
+        dim = Internal.getZoneDim(z)
+        ni = dim[1]-5
+        nj = dim[2]-5
+        nk = dim[3]-5
+
+        dimPb = dim[4]
+        
+        if dimPb==2:nk=1
+
+        nbbloc_i = ni/taille_bloc
+        nbbloc_i = int(nbbloc_i)
+        if (nbbloc_i*taille_bloc < ni) : nbbloc_i = nbbloc_i + 1
+        nbbloc_j = nj/taille_bloc
+        nbbloc_j = int(nbbloc_j)
+        if (nbbloc_j*taille_bloc < nj) : nbbloc_j = nbbloc_j + 1
+        nbbloc_k = nk/taille_bloc
+        nbbloc_k = int(nbbloc_k)
+        if (nbbloc_k*taille_bloc < nk) : nbbloc_k = nbbloc_k + 1
+
+        somme += nbbloc_i*nbbloc_j*nbbloc_k
+        
+        numZone.append(somme)
+
+        print('decoupage de la zone', z[0])
+
+        print(nbbloc_i,nbbloc_j,nbbloc_k)
+        
+         
+        for k in range(0,nbbloc_k):
+            for j in range(0,nbbloc_j):
+                for i in range(0,nbbloc_i):
+
+                    imin = i*taille_bloc + 3
+                    jmin = j*taille_bloc + 3
+                    kmin = k*taille_bloc + 3
+
+                    imax = min((i+1)*taille_bloc+1,ni)
+                    jmax = min((j+1)*taille_bloc+1,nj)
+                    kmax = min((k+1)*taille_bloc+1,nk)
+
+                    if dimPb==2:kmax=1
+                   
+                    zp = T.subzone(z,(imin,jmin,kmin),(imax,jmax,kmax))
+
+                    cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
+                    dtmin_loc = 1./cflmax_loc
+                    
+
+                    niveauTps = math.log(((2**niveauMax)*dtmin)/dtmin_loc)/math.log(2)
+     
+ 
+                    fs = Internal.getNodeFromName(t,'FlowSolution#Centers')
+                    nt = Internal.getNodeFromName(fs,'niveaux_temps')[1]
+                    for i_ in range(imin, imax):
+                        for j_ in range(jmin, jmax):
+                            for k_ in range(kmin, kmax):
+                                 nt[i,j,k] = float(niveauTps)
+
+
+
+
+
+    return t               
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

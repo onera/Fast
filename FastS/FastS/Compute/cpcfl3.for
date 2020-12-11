@@ -769,11 +769,14 @@ c******* Euler steady *****
 
               surf= 1./max(ddi,ddj)
 
+
+
               u = rop(l,2)
               v = rop(l,3)
               r = rop(l,1) 
               c = sqrt(gam2*rop(l,5))
- 
+
+  
               ur2 = u*u + v*v
               sp  = sqrt(ur2)
  
@@ -789,6 +792,7 @@ c******* Euler steady *****
 
               !print*, cfloc
 #include   "FastS/Compute/loop_end.for"
+
 
               !print*, cfl(1), cfl(2), cfl(3)
 

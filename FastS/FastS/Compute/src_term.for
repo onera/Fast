@@ -53,38 +53,21 @@ C Var loc
 
 #include "FastS/param_solver.h"
 
-      !cycl=param_int(NSSITER)/param_int(LEVEL)
-
-
-      !if (param_int(EXPLOC)==2.and.param_int(RK)==3.and.
-      !& cycl.ne.4 .and. mod(nitcfg,cycl)==2) then 
-
-       ! call initdrodm(param_int,ind_rhs,drodmbis,drodm)
-       
-       !end if
 
       !Initilalisation systematique de drodm
-      if (param_int(EXPLOC).ne.0) then !! explicite local
+      if (param_int(EXPLOC).ne.0) then !! explicite local instationnaire
 
-         if (param_int(EXPLOC).eq.2 .and. param_int(RK).eq.3 .or.
-     &        param_int(EXPLOC).eq.1 .and. param_int(RK).eq.2) then
-
+ 
             call init_rhs_dtloc(ndom, nitcfg, param_int, 
      &       param_int(NDIMDX),param_int( NEQ ), ind_ssa,  drodm )
                
 
-         else
-
-            call init_rhs_dtloc(ndom, nitcfg, param_int, 
-     &       param_int(NDIMDX),param_int( NEQ ), ind_rhs,  drodm )
-
-
-         end if
-
       else  !! pas explicite local
 
+ 
          call init_rhs(ndom, nitcfg, param_int, param_int( NDIMDX ),
      &        param_int( NEQ ), ind_rhs,  drodm )
+
 
       end if
 

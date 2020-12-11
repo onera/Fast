@@ -127,8 +127,9 @@ E_Int K_FASTS::gsdr3(
       E_Int exploc = param_int[0][EXPLOC];
       E_Int numpassage = 1;
 
-      if (param_int[0][EXPLOC]== 1 and param_int[0][ITYPCP]==2 or param_int[0][EXPLOC]== 2 and param_int[0][ITYPCP]==2 or param_int[0][EXPLOC]== 4 and param_int[0][ITYPCP]==2 or param_int[0][EXPLOC]== 5 and param_int[0][ITYPCP]==2 ) // J-Scheme + Constantinescu rk2 + rk3 local + rk2local test + Tang & Warnecke
+      if (param_int[0][EXPLOC]== 1 and param_int[0][ITYPCP]==2)   //explicit local instationnaire
 	   {
+
 	   if (nitcfg%2 != 0){iptro_ssiter = iptro;  iptro_CL = iptrotmp; ishift  =1; lfwmean  = 1; }
 	   else
 	     {
@@ -138,17 +139,6 @@ E_Int K_FASTS::gsdr3(
 
 	   }
 
-      else if (param_int[0][EXPLOC]== 3 and param_int[0][ITYPCP]==2) // constantinescu base sur rk3
-	   {
-	   if (nitcfg%3 == 1){iptro_ssiter = iptro;  iptro_CL = iptrotmp; ishift  =1; lfwmean  = 1; }
-	   else if (nitcfg%3 == 2){iptro_ssiter = iptrotmp;  iptro_CL = iptro_m1; ishift  =1; lfwmean  = 1; }
-	   else
-	     {
-	        if (nitcfg != param_int[0][NSSITER]){iptro_ssiter = iptro_m1;  iptro_CL = iptro; ishift  = -1; lfwmean = 0;}
-               else {iptro_ssiter  = iptro_m1; iptro_CL = iptro;}
-              }
-
-	   }
 
       else  // Explicit global ou Implicit
 	    {
@@ -193,7 +183,8 @@ E_Int K_FASTS::gsdr3(
 	    E_Int nfic_ij = param_int[ nd ][ NIJK + 3 ];
 	    E_Int nfic_k  = param_int[ nd ][ NIJK + 4 ];
 	    E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
-	    E_Int  nb_subzone    = ipt_nidom_loc [nitcfg-1];                                           //nbre sous-zone a la sousiter courante
+	    E_Int  nb_subzone    = ipt_nidom_loc [nitcfg-1];    
+	    //nbre sous-zone a la sousiter courante
 
 	    for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
 	      {
@@ -251,8 +242,7 @@ E_Int K_FASTS::gsdr3(
 	  }  // if relax
       } // loop zone
 
-E_Float deb_calcul;
-
+if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 //cout << "nidom= " << nidom << endl;
 //cout << "nitcfg= " << nitcfg << endl; 
 //if (nitcfg==4){deb_calcul = omp_get_wtime();}
@@ -328,17 +318,11 @@ E_Float deb_calcul;
         //---------------------------------------------------------------------
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
-        E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int nd_current=0;E_Int shift_rk4=0;
-	if  (param_int[0][EXPLOC] == 0 and param_int[0][RK] == 4 )//or param_int[0][EXPLOC] == 0 and param_int[0][RK] == 5)
-	  {
-	    for (E_Int nd = 0; nd < nidom; nd++)
-	      {
-		shift_rk4 = shift_rk4 + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-	      }
-	  }
-        E_Float rhs_end=0;
+        E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int nd_current=0;
+	E_Float rhs_end=0;
 
-	shift_rk4 = shift_rk4*(nitcfg - 1);
+	//E_Int shift_rk4=0;
+	//shift_rk4 = shift_rk4*(nitcfg - 1);
 	//cout << "shift_rk4= " << shift_rk4 << endl;
 	
 
@@ -446,8 +430,7 @@ E_Float deb_calcul;
 
 
  
-
-  //
+     //
   //
   //FillGhostcell si mise a jour necessaire et transfer dans C layer 
   //
@@ -463,20 +446,24 @@ if(lexit_lu ==0 && layer_mode==1)
 E_Int cycl;
 E_Float deb_dtlocal;
 E_Float tmps;
-    
+E_Int flag_passage2=0;
+ 
   if (param_int[0][EXPLOC] == 0)
     {
       K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
                                    linelets_int, linelets_real, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
+
     }//dt constant
 
- 
-  if (param_int[0][EXPLOC] == 2 and param_int[0][RK] == 3) 
+
+  if (param_int[0][EXPLOC] == 1)     // explicit local instationnaire
+
    {
+
+ 
      dtlocal2para_c(iptro, iptrotmp, param_int_tc, param_real_tc, param_int, param_real, iptdrodm, iptcoe, stock, drodmstock, constk, nitcfg, omp_mode, taille_tabs, nidom);
 
-     //BC_local(iptro, iptrotmp, param_int_tc, param_real_tc, param_int, param_real, iptdrodm, iptcoe, ipt_ind_CL, ipti, iptj, iptk, iptx, ipty, iptz, iptventi, iptventj, iptventk, stock, drodmstock, constk, nitcfg, omp_mode, taille_tabs, nidom);
-
+     
 
      for (E_Int nd=0; nd < nidom; nd++)
        {
@@ -489,25 +476,58 @@ E_Float tmps;
 	   } 
        }
 
+
+
+           
+      if (nitcfg != nssiter)
+	{
+      		
       K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
                              linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
 
+        }
 
-     recup3para_c(iptro, param_int_tc, param_real_tc, param_int, stock, nitcfg, omp_mode, taille_tabs, nidom);
+      
+       
+      recup3para_c(iptro, param_int_tc, param_real_tc, param_int, stock, nitcfg, omp_mode, taille_tabs, nidom);
 
+     
+     
+     //BC_local(iptro, iptrotmp, param_int_tc, param_real_tc, param_int, param_real, iptdrodm, iptcoe, ipt_ind_CL, ipti, iptj, iptk, iptx, ipty, iptz, iptventi, iptventj, iptventk, stock, drodmstock, constk, nitcfg, omp_mode, taille_tabs, nidom);
+
+     	 
      numpassage=2;
-     if (nitcfg%2==0)
+     for (E_Int nd=0; nd < nidom; nd++)
+       {
+	 cycl = nssiter/param_int[nd][LEVEL];
+	
+	 if (nitcfg%cycl == cycl/2 and (nitcfg/cycl)%2==1 )
+	   {
+             flag_passage2=1;
+	   }
+       }
+     
+     //cout << nitcfg << "  "  << flag_passage2 << endl;
+     
+     if (flag_passage2==1)
       {
-        //setInterpTransfersFastS(iptro_CL    , vartype      , param_int_tc, param_real_tc, param_int    , param_real,
-        //                        linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
+
+	//debut = omp_get_wtime();
         K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
                                linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
-      }
- 
+
+        //cout << "ap_2eme_passage" << endl;
+	flag_passage2=0;
+     }   
+   
+  
+
+
+     if (nitcfg == nssiter){cout << "tps_transferts = " <<  param_real[0][TEMPS] << endl;}
+     
 
    } // fin boucle test dtlocal
 
-  
 
 
 
@@ -527,7 +547,8 @@ for (E_Int nd = 0; nd < nidom; nd++)
   {
    // flag pour transfert optimiser explicit local
    autorisation_bc[nd]=0;
-   if (rk == 3 and exploc == 2) 
+   if (exploc == 1)    //if (rk == 3 and exploc == 2) 
+
       {
 	cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
 	  
@@ -682,8 +703,6 @@ E_Int lrhs=0; E_Int lcorner=0;
 //     cout << "nidom= "<< nidom << endl;	 
 
    //cout << "coucou" << endl;
-
-
 
  }//test exit_lu
 

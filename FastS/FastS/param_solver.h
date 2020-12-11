@@ -105,7 +105,7 @@
 #define RK	     52
 #define LEVEL	     53
 #define EXPLOC       54
-#define ITEXPLOC     55
+#define EXPLOCTYPE   55
 #define LEVELG	     56
 #define LEVELD	     57
 #define NSSITER	     58

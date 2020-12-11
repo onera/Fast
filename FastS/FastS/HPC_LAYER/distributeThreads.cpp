@@ -60,8 +60,8 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
  //
  //
  E_Int level_max;
- if (param_int[0][EXPLOC]!=2){ level_max = 1; }
- else { E_Int denominateur_max = param_int[0][NSSITER]/4; level_max = log(denominateur_max)/log(2); }
+ if (param_int[0][EXPLOC]==0){ level_max = 1; } // Tous les schemas sauf dtlocal instationnaire
+ else { E_Int denominateur_max = param_int[0][NSSITER]/4; level_max = log(denominateur_max)/log(2); } // dtlocal instationnaire
 
 
  //

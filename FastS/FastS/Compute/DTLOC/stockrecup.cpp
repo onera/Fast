@@ -110,7 +110,8 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
      for (E_Int nd = 0; nd < nidom; nd++)
        {
 	 shift_zone[nd]=a;
-	 a=a+param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];	 
+	 a=a+param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
+	 //cout << "ndimdx= " << param_int[nd][ NDIMDX ] << endl;
        }
       for (E_Int nd = 0; nd < nidom; nd++)
        {
@@ -132,15 +133,6 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		  
 		  //// stockage des flux
 		   E_Int idir = 2; E_Int ind_loop[6]; E_Int ind=1;
-		  //  ind_loop[0]=  param_int[nd][IJKV]-2;
-		  //  ind_loop[1]=  param_int[nd][IJKV];
-		  //  ind_loop[2]=  1;
-		  //  ind_loop[3]=  param_int[nd][IJKV+1];
-		  //  ind_loop[4]=  1;
-		  //  ind_loop[5]=  param_int[nd][IJKV+2];
-       
-		  //  copyflux_( idir, param_int[nd], ind_loop,iptdrodm + shift_zone[nd], iptdrodmstk,ind,nd);
-
 		  
 		   /// stockage des valeurs
 		   ind_loop[0]=  param_int[nd][IJKV]-1;
@@ -160,14 +152,6 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		{
 		  //// stockage des flux
 		   E_Int idir = 2; E_Int ind_loop[6]; E_Int ind=1;
-		  //  ind_loop[0]=  1;
-		  //  ind_loop[1]=  3;
-		  //  ind_loop[2]=  1;
-		  //  ind_loop[3]=  param_int[nd][IJKV+1];
-		  //  ind_loop[4]=  1;
-		  //  ind_loop[5]=  param_int[nd][IJKV+2];
-       
-		  //  copyflux_( idir, param_int[nd], ind_loop, iptdrodm + shift_zone[nd], iptdrodmstk,ind,nd);
 
 		   /// stockage des valeurs
 		   ind_loop[0]=  1;
@@ -191,6 +175,7 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 	  if (((nstep)%(param_int[0][NSSITER]/param_int[nd][LEVEL]))==(param_int[0][NSSITER]/param_int[nd][LEVEL])/2 and (param_int[0][NSSITER]/param_int[nd][LEVEL]) !=  2) /// savoir si on est a la bonne it. et si on prend les bonnes zones.
 	    {
 	     
+
 	      if(param_int[nd][LEVELG]<param_int[nd][LEVEL] and param_int[nd][LEVEL]<param_int[nd][LEVELD]) /// savoir quelles colonnes on prend
 		{
 		   /// Conservativite : Stockage du flux
@@ -202,21 +187,21 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		   ind_loop[4]=  1;
 		   ind_loop[5]=  param_int[nd][IJKV+2];
 		   		   
-		   //for (E_Int n = 0; n < nd+1 ; n++)
-		   for (E_Int n = 0; n < 0 ; n++)
+		   for (E_Int n = 0; n < nd+1 ; n++)
+		     //for (E_Int n = 0; n < 0 ; n++)
 		     {
 		       c=c+param_int[n][ NDIMDX ]*param_int[n][ NEQ ];	 
 		      }
 		    shift=c;
 		    //cout <<"shift_coe= "<< shift_coe[nd] << endl;
 
-		    //c=nd+1;
+		    c=nd+1;
 		    //c = nd+2;
-		    c=0;
+		    //c=0;
 		   //cout <<"c=  "<< c << endl;
 		   imax=1;
 
-		   //cout << "coucou conservativite 3" << endl;
+
 
 		   conservativite32_(idir,param_int[nd],param_real[nd],param_int[c],ind_loop,imax,iptro[nd],iptdrodm + shift_zone[nd],iptdrodm + shift,iptcstk,iptcoe+shift_coe[nd],nstep,nd);
 		   c=0; 
@@ -235,8 +220,8 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		   ind_loop[4]=  1;
 		   ind_loop[5]=  param_int[nd][IJKV+2];
 		   	      
-		   //for (E_Int n = 0; n < nd-1 ; n++)
-		   for (E_Int n = 0; n < 0 ; n++)
+		   for (E_Int n = 0; n < nd-1 ; n++)
+		   //for (E_Int n = 0; n < 0 ; n++)
 		      {
 		              c=c+param_int[n][ NDIMDX ]*param_int[n][ NEQ ];	 
 		      }
@@ -244,8 +229,8 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		   shift=c;
 		   //cout <<"c(cons2)=  "<< c << endl;
 		   //c=nd-1;
-		   //c=nd+1;
-		   c=0;
+		   c=nd-1;
+		   //c=0;
 		   imax=param_int[c][IJKV];
 		   //cout <<"param(IJKV)(cons2)=  "<< imax << endl;
 
@@ -330,17 +315,17 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		   ind_loop[4]=  1;
 		   ind_loop[5]=  param_int[nd][IJKV+2];
 		   		   
-		   //for (E_Int n = 0; n < nd+1 ; n++)
-		   for (E_Int n = 0; n < 0 ; n++)
+		   for (E_Int n = 0; n < nd+1 ; n++)
+		   //for (E_Int n = 0; n < 0 ; n++)
 		      {
 		       c=c+param_int[n][ NDIMDX ]*param_int[n][ NEQ ];	 
 		      }
 		    shift=c;
 		    //cout <<"c=  "<< c << endl;
-		    //c=nd+1;
-		    c=0;
+		    c=nd+1;
+		    //c=0;
 		   imax=1;
-		   conservativite32_(idir,param_int[nd],param_real[nd],param_int[c],ind_loop,imax,iptro[nd],iptdrodm + shift_zone[nd],iptdrodm + shift,iptcstk,iptcoe+shift_coe[nd],nstep,nd);
+		   //conservativite32_(idir,param_int[nd],param_real[nd],param_int[c],ind_loop,imax,iptro[nd],iptdrodm + shift_zone[nd],iptdrodm + shift,iptcstk,iptcoe+shift_coe[nd],nstep,nd);
 		   c=0;  
 		}
 	      else if(param_int[nd][LEVELG]>param_int[nd][LEVEL] and param_int[nd][LEVEL]>param_int[nd][LEVELD]) /// savoir quelles colonnes on prend
@@ -355,20 +340,20 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		   ind_loop[4]=  1;
 		   ind_loop[5]=  param_int[nd][IJKV+2];
 		   	      
-		   //for (E_Int n = 0; n < nd-1 ; n++)
-		   for (E_Int n = 0; n < 0 ; n++)
+		   for (E_Int n = 0; n < nd-1 ; n++)
+		   //for (E_Int n = 0; n < 0 ; n++)
 		      {
 		              c=c+param_int[n][ NDIMDX ]*param_int[n][ NEQ ];	 
 		      }
 		   
 		   shift=c;
 		   //cout <<"c(cons2)= "<< c << endl;
-		   //c=nd-1;
-		   c=0;
+		   c=nd-1;
+		   //c=0;
 		   imax=param_int[c][IJKV];
 		   //cout <<"param(IJKV)(cons2)= "<< imax << endl;
 		 
-		   conservativite32_(idir,param_int[nd],param_real[nd],param_int[c],ind_loop,imax,iptro[nd],iptdrodm + shift_zone[nd],iptdrodm + shift,iptcstk,iptcoe+shift_coe[nd],nstep,nd);
+		   //conservativite32_(idir,param_int[nd],param_real[nd],param_int[c],ind_loop,imax,iptro[nd],iptdrodm + shift_zone[nd],iptdrodm + shift,iptcstk,iptcoe+shift_coe[nd],nstep,nd);
 		   c=0;
 		   
 		}
@@ -663,30 +648,26 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 	{
 	  if (nstep%(param_int[0][NSSITER]/param_int[nd][LEVEL])==1 and param_int[nd][LEVEL]<(param_int[0][NSSITER]/param_int[nd][RK])) /// savoir si on est a la bonne it. et si on prend les bonnes zones.
 	    {
-	      //cout << "coucou2"<<endl;
+
 	       if(param_int[nd][LEVELG]<param_int[nd][LEVEL] and param_int[nd][LEVEL]<param_int[nd][LEVELD]) /// savoir quelles colonnes on prend
 		{
-		  //cout <<ipt_param_int[nd][IJKV]-2 <<endl;
-		  //cout <<ipt_param_int[nd][IJKV]   <<endl;
-		  //cout <<ipt_param_int[nd][IJKV+1] <<endl;
-		  //cout <<"nzone = "<<nd<<"stockage flux cel adj slow buffer et valeurs"<<endl;
 		  
 		  //// stockage des flux (drodm)
 		  E_Int idir = 2; E_Int ind_loop[6]; E_Int ind=1;
 		   ind_loop[0]=  param_int[nd][IJKV]-4;
 		   ind_loop[1]=  param_int[nd][IJKV]-4;
-		   ind_loop[2]=  1;//-param_int[nd][NIJK+3];
-		   ind_loop[3]=  param_int[nd][IJKV+1];//+param_int[nd][NIJK+3];
+		   ind_loop[2]=  1;
+		   ind_loop[3]=  param_int[nd][IJKV+1];
 		   ind_loop[4]=  1;
 		   ind_loop[5]=  param_int[nd][IJKV+2];
-		   //cout << "shift_zone[nd]= " <<shift_zone[nd]<< endl; 
+
 		   copyflux_( idir, param_int[nd], ind_loop,iptdrodm + shift_zone[nd], iptdrodmstk,ind,nd);
 		   		  		  
 		   /// stockage des valeurs
 		   ind_loop[0]=  param_int[nd][IJKV]-3;
 		   ind_loop[1]=  param_int[nd][IJKV];
-		   ind_loop[2]=  1;//-param_int[nd][NIJK+3];
-		   ind_loop[3]=  param_int[nd][IJKV+1];//+param_int[nd][NIJK+3];
+		   ind_loop[2]=  1;
+		   ind_loop[3]=  param_int[nd][IJKV+1];
 		   ind_loop[4]=  1;
 		   ind_loop[5]=  param_int[nd][IJKV+2];
 
@@ -696,9 +677,8 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		}
 	      else if(param_int[nd][LEVELG]>param_int[nd][LEVEL] and param_int[nd][LEVEL]>param_int[nd][LEVELD]) /// savoir quelles colonnes on prend
 		{
-		  //cout << "stockage,interpolation,conservativite"<<endl;
+
 		  //// stockage des flux
-		  //cout <<"nzone = "<<nd<<"stockage flux cel adj slow buffer et valeurs"<<endl;
 		  E_Int idir = 2; E_Int ind_loop[6]; E_Int ind=1;
 		   ind_loop[0]=  5;
 		   ind_loop[1]=  5;
@@ -712,8 +692,8 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		   /// stockage des valeurs
 		   ind_loop[0]=  1;
 		   ind_loop[1]=  4;
-		   ind_loop[2]=  1;//-param_int[nd][NIJK+3];
-		   ind_loop[3]=  param_int[nd][IJKV+1];//+param_int[nd][NIJK+3];
+		   ind_loop[2]=  1;
+		   ind_loop[3]=  param_int[nd][IJKV+1];
 		   ind_loop[4]=  1;
 		   ind_loop[5]=  param_int[nd][IJKV+2];
        
@@ -729,12 +709,12 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 	      if(param_int[nd][LEVELG]<param_int[nd][LEVEL] and param_int[nd][LEVEL]<param_int[nd][LEVELD]) /// savoir quelles colonnes on prend
 		{
 		   E_Int idir = 2; E_Int ind_loop[6]; E_Int ind=2;
-		   //cout <<"nzone = "<<nd<<"recup valeurs et stockage flux derniere etape"<<endl;	
+
 		   /// Recuperation des valeurs (yn)
 		   ind_loop[0]=  param_int[nd][IJKV]-3;
 		   ind_loop[1]=  param_int[nd][IJKV];
-		   ind_loop[2]=  1;//-param_int[nd][NIJK+3];
-		   ind_loop[3]=  param_int[nd][IJKV+1];//+param_int[nd][NIJK+3];
+		   ind_loop[2]=  1;
+		   ind_loop[3]=  param_int[nd][IJKV+1];
 		   ind_loop[4]=  1;
 		   ind_loop[5]=  param_int[nd][IJKV+2];
 
@@ -744,8 +724,8 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		   ind=1;
 		   ind_loop[0]=  param_int[nd][IJKV]-3;
 		   ind_loop[1]=  param_int[nd][IJKV];
-		   ind_loop[2]=  1;//-param_int[nd][NIJK+3];
-		   ind_loop[3]=  param_int[nd][IJKV+1];//+param_int[nd][NIJK+3];
+		   ind_loop[2]=  1;
+		   ind_loop[3]=  param_int[nd][IJKV+1];
 		   ind_loop[4]=  1;
 		   ind_loop[5]=  param_int[nd][IJKV+2];
        
@@ -757,13 +737,13 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 	      else if(param_int[nd][LEVELG]>param_int[nd][LEVEL] and param_int[nd][LEVEL]>param_int[nd][LEVELD]) /// savoir quelles colonnes on prend
 	
 		{
+
 		   E_Int idir = 2; E_Int ind_loop[6]; E_Int ind=2;
-		   //cout <<"nzone = "<<nd<<"recup valeurs et stockage flux derniere etape"<<endl;		
 		   /// Recuperation des valeurs (yn)
 		   ind_loop[0]=  1;
 		   ind_loop[1]=  4;
-		   ind_loop[2]=  1;//-param_int[nd][NIJK+3];
-		   ind_loop[3]=  param_int[nd][IJKV+1];//+param_int[nd][NIJK+3];
+		   ind_loop[2]=  1;
+		   ind_loop[3]=  param_int[nd][IJKV+1];
 		   ind_loop[4]=  1;
 		   ind_loop[5]=  param_int[nd][IJKV+2];
        
@@ -791,12 +771,7 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 	     
 	      if(param_int[nd][LEVELG]<param_int[nd][LEVEL] and param_int[nd][LEVEL]<param_int[nd][LEVELD]) /// savoir quelles colonnes on prend
 		{
-		  //cout <<ipt_param_int[nd][IJKV]-2 <<endl;
-		  //cout <<ipt_param_int[nd][IJKV]   <<endl;
-		  //cout <<ipt_param_int[nd][IJKV+1] <<endl;
-		  //cout <<ipt_param_int[nd][IJKV+2] <<endl;
-		  //cout <<"nzone = "<<nd<<"recuperation"<<endl;
-		  //cout <<"nzone = "<<nd<<"recup flux cel adj slow buffer"<<endl;			  
+		  
 		  //// Recuperation des flux
 		  E_Int idir = 2; E_Int ind_loop[6]; E_Int ind=2;
 		   ind_loop[0]=  param_int[nd][IJKV]-4;
@@ -813,7 +788,6 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 	      else if(param_int[nd][LEVELG]>param_int[nd][LEVEL] and param_int[nd][LEVEL]>param_int[nd][LEVELD]) /// savoir quelles colonnes on prend
 		{
 		  //// Recuperation des flux
-		  // cout <<"nzone = "<<nd<<"recup flux cel adj slow buffer"<<endl;	
 		  E_Int idir = 2; E_Int ind_loop[6]; E_Int ind=2;
 		   ind_loop[0]=  5;
 		   ind_loop[1]=  5;
@@ -834,8 +808,11 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 	     
 	      if(param_int[nd][LEVELG]<param_int[nd][LEVEL] and param_int[nd][LEVEL]<param_int[nd][LEVELD]) /// savoir quelles colonnes on prend
 		{
+
+
+		  //cout << nd << endl;
+
 		   /// Derniere etape schema de Constantinescu
-		  //cout <<"nzone = "<<nd<<"constantinescu derniere etape"<<endl;	
 		   E_Int idir = 2; E_Int ind_loop[6];
 		   ind_loop[0]=  param_int[nd][IJKV]-3;
 		   ind_loop[1]=  param_int[nd][IJKV];
@@ -851,6 +828,7 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		   // shift=c;
 		   //c=param_int[nd][NUMD]; 
 		   //imax=1;
+		   //cout << "shift_zone=  " << shift_zone[nd] << endl;
 		   
 		   constantinescu_(iptro[nd],ind_loop,iptcstk,iptdrodm +shift_zone[nd],iptcoe+shift_coe[nd],param_int[nd],param_real[nd],nstep,nd);
 		   //c=0;  
@@ -858,8 +836,10 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 	      else if(param_int[nd][LEVELG]>param_int[nd][LEVEL] and param_int[nd][LEVEL]>param_int[nd][LEVELD]) /// savoir quelles colonnes on prend
 		{
 		  
+
+		  //cout << nd << endl;
+
 		   /// Derniere etape schema de Constantinescu
-		  //cout <<"nzone = "<<nd<<"constantinescu derniere etape"<<endl;	
 		   E_Int idir = 2; E_Int ind_loop[6];
 		   ind_loop[0]=  1;
 		   ind_loop[1]=  4;
@@ -878,6 +858,8 @@ PyObject* K_FASTS::stockrecup(PyObject* self, PyObject* args)
 		   //c=param_int[nd][NUMG];
 		   //imax=param_int[c][IJKV];
 		   //cout <<"param(IJKV)(cons2)= "<< imax << endl;
+
+		   //cout << "shift_zone=  " << shift_zone[nd] << endl;
 		 
 		   constantinescu_(iptro[nd],ind_loop,iptcstk,iptdrodm +shift_zone[nd],iptcoe+shift_coe[nd],param_int[nd],param_real[nd],nstep,nd);
 		   //c=0;

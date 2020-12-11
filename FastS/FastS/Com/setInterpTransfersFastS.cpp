@@ -120,11 +120,13 @@ void K_FASTS::setInterpTransfersFastS(
     RecvQueue* pt_rcv_queue_IBC = NULL;
 
 
-    E_Int nbcomIBC_nstep; E_Int pt_deb;
-    if (rk ==3 and exploc==2 and mpi)
+    E_Int nbcomIBC_nstep; E_Int pt_deb; E_Int nbcomID_nstep; 
+    //if (rk ==3 and exploc==2 and mpi)
+    if (exploc==1 and mpi)
       {
         pt_deb         = param_int_tc[1+nstep+(numpassage-1)*nitmax] + 2;
         nbcomIBC_nstep = param_int_tc[ pt_deb ];
+	
       }
     else
       { pt_deb         = 1;
@@ -161,7 +163,9 @@ void K_FASTS::setInterpTransfersFastS(
             CMP::RecvBuffer& recv_buffer = iterBuf->get_message_buffer();
             recv_buffer.irecv();
            }
-          }    
+          }
+
+      //cout << "proc : " << rank << "  nbcom : " << nbcomIBC_nstep << endl;
 
       #ifdef TimeShow
        E_Float time_out = omp_get_wtime();
@@ -173,6 +177,7 @@ void K_FASTS::setInterpTransfersFastS(
       {
         E_Int ech  = param_int_tc[ip2p + shift_graph];
         dest       = param_int_tc[ech];
+
         if (dest != rank)  // Inter Process
         {
           nb_send_buffer += 1;
@@ -208,32 +213,46 @@ void K_FASTS::setInterpTransfersFastS(
     #ifdef _MPI
     if (mpi)
     {
-      //comm multi processus: wait + remplissage
-      K_FASTS::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
 
-      #ifdef TimeShow
-       time_out = omp_get_wtime();
-       ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
-       time_in= omp_get_wtime();
-      #endif
+      if (nbcomIBC_nstep != 0)
 
-      E_Int nbcomID_nstep; 
-      if (rk ==3 and exploc==2 and mpi)
+	{
+
+	  //comm multi processus: wait + remplissage
+	  K_FASTS::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
+
+          #ifdef TimeShow
+	  time_out = omp_get_wtime();
+	  ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
+	  time_in= omp_get_wtime();
+          #endif
+
+	}
+      
+
+
+      //if (rk ==3 and exploc==2 and mpi)
+      if (exploc==1 and mpi)
       {
        pt_deb         = param_int_tc[2+nbcomIBC+nstep+(numpassage-1)*nitmax] + 2 +nbcomIBC+1;
        nbcomID_nstep  = param_int_tc[ pt_deb ];
+
       }
       else
       { pt_deb        = nbcomIBC + 2;
         nbcomID_nstep = nbcomID;
       }
+
+      
+     
+      
       if (pt_rcv_queue->size() == 0 )
-      for (E_Int ircv = 1; ircv < nbcomID_nstep +1; ++ircv)
-        {
-         pt_rcv_queue->emplace_back( param_int_tc[ pt_deb + ircv], 404);
-         CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
-         recv_buffer.irecv();
-        }
+	for (E_Int ircv = 1; ircv < nbcomID_nstep +1; ++ircv)
+	  {
+	    pt_rcv_queue->emplace_back( param_int_tc[ pt_deb + ircv], 404);
+	    CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
+	    recv_buffer.irecv();
+	  }     
       else {
         assert(pt_rcv_queue->size() == nbcomID_nstep );
         for ( auto iterBuf = pt_rcv_queue->begin(); iterBuf != pt_rcv_queue->end(); ++iterBuf )
@@ -241,18 +260,21 @@ void K_FASTS::setInterpTransfersFastS(
            CMP::RecvBuffer& recv_buffer = iterBuf->get_message_buffer();
            recv_buffer.irecv();
         }
-      }
+       }
 
       #ifdef TimeShow
        time_out = omp_get_wtime();
        ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;  
       #endif
 
-       int cpt_send_buffer = 0;
+      int cpt_send_buffer = 0;
       for (E_Int ip2p = 1; ip2p < param_int_tc[0]+1; ++ip2p)
         {
          E_Int ech  = param_int_tc[ip2p+shift_graph];
          dest       = param_int_tc[ech];
+
+	 //cout << ech <<"  " << dest << endl;
+    
          if (dest != rank)  // Inter Process
           {             
             TypeTransfert = 0;
@@ -286,8 +308,14 @@ void K_FASTS::setInterpTransfersFastS(
     if (mpi)
     {
 
+      if (nbcomID_nstep != 0)
+
+	{
+
        //comm multi processus: wait + remplissage
        K_FASTS::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue);
+
+
 
        #ifdef TimeShow
         time_out         = omp_get_wtime();
@@ -304,6 +332,8 @@ void K_FASTS::setInterpTransfersFastS(
         time_in = omp_get_wtime();
        #endif
 
+	}
+      
     } // MPI Second part (InterCOM ID)
     #endif      
 
@@ -390,32 +420,62 @@ void K_FASTS::setInterpTransfersIntra(
 	  E_Int levelR = ipt_param_int_tc[debut_rac + 24];
 	  E_Int cyclD  = nssiter/levelD;
 
+	  //cout << levelD <<" " <<levelR << endl;
+
 	  // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse   
 	  if (levelD > levelR and num_passage == 1)		
 	    {
-	      if (nstep%cyclD==cyclD-1 or nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1) { autorisation_transferts[pass_inst][irac_auto]=1; }
+
+	      if (nstep%cyclD==cyclD-1 or nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1)
+		{
+		  autorisation_transferts[pass_inst][irac_auto]=1;
+		  if (ipt_param_int_tc[shift_rac + nrac * 10 + 1] > nbRcvPts_mx){ nbRcvPts_mx = ipt_param_int_tc[shift_rac + nrac * 10 + 1];}
+		}
+
 	    }
 	  // Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
 	  else if (levelD < levelR and num_passage == 1) 
 	    {
 	      if (nstep%cyclD==1 or nstep%cyclD==cyclD/4 or nstep%cyclD== cyclD/2-1 or nstep%cyclD== cyclD/2+1 or nstep%cyclD== cyclD/2+cyclD/4 or nstep%cyclD== cyclD-1)
-		{ autorisation_transferts[pass_inst][irac_auto]=1; }
+
+		{
+		  autorisation_transferts[pass_inst][irac_auto]=1;
+		  if (ipt_param_int_tc[shift_rac + nrac * 10 + 1] > nbRcvPts_mx) {nbRcvPts_mx = ipt_param_int_tc[shift_rac + nrac * 10 + 1];}
+		}
+     
+
 	    }
 	  // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse
 	  else if (levelD == levelR and num_passage == 1)
 	    {
 	      if (nstep%cyclD==cyclD/2-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==0) or nstep%cyclD==cyclD-1)
-		{ autorisation_transferts[pass_inst][irac_auto]=1; }
+
+		{
+		  autorisation_transferts[pass_inst][irac_auto]=1;
+		  if (ipt_param_int_tc[shift_rac + nrac * 10 + 1] > nbRcvPts_mx){nbRcvPts_mx = ipt_param_int_tc[shift_rac + nrac * 10 + 1];}
+		}
+	      //else {continue;}
+
 	    }
 	  // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse (cas du deuxieme passage)   
 	  else if (levelD == levelR and num_passage == 2)
 	    {
-	      if (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1) { autorisation_transferts[pass_inst][irac_auto]=1; }
+
+	      //if (nstep%8 == 6){autorisation_transferts[pass_inst][irac]=1;}
+	      if (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1)
+		{
+		  autorisation_transferts[pass_inst][irac_auto]=1;
+		  if (ipt_param_int_tc[shift_rac + nrac * 10 + 1] > nbRcvPts_mx){nbRcvPts_mx = ipt_param_int_tc[shift_rac + nrac * 10 + 1];}		
+		}
+	      //else {continue;}
+
 	    }
 	}
       else // Sinon, on autorise les transferts entre ttes les zones a ttes les ss-ite
 	{
 	  autorisation_transferts[pass_inst][irac_auto]=1;
+	  if (ipt_param_int_tc[shift_rac + nrac * 10 + 1] > nbRcvPts_mx){nbRcvPts_mx = ipt_param_int_tc[shift_rac + nrac * 10 + 1];}
+ 
 	}	
     }
   }
@@ -773,7 +833,7 @@ void K_FASTS::setInterpTransfersInter(
   E_Int timelevel = ipt_param_int_tc[ech + 3];  // nb de pas de temps stocker pour
                                              // chaque raccord instationnaire
 
-  
+ 
   E_Int nrac_steady = nrac - nrac_inst;  // nb total de raccord stationnaire
   E_Int pass_inst_deb=0; 
   E_Int pass_inst_fin=1;
@@ -913,7 +973,7 @@ void K_FASTS::setInterpTransfersInter(
         } // irac
     }  // pas inst 
 
-  //cout << "count_rac= " << count_rac << "  dest= " << dest << endl;
+  cout << "proc =  " << rank << "  count_rac= " << count_rac << endl;
   //cout << has_data_to_send << endl;
 
 E_Float time_out;
@@ -1306,6 +1366,8 @@ void K_FASTS::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*&
   
   // Attente finalisation de la réception :
   assert(pair_of_queue != NULL);
+
+  //cout << "ap_getTransfers" << endl;
 
   vector<CMP::vector_view<E_Float> > recv_frp(2048);
   vector<E_Int> recv_nozone(2048);

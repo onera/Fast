@@ -611,50 +611,61 @@ def _buildOwnData(t, Padding):
     first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
     if first is not None: timelevel_target = Internal.getValue(first)
 
-    # Ecriture d un vecteur contenant le niveau en temps de chaque zone
-    # Determination du niveau en temps le plus grand 
-    
+     
     levelg=[]; leveld=[]; val=1; i=0
     veclevel = []; mod="";posg=[] 
     for b in bases:
+
            zones = Internal.getNodesFromType1(b, 'Zone_t')
            for z in zones:
                a = Internal.getNodeFromName2(z, 'GoverningEquations')
                if a is not None: mod = Internal.getValue(a)
                if mod == "nsspalart" or mod == "NSTurbulent": neq=6
                else: neq = 5
-               d = Internal.getNodeFromName1(z, '.Solver#define')
-               if d is not None:
-                    a = Internal.getNodeFromName1(d, 'niveaux_temps')
-                    if a is not None: val = Internal.getValue(a)
-                    else : val=1
-               veclevel.append(val)
-               posg.append(0)
-               i += 1
-    if posg==[]:
-        for a in range(i):
-            posg.append(0)
+        
+           ### Recuperation du niveau en temps de chaque zone si on est en dtloc instationnaire ###          
+           d = Internal.getNodeFromName1(b, '.Solver#define')
+           if d is not None:
+               a = Internal.getNodeFromName1(d, 'temporal_scheme')
+               if a is not None:
+                   temporal_scheme = Internal.getValue(a)
+                   if temporal_scheme == 'explicit_local':
+                       for z in zones:
+                          dim = Internal.getZoneDim(z)
+                          i = int(dim[1]/2)
+                          j = int(dim[2]/2)
+                          k = int(dim[3]/2)
+                          level = C.getValue( z, 'centers:niveaux_temps', (i,j,k))
+                          veclevel.append(int(level))
+                   else:
+                       for z in zones:
+                          veclevel.append(1)                        
 
+           else:
+               for z in zones:
+                   veclevel.append(1)              
+               
+                          
     maxlevel = max(veclevel)
 
-    levelg = numpy.roll(veclevel,1)
-    levelg[0] = 0
+    #print('veclevel= ', veclevel)
 
+    levelg = numpy.roll(veclevel,1)
     leveld = numpy.roll(veclevel,-1)
-    leveld[i-1] = 0
 
     # Available keys for bases and zones
     # 0: requires and int, 1: requires a float, 2: requires any string, 
     # 3: requires array/list of ints, 4: requires array/list of floats,
     # []: requires given strings
     keys4Base = {
-    'temporal_scheme':['explicit', 'implicit', 'implicit_local'],
+    'temporal_scheme':['explicit', 'implicit', 'implicit_local','explicit_local'],
     'ss_iteration':0,
     'rk':0, 
     'modulo_verif':0,
     'exp_local':0,
     'time_begin_ale':1,
-    'omp_mode':0
+    'omp_mode':0,
+    'explicit_local_type':0    ## 0:explicit local non conservatif,  1:explicit local conservatif (correction du bilan de flux aux interface)  
     }
     keys4Zone = {
     'scheme':['ausmpred', 'senseur', 'roe_min', 'roe', 'roe_nul', 'roe_kap'],
@@ -713,6 +724,7 @@ def _buildOwnData(t, Padding):
         exploc          = 0
         t_init_ale      = temps
         timelevel_prfile= 0
+        exploctype      = 0
 
         if d is not None:
             checkKeys(d, keys4Base)
@@ -731,12 +743,13 @@ def _buildOwnData(t, Padding):
             a = Internal.getNodeFromName1(d, 'exp_local')
             if a is not None: exploc = Internal.getValue(a)
             if temporal_scheme == "implicit" or temporal_scheme =="implicit_local": exploc=0
-            a = Internal.getNodeFromName1(d, 'it_exp_local')         
-            if a is not None: itexploc = Internal.getValue(a)
+            a = Internal.getNodeFromName1(d, 'explicit_local_type')         
+            if a is not None: exploctype = Internal.getValue(a)
             a = Internal.getNodeFromName1(d, 'time_begin_ale')
-            if a is not None: t_init_ale = Internal.getValue(a) 
+            if a is not None: t_init_ale = Internal.getValue(a)
 
-          
+
+           
         # Base ownData (generated)
         o = Internal.createUniqueChild(b, '.Solver#ownData', 
                                        'UserDefinedData_t')
@@ -744,7 +757,11 @@ def _buildOwnData(t, Padding):
         elif temporal_scheme == "explicit_lbm": nssiter = 1
         elif temporal_scheme == "implicit": nssiter = ss_iteration+1
         elif temporal_scheme == "implicit_local": nssiter = ss_iteration+1
-        else: print('Warning: Fast: invalid value %s for key temporal_scheme.'%temporal_scheme)
+        elif (temporal_scheme == "explicit_local"): #explicit local instationnaire ordre 3
+            nssiter = 4*maxlevel 
+            rk = 3
+            exploc = 1
+        else: print('Warning: FastS: invalid value %s for key temporal_scheme.'%temporal_scheme)
         try: ss_iteration = int(ss_iteration)
         except: print('Warning: Fast: invalid value %s for key ss_iteration.'%ss_iteration)
         try: modulo_verif = int(modulo_verif)
@@ -752,18 +769,9 @@ def _buildOwnData(t, Padding):
         if (rk == 1 and exploc==0 and temporal_scheme == "explicit"): nssiter = 1 # explicit global
         if (rk == 2 and exploc==0 and temporal_scheme == "explicit"): nssiter = 2 # explicit global
         if (rk == 3 and exploc==0 and temporal_scheme == "explicit"): nssiter = 3 # explicit global
-        if (rk == 4 and exploc==0 and temporal_scheme == "explicit"): nssiter = 4 # explicit global
-        if (rk == 5 and exploc==0 and temporal_scheme == "explicit"): nssiter = 5 # explicit global
-        if (rk == 6 and exploc==0 and temporal_scheme == "explicit"): nssiter = 6 # explicit global
-        if (rk == 12 and exploc==0 and temporal_scheme == "explicit"): nssiter = 12 # explicit global
-        if (rk==2 and exploc == 1 and temporal_scheme == "explicit"): nssiter = rk*maxlevel # explicit local
-        if (rk==2 and exploc == 2 and temporal_scheme == "explicit"): nssiter = rk*maxlevel # explicit local (schema de Constantinescu)
-        if (rk==2 and exploc == 3 and temporal_scheme == "explicit"): nssiter = 3*maxlevel # explicit local (schema de Constantinescu avec rk3 pour methode de base)
-        if (rk==3 and exploc == 2 and temporal_scheme == "explicit"): nssiter = 4*maxlevel # explicit local (schema a pas de temps local d ordre 3)
-        if (rk==2 and exploc == 4 and temporal_scheme == "explicit"): nssiter = rk*maxlevel # explicit local rk2 (schema test)
-        if (rk==2 and exploc == 5 and temporal_scheme == "explicit"): nssiter = rk*maxlevel # schema de Tang & Warnecke
 
-        itexploc=0
+        
+
         dtdim = nssiter + 7
         datap = numpy.empty((dtdim), numpy.int32) 
         datap[0] = nssiter 
@@ -1035,7 +1043,7 @@ def _buildOwnData(t, Padding):
             size_ssdom_K = 10
 
 
-            if temporal_scheme == "explicit": itypcp = 2
+            if temporal_scheme == "explicit" or temporal_scheme == "explicit_local": itypcp = 2
             else: itypcp = 1
 
             if temporal_scheme == "implicit_local": 
@@ -1182,7 +1190,7 @@ def _buildOwnData(t, Padding):
             datap[52]  = rk
             datap[53]  = veclevel[i]
             datap[54]  = exploc
-            datap[55]  = itexploc
+            datap[55]  = exploctype
             datap[56]  = levelg
             datap[57]  = leveld
             datap[58]  = nssiter
@@ -1347,7 +1355,8 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     ndimface= neq*3*ndimplan*6*5*len(zones)
     ndimface = min(ndimface, 2000000000)
     #si pas de temps local inactif (rk3)
-    if(rk!=3 or exploc !=2): ndimface=1
+    #if(rk!=3 or exploc !=2): ndimface=1
+    if(exploc !=1): ndimface=1
     else: print('taille tab dtloc=%d'%ndimface)
 
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
@@ -1645,11 +1654,14 @@ def checkKeys(d, keys):
 # echange M1 <- current, current <- P1, P1 <- M1
 #==============================================================================
 def switchPointers2__(zones,nitmax,nstep):
+
+    for z in zones:
+        dim = Internal.getZoneDim(z)
+        i = int(dim[1]/2)
+        j = int(dim[2]/2)
+        k = int(dim[3]/2)
+        niveau = C.getValue( z, 'centers:niveaux_temps', (i,j,k))
     
-     for z in zones:
-        node = Internal.getNodeFromName1(z, '.Solver#define')
-        level = Internal.getNodeFromName1(node, 'niveaux_temps')            
-        niveau = Internal.getValue(level)
 
         cycle = nitmax/niveau
         if nstep%cycle==0 and nstep != nitmax:
@@ -1704,12 +1716,14 @@ def switchPointers2__(zones,nitmax,nstep):
 # echange M1 <- current, current <- P1, P1 <- M1
 #==============================================================================
 def switchPointers3__(zones,nitmax):
-    
-     for z in zones:
-        node = Internal.getNodeFromName1(z, '.Solver#define')
-        level = Internal.getNodeFromName1(node, 'niveaux_temps')            
-        niveau = Internal.getValue(level)
 
+    for z in zones:
+        dim = Internal.getZoneDim(z)
+        i = int(dim[1]/2)
+        j = int(dim[2]/2)
+        k = int(dim[3]/2)
+        niveau = C.getValue( z, 'centers:niveaux_temps', (i,j,k))
+    
         cycle = nitmax/niveau
         if cycle==nitmax :
 
@@ -1918,6 +1932,7 @@ def _BCcompact(t):
               
             bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
             Nb_data = len(bcdata)
+
             for data in bcdata:
                size = numpy.shape(data[1])
                c = 1
@@ -2307,7 +2322,7 @@ def getMaxProc(t):
 # and the communication graph for IBM transfers
 #==============================================================================
 def loadFile(fileName='t.cgns', split='single', graph=False, 
-             mpirun=False, cartesian=False):
+             mpirun=False, cartesian=False, exploc=False):
     """Load tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -2323,19 +2338,52 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
             FILE = fileName+'.cgns'
             t = Cmpi.convertFile2SkeletonTree(FILE)
             mp = getMaxProc(t)
-            if mp+1 != size: 
-                raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d).'%(size,mp+1))
-            if graph:
+            #if mp+1 != size: #### COMMENTE PAR GUILLAUME POUR PASSER LE CREATE
+            #    raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d).'%(size,mp+1))
+
+            if graph and exploc == False:
+
                 graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
                 graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
                 procDict  = D2.getProcDict(t)
                 procList  = D2.getProcList(t, sort=True)
                 graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+
+
+
+            if graph and exploc == True : ### dtloc instationnaire : on sort une liste de graphes (un graph par ssiter)
+
+                list_graph=[]
+                graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=True)
+                graphIBCD  = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=True)
+                procDict  = D2.getProcDict(t)
+                procList  = D2.getProcList(t,  sort=True)
+              
+  
+                i=0
+                graphN={}
+                if graphID is not None:
+                    for g in graphID:
+                        graphN={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
+                        list_graph.append(graphN)
+                        i += 1
+
+                
+                elif graphIBCD is not None:
+                    for g in graphIBCD:
+                        graphN={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
+                        list_graph.append(graphN)
+                        i += 1
+
+
             t = Cmpi.readZones(t, FILE, rank=rank)
             t = Cmpi.convert2PartialTree(t, rank=rank)
+
             
         else: # load 1 fichier par proc
-            if graph:
+
+            if graph and exploc ==False :
+
                 # Try to load graph from file
                 if os.access('%s/graph.pk'%fileName, os.R_OK):
                     import cPickle as pickle
@@ -2360,6 +2408,49 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                         graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
                     else: print('graph non calculable: manque de fichiers connectivite.')
 
+
+            if graph and exploc == True : ## dtloc instationnaire
+
+                # Try to load graph from file
+                if os.access('%s/graph.pk'%fileName, os.R_OK):
+                    import cPickle as pickle
+                    file = open('%s/graph.pk'%fileName, 'rb')
+                    graphN = pickle.load(file)
+                    file.close()
+                # Load all skeleton proc files
+                else:
+                    ret = 1; no = 0; t = []
+                    while ret == 1:
+                       FILE = '%s_%d.cgns'%(fileName, no)
+                       if not os.access(FILE, os.F_OK): ret = 0
+                       if ret == 1: 
+                          t.append(Cmpi.convertFile2SkeletonTree(FILE))
+                       no += 1
+                    if t != []:
+                        t        = Internal.merge(t)
+                        list_graph=[]
+                        graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=True)
+                        graphIBC  = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=True)
+                        procDic   = D2.getProcDict(t)
+                        procLis   = D2.getProcList(t,  sort=True)
+              
+  
+                        i=0
+                        graphN={}
+                        if graphID is not None:
+                            for g in graphID :
+                                graphN={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
+                                list_graph.append(graphN)
+                                i += 1
+
+                
+                        elif graphIBCD is not None:
+                            for g in graphIBCD :
+                                graphN ={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
+                                list_graph.append(graphN)
+                                i += 1
+
+
             FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
             else: t = None
@@ -2383,7 +2474,8 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
         import Compressor.PyTree as Compressor
         Compressor._uncompressCartesian(t)
         
-    if graph: return t, graphN
+    if graph and not exploc : return t, graphN
+    elif graph and exploc :   return t, list_graph
     else:     return t
     
 #==============================================================================
@@ -2410,11 +2502,9 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
         if split == 'single':
             FILE = fileName+'.cgns'
             t = Cmpi.convertFile2SkeletonTree(FILE)
-            #t = C.convertFile2PyTree(FILE)
-            #zones = Internal.getZones(t)
-            #for z in zones:print z
+
             mp = getMaxProc(t)
-            #print 'mp= ',mp
+
             if mp+1 != size: 
                 raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d)'%(mp+1,size)) 
             if graph:
@@ -2428,7 +2518,9 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
                 graphIBCD_  = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=True)
                 procDict_  = D2.getProcDict(t)
                 procList_  = D2.getProcList(t,  sort=True)
-                
+              
+                #print(graphID_)
+  
                 i=0
                 graphN_={}
                 if graphID_ is not None:
@@ -2443,7 +2535,8 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
                         graphN_={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
                         list_graph.append(graphN_)
                         i += 1
-                #print graphID_[1]
+                
+                #print(list_graph)
             
             t = Cmpi.readZones(t, FILE, rank=rank)
             t = Cmpi.convert2PartialTree(t, rank=rank)
@@ -2493,7 +2586,7 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
             if t != []: t = Internal.merge(t)
             else: t = None
 
-    if graph: return t, graphN, list_graph
+    if graph: return t, list_graph
     else:     return t
 
 

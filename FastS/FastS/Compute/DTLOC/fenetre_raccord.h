@@ -7,8 +7,7 @@
 		donorPts_[4] =  param_int_tc[debut_rac + 11];
 		donorPts_[5] =  param_int_tc[debut_rac + 12];
 
-                // pourquoi int et pas E_Int
-		int dir = param_int_tc[debut_rac + 13];
+ 		E_Int dir = param_int_tc[debut_rac + 13];
 		E_Int profondeur = param_int_tc[debut_rac + 20];
 
 		donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*(profondeur);

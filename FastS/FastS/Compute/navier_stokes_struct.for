@@ -77,7 +77,7 @@ C Var loc
 
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
      & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2,
-     & flag_wait,cells
+     & flag_wait,cells, it_dtloc
 
 
       REAL_E rhs_begin,rhs_end
@@ -136,14 +136,18 @@ c!$OMP BARRIER
 c         enddo 
 c       endif
 
+          
+         !!! variable pour l'explicit local !!!!
+         !!! utilisee pour savoir si on est a la premiere ss-ite des zones !!!
+         cycl=param_int(NSSITER)/param_int(LEVEL) 
 
-          !!!call  correct_coins(ndo,  param_int, ind_grad, rop_ssiter)
+ 
+         IF (param_int(EXPLOC) .eq. 0) then !!! explicit global ou implicit
 
 
-          !!call  correct_coins(ndo,  param_int, ind_grad, rop_ssiter)
+             IF(nitcfg.eq.1) then
 
 
-           IF(nitcfg.eq.1) then
 
               if(param_int(LALE).eq.1) then ! mise a jour Vent et tijk si mvt corps solide
                 call mjr_ale(ndo,nitcfg, ithread,
@@ -156,10 +160,10 @@ c       endif
      &                        x,y,z,ti,ti_df,tj,tj_df,tk,tk_df,vol,
      &                        venti, ventj, ventk)
 
-              endif
+                endif
 
-              !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
-              if(param_int(IFLOW).eq.2) then
+                !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
+                if(param_int(IFLOW).eq.2) then
                  
 
 
@@ -183,7 +187,7 @@ c       endif
      &                          xmut, rop_ssiter, ti,tj,tk, vol, rot)
                 endif
 
-              elseif(param_int(IFLOW).eq.3) then
+                elseif(param_int(IFLOW).eq.3) then
 
                 !! remplissage tableau xmut si SA uniquememnt. 
                 !! Pour ZDES, remplissage dans terme source 
@@ -199,7 +203,6 @@ c       endif
                flag_wait = 1
              ENDIF
 
-
              ! Calcul du pas de temps
              call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
      &                   flagCellN, param_int, param_real,
@@ -209,6 +212,80 @@ c       endif
 
            ENDIF!!1ere sous-iteration
 
+
+
+         ELSE !!!  explicite local instationnaire
+         
+
+             IF(mod(nitcfg,cycl).eq.1) then !!! On teste si on est a la premiere ss-ite de la zone
+
+
+
+                if(param_int(LALE).ge.1) then ! mise a jour Vent et tijk
+                   call mjr_ale(ndo,nitcfg, ithread,
+     &                        param_int, param_real,
+     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
+     &                        synchro_send_sock, synchro_send_th,
+     &                        synchro_receive_sock, synchro_receive_th,
+     &                        ibloc , jbloc , kbloc ,
+     &                        icache, jcache, kcache,
+     &                        x,y,z,ti,ti_df,tj,tj_df,tk,tk_df,vol,
+     &                        venti, ventj, ventk)
+
+                endif
+
+                !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
+                if(param_int(IFLOW).eq.2) then
+                 
+
+
+                if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
+                
+                   if(param_int(ITYPCP).le.1) then 
+                     call invist(ndo, param_int, param_real, ind_coe,
+     &                           rop_ssiter, xmut )
+                   else 
+                     call invist(ndo, param_int, param_real, ind_grad,
+     &                           rop_ssiter, xmut )
+                   endif
+
+
+                !LES selective mixed scale model
+                else
+                   neq_rot = 3
+                   depth   = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
+                   call lesvist(ndo, param_int,param_real,neq_rot,depth,
+     &                          ind_grad, ind_coe, ind_dm_zone,
+     &                          xmut, rop_ssiter, ti,tj,tk, vol, rot)
+                endif
+
+                elseif(param_int(IFLOW).eq.3) then
+
+                !! remplissage tableau xmut si SA uniquememnt. 
+                !! Pour ZDES, remplissage dans terme source 
+                !call vispalart(ndo, param_int, param_real, ind_grad,
+                call vispalart(ndo, param_int, param_real, ind_coe,
+     &                         xmut,rop_ssiter)
+
+              endif
+
+             !!sinon cfl foireux
+             IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
+#include      "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+               flag_wait = 1
+             ENDIF
+
+             ! Calcul du pas de temps
+             call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
+     &                   flagCellN, param_int, param_real,
+     &                   ind_sdm, ind_grad, ind_coe,
+     &                   cfl, xmut,rop_ssiter, cellN, coe,
+     &                   ti,tj,tk, vol,venti)
+
+           ENDIF !!1ere sous-ite de la zone
+
+
+         ENDIF !! fin test explicit local
 
            
            !SI SA implicit, verrou ici car dependence entre coe(5)
@@ -223,8 +300,9 @@ c       endif
                flag_wait = 1
            ENDIF
 
-           cycl=param_int(NSSITER)/param_int(LEVEL)
-           !print*, 'cycl= ', cycl, param_int(EXPLOC)
+
+
+
 
            ! - Ajout d'un eventuel terme source au second membre
            ! - initialisation drodm
@@ -236,10 +314,13 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                   ti,tj,tk,vol, delta, ro_src)
 
 
+
            IF(flag_wait.eq.0) then
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
            ENDIF
 
+
+           !print*, param_int(KFLUDOM)
 
            ! -----assemblage drodm euler+visqueux
               if(param_int(KFLUDOM).eq.1) then
@@ -257,9 +338,13 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
 
               elseif(param_int(KFLUDOM).eq.2.and.nitcfg.eq.1 .and.
      & param_int(EXPLOC) .eq. 0 ) then
+   
+             !elseif(param_int(KFLUDOM).eq.2.and.nitcfg.eq.1 .and.
+     & !param_int(EXPLOC) .eq. 0 .or. param_int(KFLUDOM).eq.2
+     & !.and.nitcfg.eq.5 .and.param_int(EXPLOC) .eq. 0 ) then
 
 
-
+              
                 call flusenseur_init_select(ndo,nitcfg,ithread, nptpsi,
      &                        param_int, param_real,
      &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
@@ -276,6 +361,9 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
 
               elseif(param_int(KFLUDOM).eq.2.and.nitcfg.gt.1 .and.
      & param_int(EXPLOC) .eq. 0 ) then
+
+              !elseif(param_int(KFLUDOM).eq.2.and.nitcfg.ne.1 .and.
+     & !param_int(EXPLOC) .eq. 0 .and.nitcfg.ne.5 ) then
  
 
 
@@ -340,6 +428,9 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                        psi,wig,stat_wig, rop_ssiter, drodm,
      &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
      &                        venti, ventj, ventk, xmut)
+
+
+
               else
 
                  if(ithread.eq.1) then
@@ -426,22 +517,27 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
              !c     iptrotmp(nitcfg+1)=iptrotmp(nitcfg)+CoefW *drodm (rk3)
              !c--------------------------------------------------
 
+
+
               if (param_int(EXPLOC)==0) then ! Explicit global
 
-                 if(mod(nitcfg,2)==1) then
 
-                    call core3ark3(ndo,nitcfg, param_int, param_real,
-     &                   ind_mjr,
+                 if(mod(nitcfg,2)==1) then
+                       
+                     call core3ark3(ndo,nitcfg, param_int, param_real,
+     &                      ind_mjr,
      &                   rop_tmp, rop, drodm, coe)
                  else
 
-                    call core3ark3(ndo,nitcfg, param_int, param_real,
+                     call core3ark3(ndo,nitcfg, param_int, param_real,
      &                   ind_mjr,
      &                   rop, rop_tmp, drodm, coe)
-                 endif
 
-             else if(param_int(EXPLOC)==1.or.param_int(EXPLOC)==2 .or.
-     & param_int(EXPLOC)==4 .or.param_int(EXPLOC)==5 ) then ! J-scheme + constantinescu rk2 + rk3 local + rk2 local test + Tang & Warnecke
+                 end if
+           
+    
+             else if(param_int(EXPLOC)==1) then ! Explicit local instationnaire
+             !else if(param_int(EXPLOC)==2) then ! Explicit local instationnaire
 
                  if (MOD(nitcfg,2)==0) then
 
@@ -452,49 +548,20 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
 
                      call core3_dtloc(ndo,nitcfg, param_int, param_real,
      &                    ind_mjr,
-     &                    rop_tmp, rop, drodm, coe)
+     &                   rop_tmp, rop, drodm, coe)
+                     
                  endif
 
-             else if(param_int(EXPLOC)==3)then ! Schema de Constantinescu base sur rk3             
-
-  
-                   if (MOD(nitcfg,3)==1) then
-
-                     call core3_dtloc(ndo,nitcfg, param_int, param_real,
-     &                    ind_mjr,
-     &                    rop_tmp, rop, drodm, coe)
-                     
-                     !print*, 'coucou1'
-
-                   else if (MOD(nitcfg,3)==2) then
-
-                     call core3_dtloc(ndo,nitcfg, param_int, param_real,
-     &                    ind_mjr,
-     &                    rop_m1,rop_tmp, drodm, coe)
-
-                     !print*, 'coucou2'
-
-                   else
-
-
-                     call core3_dtloc(ndo,nitcfg, param_int, param_real,
-     &                    ind_mjr,
-     &                    rop,rop_m1, drodm, coe)
-
-                     !print*, 'coucou0'
-
-                    endif
-                    
-
-
-
-
-
+                  
               endif
-           endif
+          end if
+
 
 #include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+
+
+
 
            !!! omp barriere
       if(lexit_lu.eq.0.and.nitrun*nitcfg.gt.15) then 

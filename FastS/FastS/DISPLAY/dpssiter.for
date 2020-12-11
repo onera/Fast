@@ -42,7 +42,7 @@ c-----Boucle sur les domaines :
 
       last_it = nssiter_loc
     
-      iverbs_loc  = 2
+      iverbs_loc  = 1
       do ii = 1,neq
          if (rdm(last_it,ii,2).gt.rdm(1,ii,2)) iverbs_loc = 2
       enddo

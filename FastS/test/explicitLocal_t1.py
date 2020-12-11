@@ -70,7 +70,7 @@ tc = C.rmVars(tc, 'CellN')
 
 # Numerics
 numb = {}
-numb["temporal_scheme"]    = "explicit"
+numb["temporal_scheme"]    = "explicit_local"
 numb["omp_mode"]           = 0
 numb["modulo_verif"]       = 10
 numb["rk"]        	   = 3
@@ -90,6 +90,7 @@ for z in zones:
       dtloc = Internal.getNodeFromName1(z, '.Solver#define')  # noeud
       level = Internal.getNodeFromName1(dtloc, 'niveaux_temps')  # noeud
       Internal.setValue(level,2)
+
 
 (t,tc,metrics) = FastS.warmup(t,tc)
 

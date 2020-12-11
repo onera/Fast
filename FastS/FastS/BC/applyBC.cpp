@@ -126,7 +126,8 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
     rk = ipt_param_int[0][RK];
     exploc = ipt_param_int[0][EXPLOC];
 
-    if (rk == 3 and exploc == 2) 
+    if (exploc == 1)   // Explicit local instationnaire : on met a jour les BC en fonction du niveau en tps de la zone    
+    //if (rk == 3 and exploc == 2) 
       {
 	cycl = ipt_param_int[nd][NSSITER]/ipt_param_int[nd][LEVEL];
 	  
@@ -157,7 +158,7 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
 	    
   } // boucle zone
 
- 
+
   /*----------------------------------*/
   /* Extraction des CL de la zone  */
   /*----------------------------------*/

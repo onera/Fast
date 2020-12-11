@@ -468,7 +468,9 @@ else
   PyObject* dtloc_stk;
   FldArrayF* stk; E_Float* iptstk=NULL; E_Float* iptdrodmstk=NULL; E_Float* iptcstk=NULL;
   E_Int stk_size=1; E_Int taille_tabs=1; E_Int flag_dtloc=0;
-  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==2 and ipt_param_int[0][RK]==3 and layer_mode ==1)
+
+  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==1 and layer_mode ==1)  
+  //if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==2 and ipt_param_int[0][RK]==3 and layer_mode ==1)
   {
     dtloc_stk = PyDict_GetItemString(work,"tab_dtloc"); 
     K_NUMPY::getFromNumpyArray(dtloc_stk, stk, true);  iptstk = stk->begin();
@@ -638,6 +640,7 @@ else
          }
        }//test mise a jour cfl
 
+       
        if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]!= 0) // mise a jour du temps par zone en explicite local
 	 {
 	   for (E_Int nd = 0; nd < nidom ; nd++) 
@@ -654,6 +657,7 @@ else
 	 {
         for (E_Int nd = 0; nd < nidom ; nd++) { ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]; }
 	 }
+       
      }//test calcul NS
 
    }//loop nstep

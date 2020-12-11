@@ -40,6 +40,7 @@ a4 = G.cart((17.5,10,0),(0.05,0.05,0.1), (151,201,1))
 a4 = C.addVars(a4, 'centers:niveaux_temps')
 a4 = C.initVars(a4, 'centers:niveaux_temps',4)
 
+
 ### Arbre t ####
 t = C.newPyTree(['Base']) ; t[2][1][2] += [a1,a2,a3,a4]
 
@@ -75,11 +76,11 @@ tc = C.rmVars(tc, 'CellN')
 
 # Numerics
 numb = {}
-numb["temporal_scheme"]    = "explicit"
+numb["temporal_scheme"]    = "explicit_local"
 numb["omp_mode"]           = 0
 numb["modulo_verif"]       = 10
-numb["rk"]        	   = 3
-numb["exp_local"]	   = 2 
+#numb["rk"]        	   = 3
+#numb["exp_local"]	   = 2 
 numz = {}
 numz["time_step"]          = 0.01
 numz["scheme"]             = "ausmpred"
@@ -106,7 +107,7 @@ for z in zones:
 nit=100; times = 0.
 timeStep = numz['time_step']
 for it in range(nit):
-    FastS._compute(t, metrics, it,tc,layer='c')
+    FastS._compute(t, metrics, it,tc,layer='Python')
     if it%10 == 0:
         print('- %d - %f'%(it, times))
         FastS.display_temporal_criteria(t, metrics, it)
