@@ -56,40 +56,14 @@ zones      = Internal.getNodesFromType2(t, 'Zone_t')
 param_int  = Internal.getNodeFromName2(zones[0], 'Parameter_int')[1]
 print('NEQQQQ=', param_int[36]) 
 
-print("ti", metrics[0][1][1,0])
-import numpy
-ti = metrics[0][0]
-vol= metrics[0][1]
-size_ti   = numpy.shape( ti)
-size_vol = numpy.shape(vol)
-print("ti", size_ti)
-print("vol", size_vol)
-#for i in range(size_ti[0] ):
- #print "txyz", metrics[0][0][i,0],  metrics[0][0][i,1] ,metrics[0][0][i,2], i
- #print "fxyz", metrics[0][0][i,3],  metrics[0][0][i,4] ,metrics[0][0][i,5], i
-#for i in range(size_vol[0] ):
- #print "vol", vol[i,0], vol[i,1],i
- #print "cxyz", vol[i,1],  vol[i,2] ,vol[i,3], i
-
-#C.convertPyTree2File(t, 'out.cgns')
-#sys.exit()
-
-
-#C._initVars(t, '{centers:Density} = 1 + 0.0001 * {centers:CoordinateX}* {centers:CoordinateX}')
-#C._initVars(t, '{centers:Temperature} = 1')
-#C._initVars(t, '{centers:VelocityX} = 1')
-#C._initVars(t, '{centers:VelocityY} = 1')
 C._initVars(t, '{centers:VelocityY} = {centers:VelocityY} + 0.7')
-#C.convertPyTree2File(t, "in.cgns")
-#sys.exit()
-# Time Steps
-#nit =  50  ; time = 0.
+
 nit =  50  ; time = 0.
 for it in range(nit):
     print('nit=',it)
     Fast._compute(t, metrics, nit)
 
-#C.convertPyTree2File(t, 'out.cgns')
+C.convertPyTree2File(t, 'out.cgns')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)

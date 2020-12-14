@@ -62,4 +62,4 @@ for it in range(nit):
 C.convertPyTree2File(t, 'out.cgns')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
-#test.testT(t, 1)
+test.testT(t, 1)

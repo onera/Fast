@@ -86,7 +86,7 @@ for it in range(nit):
        Fast.display_temporal_criteria(t, metrics, it)
 
 C.convertPyTree2File(t, 'out.cgns')
-sys.exit()
+#sys.exit()
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

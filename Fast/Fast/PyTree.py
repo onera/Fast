@@ -145,6 +145,8 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
         varnames= data[1]
         for fields in varnames:
             _compact(zone, fields=fields, mode=count)
+    for z in zones_unstr:
+       _compact(zone, fields=None, mode=count, ParentElements=True)
 
     #on recupere les zones a nouveau car create primvar rend zones caduc
     zones = Internal.getZones(t)
@@ -281,7 +283,7 @@ def allocate_metric(t):
     return metrics
 
 #==============================================================================
-def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolutionCenters__], fields=None, mode=None, init=True):
+def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolutionCenters__], fields=None, mode=None, init=True, ParentElements=False):
     if  mode is not None:
       if mode == -1: thread_numa = 0
       else: thread_numa = 1
@@ -289,38 +291,63 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
 
     zones = Internal.getZones(t)
     for z in zones:
-        ztype = Internal.getValue(  Internal.getNodeFromName(z, 'ZoneType') )
-        ars   = FastC.getFields2Compact__(z, containers, fields)
-        sh    = None ; size = None
-        val   = [] # valid fields
-        for a in ars:
-            a1 = a[1]
-            if sh is None: sh = a1.shape; size = a1.size; val.append(a)
-            elif a1.shape == sh: val.append(a)
-        nfields = len(val)
-        if nfields > 0:
-            param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
-            # Create an equivalent contiguous numpy [flat]
-            eq = numpy.empty(nfields*(size+ param_int[1][66]), dtype=numpy.float64) # add a shift  between prim. variables (param_int[1][SHIFTVAR])
-            c = 0        
-            if param_int is None:
-                raise ValueError("_compact: Parameter_int is missing for zone %s."%z[0])
-            for a in val:
-                a1 = a[1]
-                # Copy elements
-                ptr = a1.reshape((size), order='F') # no copy I hope
+        if ParentElements:
+          E_NG   = Internal.getNodeFromName(z   ,'NGonElements')
+          FaceSch= Internal.getNodeFromName(z   ,'FaceScheduler')
+          CellSch= Internal.getNodeFromName(z   ,'CellScheduler')
+          a      = Internal.getNodeFromName(E_NG,'ParentElements')
+          a1     = a[1]
+          sh = a1.shape ; sh1= FaceSch[1].shape; sh2 = CellSch[1].shape
 
-                if init: 
-                  if ztype=='Structured':
-                    FastS.fasts.initNuma( ptr, eq, param_int, c, thread_numa )
-                  else:
-                    FastP.fastp.initNuma( ptr, eq, param_int, c, thread_numa ) 
+          eq = numpy.empty(sh , dtype=numpy.int32, order='F')
+          eq1= numpy.empty(sh1, dtype=numpy.int32, order='F')
+          eq2= numpy.empty(sh2, dtype=numpy.int32, order='F')
 
-                # Replace numpys with slice
-                a[1] = eq[c*(size)+c*param_int[1][66]:(c+1)*(size)+c*param_int[1][66]]
-                a[1] = a[1].reshape(sh, order='F')
+          c = 0
+          param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
+          if param_int is None:
+              raise ValueError("_compact: Parameter_int is missing for zone %s."%z[0])
+          opt = 1
+          if init : FastP.fastp.initNuma( a1, eq, eq1, eq2, param_int, c, thread_numa, opt )
+          # Replace numpys with slice
+          a[1]       = eq
+          FaceSch[1] = eq1
+          CellSch[1] = eq2
 
-                c += 1
+        else:
+          opt = 0
+          ztype = Internal.getValue(  Internal.getNodeFromName(z, 'ZoneType') )
+          ars   = FastC.getFields2Compact__(z, containers, fields)
+          sh    = None ; size = None
+          val   = [] # valid fields
+          for a in ars:
+              a1 = a[1]
+              if sh is None: sh = a1.shape; size = a1.size; val.append(a)
+              elif a1.shape == sh: val.append(a)
+          nfields = len(val)
+          if nfields > 0:
+              param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
+              # Create an equivalent contiguous numpy [flat]
+              eq = numpy.empty(nfields*(size+ param_int[1][66]), dtype=numpy.float64) # add a shift  between prim. variables (param_int[1][SHIFTVAR])
+              c = 0        
+              if param_int is None:
+                  raise ValueError("_compact: Parameter_int is missing for zone %s."%z[0])
+              for a in val:
+                  a1 = a[1]
+                  # Copy elements
+                  ptr = a1.reshape((size), order='F') # no copy I hope
+
+                  if init: 
+                    if ztype=='Structured':
+                      FastS.fasts.initNuma( ptr, eq, eq, eq, param_int, c, thread_numa )
+                    else:
+                      FastP.fastp.initNuma( ptr, eq, eq, eq, param_int, c, thread_numa, opt ) 
+
+                  # Replace numpys with slice
+                  a[1] = eq[c*(size)+c*param_int[1][66]:(c+1)*(size)+c*param_int[1][66]]
+                  a[1] = a[1].reshape(sh, order='F')
+
+                  c += 1
     return None
 
 #==============================================================================
