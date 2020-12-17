@@ -339,7 +339,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
 
                   if init: 
                     if ztype=='Structured':
-                      FastS.fasts.initNuma( ptr, eq, eq, eq, param_int, c, thread_numa )
+                      FastS.fasts.initNuma( ptr, eq,  param_int, c, thread_numa )
                     else:
                       FastP.fastp.initNuma( ptr, eq, eq, eq, param_int, c, thread_numa, opt ) 
 
@@ -351,7 +351,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
     return None
 
 #==============================================================================
-def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmode, hook1, nitmax=1, rk=1, exploc=1, num_passage=1): 
+def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1): 
 
    if hook1['lexit_lu'] ==0:
 
@@ -375,7 +375,7 @@ def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmo
               no_transfert   = 1  # dans la list des transfert point a point
               X.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
        #apply BC
-       if rk != 3 and exploc != 2:
+       if exploc != 1:
           _applyBC(infos_zones, hook1, nstep, ompmode, var= vars)    
 
             
@@ -416,7 +416,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
     if layer == "Python": 
         
-      if exploc==2 and tc is not None and rk==3:
+      if exploc==1 and tc is not None:
          tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
          if tc_compact is not None:
                 param_real_tc= tc_compact[1]
@@ -454,7 +454,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             #print('t_compute = %f'%(Time.time() - t0))
 
             # dtloc GJeanmasson
-            if exploc==2 and tc is not None and rk==3:
+            if exploc==1 and tc is not None:
                FastS.fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
 
                if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
@@ -510,7 +510,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     zones_lbm   = infos_zones["LBM"][0]
     metrics_lbm = infos_zones["LBM"][1]
     #switch pointer a la fin du pas de temps
-    if exploc==2 and tc is not None and rk==3:
+    if exploc==1 and tc is not None:
          if layer == 'Python':
              FastC.switchPointers__(zones_ns, 1, 3)
          else:

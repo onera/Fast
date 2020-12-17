@@ -79,7 +79,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
     if layer == "Python":
         
       if exploc==1 and tc is not None :        
-      #if exploc==2 and tc is not None and rk==3:
          tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
          if tc_compact is not None:
                 param_real_tc= tc_compact[1]
@@ -113,7 +112,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
             # dtloc GJeanmasson
             if exploc==1 and tc is not None:
-            #if exploc==2 and tc is not None and rk==3:
                fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
 
                if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
@@ -187,7 +185,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
     # switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None :
-    #if exploc==2 and tc is not None and rk==3:
          if layer == 'Python': FastC.switchPointers__(zones, 1, 3)
          else: FastC.switchPointers3__(zones, nitmax)
     else:

@@ -497,6 +497,10 @@ else
   PyObject* coeArray = PyDict_GetItemString(work,"coe"); FldArrayF* coe;
   K_NUMPY::getFromNumpyArray(coeArray, coe, true); E_Float* iptcoe = coe->begin();
 
+  // Tableau de travail coe   ( dt/vol et diags LU)
+  PyObject* fluArray = PyDict_GetItemString(work,"flu_vecto"); FldArrayF* flu;
+  K_NUMPY::getFromNumpyArray(fluArray, flu, true); E_Float* iptflu = flu->begin();
+
   // Tableau de travail verrou omp
   PyObject* lokArray = PyDict_GetItemString(work,"verrou_omp"); FldArrayI* lok;
   K_NUMPY::getFromNumpyArray(lokArray, lok, true); E_Int* ipt_lok  = lok->begin();
@@ -630,7 +634,7 @@ else
             ipti_df            , iptj_df          , iptk_df           , iptvol_df     , 
             iptventi           , iptventj         , iptventk          ,  
             iptrdm             ,
-            iptroflt           , iptroflt2        , iptgrad           , iptwig            , iptstat_wig   ,
+            iptroflt           , iptroflt2        , iptgrad           , iptwig            , iptstat_wig   , iptflu       ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta         , iptro_res, iptdrodm_transfer  ,
             ipt_param_int_tc   , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real,
             taille_tabs        , iptstk           , iptdrodmstk       , iptcstk          , iptsrc, 
@@ -735,6 +739,7 @@ else
   RELEASESHAREDN( wigArray       , wig  );
   RELEASESHAREDN( drodmArray     , drodm);
   RELEASESHAREDN( coeArray       , coe  );
+  RELEASESHAREDN( fluArray       , flu  );
   RELEASESHAREDN( lokArray       , lok  );
   RELEASESHAREDN( timer_omp_Array, tab_timer_omp);
   RELEASESHAREDN( dtlocArray     , dtloc);

@@ -100,7 +100,9 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
     /*-------------------------------------*/
     /* Extraction (x,y,z): pour forcage spatia */
     /*-------------------------------------*/
-    GET_XYZ( "GridCoordinates", zone, iptx[nd], ipty[nd], iptz[nd]) 
+    if(param_int[nd][ LALE ]== 0 || param_int[nd][ LALE ]== 2 ){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
+    else                                                       { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
+    //GET_XYZ( "GridCoordinates", zone, iptx[nd], ipty[nd], iptz[nd]) 
 
     /* get distance paroi */
 

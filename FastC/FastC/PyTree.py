@@ -1338,10 +1338,13 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
             ndimplan = max( ndimplan, dimIJ)
             ndimplan = max( ndimplan, dimIK)
             ndimplan = max( ndimplan, dimJK)
+
+            ndimFlu  =0
         else: 
             nijk = dims[2]+shiftvar
             print('dtloc fastP: revoir dim tab jeanmasson')
             ndimplan = 10     ### a revoir
+            ndimFlu  =2500000*neq*3
 
         #print 'zone,taille =', z[0], nijk
 
@@ -1369,6 +1372,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #    drodm = KCore.empty(ndimt  , CACHELINE)
     wig   = numpy.empty(ndimwig, dtype=numpy.float64)
     coe   = numpy.empty(ndimcoe, dtype=numpy.float64)
+    flu   = numpy.empty(ndimFlu, dtype=numpy.float64)
 
     if   (rk==4 and exploc==0): size_drodm = 4*ndimt
     elif (rk==5 and exploc==0): size_drodm = 5*ndimt
@@ -1403,6 +1407,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['coe']            = coe
     hook['rhs']            = drodm
     hook['tab_dtloc']      = tab_dtloc
+    hook['flu_vecto']      = flu
     hook['verrou_omp']     = lok
     hook['skip_lu']        = iskip_lu
     hook['dtloc']          = dtloc

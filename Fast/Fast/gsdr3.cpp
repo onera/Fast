@@ -59,7 +59,7 @@ E_Int K_FAST::gsdr3(
   E_Float**  ipti_df         , E_Float**  iptj_df         , E_Float** iptk_df      , E_Float** iptvol_df     ,
   E_Float**  iptventi        , E_Float**  iptventj        , E_Float** iptventk     ,
   E_Float**& iptrdm          ,
-  E_Float*   iptroflt        , E_Float*   iptroflt2       , E_Float*  iptgrad      , E_Float*  iptwig       , E_Float*   iptstat_wig  ,
+  E_Float*   iptroflt        , E_Float*   iptroflt2       , E_Float*  iptgrad      , E_Float*  iptwig       , E_Float*   iptstat_wig  ,  E_Float* iptflu, 
   E_Float*   iptdrodm        , E_Float*   iptcoe          , E_Float*  iptrot       , E_Float**& iptdelta     , E_Float**& iptro_res, E_Float**& iptdrodm_transfer,
   E_Int*&    param_int_tc    , E_Float*& param_real_tc    , E_Int*& linelets_int   , E_Float*& linelets_real , 
   E_Int&     taille_tabs     , E_Float*& stock            , E_Float*& drodmstock   , E_Float*& constk        , E_Float** iptsrc,
@@ -130,7 +130,7 @@ E_Int K_FAST::gsdr3(
       //E_Float* iptro_CL[nidom];
       E_Float** iptro_CL  = new E_Float*[nidom];
 
-      E_Int rk =  param_int[0][RK];
+      E_Int rk     =  param_int[0][RK];
       E_Int exploc = param_int[0][EXPLOC];
       E_Int numpassage = 1;
 
@@ -138,8 +138,8 @@ E_Int K_FAST::gsdr3(
       {
         if ( param_int[nd][IFLOW]!= 4)
          {
-           // J-Scheme + Constantinescu rk2 + rk3 local + rk2local test + Tang & Warnecke
-           if( param_int[0][ITYPCP]==2 and ( param_int[0][EXPLOC]== 1 or param_int[0][EXPLOC]== 2 or param_int[0][EXPLOC]== 4 or param_int[0][EXPLOC]== 5) )
+           // explicit local
+           if(param_int[0][EXPLOC]== 1 and param_int[0][ITYPCP]==2)
 	    {
 	      if (nitcfg%2 != 0){iptro_ssiter[nd] = iptro[nd];  iptro_CL[nd] = iptrotmp[nd]; ishift  =1; lfwmean  = 1; }
 	      else {
@@ -297,6 +297,7 @@ E_Float deb_calcul;
    E_Int ipt_ind_grad_thread[6];
 
    E_Int* ipt_nidom_loc, nb_subzone;
+
      /****************************************************
       -----Boucle sous-iteration
      ****************************************************/
@@ -327,7 +328,6 @@ E_Float deb_calcul;
 	/// calcul de ndim
 
 	E_Int ndim = 0;
-	//cout<<"ndim= "<< ndim << endl;
         //---------------------------------------------------------------------
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
@@ -361,7 +361,7 @@ E_Float deb_calcul;
 	    //   {   
 	    //	 ndim = 0;
 	    //  }
-   	    if (param_int[0][EXPLOC] == 2 and param_int[0][RK] == 3 and cycl != 4 and nitcfg%cycl==cycl/4)
+   	    if (param_int[0][EXPLOC] == 1 and param_int[0][RK] == 3 and cycl != 4 and nitcfg%cycl==cycl/4)
 	      {
 		for (E_Int nd = 0; nd < nidom; nd++)
 		  {
@@ -473,7 +473,7 @@ E_Float tmps;
     }//test exploc==0
 
  
-  if (param_int[0][EXPLOC] == 2 and param_int[0][RK] == 3) 
+  if (param_int[0][EXPLOC] == 1 ) 
    {
      K_FASTS::dtlocal2para_c(iptro, iptrotmp, param_int_tc, param_real_tc, param_int, param_real, iptdrodm, iptcoe, stock, drodmstock, constk, nitcfg, omp_mode, taille_tabs, nidom);
 
@@ -525,7 +525,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
   {
    // flag pour transfert optimiser explicit local
    autorisation_bc[nd]=0;
-   if (rk == 3 and exploc == 2) 
+   if (exploc == 1) 
       {
 	cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
 	  

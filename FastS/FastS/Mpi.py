@@ -169,7 +169,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                timelevel_target = int(dtloc[4])
               
 
-               print ('target= ', timelevel_target)
+               #print ('target= ', timelevel_target)
                #tic=Time.time()
 
                _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict)
@@ -255,7 +255,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
               for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
-              print('fillGC: timeleveltarget= ', timelevel_target)
+              #if rank == 0: print('fillGC: timeleveltarget= ', timelevel_target)
 
               # #recuperation Nb pas instationnaire dans tc
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
@@ -472,11 +472,11 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
       timelevel_target = Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0]
 
 
-    #print("timelevel_motion= ", timelevel_motion)
-    #print("timelevel_target= ", timelevel_target)
 
     if iteration == 0:    
-       timelevel_motion = Internal.getNodeFromName1(t, 'Iteration')[1][0] - 1
+       Node = Internal.getNodeFromName1(t, 'Iteration')
+       if Node is not None: timelevel_motion = Internal.getNodeFromName1(t, 'Iteration')[1][0] - 1
+       else: timelevel_motion = 0
     else:
        timelevel_motion = iteration
 
@@ -498,6 +498,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        #print('root,timelevel_motion, tmp = ', root, timelevel_motion, tmp)
        #root = 60
+       if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target)
     
        iteration = timelevel_motion
    
@@ -658,11 +659,8 @@ def computeCFL_dtlocal(t):
                
     print(liste_BCPeriodiques)
                  
-    print('av warmup')
 
     (t,tc,metrics) = warmup(t,tc=None)
-
-    print('ap warmup')
 
     zones = Internal.getZones(t)
 
