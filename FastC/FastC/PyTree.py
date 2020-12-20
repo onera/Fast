@@ -569,7 +569,9 @@ def _build_omp(t):
             size_scheduler = 0
             if dims[3] == 'NGON':
                CellScheduler = Internal.getNodeFromName1( z, 'CellScheduler')[1]
-               size_scheduler= numpy.size(CellScheduler)
+               size_scheduler += numpy.size(CellScheduler)
+               Nbr_BlkIntra = Internal.getNodeFromName1( z, 'Nbr_BlkIntra')[1]
+               size_scheduler += numpy.size(Nbr_BlkIntra)
 
             #print("SIZE int", size_int,"c=", c,"size_sched=",  size_scheduler)
             datap = numpy.zeros(size_int + c + size_scheduler, numpy.int32)
@@ -580,13 +582,20 @@ def _build_omp(t):
             param_int[1] = datap
 
             if dims[3] == 'NGON':
-               size = numpy.shape(CellScheduler)
-               c = 0
                deb = param_int[1][87] 
-               for l in range(size[3]):
-                 for k in range(size[2]):
-                   for j in range(size[1]):
-                     for i in range(size[0]):
+               size = numpy.size(Nbr_BlkIntra)
+               for l in range(size):
+                 param_int[1][ deb +l ]=Nbr_BlkIntra [l]
+               Nbr_BlkIntra = param_int[1][ deb:deb+size ]
+
+               deb  += size
+               shap          = numpy.shape(CellScheduler)
+               size_scheduler= numpy.size(CellScheduler)
+               c = 0
+               for l in range(shap[3]):
+                 for k in range(shap[2]):
+                   for j in range(shap[1]):
+                     for i in range(shap[0]):
                        #print("deb+c", deb+c, c, l,k,j,i,param_int[1][87] )
                        param_int[1][ deb +c ]= CellScheduler[ i, j, k, l]
                        c +=1
