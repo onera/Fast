@@ -152,6 +152,11 @@ void K_FASTC::setInterpTransfersFast(
         nbcomIBC_nstep = nbcomIBC;
       }
 
+  
+
+
+     
+       
 
     if (mpi and (nbcomID_nstep != 0 or nbcomIBC_nstep != 0))
     //if (mpi)
@@ -190,6 +195,8 @@ void K_FASTC::setInterpTransfersFast(
        E_Float time_out = omp_get_wtime();
        ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;
       #endif
+
+
 
       int nb_send_buffer = 0;
       for (E_Int ip2p = 1; ip2p < param_int_tc[0] +1; ++ip2p)
@@ -286,6 +293,8 @@ void K_FASTC::setInterpTransfersFast(
         {
          E_Int ech  = param_int_tc[ip2p+shift_graph];
          dest       = param_int_tc[ech];
+
+         // printf("rank = %d, dest = %d \n",rank, dest );
          if (dest != rank)  // Inter Process
           {             
             TypeTransfert = 0;
@@ -341,6 +350,7 @@ void K_FASTC::setInterpTransfersFast(
 
     } // MPI Second part (InterCOM ID)
     #endif
+
 
     
   } //if  param_int_tc != Null
@@ -434,7 +444,7 @@ void K_FASTC::setInterpTransfersIntra(
 	  // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse   
 	  if (levelD > levelR and num_passage == 1)		
 	    {
-	      if (nstep%cyclD==cyclD-1 or nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1) { autorisation_transferts[pass_inst][irac_auto]=1; }
+	      if (nstep%cyclD==cyclD-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1)) { autorisation_transferts[pass_inst][irac_auto]=1; }
 	    }
 	  // Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
 	  else if (levelD < levelR and num_passage == 1) 
@@ -897,31 +907,33 @@ void K_FASTC::setInterpTransfersInter(
 	      // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse   
 	      if (levelD > levelR and num_passage == 1)		
 		{
-		  if (nstep%cyclD==cyclD-1 or nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1){autorisation_transferts[pass_inst][irac_auto]=1;}
-		  else {continue;}
+		  if (nstep%cyclD==cyclD-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1)){autorisation_transferts[pass_inst][irac_auto]=1;}
+		  
 		}
 	      // Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
 	      else if (levelD < levelR and num_passage == 1) 
 		{
 		  if (nstep%cyclD==1 or nstep%cyclD==cyclD/4 or nstep%cyclD== cyclD/2-1 or nstep%cyclD== cyclD/2+1 or nstep%cyclD== cyclD/2+cyclD/4 or nstep%cyclD== cyclD-1)
                      {autorisation_transferts[pass_inst][irac_auto]=1;}
-		  else {continue;}
+		  
 		}
 	      // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse
 	      else if (levelD == levelR and num_passage == 1)
 		{
 		  //cout << "coucou " << endl;
 		  if (nstep%cyclD==cyclD/2-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==0) or nstep%cyclD==cyclD-1) { autorisation_transferts[pass_inst][irac_auto]=1; }
-		  else {continue;}
+		  
 		}
 	      // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse (cas du deuxieme passage)   
 	      else if (levelD ==  levelR and num_passage == 2)
 		{
 		  //if (nstep%8 == 6){autorisation_transferts[pass_inst][irac]=1;}
 		  if (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1){autorisation_transferts[pass_inst][irac_auto]=1;}
-		  else {continue;}
+		  
 		}
-	      else {continue;} 
+	     
+
+
 	    }
 	  else // Sinon, on autorise les transferts entre ttes les zones a ttes les ss-ite
 	    {

@@ -46,7 +46,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
     own  = Internal.getNodeFromName1(base, '.Solver#ownData')  
     dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')
 
-
+    
     zones= Internal.getZones(t)
 
     node = Internal.getNodeFromName1(base, '.Solver#define')
@@ -326,7 +326,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)# tab numpy
-    #print('dtloc= ', dtloc)
     
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
@@ -451,6 +450,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
     bases = Internal.getNodesFromType1(t      , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
     #print('own= ', own)
+ 
     dtloc = None
     if own is not None: dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
    
@@ -462,15 +462,11 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
     if dtloc is not None:
       dtloc            = Internal.getValue(dtloc) # tab numpy
-
       timelevel_motion = dtloc[3]
       timelevel_target = dtloc[4]
-
-
     else:
       timelevel_motion = Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0]
       timelevel_target = Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0]
-
 
 
     if iteration == 0:    
@@ -489,19 +485,18 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
     #
     #target in no more in tc; need need data in a new file
     #
-    if timelevel_target == timelevel_perfile or tc is None: 
+
+    if timelevel_target == timelevel_perfile or tc is None or timelevel_motion%timelevel_period == 0 : 
 
        #print('timelevel_target=',timelevel_target)
        rank = Cmpi.rank
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
-
-       #print('root,timelevel_motion, tmp = ', root, timelevel_motion, tmp)
-       #root = 60
+       if root > timelevel_period : root=timelevel_period ### Comme 8000 pas multiple de 60 on force le load de tc_8000
+       #print(root)
        if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target)
     
-       iteration = timelevel_motion
-   
+       
        FILE = tc_steady
        if os.access(FILE, os.F_OK): 
           tc = Cmpi.convertFile2SkeletonTree(FILE)
@@ -514,6 +509,8 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        if dtloc is not None:
            dtloc[4]=dtloc[4]%timelevel_perfile
+       if timelevel_motion%timelevel_period == 0: ### On force dtloc[4] a 0 a chaque fin de periode azymutale
+           dtloc[4]=0
 
        #
        #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
@@ -540,13 +537,9 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
             for z in zones:
               angles = Internal.getNodesFromName2(z, 'RotationAngle')
               for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
-
+       
        tc = Internal.merge( [tc, tc_inst] )
 
-       #if (rank==32):
-       #    C.convertPyTree2File(tc, 'tc_merged_32.cgns')
-
-       
 
        graphID   = Cmpi.computeGraph(tc, type='ID', it=iteration)
        graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
@@ -559,8 +552,6 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
 
-       #if rank==0:print('Calcul du graph pour l iteration', iteration)
-       #if rank==0:print('graph[32]= ', graphID[32])
 
        tc = Cmpi.convert2PartialTree(tc, rank=rank)
  
@@ -589,8 +580,8 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        #if dtloc is not None: dtloc[4] = 0
        #print('COUCOU, dtloc= ', dtloc )
        
-    #timelevel_motion larger than number of timelevels for 360degre 
-    #
+       #timelevel_motion larger than number of timelevels for 360degre 
+       #
 
     else:
        rank = Cmpi.rank
@@ -604,17 +595,15 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
     
        if rank==0:print('calcul du graph it', iteration)
 
-
-          
+         
        graphID   = Cmpi.computeGraph(tc, type='ID', it=iteration)
        graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
        procDict  = D2.getProcDict(tc)
        procList  = D2.getProcList(tc, sort=True)
 
-       if rank==0:print('Recalcul du graph pour l iteration', iteration)
-
-
        graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+
+
 
 
     if timelevel_motion > timelevel_360:

@@ -286,7 +286,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
      /****************************************************
       -----Boucle sous-iteration
      ****************************************************/
-   //cout << "nticfg= " << nitcfg << endl;
+  
         if( nitcfg == 1)
                   {
                      for (E_Int nd = 0; nd < nidom; nd++) //mise a jour metric et vent ale zone cart et 3dhom(3dfull et 2d a la volee)
@@ -313,7 +313,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 
 	/// calcul de ndim
 
-	E_Int ndim = 0;
+	//E_Int ndim = 0;
 	//cout<<"ndim= "<< ndim << endl;
         //---------------------------------------------------------------------
         // -----Boucle sur num.les domaines de la configuration
@@ -342,19 +342,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 	    //   {   
 	    //	 ndim = 0;
 	    //  }
-   	    if (param_int[0][EXPLOC] == 2 and param_int[0][RK] == 3 and cycl != 4 and nitcfg%cycl==cycl/4)
-	      {
-		for (E_Int nd = 0; nd < nidom; nd++)
-		  {
-		    ndim = ndim + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-		  }
 
-	      }
-	    else
-	       {   
-	    	 ndim = 0;
-	       }
-   
            E_Int lmin = 10;
            if (param_int[nd][ITYPCP] == 2) lmin = 4;
 
@@ -482,8 +470,8 @@ E_Int flag_passage2=0;
       if (nitcfg != nssiter)
 	{
       		
-      K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
-                             linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
+	  K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+	                    linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
 
         }
 
@@ -519,7 +507,7 @@ E_Int flag_passage2=0;
         //cout << "ap_2eme_passage" << endl;
 	flag_passage2=0;
      }   
-   
+     
   
 
 

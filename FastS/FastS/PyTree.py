@@ -2102,6 +2102,7 @@ def computeCFL_dtlocal(t):
 
     liste_BCPeriodiques = []
     
+    """
     BCMatch = Internal.getNodesFromType(t, 'GridConnectivity1to1_t')
     for match in BCMatch:
         perio = Internal.getNodesFromName(match, 'GridConnectivityProperty')
@@ -2114,12 +2115,12 @@ def computeCFL_dtlocal(t):
  
             if (list1 not in liste_BCPeriodiques) :            
                  liste_BCPeriodiques.append(list1)
-                 
-    print(liste_BCPeriodiques)
+    """             
+    #print(liste_BCPeriodiques)
                  
     print('av warmup')
 
-    (t,tc,metrics) = warmup(t,tc=None)
+    (t,tc,metrics) = warmup(t,tc=None) ### Oblige d appeler warmup afin de construire les metrics necessaires au calcul de la CFL
 
     print('ap warmup')
 
@@ -2131,7 +2132,7 @@ def computeCFL_dtlocal(t):
     
     fasts.prep_cfl(zones, metrics,1,1,1)
 
-    t = Internal.rmGhostCells(t, t, 2)
+    #t = Internal.rmGhostCells(t, t, 2)
 
     C._rmVars(t, 'Temperature_M1')
     C._rmVars(t, 'Temperature_P1')
@@ -2150,70 +2151,43 @@ def computeCFL_dtlocal(t):
     zones = Internal.getZones(t)
 
     for z in zones:
-        #dim = Internal.getZoneDim(z)
-        #zp = T.subzone(z, (1,1,1), (dim[1]-2,dim[2]-2,dim[3]-2))
-        cflmax = C.getMaxValue(z, 'centers:CFL')
-        cflmin = C.getMinValue(z, 'centers:CFL')
-        print('cflmin= ', cflmin)
-        if (cflmax > cflmax_glob):cflmax_glob = cflmax
-        if (cflmin < cflmin_glob):cflmin_glob = cflmin
+        if dimPb == 3:
+           dim = Internal.getZoneDim(z)
+           zp = T.subzone(z, (3,3,3), (dim[1]-2,dim[2]-2,dim[3]-2))
+           cflmax = C.getMaxValue(zp, 'centers:CFL')
+           cflmin = C.getMinValue(zp, 'centers:CFL')
+           print('cflmin= ', cflmin)
+           if (cflmax > cflmax_glob):cflmax_glob = cflmax
+           if (cflmin < cflmin_glob):cflmin_glob = cflmin
+        else:
+           dim = Internal.getZoneDim(z)
+           zp = T.subzone(z, (3,3,1), (dim[1]-2,dim[2]-2,1))
+           cflmax = C.getMaxValue(zp, 'centers:CFL')
+           cflmin = C.getMinValue(zp, 'centers:CFL')
+           print('cflmin= ', cflmin)
+           if (cflmax > cflmax_glob):cflmax_glob = cflmax
+           if (cflmin < cflmin_glob):cflmin_glob = cflmin
 
-    """
-    if dimPb == 3:
-        for z in zones:
-            dim = Internal.getZoneDim(z)
-            zp = T.subzone(z, (3,3,3), (dim[1]-2,dim[2]-2,dim[3]-2))
-            cflmax = C.getMaxValue(zp, 'centers:CFL')
-            cflmin = C.getMinValue(zp, 'centers:CFL')
-            if (cflmax > cflmax_glob):cflmax_glob = cflmax
-            if (cflmin < cflmin_glob):cflmin_glob = cflmin
-
-    else:
-        for z in zones:
-            dim = Internal.getZoneDim(z)
-            zp = T.subzone(z, (3,3,1), (dim[1]-2,dim[2]-2,1))
-            cflmax = C.getMaxValue(zp, 'centers:CFL')
-            cflmin = C.getMinValue(zp, 'centers:CFL')
-            if (cflmax > cflmax_glob):cflmax_glob = cflmax
-            if (cflmin < cflmin_glob):cflmin_glob = cflmin
-    """    
 
     dtmin = 1.0/cflmax
     dtmax = 1.0/cflmin
      
-    timeLevel_max = math.floor(math.log((dtmax/dtmin))/math.log(2))
+    exposant_max = math.floor(math.log((dtmax/dtmin))/math.log(2))
     
-    print('Niveau en temps maximal = ', timeLevel_max)
+    print('exposant maximal = ', exposant_max)
     print(dtmin)
     print(dtmax)
 
-    print(liste_BCPeriodiques)
+    #print(liste_BCPeriodiques)
 
-    """
-    t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
-    for perio in liste_BCPeriodiques:
-        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=perio[1], translation=perio[0],tol=1.e-7,dim=dimPb)
-    """
-    return t, timeLevel_max
 
-#==================================================================================
-# decoupe maillage en zones de niveau en temps different pour dtloc instationnaire
-#==================================================================================
-def _decoupe(t):
-
-    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t') 
-    zones = []
-    for b in bases:
-        zones += Internal.getNodesFromType1(b, 'Zone_t')
-
-    infos = fasts.decoupe_maillage(zones,4)
-    return infos
+    return t, exposant_max
 
 
 #==============================================================================
 # decoupe maillage pour dtloc instationnaire
 #==============================================================================
-def _decoupe2(t, niveauMax = 2):
+def _decoupe2(t, exposantMax = 2, NP=0):
 
     import Transform.PyTree as T
 
@@ -2222,7 +2196,6 @@ def _decoupe2(t, niveauMax = 2):
 
     dtmin = 100000.
     taille_bloc = 25
-    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t') 
     zones = []
     zones_decoupe = []
 
@@ -2230,7 +2203,6 @@ def _decoupe2(t, niveauMax = 2):
     numZone = []
 
     liste_BCPeriodiques = []
-
     
     BCMatch = Internal.getNodesFromType(t, 'GridConnectivity1to1_t')
     for match in BCMatch:
@@ -2242,11 +2214,15 @@ def _decoupe2(t, niveauMax = 2):
          
             list1 = [abs(translation).tolist(),abs(rotAngle).tolist(),rotCenter.tolist()]
  
-            if (list1 not in liste_BCPeriodiques) :            
+            if (list1 not in liste_BCPeriodiques) :
+            
                  liste_BCPeriodiques.append(list1)
-         
-    print(liste_BCPeriodiques)
-     
+                 print(liste_BCPeriodiques)
+
+  
+    t = Internal.rmGhostCells(t, t, 2) 
+    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t') 
+
     for b in bases:
         zones += Internal.getNodesFromType1(b, 'Zone_t')
 
@@ -2307,9 +2283,9 @@ def _decoupe2(t, niveauMax = 2):
     for zp in zones_decoupe :
         cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
         dtmin_loc = 1./cflmax_loc        
-        niveauTps = math.log(((2**niveauMax)*dtmin)/dtmin_loc)/math.log(2)
+        niveauTps = math.log(((2**exposantMax)*dtmin)/dtmin_loc)/math.log(2)
         if (niveauTps < 0.0): niveauTps = 0
-        print(niveauTps, math.ceil(niveauTps))
+        #print(niveauTps, math.ceil(niveauTps))
         niveauTps = math.ceil(niveauTps)
         dicoTps[zp[0]]=niveauTps
         #print('niveau_tps= ', float(pow(2,niveauTps)))
@@ -2328,10 +2304,11 @@ def _decoupe2(t, niveauMax = 2):
     t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
 
     for perio in liste_BCPeriodiques:
-        print('perio[0]= ', perio[0])
-        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0]/4.,perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+        #print('perio[0]= ', perio[0])
+        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
     
-    
+
+   
     newZones = Internal.getZones(t)
 
    
@@ -2425,24 +2402,70 @@ def _decoupe2(t, niveauMax = 2):
     print('nb zones final', len(zones_merged))                
     t[2][1][2] = zones_merged
 
-    base=Internal.getBases(t)
-    base[0][2].append(fes)
-    base[0][2].append(rs)
 
     zones = Internal.getZones(t)
     for z in zones:
         niveau = C.getMaxValue(z, 'centers:niveaux_temps')
-        C._initVars(z, 'centers:niveaux_temps', pow(2,niveau))              
+        C._initVars(z, 'centers:niveaux_temps', pow(2,niveau))
 
-    C.convertPyTree2File(t, 'essai.cgns')
+
+    if NP > 0 :
+        t = _distribMpiDtloc(t, pow(2,niveauMax), NP)
+
+
+    base=Internal.getBases(t)
+    base[0][2].append(fes)
+    base[0][2].append(rs)
         
     t = X.connectMatch(t, tol=1.e-6, dim=dimPb)
-    for perio in liste_BCPeriodiques:  
-        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0]/4.,perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+    for perio in liste_BCPeriodiques:
+        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+
+    C.convertPyTree2File(t, 'essai.cgns') 
     
     return t        
 
+#==============================================================================
+# distribution mpi pour dtloc instationnaire 
+#==============================================================================
+def _distribMpiDtloc(t,niveauMax,NP):
+
+    import Transform.PyTree as T
+    import Distributor2.PyTree as D2
+
+    list_level= []
+
+    zones = Internal.getZones(t)
+
+    exposant_max = math.log(niveauMax)/math.log(2)    
+    exposant_max = int(exposant_max)
+
+    for exposant in range(0,exposant_max+1):
+      list=[]
+      for z in zones:
+        dim = Internal.getZoneDim(z)
+        i = int(dim[1]/2)
+        j = int(dim[2]/2)
+        k = int(dim[3]/2)
+        level = C.getValue( z, 'centers:niveaux_temps', (i,j,k))
+        if pow(2,exposant) == int(level):
+             list.append(z) ### list contient toutes les zones de meme niveau en temps
+      list_level.append(list) 
+
+
+    tp = C.newPyTree(['Base'])
+
+    for level in list_level: ### On distribue chaque niveau en tps de maniere independante sur NP proc
+      level = T.splitSize(level,N=0, multigrid=0, dirs=[1,2,3], R=NP, minPtsPerDir=5)
+      level = X.connectMatch(level)
+      level, stats = D2.distribute(level, NP,algorithm='gradient')
+      
+      print(stats)
+
+      tp[2][1][2] += level
     
+
+    return tp
 
 #==============================================================================
 # compute_dpJ_dpW in place
