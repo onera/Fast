@@ -1298,7 +1298,7 @@ def _buildOwnData(t, Padding):
 # create work arrays
 #==============================================================================
 def createWorkArrays__(zones, dtloc, FIRST_IT):
-    ndimt=0; ndimcoe=0; ndimwig=0; ndimplan=0; c = 0;
+    ndimt=0; ndimcoe=0; ndimwig=0; ndimgrad=0; ndimplan=0; c = 0;
     global  MX_OMP_SIZE_INT
     # on check sur 1ere zone si implicite: mixte impli/expli impossible pour le moment
     scheme = "implicit"
@@ -1354,6 +1354,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
             print('dtloc fastP: revoir dim tab jeanmasson')
             ndimplan = 10     ### a revoir
             ndimFlu  =2500000*neq*3
+            ndimgrad+= neq_max*3*nijk
 
         #print 'zone,taille =', z[0], nijk
 
@@ -1379,9 +1380,10 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #    wig   = KCore.empty(ndimwig, CACHELINE)
 #    coe   = KCore.empty(ndimcoe, CACHELINE)
 #    drodm = KCore.empty(ndimt  , CACHELINE)
-    wig   = numpy.empty(ndimwig, dtype=numpy.float64)
-    coe   = numpy.empty(ndimcoe, dtype=numpy.float64)
-    flu   = numpy.empty(ndimFlu, dtype=numpy.float64)
+    wig   = numpy.empty(ndimwig , dtype=numpy.float64)
+    coe   = numpy.empty(ndimcoe , dtype=numpy.float64)
+    flu   = numpy.empty(ndimFlu , dtype=numpy.float64)
+    grad  = numpy.empty(ndimgrad, dtype=numpy.float64)
 
     if   (rk==4 and exploc==0): size_drodm = 4*ndimt
     elif (rk==5 and exploc==0): size_drodm = 5*ndimt
@@ -1415,6 +1417,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['wiggle']         = wig
     hook['coe']            = coe
     hook['rhs']            = drodm
+    hook['grad']           = grad
     hook['tab_dtloc']      = tab_dtloc
     hook['flu_vecto']      = flu
     hook['verrou_omp']     = lok

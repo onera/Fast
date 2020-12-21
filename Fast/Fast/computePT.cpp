@@ -215,7 +215,6 @@ else
   E_Int ndimdx_sa     = 0;
   E_Int nisdom_lu_max = 0;
   E_Int ndimt         = 0;
-  E_Int ndimt_grad    = 0;
   E_Int ndim_drodm    = 0;
   E_Int ndimt_flt     = 0;
   E_Int kles          = 0;
@@ -384,8 +383,6 @@ else
     ndimt      += ipt_param_int[nd][ NDIMDX ];
     ndim_drodm += ipt_param_int[nd][ NDIMDX ]*ipt_param_int[nd][ NEQ ];
 
-    if (ngon != NULL)  ndimt_grad += ipt_param_int[nd][NELTS];
-
     if (ipt_param_int[nd][ ITYPCP ]      <= 1     ) kimpli     = 1;
     if (ipt_param_int[nd][ IFLAGFLT ]    == 1     ) kfiltering = 1;
     if (ipt_param_int[nd][ IFLOW ] >= 2 &&  ipt_param_int[nd][ ILES ] == 1 && ipt_param_int[nd][ IJKV+ 2] > 1) kles = 1;
@@ -411,10 +408,6 @@ else
   if (kfiltering == 0)  ndimt_flt = 0;
   FldArrayF  roflt(ndimt_flt*neq_max) ; E_Float* iptroflt  = roflt.begin();
   FldArrayF  roflt2(ndimt_flt*neq_max); E_Float* iptroflt2 = roflt2.begin();    //optimisation memoire possible pour roflt2 (voir Funk)
-
-  /// Tableau pour  pour gradient
-  FldArrayF  grad(ndimt_grad*neq_max*3);
-  E_Float* iptgrad = grad.begin();
 
   /// Tableau pour  pour modele LES
   ///sauvegarde pointeur pour allouer memoire SGS qu'on peut ecraser une fois calculer mut
@@ -500,6 +493,10 @@ else
   // Tableau de travail coe   ( dt/vol et diags LU)
   PyObject* fluArray = PyDict_GetItemString(work,"flu_vecto"); FldArrayF* flu;
   K_NUMPY::getFromNumpyArray(fluArray, flu, true); E_Float* iptflu = flu->begin();
+
+  // Tableau de travail gradient
+  PyObject* gradArray = PyDict_GetItemString(work,"grad"); FldArrayF* grad;
+  K_NUMPY::getFromNumpyArray(gradArray, grad, true); E_Float* iptgrad = grad->begin();
 
   // Tableau de travail verrou omp
   PyObject* lokArray = PyDict_GetItemString(work,"verrou_omp"); FldArrayI* lok;
@@ -614,7 +611,7 @@ else
             ipt_param_int, ipt_param_real   ,
             nidom              , nitrun_loc       , nstep             , nstep_fin    , nssiter        , it_target, first_it,
             kimpli             , lssiter_verif    , lexit_lu          , omp_mode     , layer_mode, mpi,
-            nisdom_lu_max      ,  mx_nidom        , ndimt_flt         , ndimt_grad   , threadmax_sdm  , mx_synchro,
+            nisdom_lu_max      ,  mx_nidom        , ndimt_flt         , threadmax_sdm, mx_synchro,
             nb_pulse           ,                
             temps              ,
             ipt_ijkv_sdm       , 
@@ -740,6 +737,7 @@ else
   RELEASESHAREDN( drodmArray     , drodm);
   RELEASESHAREDN( coeArray       , coe  );
   RELEASESHAREDN( fluArray       , flu  );
+  RELEASESHAREDN( gradArray      , grad  );
   RELEASESHAREDN( lokArray       , lok  );
   RELEASESHAREDN( timer_omp_Array, tab_timer_omp);
   RELEASESHAREDN( dtlocArray     , dtloc);

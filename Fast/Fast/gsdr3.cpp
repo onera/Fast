@@ -39,7 +39,7 @@ E_Int K_FAST::gsdr3(
   E_Int**& param_int  , E_Float**& param_real ,
   E_Int& nidom        , E_Int& nitrun         , E_Int&  nitcfg    , E_Int&  nitcfg_last, E_Int&  nssiter, E_Int& it_target , E_Int&  first_it,
   E_Int& kimpli       , E_Int& lssiter_verif  , E_Int& lexit_lu   , E_Int& omp_mode    , E_Int& layer_mode, E_Int& mpi,
-  E_Int& nisdom_lu_max, E_Int& mx_nidom       , E_Int& ndimt_flt  , E_Int& ndim_grad   ,
+  E_Int& nisdom_lu_max, E_Int& mx_nidom       , E_Int& ndimt_flt  ,
   E_Int& threadmax_sdm, E_Int& mx_synchro,
   E_Int& nb_pulse     , 
   E_Float& temps,
