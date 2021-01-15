@@ -68,7 +68,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
     if layer == "Python": 
 
       if exploc==1 and tc is not None:
-      #if exploc==2 and tc is not None and rk==3:
          tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
          if tc_compact is not None:
                 param_real_tc= tc_compact[1]
@@ -105,21 +104,19 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
 
             #dtloc GJeanmasson
-            #if exploc==2 and tc is not None and rk==3:
             if exploc==1 and tc is not None:
-
 
                no_transfert = 1#comm_P2P
                process = Cmpi.rank
 
                zonesD    = Internal.getZones(tc)
                
-               fasts.dtlocal2para_mpi(zones,zonesD,param_int_tc,param_real_tc,hook1,rostk,drodmstk,constk,0,nstep,ompmode,taille_tabs,no_transfert,process)
+               fasts.dtlocal2para_mpi(zones,zonesD,param_int_tc,param_real_tc,hook1,0,nstep,ompmode,no_transfert,process)
 
                if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
 
-               _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0], rk=rk, exploc=exploc)    
+               _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])    
 
                FastC.switchPointers2__(zones,nitmax,nstep)
                 
@@ -129,10 +126,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
                timelevel_target = int(dtloc[4])
 
-               if graph is not None and graphelist == True:
-                       procDict  = list_graph[nstep-1]['procDict']
-                       graphID   = list_graph[nstep-1]['graphID']
-                       graphIBCD = list_graph[nstep-1]['graphIBCD']
+               if graph is not None and grapheliste == True:
+                       procDict  = graph[nstep-1]['procDict']
+                       graphID   = graph[nstep-1]['graphID']
+                       graphIBCD = graph[nstep-1]['graphIBCD']
                else: 
                        procDict=None; graphID=None; graphIBCD=None          
                    
@@ -140,22 +137,22 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
                no_transfert = 1#comm_P2P      
 
-               fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
+               fasts.recup3para_mpi(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
 
                if nstep%2 == 0:
                    timelevel_target = int(dtloc[4])
                    vars = ['Density'  ]
-                   if graph is not None:
-                       procDict  = list_graph[nitmax+nstep-1]['procDict']
-                       graphID   = list_graph[nitmax+nstep-1]['graphID']
-                       graphIBCD = list_graph[nitmax+nstep-1]['graphIBCD']
+                   if graph is not None and grapheliste == True:
+                       procDict  = graph[nitmax+nstep-1]['procDict']
+                       graphID   = graph[nitmax+nstep-1]['graphID']
+                       graphIBCD = graph[nitmax+nstep-1]['graphIBCD']
                    else: 
                        procDict=None; graphID=None; graphIBCD=None      
                    _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc, 2)
 
                if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
                elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
-               _applyBC_(zones,metrics, hook1, nstep, ompmode,  var=vars[0])
+               _applyBC(zones,metrics, hook1, nstep, ompmode,  var=vars[0])
 
 
 
@@ -287,25 +284,6 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None):
 
 
-    
-    if isinstance(graph, list):
-        #test pour savoir si graph est une liste de dictionnaires (explicite local)
-        #ou juste un dictionnaire (explicite global, implicite)
-        grapheliste=True
-    else:
-        grapheliste=False
-    
-    if graph is not None and grapheliste==False:
-        procDict  = graph['procDict']
-        graphID   = graph['graphID']
-        graphIBCD = graph['graphIBCD']
-    elif graph is not None and grapheliste==True:
-        procDict  = graph[0]['procDict']
-        graphID   = graph[0]['graphID']
-        graphIBCD = graph[0]['graphIBCD']
-    else: 
-        procDict=None; graphID=None; graphIBCD=None
-
     # Get omp_mode
     ompmode = PyTree.OMP_MODE
     node = Internal.getNodeFromName2(t, '.Solver#define')
@@ -326,7 +304,26 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)# tab numpy
+    nssiter = dtloc[0]   
+
+    if isinstance(graph, list):
+        #test pour savoir si graph est une liste de dictionnaires (explicite local)
+        #ou juste un dictionnaire (explicite global, implicite)
+        grapheliste=True
+    else:
+        grapheliste=False
     
+    if graph is not None and grapheliste==False:
+        procDict  = graph['procDict']
+        graphID   = graph['graphID']
+        graphIBCD = graph['graphIBCD']
+    elif graph is not None and grapheliste==True:  ### Dans warmup tous les transferts doivent etre faits
+        procDict  = graph[nssiter-2]['procDict']   ### On va chercher le graphe a nssiter-2 car a cette ssite tous les transferts
+        graphID   = graph[nssiter-2]['graphID']    ### sont faits pour le schema a pas de temps local
+        graphIBCD = graph[nssiter-2]['graphIBCD']
+    else: 
+        procDict=None; graphID=None; graphIBCD=None
+
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it

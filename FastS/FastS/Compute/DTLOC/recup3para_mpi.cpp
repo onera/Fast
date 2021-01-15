@@ -33,13 +33,12 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
   PyObject *zonesR, *zonesD;
   PyObject *work;
   PyObject *pyParam_int, *pyParam_real;
-  PyObject* stock;
-  E_Int nstep, vartype, omp_mode, taille_tabs, Notransfert;
+  E_Int nstep, vartype, omp_mode, Notransfert;
 
   if (!PYPARSETUPLE(args,
-                    "OOOOOOlllll", "OOOOOOiiiii",
-                    "OOOOOOlllll", "OOOOOOiiiii",
-                    &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work,&stock,&vartype,&nstep,&omp_mode,&taille_tabs, &Notransfert))
+                    "OOOOOllll", "OOOOOiiii",
+                    "OOOOOllll", "OOOOOiiii",
+                    &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work,&vartype,&nstep,&omp_mode,&Notransfert))
   {
       return NULL;
   }
@@ -76,9 +75,14 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
      }
 
   /// Recuperation du tableau de stockage des valeurs
-  FldArrayF* stk;
-  K_NUMPY::getFromNumpyArray(stock, stk, true); E_Float* iptstk = stk->begin();
+  PyObject* dtlocArray = PyDict_GetItemString(work,"tab_dtloc"); FldArrayF* stk;
+  K_NUMPY::getFromNumpyArray(dtlocArray, stk, true); E_Float* iptstk = stk->begin();
 
+  E_Int stk_size    = stk[0].getSize();
+  E_Int taille_tabs = stk_size/5;
+
+  E_Float* iptdrodmstk = iptstk+ taille_tabs*3;
+  E_Float* iptcstk     = iptstk+ taille_tabs*4;
   /*-------------------------------------*/
   /* Extraction tableau int et real      */
   /*-------------------------------------*/
@@ -151,23 +155,20 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 	    E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
 
 	    E_Int cycle;
-	    //cycle = param_intt[NoD][NSSITER]/param_intt[NoD][LEVEL];
+
 	    cycle = param_intt[NoD][NSSITER]/ipt_param_int[debut_rac +25];
 
-	    //if (param_intt[NoD][LEVEL] > param_intt[NoR][LEVEL])  /// Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse 
+
+	    E_Float* tab1;   
+	    E_Float* tab2;   
+	    E_Float* tab3;   
+   	    E_Int ind;
+
+	    /// Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse 
 	    if (ipt_param_int[debut_rac + 25] > ipt_param_int[debut_rac + 24]) 
 
 	      {
 		E_Int donorPts_[6];  E_Int idir = 2;
-		//donorPts_[0] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 7];
-		//donorPts_[1] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 8] ;
-		//donorPts_[2] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 9];
-		//donorPts_[3] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 10];
-		//donorPts_[4] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 11];
-		//donorPts_[5] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 12];
-		//int dir = ipt_param_int[ech + 2 + nrac*16 + 14*irac + 13];
-
-
 		donorPts_[0] =  ipt_param_int[debut_rac + 7];
 		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
 		donorPts_[2] =  ipt_param_int[debut_rac + 9];
@@ -194,19 +195,17 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 		donorPts[3]=ipt_ind_dm_omp_thread[3];
 		donorPts[4]=ipt_ind_dm_omp_thread[4];
 		donorPts[5]=ipt_ind_dm_omp_thread[5];
+
+	        E_Int pos_tab = ipt_param_int[debut_rac + 26];	
 	  
 		if (nstep%cycle==cycle/2 and (nstep/cycle)%2==1) 
-		  //if (nstep%cycle==cycle-2 and (nstep/cycle)%2==1) 
 		  {
-
-		    E_Int pos_tab = ipt_param_int[debut_rac + 26];
-
 		    //// Recuperation de y6 en position 1 dans le tableau de stockage du raccord
-		    E_Int ind=2;
-		    //copy_rk3localpara_(param_intt[NoD], donorPts , donorPts_, iptro[NoD], iptstk + irac*taille + 1*5*taillefenetre,ind,taillefenetre); 
-		    copy_rk3localpara_(param_intt[NoD], donorPts , donorPts_, iptro[NoD], iptstk + pos_tab + 1*5*taillefenetre,ind,taillefenetre); 
+ 		    ind=2;
+                    tab1 = iptro[NoD];
+                    tab2 = iptstk + pos_tab + param_intt[NoD][NEQ]*taillefenetre;
 
-
+		    copy_rk3localpara_(param_intt[NoD], ipt_ind_dm_omp_thread, donorPts_, tab1, tab2 , ind, taillefenetre); 
 		  }
 
 	      }
@@ -215,14 +214,6 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 	      {
 
 		E_Int donorPts_[6];  E_Int idir = 2;
-		//donorPts_[0] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 7];
-		//donorPts_[1] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 8] ;
-		//donorPts_[2] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 9];
-		//donorPts_[3] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 10];
-		//donorPts_[4] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 11];
-		//donorPts_[5] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 12];
-		//int dir = ipt_param_int[ech + 2 + nrac*16 + 14*irac + 13];
-
 		donorPts_[0] =  ipt_param_int[debut_rac + 7];
 		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
 		donorPts_[2] =  ipt_param_int[debut_rac + 9];
@@ -251,21 +242,17 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 		donorPts[4]=ipt_ind_dm_omp_thread[4];
 		donorPts[5]=ipt_ind_dm_omp_thread[5];
 
+		E_Int pos_tab = ipt_param_int[debut_rac + 26];	
  
 		if (nstep%cycle==cycle/2 + cycle/4) 	   
 		  //if (nstep%cycle==cycle-2) 
 	
 		  {
-		    // cout <<"recup : "<< donorPts[0]<<" "<< donorPts[1]<<"  "<< donorPts[2]<<"  "<< donorPts[3]<<"  "<< donorPts[4]<<"  "<< donorPts[5]<<" "<<NoD<< endl;
-		    //// Recuperation de y4 en position 10
-		    //cout << "coucou" << endl;
-		    //cout << donorPts[0] <<" "<<  donorPts[1] <<" "<<donorPts[2]<<" "<<donorPts[3] << endl;
-
-		    E_Int pos_tab = ipt_param_int[debut_rac + 26];
-
-		    E_Int ind=2;
+		    ind=2;
+                    tab1 = iptro[NoD];
+                    tab2 = iptstk + pos_tab + 2*param_intt[NoD][NEQ]*taillefenetre;
 		    //copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_,  iptro[NoD], iptstk + irac*taille + 2*5*taillefenetre,ind,taillefenetre);
-		    copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_,  iptro[NoD], iptstk + pos_tab + 2*5*taillefenetre,ind,taillefenetre);
+		    copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_,  tab1, tab2,ind,taillefenetre);
 
 		  }
 
@@ -292,7 +279,6 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 
 
 
- RELEASESHAREDN( stock  , stk );
  RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL); 
  RELEASESHAREDN(pyParam_int    , param_int    );
  RELEASESHAREDN(pyParam_real   , param_real   );
