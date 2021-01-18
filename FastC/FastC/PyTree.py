@@ -1154,8 +1154,9 @@ def _buildOwnData(t, Padding):
                #NG_4  = nf_intext[4]  #element couche 2 de type raccord
 
                #datap[7 ] = NG_0 + NG_1 + NG_2 + NF_BC0 + NF_BC1 # elements total (avec les element BC )
-               datap[7 ] = NG_0 + NG_1 + NG_2 +NG_3  # elements total (avec les element BC et racc ) NELTS
-               datap[41] = NG_0 + NG_1 + NG_2 +NG_3  # elements total (avec les element BC et racc ) NDIMDX pour partage transfert Fast
+               datap[7 ] = NG_0 + NG_1 + NG_2 +NG_3           # elements total (avec les element BC et racc ) NELTS
+               print("shiftvar NGON=",shiftvar)
+               datap[41] = NG_0 + NG_1 + NG_2 +NG_3 +shiftvar # elements total (avec les element BC et racc ) NDIMDX pour partage transfert Fast
                datap[8 ] = NG_0
                datap[9 ] = NG_1
                datap[10] = NG_3
@@ -1353,7 +1354,9 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
             nijk = dims[2]+shiftvar
             print('dtloc fastP: revoir dim tab jeanmasson')
             ndimplan = 10     ### a revoir
-            ndimFlu  =2500000*neq*3
+            #ndimFlu  =2500000*neq*3
+            ndimFlu  =0
+            print('FastC: ndimFlu=0, a revoir pour vecto')
             ndimgrad+= neq_max*3*nijk
 
         #print 'zone,taille =', z[0], nijk
