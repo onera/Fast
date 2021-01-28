@@ -641,9 +641,9 @@ def _buildOwnData(t, Padding):
                    if temporal_scheme == 'explicit_local':
                        for z in zones:
                           dim = Internal.getZoneDim(z)
-                          i = int(dim[1]/2)
-                          j = int(dim[2]/2)
-                          k = int(dim[3]/2)
+                          i = dim[1]//2
+                          j = dim[2]//2
+                          k = dim[3]//2
                           level = C.getValue( z, 'centers:niveaux_temps', (i,j,k))
                           veclevel.append(int(level))
                    else:
@@ -1677,9 +1677,9 @@ def switchPointers2__(zones,nitmax,nstep):
 
     for z in zones:
         dim = Internal.getZoneDim(z)
-        i = int(dim[1]/2)
-        j = int(dim[2]/2)
-        k = int(dim[3]/2)
+        i = dim[1]//2
+        j = dim[2]//2
+        k = dim[3]//2
         niveau = C.getValue( z, 'centers:niveaux_temps', (i,j,k))
     
 
@@ -1739,9 +1739,9 @@ def switchPointers3__(zones,nitmax):
 
     for z in zones:
         dim = Internal.getZoneDim(z)
-        i = int(dim[1]/2)
-        j = int(dim[2]/2)
-        k = int(dim[3]/2)
+        i = dim[1]//2
+        j = dim[2]//2
+        k = dim[3]//2
         niveau = C.getValue( z, 'centers:niveaux_temps', (i,j,k))
     
         cycle = nitmax/niveau

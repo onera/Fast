@@ -1,14 +1,13 @@
 """Fast Structured Grid Navier-Stokes solver.
 """
+import numpy
+import os
 from . import fasts
 from . import FastS
 __version__ = FastS.__version__
 
 OMP_MODE = 0
 
-
-import numpy
-import os
 try:
     import Converter.PyTree as C
     import Converter.Internal as Internal
@@ -376,7 +375,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # mise a jour vitesse entrainememnt
     #
     #t0=timeit.default_timer()
-    if ale == True and infos_ale is not None:
+    if ale and infos_ale is not None:
         print("ale actif. Teta et tetap=", infos_ale)
         teta = infos_ale[0]; tetap = infos_ale[1]
         FastC._motionlaw(t, teta, tetap)
@@ -779,6 +778,7 @@ def itt(var):
     print("itt collection (Vtune/Advisor)", var)
     fasts.itt(ivar)
     return None
+
 #==============================================================================
 def _applyBC(t, metrics, hook1, nstep,omp_mode, var="Density"):
     zones = Internal.getZones(t)
@@ -814,12 +814,11 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
        #apply BC
        #t0=timeit.default_timer()
-       if(exploc != 1):
-       #if(rk != 3 and exploc != 2):
+       if exploc != 1:
+       #if rk != 3 and exploc != 2:
           _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        #t1=timeit.default_timer()
-       #print "Time BC",(t1-t0)
-            
+       #print("Time BC",(t1-t0))
 
    return None
    
@@ -1441,17 +1440,6 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
 
     if gmres is None: return None
     else: return residu
-#==============================================================================
-# Interface for Vtune/Advisor collection control
-#==============================================================================
-def itt(var):
-    if var == 'pause':
-          ivar =1
-    else :
-          ivar = 0
-    print("itt collection (Vtune/Advisor)", var)
-    fasts.itt(ivar)
-    return None
     
 #==============================================================================
 # IN: d: container
@@ -1474,7 +1462,7 @@ def _computeVelocityAle(t, metrics):
     zones = Internal.getZones(t)
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     f_it = FastC.FIRST_IT
-    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it;
+    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
     
     bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
@@ -1497,7 +1485,7 @@ def copy_velocity_ale(t, metrics, it=0):
     zones = Internal.getZones(t)
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     f_it = FastC.FIRST_IT
-    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it;
+    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
     
     bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
@@ -1687,12 +1675,12 @@ def createStressNodes(t, BC=None, windows=None):
                      incj =0
                      inck =0
                      if BC is not None:
-                       if  (idir==0): inci= ific
-                       elif(idir==1): inci=-ific
-                       elif(idir==2): incj= ific
-                       elif(idir==3): incj=-ific
-                       elif(idir==4): inck= inck0
-                       elif(idir==5): inck=-inck0
+                       if   idir==0: inci= ific
+                       elif idir==1: inci=-ific
+                       elif idir==2: incj= ific
+                       elif idir==3: incj=-ific
+                       elif idir==4: inck= inck0
+                       elif idir==5: inck=-inck0
   
                      ni = dim[0,1]-dim[0,0]
                      nj = dim[1,1]-dim[1,0]
@@ -1727,7 +1715,7 @@ def createStressNodes(t, BC=None, windows=None):
                        kmax = kfin -inck0-1   #kmax
                        imin = ideb -ific
                        imax = imin
-                     elif(idir <= 3):   
+                     elif idir <= 3:   
                        ni1  = ni
                        nj1  = nk
                        imin = ideb -ific      #imin
@@ -2049,7 +2037,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       
       perfo = numpy.empty(2, dtype=numpy.float64)
       perfo[0]= int(echant*NbreThreads/tps_zone_percell)
-      perfo[1]= int(echant/tps_zone_percell_max);
+      perfo[1]= int(echant/tps_zone_percell_max)
       Internal.createUniqueChild(solver_def, 'Cups', 'DataArray_t', value=perfo)
 
     else:
@@ -2157,16 +2145,16 @@ def computeCFL_dtlocal(t):
            cflmax = C.getMaxValue(zp, 'centers:CFL')
            cflmin = C.getMinValue(zp, 'centers:CFL')
            print('cflmin= ', cflmin)
-           if (cflmax > cflmax_glob):cflmax_glob = cflmax
-           if (cflmin < cflmin_glob):cflmin_glob = cflmin
+           if cflmax > cflmax_glob:cflmax_glob = cflmax
+           if cflmin < cflmin_glob:cflmin_glob = cflmin
         else:
            dim = Internal.getZoneDim(z)
            zp = T.subzone(z, (3,3,1), (dim[1]-2,dim[2]-2,1))
            cflmax = C.getMaxValue(zp, 'centers:CFL')
            cflmin = C.getMinValue(zp, 'centers:CFL')
            print('cflmin= ', cflmin)
-           if (cflmax > cflmax_glob):cflmax_glob = cflmax
-           if (cflmin < cflmin_glob):cflmin_glob = cflmin
+           if cflmax > cflmax_glob:cflmax_glob = cflmax
+           if cflmin < cflmin_glob:cflmin_glob = cflmin
 
 
     dtmin = 1.0/cflmax
@@ -2214,7 +2202,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
          
             list1 = [abs(translation).tolist(),abs(rotAngle).tolist(),rotCenter.tolist()]
  
-            if (list1 not in liste_BCPeriodiques) :
+            if list1 not in liste_BCPeriodiques:
             
                  liste_BCPeriodiques.append(list1)
                  print(liste_BCPeriodiques)
@@ -2241,13 +2229,13 @@ def _decoupe2(t, exposantMax = 2, NP=0):
 
         nbbloc_i = ni/taille_bloc
         nbbloc_i = int(nbbloc_i)
-        if (nbbloc_i*taille_bloc < ni) : nbbloc_i = nbbloc_i + 1
+        if nbbloc_i*taille_bloc < ni: nbbloc_i = nbbloc_i + 1
         nbbloc_j = nj/taille_bloc
         nbbloc_j = int(nbbloc_j)
-        if (nbbloc_j*taille_bloc < nj) : nbbloc_j = nbbloc_j + 1
+        if nbbloc_j*taille_bloc < nj: nbbloc_j = nbbloc_j + 1
         nbbloc_k = nk/taille_bloc
         nbbloc_k = int(nbbloc_k)
-        if (nbbloc_k*taille_bloc < nk) : nbbloc_k = nbbloc_k + 1
+        if nbbloc_k*taille_bloc < nk: nbbloc_k = nbbloc_k + 1
 
         somme += nbbloc_i*nbbloc_j*nbbloc_k
         
@@ -2275,7 +2263,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
 
                     cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
                     dtmin_loc = 1./cflmax_loc
-                    if (dtmin_loc < dtmin): dtmin = dtmin_loc
+                    if dtmin_loc < dtmin: dtmin = dtmin_loc
 
                     zones_decoupe.append(zp)
                     
@@ -2284,7 +2272,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
         cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
         dtmin_loc = 1./cflmax_loc        
         niveauTps = math.log(((2**exposantMax)*dtmin)/dtmin_loc)/math.log(2)
-        if (niveauTps < 0.0): niveauTps = 0
+        if niveauTps < 0.0: niveauTps = 0
         #print(niveauTps, math.ceil(niveauTps))
         niveauTps = math.ceil(niveauTps)
         dicoTps[zp[0]]=niveauTps
@@ -2327,7 +2315,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
  
                 name = Internal.getValue(gc)
                 
-                if (dicoTps[z[0]] - dicoTps[name] > 1):
+                if dicoTps[z[0]] - dicoTps[name] > 1:
                     dicoTps[name] = dicoTps[z[0]] - 1
                     node = Internal.getNodeFromName(t, name)
                     C._initVars(node, 'centers:niveaux_temps', dicoTps[name])
@@ -2338,7 +2326,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
  
                 name = Internal.getValue(gc)
                 
-                if (dicoTps[z[0]] - dicoTps[name] > 1):
+                if dicoTps[z[0]] - dicoTps[name] > 1:
                     dicoTps[name] = dicoTps[z[0]] - 1
                     node = Internal.getNodeFromName(t, name)
                     C._initVars(node, 'centers:niveaux_temps', dicoTps[name])
@@ -2444,9 +2432,9 @@ def _distribMpiDtloc(t,niveauMax,NP):
       list=[]
       for z in zones:
         dim = Internal.getZoneDim(z)
-        i = int(dim[1]/2)
-        j = int(dim[2]/2)
-        k = int(dim[3]/2)
+        i = dim[1]//2
+        j = dim[2]//2
+        k = dim[3]//2
         level = C.getValue( z, 'centers:niveaux_temps', (i,j,k))
         if pow(2,exposant) == int(level):
              list.append(z) ### list contient toutes les zones de meme niveau en temps
@@ -2481,11 +2469,11 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
     if FastC.HOOK is None: 
             dtloc  = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
-            FastC.HOOK   = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT); 
-            nitrun =0; nstep =1;
+            FastC.HOOK   = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
+            nitrun =0; nstep =1
             hook1  = FastC.HOOK.copy()
             distrib_omp = 0
-            hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
+            hook1.update(fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
     else:   hook1  = FastC.HOOK
 
     fasts.compute_dpJ_dpW(zones, zones_eff, metrics, hook1, cosAoA, sinAoA, surfinv)

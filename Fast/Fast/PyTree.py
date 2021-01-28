@@ -1,16 +1,16 @@
 """Common functions for FAST solvers.
 """
+import os
+import numpy
 from . import fast
 from . import Fast
 __version__ = Fast.__version__
 
 OMP_MODE = 0
-import os
 try:
     import FastC.PyTree as FastC
     from FastC.PyTree import _setNum2Zones, _setNum2Base, load, save, loadFile, loadFileG, saveFile, loadTree, saveTree
-     
-except: 
+except ImportError: 
     raise ImportError("Fast.PyTree: requires FastC module.")
 
 try:
@@ -28,7 +28,6 @@ try:
     OMP_NUM_THREADS = int(OMP_NUM_THREADS)
 except: OMP_NUM_THREADS = 1
 
-import numpy
 
 #==============================================================================
 # Initialisation parametre calcul: calcul metric + var primitive + compactage 
@@ -178,7 +177,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     #
     # mise a jour vitesse entrainememnt
     #
-    if ale == True and infos_ale is not None:
+    if ale and infos_ale is not None:
         print("ale actif. Teta et tetap=", infos_ale)
         teta = infos_ale[0];  tetap = infos_ale[1]
         FastC._motionlaw(t, teta, tetap)
