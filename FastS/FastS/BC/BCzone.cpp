@@ -286,6 +286,7 @@ E_Int K_FASTS::BCzone(
 
             if ( nbdata != 0 ) ipt_data = param_real + param_int[pt_bcs + 1 + ndf + nb_bc];
 
+
             if ( lskip_loc == 0 ) {
                 // RANS:LES extrapolation
                 E_Int eq_deb                             = 1;
@@ -419,8 +420,7 @@ E_Int K_FASTS::BCzone(
                     c5 = 2. / 6.;
                     c6 = -1. / 6.;
 
-
-                    if (iptsize_data[0] <=6)
+                    if ( nbdata ==0 || ( nbdata !=0 && iptsize_data[0] <=6) )
                      {
                       bvbs_inflow_supersonic_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6,
                                              ipventijk, iptijk, iptrop, ipt_data );

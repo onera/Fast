@@ -157,6 +157,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
 
        
        if AXISX > 0. or AXISZ > 0.:
+          print("NAME=",name)
           thetameanD = C.getMeanValue(zones, 'CoordinateZ')
           #zonesPerioD= T.translate(zones,(0, theta_abs, 0))
           #zonesPerioG= T.translate(zones,(0,-theta_abs, 0))
@@ -538,11 +539,11 @@ def _adaptRange(z, s, infos_Ptlist):
 #------------------------------------------------------------------
 # selection des subzones pour optimiser calcul chimere instationnaire
 #------------------------------------------------------------------
-def ZonePrecond( base, NGhostCells, info_PtlistRebuild, etages,  dim=3):
+def ZonePrecond( base, NGhostCells, info_PtlistRebuild, etages, idir_tg, depth_tg, dim=3):
 
      zones=[]
      for z in Internal.getZones(base):
-        print('zone selectionnee %s'%z[0])
+        print('ZONE selectionnee %s'%z[0])
         #on cherche si interface =imin, imax, ...
         connect =Internal.getNodeFromType(z ,'ZoneGridConnectivity_t')
         conns   =Internal.getNodesFromType1(connect ,'GridConnectivity_t')
@@ -553,93 +554,54 @@ def ZonePrecond( base, NGhostCells, info_PtlistRebuild, etages,  dim=3):
              #dir=0,...5
              idir = Ghost.getDirection__(dim, [ptrange])
 
-             if etages[0]=='Base01':depth = 13
-             elif etages[0]=='Base02':
-                         if idir== 1:depth = 30
-                         else : depth=25
+             if idir_tg[ z[0] ]== "imin": dir_tg = 0
+             if idir_tg[ z[0] ]== "imax": dir_tg = 1
+             if idir_tg[ z[0] ]== "jmin": dir_tg = 2
+             if idir_tg[ z[0] ]== "jmax": dir_tg = 3
+             if idir_tg[ z[0] ]== "kmin": dir_tg = 4
+             if idir_tg[ z[0] ]== "kmax": dir_tg = 5
 
-             elif etages[0]=='Base03':depth = 20
-             elif etages[0]=='Base04':
-                         if idir== 1:depth = 35
-                         else : depth=25 
+             depth = depth_tg[ z[0] ]
+             print("Verif",base[0],etages[0],etages[1],idir) 
+             
+             if idir== dir_tg:
+                rg = Internal.getValue(ptrange)
+                nijk     = numpy.empty(3, dtype=numpy.int32)
+                nijkOpt  = numpy.empty(3, dtype=numpy.int32)
+                shift_ijk= numpy.zeros(3, dtype=numpy.int32)
+                dimzone  = Internal.getZoneDim(z)
+                nijk[0:3]= dimzone[1:4]
+                nijk[ :] -=1  #vertex2center
 
-             elif etages[0]=='Base05':
-                         if idir== 0: depth = 28
-                         else : depth = 23 
+                #print("indice", rg[0,0],rg[0,1], rg[1,0],rg[1,1], rg[2,0],rg[2,1] )          
+                if idir == 0:
+                   zp = T.subzone(z, (rg[0,0]+NGhostCells,rg[1,0],rg[2,0]), (rg[0,0]+depth,rg[1,1],rg[2,1]))
+                elif idir == 1:
+                   zp = T.subzone(z, (rg[0,1]-depth,rg[1,0],rg[2,0]), (rg[0,1]-NGhostCells ,rg[1,1],rg[2,1]))
+                elif idir == 2:
+                   zp = T.subzone(z, (rg[0,0], rg[1,0]+NGhostCells, rg[2,0]),   (rg[0,1],rg[1,0]+depth,rg[2,1]))
+                elif idir == 3:
+                   zp = T.subzone(z, (rg[0,0], rg[1,1]-depth, rg[2,0]), (rg[0,1] ,rg[1,1]-NGhostCells,rg[2,1]))
+                elif idir == 4:
+                   zp = T.subzone(z, (rg[0,0], rg[1,0], rg[2,0]+NGhostCells),   (rg[0,1],rg[1,1],rg[2,0]+depth))
+                elif idir == 5:
+                   zp = T.subzone(z, (rg[0,0], rg[1,0], rg[2,1]-depth), (rg[0,1] , rg[1,1], rg[2,1]-NGhostCells))
 
-             elif etages[0]=='Base06':
-                         if idir== 1:depth = 25
-                         else : depth=21
+                zp[0] = z[0]
+                dimzone      = Internal.getZoneDim(zp)
+                nijkOpt[0:3] = dimzone[1:4]
+                nijkOpt[ :] -=1
 
+                if idir == 0 or idir == 2 or idir == 4:
+                   shift_ijk[2] = NGhostCells
+                elif idir == 1:
+                   shift_ijk[0] = nijk[ 0] - nijkOpt[0] -NGhostCells
+                elif idir == 3:
+                   shift_ijk[1] = nijk[ 1] - nijkOpt[1] -NGhostCells
+                elif idir == 5:
+                   shift_ijk[2] = nijk[ 2] - nijkOpt[2] -NGhostCells
 
-             if (base[0]==etages[0] and idir==1) or (base[0]==etages[1] and idir==0):
+                info_PtlistRebuild[zp[0]]  = [ shift_ijk , nijkOpt, nijk ]
 
-            
-                     rg = Internal.getValue(ptrange)
-                     nijk     = numpy.empty(3, dtype=numpy.int32)
-                     nijkOpt  = numpy.empty(3, dtype=numpy.int32)
-                     shift_ijk= numpy.zeros(3, dtype=numpy.int32)
-                     dimzone  = Internal.getZoneDim(z)
-                     nijk[0:3]= dimzone[1:4]
-                     nijk[ :] -=1  #vertex2center
-
-                     #depth = 5
-
-                     #depth = 13
-                                      
-                     if idir == 0:
-                        zp = T.subzone(z, (rg[0,0]+NGhostCells,rg[1,0],rg[2,0]), (rg[0,0]+depth,rg[1,1],rg[2,1]))
-                        #zp = T.subzone(z, (rg[0,0],rg[1,0],rg[2,0]), (rg[0,0]+depth,rg[1,1],rg[2,1]))
-                        zp[0] = z[0]
-                        dimzone      = Internal.getZoneDim(zp)
-                        nijkOpt[0:3] = dimzone[1:4]
-                        nijkOpt[ :] -=1
-                        shift_ijk[0] = NGhostCells
-                     elif idir == 1:
-                        zp = T.subzone(z, (rg[0,1]-depth,rg[1,0],rg[2,0]), (rg[0,1]-NGhostCells ,rg[1,1],rg[2,1]))
-                        #zp = T.subzone(z, (rg[0,1]-depth,rg[1,0],rg[2,0]), (rg[0,1] ,rg[1,1],rg[2,1]))
-                        zp[0] = z[0]
-                        dimzone      = Internal.getZoneDim(zp)
-                        nijkOpt[0:3] = dimzone[1:4]
-                        nijkOpt[ :] -=1
-                        shift_ijk[0] = nijk[ 0] - nijkOpt[0] -NGhostCells
-
-                        #print('dimzone= ', dimzone)
-
-                     elif idir == 2:
-                        zp = T.subzone(z, (rg[0,0], rg[1,0]+NGhostCells, rg[2,0]),   (rg[0,1],rg[1,0]+depth,rg[2,1]))
-                        zp[0] = z[0]
-                        dimzone      = Internal.getZoneDim(zp)
-                        nijkOpt[0:3] = dimzone[1:4]
-                        nijkOpt[ :] -=1
-                        shift_ijk[1] = NGhostCells
-                     elif idir == 3:
-                        zp = T.subzone(z, (rg[0,0], rg[1,1]-depth, rg[2,0]), (rg[0,1] ,rg[1,1]-NGhostCells,rg[2,1]))
-                        zp[0] = z[0]
-                        dimzone      = Internal.getZoneDim(zp)
-                        nijkOpt[0:3] = dimzone[1:4]
-                        nijkOpt[ :] -=1
-                        shift_ijk[1] = nijk[ 1] - nijkOpt[1] -NGhostCells
-                     elif idir == 4:
-                        zp = T.subzone(z, (rg[0,0], rg[1,0], rg[2,0]+NGhostCells),   (rg[0,1],rg[1,1],rg[2,0]+depth))
-                        zp[0] = z[0]
-                        dimzone      = Internal.getZoneDim(zp)
-                        nijkOpt[0:3] = dimzone[1:4]
-                        nijkOpt[ :] -=1
-                        shift_ijk[2] = NGhostCells
-                     elif idir == 5:
-                        zp = T.subzone(z, (rg[0,0], rg[1,1], rg[2,1]-depth),  (rg[0,1] , rg[1,1], rg[2,1]-NGhostCells))
-                        zp[0] = z[0]
-                        dimzone      = Internal.getZoneDim(zp)
-                        nijkOpt[0:3] = dimzone[1:4]
-                        nijkOpt[ :] -=1
-                        shift_ijk[2] = nijk[ 2] - nijkOpt[2] -NGhostCells
-
-                     info_PtlistRebuild[zp[0]]  = [ shift_ijk , nijkOpt, nijk ]
-
-                     zones.append(zp)
-
-     #if base[0]=='Base02':
-     # print(len(zones), zp[0])
-
+                zones.append(zp)
      return zones
