@@ -308,6 +308,7 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
   RELEASESHAREDN( lokArray  , lok  );
   RELEASEHOOK(hook)
 
+Py_INCREF(Py_None);
 return Py_None;
 
 }

@@ -65,7 +65,7 @@ PyObject* K_FASTS::work_thread_distribution(PyObject* self, PyObject* args)
 
 
   //return Py_BuildValue("[iii]", nidom_tot, lexit_lu, lssiter_verif);
+  Py_INCREF(Py_None);
   return Py_None;
 }
-
 
