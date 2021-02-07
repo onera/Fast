@@ -78,6 +78,8 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
         else if (K_STRING::cmp(st, s, "FamilySpecified")         == 0) type = 5;
         else if (K_STRING::cmp(st, s, "BCWallViscous")           == 0) type = 6;
         else if (K_STRING::cmp(st, s, "BCWallViscous_isot_fich") == 0) type = 7;
+        else if (K_STRING::cmp(st, s, "BCWallModel")             == 0) type =30;
+        else if (K_STRING::cmp(st, s, "BCWallExchange")          == 0) type =31;
         else if (K_STRING::cmp(st, s, "BC_fich")                 == 0) type = 8;
         else if (K_STRING::cmp(st, s, "Nearmatch")               == 0) type = 9;
         else if (K_STRING::cmp(st, s, "BCOutflow")               == 0) type =10;
