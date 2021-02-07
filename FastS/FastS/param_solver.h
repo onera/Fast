@@ -56,7 +56,8 @@
 #define BCPERIODIC               15
 #define BCOUTPRES                16
 #define BCINJ1                   17
-
+#define BCWALLMODEL              30
+#define BCWALLEXCHANGE           31
 
 #if (CACHELINE == 64)
 #define VECLENGTH     8

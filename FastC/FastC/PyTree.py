@@ -1477,6 +1477,8 @@ def tagBC(bcname):
   elif bcname == "BCInjMFR":                tag =20;
   elif bcname == "BCOutMFR":                tag =21;
   elif bcname == "BCOverlap":               tag =22;
+  elif bcname == "BCWallModel":             tag =30;
+  elif bcname == "BCWallExchange":          tag =31;
   else:
     tag = -1
     print("Warning: Fast: unknown BC type %s."%bcname)

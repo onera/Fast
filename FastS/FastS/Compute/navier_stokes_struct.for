@@ -451,6 +451,15 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
      &                  venti, ventj, ventk, xmut)
            endif
 
+           !boundary flux correction for LES wall model
+           if(param_int(NEQ).eq.5.and.nb_bc.ne.0) then
+              call wall_model_flux(ndo,ithread, param_int, param_real,
+     &                  ind_dm_zone, ind_sdm, nitcfg, nitrun, cycl,
+     &                  psi,wig,stat_wig, rop_ssiter, drodm,
+     &                  ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
+     &                  venti, ventj, ventk, xmut)
+           endif
+
            !Extraction tableau residu
            if(param_int(EXTRACT_RES).eq.1) then
               call extract_res(ndo, param_int, param_real,

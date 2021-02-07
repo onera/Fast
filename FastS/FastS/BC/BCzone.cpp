@@ -443,7 +443,7 @@ E_Int K_FASTS::BCzone(
                                          ipt_data6, iptsize_data[0], inc_bc, size_work );
                      }
 
-                } else if ( bc_type == 3 || ( bc_type == 4 && param_int[IFLOW] == 1 ) || bc_type == 5 ) {
+                } else if ( bc_type == 3 || ( bc_type == 4 && param_int[IFLOW] == 1 ) || bc_type == 5 || bc_type == 30 || bc_type == 31) {
                     E_Float mobile_coef            = 1.;
                     if ( nbdata != 0 ) mobile_coef = ipt_data[0];
 
