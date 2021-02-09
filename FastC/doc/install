@@ -11,7 +11,7 @@ then
     # Destination docs
     DEST="$CASSIOPEE/Dist/doc"
     # Destination tests unitaires
-    DEST2="$DEST/Examples/Fast"
+    DEST2="$DEST/Examples/FastC"
     # Destination des release notes
     DEST3="$DEST"
 elif ([ $# -eq 1 ])
@@ -20,7 +20,7 @@ then
     # Destination docs
     DEST="$1/doc"
     # Destination tests unitaires
-    DEST2="$DEST/Examples/Fast"
+    DEST2="$DEST/Examples/FastC"
     # Destination des release notes
     DEST3="$DEST"
 elif ([ $# -eq 2 ])
@@ -29,7 +29,7 @@ then
     # Destination docs
     DEST="$CASSIOPEE/WWW/fast-web/FAST"
     # Destination tests unitaires
-    DEST2="$DEST/Examples/Fast"
+    DEST2="$DEST/Examples/FastC"
     # Destination des release notes
     DEST3="$CASSIOPEE/WWW/Main/Download"
 else
@@ -70,7 +70,7 @@ cd build
 if test ! -e Examples
 then
     mkdir Examples
-    ln -s $CASSIOPEE/Apps/PModules/Fast/test Examples/Fast
+    ln -s $CASSIOPEE/Apps/PModules/FastC/test Examples/FastC
 fi
 cd ..
 
@@ -81,25 +81,25 @@ then
 # Build pdf
     sphinx-build -b latex ./source ./build
     cd build
-    pdflatex Fast
+    pdflatex FastC
     cd ..
 fi
 
 # Copie dans le DEST
 if ([ $PRODUCTION -eq 1 ])
 then
-    taghtml build/Fast.html
-    sed -i 's/Fast.Fast/Fast/g' build/Fast.html
-    cp build/Fast.html $DEST
-    cp build/Fast.pdf $DEST
+    taghtml build/FastC.html
+    sed -i 's/FastC.FastC/FastC/g' build/FastC.html
+    cp build/FastC.html $DEST
+    cp build/FastC.pdf $DEST
 fi
 
 # Copie des release Notes
 if ([ $PRODUCTION -eq 1 ])
 then
-    version=`grep -e __version__ ../Fast/Fast.py`
+    version=`grep -e __version__ ../FastC/FastC.py`
     version1=${version:15:4}
     version1=${version1/"'"/""}
-    v='Fast-'$version1'.txt'
-    cp Fast.txt $DEST3/$v
+    v='FastC-'$version1'.txt'
+    cp FastC.txt $DEST3/$v
 fi

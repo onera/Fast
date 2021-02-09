@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 #
-# Fast documentation build configuration file
+# FastC documentation build configuration file
 
 import sys
 import os
 
-import Fast
-__version__ = Fast.__version__
+import FastC
+__version__ = FastC.__version__
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -46,7 +46,7 @@ source_suffix = '.rst'
 master_doc = 'FastC'
 
 # General information about the project.
-project = u'Fast'
+project = u'FastC'
 copyright = u'ONERA'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -241,7 +241,7 @@ latex_domain_indices = False
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'fastc', u'Fast Documentation',
+    ('index', 'fastc', u'FastC Documentation',
      [u'ONERA'], 1)
 ]
 
@@ -255,7 +255,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'FastC', u'Fast Documentation',
+  ('index', 'FastC', u'FastC Documentation',
    u'ONERA', 'FastC', 'One line description of project.',
    'Miscellaneous'),
 ]
