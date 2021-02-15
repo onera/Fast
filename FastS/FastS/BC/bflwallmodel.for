@@ -148,11 +148,6 @@ C var loc
 
 #include  "FastS/BC/law_velocity.for"
  
-!           if (prtur.gt.0.1) then
-!              Twall = 0.5*(rop(l+v5)+rop(iadrf+v5))
-!#include  "FastS/BC/law_temperature.for"
-!           end if
-
           flu1 = 0.
           flu2 = tcx*p - (tauw*rop(m+v2)/unorm)*surf
           flu3 = tcy*p - (tauw*rop(m+v3)/unorm)*surf
