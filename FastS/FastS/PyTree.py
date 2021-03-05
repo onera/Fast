@@ -96,7 +96,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
          hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
          nidom_loc = hook1["nidom_tot"]
         
-         skip      = 0
+         skip = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
 
          # calcul Navier_stokes + appli CL
@@ -154,14 +154,15 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                 dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                 dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
                 dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
-                time, procDict, interpInDnrFrame) = ucData
-                Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
-                               dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                               dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-                               dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
-                               time=time, absFrame=True,
-                               procDict=procDict, cellNName='cellN#Motion', 
-                               interpInDnrFrame=interpInDnrFrame)
+                time, procDict, interpInDnrFrame, tfreq) = ucData
+                if nstep == 0 or nstep == nitmax or nstep%tfreq == 0:
+                    Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
+                                   dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                                   dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                                   dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
+                                   time=time, absFrame=True,
+                                   procDict=procDict, cellNName='cellN#Motion', 
+                                   interpInDnrFrame=interpInDnrFrame)
               #print('t_transferts = %f'%(Time.time() - t0)
 
       dtloc[3] +=1    #time_level_motion
