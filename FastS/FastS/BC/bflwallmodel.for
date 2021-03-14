@@ -65,7 +65,8 @@ C var loc
       REAL_E p,r,u,v,w,qen,ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,
      & ck_mtr_vent, u_int,sens,rgp,flu1,flu2,flu3,flu4,flu5,flu6,
      & tcx,tcy,tcz,dist,utau,unorm,surf,aa,yplus,l1,l2,l3,f,tp,fp,tauw,
-     & ut,vt,wt,Twall,uplus,pr,prtur,ratio,dt,pf,Tplus,qwall,cp,cond
+     & ut,vt,wt,Twall,uplus,pr,prtur,ratio,dt,pf,Tplus,qwall,cp,cond,
+     & nx,ny,nz
  
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -129,16 +130,20 @@ C var loc
 
           surf = sqrt(tcx*tcx+tcy*tcy+tcz*tcz)
 
+          nx = tcx/surf
+          ny = tcy/surf
+          nz = tcz/surf
+
           ! Calculate tangential velocity and its norm
           u = rop(m+v2)
           v = rop(m+v3)
           w = rop(m+v4)
 
-          u_int = tcx*u +tcy*v +tcz*w ! normal velocity
+          u_int = nx*u +ny*v +nz*w ! normal velocity
 
-          ut = u-u_int*tcx
-          vt = v-u_int*tcy
-          wt = w-u_int*tcz
+          ut = u-u_int*nx
+          vt = v-u_int*ny
+          wt = w-u_int*nz
 
           unorm = sqrt(ut*ut+vt*vt+wt*wt)
 
