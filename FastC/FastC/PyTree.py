@@ -184,7 +184,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
 
             vars=[]
             timelevel = ['', '_M1', '_P1']
-            if lbmflag == True : 
+            if lbmflag: 
                fields2compact =[]
                for i in range(1,neq_lbm+1):
                  fields2compact.append('centers:Q'+str(i))
@@ -288,21 +288,21 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
         if a is not None: adim = C.getState(a)
     if adim is None: raise ValueError("createPrimVars: ReferenceState is missing in t.")
 
-    if (not (model == 'Euler' or model == 'euler')):
+    if not (model == 'Euler' or model == 'euler'):
         if C.isNamePresent(zone, 'centers:ViscosityEddy') != 1: 
            C._initVars(zone, 'centers:ViscosityEddy', 1e-15)
 
-    if (not (model == 'NSTurbulent' or model == 'nsspalart')): sa = False
+    if not (model == 'NSTurbulent' or model == 'nsspalart'): sa = False
     else: 
         sa = True
         if C.isNamePresent(zone, 'centers:TurbulentDistance') != 1: 
             raise ValueError("createPrimVars: TurbulentDistance field required at cell centers for RANS computations.")
     
-    if (not (model == 'LBMLaminar' or model == 'lbmlaminar')): lbm = False
+    if not (model == 'LBMLaminar' or model == 'lbmlaminar'): lbm = False
     else: lbm = True
 
     rgp = (adim[11]-1.)*adim[7]
-    t0=timeit.default_timer()
+    t0 = timeit.default_timer()
     if C.isNamePresent(zone, 'centers:VelocityX'  ) != 1: P._computeVariables(zone, ['centers:VelocityX'  ], rgp=rgp)
 
     if C.isNamePresent(zone, 'centers:VelocityY'  ) != 1: P._computeVariables(zone, ['centers:VelocityY'  ], rgp=rgp)
@@ -409,7 +409,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
        if (ides == 4 or ides == 5) and DES_debug != "none":  
           if C.isNamePresent(zone, 'centers:fd')   != 1: C._initVars(zone, 'centers:fd', 0.)
 
-       if (ides == 6 or ides == 7) and C.isNamePresent(z, 'centers:zgris') != 1:
+       if (ides == 6 or ides == 7) and C.isNamePresent(zone, 'centers:zgris') != 1:
            raise ValueError("createPrimVars: 'In ZDES mode 3, zgris field required at cell centers.")
 
 
@@ -449,7 +449,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
             vars    = Internal.getNodesFromType1(flowsol, 'DataArray_t')
             for var in vars:
                 if 'Kry' in var[0]:
-                     C._rmVars(t, 'centers:'+var[0])
+                     C._rmVars(a, 'centers:'+var[0])
 
         #dimesionnement tableau krylov
         nbr_krylov = 20
@@ -474,7 +474,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
                shift += ndimdx
 
    # TEST PYTHON CONTEXTE ADJOINT ? (dpCLp, dpCDp)  -----------------------------
-    if (adjoint==True): 
+    if adjoint: 
        if C.isNamePresent(zone, 'centers:dpCLp_dpDensity') != 1: C._initVars(zone, 'centers:dpCLp_dpDensity', 0.)
        if C.isNamePresent(zone, 'centers:dpCLp_dpMomentumX') != 1: C._initVars(zone, 'centers:dpCLp_dpMomentumX', 0.)
        if C.isNamePresent(zone, 'centers:dpCLp_dpMomentumY') != 1: C._initVars(zone, 'centers:dpCLp_dpMomentumY', 0.)
@@ -766,7 +766,7 @@ def _buildOwnData(t, Padding):
         elif temporal_scheme == "explicit_lbm": nssiter = 1
         elif temporal_scheme == "implicit": nssiter = ss_iteration+1
         elif temporal_scheme == "implicit_local": nssiter = ss_iteration+1
-        elif (temporal_scheme == "explicit_local"): #explicit local instationnaire ordre 3
+        elif temporal_scheme == "explicit_local": #explicit local instationnaire ordre 3
             nssiter = 4*maxlevel 
             rk = 3
             exploc = 1
@@ -795,12 +795,12 @@ def _buildOwnData(t, Padding):
 
     # Data for each zone
     #==== Check if padding file exists (potential cache associativity issue)
-    pad   = False
+    pad = False
     if Padding is not None:
       try:
           f       = open(Padding,'rb')
           pad     = True
-      except IOError as e:
+      except IOError:
           print('Warning: Fast: Padding file not found, using default values.')
           pad   = False
       if pad: 
@@ -879,7 +879,7 @@ def _buildOwnData(t, Padding):
             epsi_inflow  = 1.e-5
             DES_debug    = 0
             extract_res  = 0
-            ibc          = numpy.zeros( 7, dtype=numpy.int32)
+            ibc          = numpy.zeros(7, dtype=numpy.int32)
             source       = 0
             cups         = [1.,1.]
             ratiom       = 10000.
@@ -1008,7 +1008,7 @@ def _buildOwnData(t, Padding):
                 if a is not None: senseurtype = Internal.getValue(a)  
                
             iflow  = 1
-            ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0;
+            ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0
             azgris = 0.01; addes = 0.2
 
             if not ngon:
@@ -1022,7 +1022,7 @@ def _buildOwnData(t, Padding):
             elif model == "NSLes"     or model == "nsles":     iflow = 2
 
             elif model == "nsspalart" or model == "NSTurbulent": 
-                iflow = 3;
+                iflow = 3
                 if   ransmodel == 'SA_comp':
                     ides = 1
                 elif ransmodel == 'SA_diff':
@@ -1089,9 +1089,9 @@ def _buildOwnData(t, Padding):
             elif scheme == "ausmpred_pattern":  
                 kfludom = 7
 
-            else: print( 'Warning: Fast: scheme %s is invalid.'%scheme)
+            else: print('Warning: Fast: scheme %s is invalid.'%scheme)
 
-            lale   = 0; size_ale =0;
+            lale   = 0; size_ale =0
             if    motion == "none"       : lale = 0
             elif  motion == "rigid"      : lale = 1; size_ale = 11
             elif  motion == "deformation": lale = 2
@@ -1299,7 +1299,7 @@ def _buildOwnData(t, Padding):
 # create work arrays
 #==============================================================================
 def createWorkArrays__(zones, dtloc, FIRST_IT):
-    ndimt=0; ndimcoe=0; ndimwig=0; ndimgrad=0; ndimplan=0; c = 0;
+    ndimt=0; ndimcoe=0; ndimwig=0; ndimgrad=0; ndimplan=0; c = 0
     global  MX_OMP_SIZE_INT
     # on check sur 1ere zone si implicite: mixte impli/expli impossible pour le moment
     scheme = "implicit"
@@ -1371,8 +1371,8 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     ndimface= neq*3*ndimplan*6*5*len(zones)
     ndimface = min(ndimface, 2000000000)
     #si pas de temps local inactif (rk3)
-    #if(rk!=3 or exploc !=2): ndimface=1
-    if(exploc !=1): ndimface=1
+    #if rk!=3 or exploc !=2: ndimface=1
+    if exploc !=1: ndimface=1
     else: print('taille tab dtloc=%d'%ndimface)
 
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
@@ -1452,33 +1452,33 @@ def _motionlaw(t, teta, tetap):
 # Retourne un tag suivant bcname
 #==============================================================================
 def tagBC(bcname):
-  if   bcname == "BCExtrapolate"    :       tag = 0;
-  elif bcname == "BCDegenerateLine":        tag = 0;
-  elif bcname == "BCFarfield":              tag = 1;
-  elif bcname == "BCInflowSupersonic":      tag = 2;
-  elif bcname == "BCWallInviscid":          tag = 3;
-  elif bcname == "BCSymmetryPlane":         tag = 3;
-  elif bcname == "BCWall":                  tag = 4;
-  elif bcname == "FamilySpecified":         tag = 5;
-  elif bcname == "BCWallViscous":           tag = 6;
-  elif bcname == "BCWallViscous_isot_fich": tag = 7;
-  elif bcname == "BC_fich":                 tag = 8;
-  elif bcname == "Nearmatch":               tag = 9;
-  elif bcname == "BCOutflow":               tag =10;
-  elif bcname == "BCautoperiod":            tag =11;
-  elif bcname == "BCWallViscous_transition":tag =12;
-  elif bcname == "BCInflow":                tag =13;
-  elif bcname == "BCExtrapolateRANS":       tag =14;
-  elif bcname == "BCPeriodic":              tag =15;
-  elif bcname == "BCOutpres":               tag =16;
-  elif bcname == "BCInj1":                  tag =17;
-  elif bcname == "BCRacinf":                tag =18;
-  elif bcname == "BCInflowLund":            tag =19;
-  elif bcname == "BCInjMFR":                tag =20;
-  elif bcname == "BCOutMFR":                tag =21;
-  elif bcname == "BCOverlap":               tag =22;
-  elif bcname == "BCWallModel":             tag =30;
-  elif bcname == "BCWallExchange":          tag =31;
+  if   bcname == "BCExtrapolate"    :       tag = 0
+  elif bcname == "BCDegenerateLine":        tag = 0
+  elif bcname == "BCFarfield":              tag = 1
+  elif bcname == "BCInflowSupersonic":      tag = 2
+  elif bcname == "BCWallInviscid":          tag = 3
+  elif bcname == "BCSymmetryPlane":         tag = 3
+  elif bcname == "BCWall":                  tag = 4
+  elif bcname == "FamilySpecified":         tag = 5
+  elif bcname == "BCWallViscous":           tag = 6
+  elif bcname == "BCWallViscous_isot_fich": tag = 7
+  elif bcname == "BC_fich":                 tag = 8
+  elif bcname == "Nearmatch":               tag = 9
+  elif bcname == "BCOutflow":               tag =10
+  elif bcname == "BCautoperiod":            tag =11
+  elif bcname == "BCWallViscous_transition":tag =12
+  elif bcname == "BCInflow":                tag =13
+  elif bcname == "BCExtrapolateRANS":       tag =14
+  elif bcname == "BCPeriodic":              tag =15
+  elif bcname == "BCOutpres":               tag =16
+  elif bcname == "BCInj1":                  tag =17
+  elif bcname == "BCRacinf":                tag =18
+  elif bcname == "BCInflowLund":            tag =19
+  elif bcname == "BCInjMFR":                tag =20
+  elif bcname == "BCOutMFR":                tag =21
+  elif bcname == "BCOverlap":               tag =22
+  elif bcname == "BCWallModel":             tag =30
+  elif bcname == "BCWallExchange":          tag =31
   else:
     tag = -1
     print("Warning: Fast: unknown BC type %s."%bcname)
@@ -1836,10 +1836,10 @@ def switchPointersLBM__(zones, neq_lbm):
             ca   = Internal.getNodeFromName1(sol, 'Q'+str(i))
 
             # sauvegarde M1
-            ta = caM1[1]; 
+            ta = caM1[1]
 
             # M1 <- current
-            caM1[1] = ca[1];
+            caM1[1] = ca[1]
 
             # current <- P1
             ca[1] = ta

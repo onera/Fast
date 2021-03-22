@@ -182,8 +182,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                     dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                     dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
                     dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
-                    time, procDict, interpInDnrFrame) = ucData
-                   Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
+                    time, procDict, interpInDnrFrame, tfreq) = ucData
+                   if nstep == 0 or nstep == nitmax or nstep%tfreq == 0:
+                    Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
                                   dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                                   dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
                                   dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
@@ -272,7 +273,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
        # if (rank == 0 ): t0=timeit.default_timer()
        #apply BC
        #tic = Time.time()
-       if(exploc != 1):
+       if exploc != 1:
            _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        #toc = Time.time() - tic
        # if (rank == 0 ):
@@ -678,8 +679,8 @@ def computeCFL_dtlocal(t):
         zp = T.subzone(z, (3,3,3), (dim[1]-2,dim[2]-2,dim[3]-2))
         cflmax = C.getMaxValue(zp, 'centers:CFL')
         cflmin = C.getMinValue(zp, 'centers:CFL')
-        if (cflmax > cflmax_glob):cflmax_glob = cflmax
-        if (cflmin < cflmin_glob):cflmin_glob = cflmin
+        if cflmax > cflmax_glob:cflmax_glob = cflmax
+        if cflmin < cflmin_glob:cflmin_glob = cflmin
 
     dtmin = 1.0/cflmax
     dtmax = 1.0/cflmin
@@ -806,133 +807,4 @@ def _decoupe2(t, niveauMax, dtmin):
                                  nt[i,j,k] = float(niveauTps)
 
 
-
-
-
-    return t               
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return t

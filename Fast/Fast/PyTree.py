@@ -473,7 +473,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
                if nstep%2 == 0:
                    timelevel_target = int(dtloc[4])
-                   vars = ['Density'  ]
+                   vars = ['Density']
                    _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep, nitmax, hook1, nitmax, rk, exploc, 2)
 
                if    nstep%2 == 0 and itypcp == 2 : vars = ['Density'  ] 
@@ -559,7 +559,7 @@ def tri_zones(zones, metrics):
     c=0
     for z in zones:
        ztype = Internal.getValue(  Internal.getNodeFromName(z, 'ZoneType') )
-       if ztype=='Structured':
+       if ztype == 'Structured':
          zones_str.append(z)
          metrics_str.append( metrics[c])
          param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
@@ -612,4 +612,3 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
 
     if gmres is None: return None
     else: return residu
-
