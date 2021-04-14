@@ -1,6 +1,6 @@
 """Structured grid Navier-Stokes solver.
 """
-__version__ = '3.2'
+__version__ = '3.3'
 __author__ = "Ivan Mary, Stephanie Peron, Christophe Benoit, Thomas Renaud, Guillaume Jeanmasson"
 
 from . import fasts
