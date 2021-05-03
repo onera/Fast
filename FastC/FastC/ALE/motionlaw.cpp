@@ -49,7 +49,6 @@ PyObject* K_FASTC::_motionlaw(PyObject* self, PyObject* args)
 
   vector<PyArrayObject*> hook;
 
-  E_Int ndloc = 0;
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
     // check zone

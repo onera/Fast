@@ -114,7 +114,7 @@ c      write(*,'(a,2f18.9)')'cn,cm',cn*c3,cnm
 
 
 !   Initialisation par la moyenne des n-1 echantillons
-#ifndef E_PERMUT  
+#ifndef E_PERMUT
       do 10 ne=1,neq_my
         do 10 k= ind_loop(5), ind_loop(6)
         do 10 j= ind_loop(3), ind_loop(4)

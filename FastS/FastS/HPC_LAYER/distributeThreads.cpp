@@ -58,7 +58,6 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
  //// Determination du plus grand niveau en tps pour dtloc////
  //
  //
- //
  E_Int level_max;
  if (param_int[0][EXPLOC]==0){ level_max = 1; } // Tous les schemas sauf dtlocal instationnaire
  else { E_Int denominateur_max = param_int[0][NSSITER]/4; level_max = log(denominateur_max)/log(2); } // dtlocal instationnaire
@@ -116,7 +115,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
   E_Int c = 0;
   E_Int boom=0;
-  E_Int check_size;
+  E_Int check_size=0;
   E_Int ndimt=0;
   //calcul dimension et nombre souszone
   for (E_Int i = 0; i < nb_zones_dtloc ; i++)
@@ -169,13 +168,13 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
   {
     for (E_Int c = 0; c < Nbzones; c++)
       {  
-        E_Int* nijk         = ipt_nijk_new     + 3*c;
+        //E_Int* nijk         = ipt_nijk_new     + 3*c;
         E_Int* nozone_new   = ipt_nozone_new   +   c;
         E_Int* nosszone_new = ipt_nosszone_new +   c;
 
         E_Int  No_zone      = nozone_new[0];
         E_Int  No_sszone    = nosszone_new[0];
-        E_Int* ndimdx       = ipt_ndimdx_new   +   c;
+        //E_Int* ndimdx       = ipt_ndimdx_new   +   c;
 
 
         E_Int* ipt_nidom_loc = ipt_ind_dm[No_zone] + param_int[No_zone][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
@@ -333,7 +332,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
         E_Int  No_zone      = nozone_new[0];
         E_Int  No_sszone    = nosszone_new[0];
-        E_Int* ndimdx       = ipt_ndimdx_new   +   c;
+        //E_Int* ndimdx       = ipt_ndimdx_new   +   c;
 
         E_Int* ipt_nidom_loc = ipt_ind_dm[No_zone] + param_int[No_zone][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
         E_Int nb_subzone     = ipt_nidom_loc [nstep-1];   
@@ -363,10 +362,10 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
         poids = cupsmoy/ipt_HPC_CUPS[c];
 
-	E_Int size_c = nijk[0]*nijk[1]*nijk[2]*poids;
-	E_Int size_i =(nijk[0]+1)*nijk[1]*nijk[2]*poids;
-	E_Int size_j =(nijk[1]+1)*nijk[0]*nijk[2]*poids;
-	E_Int size_k = 0;
+        E_Int size_c = nijk[0]*nijk[1]*nijk[2]*poids;
+        E_Int size_i =(nijk[0]+1)*nijk[1]*nijk[2]*poids;
+        E_Int size_j =(nijk[1]+1)*nijk[0]*nijk[2]*poids;
+        E_Int size_k = 0;
         if(nijk[2] != 1) size_k = (nijk[2]+1)*nijk[0]*nijk[1]*poids;
 
         E_Int cells_tmp = size_c;
@@ -400,9 +399,8 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
         if(size_c <= rmax*marge || size_c<= 0.01*cells_tg_save)  // si place sur 1 thread ou zone tres petite, on reserve 1 thread pour eviter synchro sur micozone
         {
-            E_Int socket_tg = c%nb_socket;
-
-	    E_Int th_current =  __NUMTHREADS__ -1 -c%__NUMTHREADS__;
+            //E_Int socket_tg = c%nb_socket;
+	          E_Int th_current =  __NUMTHREADS__ -1 -c%__NUMTHREADS__;
             E_Int sens =-1;
             E_Int dirr = c/ __NUMTHREADS__;
             if (dirr%2==0) {sens=1; th_current=c%__NUMTHREADS__;}
@@ -478,17 +476,17 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
            }
         }
         else
-	{
-            Nthreads=0; E_Int cells_loc=0; E_Int th_min;E_Int cells_tg_min; E_Int cells_tg_loc;
+        {
+            Nthreads=0; E_Int cells_loc=0; E_Int th_min; E_Int cells_tg_min; E_Int cells_tg_loc;
             // zone plus grande que la cible globale
             if(size_c*3 > cells_tg_save)
             {
               while( cells_loc < size_c && Nthreads < __NUMTHREADS__ )
 	        {  
 	    	  //cells_loc += remaind[ remaind_pos[Nthreads]]; Nthreads +=1;
-		  cells_loc += remaind[ remaind_pos[Nthreads]]*marge; Nthreads +=1; // modif avril
+		      cells_loc += remaind[ remaind_pos[Nthreads]]*marge; Nthreads +=1; // modif avril
 
-		  //printf("cells_loc = %d, remain = %d %d %d\n", cells_loc, remaind[ remaind_pos[Nthreads-1]], Nthreads, size_c ); 
+		      //printf("cells_loc = %d, remain = %d %d %d\n", cells_loc, remaind[ remaind_pos[Nthreads-1]], Nthreads, size_c ); 
 	        }
 
                 cells_tg_loc  =  cells_loc/Nthreads;
@@ -508,7 +506,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                   Nthreads     = size_c/target+1;
                   cells_loc    = size_c/Nthreads;
                   cells_tg_loc =  cells_loc;
-                  cells_tg_min = cells_loc; E_Int th_min=-1; 
+                  cells_tg_min = cells_loc; th_min=-1; 
             }
 
             //printf("cell_tg %d, rmax= %d , cell_thmin= %d, th_min= %d , Nthreads= %d \n", cells_tg, rmax, cells_tg_min, th_min,Nthreads );
@@ -518,9 +516,10 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
             if(param_int[No_zone][ITYPCP] == 2 ) lmin =  4;
             else  lmin = 10;
 
-            FldArrayI tab_dim_ijk(3*Nthreads);   E_Int* dim_ijk  = tab_dim_ijk.begin();
-            FldArrayI tab_res_ijk(3*Nthreads);   E_Int* res_ijk  = tab_res_ijk.begin();
-
+            FldArrayI tab_dim_ijk(3*Nthreads);   
+            //E_Int* dim_ijk  = tab_dim_ijk.begin();
+            FldArrayI tab_res_ijk(3*Nthreads);   
+            //E_Int* res_ijk  = tab_res_ijk.begin();
 
             E_Int search      = 1;
             E_Int search_topo = 0;
@@ -582,7 +581,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                 //sous bloc trop grand
                 if(res*sign > 0 && adapt_thread ==0)
                   {
-                    E_Int compteur =0;
+                    //E_Int compteur =0;
                     E_Int go = 0;
                     //while(res*sign > 0. && go==0 && compteur < compteur_mx)
                     while(res*sign > 0. && go==0)
@@ -828,9 +827,9 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
               for (E_Int j = 0; j < topo_lu[1]; j++){
                 for (E_Int i = 0; i < topo_lu[0]; i++){
 
-                  E_Int socket_tg  = c%nb_socket;
+                  //E_Int socket_tg  = c%nb_socket;
                   E_Int th_count   = 0;
-	          E_Int th_current =  __NUMTHREADS__ -1 -c%__NUMTHREADS__;
+                  E_Int th_current =  __NUMTHREADS__ -1 -c%__NUMTHREADS__;
                   E_Int sens =-1;
                   E_Int dirr = c/ __NUMTHREADS__;
                   if (dirr%2==0) {sens=1; th_current=c%__NUMTHREADS__;}
@@ -1009,7 +1008,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
             }//loop k
 
             E_Int check = PtZoneomp + __NUMTHREADS__ +9 +th*6 - param_int[No_zone][PT_OMP  ];
-            if(check > mx_omp_size_int  && boom ==0 ) {boom =1; check_size =check;}
+            if(check > mx_omp_size_int && boom ==0 ) {boom =1; check_size =check;}
 
            //if ((display==1 && nitrun ==1 && nstep==1) || display==2)
            if ((display==1 && nitrun ==1 ) || display==2)
@@ -1037,7 +1036,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
         }// if mono ou subzone
 
-     size_subzone[No_zone] += 4 + __NUMTHREADS__ + 6*Nthreads;
+        size_subzone[No_zone] += 4 + __NUMTHREADS__ + 6*Nthreads;
 
        if(boom == 1 )
                {
@@ -1049,7 +1048,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                 printf("Just after the modules import of userscript.py, add the following python command:\n");
                 printf("#\n");
                 printf("#\n");
-                printf("Fast.FastI.MX_OMP_SIZE_INT= %d\n ", check_size+20);
+                printf("Fast.FastC.MX_OMP_SIZE_INT= %d\n ", check_size+20);
                 printf("------\n");
                 printf("End error msg\n");
                 printf("------\n");
@@ -1084,7 +1083,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                 printf("Just after the modules import of userscript.py, add the following python command:\n");
                 printf("#\n");
                 printf("#\n");
-                printf("Fast.FastI.MX_OMP_SIZE_INT= %d\n ", check_size+20);
+                printf("Fast.FastC.MX_OMP_SIZE_INT= %d\n ", check_size+20);
                 printf("------\n");
                 printf("End error msg\n");
                 printf("------\n");

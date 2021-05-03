@@ -373,9 +373,9 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
            ipt_ind_dm_loc[5]   = 1 ;
           }
 
-         E_Int nd =0;
-         E_Int lmin = 10;
-         if (ipt_param_int[ ITYPCP ] == 2) lmin = 4;
+         //E_Int nd =0;
+         //E_Int lmin = 10;
+         //if (ipt_param_int[ ITYPCP ] == 2) lmin = 4;
      } //* fin zone parallele  *//
 
 

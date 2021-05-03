@@ -89,8 +89,6 @@ void K_FASTC::setInterpTransfersFast(
 {
   E_Int rank = 0;
   E_Int dest = 0;
-  E_Int count= 0;
-
 
 #ifdef _MPI
   if(mpi) { MPI_Comm_rank (MPI_COMM_WORLD, &rank); }
@@ -535,7 +533,7 @@ void K_FASTC::setInterpTransfersIntra(
           if (1 - ibc != ipass_typ) continue;
 
           E_Int NoD       = ipt_param_int_tc[shift_rac + nrac * 5     ];
-          E_Int loc       = ipt_param_int_tc[shift_rac + nrac * 9  + 1];  //+1 a cause du nrac mpi
+          //E_Int loc       = ipt_param_int_tc[shift_rac + nrac * 9  + 1];  //+1 a cause du nrac mpi
           E_Int NoR       = ipt_param_int_tc[shift_rac + nrac * 11 + 1];
           E_Int nvars_loc = ipt_param_int_tc[shift_rac + nrac * 13 + 1];  // neq fonction raccord rans/LES
           E_Int rotation  = ipt_param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
@@ -805,8 +803,6 @@ void K_FASTC::setInterpTransfersInter(
     pass_fin = 2;
   }  // ALL
 
-  E_Int* ipt_cnd = NULL;  // ONLY FOR STRUCTURED
-
   E_Int nvars;
 
   if (varType <= 3 && varType >= 1)
@@ -856,7 +852,7 @@ void K_FASTC::setInterpTransfersInter(
   MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 #endif
   SendQueue* pt_snd_queue = pair_of_queue->second;
-  if (pt_snd_queue->size() < nb_send_buffer)
+  if (pt_snd_queue->size() < (size_t)nb_send_buffer)
   {
       pt_snd_queue->emplace_back(dest, 404);
   }
@@ -1093,8 +1089,8 @@ if (has_data_to_send) {
     E_Int Nbre_thread_actif = 1;
 #endif
 
-    E_Int indR, type;
-    E_Int indD0, indD, i, j, k, ncfLoc, nocf, indCoef, noi, sizecoefs, Nbchunk, imd, jmd, imdjmd;
+    E_Int type;
+    E_Int indD0, indD, i, j, k, ncfLoc, indCoef, noi, sizecoefs, imd, jmd, imdjmd;
 
     vector<E_Float*> vectOfRcvFields(nvars);
     vector<E_Float*> vectOfDnrFields(nvars);
@@ -1135,9 +1131,9 @@ if (has_data_to_send) {
                    if (1 - ibc != ipass_typ) continue;
          
                    E_Int NoD       = ipt_param_int_tc[shift_rac + nrac * 5     ];
-                   E_Int loc       = ipt_param_int_tc[shift_rac + nrac * 9  + 1];  //+1 a cause du nrac mpi
+                   //E_Int loc       = ipt_param_int_tc[shift_rac + nrac * 9  + 1];  //+1 a cause du nrac mpi
                    E_Int nbRcvPts  = ipt_param_int_tc[shift_rac + nrac * 10 + 1];
-                   E_Int NoR       = ipt_param_int_tc[shift_rac + nrac * 11 + 1];
+                   //E_Int NoR       = ipt_param_int_tc[shift_rac + nrac * 11 + 1];
                    E_Int nvars_loc = ipt_param_int_tc[shift_rac + nrac * 13 + 1];  // neq fonction raccord rans/LES
                    E_Int rotation  = ipt_param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
          
@@ -1194,9 +1190,9 @@ if (has_data_to_send) {
                      if (linelets_int != NULL )
                         {                        
                         nbptslinelets= linelets_int[0];
-                        E_Int addrlinelets   = linelets_int[count_racIBC + 3 ];
-                        E_Float* linelets    = linelets_real + addrlinelets;
-                        E_Int* indexlinelets = linelets_int + linelets_int[1]+1 + 3;
+                        //E_Int addrlinelets   = linelets_int[count_racIBC + 3 ];
+                        //E_Float* linelets    = linelets_real + addrlinelets;
+                        //E_Int* indexlinelets = linelets_int + linelets_int[1]+1 + 3;
                         count_racIBC = count_racIBC + 1;
                         }                    
                    }
@@ -1243,7 +1239,7 @@ if (has_data_to_send) {
          
                   noi     = shiftDonor;  // compteur sur le tableau d indices donneur
                   indCoef = ( pt_deb - ideb ) * sizecoefs + shiftCoef;
-                  E_Int NoR = ipt_param_int_tc[shift_rac + nrac * 11 + 1];
+                  //E_Int NoR = ipt_param_int_tc[shift_rac + nrac * 11 + 1];
                   //if (ipt_param_int_tc[ech]==0) printf("No rac= %d , NoR= %d, NoD= %d, Ntype= %d, ptdeb= %d, ptfin= %d, NptD= %d, neq= %d, skip= %d, rank= %d, dest= %d,  thread= %d\n",
                   //irac, NoR,NoD, ntype[ 1 + ndtyp],pt_deb,pt_fin , 
                   //ipt_param_int_tc[ shift_rac + nrac*10+1  ], ipt_param_int_tc[ shift_rac + nrac*13+1  ], ipt_param_int_tc[ shift_rac + nrac*15+1  ], 

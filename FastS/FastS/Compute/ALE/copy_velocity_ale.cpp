@@ -48,8 +48,8 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
     threadmax_sdm  = omp_get_max_threads();
 #endif
 
-  PyObject* tmp = PyDict_GetItemString(work,"MX_SYNCHRO"); E_Int mx_synchro = PyLong_AsLong(tmp); 
-            tmp = PyDict_GetItemString(work,"MX_SSZONE");  E_Int mx_sszone  = PyLong_AsLong(tmp);
+  //PyObject* tmp = PyDict_GetItemString(work,"MX_SYNCHRO"); E_Int mx_synchro = PyLong_AsLong(tmp); 
+  //          tmp = PyDict_GetItemString(work,"MX_SSZONE");  E_Int mx_sszone  = PyLong_AsLong(tmp);
 
   E_Int nidom        = PyList_Size(zones);
   E_Int ndimdx       = 0;
@@ -58,7 +58,6 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
 
   E_Float** iptventi; E_Float** iptventj; E_Float** iptventk; E_Float** iptvent_vertex;
   E_Float** ipt_param_real; 
-
   E_Int** ipt_param_int;
 
   ipt_param_real    = new  E_Float*[nidom*5];
@@ -103,7 +102,7 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
 
   //printf("thread =%d\n",threadmax_sdm);
   //FldArrayI compteur(     threadmax_sdm); E_Int* ipt_compteur   =  compteur.begin();
-  FldArrayI ijkv_sdm(   3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
+  //FldArrayI ijkv_sdm(   3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(   3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
   FldArrayI ind_dm(     6*threadmax_sdm); E_Int* ipt_ind_dm     =  ind_dm.begin();
   FldArrayI ind_dm_omp(12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
@@ -142,7 +141,7 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
             {  ipt_ind_dm_loc[5] =1; }//champ de vitesse 2D
 
             E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
-            E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
+            //E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
             E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
 
              // Distribution de la sous-zone sur les threads

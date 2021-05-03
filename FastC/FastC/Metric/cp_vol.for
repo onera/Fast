@@ -71,9 +71,9 @@ c-----le nbr de metrique varie selon le type de domaine
       IF(param_int( ITYPZONE ).eq.0) THEN !Domaine 3D quelconque
 
         !calcul volume
-        do 104 k=ind_loop(5),ind_loop(6)
-        do 104 j=ind_loop(3),ind_loop(4)
-        do 104 i=ind_loop(1),ind_loop(2)
+        do k=ind_loop(5),ind_loop(6)
+        do j=ind_loop(3),ind_loop(4)
+        do i=ind_loop(1),ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -111,14 +111,16 @@ c-----le nbr de metrique varie selon le type de domaine
      &              -( z(l0) + z(l1) + z(l4) +z(l5))*tk(l  ,3))
 
           vol(l) = (ax+ay+az)/3.
-104      continue 
+        enddo
+        enddo
+        enddo
 
       ELSEIF(param_int( ITYPZONE ).eq.1) THEN !Domaine 3D avec une direction homogene k: traitement facette i et j
 
         !calcul volume
-        do 204 k=ind_loop(5),ind_loop(6)
-        do 204 j=ind_loop(3),ind_loop(4)
-        do 204 i=ind_loop(1),ind_loop(2)
+        do k=ind_loop(5),ind_loop(6)
+        do j=ind_loop(3),ind_loop(4)
+        do i=ind_loop(1),ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -148,14 +150,16 @@ c-----le nbr de metrique varie selon le type de domaine
      &              -( z(l0) + z(l1) + z(l4) +z(l5))*tk(l  ,1))
 
           vol(l) = (ax+ay+az)/3.
-204      continue
+        enddo
+        enddo
+        enddo
 
       ELSEIF(param_int( ITYPZONE ).eq.2) THEN !Domaine 3D cartesien
 
         !calcul volume
-        do 404 k=ind_loop(5),ind_loop(6)
-        do 404 j=ind_loop(3),ind_loop(4)
-        do 404 i=ind_loop(1),ind_loop(2)
+        do k=ind_loop(5),ind_loop(6)
+        do j=ind_loop(3),ind_loop(4)
+        do i=ind_loop(1),ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -181,14 +185,15 @@ c-----le nbr de metrique varie selon le type de domaine
      &              -( z(l0) + z(l1) + z(l4) +z(l5))*tk(l  ,1))
 
           vol(l) = (ax+ay+az)/3.
-404      continue
-
+        enddo
+        enddo
+        enddo
       ELSE !Domaine 2D: neq_k=0
 
         !calcul volume
-        do 304 k=ind_loop(5),ind_loop(6)
-        do 304 j=ind_loop(3),ind_loop(4)
-        do 304 i=ind_loop(1),ind_loop(2)
+        do k=ind_loop(5),ind_loop(6)
+        do j=ind_loop(3),ind_loop(4)
+        do i=ind_loop(1),ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -221,7 +226,9 @@ c-----le nbr de metrique varie selon le type de domaine
           az = .25*(z(l2)+z(l3)+z(l6)+z(l7)-z(l0)-z(l1)-z(l4)-z(l5))*tk1
 
           vol(l) = (ax+ay+az)/3.
-304      continue
+        enddo
+        enddo
+        enddo
 
       ENDIF!neq_k
 

@@ -57,8 +57,6 @@ void K_FASTS::recup3para_c(E_Float**& iptro, E_Int*& param_int_tc,
          else activ_core_per_socket[s] = count;
      }
 
-  E_Int omp_mode_loc = 0;
-
 #pragma omp parallel default(shared) //private(cycle)
   {
 #ifdef _OPENMP

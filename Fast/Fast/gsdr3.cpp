@@ -180,24 +180,24 @@ E_Int K_FAST::gsdr3(
            if(ipt_nisdom_residu[nitcfg-1] != 0) ipt_it_bloc[0] +=1;
           }
 
-    E_Int* ipt_nidom_loc= ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;
+    //E_Int* ipt_nidom_loc= ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;
 
 
-	if( (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1) && param_int[nd][ ITYPZONE] != 4)
+  if( (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1) && param_int[nd][ ITYPZONE] != 4)
 	  {
 #ifdef _OPENMP
 	    E_Int  Nbre_thread_actif = __NUMTHREADS__;
 #else
 	    E_Int Nbre_thread_actif = 1;
 #endif
-	    E_Int nfic_ij = param_int[ nd ][ NIJK + 3 ];
-	    E_Int nfic_k  = param_int[ nd ][ NIJK + 4 ];
+	    //E_Int nfic_ij = param_int[ nd ][ NIJK + 3 ];
+	    //E_Int nfic_k  = param_int[ nd ][ NIJK + 4 ];
 	    E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
 	    E_Int  nb_subzone    = ipt_nidom_loc [nitcfg-1];                                           //nbre sous-zone a la sousiter courante
 
 	    for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
-	      {
-		if (omp_mode == 1)
+      {
+      if (omp_mode == 1)
 		  {
 		    E_Int       Ptomp = param_int[nd][PT_OMP];
 		    E_Int  PtrIterOmp = param_int[nd][Ptomp];   
@@ -251,8 +251,7 @@ E_Int K_FAST::gsdr3(
 	  }  // if relax
       } // loop zone
 
-E_Float deb_calcul;
-
+//E_Float deb_calcul;
 //cout << "nidom= " << nidom << endl;
 //cout << "nitcfg= " << nitcfg << endl; 
 //if (nitcfg==4){deb_calcul = omp_get_wtime();}

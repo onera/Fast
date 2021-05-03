@@ -73,9 +73,9 @@ c Var loc
 c-----le nbr de metrique varie selon le type de domaine
       IF(param_int( ITYPZONE ).eq.0) THEN !Domaine 3D quelconque
 
-        do 100 k=ind_loop(5),ind_loop(6)
-        do 100 j=ind_loop(3),ind_loop(4)
-        do 100 i=ind_loop(1),ind_loop(2)
+        do k=ind_loop(5),ind_loop(6)
+        do j=ind_loop(3),ind_loop(4)
+        do i=ind_loop(1),ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0=  indcg(i  ,j  ,k  )   ! x(i  , j  , k  )
@@ -123,12 +123,14 @@ c-----le nbr de metrique varie selon le type de domaine
           tk(l ,1) = .5*(tkx10+tkx11)  ! tk(i  ,j ,k  )=normal*surf
           tk(l ,2) = .5*(tky10+tky11)
           tk(l ,3) = .5*(tkz10+tkz11)
-100      continue 
+        enddo
+        enddo
+        enddo
 
         if(li) then !!! Facette I imax: normal et surface
-         DO 101 k = ind_loop(5)   , ind_loop(6) 
-         DO 101 j = ind_loop(3)   , ind_loop(4)
-         DO 101 i = ind_loop(2)+1 , ind_loop(2) + 1
+         DO k = ind_loop(5)   , ind_loop(6) 
+         DO j = ind_loop(3)   , ind_loop(4)
+         DO i = ind_loop(2)+1 , ind_loop(2) + 1
 
           l = indmtr(i  ,j  ,k  )
           l0=  indcg(i  ,j  ,k  )     ! x(i  , j  , k  )
@@ -146,13 +148,15 @@ c-----le nbr de metrique varie selon le type de domaine
           ti(l ,1)= .5*(tix10+tix11)  ! ti(i  ,j,k)=normal*surf
           ti(l ,2)= .5*(tiy10+tiy11)
           ti(l ,3)= .5*(tiz10+tiz11)
-101      continue
+        enddo
+        enddo
+        enddo
         endif
 
         if(lj) then !!! Facette J jmax: normal et surface
-         DO 102 k = ind_loop(5)   , ind_loop(6) 
-         DO 102 j = ind_loop(4)+1 , ind_loop(4)+1
-         DO 102 i = ind_loop(1)   , ind_loop(2)
+         DO k = ind_loop(5)   , ind_loop(6) 
+         DO j = ind_loop(4)+1 , ind_loop(4)+1
+         DO i = ind_loop(1)   , ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0=  indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -170,13 +174,15 @@ c-----le nbr de metrique varie selon le type de domaine
           tj(l ,1) = .5*(tjx10+tjx11)  ! tj(i  ,j   ,k  )=normal*surf
           tj(l ,2) = .5*(tjy10+tjy11)
           tj(l ,3) = .5*(tjz10+tjz11)
-102      continue
+        enddo
+        enddo
+        enddo
         endif
 
         if(lk) then !!! Facette K kmax: normal et surface
-         DO 103 k = ind_loop(6)+1 , ind_loop(6)+1
-         DO 103 j = ind_loop(3)   , ind_loop(4)
-         DO 103 i = ind_loop(1)   , ind_loop(2)
+         DO k = ind_loop(6)+1 , ind_loop(6)+1
+         DO j = ind_loop(3)   , ind_loop(4)
+         DO i = ind_loop(1)   , ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0=  indcg(i  ,j  ,k  )    ! x(i  , j  , k  )
@@ -194,14 +200,16 @@ c-----le nbr de metrique varie selon le type de domaine
           tk(l ,1) = .5*(tkx10+tkx11)  ! tk(i  ,j ,k  )=normal*surf
           tk(l ,2) = .5*(tky10+tky11)
           tk(l ,3) = .5*(tkz10+tkz11)
-103      continue
+        enddo
+        enddo
+        enddo
         endif
 
       ELSEIF(param_int( ITYPZONE ).eq.1) THEN !Domaine 3D avec une direction homogene k: traitement facette i et j
 
-        do 200 k=ind_loop(5),ind_loop(6)
-        do 200 j=ind_loop(3),ind_loop(4)
-        do 200 i=ind_loop(1),ind_loop(2)
+        do k=ind_loop(5),ind_loop(6)
+        do j=ind_loop(3),ind_loop(4)
+        do i=ind_loop(1),ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0=  indcg(i  ,j  ,k  )   ! x(i  , j  , k  )
@@ -237,12 +245,14 @@ c-----le nbr de metrique varie selon le type de domaine
           tkz11=(x(l1)-x(l5))*(y(l0)-y(l1))-(y(l1)-y(l5))*(x(l0)-x(l1))
 
           tk(l ,1) = .5*(tkz10+tkz11)
-200      continue
+        enddo
+        enddo
+        enddo
 
         if(li) then !!! Facette I imax: normal et surface
-         DO 201 k = ind_loop(5)   , ind_loop(6) 
-         DO 201 j = ind_loop(3)   , ind_loop(4)
-         DO 201 i = ind_loop(2)+1 , ind_loop(2) + 1
+         DO k = ind_loop(5)   , ind_loop(6) 
+         DO j = ind_loop(3)   , ind_loop(4)
+         DO i = ind_loop(2)+1 , ind_loop(2) + 1
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -257,13 +267,15 @@ c-----le nbr de metrique varie selon le type de domaine
 
           ti(l ,1)= .5*(tix10+tix11)  ! ti(i  ,j,k)=normal*surf
           ti(l ,2)= .5*(tiy10+tiy11)
-201      continue
+        enddo
+        enddo
+        enddo
         endif
 
         if(lj) then !!! Facette J jmax: normal et surface
-         DO 202 k = ind_loop(5)   , ind_loop(6) 
-         DO 202 j = ind_loop(4)+1 , ind_loop(4)+1
-         DO 202 i = ind_loop(1)   , ind_loop(2)
+         DO k = ind_loop(5)   , ind_loop(6) 
+         DO j = ind_loop(4)+1 , ind_loop(4)+1
+         DO i = ind_loop(1)   , ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -278,13 +290,15 @@ c-----le nbr de metrique varie selon le type de domaine
 
           tj(l ,1) = .5*(tjx10+tjx11)  ! tj(i  ,j   ,k  )=normal*surf
           tj(l ,2) = .5*(tjy10+tjy11)
-202      continue
+        enddo
+        enddo
+        enddo
         endif
 
         if(lk) then !!! Facette K kmax: normal et surface
-         DO 203 k = ind_loop(6)+1 , ind_loop(6)+1
-         DO 203 j = ind_loop(3)   , ind_loop(4)
-         DO 203 i = ind_loop(1)   , ind_loop(2)
+         DO k = ind_loop(6)+1 , ind_loop(6)+1
+         DO j = ind_loop(3)   , ind_loop(4)
+         DO i = ind_loop(1)   , ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -296,14 +310,16 @@ c-----le nbr de metrique varie selon le type de domaine
           tkz11=(x(l1)-x(l5))*(y(l0)-y(l1))-(y(l1)-y(l5))*(x(l0)-x(l1))
 
           tk(l ,1) = .5*(tkz10+tkz11)
-203      continue
+        enddo
+        enddo
+        enddo
         endif
 
       ELSEIF(param_int( ITYPZONE ).eq.2) THEN !Domaine 3D cartesien
 
-        do 400 k=ind_loop(5),ind_loop(6)
-        do 400 j=ind_loop(3),ind_loop(4)
-        do 400 i=ind_loop(1),ind_loop(2)
+        do k=ind_loop(5),ind_loop(6)
+        do j=ind_loop(3),ind_loop(4)
+        do i=ind_loop(1),ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0=  indcg(i  ,j  ,k  )   ! x(i  , j  , k  )
@@ -333,12 +349,14 @@ c-----le nbr de metrique varie selon le type de domaine
           tkz11=(x(l1)-x(l5))*(y(l0)-y(l1))-(y(l1)-y(l5))*(x(l0)-x(l1))
 
           tk(l ,1) = .5*(tkz10+tkz11)
-400      continue
+        enddo
+        enddo
+        enddo
 
         if(li) then !!! Facette I imax: normal et surface
-         DO 401 k = ind_loop(5)   , ind_loop(6) 
-         DO 401 j = ind_loop(3)   , ind_loop(4)
-         DO 401 i = ind_loop(2)+1 , ind_loop(2) + 1
+         DO k = ind_loop(5)   , ind_loop(6) 
+         DO j = ind_loop(3)   , ind_loop(4)
+         DO i = ind_loop(2)+1 , ind_loop(2) + 1
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -350,13 +368,15 @@ c-----le nbr de metrique varie selon le type de domaine
           tix11=(y(l2)-y(l3))*(z(l0)-z(l2))-(z(l2)-z(l3))*(y(l0)-y(l2))
 
           ti(l ,1)= .5*(tix10+tix11)  ! ti(i  ,j,k)=normal*surf
-401      continue
+        enddo
+        enddo
+        enddo
         endif
 
         if(lj) then !!! Facette J jmax: normal et surface
-         DO 402 k = ind_loop(5)   , ind_loop(6) 
-         DO 402 j = ind_loop(4)+1 , ind_loop(4)+1
-         DO 402 i = ind_loop(1)   , ind_loop(2)
+         DO k = ind_loop(5)   , ind_loop(6) 
+         DO j = ind_loop(4)+1 , ind_loop(4)+1
+         DO i = ind_loop(1)   , ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -368,13 +388,15 @@ c-----le nbr de metrique varie selon le type de domaine
           tjy11=(z(l6)-z(l2))*(x(l4)-x(l6))-(x(l6)-x(l2))*(z(l4)-z(l6))
 
           tj(l ,1) = .5*(tjy10+tjy11)
-402      continue
+        enddo
+        enddo
+        enddo
         endif
 
         if(lk) then !!! Facette K kmax: normal et surface
-         DO 403 k = ind_loop(6)+1 , ind_loop(6)+1
-         DO 403 j = ind_loop(3)   , ind_loop(4)
-         DO 403 i = ind_loop(1)   , ind_loop(2)
+         DO k = ind_loop(6)+1 , ind_loop(6)+1
+         DO j = ind_loop(3)   , ind_loop(4)
+         DO i = ind_loop(1)   , ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -386,15 +408,17 @@ c-----le nbr de metrique varie selon le type de domaine
           tkz11=(x(l1)-x(l5))*(y(l0)-y(l1))-(y(l1)-y(l5))*(x(l0)-x(l1))
 
           tk(l ,1) = .5*(tkz10+tkz11)
-403      continue
+        enddo
+        enddo
+        enddo
         endif
 
 
       ELSE !Domaine 2D: neq_k=0
 
-        do 300 k=ind_loop(5),ind_loop(6)
-        do 300 j=ind_loop(3),ind_loop(4)
-        do 300 i=ind_loop(1),ind_loop(2)
+        do k=ind_loop(5),ind_loop(6)
+        do j=ind_loop(3),ind_loop(4)
+        do i=ind_loop(1),ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  )   ! x(i  , j  , k  )
@@ -424,12 +448,14 @@ c-----le nbr de metrique varie selon le type de domaine
 
           tj(l ,1) = .5*(tjx10+tjx11)  ! tj(i  ,j   ,k  )=normal*surf
           tj(l ,2) = .5*(tjy10+tjy11)
-300      continue
+        enddo
+        enddo
+        enddo
 
         if(li) then !!! Facette I imax: normal et surface
-         DO 301 k = ind_loop(5)   , ind_loop(6) 
-         DO 301 j = ind_loop(3)   , ind_loop(4)
-         DO 301 i = ind_loop(2)+1 , ind_loop(2) + 1
+         DO k = ind_loop(5)   , ind_loop(6) 
+         DO j = ind_loop(3)   , ind_loop(4)
+         DO i = ind_loop(2)+1 , ind_loop(2) + 1
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -444,13 +470,15 @@ c-----le nbr de metrique varie selon le type de domaine
 
           ti(l ,1)= .5*(tix10+tix11)  ! ti(i  ,j,k)=normal*surf
           ti(l ,2)= .5*(tiy10+tiy11)
-301      continue
+        enddo
+        enddo
+        enddo
         endif
 
         if(lj) then !!! Facette J jmax: normal et surface
-         DO 302 k = ind_loop(5)   , ind_loop(6) 
-         DO 302 j = ind_loop(4)+1 , ind_loop(4)+1
-         DO 302 i = ind_loop(1)   , ind_loop(2)
+         DO k = ind_loop(5)   , ind_loop(6) 
+         DO j = ind_loop(4)+1 , ind_loop(4)+1
+         DO i = ind_loop(1)   , ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
           l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
@@ -465,7 +493,9 @@ c-----le nbr de metrique varie selon le type de domaine
 
           tj(l ,1) = .5*(tjx10+tjx11)  ! tj(i  ,j   ,k  )=normal*surf
           tj(l ,2) = .5*(tjy10+tjy11)
-302      continue
+        enddo
+        enddo
+        enddo
         endif
 
       ENDIF!neq_k

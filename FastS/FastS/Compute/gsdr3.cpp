@@ -180,8 +180,8 @@ E_Int K_FASTS::gsdr3(
 #else
 	    E_Int Nbre_thread_actif = 1;
 #endif
-	    E_Int nfic_ij = param_int[ nd ][ NIJK + 3 ];
-	    E_Int nfic_k  = param_int[ nd ][ NIJK + 4 ];
+	    //E_Int nfic_ij = param_int[ nd ][ NIJK + 3 ];
+	    //E_Int nfic_k  = param_int[ nd ][ NIJK + 4 ];
 	    E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
 	    E_Int  nb_subzone    = ipt_nidom_loc [nitcfg-1];    
 	    //nbre sous-zone a la sousiter courante
@@ -332,7 +332,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
           {
 
 
-	    E_Int cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
+	    //E_Int cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
 	    //if (param_int[0][EXPLOC] == 2 and param_int[0][RK] == 3 and cycl != 4 and nitcfg%cycl==cycl/4)
 	    //{
 	    //	 ndim = param_int[0][SHIFTLOCAL];

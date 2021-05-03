@@ -37,8 +37,7 @@
 #define GET_TI_NG(pos, metric, para, ti, tj, tk, vol) { ti  = K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, pos ) ); \
                                                      vol = K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, pos+1));   }
 
-#define GET_VENT_NG(pos, metric, para, vi, vj, vk) { vi  = K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, pos ) ); \
-                                                  E_Int c=0; if(para[LALE] == 1){ c=1;}                        }
+#define GET_VENT_NG(pos, metric, para, vi, vj, vk) { vi  = K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, pos ) ); }
 
 #define BCDEGENERATELINE          0
 #define BCEXTRAPOLATE             0
