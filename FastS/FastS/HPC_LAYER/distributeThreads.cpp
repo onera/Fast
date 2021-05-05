@@ -878,7 +878,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                   //on estime a quelle socket Numa la zone appartient  ( a blinder...)
                   E_Int socket = th_current/core_per_socket;
 
-                  if (socket >= nb_socket) socket=0;
+                  if (socket >= nb_socket || socket >= NBR_SOCKET) socket=0;
                   numa_socket[socket] += size_loc;
 
                   remaind[th_current] -=  size_loc;

@@ -155,7 +155,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                 dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
                 dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
                 time, procDict, interpInDnrFrame, tfreq) = ucData
-                if nstep == 0 or nstep == nitmax or nstep%tfreq == 0:
+                if nstep == nitmax or nstep%tfreq == 0:
                     Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
                                    dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                                    dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
