@@ -55,19 +55,17 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
   threadmax_sdm = omp_get_max_threads();
 #endif
   
-  FldArrayI ind_sdm(6*threadmax_sdm);          E_Int* ipt_ind_sdm         = ind_sdm.begin();
-  FldArrayI ind_coe(6*threadmax_sdm);          E_Int* ipt_ind_coe         = ind_coe.begin();
-  FldArrayI ind_grad(6*threadmax_sdm);         E_Int* ipt_ind_grad        = ind_grad.begin();
+  //FldArrayI ind_sdm(6*threadmax_sdm);          E_Int* ipt_ind_sdm         = ind_sdm.begin();
+  //FldArrayI ind_coe(6*threadmax_sdm);          E_Int* ipt_ind_coe         = ind_coe.begin();
+  //FldArrayI ind_grad(6*threadmax_sdm);         E_Int* ipt_ind_grad        = ind_grad.begin();
   FldArrayI ind_dm1(6*threadmax_sdm);          E_Int* ipt_ind_dm1         = ind_dm1.begin();
-  FldArrayI ijkv_sdm(3*threadmax_sdm);         E_Int* ipt_ijkv_sdm        = ijkv_sdm.begin();
-  FldArrayI ind_dm_omp(12*threadmax_sdm);      E_Int* ipt_ind_dm_omp      = ind_dm_omp.begin();
-  FldArrayI topology_socket(3*threadmax_sdm);  E_Int* ipt_topology_socket = topology_socket.begin();
-
-  FldArrayF rot_ale(12*threadmax_sdm);         E_Float* ipt_rot_ale       = rot_ale.begin();
+  //FldArrayI ijkv_sdm(3*threadmax_sdm);         E_Int* ipt_ijkv_sdm        = ijkv_sdm.begin();
+  //FldArrayI ind_dm_omp(12*threadmax_sdm);      E_Int* ipt_ind_dm_omp      = ind_dm_omp.begin();
+  //FldArrayI topology_socket(3*threadmax_sdm);  E_Int* ipt_topology_socket = topology_socket.begin();
+  //FldArrayF rot_ale(12*threadmax_sdm);         E_Float* ipt_rot_ale       = rot_ale.begin();
 
   //printf("Nombre de thread max= %d\n", threadmax_sdm);
-
-
+ 
     /* Get numerics from zone */
     PyObject*   numerics    = K_PYTREE::getNodeFromName1(zone    , ".Solver#ownData");
     PyObject*            o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"); 
@@ -290,31 +288,31 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
      if(kfludom == 3)  ipti_df = K_NUMPY::buildNumpyArray( ndimdx_mtr, neq_mtr, 0, 1);  
      else              ipti_df = ipti; 
 
-     E_Float* ti  = K_NUMPY::getNumpyPtrF(ipti  );
-     E_Float* tj  = ti + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
-     E_Float* tk  = tj + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
-     E_Float* vol = tk + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_K ];
+     //E_Float* ti  = K_NUMPY::getNumpyPtrF(ipti  );
+     //E_Float* tj  = ti + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
+     //E_Float* tk  = tj + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
+     //E_Float* vol = tk + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_K ];
 
-     E_Float* ti_df  = K_NUMPY::getNumpyPtrF(ipti_df  );
-     E_Float* tj_df  = ti_df + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
-     E_Float* tk_df  = tj_df + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
-     E_Float* vol_df = tk_df + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_K ];
+     //E_Float* ti_df  = K_NUMPY::getNumpyPtrF(ipti_df  );
+     //E_Float* tj_df  = ti_df + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
+     //E_Float* tk_df  = tj_df + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
+     //E_Float* vol_df = tk_df + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_K ];
 
-     E_Float* ti0  = K_NUMPY::getNumpyPtrF(ipti0  );
-     E_Float* tj0  = ti0 + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
-     E_Float* tk0  = tj0 + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
+     //E_Float* ti0  = K_NUMPY::getNumpyPtrF(ipti0  );
+     //E_Float* tj0  = ti0 + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
+     //E_Float* tk0  = tj0 + ipt_param_int[ NDIMDX_MTR]* ipt_param_int[ NEQ_IJ];
 
-     E_Float* venti = K_NUMPY::getNumpyPtrF(iptventi);
-     E_Float* ventj = venti + ipt_param_int[ NDIMDX_VENT]*ipt_param_int[ NEQ_VENT ];
-     E_Float* ventk = ventj + ipt_param_int[ NDIMDX_VENT]*ipt_param_int[ NEQ_VENT ];
+     //E_Float* venti = K_NUMPY::getNumpyPtrF(iptventi);
+     //E_Float* ventj = venti + ipt_param_int[ NDIMDX_VENT]*ipt_param_int[ NEQ_VENT ];
+     //E_Float* ventk = ventj + ipt_param_int[ NDIMDX_VENT]*ipt_param_int[ NEQ_VENT ];
 
      //* tableau pour calculer dimension metric DF du domaine *//
      FldArrayF  iptmpi(   ipt_param_int[ NDIMDX_XYZ ]);
      FldArrayF  iptmpj(   ipt_param_int[ NDIMDX_XYZ ]);
      FldArrayF  iptmpk(   ipt_param_int[ NDIMDX_XYZ ]);
-     FldArrayF iptmpi2(   ipt_param_int[ NDIMDX_XYZ ]);
-     FldArrayF iptmpj2(   ipt_param_int[ NDIMDX_XYZ ]);
-     FldArrayF iptmpk2(   ipt_param_int[ NDIMDX_XYZ ]);
+     FldArrayF  iptmpi2(   ipt_param_int[ NDIMDX_XYZ ]);
+     FldArrayF  iptmpj2(   ipt_param_int[ NDIMDX_XYZ ]);
+     FldArrayF  iptmpk2(   ipt_param_int[ NDIMDX_XYZ ]);
      FldArrayF  iptmtr( 9*ipt_param_int[ NDIMDX_XYZ ]);
 #pragma omp parallel default(shared) 
      {

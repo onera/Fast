@@ -47,8 +47,8 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
   E_Int nidom = PyList_Size(zones), nb_subzones;
   E_Int *ipt_param_int, *ipt_ind_dm, *ipt_nidom_loc;
 
-  PyObject* tmp = PyDict_GetItemString(work,"MX_SSZONE"); 
-  E_Int mx_sszone = PyLong_AsLong(tmp);
+  //PyObject* tmp = PyDict_GetItemString(work, "MX_SSZONE"); 
+  //E_Int mx_sszone = PyLong_AsLong(tmp);
   E_Int sizessor;
   E_Int neq;
   E_Int nfic_ij, nfic_k;
@@ -99,7 +99,7 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 			}
 		    }
 		}
-	      else //ompmode = 0
+        else //ompmode = 0
 		{
 		  E_Int* ipt_ind_dm_loc  = ipt_ind_dm + 6 * nd_subzone;
 		  E_Int ipt_topology_socket[3];
@@ -121,15 +121,15 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 			(ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
 		    }
 		}
-	    }//loop subzone
-          E_Int sz_ssortmp = sizessor;
-          E_Int sz_ssor    = sizessor;
-          if( ipt_param_int[NB_RELAX] == 1 ) sz_ssor=1;
+        }//loop subzone
+        E_Int sz_ssortmp = sizessor;
+        E_Int sz_ssor    = sizessor;
+        if (ipt_param_int[NB_RELAX] == 1) sz_ssor=1;
 
-	  ssor    = K_NUMPY::buildNumpyArray(sz_ssor   , neq, 0, 1);  PyList_Append(ssors, ssor);
-	  ssortmp = K_NUMPY::buildNumpyArray(sz_ssortmp, neq, 0, 1);  PyList_Append(ssors, ssortmp);
-	  
-	}// test NB_RELAX
+        ssor    = K_NUMPY::buildNumpyArray(sz_ssor   , neq, 0, 1);  PyList_Append(ssors, ssor);
+        ssortmp = K_NUMPY::buildNumpyArray(sz_ssortmp, neq, 0, 1);  PyList_Append(ssors, ssortmp);
+
+    }// test NB_RELAX
     }//loop zone
   
   if ( nidom != 0 && (ipt_param_int[NB_RELAX] > 1 || ipt_param_int[LU_MATCH]==1 ) )

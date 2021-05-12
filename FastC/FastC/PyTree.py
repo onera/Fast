@@ -346,7 +346,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
            if C.isNamePresent(zone, 'centers:Q'+str(i)) != 1: C._initVars(zone, 'centers:Q'+str(i), 0.)
            if C.isNamePresent(zone, 'centers:Q'+str(i)+'_M1') != 1: C._initVars(zone, 'centers:Q'+str(i)+'_M1', 0.)
 
-    #gestion ale maillage deformable
+    # gestion ale maillage deformable
     ale=0
     b = Internal.getNodeFromName1(zone, '.Solver#define')
     if b is not None:
@@ -356,7 +356,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
           Motion = Internal.getNodeFromName1(zone, 'Motion')
           vx = None
           if Motion is not None: vx = Internal.getNodeFromName1(Motion, 'VelocityX')
-          else :
+          else:
               Internal.createNode('Motion', 'ArbitraryGridMotion_t', value=None, children=[], parent=zone) 
               Motion   = Internal.getNodeFromType1(zone, 'ArbitraryGridMotion_t')
               Internal.createNode('ArbitraryGridMotion', 'ArbitraryGridMotionType_t', value='DeformingGrid', children=[], parent=Motion) 
@@ -1649,7 +1649,7 @@ def checkKeys(d, keys):
           if not isinstance(val, (float, int)):
             fail = True; print('Error: Fast: keyword %s requires a float.'%i[0])
         elif k == 2: # must be any string
-          if not isinstance(val, string):
+          if not isinstance(val, str):
             fail = True; print('Error: Fast: keyword %s requires a string.'%i[0])
         elif k == 3: # Array/list of ints
           if not isinstance(val, numpy.ndarray):
@@ -2139,7 +2139,8 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
         else: # un fichier loade par proc
             # Try to load graph
             if os.access('%s/graph.pk'%fileName, os.R_OK):
-                import cPickle as pickle
+                try: import cPickle as pickle
+                except: import pickle
                 file = open('%s/graph.pk'%fileName, 'rb')
                 graph = pickle.load(file)
                 file.close()
@@ -2318,7 +2319,8 @@ def save(t, fileName='restart', split='single',
                 C.convertPyTree2File(tl, '%s/%s_%d.cgns'%(fileName,baseName,i))
 
             # Write graph
-            import cPickle as pickle
+            try: import cPickle as pickle
+            except: import pickle
             file = open('%s/graph.pk'%fileName, 'wb')
             pickle.dump(objet, file, protocol=pickle.HIGHEST_PROTOCOL)
             file.close()
@@ -2408,7 +2410,8 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
 
                 # Try to load graph from file
                 if os.access('%s/graph.pk'%fileName, os.R_OK):
-                    import cPickle as pickle
+                    try: import cPickle as pickle
+                    except: import pickle
                     file = open('%s/graph.pk'%fileName, 'rb')
                     graphN = pickle.load(file)
                     file.close()
@@ -2431,11 +2434,12 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                     else: print('graph non calculable: manque de fichiers connectivite.')
 
 
-            if graph and exploc == True : ## dtloc instationnaire
+            if graph and exploc : ## dtloc instationnaire
 
                 # Try to load graph from file
                 if os.access('%s/graph.pk'%fileName, os.R_OK):
-                    import cPickle as pickle
+                    try: import cPickle as pickle
+                    except: import pickle
                     file = open('%s/graph.pk'%fileName, 'rb')
                     graphN = pickle.load(file)
                     file.close()
@@ -2567,7 +2571,8 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
             if graph:
                 # Try to load graph from file
                 if os.access('%s/graph.pk'%fileName, os.R_OK):
-                    import cPickle as pickle
+                    try: import cPickle as pickle
+                    except: import pickle
                     file = open('%s/graph.pk'%fileName, 'rb')
                     graphN = pickle.load(file)
                     file.close()
@@ -2743,7 +2748,8 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
             if graph:
                 # Try to load graph
                 if os.access('%s/graph.pk'%directory, os.R_OK):
-                    import cPickle as pickle
+                    try: import cPickle as pickle
+                    except: import pickle
                     file = open('%s/graph.pk'%directory, 'rb')
                     graphN= pickle.load(file)
                     file.close()
@@ -2769,7 +2775,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
             #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
             FILE = '%s/%s%d.cgns'%(directory, fileName, rank)
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else: t= None
+            else: t = None
 
     else: # sequential run
         if split == 'single':

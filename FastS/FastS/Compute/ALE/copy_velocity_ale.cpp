@@ -153,12 +153,11 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
                               ipt_ind_dm_loc, 
                               ipt_topology_socket, ipt_ind_dm_socket );
 
-             if ( ipt_param_int[nd][ LALE ]==2)
+             if (ipt_param_int[nd][ LALE ] == 2)
              {
                copy_ventijk_( nd, ithread, ipt_param_int[nd], ipt_param_real[nd],
                             ipt_ind_dm_loc, ipt_ind_dm_socket,
-                            iptventi[nd], iptventj[nd], iptventk[nd], iptvent_vertex[nd] );  
-            
+                            iptventi[nd], iptventj[nd], iptventk[nd], iptvent_vertex[nd] );
              }
             nd_current++;
 

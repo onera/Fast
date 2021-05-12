@@ -460,7 +460,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
                _applyBC(infos_zones, hook1, nstep, ompmode, var=vars[0])    
 
-               FastC.switchPointers2__(zones_str,nitmax,nstep)
+               FastC.switchPointers2__(zones, nitmax, nstep)
                 
                # Ghostcell
                if nitmax%3 != 0: # Tous les schemas sauf constantinescu RK3

@@ -17,7 +17,6 @@
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 # include "fastS.h"
 # include "param_solver.h"
 # include "string.h"
@@ -49,7 +48,7 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
 
   //printf("nombre de zone a traiter= %d\n",nidom);
 
-  E_Float** iptro; E_Float** iptmut; E_Float** iptromoy;
+  E_Float** iptro; E_Float** iptmut; //E_Float** iptromoy;
   E_Float** ipti;  E_Float** iptj;  E_Float** iptk; E_Float** iptvol;
   E_Float** ipti_df; E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
   E_Float** ipt_param_real;
@@ -67,12 +66,11 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
   iptj_df           = ipti_df        + nidom;
   iptk_df           = iptj_df        + nidom;
   iptvol_df         = iptk_df        + nidom;
-  iptromoy          = iptvol_df      + nidom;
+  //iptromoy          = iptvol_df      + nidom;
 
   ipt_param_int     = new  E_Int*[nidom];
 
   vector<PyArrayObject*> hook;
-
 
   for (E_Int nd = 0; nd < nidom; nd++)
   { 

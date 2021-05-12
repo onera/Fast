@@ -64,7 +64,7 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
 
   //printf("nombre de zone a traiter= %d\n",nidom);
 
-  E_Float** iptro; E_Float** iptQ; E_Float** iptvort; //E_Float** iptenst;
+  E_Float** iptro; E_Float** iptQ; //E_Float** iptvort; E_Float** iptenst;
   E_Float** ipti;  E_Float** iptj;  E_Float** iptk; E_Float** iptvol;
   E_Float** ipti_df; E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
   E_Float** ipt_param_real; E_Float** iptvar; E_Float** iptgra;
@@ -82,7 +82,7 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
   iptj_df           = ipti_df        + nidom;
   iptk_df           = iptj_df        + nidom;
   iptvol_df         = iptk_df        + nidom;
-  iptvort           = iptvol_df      + nidom;
+  //iptvort           = iptvol_df      + nidom;
   //iptenst           = iptvort        + nidom;
  
   iptvar            = new  E_Float*[nidom*nivarMax];
@@ -224,7 +224,6 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
   RELEASESHAREDN( lokArray  , lok  );
   RELEASEHOOK(hook)
 
-Py_INCREF(Py_None);
-return Py_None;
-
+  Py_INCREF(Py_None);
+  return Py_None;
 }

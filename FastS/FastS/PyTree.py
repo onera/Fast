@@ -312,7 +312,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     dtloc = Internal.getValue(dtloc)                       # tab numpy
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
-    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
+    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it); FastC.FIRST_IT = f_it
 
     # allocation d espace dans param_int pour stockage info openmp
     FastC._build_omp(t) 
@@ -1819,11 +1819,11 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     if FastC.HOOK is None: 
             dtloc  = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
-            FastC.HOOK   = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
+            FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
             nitrun =0; nstep =1
-
             distrib_omp = 0
-            hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
+            hook1 = FastC.HOOK.copy()
+            hook1.update( fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
 
     else:  hook1  = FastC.HOOK
 
@@ -1831,7 +1831,7 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     pos_eff = numpy.empty(3, numpy.float64)
     pos_eff[0] = xyz_ref[0]; pos_eff[1] = xyz_ref[1]; pos_eff[2] = xyz_ref[2]
 
-    #print 'ompmode=', ompmode
+    #print('ompmode=', ompmode)
     fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, pos_eff, ompmode)
 
     return effort
