@@ -2870,3 +2870,38 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
     else: # sequential run
         FILE = directory+'/'+fileName+'.cgns'
         C.convertPyTree2File(t2, FILE)
+
+def convertpointwise2fast(FILEIN):
+    ## This script converst Pointwise meshes to a format that can be used for FastS
+    t  = C.convertFile2PyTree(FILEIN+".cgns")
+    ##A few comments: Assumes unspecified is empty!!
+    for fam in Internal.getNodesFromType(t,'Family_t'):
+        if(fam[0] == "Unspecified"):
+            Internal.rmNode(t,fam)
+
+    ## The code below was provided by Thomas Renaud. Thank you!_____________________                             
+    dicofambc={}                                                                   #|   
+    for fam in Internal.getNodesFromType(t,'Family_t'):                            #|       
+        fambc = Internal.getValue(Internal.getNodeFromType(fam,'FamilyBC_t'))      #|                 
+        dicofambc[fam[0]]=fambc                                                    #|         
+                                                                                   #|         
+                                                                                   #|           
+    for bc in Internal.getNodesFromType(t,'BC_t'):                                 #|             
+        if Internal.getValue(bc)=='FamilySpecified':                               #|                  
+            famname = Internal.getNodeFromType(bc,'FamilyName_t')                  #|                  
+            valbc = dicofambc[Internal.getValue(famname)]                          #|                    
+            Internal.setValue(bc,valbc)                                            #|                     
+            Internal.rmNode(bc,famname)                                            #|                     
+    Internal._rmNodesByType(t,'Family_t')                                          #|               
+    ##                                               _______________________________|
+
+    ## Remove further unneccesary information
+    ## output is bare bones for FastLBM
+    vars = ['Descriptor_t','FamilyName_t','DataClass_t','DimensionalUnits_t','GridLocation_t','FamilyName']
+    for v in vars:
+        for fam in Internal.getNodesFromType(t,v):
+            Internal.rmNode(t,fam)
+    
+    C.convertPyTree2File(t ,FILEIN+"_fast.cgns")
+    return t
+    
