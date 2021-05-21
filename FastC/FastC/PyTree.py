@@ -2905,3 +2905,43 @@ def convertpointwise2fast(FILEIN):
     C.convertPyTree2File(t ,FILEIN+"_fast.cgns")
     return t
     
+def change_name_BC_pointwise(t):
+    import sys
+    zones = Internal.getNodesFromType2(t, 'Zone_t')
+    for z in zones:
+        count=0
+        zonebc = Internal.getNodesFromType(t, 'BC_t')
+        for zbc in zonebc:
+            count +=1
+            bc_type=[]
+            tempname='';
+            for i in zbc[1]:
+                if sys.version_info[0] < 3:
+                    tempname=tempname+str(i)
+                else:
+                    tempname=tempname+str(i,'utf-8')
+            bc_type.append(tempname+str(count))  
+            print(bc_type[0])
+            Internal.setName(zbc, bc_type[0]);
+    return None
+
+def pointwise2D_2Fast(t):
+    import numpy as np
+    zones = Internal.getNodesFromType2(t, 'Zone_t')
+    for z in zones:
+        zonebc = Internal.getNodesFromType(z, 'BC_t')
+        for zbc in zonebc:
+            s = np.ones((3,2), dtype=np.int32)
+            for j in range(0,2):
+                for i in range(0,2):
+                    s[j][i]=zbc[2][0][1][j][i]
+            Internal.setValue(zbc[2][0],s)
+
+        zonegrid = Internal.getNodesFromType(z, 'GridCoordinates_t')
+        for zgrid in zonegrid:            
+            if Internal.getNodeFromName(z, 'CoordinateZ') is None:
+                coordz=Internal.copyNode(Internal.getNodeFromName(t, 'CoordinateX'))
+                Internal.setName(coordz, 'CoordinateZ')
+                Internal.setValue(coordz,np.zeros((np.shape(coordz[1])[0],np.shape(coordz[1])[1])))
+                Internal.addChild(zgrid, coordz, pos=-1)
+    return None
