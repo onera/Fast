@@ -687,6 +687,8 @@ def _buildOwnData(t, Padding):
     'time_step':1,
     'io_thread':0,
     'sgsmodel': ['smsm','Miles'],
+    'wallmodel': ['musker','power'],
+    'wallmodel_sample': 0,
     'ransmodel': ['SA','SA_comp','SA_diff'],
     'cache_blocking_I':0,
     'cache_blocking_J':0,
@@ -847,6 +849,8 @@ def _buildOwnData(t, Padding):
             model    = "Euler"
             ransmodel= 'SA'
             sgsmodel = "Miles"
+            wallmodel= "power"
+            wallmodel_sample= 4  # position du point (en maille )par rapport paroi pour calcul utau
             des      = "none"
             implicit_solver = "lussor"
             nbr_relax = 1
@@ -861,8 +865,8 @@ def _buildOwnData(t, Padding):
             filtrage        = "off"
             io_th      = 0
             cacheblckI = 2048
-            cacheblckJ = 2
-            cacheblckK = 7
+            cacheblckJ = 2         # modifier sir LES car 3 valeur minimal dans ce cas
+            cacheblckK = 7           
             dtnature   = "global"
             dtc        = -0.000001
             epsi_newton  = 0.1 
@@ -962,6 +966,10 @@ def _buildOwnData(t, Padding):
                 if a is not None: dtnature = Internal.getValue(a)                
                 a = Internal.getNodeFromName1(d, 'sgsmodel')
                 if a is not None: sgsmodel = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'wallmodel')
+                if a is not None: wallmodel = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'wallmodel_sample')
+                if a is not None: wallmodel_sample = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'time_step')
                 if a is not None: dtc = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'inj1_newton_tol')
@@ -1043,7 +1051,13 @@ def _buildOwnData(t, Padding):
 
             iles = 0
             if sgsmodel == 'smsm': iles = 1
+            if iles ==1:
+               cacheblckI = max(cacheblckI,4)
+               cacheblckJ = max(cacheblckJ,4)
+               cacheblckK = max(cacheblckK,4)
 
+            iwallmodel =1
+            if wallmodel == 'musker': iwallmodel = 0
 
             #par defaut valeur petite, car determine le niveau de parallelisme pour calcul residu en implicit et explict
             #si valeur grande, alors calcul sequentiel de cprdus1
@@ -1116,7 +1130,7 @@ def _buildOwnData(t, Padding):
             leveld=0
 
             
-            datap = numpy.empty(88, numpy.int32)
+            datap = numpy.empty(90, numpy.int32)
             datap[0:25]= -1
 
             #Structure ou polyhedric
@@ -1225,6 +1239,8 @@ def _buildOwnData(t, Padding):
             datap[85]   = senseurtype
             datap[86]   = neq_lbm
             datap[87]   = -1
+            datap[88]   = iwallmodel
+            datap[89]   = wallmodel_sample
 
             i += 1
          
@@ -1951,6 +1967,50 @@ def _BCcompact(t):
                 nb_cell = max([wrange[0][1] - wrange[0][0],1])* max([wrange[1][1] - wrange[1][0],1])*max([wrange[2][1] - wrange[2][0],1])
                 rand = numpy.zeros((1,nb_cell), dtype=numpy.float64)
                 Internal.createUniqueChild(bc, 'random_vec', 'DataArray_t', rand)
+
+            if btype == 'BCWallExchange':
+                sol   = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+                cellN = Internal.getNodeFromName1(sol, 'cellN')
+                if cellN == None:
+                  C._initVars(z, 'centers:cellN', 1.)
+                  cellN = Internal.getNodeFromName1(sol, 'cellN')[1]
+                  ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
+                  wrange  = ptrange[0][1]
+                  shift =1
+                  if '2couche' in bc[0]: shift=2
+                  if '3couche' in bc[0]: shift=3
+                  print ('nb couche loi de paroi',shift)
+                  
+
+                  #CL I
+                  if wrange[0][1] - wrange[0][0]==0:
+                     if wrange[0][1]==1: ijk_tg =2;              sens = 1
+                     else:               ijk_tg =wrange[0][1]-4; sens =-1
+
+                     for k in range(wrange[2][0]-1,wrange[2][1]):
+                        for j in range(wrange[1][0]-1,wrange[1][1]):
+                          for s in range(shift):
+                            cellN[ijk_tg+ s*sens, j , k]=2.
+
+                  #CL J
+                  if wrange[1][1] - wrange[1][0]==0:
+                     if wrange[1][1]==1: ijk_tg =2;              sens = 1
+                     else:               ijk_tg = wrange[1][1]-4;sens =-1
+
+                     for k in range(wrange[2][0]-1,wrange[2][1]):
+                        for i in range(wrange[0][0]-1,wrange[0][1]):
+                          for s in range(shift):
+                             cellN[i, ijk_tg+ s*sens  , k]=2.
+
+                  #CL K
+                  if numpy.shape(cellN)[2]!=1:
+                    if wrange[2][1] - wrange[2][0]==0:
+                       if wrange[2][1]==1: ijk_tg =2;               sens = 1
+                       else:               ijk_tg = wrange[2][1]-4; sens =-1
+                       for j in range(wrange[1][0]-1,wrange[1][1]):
+                         for i in range(wrange[0][0]-1,wrange[0][1]):
+                           for s in range(shift):
+                              cellN[i, j, ijk_tg+ s*sens ]=2.
               
             bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
             Nb_data = len(bcdata)

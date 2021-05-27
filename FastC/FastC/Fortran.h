@@ -36,15 +36,14 @@ extern "C"
   void copynuma_( E_Int*  ind_loop,  E_Int& ni,  E_Int& nj, E_Int& shift, E_Int& ific, E_Int& jfic, E_Int& kfic,
                  E_Float* target       , E_Float* src );
 
-  void cpmys_rij_( E_Int& ndo           , E_Int& ndimdx    , E_Int& ndimdx_mtr , E_Int& ndimdx_my  , 
-                   E_Int& neq           , E_Int& neq_my    , E_Int& neq_grad   , E_Int& neq_ij     , E_Int& neq_k  , E_Int& imtr       ,
-                   E_Int& lthermique    , E_Int& ltensrey  , 
-                   E_Int* ipt_nijk_mtr  , E_Int* ipt_nijk  , E_Int* ipt_nijk_my, E_Int* ipt_ijkv   ,
-                   E_Int* iptmoy_param  ,
+  void cpmys_rij_( E_Int& ndo           , E_Int& ndimdx_my , E_Int& neq_my    , E_Int& neq_grad   ,
+                   E_Int& lthermique    , E_Int& ltensrey  , E_Int& lcyl,
+                   E_Int* ipt_nijk_my   , E_Int* iptmoy_param  ,  E_Int* param_int,
                    E_Int* ipt_ind_dm_omp,
                    E_Float&  gamma      , E_Float&  cv         ,  E_Float&  prandtl  ,
                    E_Float* iptro       ,
                    E_Float* iptmut      , 
+                   E_Float* iptx        , E_Float* ipty        , E_Float* iptz           ,
                    E_Float* ipti        , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , 
                    E_Float* ipti_df     , E_Float* iptj_df     , E_Float* iptk_df        , E_Float* iptvol_df      , 
                    E_Float* iptromoy    );
