@@ -145,6 +145,8 @@
 #define SENSORTYPE   85
 #define NEQ_LBM      86
 #define SCHEDULER    87
+#define WM_FUNCTION  88
+#define WM_SAMPLING  89
 
 #define BC_TYPE	      0
 #define BC_IDIR       1

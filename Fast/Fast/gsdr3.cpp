@@ -377,7 +377,9 @@ E_Int K_FAST::gsdr3(
 
           if (param_int[nd][ITYPZONE] == 4)
            {
+               printf("avt unstrcu %d %d \n", nd,nidom);
 #include       "../../FastP/FastP/Compute/rhs.cpp"
+               printf("apr unstrcu %d %d \n", nd,nidom);
                shift_grad = shift_grad + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ]*3;
            }
           else{
@@ -386,7 +388,9 @@ E_Int K_FAST::gsdr3(
 #include       "../../FastLBM/FastLBM/Compute/rhs.cpp"
               }
               else{
+               printf("avt strcu %d %d \n", nd,nidom);
 #include       "../../FastS/FastS/Compute/rhs.cpp"
+               printf("apr strcu %d %d \n", nd,nidom);
               }
            }
           shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
@@ -399,9 +403,11 @@ E_Int K_FAST::gsdr3(
 	   
 
           } //Fin boucle sur zones pour calcul RHS
+          printf("RHS okay \n");
 #ifdef _WIN32
 #pragma omp barrier
 #endif
+          printf("RHS1 okay \n");
           //
           //timer pour omp "dynamique"
           //
@@ -412,7 +418,7 @@ E_Int K_FAST::gsdr3(
           timer_omp[ cpu_perthread] += rhs_end - rhs_begin;
           //if(ithread==1) printf(" time rhs= %g %g  %d %d  \n",timer_omp[ cpu_perthread], rhs_end - rhs_begin , cpu_perthread, nitcfg);
 
-#include   "../../FastS/FastS/Compute/lhs.cpp"
+//#include   "../../FastS/FastS/Compute/lhs.cpp"
           //
           //finalisation timer pour omp "dynamique"
           //
@@ -467,8 +473,10 @@ E_Float tmps;
     
   if (param_int[0][EXPLOC] == 0)
     {
+      printf("avt rac \n");
       K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
                                    linelets_int, linelets_real, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
+      printf("apr rac \n");
     }//test exploc==0
 
  
@@ -657,13 +665,15 @@ E_Int lrhs=0; E_Int lcorner=0;
                 {
                   if(param_int[nd][IFLOW] != 4)
                     {
+      printf("avt bc struc %d \n",nd);
 	              E_Int ierr = K_FASTS::BCzone(nd, lrhs , nitcfg_stk, lcorner, param_int[nd], param_real[nd], npass,
                                                    ipt_ind_dm_loc, ipt_ind_dm_thread, 
                                                    ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
                                                    iptro_CL[nd] , ipti[nd]            , iptj[nd]    , iptk[nd]       ,
                                                    iptx[nd]     , ipty[nd]            , iptz[nd]    ,
-				                   iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd]);
+				                   iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd], iptmut[nd]);
 
+      printf("apr bc struc %d \n",nd);
 	              correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptro_CL[nd]);
                     }
                    else
@@ -679,12 +689,14 @@ E_Int lrhs=0; E_Int lcorner=0;
                else
                 {
                      E_Int lrhs=0; E_Int lcorner=0;
+      printf("avt bc unstruc %d \n",nd);
                      K_FASTP::BCzone( nd, ithread, lrhs, lcorner,
                                       param_int[nd], param_real[nd],
                                       npass, temps,
                                       ipt_ind_CL119  , 
                                       ipt_ng_pe[nd]          , iptro_CL[nd]   ,
                                       ipti[nd] , iptventi[nd], iptx[nd] , ipty[nd] , iptz[nd] );
+      printf("apr bc unstruc %d \n",nd);
                 }
 	    }//autorisation
 
