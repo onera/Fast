@@ -19,6 +19,8 @@ c.....Metrique
         qm2 = qm
         qp2 = qp
 
+        !if(k.eq.10.and.j.eq.2.and.l-lij.eq.10) write(*,*)'slp',qm2,qp2
+
         vslp = v3
 #include  "FastS/Compute/Slope/o3_slope_var.for"
         qm3 = qm

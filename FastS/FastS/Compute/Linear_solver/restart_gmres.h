@@ -75,7 +75,7 @@ lhs_beg = omp_get_wtime();
                            ipt_ind_CL_thread      , ipt_ind_CL119          , ipt_ind_CLgmres, ipt_shift_lu,
                            krylov_in              , ipti[nd]               , iptj[nd]       , iptk[nd]          ,
                            iptx[nd]               , ipty[nd]               , iptz[nd]       ,
-                           iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd]);
+                           iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd], iptmut[nd]);
                  
                          if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu ,  krylov_in);
 
@@ -542,7 +542,7 @@ lhs_beg = omp_get_wtime();
                    ipt_ind_CL_thread      , ipt_ind_CL119          , ipt_ind_CLgmres, ipt_shift_lu,
                    krylov_in              , ipti[nd]               , iptj[nd]       , iptk[nd]          ,
                    iptx[nd]               , ipty[nd]               , iptz[nd]       ,
-		    iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd]);
+		    iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd], iptmut[nd]);
                  
                    if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu ,  krylov_in);
 

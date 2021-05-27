@@ -143,6 +143,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
               timelevel_target = int(dtloc[4])
               #t0=Time.time()
               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
+              #print('t_fillGhost = ',  Time.time() - t0 ,'nstep =', nstep)
               # Add unsteady Chimera transfers here
               if ucData is not None:
                 VARS = ['Density_P1', 'VelocityX_P1', 'VelocityY_P1', 'VelocityZ_P1', 'Temperature_P1']
@@ -155,7 +156,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                 dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
                 dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
                 time, procDict, interpInDnrFrame, tfreq) = ucData
-                if nstep == nitmax or nstep%tfreq == 0:
+                if nstep == 0 or nstep == nitmax or nstep%tfreq == 0:
+                    #t0=Time.time()
                     Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
                                    dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                                    dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
@@ -163,6 +165,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                                    time=time, absFrame=True,
                                    procDict=procDict, cellNName='cellN#Motion', 
                                    interpInDnrFrame=interpInDnrFrame)
+                    #print('t_transfert = ',  Time.time() - t0 ,'nstep =', nstep)
               #print('t_transferts = %f'%(Time.time() - t0)
 
       dtloc[3] +=1    #time_level_motion
@@ -312,11 +315,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     dtloc = Internal.getValue(dtloc)                       # tab numpy
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
-    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it); FastC.FIRST_IT = f_it
+    if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
 
     # allocation d espace dans param_int pour stockage info openmp
     FastC._build_omp(t) 
-
 
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
@@ -816,7 +818,6 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
        #apply BC
        #t0=timeit.default_timer()
        if exploc != 1:
-       #if rk != 3 and exploc != 2:
           _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        #t1=timeit.default_timer()
        #print("Time BC",(t1-t0))
@@ -847,6 +848,14 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
     varmy = ['MomentumX','MomentumY','MomentumZ','Density','Pressure','Pressure^2','ViscosityEddy','rou^2','rov^2','row^2','rouv','rouw','rovw']
     lgrad = 0
     for var in vars:
+      if var == 'cylindrique':
+        varmy[1]='Momentum_t'
+        varmy[2]='Momentum_r'
+        varmy[8]='roU_t^2'
+        varmy[9]='roU_r^2'
+        varmy[10]='rouU_t'
+        varmy[11]='rouU_r'
+        varmy[12]='roU_tU_r'
       if var == 'thermique':
         varmy += ['Temperature','T^2','rouT','rovT','rowT','Eps_T' ]
         lgrad =  1
@@ -1819,11 +1828,11 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     if FastC.HOOK is None: 
             dtloc  = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
-            FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
+            FastC.HOOK   = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
             nitrun =0; nstep =1
+
             distrib_omp = 0
-            hook1 = FastC.HOOK.copy()
-            hook1.update( fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
+            hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
 
     else:  hook1  = FastC.HOOK
 
@@ -1831,7 +1840,7 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     pos_eff = numpy.empty(3, numpy.float64)
     pos_eff[0] = xyz_ref[0]; pos_eff[1] = xyz_ref[1]; pos_eff[2] = xyz_ref[2]
 
-    #print('ompmode=', ompmode)
+    #print 'ompmode=', ompmode
     fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, pos_eff, ompmode)
 
     return effort

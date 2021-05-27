@@ -321,6 +321,14 @@ extern "C"
    void     bvbs_wall_inviscid_d_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
                                    E_Float* iptventi  , E_Float* iptijk  , E_Float* iptro, E_Float* iptrod);
 
+   void     bvbs_wallmodel_(   E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Float& c4   , E_Float& c5, E_Float& c6, 
+                               E_Int* param_int , E_Int* ind_loop  ,
+                               E_Float* iptventi, E_Float* iptijk  , E_Float* iptro, E_Float* xmut);
+
+   void     bvbs_wallexchange_(   E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Float& c4   , E_Float& c5, E_Float& c6, 
+                               E_Int* param_int , E_Float* param_real, E_Int* ind_loop  ,
+                               E_Float* iptventi, E_Float* iptijk  , E_Float* iptro, E_Float* xmut);
+
    void     bvbs_wall_viscous_adia_(   E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
                                        E_Float* iptventi, E_Float* iptijk  , E_Float* iptro);
    void     bvbs_wall_viscous_adia_d_( E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
@@ -465,19 +473,6 @@ extern "C"
    void     dpssiter_(  E_Int& nitrun , E_Int& neq , E_Int& nssiter, E_Int& iflw, E_Int& iles, E_Int& lft, char*, E_Int& size_name, E_Float* rdm, E_Float* cvg_ptr);
 
    void     conv2pytree_(E_Float* cvg_pt, E_Int& nitrun, E_Int& neq, E_Int* LastRec, char* name, E_Int& size_name, E_Int& lft, E_Int& nrec, E_Int& nd, E_Int* Itnum, E_Float* Res_L2, E_Float* Res_oo);
-
-  void cpmys_rij_( E_Int& ndo           , E_Int& ndimdx    , E_Int& ndimdx_mtr , E_Int& ndimdx_my  , 
-                   E_Int& neq           , E_Int& neq_my    , E_Int& neq_grad   , E_Int& neq_ij     , E_Int& neq_k  , E_Int& imtr       ,
-                   E_Int& lthermique    , E_Int& ltensrey  , 
-                   E_Int* ipt_nijk_mtr  , E_Int* ipt_nijk  , E_Int* ipt_nijk_my, E_Int* ipt_ijkv   ,
-                   E_Int* iptmoy_param  ,
-                   E_Int* ipt_ind_dm_omp,
-                   E_Float&  gamma      , E_Float&  cv         ,  E_Float&  prandtl  ,
-                   E_Float* iptro       ,
-                   E_Float* iptmut      , 
-                   E_Float* ipti        , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , 
-                   E_Float* ipti_df     , E_Float* iptj_df     , E_Float* iptk_df        , E_Float* iptvol_df      , 
-                   E_Float* iptromoy    );
 
   void bceffort_( E_Int& ndo        ,  E_Int& ithread     ,  E_Int* param_int, E_Float* param_real,  E_Int* param_int_eff,
                   E_Int* ind_loop   ,  E_Float* effort_omp,  E_Float* xyz_ref,

@@ -51,7 +51,8 @@ C Var loc
       if(ind_loop(5).gt.ind_loop(6)) return
 
       iflow_loc = param_int(IFLOW)
-      if(iflow_loc.eq.2) iflow_loc = 1
+      if(iflow_loc.ge.2) iflow_loc = 1
+      !if(iflow_loc.eq.2) iflow_loc = 1
 
       ale = min(param_int(LALE),1)
 

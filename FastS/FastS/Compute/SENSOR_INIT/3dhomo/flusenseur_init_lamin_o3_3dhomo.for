@@ -40,6 +40,7 @@ c***********************************************************************
       real souszero
       parameter(souszero=-1e-12)
 
+
 #include "FastS/param_solver.h"
 
       INTEGER_E ndom, ithread, nptpsi,
@@ -90,6 +91,8 @@ C Var loc
 #include "FastS/formule_mtr_param.h"
 
       !limiteur 'minmod'
+
+
 
 CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 
@@ -171,8 +174,6 @@ c      c7     = c4/c5
       wig_i = v1
       wig_j = v2
       wig_k = v3
-
-
 
 #include "FastS/Compute/pragma_align.for"
 

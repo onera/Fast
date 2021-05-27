@@ -264,7 +264,7 @@ namespace K_FASTS
                E_Int* ipt_ind_dm, E_Int* ipt_ind_dm_thread,
                E_Int* ipt_ind_CL  , E_Int* ipt_ind_CL119, E_Int* ipt_ind_CLgmres, E_Int* ishift_lu,
                E_Float*   iptrop  , E_Float*   ipti     , E_Float*  iptj        , E_Float* iptk   , E_Float* iptx, E_Float* ipty, E_Float* iptz,
-               E_Float* iptventi  , E_Float* iptventj   , E_Float* iptventk, E_Float* iptro_gmres);
+               E_Float* iptventi  , E_Float* iptventj   , E_Float* iptventk, E_Float* iptro_gmres, E_Float* iptmut);
 
   E_Int BCzone_d(E_Int& nd, E_Int& lrhs,  E_Int& nstep,E_Int& lcorner,
                E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int& npass ,
@@ -298,7 +298,7 @@ void dtlocal2para_c(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int, E_
 void BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int,
 		    E_Float*& param_real, E_Int**& param_intt, E_Float**& param_realt,
 		    E_Float*& iptdrodm,  E_Float*& iptdrodmcoe, E_Int* ipt_ind_CL, E_Float** ipti, E_Float** iptj, E_Float** iptk,
-		    E_Float** iptx, E_Float** ipty, E_Float** iptz, E_Float** iptventi, E_Float** iptventj, E_Float** iptventk, 
+		    E_Float** iptx, E_Float** ipty, E_Float** iptz, E_Float** iptventi, E_Float** iptventj, E_Float** iptventk,  E_Float** iptmut,
 		    E_Float*& iptstk, E_Float*& iptdrodmstk,
 		    E_Float*& iptcstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom);
 

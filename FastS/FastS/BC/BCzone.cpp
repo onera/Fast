@@ -45,7 +45,7 @@ E_Int K_FASTS::BCzone(
     E_Int& nd, E_Int& lrhs, E_Int& nstep, E_Int& lcorner,
     E_Int* param_int, E_Float* param_real, E_Int& npass, E_Int* ipt_ind_dm, E_Int* ipt_ind_dm_thread, E_Int* ipt_ind_CL,
     E_Int* ipt_ind_CL119, E_Int* ipt_ind_CLgmres, E_Int* ishift_lu, E_Float* iptrop, E_Float* ipti, E_Float* iptj, E_Float* iptk, E_Float* iptx,
-    E_Float* ipty, E_Float* iptz, E_Float* iptventi, E_Float* iptventj, E_Float* iptventk, E_Float* iptrop_gmres ) {
+    E_Float* ipty, E_Float* iptz, E_Float* iptventi, E_Float* iptventj, E_Float* iptventk, E_Float* iptrop_gmres, E_Float* iptmut  ) {
 
     E_Int err = 1;
     E_Int neq_mtr;
@@ -91,13 +91,17 @@ E_Int K_FASTS::BCzone(
                                (   (  param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7 ) 
 				 ||   param_int[pt_bc + BC_TYPE] == 12 
                                  ||   param_int[pt_bc + BC_TYPE] == 18 
+                                 //||   param_int[pt_bc + BC_TYPE] == 30 
+                                 //||   param_int[pt_bc + BC_TYPE] == 31 
                                )   
                              ) 
                            {
                              lskip[ipara] = 0;
                              lcorner      = 0;
                              //if (  (param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7) ||  param_int[pt_bc + BC_TYPE] == 12) ificmax[ipara]=param_int[LU_MATCH];
-                             if (  (param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7) ||  param_int[pt_bc + BC_TYPE] == 12) ificmax[ipara]=1;
+                             if (  (param_int[pt_bc + BC_TYPE] >= 3 && param_int[pt_bc + BC_TYPE] <= 7) ||  param_int[pt_bc + BC_TYPE] == 12 
+                                  //|| param_int[pt_bc + BC_TYPE] == 30 || param_int[pt_bc + BC_TYPE] == 31
+                                   ) ificmax[ipara]=1;
                            }
 
 	}
@@ -296,37 +300,26 @@ E_Int K_FASTS::BCzone(
                                        bc_type == 14 || bc_type == 16 || bc_type == 17 || bc_type == 20 || bc_type == 21 ) )
                     bc_type = 0;  // si rhs, on extrapole sauf si wall
 
+                // MUSCL
+                E_Float c4, c5, c6;
+                c4 = 5. / 6.; c5 = 2. / 6.; c6 = -1. / 6.;
+
                 if ( bc_type == 0 ) {
                     bvbs_extrapolate_( idir, lrhs_loc, eq_deb, param_int, ipt_ind_CL119, param_real[RONUTILDEINF], iptrop );
 
                 } else if ( bc_type == 1) {
                     DEFAULT_STATE( "BCFarfield" )
-                    // MUSCL
-                    E_Float c4, c5, c6;
-                    c4 = 5. / 6.;
-                    c5 = 2. / 6.;
-                    c6 = -1. / 6.;
 
                     bvbs_farfield_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                     iptijk, iptrop, ipt_data );
 
                 } else if ( bc_type == 10 ) {
                     DEFAULT_STATE( "BCOutflow" )
-                    // MUSCL
-                    E_Float c4, c5, c6;
-                    c4 =  5. / 6.;
-                    c5 =  2. / 6.;
-                    c6 = -1. / 6.;
 
                     bvbs_outflow_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                    iptijk, iptrop, ipt_data );
                 } else if ( bc_type == 13 ) {
                     DEFAULT_STATE( "BCInflow" )
-                    // MUSCL
-                    E_Float c4, c5, c6;
-                    c4 = 5. / 6.;
-                    c5 = 2. / 6.;
-                    c6 = -1. / 6.;
 
                     if ( nbdata ==0 || ( nbdata !=0 && iptsize_data[0] <=6) )
                      {
@@ -353,11 +346,6 @@ E_Int K_FASTS::BCzone(
 
                 } else if ( bc_type == 19 ) {//inflow Lund
                     DEFAULT_STATE( "BCInflow" )
-                    // MUSCL
-                    E_Float c4, c5, c6;
-                    c4 = 5. / 6.;
-                    c5 = 2. / 6.;
-                    c6 = -1. / 6.;
 
 #                   include "BC/INCREMENT_BC.h"
 
@@ -374,11 +362,6 @@ E_Int K_FASTS::BCzone(
                 // Added romain Paris           /////////////////////////////////////////////////////
               } else if ( bc_type == 20 ) {//inj MFR
                    DEFAULT_STATE( "BCInjMFR" )
-                   // MUSCL
-                   E_Float c4, c5, c6;
-                   c4 = 5. / 6.;
-                   c5 = 2. / 6.;
-                   c6 = -1. / 6.;
 
 #                   include "BC/INCREMENT_BC.h"
 
@@ -396,11 +379,6 @@ E_Int K_FASTS::BCzone(
                                         iptsize_data[0], inc_bc );
                 } else if ( bc_type == 21 ) {//out MFR
                      DEFAULT_STATE( "BCOutMFR" )
-                     // MUSCL
-                     E_Float c4, c5, c6;
-                     c4 = 5. / 6.;
-                     c5 = 2. / 6.;
-                     c6 = -1. / 6.;
 
 #                   include "BC/INCREMENT_BC.h"
 
@@ -414,11 +392,6 @@ E_Int K_FASTS::BCzone(
                 ////////////////////////////////////////////////////////////////////////////
                 } else if ( bc_type == 2 ) {
                     DEFAULT_STATE( "BCSupersonic" )
-                    // MUSCL
-                    E_Float c4, c5, c6;
-                    c4 = 5. / 6.;
-                    c5 = 2. / 6.;
-                    c6 = -1. / 6.;
 
                     if ( nbdata ==0 || ( nbdata !=0 && iptsize_data[0] <=6) )
                      {
@@ -443,16 +416,31 @@ E_Int K_FASTS::BCzone(
                                          ipt_data6, iptsize_data[0], inc_bc, size_work );
                      }
 
-                } else if ( bc_type == 3 || ( bc_type == 4 && param_int[IFLOW] == 1 ) || bc_type == 5 || bc_type == 30 || bc_type == 31) {
+                //} else if ( bc_type == 3 || ( bc_type == 4 && param_int[IFLOW] == 1 ) || bc_type == 5  || bc_type == 31) {
+                } else if ( bc_type == 3 || ( bc_type == 4 && param_int[IFLOW] == 1 ) || bc_type == 5 ) {
                     E_Float mobile_coef            = 1.;
                     if ( nbdata != 0 ) mobile_coef = ipt_data[0];
 
                     bvbs_wall_inviscid_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, ipventijk, iptijk,
                                          iptrop );
+
+                } else if ( bc_type == 31) {
+                    E_Float mobile_coef            = 1.;
+                    if ( nbdata != 0 ) mobile_coef = ipt_data[0];
+
+                    bvbs_wallexchange_( idir, lrhs_loc, neq_mtr, mobile_coef, c4, c5, c6, param_int, param_real, ipt_ind_CL, ipventijk, iptijk, iptrop, iptmut );
+
+                } else if ( bc_type == 30) {
+                    E_Float mobile_coef            = 1.;
+                    if ( nbdata != 0 ) mobile_coef = ipt_data[0];
+
+                    bvbs_wallmodel_( idir, lrhs_loc, neq_mtr, mobile_coef, c4, c5, c6, param_int, ipt_ind_CL, ipventijk, iptijk, iptrop, iptmut );
+
                 } else if ( ( bc_type == 6 || bc_type == 4 ) && param_int[IFLOW] > 1 ) {
                     E_Float mobile_coef            = 1.;
                     if ( nbdata != 0 ) mobile_coef = ipt_data[0];
 
+                    //printf("ADIA \n");
                     bvbs_wall_viscous_adia_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, ipventijk, iptijk, iptrop );
 
                 } else if ( bc_type == 12 && param_int[IFLOW] > 1 ) {
@@ -491,11 +479,6 @@ E_Int K_FASTS::BCzone(
                     }*/
 
                 else if ( bc_type == 16 ) {
-                    // MUSCL
-                    E_Float c4, c5, c6;
-                    c4 = 5. / 6.;
-                    c5 = 2. / 6.;
-                    c6 = -1. / 6.;
 
 #                   include "BC/INCREMENT_BC.h"
                     
@@ -503,11 +486,6 @@ E_Int K_FASTS::BCzone(
                                    iptijk, iptrop, ipt_data, iptsize_data[0], inc_bc );
 
                 } else if ( bc_type == 17 && lrhs_loc == 0 ) {
-                    // MUSCL
-                    E_Float c4, c5, c6;
-                    c4 = 5. / 6.;
-                    c5 = 2. / 6.;
-                    c6 = -1. / 6.;
 
 #                   include "BC/INCREMENT_BC.h"
 

@@ -167,7 +167,7 @@ c       endif
                  
 
 
-                if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
+                 if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
                 
                    if(param_int(ITYPCP).le.1) then 
                      call invist(ndo, param_int, param_real, ind_coe,
@@ -178,14 +178,15 @@ c       endif
                    endif
 
 
-                !LES selective mixed scale model
-                else
+                 !LES selective mixed scale model
+                 else
                    neq_rot = 3
                    depth   = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
                    call lesvist(ndo, param_int,param_real,neq_rot,depth,
+     &                          ithread, nitrun,
      &                          ind_grad, ind_coe, ind_dm_zone,
      &                          xmut, rop_ssiter, ti,tj,tk, vol, rot)
-                endif
+                 endif
 
                 elseif(param_int(IFLOW).eq.3) then
 
@@ -252,9 +253,13 @@ c       endif
 
                 !LES selective mixed scale model
                 else
+#include          "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+                   flag_wait = 1
+
                    neq_rot = 3
                    depth   = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
                    call lesvist(ndo, param_int,param_real,neq_rot,depth,
+     &                          ithread,
      &                          ind_grad, ind_coe, ind_dm_zone,
      &                          xmut, rop_ssiter, ti,tj,tk, vol, rot)
                 endif
@@ -455,7 +460,7 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
            if(param_int(NEQ).eq.5.and.nb_bc.ne.0) then
               call wall_model_flux(ndo,ithread, param_int, param_real,
      &                  ind_dm_zone, ind_sdm, nitcfg, nitrun, cycl,
-     &                  psi,wig,stat_wig, rop_ssiter, drodm,
+     &                  psi,wig,stat_wig, rop_ssiter, drodm,x,y,z,
      &                  ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
      &                  venti, ventj, ventk, xmut)
            endif

@@ -93,7 +93,7 @@ C var loc
      &                   ic,jc,kc,kc_vent,
      &                   ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale)
 
-      c_ale = c_ale*mobile_coef
+      !c_ale = c_ale*mobile_coef
 
 
       !correction monoindice

@@ -318,7 +318,7 @@ c......determine la forme des tableaux metriques en fonction de la nature du dom
                do  i = ind_loop(1), ind_loop(2)
                   l    = inddm( i , j,  ind_loop(5)   )
                   lmtr = indmtr(i , j,  ind_loop(5)   )
-                  ldp  = indven(i , j,  ind_loop(6)   )
+                  ldp  = indven(i , j,  ind_loop(5)   )
                   l1   = l +   inck
                   li   = indbci(i,  j )
 #include        "FastS/BC/BCInjMFR_firstrank.for"
@@ -342,7 +342,7 @@ c......determine la forme des tableaux metriques en fonction de la nature du dom
                do  i = ind_loop(1), ind_loop(2)
                   l    = inddm( i , j,  ind_loop(5)   )
                   lmtr = indmtr(i , j,  ind_loop(5)   )
-                  ldp  = indven(i , j,  ind_loop(6)   )
+                  ldp  = indven(i , j,  ind_loop(5)   )
                   l1   = l +   inck
                   li   = indbci(i,  j )
 #include        "FastS/BC/BCInjMFR_firstrank_SA.for"

@@ -32,6 +32,7 @@ E_Float time_init;
 //E_Float time_COM=0.0;
 //E_Float time_init;
 
+
 E_Int K_FASTS::gsdr3( 
   E_Int**& param_int  , E_Float**& param_real ,
   E_Int& nidom        , E_Int& nitrun         , E_Int&  nitcfg    , E_Int&  nitcfg_last, E_Int&  nssiter, E_Int& it_target , E_Int&  first_it,
@@ -669,7 +670,7 @@ E_Int lrhs=0; E_Int lcorner=0;
 				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
 				   iptro_CL[nd] , ipti[nd]            , iptj[nd]    , iptk[nd]       ,
 				   iptx[nd]     , ipty[nd]            , iptz[nd]    ,
-				   iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd]);
+				   iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd], iptmut[nd]);
 
 	       correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptro_CL[nd]);
 	    }//autorisation

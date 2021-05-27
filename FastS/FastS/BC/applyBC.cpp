@@ -56,12 +56,12 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   E_Float** ipt_param_real  ;
   E_Float** iptx;       E_Float** ipty;     E_Float** iptz;    E_Float** iptro;
   E_Float** ipti;       E_Float** iptj;     E_Float** iptk;    E_Float** iptvol;
-  E_Float** iptventi;   E_Float** iptventj; E_Float** iptventk;
+  E_Float** iptventi;   E_Float** iptventj; E_Float** iptventk; E_Float** iptmut;
 
   ipt_param_int     = new E_Int*[nidom*2];
   ipt_ind_dm        = ipt_param_int   + nidom;
 
-  iptx              = new E_Float*[nidom*12];
+  iptx              = new E_Float*[nidom*13];
   ipty              = iptx            + nidom;
   iptz              = ipty            + nidom;
   iptro             = iptz            + nidom;
@@ -73,6 +73,7 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   iptventj          = iptventi        + nidom;
   iptventk          = iptventj        + nidom;
   ipt_param_real    = iptventk        + nidom;
+  iptmut            = ipt_param_real  + nidom;
   
 
   /*------*/
@@ -108,6 +109,13 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
     sol_center   = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
     t            = K_PYTREE::getNodeFromName1(sol_center, var);
     iptro[nd]    = K_PYTREE::getValueAF(t, hook);
+
+    //Pointeur visqeux: mut, dist, zgris sont en acces compact
+    if(ipt_param_int[nd][ IFLOW ] > 1)
+      { t          = K_PYTREE::getNodeFromName1(sol_center, "ViscosityEddy");
+        iptmut[nd] = K_PYTREE::getValueAF(t, hook);
+      }
+    else {iptmut[nd] = iptro[nd];}
 
     /*-------------------------------------*/
     /* Extraction (x,y,z): pour forcage spatia */
@@ -248,7 +256,7 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
                                      ipt_ind_CL    , ipt_ind_CL119   , ipt_ind_CLgmres, ipt_shift_lu,
                                      iptro[nd]     , ipti[nd]        , iptj[nd]       , iptk[nd]    ,
                                      iptx[nd]      , ipty[nd]        , iptz[nd]     ,
-                                     iptventi[nd]  , iptventj[nd]    , iptventk[nd], iptro[nd]);
+                                     iptventi[nd]  , iptventj[nd]    , iptventk[nd], iptro[nd], iptmut[nd]);
 
 		correct_coins_(nd,  ipt_param_int[nd], ipt_ind_dm_thread , iptro[nd]);
 	    } // autorisation

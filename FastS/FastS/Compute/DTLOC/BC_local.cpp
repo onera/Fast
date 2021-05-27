@@ -31,7 +31,7 @@ using namespace K_FLD;
 void K_FASTS::BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& ipt_param_int,
 			     E_Float*& ipt_param_real, E_Int**& param_intt, E_Float**& param_realt,
 			     E_Float*& iptdrodm,  E_Float*& iptcoe, E_Int* ipt_ind_CL, E_Float** ipti, E_Float** iptj, E_Float** iptk,
-			     E_Float** iptx, E_Float** ipty, E_Float** iptz, E_Float** iptventi, E_Float** iptventj, E_Float** iptventk,
+			     E_Float** iptx, E_Float** ipty, E_Float** iptz, E_Float** iptventi, E_Float** iptventj, E_Float** iptventk, E_Float** iptmut, 
 			     E_Float*& iptstk, E_Float*& iptdrodmstk, E_Float*& iptcstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom)
 {
 
@@ -171,7 +171,7 @@ void K_FASTS::BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& ipt_param_
 				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
 				   iptro_p1[NoD] , ipti[NoD]            , iptj[NoD]    , iptk[NoD]       ,
 				   iptx[NoD]     , ipty[NoD]            , iptz[NoD]    ,
-				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro_p1[NoD]);
+				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro_p1[NoD], iptmut[NoD]);
 
 
 
@@ -196,7 +196,7 @@ void K_FASTS::BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& ipt_param_
 				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
 				   iptro[NoD] , ipti[NoD]            , iptj[NoD]    , iptk[NoD]       ,
 				   iptx[NoD]     , ipty[NoD]            , iptz[NoD]    ,
-				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro[NoD]);
+				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro[NoD], iptmut[NoD]);
 
 
 		  }
@@ -257,7 +257,7 @@ void K_FASTS::BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& ipt_param_
 				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
 				   iptro_p1[NoD] , ipti[NoD]            , iptj[NoD]    , iptk[NoD]       ,
 				   iptx[NoD]     , ipty[NoD]            , iptz[NoD]    ,
-				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro_p1[NoD]);
+				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro_p1[NoD], iptmut[NoD]);
 
 
 
@@ -282,7 +282,7 @@ void K_FASTS::BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& ipt_param_
 				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
 				   iptro[NoD] , ipti[NoD]            , iptj[NoD]    , iptk[NoD]       ,
 				   iptx[NoD]     , ipty[NoD]            , iptz[NoD]    ,
-				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro[NoD]);
+				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro[NoD], iptmut[NoD]);
 
 		    
 		  }
@@ -306,7 +306,7 @@ void K_FASTS::BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& ipt_param_
 				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
 				   iptro_p1[NoD] , ipti[NoD]            , iptj[NoD]    , iptk[NoD]       ,
 				   iptx[NoD]     , ipty[NoD]            , iptz[NoD]    ,
-				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro_p1[NoD]);
+				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro_p1[NoD], iptmut[NoD]);
 
 		  }
 
@@ -329,7 +329,7 @@ void K_FASTS::BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& ipt_param_
 				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
 				   iptro_p1[NoD] , ipti[NoD]            , iptj[NoD]    , iptk[NoD]       ,
 				   iptx[NoD]     , ipty[NoD]            , iptz[NoD]    ,
-				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro_p1[NoD]);
+				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro_p1[NoD], iptmut[NoD]);
 
 
 		  }
@@ -352,23 +352,16 @@ void K_FASTS::BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& ipt_param_
 				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
 				   iptro[NoD] , ipti[NoD]            , iptj[NoD]    , iptk[NoD]       ,
 				   iptx[NoD]     , ipty[NoD]            , iptz[NoD]    ,
-				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro[NoD]);
-
-
-
-		       
+				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro[NoD], iptmut[NoD]);
 		  }
 
 		if (nstep%cycle == cycle-1)
  
 		  {
-
-
 		    E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
 		    E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
 		    E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
 		    E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
-
 
 		    /// condtions aux limites partielles (cas des IBC)
 		    E_Int ierr = BCzone(NoD, lrhs , nstep, lcorner, param_intt[NoD], param_realt[NoD], npass,
@@ -376,16 +369,8 @@ void K_FASTS::BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& ipt_param_
 				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
 				   iptro_p1[NoD] , ipti[NoD]            , iptj[NoD]    , iptk[NoD]       ,
 				   iptx[NoD]     , ipty[NoD]            , iptz[NoD]    ,
-				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro[NoD]);
-
-
-
-		       
+				   iptventi[NoD] , iptventj[NoD]        , iptventk[NoD], iptro[NoD], iptmut[NoD]);
 		  }
-
-
-
-
 
 	      }
  

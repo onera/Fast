@@ -5,7 +5,7 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine wall_model_flux(ndom, ithread, param_int, param_real, 
      &                  ind_dm_zone, ind_sdm, nitcfg, nitrun, cycl,
-     &                  psi, wig, stat_wig, rop, drodm,
+     &                  psi, wig, stat_wig, rop, drodm, x,y,z,
      &                  ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
      &                  venti, ventj, ventk, xmut)
 c***********************************************************************
@@ -31,7 +31,7 @@ c***********************************************************************
       INTEGER_E ndom,ithread,ind_dm_zone(6),ind_sdm(6), param_int(0:*)
 
       REAL_E rop(*),drodm(*),xmut(*), ti(*),tj(*),tk(*),vol(*),
-     & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*),
+     & venti(*),ventj(*),ventk(*), wig(*),stat_wig(*),x(*),y(*),z(*),
      & ti_df(*),tj_df(*),tk_df(*),vol_df(*), psi(*), param_real(0:*)
 
 C     Var loc
@@ -51,10 +51,13 @@ C     Var loc
 
         bc_type= param_int(pt_bc + BC_TYPE)
 
-        !write(*,*)'ndf',bc_type,ndf
+        !write(*,*)'ndf',bc_type,ndf,ndom, nb_bc-1
 
         !on corrige wall et symetrie pour le moment
-        if(bc_type.ne.BCWALLMODEL.and.bc_type.ne.BCWALLEXCHANGE) goto 100
+        !if(bc_type.ne.BCWALLMODEL.and.bc_type.ne.BCWALLEXCHANGE) goto 100
+        if(bc_type.ne.BCWALLMODEL) goto 100
+        !if(bc_type.ne.BCWALLEXCHANGE) goto 100
+        !write(*,*)'ndf',bc_type,ndf,ndom, nb_bc-1
 
         idir   = param_int( pt_bc + BC_IDIR)
         nbdata = param_int( pt_bc + BC_NBDATA)
@@ -90,6 +93,10 @@ C     Var loc
           ind_CL(6)=ind_CL(5)
         endif
 
+         cycl=param_int(NSSITER)/param_int(LEVEL)
+c        write(*,*)'avt correction',ndom,nitcfg
+c     & , param_int(LEVEL)
+
         ! ---- Correction of the boundary face fluxes
 
         if(param_int(KFLUDOM).eq.2.and.nitcfg.eq.1 .and.
@@ -100,7 +107,7 @@ C     Var loc
      &                        ind_CL,
      &                        rop, drodm  , wig,
      &                        venti, ventj, ventk,
-     &                        ti,tj,tk,vol)
+     &                        ti,tj,tk,vol, xmut)
 
         elseif(param_int(KFLUDOM).eq.2.and.nitcfg.gt.1 .and.
      & param_int(EXPLOC) .eq. 0 ) then
@@ -110,7 +117,7 @@ C     Var loc
      &                        ind_CL,
      &                        rop, drodm  , wig,
      &                        venti, ventj, ventk,
-     &                        ti,tj,tk,vol)
+     &                        ti,tj,tk,vol, xmut)
 
         elseif(param_int(KFLUDOM).eq.2.and.mod(nitcfg,cycl).eq.1
      & .and. param_int(EXPLOC) .ne. 0 ) then !!! senseur pour l'explicit local
@@ -120,7 +127,7 @@ C     Var loc
      &                        ind_CL,
      &                        rop, drodm  , wig,
      &                        venti, ventj, ventk,
-     &                        ti,tj,tk,vol)
+     &                        ti,tj,tk,vol, xmut)
 
         elseif(param_int(KFLUDOM).eq.2.and.mod(nitcfg,cycl).ne.1
      & .and. param_int(EXPLOC) .ne. 0 ) then !!! senseur pour l'explicit local
@@ -130,12 +137,13 @@ C     Var loc
      &                        ind_CL,
      &                        rop, drodm  , wig,
      &                        venti, ventj, ventk,
-     &                        ti,tj,tk,vol)
+     &                        ti,tj,tk,vol, xmut)
 
         else
           continue
         endif
 
+        !write(*,*)'avt wammmod',ndom,nitcfg
 
 #include "FastS/BC/CL_wallmodel_flu.for"
 

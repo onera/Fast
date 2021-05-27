@@ -36,7 +36,7 @@ c***********************************************************************
 C Var loc
       INTEGER_E incmax,l, i,j,k,ne,lij,ltij,lt,b,ind,vg, lvo,
      & ind_loop(6), v1,v2,v3,v4,v5,v6
-      REAL_E ratio,coefH,xmut(1), rho,vu,vv,vw,q,ampli !!ajout pour feinter option de vecto 
+      REAL_E ratio,coefH,xmut(1), rho,vu,vv,vw,q,ampli,dt !!ajout pour feinter option de vecto 
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -68,7 +68,11 @@ C Var loc
             vw   = rop(l + v4)
             q    = 0.5*(vu*vu+vv*vv+vw*vw)
 
-            ampli= cellN(l)/coe(l +V1)*rho
+            ! protection pour interaction CellN et CellNIBC
+            dt = max(1e-30,coe(l +V1))
+
+            !ampli= cellN(l)/coe(l +V1)*rho
+            ampli= cellN(l)/dt*rho
  
             !drodm(l +v1) = drodm(l +v1)*xcomp
             drodm(l +v2) = drodm(l +v2)+ vu*ampli
@@ -92,7 +96,11 @@ C Var loc
             vw   = rop(l + v4)
             q    = 0.5*(vu*vu+vv*vv+vw*vw)
 
-            ampli= cellN(l)/coe(l +V1)*rho
+            ! protection pour interaction CellN et CellNIBC
+            dt = max(1e-30,coe(l +V1))
+
+            !ampli= cellN(l)/coe(l +V1)*rho
+            ampli= cellN(l)/dt*rho
   
             !drodm(l +v1) = drodm(l +v1)*xcomp
             drodm(l +v2) = drodm(l +v2)+ vu*ampli

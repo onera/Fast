@@ -844,7 +844,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
     
                       l    = inddm( i , j,  ind_loop(5)   )
                       lmtr = indmtr(i , j,  ind_loop(5)   )
-                      ldp  = indven(i , j,  ind_loop(6)   )
+                      ldp  = indven(i , j,  ind_loop(5)   )
                       l1   = l +   inck
                       lit  = lit + 1
                       li   = indbci(i,  j )
@@ -859,7 +859,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
                   l    = inddm( i , j,  ind_loop(5)   )
                   lmtr = indmtr(i , j,  ind_loop(5)   )
-                  ldp  = indven(i , j,  ind_loop(6)   )
+                  ldp  = indven(i , j,  ind_loop(5)   )
                   l1   = l   + inck
                   lit  = lit + 1
                   li   = indbci(i,  j )

@@ -3,8 +3,8 @@ c     $Date: 2013-08-26 16:00:23 +0200 (lun. 26 août 2013) $
 c     $Revision: 58 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine mcmvi(ndom, param_int, param_real, neq_rot,
-     &                 ind_loop,
+      subroutine mcmvi(ndom, param_int, param_real, neq_rot,ithread,
+     &                 nitrun,ind_loop,
      &                 xmut, rop, rot)
 c***********************************************************************
 c_P                          O N E R A
@@ -29,7 +29,7 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
  
-      INTEGER_E ndom, neq_rot, ind_loop(6), param_int(0:*)
+      INTEGER_E ndom,neq_rot,ithread,nitrun,ind_loop(6), param_int(0:*)
 
       REAL_E xmut( param_int(NDIMDX) )
       REAL_E rot ( param_int(NDIMDX) * neq_rot)
@@ -177,10 +177,10 @@ c             rop(l+v5)=fv
 
              ! mut = mulam + mu_sgs
              t1     = rop(l + v5)
-             xmut(l) = fs * xmut(l) + coesut * sqrt(t1)*t1/(t1+cmus1)
-             !xmut(l) =  xmut(l) + coesut * sqrt(t1)*t1/(t1+cmus1)
-
-c             if(k.le.3.and.k.ge.1.and.j.eq.81.and.l-lij.eq.10) then
+             xmut(l) = fs*xmut(l)+ coesut * sqrt(t1)*t1/(t1+cmus1)
+            
+c             if(ndom.eq.1.and.param_int(IO_THREAD).eq.ithread
+c     &          .and.( xmut(l).ge.0.001.or.xmut(l).le.0)) then
 c        write(*,'(a,5f19.12,3i4)')'vi',
 c     &             xmut(l),fs,vort,vortmoy,vortflu,l-lij,j,k
 c     &             xmut(l),fs,r1,r2,vortflu,l-lij,j,k

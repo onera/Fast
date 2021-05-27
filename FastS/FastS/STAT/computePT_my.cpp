@@ -19,6 +19,7 @@
 
 
 # include "fastS.h"
+# include "fastc.h"
 # include "param_solver.h"
 # include "string.h"
 #ifdef _OPENMP
@@ -52,11 +53,14 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
   E_Float** iptro; E_Float** iptmut; E_Float** iptromoy;
   E_Float** ipti;  E_Float** iptj;  E_Float** iptk; E_Float** iptvol;
   E_Float** ipti_df; E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
-  E_Float** ipt_param_real;
+  E_Float** ipt_param_real; E_Float** iptx; E_Float** ipty; E_Float** iptz;
 
   E_Int** iptmoy_param; E_Int**   ipt_param_int;
 
-  ipt_param_real    = new  E_Float*[nidom*12];
+  iptx              = new E_Float*[nidom*15];
+  ipty              = iptx           + nidom;
+  iptz              = ipty           + nidom;
+  ipt_param_real    = iptz           + nidom;
   iptro             = ipt_param_real + nidom;
   iptmut            = iptro          + nidom;
   ipti              = iptmut         + nidom;
@@ -74,6 +78,7 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
 
   vector<PyArrayObject*> hook;
 
+  E_Int lcyl = 1;
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
     // check zone
@@ -87,7 +92,6 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
                        t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
     ipt_param_real[nd]    = K_PYTREE::getValueAF(t, hook);
 
-
     PyObject* sol_center;
     sol_center   = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
     t            = K_PYTREE::getNodeFromName1(sol_center, "Density");
@@ -100,6 +104,7 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
       }
     else {iptmut[nd] = iptro[nd];}
 
+    GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])
 
     // Check metrics
     PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
@@ -114,6 +119,9 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
     sol_center   = K_PYTREE::getNodeFromName1(zone_my   , "FlowSolution#Centers");
     t            = K_PYTREE::getNodeFromName1(sol_center, "MomentumX");
     iptromoy[nd] = K_PYTREE::getValueAF(t, hook);
+
+    t            = K_PYTREE::getNodeFromName1(sol_center, "Momentum_t");
+    if ( t == NULL) { lcyl =0;}
 
     t  = K_PYTREE::getNodeFromName1(zone_my, ".Solver#post");
     if ( t == NULL) { PyErr_SetString(PyExc_ValueError, "stat: .Solver#post is missing or is invalid."); return 0; }
@@ -193,15 +201,12 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
             //c1 = 7./6
             //c2 = 1./6
 
-
-             cpmys_rij_(nd,  ipt_param_int[nd][ NDIMDX ] , ipt_param_int[nd][ NDIMDX_MTR ], iptmoy_param[nd][3],
-                             ipt_param_int[nd][ NEQ ]    , iptmoy_param[nd][4]            , neq_grad           ,
-                             ipt_param_int[nd][ NEQ_IJ ] , ipt_param_int[nd][ NEQ_K ]     ,  ipt_param_int[nd][ ITYPZONE ],
-                             lthermique                  , lreynolds                      ,
-                             ipt_param_int[nd]+ NIJK_MTR , ipt_param_int[nd]+ NIJK        ,  iptmoy_param[nd]+6,  ipt_param_int[nd]+ IJKV     ,
-                             iptmoy_param[nd]        ,
+             cpmys_rij_(nd,  iptmoy_param[nd][3], iptmoy_param[nd][4]            , neq_grad ,
+                             lthermique                  , lreynolds             , lcyl,
+                             iptmoy_param[nd]+6      , iptmoy_param[nd]           , ipt_param_int[nd]           ,
                              ipt_ind_dm_omp_thread   , ipt_param_real[nd][ GAMMA ],  ipt_param_real[nd][ CVINF ], ipt_param_real[nd][ PRANDT ],
                              iptro[nd]               , iptmut[nd]             ,
+                             iptx[nd]                , ipty[nd]               , iptz[nd]                ,
                              ipti[nd]                , iptj[nd]               , iptk[nd]                , iptvol[nd]       , 
                              ipti_df[nd]             , iptj_df[nd]            , iptk_df[nd]             , iptvol_df[nd]    ,
                              iptromoy[nd]);           
@@ -210,7 +215,7 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
   }  // zone OMP
 
 
-  delete [] ipt_param_real;
+  delete [] iptx;
   delete [] ipt_param_int;
 
   RELEASEHOOK(hook)

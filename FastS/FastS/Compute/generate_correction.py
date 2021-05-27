@@ -32,7 +32,9 @@ opt_mesh= {"3dfull":0, "3dhomo":1, "3dcart":2, "2d":3}
 
 
 #open template file for flux selection
-select= open('template_correction_select.for','r')
+#select= open('template_correction_select.for','r')
+print("warning: corection flux Selection euler Et visqueux")
+select= open('template_correction_select_viscous.for','r')
 lines_select = select.readlines()
 
 #open file for sources compilation
@@ -57,6 +59,7 @@ lines_select_beg = lines_select[0:c_index]
 lines_select_end = lines_select[c_index:c_index+8]
 
 fselecto = open(rep+'/correction_'+flux+'_select.for',"w")                  # ouvrir le fichier de sortie
+#fselecto = open(rep+'/correction_'+flux+'_select_viscous.for',"w")           # ouvrir le fichier de sortie
 
 for ale in TypeMotion:
 
@@ -70,7 +73,9 @@ for ale in TypeMotion:
                         option =  1000*opt_ale[ ale]  +  100*opt_slp[slope] +  10*opt_mod[eq] + opt_mesh[ typezone]
 
                         # ouvrir le fichier input
-                        f     = open('template_correction.for','r')
+                        #f     = open('template_correction.for','r')
+                        f     = open('template_correction_viscous.for','r')
+                        print("warning: corection flux euler Et visqueux")
                         lines = f.readlines()
 
 
@@ -176,12 +181,14 @@ for ale in TypeMotion:
                         if include == True:
                            select_out.append('       ELSEIF (option.eq.'+str(option)+') THEN\n')
                            select_out.append('                                               \n') 
-                           select_out.append('         call '+ name_routine+'(ndom, ithread, idir,\n') 
+                           select_out.append('         call '+ name_routine+'(ndom,\n') 
+                           select_out.append('     &                 ithread, idir,\n') 
                            select_out.append('     &                 param_int, param_real,\n') 
                            select_out.append('     &                 ind_loop,\n') 
                            select_out.append('     &                 rop, drodm , wig,\n') 
                            select_out.append('     &                 venti, ventj, ventk,\n') 
-                           select_out.append('     &                 ti, tj, tk, vol)\n') 
+                           #select_out.append('     &                 ti, tj, tk, vol)\n')  pour correction euler
+                           select_out.append('     &                 ti, tj, tk, vol, xmut)\n') 
                            select_out.append('                                               \n') 
 
                         lines_select_beg = lines_select_beg +   select_out 

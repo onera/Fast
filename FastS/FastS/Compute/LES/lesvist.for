@@ -4,8 +4,9 @@ c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine lesvist(ndo, param_int, param_real, neq_rot,depth,
-     &                      ind_grad, ind_coe, ind_dm_zone,
-     &                      xmut, rop, ti,tj,tk, vol, rot)
+     &                   ithread,nitrun,
+     &                   ind_grad, ind_coe, ind_dm_zone,
+     &                   xmut, rop, ti,tj,tk, vol, rot)
 
 c***********************************************************************
 c_U   USER : TERRACOL
@@ -32,7 +33,7 @@ c***********************************************************************
       implicit none
 
       INTEGER_E ndo, neq_rot, depth, ind_grad(6), ind_dm_zone(6),
-     & ind_coe(6), param_int(0:*)
+     & ithread, nitrun, ind_coe(6), param_int(0:*)
 
       REAL_E rop(*), ti(*),tj(*),tk(*),vol(*), xmut(*), rot(*)
 
@@ -71,7 +72,7 @@ C Var loc
             
           !!  OUt : xmut = mulam + mu_sgs
           !!  OUt valable sur une rangee de ghost
-          call mcmvi(ndo, param_int, param_real, neq_rot,
+          call mcmvi(ndo, param_int, param_real, neq_rot,ithread,nitrun,
      &                    ind_grad,
      &                    xmut, rop, rot)
 

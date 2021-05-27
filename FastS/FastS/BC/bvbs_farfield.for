@@ -373,7 +373,7 @@ c      write(*,*)'loop=', ind_loop
 
                   l    = inddm( i , j,  ind_loop(5)   )
                   lmtr = indmtr(i , j,  ind_loop(5)   )
-                  ldp  = indven(i , j,  ind_loop(6)   )
+                  ldp  = indven(i , j,  ind_loop(5)   )
                   l1   = l +   inck
 #include        "FastS/BC/BCFarfield_firstrank.for"
                enddo
@@ -401,7 +401,7 @@ c      write(*,*)'loop=', ind_loop
 
                   l    = inddm( i , j,  ind_loop(5)   )
                   lmtr = indmtr(i , j,  ind_loop(5)   )
-                  ldp  = indven(i , j,  ind_loop(6)   )
+                  ldp  = indven(i , j,  ind_loop(5)   )
                   l1   = l +   inck
 #include        "FastS/BC/BCFarfield_firstrank_SA.for"
                enddo
