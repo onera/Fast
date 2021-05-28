@@ -153,15 +153,15 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
    } // if lft > 0
     /* Convergence History from zone */
     E_Float* ipt_Res_L2 ; E_Float* ipt_Res_oo ; E_Int* ipt_Itnum ;
-    E_Int LastRec ;  E_Int nrec; E_Int nrec2;
+    E_Int LastRec;  E_Int nrec; E_Int nrec2;
     PyObject* zoneCH = K_PYTREE::getNodeFromName1(zone , "ZoneConvergenceHistory");
     if ( zoneCH != NULL ) { E_Int* ipt_LastRec = K_PYTREE::getValueAI(zoneCH, hook);
-        LastRec = *ipt_LastRec ;
-	PyObject*  Itnum = K_PYTREE::getNodeFromName1(zoneCH, "IterationNumber");
+        LastRec = *ipt_LastRec;
+        PyObject*  Itnum = K_PYTREE::getNodeFromName1(zoneCH, "IterationNumber");
         ipt_Itnum =  K_PYTREE::getValueAI(Itnum, nrec, nrec2, hook);
-	PyObject*  Res_L2 = K_PYTREE::getNodeFromName1(zoneCH, "RSD_L2");
+        PyObject*  Res_L2 = K_PYTREE::getNodeFromName1(zoneCH, "RSD_L2");
         ipt_Res_L2 =  K_PYTREE::getValueAF(Res_L2,hook) ;
-	PyObject*  Res_oo = K_PYTREE::getNodeFromName1(zoneCH, "RSD_oo");
+        PyObject*  Res_oo = K_PYTREE::getNodeFromName1(zoneCH, "RSD_oo");
         ipt_Res_oo =  K_PYTREE::getValueAF(Res_oo, hook) ;
 
         //printf("display_ss_iteration : lft= %d nrec= %d\n",lft,nrec); fflush(stdout) ;

@@ -159,16 +159,16 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
   FldArrayI ind_dm_omp(12*threadmax_sdm);      E_Int* ipt_ind_dm_omp      = ind_dm_omp.begin();
   FldArrayI topology_socket(3*threadmax_sdm);  E_Int* ipt_topology_socket = topology_socket.begin();
 
-  FldArrayF rot_ale(12*threadmax_sdm);         E_Float* ipt_rot_ale       = rot_ale.begin();
+  //FldArrayF rot_ale(12*threadmax_sdm);         E_Float* ipt_rot_ale       = rot_ale.begin();
 
 #pragma omp parallel default(shared) 
      {
 	//* variable declaree dans zone parallele = private *//
 #ifdef _OPENMP
-	E_Int  ithread           = omp_get_thread_num() +1;
+        E_Int  ithread           = omp_get_thread_num() +1;
         E_Int  Nbre_thread_actif = omp_get_num_threads();
 #else
-	E_Int  ithread           = 1;
+        E_Int  ithread           = 1;
         E_Int  Nbre_thread_actif = 1;
 #endif
         //E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee

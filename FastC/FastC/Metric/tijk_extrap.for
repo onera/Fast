@@ -103,13 +103,13 @@ C_LOCAL
                  enddo
                endif
 
-               !!Recontruction tk pour assurer conservation geom
+               !!Reconstruction tk pour assurer conservation geom
                lmtrk =  indmtr( i  ,j, k+1)
                if(neq_k.ne.3) then
 
                  do ne =1, neq_k
-                 tk( lmtr, ne)=tk( lmtrk,ne)
-                 tk0(lmtr, ne)=tk0(lmtrk,ne)
+                 tk( lmtr, ne) = tk( lmtrk,ne)
+                 tk0(lmtr, ne) = tk0(lmtrk,ne)
                  enddo
 
                else
@@ -188,7 +188,7 @@ C_LOCAL
                  enddo
                endif
 
-               !!Recontruction ti pour assurer conservation geom
+               !!Reconstruction ti pour assurer conservation geom
                lmtrk =  indmtr( i  ,j, k+1)
                if(neq_k.ne.3) then
 
@@ -205,7 +205,6 @@ C_LOCAL
      &                                      +tj0(lmtr,ne)- tj0(lmtrj,ne)
                  enddo
                endif
-
 
                vol(lmtr) = vol(lmtr0)
 
@@ -278,7 +277,7 @@ C_LOCAL
                  enddo
                endif
 
-               !!Recontruction ti pour assurer conservation geom
+               !!Reconstruction ti pour assurer conservation geom
                lmtrj =  indmtr( i  ,j+1,k)
                if(neq_k.ne.3) then
 
@@ -368,7 +367,7 @@ C_LOCAL
                  enddo
                endif
 
-               !!Recontruction ti pour assurer conservation geom
+               !!Reconstruction ti pour assurer conservation geom
                lmtrj  =  indmtr( i , j+1         , k)
                if(neq_k.ne.3) then
 
@@ -455,7 +454,7 @@ C_LOCAL
                  enddo
                endif
 
-               !!Recontruction ti pour assurer conservation geom
+               !!Reconstruction ti pour assurer conservation geom
                lmtri =  indmtr( i+1  ,j,k)
                if(neq_k.ne.3) then
 
@@ -541,7 +540,7 @@ C_LOCAL
                  enddo
                endif
 
-               !!Recontruction ti pour assurer conservation geom
+               !!Reconstruction ti pour assurer conservation geom
                lmtri  =  indmtr( i+1              , j  , k)
                if(neq_k.ne.3) then
 

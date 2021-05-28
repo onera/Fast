@@ -65,7 +65,7 @@ c Var loc
       li   = .false.
       lj   = .false.
       lk   = .false.
-      !corection sous domaine pour passer list gradient a liste interface
+      !correction sous domaine pour passer list gradient a liste interface
         if(ind_loop(2).ge.iv+1) li   = .true.
         if(ind_loop(4).ge.jv+1) lj   = .true.
         if(ind_loop(6).ge.kv+1) lk   = .true.
@@ -130,7 +130,7 @@ c-----le nbr de metrique varie selon le type de domaine
         if(li) then !!! Facette I imax: normal et surface
          DO k = ind_loop(5)   , ind_loop(6) 
          DO j = ind_loop(3)   , ind_loop(4)
-         DO i = ind_loop(2)+1 , ind_loop(2) + 1
+         DO i = ind_loop(2)+1 , ind_loop(2)+1
 
           l = indmtr(i  ,j  ,k  )
           l0=  indcg(i  ,j  ,k  )     ! x(i  , j  , k  )
@@ -500,7 +500,7 @@ c-----le nbr de metrique varie selon le type de domaine
 
       ENDIF!neq_k
 
-      !on sauvegarde les metrique de l'insant initial en ale
+      !on sauvegarde les metrique de l'instant initial en ale
       If(param_int( LALE ).eq.1) THEN
 
        inck = 0 
@@ -524,6 +524,7 @@ CVD$  NODEPCHK
 
             l   = indmtr(i  ,j  ,k  )
 #endif
+
 
              ti0(l,1) = ti(l,1)
              ti0(l,2) = ti(l,2)

@@ -47,7 +47,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
   E_Float** ipti;       E_Float** iptj;     E_Float** iptk;    E_Float** iptvol;
   E_Float** ipti0;      E_Float** iptj0;    E_Float** iptk0;
   E_Float** ipti_df;    E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
-  E_Float** iptdist;    E_Float** iptventi; E_Float** iptventj; E_Float** iptventk;
+  E_Float** iptventi; E_Float** iptventj; E_Float** iptventk;
 
   E_Int nidom    = PyList_Size(zones);
 
