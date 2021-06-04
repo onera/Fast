@@ -55,7 +55,7 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
   E_Float** ipti_df; E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
   E_Float** ipt_param_real; E_Float** iptx; E_Float** ipty; E_Float** iptz;
 
-  E_Int** iptmoy_param; E_Int**   ipt_param_int;
+  E_Int** iptmoy_param; E_Int** ipt_param_int;
 
   iptx              = new E_Float*[nidom*15];
   ipty              = iptx           + nidom;

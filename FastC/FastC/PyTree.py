@@ -324,7 +324,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     FIRST_IT = 1
     if model != 'LBMLaminar':
        neq_lbm = 0
-       #on test s'il existe 2 niveau en temps dans l'arbre pour appliquer la bonne formule de derivee temporelle a la premere iteration
+       #on test s'il existe 2 niveaux en temps dans l'arbre pour appliquer la bonne formule de derivee temporelle a la premere iteration
        if C.isNamePresent(zone, 'centers:Density_M1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_M1')  ; FIRST_IT=0
        if C.isNamePresent(zone, 'centers:VelocityX_M1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_M1'); FIRST_IT=0
        if C.isNamePresent(zone, 'centers:VelocityY_M1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_M1'); FIRST_IT=0
@@ -777,9 +777,9 @@ def _buildOwnData(t, Padding):
         except: print('Warning: Fast: invalid value %s for key ss_iteration.'%ss_iteration)
         try: modulo_verif = int(modulo_verif)
         except: print('Warning: Fast: invalid value %s for key modulo_verif.'%modulo_verif)
-        if (rk == 1 and exploc==0 and temporal_scheme == "explicit"): nssiter = 1 # explicit global
-        if (rk == 2 and exploc==0 and temporal_scheme == "explicit"): nssiter = 2 # explicit global
-        if (rk == 3 and exploc==0 and temporal_scheme == "explicit"): nssiter = 3 # explicit global
+        if rk == 1 and exploc==0 and temporal_scheme == "explicit": nssiter = 1 # explicit global
+        if rk == 2 and exploc==0 and temporal_scheme == "explicit": nssiter = 2 # explicit global
+        if rk == 3 and exploc==0 and temporal_scheme == "explicit": nssiter = 3 # explicit global
 
         
 
@@ -2278,6 +2278,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
     if cartesian: # peut etre inutile (fait dans convert2File?)
         import Compressor.PyTree as Compressor
         Compressor._uncompressCartesian(t)
+        Compressor._uncompressCartesian(tc)
     
     return t, tc, ts, graph
 
@@ -2289,8 +2290,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
 # single: write restart.cgns (full)
 # multiple: write restart/restart_1.cgns, ... (partial trees)
 #==============================================================================
-def save(t, fileName='restart', split='single',
-         temporal_scheme='implicit', NP=0, cartesian=False):
+def save(t, fileName='restart', split='single', NP=0, cartesian=False):
     """Save tree and connectivity tree."""
     # Rip file ext if any
     import os.path

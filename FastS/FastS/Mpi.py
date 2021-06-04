@@ -255,7 +255,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
               #if rank == 0: print('fillGC: timeleveltarget= ', timelevel_target)
 
-              # #recuperation Nb pas instationnaire dans tc
+              #recuperation Nb pas instationnaire dans tc
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
               Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                         nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1,
@@ -270,13 +270,13 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
        #     print "Time InterpTransfert (Inter)  ","%.6f"%timecount[1]
        #     print "Time InterpTransfert (Intra)  ","%.6f"%timecount[2]
        #     print "Time in getTransfersInter ","%.6f"%timecount[3]
-       # if (rank == 0 ): t0=timeit.default_timer()
+       # if rank == 0: t0=timeit.default_timer()
        #apply BC
        #tic = Time.time()
        if exploc != 1:
            _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        #toc = Time.time() - tic
-       # if (rank == 0 ):
+       # if rank == 0:
        #     t1=timeit.default_timer()
        #     print "time/it (s) BC only (=t_RK X 1.0): ",(t1-t0)
    #return toc
@@ -605,7 +605,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
 
     if timelevel_motion > timelevel_360:
-       print('remise a ZERO dans updateUnstaeady')
+       print('remise a ZERO dans updateUnsteady')
        dtloc[3] = 0  # remise a zero du compteur si 360degres 
 
     return tc, graph

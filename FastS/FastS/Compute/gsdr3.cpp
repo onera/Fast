@@ -456,8 +456,8 @@ E_Int flag_passage2=0;
 
      for (E_Int nd=0; nd < nidom; nd++)
        {
-	 cycl = nssiter/param_int[nd][LEVEL];
-	 if (nitcfg%cycl == 0 and nitcfg != nssiter)
+        cycl = nssiter/param_int[nd][LEVEL];
+        if (nitcfg%cycl == 0 and nitcfg != nssiter)
 	   {
 	     E_Float* ptsave  = iptro[nd]; 
 	     iptro[nd] = iptrotmp[nd]; 
@@ -468,13 +468,11 @@ E_Int flag_passage2=0;
 
 
            
-      if (nitcfg != nssiter)
-	{
-      		
-	  K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
-	                    linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
-
-        }
+    if (nitcfg != nssiter)
+    {  		
+      K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+                        linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
+    }
 
       
        
@@ -678,7 +676,7 @@ E_Int lrhs=0; E_Int lcorner=0;
            //
            E_Int l =  nd_current*mx_synchro*Nbre_thread_actif  + (ithread_loc-1)*mx_synchro;
            for (E_Int i = 0;  i < mx_synchro ; i++) { ipt_lok[ l + i ]  = 0; }
-	   nd_current +=1;
+           nd_current +=1;
 
 	 }//loop souszone
      }//loop zone

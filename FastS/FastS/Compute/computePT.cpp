@@ -578,7 +578,7 @@ else
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
             ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size , ipt_drodmd,
-	    ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp  , ipt_givens,
+            ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp  , ipt_givens,
             ipt_cfl            ,
             iptx               , ipty             , iptz              ,
             iptCellN           , iptCellN_IBC     , ipt_degen         ,
@@ -654,9 +654,9 @@ else
 	 }
 
        else if((ipt_param_int[0][EXPLOC] == 0 && nstep == nssiter && lssiter_verif==1) || (ipt_param_int[0][EXPLOC] == 0 && nstep == nssiter-1 && lssiter_verif==0))  // mise a jour  du temps courant pour les schemas autres que l'explicite local
-	 {
+     {
         for (E_Int nd = 0; nd < nidom ; nd++) { ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]; }
-	 }
+     }
        
      }//test calcul NS
 

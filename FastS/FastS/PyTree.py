@@ -77,7 +77,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
     if layer == "Python":
         
-      if exploc==1 and tc is not None :        
+      if exploc==1 and tc is not None:        
          tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
          if tc_compact is not None:
                 param_real_tc= tc_compact[1]
@@ -136,7 +136,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                elif nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
                _applyBC(zones, metrics, hook1, nstep, ompmode, var=vars[0])
 
-            else: 
+            else:
               #Ghostcell
               vars = FastC.varsP
               if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
@@ -173,7 +173,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
 
     else: ### layer C
- 
 
       nstep_deb = 1
       nstep_fin = nitmax
@@ -187,7 +186,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
       fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, FastC.HOOK)
 
     # switch pointer a la fin du pas de temps
-    if exploc==1 and tc is not None :
+    if exploc==1 and tc is not None:
          if layer == 'Python': FastC.switchPointers__(zones, 1, 3)
          else: FastC.switchPointers3__(zones, nitmax)
     else:
@@ -208,7 +207,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 #==============================================================================
 def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
     
-
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
@@ -797,7 +795,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
    if hook1['lexit_lu'] ==0:
 
        #transfert
-       if tc is not None :
+       if tc is not None:
            tc_compact = Internal.getNodeFromName1( tc, 'Parameter_real')
            #Si param_real n'existe pas, alors pas de raccord dans tc
            if tc_compact is not  None:
@@ -1828,11 +1826,12 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     if FastC.HOOK is None: 
             dtloc  = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
-            FastC.HOOK   = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
+            FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
             nitrun =0; nstep =1
 
             distrib_omp = 0
-            hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
+            hook1 = FastC.HOOK.copy()
+            hook1.update(fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
 
     else:  hook1  = FastC.HOOK
 
@@ -1840,7 +1839,7 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     pos_eff = numpy.empty(3, numpy.float64)
     pos_eff[0] = xyz_ref[0]; pos_eff[1] = xyz_ref[1]; pos_eff[2] = xyz_ref[2]
 
-    #print 'ompmode=', ompmode
+    #print('ompmode=', ompmode)
     fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, pos_eff, ompmode)
 
     return effort

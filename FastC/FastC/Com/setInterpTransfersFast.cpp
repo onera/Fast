@@ -208,7 +208,7 @@ void K_FASTC::setInterpTransfersFast(
           TypeTransfert = 1;  
           #ifdef _MPI      
           K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
-  	       			           param_int    , param_real   , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                           param_int    , param_real   , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
                                            pair_of_queue_IBC, ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer); 
           #endif
         }
@@ -224,7 +224,7 @@ void K_FASTC::setInterpTransfersFast(
       dest       = param_int_tc[ech];
       if (dest == rank)  // Intra Process
       { TypeTransfert = 1;
-	K_FASTC::setInterpTransfersIntra(iptro_tmp    , vartype    , param_int_tc, param_real_tc,
+        K_FASTC::setInterpTransfersIntra(iptro_tmp    , vartype    , param_int_tc, param_real_tc,
                                          param_int    , param_real , linelets_int, linelets_real, TypeTransfert, it_target, nidom, ip2p, 
                                          ipt_timecount, nstep      , nitmax      , rk           , exploc       , numpassage); 
       }
@@ -255,9 +255,8 @@ void K_FASTC::setInterpTransfersFast(
       }
       else
       {
-	pt_deb        = nbcomIBC + 2;
+        pt_deb        = nbcomIBC + 2;
         nbcomID_nstep = nbcomID;
-
       }
 
 
@@ -344,13 +343,9 @@ void K_FASTC::setInterpTransfersFast(
         time_in = omp_get_wtime();
        #endif
 
-
-
     } // MPI Second part (InterCOM ID)
     #endif
 
-
-    
   } //if  param_int_tc != Null
 
 
