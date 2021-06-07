@@ -56,7 +56,22 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
     zones = []
     for f in bases:
-        zones += Internal.getNodesFromType1(f, 'Zone_t') 
+        zones += Internal.getNodesFromType1(f, 'Zone_t')
+
+        ## Note: This error is currently placed as a peculiar behavior was observed for a specific
+        ##       test case.
+        ##       For identical parameters, mesh, running conditions, etc. the "c layer" mode resulted
+        ##       in wrong results while the "python layer" gave the correct results.
+        ##       However, for simplified regression & verification test cases "c layer" and "python layer"
+        ##       resulted in the same results. Therefore the below warning is just for precaution and if needed can be
+        ##       commented out.
+        
+        d = Internal.getNodeFromName1(f, '.Solver#define')
+        a = Internal.getNodeFromName1(d, 'temporal_scheme')
+        if(Internal.getValue(a) == 'explicit_local' and layer=="c"):
+            print("ERROR(compute.py):: There is a bug with 'explicit_local' & 'c layer'")
+            print("ERROR(compute.py):: use 'python layer'...aborting.")
+            exit()
 
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
     omp_node = Internal.getNodeFromName1(node, 'omp_mode')
@@ -2166,10 +2181,10 @@ def computeCFL_dtlocal(t):
            if cflmin < cflmin_glob:cflmin_glob = cflmin
 
 
-    dtmin = 1.0/cflmax
-    dtmax = 1.0/cflmin
+    dtmin = 1.0/cflmax_glob
+    dtmax = 1.0/cflmin_glob
      
-    exposant_max = math.floor(math.log((dtmax/dtmin))/math.log(2))
+    exposant_max = math.floor(math.log2(dtmax/dtmin))
     
     print('exposant maximal = ', exposant_max)
     print(dtmin)
@@ -2184,6 +2199,10 @@ def computeCFL_dtlocal(t):
 #==============================================================================
 # decoupe maillage pour dtloc instationnaire
 #==============================================================================
+##[TODO] Decision on keeping _decoupe2
+##[TODO] Further testing on _decoupe2 & _decoupe4
+## NOTE: _decoupe2 destroys all BCs and raccords. It is recommended to check these two
+##       before proceeding.
 def _decoupe2(t, exposantMax = 2, NP=0):
 
     import Transform.PyTree as T
@@ -2421,6 +2440,249 @@ def _decoupe2(t, exposantMax = 2, NP=0):
     C.convertPyTree2File(t, 'essai.cgns') 
     
     return t        
+
+
+## NOTE: _decoupe4 vs _decoupe2
+## _decoupe4 is heavy based on _decoupe2 and is just a "cleaning" of what is done in the latter.
+## _decoupe2 is left for now and it will be decided in the future which to keep.
+## _decoupe4 uses Cassiopee functions to split the domain and uses the block size algorithm of _decoupe2 to determine
+## the number of "cuts" in each direction.
+def splitting_per_direction(t,dir,taille_bloc):
+    zones  = Internal.getNodesFromType(t     , 'Zone_t')
+    zones_delete=[]
+    for z in zones:
+        dim = Internal.getZoneDim(z)
+        ni = dim[1]-1
+        nj = dim[2]-1
+        nk = dim[3]-1
+
+        dimPb = dim[4]
+        
+        if dimPb==2:nk=1
+
+        nbbloc_i = ni/taille_bloc
+        nbbloc_i = int(nbbloc_i)
+        if nbbloc_i*taille_bloc < ni: nbbloc_i = nbbloc_i + 1
+        nbbloc_j = nj/taille_bloc
+        nbbloc_j = int(nbbloc_j)
+        if nbbloc_j*taille_bloc < nj: nbbloc_j = nbbloc_j + 1
+        nbbloc_k = nk/taille_bloc
+        nbbloc_k = int(nbbloc_k)
+        if nbbloc_k*taille_bloc < nk: nbbloc_k = nbbloc_k + 1
+
+        if dir == 1:
+            nbloc=nbbloc_i
+            nbbloc_j = 1
+            nbbloc_k = 1
+        elif dir ==2:
+            nbbloc_i = 1
+            nbloc=nbbloc_j
+            nbbloc_k = 1
+        else:
+            nbbloc_i = 1
+            nbbloc_j = 1
+            nbloc=nbbloc_k
+        if nbloc==1:
+            continue
+        zones_delete.append(z)
+        print('Splitting of Zone %s in num. blocs in i,j,k::%d %d %d'%(z[0],nbbloc_i,nbbloc_j,nbbloc_k))       
+        zones_decoupe  = T.splitNParts(z,nbloc, multigrid=0, dirs=[dir],recoverBC=True)
+        t[2][1][2] += zones_decoupe
+        
+    for z in zones_delete:
+        Internal._rmNode(t,z)
+
+    return t
+
+
+def _decoupe4(t, exposantMax = 2, NP=0,taille_bloc=25):
+    import Transform.PyTree as T
+
+    dimPb = 3
+    node = Internal.getNodeFromName(t, 'EquationDimension')
+    if node is not None: dimPb = Internal.getValue(node) 
+
+    print("Saving periodic settings...start")
+    liste_BCPeriodiques = []
+    BCMatch = Internal.getNodesFromType(t, 'GridConnectivity1to1_t')
+    for match in BCMatch:
+        perio = Internal.getNodesFromName(match, 'GridConnectivityProperty')
+        if perio != [] :
+            rotCenter  = Internal.getNodeFromName(perio, 'RotationCenter')[1]
+            rotAngle   = Internal.getNodeFromName(perio, 'RotationAngle')[1]
+            translation = Internal.getNodeFromName(perio, 'Translation')[1]
+         
+            list1 = [abs(translation).tolist(),abs(rotAngle).tolist(),rotCenter.tolist()]
+    
+            if list1 not in liste_BCPeriodiques:            
+                 liste_BCPeriodiques.append(list1)
+                 print("liste_BCPeriodiques=",liste_BCPeriodiques)
+    print("Saving periodic settings...end")
+
+    t = Internal.rmGhostCells(t, t, 2,adaptBCs=1)
+    zones  = Internal.getNodesFromType(t     , 'Zone_t')
+    for z in zones:
+        gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
+        Internal._rmNode(z,gcs)
+       
+    print("Splitting mesh...start")   
+    ## Doing X direction splitting
+    dir = 1
+    t   = splitting_per_direction(t,dir,taille_bloc)
+    ## Doing Y direction splitting
+    dir = 2
+    t   = splitting_per_direction(t,dir,taille_bloc)
+    ## Doing Z direction splitting
+    dir = 3
+    t   = splitting_per_direction(t,dir,taille_bloc)
+    print("Splitting mesh...done")
+    
+    zones  = Internal.getNodesFromType(t     , 'Zone_t')
+    print('Post split: Total number of zones=', len(zones))
+
+    print("Setting 'centers:niveaux_temps' as a flow variables...start")
+    dtmin=1e15
+    count = 0
+    for z in zones :
+        dim = Internal.getZoneDim(z)
+        zp = T.subzone(z,(3,3,3),(dim[1]-2,dim[2]-2,dim[3]-2))
+        cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
+        dtmin_loc = 1./cflmax_loc
+        if dtmin_loc < dtmin: dtmin = dtmin_loc
+    
+    for z in zones :
+        gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
+        Internal._rmNode(z,gcs)
+    
+    t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
+    for perio in liste_BCPeriodiques:
+        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+   
+    dicoTps = {}
+    zones  = Internal.getNodesFromType(t, 'Zone_t')
+    ## Note: 2 parameters to control the number of time zones
+    ## 1) taille_bloc: The smaller this number is the more likely you will have the same
+    ##                  number of time levels as exposantMax
+    ## 2) exposantMax: for forcing niveauTps < 0.0 and by making exposantMax< thexposantMax
+    ##                 one can play with taille_bloc such that we have more control of the regions of
+    ##                 with smaller time steps without "exploding" the different levels of time zones.
+    for z in zones :
+        cflmax_loc = C.getMaxValue(z, 'centers:CFL')
+        dtmin_loc = 1./cflmax_loc
+        niveauTps = math.log2(((2**exposantMax)*dtmin)/dtmin_loc)
+        if niveauTps < 0.0: niveauTps = 0
+        niveauTps = math.ceil(niveauTps)
+        dicoTps[z[0]]=niveauTps
+        z = C._initVars(z,'centers:niveaux_temps',float(niveauTps))
+        
+    for z in zones :
+        cflmax_loc = C.getMaxValue(z, 'centers:CFL')
+        dtmin_loc = 1./cflmax_loc
+        niveauTps = math.log2(((2**exposantMax)*dtmin)/dtmin_loc)    
+        z = C._initVars(z,'centers:niveaux_tempsP1',niveauTps)
+        
+    print("Setting 'centers:niveaux_temps' as a flow variables...done")
+    #
+
+    ### On controle si les zones en contact ont, au plus, un rapport 2 entre leur niveau en temps ###
+    ### Tant que ce n'est pas le cas, on modifie les niveaux afin d arriver dans cette situtation ###
+    print("Checking smooth transition in times levels...start")
+    chgt = 1    
+    while chgt != 0 :
+        chgt = 0      
+        for z in zones :
+            gcs = Internal.getNodesFromType2(z, 'GridConnectivity_t')
+            for gc in gcs :
+                name = Internal.getValue(gc)                
+                if dicoTps[z[0]] - dicoTps[name] > 1:
+                    dicoTps[name] = dicoTps[z[0]] - 1
+                    node = Internal.getNodeFromName(t, name)
+                    C._initVars(node, 'centers:niveaux_temps', dicoTps[name])
+                    chgt = 1
+
+            gcs = Internal.getNodesFromType2(z, 'GridConnectivity1to1_t')
+            for gc in gcs : 
+                name = Internal.getValue(gc)
+                if dicoTps[z[0]] - dicoTps[name] > 1:
+                    dicoTps[name] = dicoTps[z[0]] - 1
+                    node = Internal.getNodeFromName(t, name)
+                    C._initVars(node, 'centers:niveaux_temps', dicoTps[name])
+                    chgt = 1
+           
+    print("Checking smooth transition in times levels...done")
+    
+    niveau_min = 100000
+    max_time_level=0
+    for z in zones:
+         niveau = C.getMaxValue(z, 'centers:niveaux_temps')
+         if niveau < niveau_min :
+             niveau_min = niveau
+    print('Smallest time level= ', niveau_min)
+    
+    print("Setting smallest time level to 0...start")
+    if niveau_min != 0:
+        for z in zones:
+            niveau_precedent = C.getMaxValue(z, 'centers:niveaux_temps')         
+            C._initVars(z, 'centers:niveaux_temps', niveau_precedent - niveau_min)
+
+    for z in zones:
+        niveau_precedent = C.getMaxValue(z, 'centers:niveaux_temps')
+        if niveau_precedent>max_time_level: max_time_level=niveau_precedent
+    print("Setting smallest time level to 0...done")
+    
+    print("Total number of time levels=",max_time_level)
+    print("Number of zones pre merge=",len(zones))
+    
+    print("Merging zones with same time level...start")
+    count = 0
+    for i in range(0,int(max_time_level)+1):
+        list_same_levels=[]
+        for z in zones:
+            current_level = C.getMaxValue(z, 'centers:niveaux_temps')   
+            if current_level == i:
+                list_same_levels.append(z)
+        new_zone=T.merge(list_same_levels)
+        t[2][1][2] += new_zone
+        count += 1
+        del list_same_levels
+        
+    for z in zones:
+        Internal._rmNode(t,z)
+        
+    zones  = Internal.getNodesFromType(t, 'Zone_t')
+    print("Merging zones with same time level...done")
+    print("Number of zones post merge=",len(zones))
+    print("Dimension=",dimPb)
+
+    for z in zones:
+        niveau = C.getMaxValue(z, 'centers:niveaux_temps')
+        C._initVars(z, 'centers:niveaux_temps', pow(2,niveau))
+
+    ##This has not been tested
+    if NP > 0 :
+        t = _distribMpiDtloc(t, pow(2,niveauMax), NP)
+
+    zones  = Internal.getNodesFromType(t, 'Zone_t')
+    for z in zones :
+        gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
+        Internal._rmNode(z,gcs)
+        
+    t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
+    for perio in liste_BCPeriodiques:
+        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+
+    C.addState2Node__(t, 'EquationDimension', dimPb)   
+    t = Internal.addGhostCells(t, t, 2, adaptBCs=1, fillCorner=0)
+    if (dim == 2): 
+        t = T.addkplane(t)
+        t = T.contract(t, (0,0,0), (1,0,0), (0,1,0),0.025)
+        t = T.makeDirect(t)
+    tc = C.node2Center(t)
+    tc = X.setInterpData2(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=dim)
+    tc = C.rmVars(tc, 'FlowSolution')
+    tc = C.rmVars(tc, 'CellN')
+    return t   
+
 
 #==============================================================================
 # distribution mpi pour dtloc instationnaire 
