@@ -2956,7 +2956,7 @@ def convertpointwise2fast(FILEIN):
     ##                                               _______________________________|
 
     ## Remove further unneccesary information
-    ## output is bare bones for FastLBM
+    ## output is bare bones for FastS
     vars = ['Descriptor_t','FamilyName_t','DataClass_t','DimensionalUnits_t','GridLocation_t','FamilyName']
     for v in vars:
         for fam in Internal.getNodesFromType(t,v):
@@ -2970,20 +2970,12 @@ def change_name_BC_pointwise(t):
     zones = Internal.getNodesFromType2(t, 'Zone_t')
     for z in zones:
         count=0
-        zonebc = Internal.getNodesFromType(t, 'BC_t')
+        zonebc = Internal.getNodesFromType(z, 'BC_t')
         for zbc in zonebc:
             count +=1
-            bc_type=[]
-            tempname='';
-            for i in zbc[1]:
-                if sys.version_info[0] < 3:
-                    tempname=tempname+str(i)
-                else:
-                    tempname=tempname+str(i,'utf-8')
-            bc_type.append(tempname+str(count))  
-            print(bc_type[0])
-            Internal.setName(zbc, bc_type[0]);
+            Internal.setName(zbc, Internal.getValue(zbc)+str(count));
     return None
+
 
 def pointwise2D_2Fast(t):
     import numpy as np
@@ -2999,8 +2991,8 @@ def pointwise2D_2Fast(t):
 
         zonegrid = Internal.getNodesFromType(z, 'GridCoordinates_t')
         for zgrid in zonegrid:            
-            if Internal.getNodeFromName(z, 'CoordinateZ') is None:
-                coordz=Internal.copyNode(Internal.getNodeFromName(t, 'CoordinateX'))
+            if Internal.getNodeFromName(zgrid, 'CoordinateZ') is None:
+                coordz=Internal.copyNode(Internal.getNodeFromName(zgrid, 'CoordinateX'))
                 Internal.setName(coordz, 'CoordinateZ')
                 Internal.setValue(coordz,np.zeros((np.shape(coordz[1])[0],np.shape(coordz[1])[1])))
                 Internal.addChild(zgrid, coordz, pos=-1)
