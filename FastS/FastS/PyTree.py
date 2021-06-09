@@ -121,17 +121,17 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
             layer_mode= 0
             nit_c     = 1
             #t0=Time.time()
-            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
+            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)           
             #print('t_compute = %f'%(Time.time() - t0))
 
             # dtloc GJeanmasson
             if exploc==1 and tc is not None:
                fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
-
+               
                if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
                elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
                _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])    
-
+               
                FastC.switchPointers2__(zones,nitmax,nstep)
                 
                # Ghostcell
@@ -150,7 +150,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                if   nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
                elif nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
                _applyBC(zones, metrics, hook1, nstep, ompmode, var=vars[0])
-
+               
             else:
               #Ghostcell
               vars = FastC.varsP
@@ -319,10 +319,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     # Reordone les zones pour garantir meme ordre entre t et tc
     FastC._reorder(t, tc, ompmode)
-
+    
     # Construction param_int et param_real des zones
     FastC._buildOwnData(t, Padding)
-
+    
     #init hook necessaire pour info omp
     dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
@@ -330,16 +330,16 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
 
-    # allocation d espace dans param_int pour stockage info openmp
+    # allocation d espace dans param_int pour stockage info openmp  
     FastC._build_omp(t) 
-
+    
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
     metrics = allocate_metric(t)
-
+    
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t) 
-
+    
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     #print 'int(dtloc[0])= ', int(dtloc[0])
@@ -358,7 +358,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     rmConsVars=True
     adjoint=Adjoint
 
-
+    
     t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint)
     FastC.HOOK['FIRST_IT']= FastC.FIRST_IT
 
@@ -2448,6 +2448,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
 ## _decoupe4 uses Cassiopee functions to split the domain and uses the block size algorithm of _decoupe2 to determine
 ## the number of "cuts" in each direction.
 def splitting_per_direction(t,dir,taille_bloc):
+    import Transform.PyTree as T
     zones  = Internal.getNodesFromType(t     , 'Zone_t')
     zones_delete=[]
     for z in zones:
@@ -2495,48 +2496,49 @@ def splitting_per_direction(t,dir,taille_bloc):
     return t
 
 
-def _decoupe4(t, exposantMax = 2, NP=0,taille_bloc=25):
+def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
     import Transform.PyTree as T
 
     dimPb = 3
     node = Internal.getNodeFromName(t, 'EquationDimension')
     if node is not None: dimPb = Internal.getValue(node) 
 
-    print("Saving periodic settings...start")
-    liste_BCPeriodiques = []
-    BCMatch = Internal.getNodesFromType(t, 'GridConnectivity1to1_t')
-    for match in BCMatch:
-        perio = Internal.getNodesFromName(match, 'GridConnectivityProperty')
-        if perio != [] :
-            rotCenter  = Internal.getNodeFromName(perio, 'RotationCenter')[1]
-            rotAngle   = Internal.getNodeFromName(perio, 'RotationAngle')[1]
-            translation = Internal.getNodeFromName(perio, 'Translation')[1]
-         
-            list1 = [abs(translation).tolist(),abs(rotAngle).tolist(),rotCenter.tolist()]
+    if not isOctree:
+        print("Saving periodic settings...start")
+        liste_BCPeriodiques = []
+        BCMatch = Internal.getNodesFromType(t, 'GridConnectivity1to1_t')
+        for match in BCMatch:
+            perio = Internal.getNodesFromName(match, 'GridConnectivityProperty')
+            if perio != [] :
+                rotCenter  = Internal.getNodeFromName(perio, 'RotationCenter')[1]
+                rotAngle   = Internal.getNodeFromName(perio, 'RotationAngle')[1]
+                translation = Internal.getNodeFromName(perio, 'Translation')[1]
+             
+                list1 = [abs(translation).tolist(),abs(rotAngle).tolist(),rotCenter.tolist()]
+        
+                if list1 not in liste_BCPeriodiques:            
+                     liste_BCPeriodiques.append(list1)
+                     print("liste_BCPeriodiques=",liste_BCPeriodiques)
+        print("Saving periodic settings...end")
     
-            if list1 not in liste_BCPeriodiques:            
-                 liste_BCPeriodiques.append(list1)
-                 print("liste_BCPeriodiques=",liste_BCPeriodiques)
-    print("Saving periodic settings...end")
-
-    t = Internal.rmGhostCells(t, t, 2,adaptBCs=1)
-    zones  = Internal.getNodesFromType(t     , 'Zone_t')
-    for z in zones:
-        gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
-        Internal._rmNode(z,gcs)
-       
-    print("Splitting mesh...start")   
-    ## Doing X direction splitting
-    dir = 1
-    t   = splitting_per_direction(t,dir,taille_bloc)
-    ## Doing Y direction splitting
-    dir = 2
-    t   = splitting_per_direction(t,dir,taille_bloc)
-    ## Doing Z direction splitting
-    dir = 3
-    t   = splitting_per_direction(t,dir,taille_bloc)
-    print("Splitting mesh...done")
-    
+        t = Internal.rmGhostCells(t, t, 2,adaptBCs=1)
+        zones  = Internal.getNodesFromType(t     , 'Zone_t')
+        for z in zones:
+            gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
+            Internal._rmNode(z,gcs)
+           
+        print("Splitting mesh...start")   
+        ## Doing X direction splitting
+        dir = 1
+        t   = splitting_per_direction(t,dir,taille_bloc)
+        ## Doing Y direction splitting
+        dir = 2
+        t   = splitting_per_direction(t,dir,taille_bloc)
+        ## Doing Z direction splitting
+        dir = 3
+        t   = splitting_per_direction(t,dir,taille_bloc)
+        print("Splitting mesh...done")
+        
     zones  = Internal.getNodesFromType(t     , 'Zone_t')
     print('Post split: Total number of zones=', len(zones))
 
@@ -2545,18 +2547,22 @@ def _decoupe4(t, exposantMax = 2, NP=0,taille_bloc=25):
     count = 0
     for z in zones :
         dim = Internal.getZoneDim(z)
-        zp = T.subzone(z,(3,3,3),(dim[1]-2,dim[2]-2,dim[3]-2))
+        if dimPb == 3:
+            zp = T.subzone(z,(3,3,3),(dim[1]-2,dim[2]-2,dim[3]-2))
+        else:
+            zp = T.subzone(z,(3,3,1),(dim[1]-2,dim[2]-2,1))
         cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
         dtmin_loc = 1./cflmax_loc
         if dtmin_loc < dtmin: dtmin = dtmin_loc
-    
-    for z in zones :
-        gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
-        Internal._rmNode(z,gcs)
-    
-    t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
-    for perio in liste_BCPeriodiques:
-        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+
+    if not isOctree:
+        for z in zones :
+            gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
+            Internal._rmNode(z,gcs)
+        
+        t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
+        for perio in liste_BCPeriodiques:
+            t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
    
     dicoTps = {}
     zones  = Internal.getNodesFromType(t, 'Zone_t')
@@ -2631,58 +2637,138 @@ def _decoupe4(t, exposantMax = 2, NP=0,taille_bloc=25):
     print("Setting smallest time level to 0...done")
     
     print("Total number of time levels=",max_time_level)
-    print("Number of zones pre merge=",len(zones))
-    
-    print("Merging zones with same time level...start")
-    count = 0
-    for i in range(0,int(max_time_level)+1):
-        list_same_levels=[]
+    if not isOctree:
+        print("Number of zones pre merge=",len(zones))
+        
+        print("Merging zones with same time level...start")
+        count = 0
+        for i in range(0,int(max_time_level)+1):
+            list_same_levels=[]
+            for z in zones:
+                current_level = C.getMaxValue(z, 'centers:niveaux_temps')   
+                if current_level == i:
+                    list_same_levels.append(z)
+            new_zone=T.merge(list_same_levels)
+            t[2][1][2] += new_zone
+            count += 1
+            del list_same_levels
+            
         for z in zones:
-            current_level = C.getMaxValue(z, 'centers:niveaux_temps')   
-            if current_level == i:
-                list_same_levels.append(z)
-        new_zone=T.merge(list_same_levels)
-        t[2][1][2] += new_zone
-        count += 1
-        del list_same_levels
-        
-    for z in zones:
-        Internal._rmNode(t,z)
-        
-    zones  = Internal.getNodesFromType(t, 'Zone_t')
-    print("Merging zones with same time level...done")
-    print("Number of zones post merge=",len(zones))
-    print("Dimension=",dimPb)
+            Internal._rmNode(t,z)
+            
+        zones  = Internal.getNodesFromType(t, 'Zone_t')
+        print("Merging zones with same time level...done")
+        print("Number of zones post merge=",len(zones))
+        print("Dimension=",dimPb)
 
     for z in zones:
         niveau = C.getMaxValue(z, 'centers:niveaux_temps')
         C._initVars(z, 'centers:niveaux_temps', pow(2,niveau))
 
-    ##This has not been tested
-    if NP > 0 :
-        t = _distribMpiDtloc(t, pow(2,niveauMax), NP)
 
-    zones  = Internal.getNodesFromType(t, 'Zone_t')
-    for z in zones :
-        gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
-        Internal._rmNode(z,gcs)
+    if not isOctree:
+        ##This has not been tested
+        if NP > 0 :
+            t = _distribMpiDtloc(t, pow(2,niveauMax), NP)
+    
+        zones  = Internal.getNodesFromType(t, 'Zone_t')
+        for z in zones :
+            gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
+            Internal._rmNode(z,gcs)
+            
+        t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
+        for perio in liste_BCPeriodiques:
+            t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+    
+        C.addState2Node__(t, 'EquationDimension', dimPb)   
+        t = Internal.addGhostCells(t, t, 2, adaptBCs=1, fillCorner=0)
+        if (dim == 2): 
+            t = T.addkplane(t)
+            t = T.contract(t, (0,0,0), (1,0,0), (0,1,0),0.025)
+            t = T.makeDirect(t)
+        tc = C.node2Center(t)
+        tc = X.setInterpData2(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=dim)
+        tc = C.rmVars(tc, 'FlowSolution')
+        tc = C.rmVars(tc, 'CellN')
+    else:
+        tc_orig = Internal.copyRef(tc)
+        tc = C.node2Center(t)
+        tc = X.setInterpData2(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=dim)
+        bases = Internal.getNodesFromType(tc_orig, 'CGNSBase_t')
+        for b in bases:
+            zones = Internal.getNodesFromType(b, 'Zone_t')
+            for z in zones:
+                    zones2 = Internal.getNodesFromType(z, 'ZoneSubRegion_t')
+                    for z2 in zones2:
+                        if z2[0][0:3]=='IBC':
+                            node = Internal.createNode('PointRange', 'IndexArray_t', value=[0,0,0,0,0,0], children=[])
+                            Internal.addChild(z2, node, pos=-1)
+                            node = Internal.createNode('PointRangeDonor', 'IndexArray_t', value=[0,0,0,0,0,0], children=[])
+                            Internal.addChild(z2, node, pos=-1)
+                            node = Internal.createNode('DirDonneur', 'IndexArray_t', value=[0], children=[])
+                            Internal.addChild(z2, node, pos=-1)
+                            node = Internal.createNode('DirReceveur', 'IndexArray_t', value=[0], children=[])
+                            Internal.addChild(z2, node, pos=-1)
+                            node = Internal.createNode('Transform', 'IndexArray_t', value=[1,2,3], children=[])
+                            Internal.addChild(z2, node, pos=-1)
+                            node = Internal.createNode('PointPivot', 'IndexArray_t', value=[0,0,0], children=[])
+                            Internal.addChild(z2, node, pos=-1)
+                            node = Internal.createNode('Profondeur', 'IndexArray_t', value=[2], children=[])
+                            Internal.addChild(z2, node, pos=-1)                
+                            node = Internal.createNode('NMratio', 'IndexArray_t', value=[1,1,1], children=[])
+                            Internal.addChild(z2, node, pos=-1)
+                            node = Internal.createNode('DnrZoneName', 'IndexArray_t', value=[Internal.getValue(z2)], children=[])
+                            Internal.addChild(z2, node, pos=-1)
+                            
+                            t_zone     = Internal.getNodesFromName(t, Internal.getValue(z2))
+                            time_level = C.getMaxValue(t_zone, 'centers:niveaux_temps')
+            
+                            node = Internal.createNode('LevelZRcv', 'IndexArray_t', value=[time_level], children=[])
+                            Internal.addChild(z2, node, pos=-1)
+                            node = Internal.createNode('LevelZDnr', 'IndexArray_t', value=[time_level], children=[])
+                            Internal.addChild(z2, node, pos=-1)
+            
+                            path = b[0]+'/'+z[0]
+                            node = Internal.getNodeFromPath(tc, path)
+                            Internal.addChild(node, z2, pos=-1)        
+    return (t,tc)
+
+
+def set_dt_lts(t,running_cfl=None,dt=None):
+    import Transform.PyTree as T
+    if running_cfl is None and dt is None:
+        print("Error(set_dt_lts):: running_cfl and dt cannot be both None")
+        print("Error(set_dt_lts):: either running_cfl or dt for the most refined level must be provided")
+        print("Error(set_dt_lts):: ...aborting...")
+        exit()
         
-    t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
-    for perio in liste_BCPeriodiques:
-        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
-
-    C.addState2Node__(t, 'EquationDimension', dimPb)   
-    t = Internal.addGhostCells(t, t, 2, adaptBCs=1, fillCorner=0)
-    if (dim == 2): 
-        t = T.addkplane(t)
-        t = T.contract(t, (0,0,0), (1,0,0), (0,1,0),0.025)
-        t = T.makeDirect(t)
-    tc = C.node2Center(t)
-    tc = X.setInterpData2(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=dim)
-    tc = C.rmVars(tc, 'FlowSolution')
-    tc = C.rmVars(tc, 'CellN')
-    return t   
-
+    dimPb = 3
+    node  = Internal.getNodeFromName(t, 'EquationDimension')
+    if node is not None: dimPb = Internal.getValue(node) 
+    time_level_glob = 0
+    cflmax_glob     = 0.0
+    zones           = Internal.getZones(t)
+    for z in zones:
+        dim        = Internal.getZoneDim(z)
+        if dimPb == 3:
+            z          = T.subzone(z, (3,3,3), (dim[1]-2,dim[2]-2,dim[3]-2))
+        else:
+            z          = T.subzone(z, (3,3,1), (dim[1]-2,dim[2]-2,1))
+            
+        cflmax     = C.getMaxValue(z, 'centers:CFL')
+        time_level = C.getMaxValue(z, 'centers:niveaux_temps')
+        if time_level > time_level_glob:time_level_glob = time_level
+        if cflmax > cflmax_glob:cflmax_glob = cflmax
+    
+    dt_max = running_cfl*(1/cflmax_glob)
+    if dt is not None:
+        dt_max = dt
+    print("dt_refined=",dt_max)
+    dt_max = dt_max*2**(numpy.log2(time_level_glob))
+    print("Total number of time levels=",time_level_glob)
+    print("dt_coarse=",dt_max)
+    
+    return dt_max
 
 #==============================================================================
 # distribution mpi pour dtloc instationnaire 
