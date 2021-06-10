@@ -12,10 +12,18 @@ import Transform.PyTree as T
 import math
 import numpy
 import sys
+import os
+import tarfile
+import shutil
 
 ## BEGINNING OF COMPUTE
-t  = Fast.loadTree('t3DLTS.cgns')
-tc = Fast.loadTree('tc3DLTS.cgns')
+if not os.path.isfile('cgns_lts/t3DLTS.cgns'):
+    tar = tarfile.open('cgns_lts.tar.gz', "r:gz")
+    tar.extractall()
+    tar.close()
+
+t  = Fast.loadTree('cgns_lts/t3DLTS.cgns')
+tc = Fast.loadTree('cgns_lts/tc3DLTS.cgns')
 
 NIT                        = 100     # number of iterations
 display_probe_freq         = 10      # iteration frequency to display modulo_verif
@@ -66,6 +74,7 @@ Internal.createUniqueChild(t, 'Time', 'DataArray_t', value=time0)
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)
+shutil.rmtree("cgns_lts")
 #C.convertPyTree2File(t, "out.cgns")
 
 
