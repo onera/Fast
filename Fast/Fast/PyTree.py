@@ -33,7 +33,7 @@ except: OMP_NUM_THREADS = 1
 # Initialisation parametre calcul: calcul metric + var primitive + compactage 
 # + alignement + placement DRAM
 #==============================================================================
-def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, SizeBlockTarget=1000):
+def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, SizeBlockTarget=1000,nghost=2):
     """Perform necessary operations for the solver to run."""
 
     # renumerotation cellule/face si necessaire pour HPC (threading et cache blocking)
@@ -93,7 +93,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
-    metrics = allocate_metric(t)
+    metrics = allocate_metric(t,nghost)
 
     metrics_str=[]; metrics_unstr=[]; metrics_ns = []; metrics_lbm = []
     c  =0
@@ -152,8 +152,8 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     #zones_str, zones_unstr, metrics_str, metrics_unstr = tri_zones( zones, metrics)
     infos_zones = tri_zones( zones, metrics)  #info-zone: dico 4 item contenant la list [ zones, metrics] pour Struct, unstruc, LBM, NS
     # init Q variables from macro variable if lbm
-    #FastLBM._init_Q(infos_zones["LBM"][0])
-    FastLBM._init_Q(infos_zones["LBM"][0])
+    flag_initprecise = 0
+    FastLBM._init_Q(infos_zones["LBM"][0],flag_initprecise)
 
     #allocate tab ssor en structure
     zones_str   = infos_zones["struct"][0]
@@ -249,7 +249,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 #==============================================================================
 # alloue retourne la metrique
 #==============================================================================
-def allocate_metric(t):
+def allocate_metric(t,nghost):
     zones        = Internal.getZones(t)
     dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
@@ -274,7 +274,7 @@ def allocate_metric(t):
            param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
 
            if param_int[27] == 4:   #IFLOW=4
-              metrics.append( FastLBM.fastlbm.allocate_metric(z, nssiter))
+              metrics.append( FastLBM.fastlbm.allocate_metric(z, nssiter,nghost))
            else:
               metrics.append( FastS.fasts.allocate_metric(z, nssiter))
         else:
@@ -519,8 +519,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
          if case != 0 and itypcp < 2: FastC.switchPointers__(zones_ns, case)
          if case != 0 and itypcp ==2: FastC.switchPointers__(zones_ns, case, nitmax%2+2)
 
-    if  NIT%2 != 0:
-      FastC.switchPointersLBM__(zones_lbm, FastLBM.NQ)
+    #if  NIT%2 != 0:
+    #  FastC.switchPointersLBM__(zones_lbm, FastLBM.NQ)
 
     # flag pour derivee temporelle 1er pas de temps implicit
     FastC.HOOK["FIRST_IT"]  = 1
@@ -539,9 +539,9 @@ def _applyBC(infos_zones, hook1, nstep, ompmode, var=["Density","Q1"]):
     else: 
          varlbm =  var[1]
          varns  =  var[0]
-
+    varType=4
     FastS.fasts._applyBC(infos_zones["struct"][0]  , infos_zones["struct"][1]    , hook1, nstep, ompmode, varns  )
-    FastLBM.fastlbm._applyBC(infos_zones["LBM"][0] , infos_zones["LBM"][1]       , hook1, nstep, ompmode, varlbm )
+    FastLBM.fastlbm._applyBC(infos_zones["LBM"][0] , infos_zones["LBM"][1]       , hook1, nstep, ompmode, varType,varlbm )
     FastP.fastp._applyBC(infos_zones["unstruct"][0], infos_zones["unstruct"][1]  , hook1, nstep, ompmode, varns  )
     
 

@@ -686,7 +686,7 @@ void K_FASTC::setInterpTransfersIntra(
                       }
                       else
                       {
-            #           include "commonInterpTransfers_reorder_neq.h"
+			//            #           include "LBM/commonInterpTransfers_reorder_neq.h"
                       }
                        
                       // Prise en compte de la periodicite par rotation
@@ -1244,7 +1244,7 @@ if (has_data_to_send) {
                         } else if ( nvars_loc == 6 ) {
 #include "commonInterpTransfersD_reorder_6eq.h"
                         } else {
-#include "commonInterpTransfersD_reorder_neq.h"
+		    //#include "LBM/commonInterpTransfersD_reorder_neq.h"
                         }
                   // Prise en compte de la periodicite par rotation
                   if ( rotation == 1 ) {

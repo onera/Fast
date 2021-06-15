@@ -4,6 +4,7 @@ import numpy
 import os
 from . import fastc
 
+
 FIRST_IT = 0
 HOOK     = None
 
@@ -11,14 +12,19 @@ HOOK     = None
 varsN    = ['Density']
 varsP    = ['Density_P1']
 varsM    = ['Density_M1']
-varsPLBM = ['Q1']
-varsMLBM = ['Q1_M1']
-varsMacro= ['Density']
+
+# LBM Variables
+varsPLBM   = ['Q_1']
+varsMLBM   = ['Qstar_1']
+varsEQLBM  = ['Qeq_1']
+varsNEQLBM = ['Qneq_1']
+varsMacro  = ['Density']
 
 try:
     import Converter.PyTree as C
     import Converter.Internal as Internal
     import Post.PyTree as P
+    import Fast.variables_share_pytree as v
     import math
 except:
     raise ImportError("Fast.Internal: requires Converter and Post module.")
@@ -33,10 +39,10 @@ except: OMP_NUM_THREADS = 1
 
 import Converter.Mpi as Cmpi
 
+
 MX_SYNCHRO = 1000
 MX_SSZONE  = 10
 MX_OMP_SIZE_INT = 250*OMP_NUM_THREADS
-
 #==============================================================================
 # Met un dictionnaire de numerics dans une/des zones
 #==============================================================================
@@ -183,17 +189,39 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                vars_c.append('TurbulentSANuTildeDensity')
 
             vars=[]
-            timelevel = ['', '_M1', '_P1']
-            if lbmflag: 
+            timelevel    = ['', '_M1', '_P1']
+            if lbmflag == True :
+               timelevel = [''] 
+               for level in timelevel:
+                   fields2compact =[]
+                   for i in range(1,neq_lbm+1):
+                       fields2compact.append('centers:Q_'+str(i)+level)
+                   vars.append(fields2compact)
+
                fields2compact =[]
                for i in range(1,neq_lbm+1):
-                 fields2compact.append('centers:Q'+str(i))
+                 fields2compact.append('centers:Qstar_'+str(i))
+               vars.append(fields2compact)
+
+               fields2compact =[]
+               for i in range(1,neq_lbm+1):
+                 fields2compact.append('centers:cellN_IBC_LBM_'+str(i))
+               vars.append(fields2compact)
+
+               fields2compact =[]
+               for i in range(1,neq_lbm+1):
+                 fields2compact.append('centers:Qeq_'+str(i))
                vars.append(fields2compact)
                fields2compact =[]
                for i in range(1,neq_lbm+1):
-                 fields2compact.append('centers:Q'+str(i)+'_M1')
+                 fields2compact.append('centers:Qneq_'+str(i))
                vars.append(fields2compact)
-               timelevel = ['']
+
+               vars.append('centers:SpongeCoef')
+
+
+            timelevel = ['', '_M1','_P1']
+                
             for level in timelevel:  #champs primitives
                fields2compact =[]
                for v in vars_p:
@@ -325,10 +353,10 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
     if model != 'LBMLaminar':
        neq_lbm = 0
        #on test s'il existe 2 niveaux en temps dans l'arbre pour appliquer la bonne formule de derivee temporelle a la premere iteration
-       if C.isNamePresent(zone, 'centers:Density_M1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_M1')  ; FIRST_IT=0
-       if C.isNamePresent(zone, 'centers:VelocityX_M1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_M1'); FIRST_IT=0
-       if C.isNamePresent(zone, 'centers:VelocityY_M1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_M1'); FIRST_IT=0
-       if C.isNamePresent(zone, 'centers:VelocityZ_M1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_M1'); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:Density_M1')     != 1: C._cpVars(zone, 'centers:Density'    , zone, 'centers:Density_M1')  ; FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:VelocityX_M1')   != 1: C._cpVars(zone, 'centers:VelocityX'  , zone, 'centers:VelocityX_M1'); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:VelocityY_M1')   != 1: C._cpVars(zone, 'centers:VelocityY'  , zone, 'centers:VelocityY_M1'); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:VelocityZ_M1')   != 1: C._cpVars(zone, 'centers:VelocityZ'  , zone, 'centers:VelocityZ_M1'); FIRST_IT=0
        if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
        if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_M1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_M1'); FIRST_IT=0
 
@@ -343,10 +371,23 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
 
        #print('Internal fast: neq_LBM=', neq_lbm)
        for i in range(1,neq_lbm+1):
-           if C.isNamePresent(zone, 'centers:Q'+str(i)) != 1: C._initVars(zone, 'centers:Q'+str(i), 0.)
-           if C.isNamePresent(zone, 'centers:Q'+str(i)+'_M1') != 1: C._initVars(zone, 'centers:Q'+str(i)+'_M1', 0.)
+           if C.isNamePresent(zone, 'centers:Q_'    +str(i)      ) != 1: C._initVars(zone, 'centers:Q_'    +str(i)      , 0.)
+           if C.isNamePresent(zone, 'centers:Qstar_'+str(i)      ) != 1: C._initVars(zone, 'centers:Qstar_'+str(i)      , 0.)
+           if C.isNamePresent(zone, 'centers:Qeq_'  +str(i)      ) != 1: C._initVars(zone, 'centers:Qeq_'  +str(i)      , 0.)
+           if C.isNamePresent(zone, 'centers:Qneq_' +str(i)      ) != 1: C._initVars(zone, 'centers:Qneq_' +str(i)      , 0.)
+           
+       for i in range(1,3+1):
+           if C.isNamePresent(zone, 'centers:cellN_IBC_LBM'    +str(i)      ) != 1: C._initVars(zone, 'centers:cellN_IBC_LBM_'    +str(i)      , 0.)
+           
+       if C.isNamePresent(zone, 'centers:SpongeCoef')    != 1: C._initVars(zone, 'centers:SpongeCoef'    , 0.)
 
-    # gestion ale maillage deformable
+       if C.isNamePresent(zone, 'centers:Density_M1'    ) != 1: C._cpVars(zone, 'centers:Density'    , zone, 'centers:Density_M1'    ); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:VelocityX_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityX'  , zone, 'centers:VelocityX_M1'  ); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:VelocityY_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityY'  , zone, 'centers:VelocityY_M1'  ); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:VelocityZ_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityZ'  , zone, 'centers:VelocityZ_M1'  ); FIRST_IT=0
+       if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
+       
+    #gestion ale maillage deformable
     ale=0
     b = Internal.getNodeFromName1(zone, '.Solver#define')
     if b is not None:
@@ -606,6 +647,7 @@ def _build_omp(t):
 # Construit les datas possedees par FastP
 #==============================================================================
 def _buildOwnData(t, Padding):
+
     # Data for each Base
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
 
@@ -663,7 +705,7 @@ def _buildOwnData(t, Padding):
     leveld = numpy.roll(veclevel,-1)
 
     # Available keys for bases and zones
-    # 0: requires and int, 1: requires a float, 2: requires any string, 
+    # 0: requires an int, 1: requires a float, 2: requires any string, 
     # 3: requires array/list of ints, 4: requires array/list of floats,
     # []: requires given strings
     keys4Base = {
@@ -718,7 +760,30 @@ def _buildOwnData(t, Padding):
     'source':0,
     'Cups':4,
     'senseurType':0,
-    'ratiom':1
+    'ratiom':1, 
+    'lbm_neq':0,
+    'lbm_col_op':['BGK','TRT','HRR'],
+    'lbm_c0':1,
+    'lbm_taug':1,
+    'lbm_gamma_precon':1,    
+    'lbm_dif_coef':1,
+    'lbm_selective_filter':0,
+    'lbm_selective_filter_size':0,
+    'lbm_selective_filter_sigma':1,
+    'lbm_hrr_sigma':1,   
+    'lbm_adaptive_filter_chi':1,
+    'lbm_chi_spongetypeII':1,
+    'lbm_sponge_size':0,
+    'lbm_spng_xmin':1,
+    'lbm_spng_xmax':0,
+    'lbm_spng_ymin':0,
+    'lbm_spng_ymax':0,
+    'lbm_spng_zmin':0,
+    'lbm_spng_zmax':0,
+    'lbm_ibm':0,
+    'lbm_isforce':0,
+    'lbm_zlim':1,
+    'lbm_ibm_connector':0       
     }
 
 
@@ -834,6 +899,7 @@ def _buildOwnData(t, Padding):
                iv = dims[1]-5
                jv = dims[2]-5
                kv = dims[3]-5
+               #kv = dims[3]-3 #[AJ] Hard coded for LBM and 1 ghost point
                if kv == -3 : kv =1
                if pad: 
                   target = [iv,jv,kv]
@@ -863,33 +929,74 @@ def _buildOwnData(t, Padding):
             if ngon : slope ='o2'
             motion          = "none"
             filtrage        = "off"
-            io_th      = 0
-            cacheblckI = 2048
-            cacheblckJ = 2         # modifier sir LES car 3 valeur minimal dans ce cas
-            cacheblckK = 7           
-            dtnature   = "global"
-            dtc        = -0.000001
-            epsi_newton  = 0.1 
-            epsi_linear  = 0.01 
-            psiroe       = 0.1
-            cfl          = 1.
-            rotation     = [ 0.,0.,0., 0.,0.,0.,0.,0.]
-            ssdom_IJK    = [240,20,900]
-            sfd          = 0
-            sfd_chi      = 0.
-            sfd_delta    = 1.e15
-            sfd_init_iter= 1
-            nit_inflow   = 10
-            epsi_inflow  = 1.e-5
-            DES_debug    = 0
-            extract_res  = 0
-            ibc          = numpy.zeros(7, dtype=numpy.int32)
-            source       = 0
-            cups         = [1.,1.]
-            ratiom       = 10000.
-            meshtype     = 1  #stuctured
-            senseurtype  = 1  #version celia laurent du schema senseur
-            
+            io_th           = 0
+            cacheblckI      = 2048
+            cacheblckJ      = 2
+            cacheblckK      = 7
+            dtnature        = "global"
+            dtc             = -0.000001
+            epsi_newton     = 0.1 
+            epsi_linear     = 0.01 
+            psiroe          = 0.1
+            cfl             = 1.
+            rotation        = [ 0.,0.,0., 0.,0.,0.,0.,0.]
+            ssdom_IJK       = [240,20,900]
+            sfd             = 0
+            sfd_chi         = 0.
+            sfd_delta       = 1.e15
+            sfd_init_iter   = 1
+            nit_inflow      = 10
+            epsi_inflow     = 1.e-5
+            DES_debug       = 0
+            extract_res     = 0
+            ibc             = numpy.zeros( 7, dtype=numpy.int32)
+            source          = 0
+            cups            = [1.,1.]
+            ratiom          = 10000.
+            meshtype        = 1  #stuctured
+            senseurtype     = 1  #version celia laurent du schema senseur
+
+            ##LBM
+            #General
+            lbm_neq                = 19              #Stencil
+            lbm_col_op             = "BGK"           #Collision Operator
+            lbm_taug               = 0.5             #relaxation time | for BGK this is tau for TRT this is big lambda
+            lbm_gamma_precon       = 1.
+            lbm_c0                 = 1./math.sqrt(3.)# speed of sound
+            lbm_dif_coef           = 0.              # nu_local
+
+            ##IBM
+            lbm_ibm                = 21
+            lbm_ibm_connector      = 1
+            lbm_collision_operator = 1
+
+            # Selective Filter
+            ## S-M-C   :: streaming - macro - collision 
+            ## M-C-B-S :: macro - collision - BCs - streaming
+            lbm_selective_filter       = 0               # -1 M-C-B-S || 0 S-M-C   || 1 - Macro props || 2 - f's || 3 - collision operator
+            lbm_selective_filter_size  = 9               # Filter size
+            lbm_selective_filter_sigma = 0.              # Filter sigma
+            lbm_adaptive_filter_chi    = 1.5             # chi var for adaptive filter
+            lbm_chi_spongetypeII       = 0.2             # chi value for sponge type II absorbing layer Xu & Sagaut 2013
+            lbm_hrr_sigma              = 0.99999995
+
+            # Non-reflecting boundary condition : Absorbing/Sponge Layer
+            lbm_sponge_size        = 0               # Sponge size - Number of grid points
+            lbm_sponge_prep        = 0               # Prepare Sponge
+            lbm_cbc_prep           = 0               # Prepare Sponge
+
+            lbm_spng_xmin          = 0
+            lbm_spng_xmax          = 0
+            lbm_spng_ymin          = 0
+            lbm_spng_ymax          = 0
+            lbm_spng_zmin          = 0
+            lbm_spng_zmax          = 0
+            lbm_ibm                = 0
+            lbm_initialize         = 0
+            lbm_isforce            = 0
+            lbm_forcex             = [0.,0.,0.]
+            lbm_zlim               = 0.
+
             a = Internal.getNodeFromName1(z, 'ZoneType')
             tmp = Internal.getValue(a)
             if tmp == 'Unstructured':
@@ -1013,17 +1120,96 @@ def _buildOwnData(t, Padding):
                 a = Internal.getNodeFromName1(d, 'ratiom')
                 if a is not None: ratiom = Internal.getValue(a)  
                 a = Internal.getNodeFromName1(d, 'senseurType')
-                if a is not None: senseurtype = Internal.getValue(a)  
+                if a is not None: senseurtype = Internal.getValue(a)
+
+                ##LBM                 
+                a = Internal.getNodeFromName1(d, 'lbm_neq')
+                if a is not None:
+                    lbm_neq = Internal.getValue(a)
+                    if kv == 1: lbm_neq=9  # over-ride to default value of 9 for 2d
+                else:
+                    lbm_neq = 19                  
+                if ngon:
+                    lbm_neq=0
+                    
+                a = Internal.getNodeFromName1(d, 'lbm_col_op')
+                if a is not None: lbm_col_op = Internal.getValue(a)
+                if   lbm_col_op == 'BGK':
+                    lbm_collision_operator=1
+                elif  lbm_col_op == 'TRT':
+                    lbm_collision_operator=2
+                elif  lbm_col_op == 'HRR':
+                    lbm_collision_operator=3
+
+                a = Internal.getNodeFromName1(d, 'lbm_c0')
+                if a is not None: lbm_c0 = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_taug')
+                if a is not None: lbm_taug = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_gamma_precon')
+                if a is not None: lbm_gamma_precon = Internal.getValue(a)
                
+                a = Internal.getNodeFromName1(d, 'lbm_dif_coef')
+                if a is not None: lbm_dif_coef = Internal.getValue(a)
+                
+                a = Internal.getNodeFromName1(d, 'lbm_selective_filter')
+                if a is not None: lbm_selective_filter = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_selective_filter_size')
+                if a is not None: lbm_selective_filter_size = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_selective_filter_sigma')
+                if a is not None: lbm_selective_filter_sigma = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_hrr_sigma')
+                if a is not None: lbm_hrr_sigma = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_adaptive_filter_chi')
+                if a is not None: lbm_adaptive_filter_chi = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_chi_spongetypeII')
+                if a is not None: lbm_chi_spongetypeII = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_sponge_size')
+                if a is not None: lbm_sponge_size = Internal.getValue(a)
+                
+                a = Internal.getNodeFromName1(d, 'lbm_spng_xmin')
+                if a is not None: lbm_spng_xmin = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'lbm_spng_xmax')
+                if a is not None: lbm_spng_xmax = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'lbm_spng_ymin')
+                if a is not None: lbm_spng_ymin = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'lbm_spng_ymax')
+                if a is not None: lbm_spng_ymax = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'lbm_spng_zmin')
+                if a is not None: lbm_spng_zmin = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'lbm_spng_zmax')
+                if a is not None: lbm_spng_zmax = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_ibm')
+                if a is not None: lbm_ibm = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_ibm_connector')
+                if a is not None: lbm_ibm_connector = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_init_method')
+                if a is not None: lbm_initialize = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_isforce')
+                if a is not None: lbm_isforce = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_force')
+                if a is not None: lbm_forcex = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'lbm_zlim')
+                if a is not None: lbm_zlim = Internal.getValue(a) 
+                
+
+                
             iflow  = 1
             ides   = 0; idist = 1; ispax = 2; izgris = 0; iprod = 0
             azgris = 0.01; addes = 0.2
-
-            if not ngon:
-              neq_lbm=19
-              if kv == 1: neq_lbm=9  # calcul 2d
-            else:
-              neq_lbm=0
 
             if   model == "Euler"     or model == "euler":     iflow = 1
             elif model == "NSLaminar" or model == "nslaminar": iflow = 2
@@ -1130,7 +1316,10 @@ def _buildOwnData(t, Padding):
             leveld=0
 
             
-            datap = numpy.empty(90, numpy.int32)
+            number_of_defines_param_int = 124                           # Number Param INT
+            size_int                   = number_of_defines_param_int +1 # number of defines + 1
+
+            datap      = numpy.empty(size_int, numpy.int32)
             datap[0:25]= -1
 
             #Structure ou polyhedric
@@ -1237,19 +1426,46 @@ def _buildOwnData(t, Padding):
             datap[83]   = source
             datap[84]   = meshtype
             datap[85]   = senseurtype
-            datap[86]   = neq_lbm
             datap[87]   = -1
             datap[88]   = iwallmodel
             datap[89]   = wallmodel_sample
 
+            ## LBM
+            datap[v.NEQ_LBM]        = lbm_neq
+            datap[v.LBM_COL_OP]     = lbm_collision_operator
+            datap[v.LBM_FILTER]     = lbm_selective_filter
+            datap[v.LBM_FILTER_SZ]  = lbm_selective_filter_size
+            datap[v.LBM_SPONGE_SIZE]= lbm_sponge_size
+            datap[v.LBM_SPONGE_PREP]= lbm_sponge_prep
+
+            datap[v.flag_streaming]           = 1
+            datap[v.flag_macro]               = 1
+            datap[v.flag_collision_operator]  = 1
+            datap[v.flag_collision]           = 1
+            datap[v.LBM_isforce]              = lbm_isforce
+            datap[v.flag_BConQstar_switch]    = 0
+
+            datap[v.LBM_IBC]          = lbm_ibm
+            datap[v.LBM_IBC_NUM]      = 0 
+            datap[v.LBM_IBC_PREP]     = 0
+            datap[v.LBM_IBC_CONNECTOR]= lbm_ibm_connector
+
+            datap[v.LBM_spng_xmin] = lbm_spng_xmin
+            datap[v.LBM_spng_xmax] = lbm_spng_xmax
+            datap[v.LBM_spng_ymin] = lbm_spng_ymin
+            datap[v.LBM_spng_ymax] = lbm_spng_ymax
+            datap[v.LBM_spng_zmin] = lbm_spng_zmin
+            datap[v.LBM_spng_zmax] = lbm_spng_zmax
+            
             i += 1
          
             Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
             
             # creation noeud parametre real 
             #size_real = 23 +  size_ale   
-            size_real = 41
-            datap = numpy.zeros(size_real, numpy.float64)
+            number_of_defines_param_real = 54                                    # Number Param REAL
+            size_real                    = number_of_defines_param_real+1
+            datap                        = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
                 print('Warning: Fast: time_step set to default value (0.0001).')
                 dtc = 0.0001
@@ -1299,6 +1515,19 @@ def _buildOwnData(t, Padding):
             datap[39]=  epsi_linear
             datap[40]=  cups[1] # on garde la valeur max, pas la moyenne
 
+            ##LBM
+            datap[v.LBM_c0]      = lbm_c0
+            datap[v.LBM_taug]    = lbm_taug
+            datap[v.LBM_difcoef] = lbm_dif_coef
+            
+            datap[v.LBM_filter_sigma]        = lbm_selective_filter_sigma
+            datap[v.LBM_forcex:v.LBM_forcex+3] = lbm_forcex[0:3]
+            datap[v.LBM_adaptive_filter_chi] = lbm_adaptive_filter_chi
+            datap[v.LBM_chi_spongetypeII]    = lbm_chi_spongetypeII
+            datap[v.LBM_HRR_sigma]           = lbm_hrr_sigma
+            datap[v.LBM_gamma_precon]        = lbm_gamma_precon
+            datap[v.LBM_zlim]                = lbm_zlim
+                       
             Internal.createUniqueChild(o, 'Parameter_real', 'DataArray_t', datap)
 
             # More
@@ -1409,6 +1638,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     else                      : size_drodm =   ndimt
     drodm     = numpy.empty(ndimt   , dtype=numpy.float64)        
     tab_dtloc = numpy.empty(ndimface, dtype=numpy.float64)
+    forceterm = numpy.empty(ndimt   , dtype=numpy.float64)
 
 #    for z in zones:
 #         param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
@@ -1437,6 +1667,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['coe']            = coe
     hook['rhs']            = drodm
     hook['grad']           = grad
+    #hook['forceterm']      = forceterm
     hook['tab_dtloc']      = tab_dtloc
     hook['flu_vecto']      = flu
     hook['verrou_omp']     = lok
@@ -1495,6 +1726,20 @@ def tagBC(bcname):
   elif bcname == "BCOverlap":               tag =22
   elif bcname == "BCWallModel":             tag =30
   elif bcname == "BCWallExchange":          tag =31
+
+  elif bcname == "LBM_BCPeriodic":           tag =100;#ok
+  elif bcname == "LBM_BCSymmetryPlane":      tag =101;#ok
+  elif bcname == "LBM_BCSlip":               tag =101;#ok
+  elif bcname == "LBM_BCWall":               tag =102;#ok
+  elif bcname == "LBM_BCInflow":             tag =103;#ok
+  elif bcname == "LBM_BCPressureAntiBB":     tag =105;#ok
+  elif bcname == "LBM_BCPML":                tag =108;#NOT FULLY IMPLEMENTED
+  elif bcname == "LBM_BCCBC_UBB":            tag =109;#work needs to be done (DO NOT USE)
+  elif bcname == "LBM_BCCBC_PABB":           tag =110;#work needs to be done (BUG)
+  elif bcname == "LBM_BCZerothExtrapol":     tag =111;#ok
+  elif bcname == "LBM_BCLinearExtrapol":     tag =112;#ok
+  elif bcname == "LBM_BCNeumannCentralDir":  tag =113;#ok
+  elif bcname == "LBM_BCExtrapolJunk":       tag =114;#ok
   else:
     tag = -1
     print("Warning: Fast: unknown BC type %s."%bcname)
@@ -2931,6 +3176,7 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
         FILE = directory+'/'+fileName+'.cgns'
         C.convertPyTree2File(t2, FILE)
 
+
 def convertpointwise2fast(FILEIN):
     ## This script converst Pointwise meshes to a format that can be used for FastS
     t  = C.convertFile2PyTree(FILEIN+".cgns")
@@ -2965,6 +3211,7 @@ def convertpointwise2fast(FILEIN):
     C.convertPyTree2File(t ,FILEIN+"_fast.cgns")
     return t
     
+
 def change_name_BC_pointwise(t):
     import sys
     zones = Internal.getNodesFromType2(t, 'Zone_t')
@@ -2997,3 +3244,30 @@ def pointwise2D_2Fast(t):
                 Internal.setValue(coordz,np.zeros((np.shape(coordz[1])[0],np.shape(coordz[1])[1])))
                 Internal.addChild(zgrid, coordz, pos=-1)
     return None
+#==============================================================================
+# Enhance IO (with colours) (cleaned)
+#==============================================================================
+def _print2screen(mssg2print,txt_colour):
+    import sys
+    io_fatal_warning   = 1
+    io_pass            = 2
+    io_warning         = 3
+    io_gen_info        = 4
+    io_reset           = "\033[0;0m"
+
+    if txt_colour==io_fatal_warning:
+        sys.stdout.write("\033[1;31m")
+        print(mssg2print);
+        sys.stdout.write(io_reset)
+        exit()
+    elif txt_colour==io_gen_info:
+        sys.stdout.write("\033[1;34m")
+        print(mssg2print);
+    elif txt_colour==io_pass:
+        sys.stdout.write("\033[1;32m")
+        print(mssg2print);
+    elif txt_colour==io_warning:
+        sys.stdout.write("\033[1;33m")
+        print(mssg2print);
+        sys.stdout.write(io_reset)
+    print("--");

@@ -98,7 +98,7 @@ nit=100; times = 0.
 timeStep = numz['time_step']
 for it in range(nit):
     #FastS._computeguillaume1(t, metrics, it,tc,layer='c')
-    FastS._compute(t, metrics, it,tc,layer='c')
+    FastS._compute(t, metrics, it,tc,layer='Python')
     if it%10 == 0:
         print('- %d - %f'%(it, times))
         FastS.display_temporal_criteria(t, metrics, it)

@@ -19,6 +19,7 @@ VARSMACRO = ['Density','VelocityX','VelocityY','VelocityZ','Temperature']
 x_min = -0.5
 dx = 0.01
 L = 1.
+NG=1
 Nx=101; Ny = Nx; Nz = 9
 c0=343.2
 n = Nx-1
@@ -65,6 +66,10 @@ C._initVars(t,'{centers:VelocityY}=%g*({centers:CoordinateX}*%g)*exp(0.5*(1.-{ce
 C._rmVars(t,["centers:r2"])
 C._initVars(t,'{centers:Temperature}=1.')# pour l instant ne sert qu a passer dans le warmup, car isotherme
 C._initVars(t,'{centers:VelocityZ}=0.')
+C._initVars(t,"{centers:TurbulentDistance} =1.")
+C._initVars(t,"{centers:cellN_IBC_LBM_1} =0.")
+C._initVars(t,"{centers:cellN_IBC_LBM_2} =0.")
+C._initVars(t,"{centers:cellN_IBC_LBM_3} =0.")
 #-------------------------
 # Adimensionnement
 #-------------------------
@@ -77,7 +82,7 @@ X._setInterpTransfers(t,tc,variables=VARSMACRO)
 # Compute
 #-------------------------
 # Numerics
-numb = {'temporal_scheme':'explicit', 'ss_iteration':20,'omp_mode':1}
+numb = {'temporal_scheme':'explicit', 'ss_iteration':20,'omp_mode':0}
 numz = {'scheme':'ausmpred'}
 numz['cache_blocking_I']=1000000
 numz['cache_blocking_J']=1000000
@@ -87,24 +92,36 @@ numz["time_step"]=dt # pour l instant pas de viscosite
 myApp.set(numb=numb) 
 myApp.set(numz=numz)
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
-
+C.convertPyTree2File(t,"restart.cgns")
 (t, tc, metrics)  = FastLBM.warmup(t, tc)
-#(t, tc, metrics)  = Fast.warmup(t, tc)
 
 for it in range(1,nit+1):    
     print("--------- iteration %d -------------"%it)
-    Fast._compute(t, metrics, it, tc)#,layer='Python')
+    FastLBM._compute(t, metrics, it, tc,layer='Python',nittotal=nit)
 
-tempVar=['Q'+str(i) for i in range(1,20)]
-C._rmVars(t,tempVar)
-for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
-X._setInterpTransfers(t,tc,variables=VARSMACRO,storage=1)
-
-# reconstruction des variables macro
-v_adiminv = math.sqrt(3)*c0
-C._initVars(t,"{centers:VelocityX}={centers:VelocityX}*%g"%v_adiminv)
-C._initVars(t,'{centers:VelocityY}={centers:VelocityY}*%g'%v_adiminv)
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
-C.convertPyTree2File(t,"restart.cgns")
+
+# POST
+Internal._rmNodesByName(t,'*M1*')
+Internal._rmNodesByName(t,'*Sx*')
+Internal._rmNodesByName(t,'*Sy*')
+Internal._rmNodesByName(t,'*Sz*')
+Internal._rmNodesByName(t,'*cell*')
+Internal._rmNodesByName(t,'*Qstar*')
+Internal._rmNodesByName(t,'*Qeq*')
+Internal._rmNodesByName(t,'*Qneq*')
+Internal._rmNodesByName(t,'*SpongeCoef')
+
+# reconstruction des variables macro
+#FastLBM.convert_to_dimensional(t,rho0,dx,dt)
+v_adiminv=1./v_adim
+C._initVars(t,"{centers:VelocityX}={centers:VelocityX}*%20.16g/{centers:Density}"%(v_adiminv))
+C._initVars(t,'{centers:VelocityY}={centers:VelocityY}*%20.16g/{centers:Density}'%(v_adiminv))
+C._initVars(t,'{centers:VelocityZ}={centers:VelocityZ}*%20.16g/{centers:Density}'%(v_adiminv))
+
+
 test.testT(t,1)
+t=FastLBM.rmGhostCells(t,NG)
+C.convertPyTree2File(t,"restart.cgns")
+
