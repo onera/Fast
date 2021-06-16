@@ -1417,6 +1417,8 @@ def _buildOwnData(t, Padding):
             datap[66]  = shiftvar
             datap[67]  = extract_res
             datap[68]  = DES_debug     #index 69 et 70 pour PT_BC et PT_OMP
+            datap[69]  = 0             # setting to zero for non-regression
+            datap[70]  = 0             # setting to zero for non-regression
             datap[71]   = nbr_relax
             datap[72]   = nbr_restart
             datap[73]   = nbr_krylov
@@ -1456,7 +1458,20 @@ def _buildOwnData(t, Padding):
             datap[v.LBM_spng_ymax] = lbm_spng_ymax
             datap[v.LBM_spng_zmin] = lbm_spng_zmin
             datap[v.LBM_spng_zmax] = lbm_spng_zmax
-            
+
+            ##Setting pointers to 0 for non-regression tests
+            datap[v.PT_LBM_Cs]          =0
+            datap[v.PT_LBM_Ws]          =0
+            datap[v.PT_LBM_Cminus]      =0
+            datap[v.PT_LBM_BC]          =0
+            datap[v.PT_LBM_H2H3]        =0
+            datap[v.PT_LBM_SPEC]        =0
+            datap[v.PT_LBM_FILTER_WGHT] =0
+            datap[v.PT_LBM_FILTER_STNCL]=0
+            datap[v.PT_LBM_IBC_LIST]    =0
+            datap[v.PT_LBM_IBC_DIST]    =0
+            datap[v.PT_LBM_IBC_DIR]     =0
+
             i += 1
          
             Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
