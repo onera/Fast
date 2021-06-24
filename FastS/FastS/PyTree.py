@@ -68,7 +68,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
         
         d = Internal.getNodeFromName1(f, '.Solver#define')
         a = Internal.getNodeFromName1(d, 'temporal_scheme')
-        if(Internal.getValue(a) == 'explicit_local' and layer=="c"):
+        if Internal.getValue(a) == 'explicit_local' and layer=="c":
             print("ERROR(compute.py):: There is a bug with 'explicit_local' & 'c layer'")
             print("ERROR(compute.py):: use 'python layer'...aborting.")
             exit()
@@ -135,8 +135,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                FastC.switchPointers2__(zones,nitmax,nstep)
                 
                # Ghostcell
-               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
-               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
+               if    (nstep%2 == 0)  and itypcp == 2: vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
+               elif  (nstep%2 == 1)  and itypcp == 2: vars = ['Density_P1']
                timelevel_target = int(dtloc[4])
                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax, rk, exploc)
 
