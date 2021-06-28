@@ -19,7 +19,7 @@ C_I    neq_ij,neq_k : dimension metrique
 c_/    x,y,z        : coordonnees du maillage
 c
 c     OUT
-c     ti,tj,tk,si,sj,sk
+c     ti,tj,tk,ti0,tj0,tk0
 c***********************************************************************
       implicit none
 
@@ -54,6 +54,30 @@ c Var loc
 #include "FastC/formule_mtr_param.h"
 #include "FastC/formule_xyz_param.h"
 
+
+      !DBX CB
+      !do l = 1,param_int( NDIMDX_MTR )
+      !   ti(l,1) = -999.
+      !   ti(l,2) = -999.
+      !   ti(l,3) = -999.
+      !   tj(l,1) = -999.
+      !   tj(l,2) = -999.
+      !   tj(l,3) = -999.
+      !   tk(l,1) = -999.
+      !   tk(l,2) = -999.
+      !   tk(l,3) = -999.
+      !   ti0(l,1) = -999.
+      !   ti0(l,2) = -999.
+      !   ti0(l,3) = -999.
+      !   tj0(l,1) = -999.
+      !   tj0(l,2) = -999.
+      !   tj0(l,3) = -999.
+      !   tk0(l,1) = -999.
+      !   tk0(l,2) = -999.
+      !   tk0(l,3) = -999.
+      !enddo
+      !END DBX CB
+      
       inci = 1
       incj = param_int( NIJK_XYZ ) 
       inck = param_int( NIJK_XYZ ) *param_int( NIJK_XYZ +1 ) 

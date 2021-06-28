@@ -105,8 +105,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                 pt_ech      = param_int_tc[comm_P2P + shift_graph]
                 dest        = param_int_tc[pt_ech] 
 
-      hookTranfer = []
-                
+      hookTransfer = []        
+
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
          distrib_omp = 0

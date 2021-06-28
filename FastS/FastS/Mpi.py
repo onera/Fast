@@ -104,7 +104,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
             #print('t_compute, rank= ', Time.time() - t0, Cmpi.rank)
 
 
-            #dtloc GJeanmasson
+            # dtloc GJeanmasson
             if exploc==1 and tc is not None:
 
                no_transfert = 1#comm_P2P
