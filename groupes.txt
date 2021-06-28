@@ -18,7 +18,7 @@ puma-rw =
 puma-r = 
 
 bemuse-rw = juvigny
-bemuse-r = mlorteau,ymauffre
+bemuse-r = mlorteau,ymauffre,tlegarre
 
 nxo-rw = jmlegoue
 nxo-r = slandier

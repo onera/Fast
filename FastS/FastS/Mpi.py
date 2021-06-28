@@ -5,7 +5,6 @@ from .PyTree import display_temporal_criteria, createConvergenceHistory, extract
 import timeit
 import time as Time
 import numpy
-import sys
 
 try:
     import Converter.PyTree as C
@@ -80,6 +79,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                 pt_ech      = param_int_tc[comm_P2P + shift_graph]
                 dest        = param_int_tc[pt_ech]
 
+      hookTransfer = []
+                
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
          distrib_omp = 0
@@ -184,16 +185,15 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                     dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
                     time, procDict, interpInDnrFrame, tfreq) = ucData
                    if nstep == 0 or nstep == nitmax or nstep%tfreq == 0:
-                    Xmpi._transfer(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
-                                  dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                                  dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-                                  dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
-                                  time=time, absFrame=True,
-                                  procDict=procDict, cellNName='cellN#Motion', 
-                                  interpInDnrFrame=interpInDnrFrame)
+                    Xmpi._transfer2(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
+                                    dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                                    dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                                    dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
+                                    time=time, absFrame=True,
+                                    procDict=procDict, cellNName='cellN#Motion', 
+                                    interpInDnrFrame=interpInDnrFrame, hook=hookTransfer)
                #print('t_transferts, rank= ', Time.time() - t0, Cmpi.rank)
-
-               #toc1_=Time.time()-tic  
+               #toc1_=Time.time()-tic
 
 
       dtloc[3] +=1    #time_level_motion
