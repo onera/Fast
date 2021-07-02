@@ -45,7 +45,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
     own  = Internal.getNodeFromName1(base, '.Solver#ownData')  
     dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')
 
-    
     zones= Internal.getZones(t)
 
     node = Internal.getNodeFromName1(base, '.Solver#define')
@@ -157,7 +156,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
 
 
-            else: ### Autres schémas
+            else: ### Autres schemas
                # Ghostcell
                #tic=Time.time()  
 
@@ -174,16 +173,21 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
                # add unsteady Chimera transfers (motion) here
                if ucData is not None:
-                   VARS = ['Density_P1', 'VelocityX_P1', 'VelocityY_P1', 'VelocityZ_P1', 'Temperature_P1']
-                   if nstep%2 == 0 and itypcp == 2: VARS = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
+                   (graphX, intersectionDict, dictOfADT, 
+                   dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                   dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                   dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
+                   time, procDict, interpInDnrFrame, varType, tfreq) = ucData
+
+                   if nstep%2 == 0 and itypcp == 2: 
+                       VARS = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
+                       if varType == 1: VARS += ['TurbulentSANuTilde']
+                   else: 
+                       VARS = ['Density_P1', 'VelocityX_P1', 'VelocityY_P1', 'VelocityZ_P1', 'Temperature_P1']
+                       if varType == 1: VARS += ['TurbulentSANuTilde_P1']
                    for v in VARS: C._cpVars(t, 'centers:'+v, tc, v)
                    C._cpVars(t, "centers:cellN", tc, "cellN")
 
-                   (graphX, intersectionDict, dictOfADT, 
-                    dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                    dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-                    dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
-                    time, procDict, interpInDnrFrame, tfreq) = ucData
                    if nstep == 0 or nstep == nitmax or nstep%tfreq == 0:
                     Xmpi._transfer2(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
                                     dictOfNobOfRcvZones, dictOfNozOfRcvZones,
@@ -283,7 +287,6 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
    return None
 #==============================================================================
 def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None):
-
 
     # Get omp_mode
     ompmode = PyTree.OMP_MODE
