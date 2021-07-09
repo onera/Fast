@@ -3223,15 +3223,14 @@ def convertpointwise2fast(FILEIN):
         for fam in Internal.getNodesFromType(t,v):
             Internal.rmNode(t,fam)
     
-    C.convertPyTree2File(t ,FILEIN+"_fast.cgns")
     return t
     
 
 def change_name_BC_pointwise(t):
     import sys
     zones = Internal.getNodesFromType2(t, 'Zone_t')
+    count=0
     for z in zones:
-        count=0
         zonebc = Internal.getNodesFromType(z, 'BC_t')
         for zbc in zonebc:
             count +=1
@@ -3250,6 +3249,16 @@ def pointwise2D_2Fast(t):
                 for i in range(0,2):
                     s[j][i]=zbc[2][0][1][j][i]
             Internal.setValue(zbc[2][0],s)
+        zonebc = Internal.getNodesFromType(z, 'GridConnectivity1to1_t')
+        for zbc in zonebc:
+            s  = np.ones((3,2), dtype=np.int32)
+            s2 = np.ones((3,2), dtype=np.int32)
+            for j in range(0,2):
+                for i in range(0,2):
+                    s [j][i]=zbc[2][1][1][j][i]
+                    s2[j][i]=zbc[2][2][1][j][i]
+            Internal.setValue(zbc[2][1],s)
+            Internal.setValue(zbc[2][2],s2)
 
         zonegrid = Internal.getNodesFromType(z, 'GridCoordinates_t')
         for zgrid in zonegrid:            
