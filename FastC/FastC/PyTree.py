@@ -2433,27 +2433,27 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             # Load connect (tc)
             FILE = fileNameC+extC
             tc = Cmpi.convertFile2SkeletonTree(FILE)
-            tc = Cmpi.readZones(tc, FILE, rank=rank)
+            Cmpi._readZones(tc, FILE, rank=rank)
             graphID = Cmpi.computeGraph(tc, type='ID')
             graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
             procDict = D2.getProcDict(tc)
             procList = D2.getProcList(tc, sort=True)
             graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
-            tc = Cmpi.convert2PartialTree(tc, rank=rank)
+            Cmpi._convert2PartialTree(tc, rank=rank)
             # Load data (t)
             FILE = fileName+ext
             if restart and os.access('restart.cgns', os.F_OK): FILE = 'restart.cgns'
             if os.access(FILE, os.F_OK):
                 t = Cmpi.convertFile2SkeletonTree(FILE)
-                t = Cmpi.readZones(t, FILE, rank=rank)
-                t = Cmpi.convert2PartialTree(t)
+                Cmpi._readZones(t, FILE, rank=rank)
+                Cmpi._convert2PartialTree(t)
             else: t = None
             # Load stat (ts)
             FILE = fileNameS+extS
             if os.access(FILE, os.F_OK):
                 ts = Cmpi.convertFile2SkeletonTree(FILE)
-                ts = Cmpi.readZones(ts, FILE, rank=rank)
-                ts = Cmpi.convert2PartialTree(ts)
+                Cmpi._readZones(ts, FILE, rank=rank)
+                Cmpi._convert2PartialTree(ts)
             else: ts = None
 
         else: # un fichier loade par proc
@@ -2469,13 +2469,13 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             else:
                 FILE = fileNameC+extC
                 tc = Cmpi.convertFile2SkeletonTree(FILE)
-                tc = Cmpi.readZones(tc, FILE, rank=rank)        
+                Cmpi._readZones(tc, FILE, rank=rank)        
                 graphID = Cmpi.computeGraph(tc, type='ID',reduction=False)
                 graphIBCD = Cmpi.computeGraph(tc, type='IBCD',reduction=False)
                 procDict = D2.getProcDict(tc)
                 procList = D2.getProcList(tc, sort=True)
                 graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
-                tc = Cmpi.convert2PartialTree(tc)
+                Cmpi._convert2PartialTree(tc)
             # Load data (t)
             FILE = '%s/%s_%d%s'%(fileName, baseName, rank, ext)
             if restart and os.access('restart/restart_%d%s'%(rank,ext), os.F_OK):
@@ -2537,8 +2537,14 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             else: ts = None
     if cartesian: # peut etre inutile (fait dans convert2File?)
         import Compressor.PyTree as Compressor
-        Compressor._uncompressCartesian(t)
-        Compressor._uncompressCartesian(tc)
+        for base in Internal.getBases(t):
+            CartData =Internal.getNodeFromName(base,'CartesianData')
+            if CartData is not None:
+                Compressor._uncompressCartesian(base)
+        for base in Internal.getBases(tc):
+            CartData =Internal.getNodeFromName(base,'CartesianData')
+            if CartData is not None:
+                Compressor._uncompressCartesian(base)
     
     return t, tc, ts, graph
 
@@ -2818,7 +2824,10 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
 
     if cartesian: # peut etre inutile (fait dans convert2File?)
         import Compressor.PyTree as Compressor
-        Compressor._uncompressCartesian(t)
+        for base in Internal.getBases(t):
+            CartData =Internal.getNodeFromName(base,'CartesianData')
+            if CartData is not None:
+                Compressor._uncompressCartesian(base)
         
     if graph and not exploc : return t, graphN
     elif graph and exploc :   return t, list_graph
