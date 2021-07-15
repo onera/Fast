@@ -236,7 +236,7 @@ c      c7     = c4/c5
              flu(lf+v2flu*8 )= gradV_ny*2.*volinv 
              flu(lf+v2flu*9 )= gradT_nx*2.*volinv 
              flu(lf+v2flu*10)= gradT_ny*2.*volinv 
-             flu(lf+v2flu*11)= (p1p2-param_real(PINF))*norm
+             flu(lf+v2flu*11)= (0.5*p1p2-param_real(PINF))*norm
              flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
@@ -285,7 +285,7 @@ c      c7     = c4/c5
              flu(lf+v2flu*8 )= gradV_ny*2.*volinv 
              flu(lf+v2flu*9 )= gradT_nx*2.*volinv 
              flu(lf+v2flu*10)= gradT_ny*2.*volinv 
-             flu(lf+v2flu*11)= (p1p2-param_real(PINF))*norm
+             flu(lf+v2flu*11)= (0.5*p1p2-param_real(PINF))*norm
              flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
@@ -332,7 +332,7 @@ c      c7     = c4/c5
              flu(lf+v2flu*8 )= gradV_ny*2.*volinv 
              flu(lf+v2flu*9 )= gradT_nx*2.*volinv 
              flu(lf+v2flu*10)= gradT_ny*2.*volinv 
-             flu(lf+v2flu*11)= (p1p2-param_real(PINF))*norm
+             flu(lf+v2flu*11)= (0.5*p1p2-param_real(PINF))*norm
              flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))

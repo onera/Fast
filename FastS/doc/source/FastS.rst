@@ -291,14 +291,16 @@ Post
         7. gradyVelocityX 
         8. gradzVelocityX 
         9. gradxVelocityY
-        10. etc...
-        11. gradxVelocityZ 
-        12. etc...
-        13. gradxTemperature 
-        14. etc...
-        15. gradzTemperature
-        16. CoefPressure
-        17. ViscosityMolecular
+        10. gradyVelocityY
+        11. gradzVelocityY
+        12. gradxVelocityZ 
+        13. gradyVelocityZ
+        14. gradxVelocityZ
+        15. gradxTemperature 
+        16. gradyTemperature
+        17. gradzTemperature
+        18. CoefPressure
+        19. ViscosityMolecular
 
     the return of the function, effort, is a list of 8 items which contains integral over the surface of the BC of different variables of teff:
 

@@ -182,8 +182,6 @@ c      c7     = c4/c5
 
       norm =2./(param_real(ROINF)*param_real(VINF)**2)
 
-      !write(*,*)'norm=',1/norm
-
       sens = norm
       sens1=1.
       if(mod(param_int_eff(EFF_IDIR),2).eq.1) then
@@ -239,7 +237,7 @@ c      c7     = c4/c5
              flu(lf+v2flu*8 )= gradV_ny*2.*volinv 
              flu(lf+v2flu*9 )= gradT_nx*2.*volinv 
              flu(lf+v2flu*10)= gradT_ny*2.*volinv 
-             flu(lf+v2flu*11)= (p1p2-param_real(PINF))*norm
+             flu(lf+v2flu*11)= (0.5*p1p2-param_real(PINF))*norm
              flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
@@ -261,8 +259,6 @@ c      c7     = c4/c5
            enddo
          ENDDO
         ENDDO
-
-      !write(*,*)'norm=',1/norm,p1p2
 
       ELSEIF(param_int_eff(EFF_IDIR).le.4) THEN
 
@@ -290,7 +286,7 @@ c      c7     = c4/c5
              flu(lf+v2flu*8 )= gradV_ny*2.*volinv 
              flu(lf+v2flu*9 )= gradT_nx*2.*volinv 
              flu(lf+v2flu*10)= gradT_ny*2.*volinv 
-             flu(lf+v2flu*11)= (p1p2-param_real(PINF))*norm
+             flu(lf+v2flu*11)= (0.5*p1p2-param_real(PINF))*norm
              flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
@@ -312,7 +308,6 @@ c      c7     = c4/c5
            enddo
          ENDDO
         ENDDO
-      !write(*,*)'norm=',1/norm,p1p2
 
       ELSE
 
@@ -338,7 +333,7 @@ c      c7     = c4/c5
              flu(lf+v2flu*8 )= gradV_ny*2.*volinv 
              flu(lf+v2flu*9 )= gradT_nx*2.*volinv 
              flu(lf+v2flu*10)= gradT_ny*2.*volinv 
-             flu(lf+v2flu*11)= (p1p2-param_real(PINF))*norm
+             flu(lf+v2flu*11)= (0.5*p1p2-param_real(PINF))*norm
              flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))

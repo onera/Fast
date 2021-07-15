@@ -2537,15 +2537,8 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             else: ts = None
     if cartesian: # peut etre inutile (fait dans convert2File?)
         import Compressor.PyTree as Compressor
-        for base in Internal.getBases(t):
-            CartData =Internal.getNodeFromName(base,'CartesianData')
-            if CartData is not None:
-                Compressor._uncompressCartesian(base)
-        for base in Internal.getBases(tc):
-            CartData =Internal.getNodeFromName(base,'CartesianData')
-            if CartData is not None:
-                Compressor._uncompressCartesian(base)
-    
+        Compressor._uncompressCartesian(t)
+        Compressor._uncompressCartesian(tc)
     return t, tc, ts, graph
 
 #==============================================================================

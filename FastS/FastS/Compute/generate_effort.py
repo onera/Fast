@@ -4,7 +4,7 @@ import sys
 #  python generate_effort.py  repertoire_flux
 n = len(sys.argv)
 if n != 2:
-    print('Flux name folder is required as argument: python generate_flu.py  fluxFolder' )
+    print('Error: Flux name folder is required as argument: python generate_effort.py fluxFolder.' )
     sys.exit()
 
 dico= {}
@@ -15,7 +15,7 @@ dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','euler'], 'Ty
 
 rep = sys.argv[1]
 if rep not in dico:
-    print('Flux option not described in the dictionnary')
+    print('Error: Flux option not described in the dictionnary.')
     sys.exit()
 
 Model      = dico[ rep ]['model']
@@ -80,8 +80,14 @@ for ale in TypeMotion:
                         fo = open(fout,"w")                  # ouvrir le fichier de sortie
                         print(rep,' Scheme: file',fout, 'generated')
 
+                        # remplacement du type de flux
                         for i in range( len(lines) ):
                              lines[i]=lines[i].replace("FLUX_CONV", rep)
+
+                        # correction pour Roe (p1p2)
+                        if flux == 'fluroe':
+                            for i in range( 90, len(lines) ):
+                                lines[i]=lines[i].replace("p1p2", "0.5*p1p2")
 
                         # suppression fluk en 2d et metrique k (pour que mode debug soit OK)
                         if typezone == '2d': 

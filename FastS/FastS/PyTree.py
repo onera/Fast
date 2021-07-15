@@ -880,8 +880,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
         varmy += ['Temperature','T^2','rouT','rovT','rowT','Eps_T' ]
         lgrad =  1
 
-    for i in range(len(varmy)):
-      varmy[i] = 'centers:'+varmy[i]
+    for i in range(len(varmy)): varmy[i] = 'centers:'+varmy[i]
 
     # on determine le nbr de cellule fictive active pour le calcul des moyennes
     numcellfic = 2 
@@ -1614,7 +1613,7 @@ def extractConvergenceHistory(t, fileout):
 # Cree un arbre Stress pour calcul effort
 # IN: t: tree
 # IN: BC: list des BC concernees ['BCWall', BCFarfield',...]
-# IN: window: ou range de window
+# IN: windows: ou range de window
 # OUT: return arbre stress
 #==============================================================================
 def createStressNodes(t, BC=None, windows=None):
@@ -1632,8 +1631,8 @@ def createStressNodes(t, BC=None, windows=None):
 
     zones = []
     no_z = 0
-    for b0 in Internal.getNodesFromType1(t,'CGNSBase_t'):
-        dimbase=  b0[1][0]
+    for b0 in Internal.getNodesFromType1(t, 'CGNSBase_t'):
+        dimbase = b0[1][0]
         if b0[0] != PostBaseName:
            zones = Internal.getNodesFromType1(b0, 'Zone_t')
 
@@ -1650,9 +1649,9 @@ def createStressNodes(t, BC=None, windows=None):
                    vargrad=['gradxVelocityX','gradyVelocityX','gradxVelocityY','gradyVelocityY','gradxTemperature','gradyTemperature','CoefPressure','ViscosityMolecular']
 
               varc  = []
-              for i in range(len(var)): varc.append('centers:'+var[i])
-              for i in range(len(vargrad)): varc.append('centers:'+vargrad[i])
-              
+              for i in var: varc.append('centers:'+i)
+              for i in vargrad: varc.append('centers:'+i)
+
               if BC is not None:
                  bc = Internal.getNodeFromName1(z, "ZoneBC")
                  list_bc =[]
@@ -1838,11 +1837,11 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     zones     = Internal.getZones(t)
     zones_eff = Internal.getZones(teff)
     
-    bases= Internal.getNodesFromType1(t,'CGNSBase_t')
+    bases= Internal.getNodesFromType1(t, 'CGNSBase_t')
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = OMP_MODE
-    if  node is not None: ompmode = Internal.getValue(node)
+    if node is not None: ompmode = Internal.getValue(node)
     
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     if FastC.HOOK is None: 
@@ -2595,7 +2594,6 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
         z = C._initVars(z,'centers:niveaux_tempsP1',niveauTps)
         
     print("Setting 'centers:niveaux_temps' as a flow variables...done")
-    #
 
     ### On controle si les zones en contact ont, au plus, un rapport 2 entre leur niveau en temps ###
     ### Tant que ce n'est pas le cas, on modifie les niveaux afin d arriver dans cette situtation ###
