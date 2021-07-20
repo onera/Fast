@@ -2399,7 +2399,7 @@ def _BCcompact(t):
 # the communication graph for IBM transfers
 #==============================================================================
 def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
-         restart=False, cartesian=False):
+         restart=False):
     """Load tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -2535,10 +2535,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
                 no += 1
             if ts != []: ts = Internal.merge(ts)
             else: ts = None
-    if cartesian: # peut etre inutile (fait dans convert2File?)
-        import Compressor.PyTree as Compressor
-        Compressor._uncompressCartesian(t)
-        Compressor._uncompressCartesian(tc)
+
     return t, tc, ts, graph
 
 #==============================================================================
@@ -2665,7 +2662,7 @@ def getMaxProc(t):
 # and the communication graph for IBM transfers
 #==============================================================================
 def loadFile(fileName='t.cgns', split='single', graph=False, 
-             mpirun=False, cartesian=False, exploc=False):
+             mpirun=False, exploc=False):
     """Load tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -2691,8 +2688,6 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                 procDict  = D2.getProcDict(t)
                 procList  = D2.getProcList(t, sort=True)
                 graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
-
-
 
             if graph and exploc == True : ### dtloc instationnaire : on sort une liste de graphes (un graph par ssiter)
 
@@ -2814,14 +2809,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                 no += 1
             if t != []: t = Internal.merge(t)
             else: t = None
-
-    if cartesian: # peut etre inutile (fait dans convert2File?)
-        import Compressor.PyTree as Compressor
-        for base in Internal.getBases(t):
-            CartData =Internal.getNodeFromName(base,'CartesianData')
-            if CartData is not None:
-                Compressor._uncompressCartesian(base)
-        
+    
     if graph and not exploc : return t, graphN
     elif graph and exploc :   return t, list_graph
     else:     return t
@@ -3121,9 +3109,9 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
     else:     return t
 
 #==============================================================================
-# Load t.cgns (data) tc.cgns (connectivity file) ts.cgns (stat)
-# si split='single': load t.cgns
-# si split='multiple': read t.cgns ou t/t_1.cgns
+# Save t.cgns (data) tc.cgns (connectivity file) ts.cgns (stat)
+# si split='single': save t.cgns
+# si split='multiple': save t.cgns or t/t_1.cgns
 # autorestart possible
 # return a partial tree t, a donor partial tree tc, 
 # a stat partial tree,
@@ -3132,7 +3120,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
 # dir is the directory containing files to be read 
 #==============================================================================
 def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=False, mpirun=False):
-    """Load tree and connectivity tree."""
+    """Save tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
     baseName = os.path.splitext(baseName)[0] # name without extension

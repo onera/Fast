@@ -26,6 +26,7 @@ nxo-r = slandier
 thermolib-rw = juvigny
 thermolib-r = slandier,bertier,nrutard,bmichel,sgalivel
 
+upmost-rw = jmarty
 
 [/]
 @all-rw = rw
@@ -106,3 +107,8 @@ thermolib-r = slandier,bertier,nrutard,bmichel,sgalivel
 @all-rw = rw
 @thermolib-rw = rw
 @thermolib-r = r
+
+
+[/Apps/PModules/Upmost]
+@all-rw = rw
+@upmost-rw = rw
