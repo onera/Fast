@@ -1,6 +1,6 @@
 FREEMODULES=''
 export FREEMODULES
-FULLMODULES=$FREEMODULES'FastC FastS FastP FastLBM Fast Nxo FFX FFD Thermolib'
+FULLMODULES=$FREEMODULES'FastC FastS FastP FastLBM Fast Nxo FFX FFD SEMbc Ael Thermolib'
 export FULLMODULES
-OTHERS='Ael Bemuse'
+OTHERS='Bemuse'
 
