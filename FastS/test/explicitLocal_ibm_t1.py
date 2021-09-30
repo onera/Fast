@@ -17,13 +17,15 @@ import os
 import tarfile
 import shutil
 
-if not os.path.isfile('cgns_lts/t2DLTS.cgns'):
-    tar = tarfile.open('cgns_lts.tar.gz', "r:gz")
+LOCAL = test.getLocal()
+
+if not os.path.isfile(LOCAL+'/cgns_lts/t2DLTS.cgns'):
+    tar = tarfile.open(LOCAL+'/cgns_lts.tar.gz', "r:gz")
     tar.extractall()
     tar.close()
 
-t  = Fast.loadTree('cgns_lts/t2DLTS_ibm.cgns')
-tc = Fast.loadTree('cgns_lts/tc2DLTS_ibm.cgns')
+t  = Fast.loadTree(LOCAL+'/cgns_lts/t2DLTS_ibm.cgns')
+tc = Fast.loadTree(LOCAL+'/cgns_lts/tc2DLTS_ibm.cgns')
 NIT                        = 100   # number of iterations
 display_probe_freq         = 10    # iteration frequency to display modulo_verif
 
@@ -67,7 +69,7 @@ Internal.createUniqueChild(t, 'Time', 'DataArray_t', value=time0)
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)
-shutil.rmtree("cgns_lts")
+shutil.rmtree(LOCAL+"/cgns_lts")
 #C.convertPyTree2File(t, "out.cgns")
 
 

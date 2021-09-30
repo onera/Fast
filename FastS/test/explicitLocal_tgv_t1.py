@@ -168,13 +168,12 @@ for it in range(nit):
             FileEnstInt.flush()
         if it%1000 == 0:
             FastS.display_temporal_criteria(t, metrics, it)
-    
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 
 test.testT(t, 1)
-C.convertPyTree2File(t,"out.cgns")
+#C.convertPyTree2File(t, "out.cgns")
 #if isPrintAnalysis:
 #    if explicit_select == 'explicit_local':
 #        C.convertPyTree2File(t,"restart_tgv_explicit_local.cgns")
