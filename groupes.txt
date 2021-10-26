@@ -3,9 +3,9 @@ all-rw = adminsri,imary,benoit,speron,renaud
 all-r = 
 
 ael-rw = ymauffre
-ael-r = pelicesp,lbernard,cwervaec,mcostes,isalah,jmlegoue,juvigny,slandier,jcbonifa,pgrenson,dandois,cleclerc,bertier,ipetropo,fgand,vmons,mlorteau,asuss,rparis,cbenazet,ajost
+ael-r = pelicesp,lbernard,cwervaec,mcostes,isalah,jmlegoue,juvigny,slandier,jcbonifa,pgrenson,dandois,cleclerc,bertier,ipetropo,fgand,vmons,mlorteau,asuss,rparis,cbenazet,ajost,adorange
 
-fast-rw = bconstan,ymauffre,ajost,dandois,peter,jcbonifa,pgrenson,mcostes,vmons,asuss,lbernard,tlegarre
+fast-rw = bconstan,ymauffre,ajost,dandois,peter,jcbonifa,pgrenson,mcostes,vmons,asuss,lbernard,tlegarre,adorange
 fast-r = mlugrin,dnget,gleize,lcoelho,rparis,isalah,jmlegoue,juvigny,slandier,cleclerc,cwervaec,ipetropo,ymauffre,fgand,mlorteau,cbenazet,tguegan,lcoelho
 fast-lbm-rw = smarie
 
