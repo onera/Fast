@@ -15,7 +15,7 @@ if Cmpi.rank == 0:
     t = C.newPyTree(['Base',a,b])
     
     t = X.connectMatch(t, dim=3)
-    t = Internal.addGhostCells(t,t,2)
+    t = Internal.addGhostCells(t,t,2,adaptBCs=0)
     C.convertPyTree2File(t, 't.cgns')
     tc = C.node2Center(t)
     tc = X.setInterpData(t, tc, loc='centers', storage='inverse')

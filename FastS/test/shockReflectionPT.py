@@ -19,7 +19,7 @@ state2 = [1.6999600, 4.4527732, -0.86072205, 0., 9.8700385]
 
 N = 101; h = 4.1/(N-1)
 a = G.cart((0,0,0), (h,h,1.000), (N,int(N/4.1),1))
-a = Internal.addGhostCells(a, a, 2)
+a = Internal.addGhostCells(a, a, 2, adaptBCs=0)
 a = T.addkplane(a)
 C._addBC2Zone(a, 'wall', 'BCWallInviscid', 'jmin')
 #C._addBC2Zone(a, 'super', 'BCFarfield', 'imin', data=state1)

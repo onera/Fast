@@ -24,7 +24,7 @@ a1 = T.subzone(a,(1,1,1),(NI//2,-1,-1)); a1[0] = 'cyl1'
 a2 = T.subzone(a,(NI//2,1,1),(NI,-1,-1)); a2[0] = 'cyl2'
 t = C.newPyTree(["Base",a1,a2])
 t = X.connectMatch(t)
-Internal._addGhostCells(t,t,2,2)
+Internal._addGhostCells(t,t,2,adaptBCs=0)
 C._rmBCOfType(t, 'BCMatch')
 C._addBC2Zone(t,'overlap','BCOverlap','imin')
 C._addBC2Zone(t,'overlap','BCOverlap','imax')

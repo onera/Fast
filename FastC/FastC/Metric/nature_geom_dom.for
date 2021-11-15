@@ -26,11 +26,11 @@ c***********************************************************************
 #include "FastC/param_solver.h"
       REAL_E souszero
 c      parameter(souszero=1e-10)
-      parameter(souszero=2e-8)
+      parameter(souszero=2.e-8)
 
 
       INTEGER_E ndimt_xyz,neq_ij,neq_k,type_zone,ndimdx_mtr,lale,
-     &  nijk_xyz(5),nijk_mtr(5), degener(ndimt_xyz)
+     &  nijk_xyz(5),nijk_mtr(5),degener(ndimt_xyz)
 
       REAL_E x(ndimt_xyz),y(ndimt_xyz),z(ndimt_xyz), param_real(0:*)
 
