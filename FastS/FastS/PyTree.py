@@ -1908,7 +1908,7 @@ def setIBCData_zero(t, surf, dim=None):
      else:       dim = 3
 
   C._initVars(t,"{centers:cellN_IBC}=1.")
-  #X._blankCells(t, bodies, BM, blankingType="center_in", dim= dim,delta=0., cellNName='cellN_IBC')
+  #X._blankCells(t, bodies, BM, blankingType="center_in", dim=dim, delta=0., cellNName='cellN_IBC')
   t = X.blankCells(t, bodies, BM, blankingType="center_in", dim= dim,delta=0., cellNName='cellN_IBC')
 
   numz = {}
@@ -1918,7 +1918,7 @@ def setIBCData_zero(t, surf, dim=None):
      #cellN_node[0]= 'cellN_IBC'
      cellN_IBC = cellN_node[1]
 
-     Internal._rmNodesByName(z,"IBC")
+     Internal._rmNodesByName(z, "IBC")
 
      if 0 in cellN_IBC:
         ibc = numpy.ones( 7, dtype=numpy.int32)

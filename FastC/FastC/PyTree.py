@@ -47,6 +47,7 @@ MX_OMP_SIZE_INT = 250*OMP_NUM_THREADS
 # Met un dictionnaire de numerics dans une/des zones
 #==============================================================================
 def _setNum2Zones(a, num):
+    """Set numeric data dictionary  in zones."""
     zones = Internal.getNodesFromType2(a, 'Zone_t')
     for z in zones:
         cont = Internal.createUniqueChild(z, '.Solver#define', 
@@ -57,6 +58,7 @@ def _setNum2Zones(a, num):
 
 #==============================================================================
 def _setNum2Base(a, num):
+    """Set numeric data dictionary  in bases."""
     bases = Internal.getNodesFromType1(a, 'CGNSBase_t')
     for b in bases:
         cont = Internal.createUniqueChild(b, '.Solver#define', 
@@ -139,12 +141,14 @@ def _reorder(t, tc=None, omp_mode=0):
 # IN: rmConsVars: if True, remove the conservative variables
 #==============================================================================
 def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
+    """Create primitive vars from conservative vars."""
     tp = Internal.copyRef(t)
     first_iter , vars_zones = _createPrimVars(tp, omp_mode, rmConsVars, Adjoint)
     return tp, first_iter, vars_zones
 
 #==============================================================================
 def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
+    """Create primitive vars from conservative vars."""
     vars_zones=[]
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
     for b in bases:  
@@ -643,8 +647,9 @@ def _build_omp(t):
                CellScheduler = param_int[1][ deb:deb+size_scheduler ]
 
     return None
+
 #==============================================================================
-# Construit les datas possedees par FastP
+# Construit les datas possedees par Fast
 #==============================================================================
 def _buildOwnData(t, Padding):
 
