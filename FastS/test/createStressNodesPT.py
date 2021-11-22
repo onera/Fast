@@ -1,4 +1,4 @@
-# - computeStress (pyTree) - 
+# - createStressNodes (pyTree) - 
 import Converter.PyTree as C
 import Generator.PyTree as G
 import Connector.PyTree as X
@@ -22,5 +22,7 @@ FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 (t, tc, metrics) = FastS.warmup(t, None)
 
 teff = FastS.createStressNodes(t, BC=['BCWall','BCWallViscous'])
+
+FastS._computeStress(t, teff, metrics)
 
 C.convertPyTree2File(teff, 'stress.cgns')

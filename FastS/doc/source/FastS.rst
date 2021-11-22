@@ -301,6 +301,8 @@ Post
         17. gradzTemperature
         18. CoefPressure
         19. ViscosityMolecular
+        20. Density2 (contains density)
+        21. Pressure
 
     the return of the function, effort, is a list of 8 items which contains integral over the surface of the BC of different variables of teff:
 

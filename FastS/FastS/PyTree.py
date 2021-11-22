@@ -1622,213 +1622,221 @@ def createStressNodes(t, BC=None, windows=None):
     try: import Transform.PyTree as T
     except: raise ImportError("createStressNodes: requires transform module.")
 
-    PostBaseName = 'Stress' # nom de la base POST
-    vars0  = ['CoordinateX','CoordinateY','CoordinateZ']
-    var    = ['Density','MomentumX','MomentumY','MomentumZ','EnergyStagnationDensity']
+    vars0 = ['CoordinateX','CoordinateY','CoordinateZ']
+    var   = ['Density','MomentumX','MomentumY','MomentumZ','EnergyStagnationDensity']
 
-    teff = C.newPyTree([PostBaseName])
-    b    = Internal.getNodesFromName1(teff, PostBaseName)
+    bases = Internal.getBases(t)
+    teff = C.newPyTree([b[0] for b in bases])
 
     zones = []
     no_z = 0
     for b0 in Internal.getNodesFromType1(t, 'CGNSBase_t'):
+
+        b = Internal.getNodeFromName1(teff, b0[0])
+
         dimbase = b0[1][0]
-        if b0[0] != PostBaseName:
-           zones = Internal.getNodesFromType1(b0, 'Zone_t')
+           
+        count = -1
+        zones = Internal.getNodesFromType1(b0, 'Zone_t')
 
-           for z in zones:
+        for z in b0[2]:
+        
+            count += 1
+            if z[3] != 'Zone_t': continue
 
-              # gestion zone2d
-              dimzone= Internal.getZoneDim(z)
-              inck0 = 2
-              inck1 = 1
-              vargrad=['gradxVelocityX','gradyVelocityX','gradzVelocityX','gradxVelocityY','gradyVelocityY','gradzVelocityY','gradxVelocityZ','gradyVelocityZ','gradzVelocityZ','gradxTemperature','gradyTemperature','gradzTemperature', 'CoefPressure','ViscosityMolecular']
-              if dimzone[3] == 2: 
-                   inck0=0
-                   inck1=0
-                   vargrad=['gradxVelocityX','gradyVelocityX','gradxVelocityY','gradyVelocityY','gradxTemperature','gradyTemperature','CoefPressure','ViscosityMolecular']
+            # gestion zone2d
+            dimzone = Internal.getZoneDim(z)
+            inck0 = 2 ; inck1 = 1
+            #vargrad=['gradxVelocityX','gradyVelocityX','gradzVelocityX','gradxVelocityY','gradyVelocityY','gradzVelocityY','gradxVelocityZ','gradyVelocityZ','gradzVelocityZ','gradxTemperature','gradyTemperature','gradzTemperature', 'CoefPressure','ViscosityMolecular']
+            vargrad=['gradxVelocityX','gradyVelocityX','gradzVelocityX','gradxVelocityY','gradyVelocityY','gradzVelocityY','gradxVelocityZ','gradyVelocityZ','gradzVelocityZ','gradxTemperature','gradyTemperature','gradzTemperature', 'CoefPressure','ViscosityMolecular','Density2','Pressure']
+            if dimzone[3] == 2: 
+                inck0=0 ; inck1=0
+                #vargrad=['gradxVelocityX','gradyVelocityX','gradxVelocityY','gradyVelocityY','gradxTemperature','gradyTemperature','CoefPressure','ViscosityMolecular']
+                vargrad=['gradxVelocityX','gradyVelocityX','gradxVelocityY','gradyVelocityY','gradxTemperature','gradyTemperature','CoefPressure','ViscosityMolecular','Density2','Pressure']
 
-              varc  = []
-              for i in var: varc.append('centers:'+i)
-              for i in vargrad: varc.append('centers:'+i)
+            varc  = []
+            for i in var: varc.append('centers:'+i)
+            for i in vargrad: varc.append('centers:'+i)
 
-              if BC is not None:
-                 bc = Internal.getNodeFromName1(z, "ZoneBC")
-                 list_bc =[]
-                 if bc is not None: list_bc = bc[2]
-              else:
-                 list_bc =['window']
-              ific    = 2
-              param_int = Internal.getNodeFromName2(z, 'Parameter_int')
-              if param_int is not None: ific = param_int[1][3]
-              ndf =0
-              for v in list_bc:
-                 if BC is not None:
-                   name = Internal.getValue(v)
-                 else:
-                   name = v[0]
+            if BC is not None:
+                bc = Internal.getNodeFromName1(z, 'ZoneBC')
+                list_bc = []
+                if bc is not None: list_bc = bc[2]
+            else:
+                list_bc =['window']
+            ific = 2
+            param_int = Internal.getNodeFromName2(z, 'Parameter_int')
+            if param_int is not None: ific = param_int[1][3]
+            ndf = 0
+            for v in list_bc:
+                if BC is not None: name = Internal.getValue(v)
+                else: name = v[0]
 
-                 if windows is None:
-                     windows = [None]
+                if windows is None: windows = [None]
 
-                 inum = 0
+                inum = 0
 
-                 for window in windows:
+                for window in windows:
 
-                   if (BC is not None and name in BC) or (window is not None and z[0]==window[0]):
-                     if BC is not None:
-                        ptrg = Internal.getNodeFromName(v, "PointRange")
-                     else: 
-                        wrange = numpy.zeros(6, numpy.int32 ).reshape(3,2)
-                        wrange[0,0]= window[1]
-                        wrange[1,0]= window[3]
-                        wrange[2,0]= window[5]
-                        wrange[0,1]= window[2]
-                        wrange[1,1]= window[4]
-                        wrange[2,1]= window[6]
-                        ptrg = [ 'PointRange', wrange,  [], 'IndexRange_t']
-                      
-                     dim = Internal.getValue(ptrg)
-                     
-                     #dir=0,...5
-                     idir = Ghost.getDirection__(dimbase, [ptrg])
-                     if windows[0] is not None:
-                       if   window[7]== 'imin': idir =0
-                       elif window[7]== 'imax': idir =1
-                       elif window[7]== 'jmin': idir =2
-                       elif window[7]== 'jmax': idir =3
-                       elif window[7]== 'kmin': idir =4
-                       elif window[7]== 'kmax': idir =5
-                     
-                     inci =0
-                     incj =0
-                     inck =0
-                     if BC is not None:
-                       if   idir==0: inci= ific
-                       elif idir==1: inci=-ific
-                       elif idir==2: incj= ific
-                       elif idir==3: incj=-ific
-                       elif idir==4: inck= inck0
-                       elif idir==5: inck=-inck0
-  
-                     ni = dim[0,1]-dim[0,0]
-                     nj = dim[1,1]-dim[1,0]
-                     nk = dim[2,1]-dim[2,0]
+                    if (BC is not None and name in BC) or (window is not None and z[0]==window[0]):
+                        if BC is not None:
+                            ptrg = Internal.getNodeFromName(v, "PointRange")
+                        else: 
+                            wrange = numpy.zeros(6, numpy.int32 ).reshape(3,2)
+                            wrange[0,0]= window[1]
+                            wrange[1,0]= window[3]
+                            wrange[2,0]= window[5]
+                            wrange[0,1]= window[2]
+                            wrange[1,1]= window[4]
+                            wrange[2,1]= window[6]
+                            ptrg = ['PointRange', wrange,  [], 'IndexRange_t']
+                    
+                        dim = Internal.getValue(ptrg)
+                    
+                        #dir=0,...5
+                        idir = Ghost.getDirection__(dimbase, [ptrg])
+                        if windows[0] is not None:
+                            if   window[7]== 'imin': idir =0
+                            elif window[7]== 'imax': idir =1
+                            elif window[7]== 'jmin': idir =2
+                            elif window[7]== 'jmax': idir =3
+                            elif window[7]== 'kmin': idir =4
+                            elif window[7]== 'kmax': idir =5
+                    
+                        inci =0 ; incj =0 ; inck =0
+                        if BC is not None:
+                            if   idir==0: inci= ific
+                            elif idir==1: inci=-ific
+                            elif idir==2: incj= ific
+                            elif idir==3: incj=-ific
+                            elif idir==4: inck= inck0
+                            elif idir==5: inck=-inck0
 
-                     ideb = dim[0,0]+inci
-                     ifin = dim[0,1]+inci
-                     jdeb = dim[1,0]+incj
-                     jfin = dim[1,1]+incj
-                     kdeb = dim[2,0]+inck
-                     kfin = dim[2,1]+inck
+                        ni = dim[0,1]-dim[0,0]
+                        nj = dim[1,1]-dim[1,0]
+                        nk = dim[2,1]-dim[2,0]
 
-                     #print 'subZ', ideb,ifin,jdeb,jfin,kdeb,kfin
+                        ideb = dim[0,0]+inci
+                        ifin = dim[0,1]+inci
+                        jdeb = dim[1,0]+incj
+                        jfin = dim[1,1]+incj
+                        kdeb = dim[2,0]+inck
+                        kfin = dim[2,1]+inck
 
-                     zp = T.subzone(z, (ideb,jdeb,kdeb), (ifin,jfin,kfin))
-                     zp[0] = z[0]+'_'+v[0]+str(inum)
-                     inum  = inum + 1
-                     C._extractVars(zp, vars0)
-                     c = 0
-                     for v1 in varc: 
-                        C._initVars(zp, v1, c)
-                        c += 1
-                     #print 'zone name=',zp[0]
-                     #print 'dim0=',dim[0,0],dim[0,1],dim[1,0],dim[1,1],dim[2,0],dim[2,1]
+                        #print('subZ', ideb,ifin,jdeb,jfin,kdeb,kfin)
 
-                     if idir <= 1:
-                       ni1  = nj
-                       nj1  = nk
-                       jmin = jdeb -ific      #jmin
-                       jmax = jfin -ific-1    #jmax
-                       kmin = kdeb -inck0     #kmin
-                       kmax = kfin -inck0-1   #kmax
-                       imin = ideb -ific
-                       imax = imin
-                     elif idir <= 3:   
-                       ni1  = ni
-                       nj1  = nk
-                       imin = ideb -ific      #imin
-                       imax = ifin -ific-1    #imax
-                       kmin = kdeb -inck0     #kmin
-                       kmax = kfin -inck0-1   #kmax
-                       jmin = jdeb -ific
-                       jmax = jmin
-                     else:
-                       ni1  = ni
-                       nj1  = nj
-                       imin = ideb -ific      #imin
-                       imax = ifin -ific-1    #imax
-                       jmin = jdeb -ific      #jmin
-                       jmax = jfin -ific-1    #jmax
-                       kmin = kdeb -inck0
-                       kmax = kmin
-  
-                     param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
-                     if param_int is None:
-                        raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%zp[0])
- 
-                     #print 'loop effort',imin,imax,jmin,jmax,kmin,kmax
-                     ##modifie le moeud param_int de l'arbre teffot (issue de subzone) pour la fonction initNuma
-                     param_int[1]    = numpy.copy(param_int[1])    # sinon tableau partager avec param de la zone NS
-                     #NIJK  pour initNuma
-                     param_int[1][ 0] = ni1
-                     param_int[1][ 1] = nj1
-                     param_int[1][ 2] = 1
-                     param_int[1][ 3] = ific
-                     param_int[1][ 4] = 0
-                     #IJKV  pour initNuma
-                     param_int[1][20] = max(ni1-2*ific, 1)
-                     param_int[1][21] = max(nj1-2*ific, 1)
-                     param_int[1][22] = 1
-                     param_int[1][36] = len(varc)             #NEQ    
-                     param_int[1][41] = ni1*nj1               #NDIMDX
-                     param_int[1][66] = 0                     #SHIFTVAR
-                     #fenetre calcul flux dans arbre NS
-                     param_int[1][23] = imin
-                     param_int[1][24] = imax
-                     param_int[1][25] = jmin
-                     param_int[1][26] = jmax
-                     param_int[1][27] = kmin
-                     param_int[1][28] = kmax
-                     #adresse stockage flu:  adr = 1 + (i-i0) +(j-j0)*Ni0 + (k-k0)*Ni0*Nj0
-                     param_int[1][29] = imin                             #i0
-                     param_int[1][30] = jmin                             #j0
-                     param_int[1][31] = kmin                             #k0
-                     param_int[1][32] = imax-imin+1                      #Ni0
-                     param_int[1][33] = param_int[1][32]*(jmax-jmin+1)   #Ni0*Nj0
-                     #no de la zone pour recuperer pointer zone
-                     param_int[1][34] = no_z               
-                     param_int[1][35] = idir+1               
-                     #param_int[1][36] = ndf
-                        
-                     #print 'dim1=',imin,imax,jmin,jmax,kmin,kmax
-                     #print 'idir=',idir+1
+                        zp = T.subzone(z, (ideb,jdeb,kdeb), (ifin,jfin,kfin))
+                        zp[0] = z[0]+'_'+v[0]+str(inum)
+                        inum  += 1
+                        C._extractVars(zp, vars0)
+                        c = 0
+                        for v1 in varc: 
+                            C._initVars(zp, v1, c)
+                            c += 1
+                        #print('zone name=',zp[0])
+                        #print('dim0=',dim[0,0],dim[0,1],dim[1,0],dim[1,1],dim[2,0],dim[2,1])
 
-                     _compact(zp, fields=varc, init=False) #allocation compact uniquememnt; init dans er calcul effort
+                        if idir <= 1:
+                            ni1  = nj
+                            nj1  = nk
+                            jmin = jdeb -ific      #jmin
+                            jmax = jfin -ific-1    #jmax
+                            kmin = kdeb -inck0     #kmin
+                            kmax = kfin -inck0-1   #kmax
+                            imin = ideb -ific
+                            imax = imin
+                        elif idir <= 3:   
+                            ni1  = ni
+                            nj1  = nk
+                            imin = ideb -ific      #imin
+                            imax = ifin -ific-1    #imax
+                            kmin = kdeb -inck0     #kmin
+                            kmax = kfin -inck0-1   #kmax
+                            jmin = jdeb -ific
+                            jmax = jmin
+                        else:
+                            ni1  = ni
+                            nj1  = nj
+                            imin = ideb -ific      #imin
+                            imax = ifin -ific-1    #imax
+                            jmin = jdeb -ific      #jmin
+                            jmax = jfin -ific-1    #jmax
+                            kmin = kdeb -inck0
+                            kmax = kmin
 
-                     b[0][2].append(zp)
+                        param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
+                        if param_int is None:
+                            raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%zp[0])
 
+                        #print('loop effort',imin,imax,jmin,jmax,kmin,kmax)
+                        #modifie le moeud param_int de l'arbre teffort (issue de subzone) pour la fonction initNuma
+                        param_int[1]    = numpy.copy(param_int[1])    # sinon tableau partager avec param de la zone NS
+                        #NIJK  pour initNuma
+                        param_int[1][ 0] = ni1
+                        param_int[1][ 1] = nj1
+                        param_int[1][ 2] = 1
+                        param_int[1][ 3] = ific
+                        param_int[1][ 4] = 0
+                        #IJKV  pour initNuma
+                        param_int[1][20] = max(ni1-2*ific, 1)
+                        param_int[1][21] = max(nj1-2*ific, 1)
+                        param_int[1][22] = 1
+                        param_int[1][36] = len(varc)             #NEQ    
+                        param_int[1][41] = ni1*nj1               #NDIMDX
+                        param_int[1][66] = 0                     #SHIFTVAR
+                        #fenetre calcul flux dans arbre NS
+                        param_int[1][23] = imin
+                        param_int[1][24] = imax
+                        param_int[1][25] = jmin
+                        param_int[1][26] = jmax
+                        param_int[1][27] = kmin
+                        param_int[1][28] = kmax
+                        #adresse stockage flu:  adr = 1 + (i-i0) +(j-j0)*Ni0 + (k-k0)*Ni0*Nj0
+                        param_int[1][29] = imin                             #i0
+                        param_int[1][30] = jmin                             #j0
+                        param_int[1][31] = kmin                             #k0
+                        param_int[1][32] = imax-imin+1                      #Ni0
+                        param_int[1][33] = param_int[1][32]*(jmax-jmin+1)   #Ni0*Nj0
+                        #no de la zone pour recuperer pointer zone
+                        param_int[1][34] = no_z               
+                        param_int[1][35] = idir+1
+                        #param_int[1][36] = ndf
+                    
+                        #print('dim1=',imin,imax,jmin,jmax,kmin,kmax)
+                        #print('idir=',idir+1)
 
-              no_z +=1
-              ndf  +=1
+                        _compact(zp, fields=varc, init=False) #allocation compact uniquememnt; init dans er calcul effort
 
-    Internal._rmNodesByType(b,'ZoneGridConnectivity_t')
-    Internal._rmNodesByType(b,'ZoneBC_t')
-    Internal._rmNodesByType(b,'Rind_t')
-    Internal._rmNodesByName(b,'.Solver#define')
-    Internal._rmNodesByName(b,'Parameter_real')
-    Internal._rmNodesByName(b,'CFL_minmaxmoy')
-    Internal._rmNodesByName(b,'type_zone')
-    Internal._rmNodesByName(b,'model')
-    Internal._rmNodesByName(b,'temporal_scheme')
-    Internal._rmNodesByName(b,'GridCoordinates#Init')
-    Internal._rmNodesByName(b,'FlowSolution')
+                        b[2].append(zp)
+
+            no_z +=1
+            ndf  +=1
+
+        # ajoute le refState (if any)
+        ref = Internal.getNodeFromName1(b0, 'ReferenceState')
+        if ref is not None:
+            b[2].append(ref)
+        ref = Internal.getNodeFromName1(b0, 'FlowEquationSet')
+        if ref is not None:
+            b[2].append(ref)
+
+    Internal._rmNodesByType(teff, 'ZoneGridConnectivity_t')
+    Internal._rmNodesByType(teff, 'ZoneBC_t')
+    Internal._rmNodesByType(teff, 'Rind_t')
+    Internal._rmNodesByName(teff, '.Solver#define')
+    Internal._rmNodesByName(teff, 'Parameter_real')
+    Internal._rmNodesByName(teff, 'CFL_minmaxmoy')
+    Internal._rmNodesByName(teff, 'type_zone')
+    Internal._rmNodesByName(teff, 'model')
+    Internal._rmNodesByName(teff, 'temporal_scheme')
+    Internal._rmNodesByName(teff, 'GridCoordinates#Init')
+    Internal._rmNodesByName(teff, 'FlowSolution')
 
     return teff
 
 #==============================================================================
 #
-# Calcul des effort (in place)
+# Calcul des efforts (in place)
 #
 #==============================================================================
 def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
@@ -1867,7 +1875,7 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
 
 #==============================================================================
 #
-# Calcul distributiona threads
+# Calcul distribution threads
 #
 #==============================================================================
 def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
@@ -1890,6 +1898,7 @@ def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
 #==============================================================================
 def setIBCData_zero(t, surf, dim=None):
 
+  bases = Internal.getBases(t)
   zones = Internal.getZones(t)
 
   # recup des obstacles
@@ -1900,7 +1909,8 @@ def setIBCData_zero(t, surf, dim=None):
   
   # Matrice de masquage (arbre d'assemblage)
   nbodies = len(bodies)
-  BM = numpy.ones((1,nbodies),dtype=numpy.int32)
+  nbases = len(bases)
+  BM = numpy.ones((nbases,nbodies), dtype=numpy.int32)
   if dim is None:
      sol= Internal.getNodeFromName1(zones[0],'FlowSolution#Centers')
      nk = Internal.getNodeFromName1(sol,'Density')[1].shape[2]
@@ -1938,7 +1948,7 @@ def setIBCData_zero(t, surf, dim=None):
         #on retranche 1 pour avoir une bonne visu et un terme src plus compact
         cellN_IBC[0:] -= 1
 
-        print('zone', z[0],': plage IBC=', ibc[1:7])
+        print('Zone', z[0],': plage IBC=', ibc[1:7])
       
         numz["IBC"]  = ibc
 

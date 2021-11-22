@@ -669,7 +669,7 @@ def _buildOwnData(t, Padding):
 
      
     levelg=[]; leveld=[]; val=1; i=0
-    veclevel = []; mod="";posg=[] 
+    veclevel = []; mod=""; posg=[] 
     for b in bases:
 
            zones = Internal.getNodesFromType1(b, 'Zone_t')
@@ -691,17 +691,16 @@ def _buildOwnData(t, Padding):
                           i = dim[1]//2
                           j = dim[2]//2
                           k = dim[3]//2
-                          level = C.getValue( z, 'centers:niveaux_temps', (i,j,k))
+                          level = C.getValue(z, 'centers:niveaux_temps', (i,j,k))
                           veclevel.append(int(level))
                    else:
-                       for z in zones:
-                          veclevel.append(1)                        
+                       for z in zones: veclevel.append(1)
+               else:
+                   for z in zones: veclevel.append(1)               
 
            else:
-               for z in zones:
-                   veclevel.append(1)              
-               
-                          
+               for z in zones: veclevel.append(1)
+
     maxlevel = max(veclevel)
 
     #print('veclevel= ', veclevel)
