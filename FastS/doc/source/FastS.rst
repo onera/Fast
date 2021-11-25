@@ -283,7 +283,7 @@ Post
     in the tree **teff**, the following variables are updated in the **FlowSolution#Centers** node thanks to primitive variable of t:
 
         1. Density     (contains the numerical fluxes linked to the mass conservation) 
-        2. MomentumX   (contains the numerical fluxes linked to the MomentumX conservation)
+        2. MomentumX   (contains the numerical fluxes linked to the MomentumX conservation minus pinf*n)
         3. MomentumY...
         4. MomentumZ...
         5. EnergyStagnationDensity  (contains the numerical fluxes of the linked to the energy conservation)
