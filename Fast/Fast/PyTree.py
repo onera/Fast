@@ -9,7 +9,8 @@ __version__ = Fast.__version__
 OMP_MODE = 0
 try:
     import FastC.PyTree as FastC
-    from FastC.PyTree import _setNum2Zones, _setNum2Base, load, save, loadFile, loadFileG, saveFile, loadTree, saveTree
+    from FastC.PyTree import _setNum2Zones, _setNum2Base, load, save, loadFile, loadFileG, saveFile, loadTree, saveTree, \
+            getDictOfNobNozOfRcvZones, _addPair, getDictOfNobNozOfDnrZones, _pushCenters
 except ImportError: 
     raise ImportError("Fast.PyTree: requires FastC module.")
 
@@ -27,7 +28,6 @@ try:
     OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
     OMP_NUM_THREADS = int(OMP_NUM_THREADS)
 except: OMP_NUM_THREADS = 1
-
 
 #==============================================================================
 # Initialisation parametre calcul: calcul metric + var primitive + compactage 
@@ -209,7 +209,6 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 
     
     # Compactage arbre moyennes stat
-    #
     if tmy is not None:
         sol = Internal.getNodesFromName3(tmy, 'FlowSolution#Centers')
         var = Internal.getNodesFromType1(sol[0], 'DataArray_t')
@@ -377,8 +376,6 @@ def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmo
        if exploc != 1:
           _applyBC(infos_zones, hook1, nstep, ompmode, var= vars)    
 
-            
-
    return None
 #==============================================================================
 # compute in place
@@ -409,8 +406,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     rk     = param_int_firstZone[52]
     exploc = param_int_firstZone[54]
     #### a blinder...
-                
-     
+
     if nitrun == 1: print('Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode))
 
     if layer == "Python": 
@@ -544,7 +540,6 @@ def _applyBC(infos_zones, hook1, nstep, ompmode, var=["Density","Q1"]):
     FastLBM.fastlbm._applyBC(infos_zones["LBM"][0] , infos_zones["LBM"][1]       , hook1, nstep, ompmode, varType,varlbm )
     FastP.fastp._applyBC(infos_zones["unstruct"][0], infos_zones["unstruct"][1]  , hook1, nstep, ompmode, varns  )
     
-
     return None
 
 #==============================================================================

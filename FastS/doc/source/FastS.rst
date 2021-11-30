@@ -295,12 +295,12 @@ Post
         11. gradzVelocityY
         12. gradxVelocityZ 
         13. gradyVelocityZ
-        14. gradxVelocityZ
+        14. gradzVelocityZ
         15. gradxTemperature 
         16. gradyTemperature
         17. gradzTemperature
         18. CoefPressure
-        19. ViscosityMolecular
+        19. ViscosityMolecular + ViscosityEddy
         20. Density2 (contains density)
         21. Pressure
 

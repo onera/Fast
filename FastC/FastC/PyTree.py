@@ -39,10 +39,10 @@ except: OMP_NUM_THREADS = 1
 
 import Converter.Mpi as Cmpi
 
-
 MX_SYNCHRO = 1000
 MX_SSZONE  = 10
 MX_OMP_SIZE_INT = 250*OMP_NUM_THREADS
+
 #==============================================================================
 # Met un dictionnaire de numerics dans une/des zones
 #==============================================================================
@@ -3185,13 +3185,13 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
         FILE = directory+'/'+fileName+'.cgns'
         C.convertPyTree2File(t2, FILE)
 
-
+# Convert input file 
 def convertpointwise2fast(FILEIN):
-    ## This script converst Pointwise meshes to a format that can be used for FastS
+    """This script converts Pointwise meshes to a format that can be used for FastS."""
     t  = C.convertFile2PyTree(FILEIN+".cgns")
     ##A few comments: Assumes unspecified is empty!!
     for fam in Internal.getNodesFromType(t,'Family_t'):
-        if(fam[0] == "Unspecified"):
+        if fam[0] == "Unspecified":
             Internal.rmNode(t,fam)
 
     ## The code below was provided by Thomas Renaud. Thank you!_____________________                             
@@ -3199,8 +3199,7 @@ def convertpointwise2fast(FILEIN):
     for fam in Internal.getNodesFromType(t,'Family_t'):                            #|       
         fambc = Internal.getValue(Internal.getNodeFromType(fam,'FamilyBC_t'))      #|                 
         dicofambc[fam[0]]=fambc                                                    #|         
-                                                                                   #|         
-                                                                                   #|           
+                                                                                   #|                                                                          #|           
     for bc in Internal.getNodesFromType(t,'BC_t'):                                 #|             
         if Internal.getValue(bc)=='FamilySpecified':                               #|                  
             famname = Internal.getNodeFromType(bc,'FamilyName_t')                  #|                  
@@ -3262,6 +3261,7 @@ def pointwise2D_2Fast(t):
                 Internal.setValue(coordz,np.zeros((np.shape(coordz[1])[0],np.shape(coordz[1])[1])))
                 Internal.addChild(zgrid, coordz, pos=-1)
     return None
+
 #==============================================================================
 # Enhance IO (with colours) (cleaned)
 #==============================================================================
@@ -3275,17 +3275,89 @@ def _print2screen(mssg2print,txt_colour):
 
     if txt_colour==io_fatal_warning:
         sys.stdout.write("\033[1;31m")
-        print(mssg2print);
+        print(mssg2print)
         sys.stdout.write(io_reset)
         exit()
     elif txt_colour==io_gen_info:
         sys.stdout.write("\033[1;34m")
-        print(mssg2print);
+        print(mssg2print)
     elif txt_colour==io_pass:
         sys.stdout.write("\033[1;32m")
-        print(mssg2print);
+        print(mssg2print)
     elif txt_colour==io_warning:
         sys.stdout.write("\033[1;33m")
-        print(mssg2print);
+        print(mssg2print)
         sys.stdout.write(io_reset)
-    print("--");
+    print("--")
+
+#====================================================================
+# Usefull functions for Chimera + motion
+#====================================================================
+# Return dictionary of receiver zones
+def getDictOfNobNozOfRcvZones(t, intersectionDict):
+    """Return the dict of Nob and Noz of receiver zones."""
+    dictOfNobOfRcvZones={}
+    dictOfNozOfRcvZones={}
+    for nob in range(len(t[2])):
+        if Internal.getType(t[2][nob]) == 'CGNSBase_t':
+            for noz in range(len(t[2][nob][2])):
+                z = t[2][nob][2][noz]
+                if Internal.getType(z) == 'Zone_t':
+                    zname = Internal.getName(z)                
+                    if zname in intersectionDict and intersectionDict[zname] != []:
+                        dictOfNobOfRcvZones[zname]=nob
+                        dictOfNozOfRcvZones[zname]=noz
+    return (dictOfNobOfRcvZones, dictOfNozOfRcvZones)
+
+# Ajout symetrique dans un dictionnaire
+def _addPair(idic, z1, z2):
+    """Add z1 and z2 symetrically to dictionnary idic."""
+    if z1 not in idic: idic[z1] = [z2]
+    else:
+        if z2 not in idic[z1]: idic[z1].append(z2)
+    if z2 not in idic: idic[z2] = [z1]
+    else:
+        if z1 not in idic[z2]: idic[z2].append(z1)
+    return None
+
+# Retourne le nob noz des zones donneuses et remplit le dicOfAdt
+def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT):
+    """Fill dictOfAdt."""
+    dnrnames=[]
+    for i in intersectionDict.values(): dnrnames += i
+    dnrnames = list(set(dnrnames))
+
+    dictOfNobOfDnrZones={}; dictOfNozOfDnrZones={}
+    for nob in range(len(tc[2])):
+        if Internal.getType(tc[2][nob]) == 'CGNSBase_t':
+            baseName = Internal.getName(tc[2][nob])
+            for nozc in range(len(tc[2][nob][2])):
+                zc = tc[2][nob][2][nozc]
+                if Internal.getType(zc) == 'Zone_t':
+                    zdnrname = Internal.getName(zc)
+                    if zdnrname in dnrnames and zdnrname not in dictOfADT:
+                        if baseName == 'CARTESIAN': adt = None
+                        else: adt = C.createHook(zc, 'adt')
+                        dictOfADT[zdnrname] = adt
+                        dictOfNobOfDnrZones[zdnrname] = nob
+                        dictOfNozOfDnrZones[zdnrname] = nozc
+    return (dictOfNobOfDnrZones,dictOfNozOfDnrZones)
+
+# in the case of deforming grids, coordinates are modified in t
+# this functions update tc from t coordinates
+def _pushCenters(t, tc, baseNames):
+    for n in baseNames:
+        b = Internal.getNodeFromName1(t, n)
+        bpc = C.node2Center(b) # centers
+        for z in Internal.getZones(bpc): # push centers in tc
+            zp = Internal.getNodeFromName2(tc, z[0])
+            cx = Internal.getNodeFromPath(z, 'GridCoordinates/CoordinateX')
+            cxp = Internal.getNodeFromPath(zp, 'GridCoordinates/CoordinateX')
+            cxp[1][:] = cx[1][:]
+            cy = Internal.getNodeFromPath(z, 'GridCoordinates/CoordinateY')
+            cyp = Internal.getNodeFromPath(zp, 'GridCoordinates/CoordinateY')
+            cyp[1][:] = cy[1][:]
+            cz = Internal.getNodeFromPath(z, 'GridCoordinates/CoordinateZ')
+            czp = Internal.getNodeFromPath(zp, 'GridCoordinates/CoordinateZ')
+            czp[1][:] = cz[1][:]
+    return None

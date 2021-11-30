@@ -103,6 +103,8 @@ for ale in TypeMotion:
                                       lines[i]=lines[i].replace("flu(lf+v2flu*14","flu(lf+v2flu*9 ").replace("flu(lf+v2flu*15","flu(lf+v2flu*10")
                                       lines[i]=lines[i].replace("flu(lf+v2flu*17","flu(lf+v2flu*11")
                                       lines[i]=lines[i].replace("flu(lf+v2flu*18","flu(lf+v2flu*12")
+                                      lines[i]=lines[i].replace("flu(lf+v2flu*19","flu(lf+v2flu*13")
+                                      lines[i]=lines[i].replace("flu(lf+v2flu*20","flu(lf+v2flu*14")
                                       lines[i]=lines[i].replace("flu(lf+v2flu*3 )=(flu4-param_real(PINF)*tcz*flagk)*sens","flu(lf+v2flu*3 )=0.")
 
                         # suppression minmod
