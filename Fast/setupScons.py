@@ -79,7 +79,7 @@ listExtensions.append(
 # setup ======================================================================
 setup(
     name="Fast",
-    version="3.3",
+    version="3.4",
     description="Fast NS and LBM solvers.",
     author="Onera",
     package_dir={"":"."},
