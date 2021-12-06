@@ -1628,6 +1628,8 @@ def createStressNodes(t, BC=None, windows=None):
     bases = Internal.getBases(t)
     teff = C.newPyTree([b[0] for b in bases])
 
+    familyBCDict = C.getFamilyBCNamesDict(t)
+
     zones = []
     no_z = 0
     for b0 in Internal.getNodesFromType1(t, 'CGNSBase_t'):
@@ -1669,8 +1671,21 @@ def createStressNodes(t, BC=None, windows=None):
             if param_int is not None: ific = param_int[1][3]
             ndf = 0
             for v in list_bc:
-                if BC is not None: name = Internal.getValue(v)
-                else: name = v[0]
+
+                selectBC = False 
+                if BC is not None:
+                    # nom de la BC
+                    name = Internal.getValue(v)
+                    if name == 'FamilySpecified': # name is a familyName
+                        familyName = Internal.getNodeFromName1(v, 'FamilyName')
+                        if familyName is not None:
+                            familyName = Internal.getValue(familyName)
+                            if familyName in BC: selectBC = True
+                            if familyBCDict[familyName] in BC: selectBC = True
+                    else: # name is a type
+                        if name in BC: selectBC = True
+                    print('selection', name, selectBC)
+                else: name = v[0] 
 
                 if windows is None: windows = [None]
 
@@ -1678,7 +1693,7 @@ def createStressNodes(t, BC=None, windows=None):
 
                 for window in windows:
 
-                    if (BC is not None and name in BC) or (window is not None and z[0]==window[0]):
+                    if (selectBC) or (window is not None and z[0]==window[0]):
                         if BC is not None:
                             ptrg = Internal.getNodeFromName(v, "PointRange")
                         else: 
@@ -1689,19 +1704,19 @@ def createStressNodes(t, BC=None, windows=None):
                             wrange[0,1]= window[2]
                             wrange[1,1]= window[4]
                             wrange[2,1]= window[6]
-                            ptrg = ['PointRange', wrange,  [], 'IndexRange_t']
+                            ptrg = ['PointRange', wrange, [], 'IndexRange_t']
                     
                         dim = Internal.getValue(ptrg)
                     
                         #dir=0,...5
                         idir = Ghost.getDirection__(dimbase, [ptrg])
                         if windows[0] is not None:
-                            if   window[7]== 'imin': idir =0
-                            elif window[7]== 'imax': idir =1
-                            elif window[7]== 'jmin': idir =2
-                            elif window[7]== 'jmax': idir =3
-                            elif window[7]== 'kmin': idir =4
-                            elif window[7]== 'kmax': idir =5
+                            if   window[7] == 'imin': idir =0
+                            elif window[7] == 'imax': idir =1
+                            elif window[7] == 'jmin': idir =2
+                            elif window[7] == 'jmax': idir =3
+                            elif window[7] == 'kmin': idir =4
+                            elif window[7] == 'kmax': idir =5
                     
                         inci =0 ; incj =0 ; inck =0
                         if BC is not None:
@@ -1814,11 +1829,9 @@ def createStressNodes(t, BC=None, windows=None):
 
         # ajoute le refState (if any)
         ref = Internal.getNodeFromName1(b0, 'ReferenceState')
-        if ref is not None:
-            b[2].append(ref)
+        if ref is not None: b[2].append(ref)
         ref = Internal.getNodeFromName1(b0, 'FlowEquationSet')
-        if ref is not None:
-            b[2].append(ref)
+        if ref is not None: b[2].append(ref)
 
     Internal._rmNodesByType(teff, 'ZoneGridConnectivity_t')
     Internal._rmNodesByType(teff, 'ZoneBC_t')
@@ -2858,8 +2871,6 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
 #==============================================================================
 def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
-    
-
     bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
@@ -2876,7 +2887,6 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
     dtloc = Internal.getValue(dtloc) # tab numpy
     nitmax = int(dtloc[0])                 
     orderRk = int(dtloc[len(dtloc)-1])
-    
 
     if tc is not None:
          bases = Internal.getNodesFromType1(tc, 'CGNSBase_t')  # noeud

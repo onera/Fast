@@ -126,8 +126,8 @@ if f77compiler == 'ifort':
    version = Dist.getForVersion() # A utiliser version=(13,4)
    f77Args = '-r8 -i4 -g -fno-alias -fno-fnalias -ip'
    cacheLine = Dist.getCacheLine()
-   simd      = Dist.getSimd()
 
+   simd      = Dist.getSimd()
    if   (cacheLine != 1 ): f77Args += ' -align array%dbyte '%cacheLine
    if   (simd == 'SSE4.2' ): f77Args += ' -xSSE4.2 '
    elif (simd == 'AVX2'   ): f77Args += ' -xCORE-AVX2 '

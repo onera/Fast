@@ -1,7 +1,7 @@
 # FastS + MPI
 from . import PyTree
 from . import fasts
-from .PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, _computeStress, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, distributeThreads, allocate_ssor, setIBCData_zero, display_cpu_efficiency
+from .PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, distributeThreads, allocate_ssor, setIBCData_zero, display_cpu_efficiency
 import timeit
 import time as Time
 import numpy
@@ -444,6 +444,17 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     return (t, tc, metrics)
 
 #==============================================================================
+# computeStress avec reduction 
+#==============================================================================
+def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
+    """Compute efforts in teff.""" 
+    ret = PyTree._computeStress(t, teff, metrics, xyz_ref)
+    ret = numpy.array(ret, dtype=numpy.float64)
+    ret1 = numpy.empty(ret.shape, dtype=numpy.float64)
+    Cmpi.Allreduce(ret, ret1, Cmpi.SUM)
+    return ret1.tolist()
+
+#==============================================================================
 # For periodic unsteady chimera join, parameter must be updated peridicaly 
 #==============================================================================
 def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_steady.cgns', directory='.', iteration=0):
@@ -579,7 +590,6 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        #Remise zero target
        #if dtloc is not None: dtloc[4] = 0
-       #print('COUCOU, dtloc= ', dtloc )
        
        #timelevel_motion larger than number of timelevels for 360degre 
        #
