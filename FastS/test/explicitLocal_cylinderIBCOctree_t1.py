@@ -159,5 +159,8 @@ for it in range(nit):
     if it%100 == 0:
         print('- %d -'%it); 
         FastS.display_temporal_criteria(t, metrics, it)
+
+Internal._rmNodesFromName(t, 'Parameter_int')
+Internal._rmNodesFromName(t, 'Parameter_real')
 test.testT(t, 1)
 #C.convertPyTree2File(t, "out.cgns")
