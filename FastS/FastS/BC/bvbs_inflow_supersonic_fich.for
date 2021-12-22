@@ -9,7 +9,7 @@ c***********************************************************************
 C VGmod
      &                                  ventijk, tijk, rop,
      &                                  rofich, rufich, rvfich, 
-     &                                  rwfich, refich, nue,
+     &                                  rwfich, refich, ronutfich,
      &                                  size_data, inc_bc, size_work)
 C VGmod
 c_U   USER : PECHIER
@@ -32,7 +32,7 @@ C VGmod
       INTEGER_E indbci, li
 C...  Contient les donnees CGNS pour l injection subsonique:
       REAL_E rofich(size_data),rufich(size_data),rvfich(size_data),
-     & rwfich(size_data),refich(size_data),nue(size_data)
+     & rwfich(size_data),refich(size_data),ronutfich(size_data)
 
 C VGmod
       REAL_E rop    (param_int(NDIMDX     ), param_int(NEQ)      )
@@ -78,7 +78,6 @@ C VGmod
              do j = ind_loop(3), ind_loop(4)
 
                l    = inddm(  ind_loop(2) , j,  k ) 
-C VGmod
                li   = indbci(j,  k )
 #include       "FastS/BC/BCInflowSupersonic_fich_firstrank.for"
 
@@ -99,7 +98,8 @@ C VGmod
              do j = ind_loop(3), ind_loop(4) 
 
                l    = inddm(  ind_loop(2) , j,  k )
-#include       "FastS/BC/BCInflowSupersonic_firstrank_SA.for"
+               li   = indbci(j,  k )
+#include       "FastS/BC/BCInflowSupersonic_fich_firstrank_SA.for"
 
                l0   = l
                l1   = l + 1
@@ -122,7 +122,8 @@ C VGmod
              do  j = ind_loop(3), ind_loop(4)
 
                l    = inddm( ind_loop(1)    , j,  k ) 
-#include      "FastS/BC/BCInflowSupersonic_firstrank.for"
+               li   = indbci(j,  k )
+#include      "FastS/BC/BCInflowSupersonic_fich_firstrank.for"
 
                l0   = l
                l1   = l - 1
@@ -141,7 +142,8 @@ C VGmod
              do  j = ind_loop(3), ind_loop(4)
 
                l    = inddm( ind_loop(1)    , j,  k ) 
-#include      "FastS/BC/BCInflowSupersonic_firstrank_SA.for"
+               li   = indbci(j,  k )
+#include      "FastS/BC/BCInflowSupersonic_fich_firstrank_SA.for"
 
                l0   = l
                l1   = l - 1
@@ -168,7 +170,8 @@ C VGmod
                   lij =  inddm( ind_loop(1),  ind_loop(4)    , k )
 !DEC$ IVDEP
                   do l = lij, lij + ind_loop(2) - ind_loop(1)
-#include           "FastS/BC/BCInflowSupersonic_firstrank.for"
+                  li   = indbci(l - lij + ind_loop(1),  k )
+#include           "FastS/BC/BCInflowSupersonic_fich_firstrank.for"
                   enddo !i
 
                 do  j = ind_loop(3), ind_loop(4)-1
@@ -193,7 +196,8 @@ C VGmod
                   lij =  inddm( ind_loop(1),  ind_loop(4)    , k )
 !DEC$ IVDEP
                   do l = lij, lij + ind_loop(2) - ind_loop(1)
-#include           "FastS/BC/BCInflowSupersonic_firstrank_SA.for"
+                  li   = indbci(l - lij + ind_loop(1),  k )
+#include           "FastS/BC/BCInflowSupersonic_fich_firstrank_SA.for"
                   enddo !i
 
                   do  j = ind_loop(3), ind_loop(4)-1
@@ -224,7 +228,8 @@ C VGmod
                   lij =  inddm( ind_loop(1),  ind_loop(3)    , k )
 !DEC$ IVDEP
                   do l = lij, lij + ind_loop(2) - ind_loop(1)
-#include           "FastS/BC/BCInflowSupersonic_firstrank.for"
+                  li   = indbci(l - lij + ind_loop(1),  k )
+#include           "FastS/BC/BCInflowSupersonic_fich_firstrank.for"
                   enddo !i
 
                   do  j = ind_loop(3)+1, ind_loop(4)
@@ -249,7 +254,8 @@ C VGmod
                   lij =  inddm( ind_loop(1),  ind_loop(3)    , k )
 !DEC$ IVDEP
                   do l = lij, lij + ind_loop(2) - ind_loop(1)
-#include           "FastS/BC/BCInflowSupersonic_firstrank_SA.for"
+                  li   = indbci(l - lij + ind_loop(1),  k )
+#include           "FastS/BC/BCInflowSupersonic_fich_firstrank_SA.for"
                   enddo !i
 
                   do  j = ind_loop(3)+1, ind_loop(4)
@@ -282,7 +288,8 @@ C VGmod
                   lij =  inddm( ind_loop(1),  ind_loop(4), ind_loop(6) )
 !DEC$ IVDEP
                   do l = lij, lij + ind_loop(2) - ind_loop(1)
-#include           "FastS/BC/BCInflowSupersonic_firstrank.for"
+                  li   = indbci(l - lij + ind_loop(1),  j )
+#include           "FastS/BC/BCInflowSupersonic_fich_firstrank.for"
                   enddo !i
              enddo !j
 
@@ -310,7 +317,8 @@ C VGmod
                   lij =  inddm( ind_loop(1),  ind_loop(4), ind_loop(6) )
 !DEC$ IVDEP
                   do l = lij, lij + ind_loop(2) - ind_loop(1)
-#include           "FastS/BC/BCInflowSupersonic_firstrank_SA.for"
+                  li   = indbci(l - lij + ind_loop(1),  j )
+#include           "FastS/BC/BCInflowSupersonic_fich_firstrank_SA.for"
                   enddo !i
              enddo !j
 
@@ -344,7 +352,8 @@ C VGmod
                   lij =  inddm( ind_loop(1),  ind_loop(4), ind_loop(5) )
 !DEC$ IVDEP
                   do l = lij, lij + ind_loop(2) - ind_loop(1)
-#include           "FastS/BC/BCInflowSupersonic_firstrank.for"
+                  li   = indbci(l - lij + ind_loop(1),  j )
+#include           "FastS/BC/BCInflowSupersonic_fich_firstrank.for"
                   enddo !i
              enddo !j
 
@@ -372,7 +381,8 @@ C VGmod
                   lij =  inddm( ind_loop(1),  ind_loop(4), ind_loop(5) )
 !DEC$ IVDEP
                   do l = lij, lij + ind_loop(2) - ind_loop(1)
-#include           "FastS/BC/BCInflowSupersonic_firstrank_SA.for"
+                  li   = indbci(l - lij + ind_loop(1),  j )
+#include           "FastS/BC/BCInflowSupersonic_fich_firstrank_SA.for"
                   enddo !i
              enddo !j
 

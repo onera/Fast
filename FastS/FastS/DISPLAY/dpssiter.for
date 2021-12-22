@@ -4,7 +4,7 @@ c     $Revision: 59 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine dpssiter(nitrun, neq, nssiter_loc, iflw, iles, lft,
-     &   zone_name, size_name, rdm, cvg_ptr)
+     &   iverb, zone_name, size_name, rdm, cvg_ptr)
 c***********************************************************************
 c_U   USER : PECHIER
 c
@@ -23,12 +23,12 @@ c                    display ss_iteration +ndoms
 c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       implicit none
 #define ALOG10 LOG10
-      INTEGER_E nitrun, neq,nssiter_loc,lft,iles,iflw,size_name
+      INTEGER_E nitrun, neq,nssiter_loc,lft,iles,iflw,size_name,iverb
       REAL_E rdm(nssiter_loc,neq,2), cvg_ptr(2*neq)
 
       character(len=size_name) zone_name 
 c Var loc
-      INTEGER_E ndm,i,ne,last_it,iverbs_loc,
+      INTEGER_E ndm,i,ne,last_it,iverbs_loc,it_reelle(nssiter_loc),
      &     nitcfg,ndsdm,i_loc,itest,ii,ipass,inds
       REAL_E xro,xrou,xrov,xrow,xroe,xro1,xrou1,xrov1,xrow1,xroe1,
      &     xnut,xnut1,test,test1, cut0x
@@ -42,7 +42,7 @@ c-----Boucle sur les domaines :
 
       last_it = nssiter_loc
     
-      iverbs_loc  = 1
+      iverbs_loc  = iverb
       do ii = 1,neq
          if (rdm(last_it,ii,2).gt.rdm(1,ii,2)) iverbs_loc = 2
       enddo
@@ -51,9 +51,9 @@ c        i_loc = 1
 c        do ii = 1, Niter_max - 1
 c
 c            itest = iskip_lu(Niter_max - 1, ii) + 3
-c         
+cc         
 c            if(itest.le. last_it - 1 ) then
-c 
+cc 
 c              it_reelle(i_loc) = ii
 c              i_loc            = i_loc + 1
 c            endif
@@ -94,13 +94,15 @@ c          !Norme Loo
                 xnut  = ALOG10(max(rdm(i,6,1),cut0x)) !Norme L2
                 xnut1 = ALOG10(max(rdm(i,6,2),cut0x)) !Norme Loo
                 if(lft.eq.0) then
-                 write(*,3011)zone_name,i,xro ,xrou,xrov ,xrow,xroe,xnut
+                 write(*,3011)zone_name,i,xro,xrou,xrov,xrow,xroe,xnut
+c     &                       ,it_reelle(i)
                  write(*,4011)zone_name,i,xro1,xrou1,xrov1,xrow1,xroe1,
-     &                        xnut1
+     &                        xnut1!, it_reelle(i)
                 else
-                 write(*,3311)zone_name,i,xro,xrou,xrov,xrow,xroe ,xnut 
+                 write(*,3311)zone_name,i,xro,xrou,xrov,xrow,xroe ,xnut
+c     &                       ,it_reelle(i)
                  write(*,4311)zone_name,i,xro1,xrou1,xrov1,xrow1,xroe1,
-     &                        xnut1
+     &                        xnut1!, it_reelle(i)
                 endif
               else
 
@@ -210,16 +212,7 @@ C
 2000  format('  Zone  =',a,' / Ss-Iteration',i3)
 2001  format('  Zone  =',a,' / Diff SsI 1 -',i3)
 
-3000  format('  Residus L2 (log) : ',5(2x,f14.9))
-4000  format('  Residus Loo(log) : ',5(2x,f14.9))
-3001  format('  Residus L2 (log) : ',6(2x,f14.9))
-4001  format('  Residus Loo(log) : ',6(2x,f14.9))
-3300  format('  Residus L2 (log) : ',5(2x,f7.2))
-4300  format('  Residus Loo(log) : ',5(2x,f7.2))
-3301  format('  Residus L2 (log) : ',6(2x,f7.2))
-4301  format('  Residus Loo(log) : ',6(2x,f7.2))
-
-3010  format(' Res_L2 (zone=',a,', ssiter =   ',i3,')',5(2x,f14.9))
+3010  format(' Res_L2 (zone=',a,', ssiter =   ',i3,')',5(2x,f14.9)) 
 4010  format(' Res_Loo(zone=',a,', ssiter =   ',i3,')',5(2x,f14.9))
 3011  format(' Res_L2 (zone=',a,', ssiter =   ',i3,')',6(2x,f14.9))
 4011  format(' Res_Loo(zone=',a,', ssiter =   ',i3,')',6(2x,f14.9))

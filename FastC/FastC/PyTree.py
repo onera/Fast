@@ -120,7 +120,8 @@ def _reorder(t, tc=None, omp_mode=0):
            zones_tc  = Internal.getNodesFromType1(bases_tc[ctg], 'Zone_t')
 
            zname = []
-           for zc in zones: zname.append( zc[0] )
+           for zc in zones: 
+               zname.append( zc[0] )
 
            new_zones = []
            for z in zones_tc:
@@ -390,8 +391,64 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
        if C.isNamePresent(zone, 'centers:VelocityY_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityY'  , zone, 'centers:VelocityY_M1'  ); FIRST_IT=0
        if C.isNamePresent(zone, 'centers:VelocityZ_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityZ'  , zone, 'centers:VelocityZ_M1'  ); FIRST_IT=0
        if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
-       
-    #gestion ale maillage deformable
+
+    # init moyenne loi de paroi
+    bcs   = Internal.getNodesFromType2(zone, 'BC_t')
+    for bc in bcs:
+      btype = Internal.getValue(bc)
+      if btype == 'BCWallExchange':
+         sol     = Internal.getNodeFromName1(zone, 'FlowSolution#Centers')
+         ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
+         rg      = ptrange[0][1]
+         sz      = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
+         Prop    = Internal.getNodeFromName(bc,'.Solver#Property')
+         wmles   = Internal.getNodeFromName(Prop,'WMLES_parameter')[1]
+         Nechant = wmles[1]
+         print('Nechant',Nechant) 
+         vars=['Density','VelocityX','VelocityY','VelocityZ','Temperature']
+         if Nechant==0:
+            wmles[1]=1  #nb echantillon initialisé
+            wmles[2]=1  #position dernier echantillon calculer
+            moy  = Internal.getNodeFromName1(Prop, "AvgPlane-Primitive" )[1]
+            shift=0
+            for var in vars:
+               inst = Internal.getNodeFromName1(sol, var )[1]
+               #CL I
+               if rg[0][1] - rg[0][0]==0:
+                 if rg[0][1]==1: ijk_tg =5;     
+                 else:           ijk_tg =rg[0][1]-7
+                 l = shift
+                 for k in range(rg[2][0]-1,rg[2][1]):
+                    for j in range(rg[1][0]-1,rg[1][1]):
+                      moy[l]    = inst[ijk_tg ,j,k]   #moyenne
+                      moy[l+sz] = inst[ijk_tg ,j,k]   #echant 1
+                      l+=1
+               #CL J
+               if rg[1][1] - rg[1][0]==0:
+                 if rg[1][1]==1: ijk_tg =5
+                 else:           ijk_tg = rg[1][1]-7
+                 l = shift
+                 #print("shift",shift, sz*5, var, rg[2][0]-1,rg[2][1]-1 )
+                 for k in range(rg[2][0]-1,rg[2][1]-1):
+                    for i in range(rg[0][0]-1,rg[0][1]-1):
+                      moy[l]      = inst[i, ijk_tg ,k]   #moyenne
+                      moy[l+sz*5] = inst[i, ijk_tg ,k]   #echant 1
+                      #if zone[0]=='cart.0' and var== "Temperature": print l+sz*5,i 
+                      l+=1
+               #CL K
+               if numpy.shape(inst)[2]!=1:
+                  if rg[2][1] - rg[2][0]==0:
+                    if rg[2][1]==1: ijk_tg =5
+                    else:           ijk_tg = rg[2][1]-7
+                    l = shift
+                    for j in range(rg[1][0]-1,rg[1][1]):
+                      for i in range(rg[0][0]-1,rg[0][1]):
+                        moy[l]    = inst[i,j, ijk_tg ]   #moyenne
+                        moy[l+sz] = inst[i,j, ijk_tg ]   #echant 1
+                        l+=1
+               shift+=sz
+
+
     ale=0
     b = Internal.getNodeFromName1(zone, '.Solver#define')
     if b is not None:
@@ -667,7 +724,6 @@ def _buildOwnData(t, Padding):
     first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
     if first is not None: timelevel_target = Internal.getValue(first)
 
-     
     levelg=[]; leveld=[]; val=1; i=0
     veclevel = []; mod=""; posg=[] 
     for b in bases:
@@ -852,7 +908,7 @@ def _buildOwnData(t, Padding):
 
         
 
-        dtdim = nssiter + 7
+        dtdim = nssiter + 8
         datap = numpy.empty((dtdim), numpy.int32) 
         datap[0] = nssiter 
         datap[1] = modulo_verif
@@ -860,9 +916,20 @@ def _buildOwnData(t, Padding):
         datap[3] = timelevel_motion
         datap[4] = timelevel_target 
         datap[5] = timelevel_prfile
-        datap[6:dtdim-1] = 1
-        datap[dtdim-1] = rk
+        datap[6:dtdim-2] = 1
+        datap[dtdim-2] = rk
+        datap[dtdim-1] = it0
         Internal.createUniqueChild(o, '.Solver#dtloc', 'DataArray_t', datap)
+
+        dtloc = Internal.getNodeFromName1(o, '.Solver#dtloc')[1]
+
+        #partage memoire entre dtloc et Noeud timeMotion,....
+        first = Internal.getNodeFromName1(t, 'Iteration')
+        if first is not None: first[1]=dtloc[dtdim-1:dtdim]
+        first = Internal.getNodeFromName1(t, 'TimeLevelMotion')
+        if first is not None: first[1]=dtloc[3:4]
+        first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
+        if first is not None: first[1]=dtloc[4:5]
 
     # Data for each zone
     #==== Check if padding file exists (potential cache associativity issue)
@@ -1320,10 +1387,11 @@ def _buildOwnData(t, Padding):
             leveld=0
 
             
-            number_of_defines_param_int = 124                           # Number Param INT
+            number_of_defines_param_int = 125                           # Number Param INT
             size_int                   = number_of_defines_param_int +1 # number of defines + 1
 
             datap      = numpy.empty(size_int, numpy.int32)
+
             datap[0:25]= -1
 
             #Structure ou polyhedric
@@ -1476,6 +1544,10 @@ def _buildOwnData(t, Padding):
             datap[v.PT_LBM_IBC_DIST]    =0
             datap[v.PT_LBM_IBC_DIR]     =0
 
+            #correction flux paroi ibm
+            datap[v.IBC_PT_FLUX]   = -1
+
+
             i += 1
          
             Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
@@ -1627,7 +1699,9 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 
         ndimt   +=     neq*nijk       # surdimensionne ici
         ndimcoe += neq_coe*nijk       # surdimensionne ici
-        ndimwig +=        3*nijk      # surdimensionne ici
+       
+        if param_int[33]==2:   #schema senseur
+           ndimwig +=   3*nijk # surdimensionne ici
 
         c       += 1
         
@@ -2239,40 +2313,73 @@ def _BCcompact(t):
                   C._initVars(z, 'centers:cellN', 1.)
                   cellN = Internal.getNodeFromName1(sol, 'cellN')[1]
                   ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
-                  wrange  = ptrange[0][1]
+                  rg  = ptrange[0][1]
                   shift =1
                   if '2couche' in bc[0]: shift=2
                   if '3couche' in bc[0]: shift=3
-                  print ('nb couche loi de paroi',shift)
+                  Ntg= 101 #nbr echant pour calcul moyenne temporelle
+                  print ('nb couche loi de paroi',shift,'Nb echant pour moyenne:',Ntg)
                   
+                  Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
+                  if Prop == None:
+                     Internal.createUniqueChild(bc,'.Solver#Property','UserDefinedData_t')
+                     Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
+
+                  wmles  = Internal.getNodeFromName(Prop,'WMLES_parameter')
+                  if wmles == None:
+                     sz     = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
+
+                     #vars=['AvgDensity','AvgVelocityX','AvgVelocityY','AvgVelocityZ','AvgTemperature']
+                     vars=['AvgPlane-Primitive']
+                     c =0
+                     for v in vars:
+                         #tab  =  numpy.zeros(sz*Ntg, numpy.float64)
+                         tab  =  numpy.zeros(sz*Ntg*5, numpy.float64)
+                         Internal.createUniqueChild( Prop, v,'DataArray_t',value= tab)
+                         c+=1
+                     tab   =  numpy.zeros(4, numpy.float64)
+                     tab[0]= Ntg
+                     tab[1]= 0
+                     tab[2]= 0
+                     tab[3]= 0
+                     Internal.createUniqueChild( Prop, 'WMLES_parameter','DataArray_t',value= tab)
+                     wmles  = Internal.getNodeFromName(Prop,'WMLES_parameter')
+
+
+                  #verif que coef mobile est bien le premier tableau
+                  datas   = Internal.getNodesFromType(Prop,'DataArray_t')
+                  pos =0
+                  for data in datas:
+                      if data[0]=='mobile_coef' and pos != 0:
+                        print("zonz:",z[0],"bc:",bc[0],"mobile_coef doit etre le premier noeud de .Solver#Property")
+                        import sys; sys.exit()
+                      pos+=1
 
                   #CL I
-                  if wrange[0][1] - wrange[0][0]==0:
-                     if wrange[0][1]==1: ijk_tg =2;              sens = 1
-                     else:               ijk_tg =wrange[0][1]-4; sens =-1
+                  if rg[0][1] - rg[0][0]==0:
+                     if rg[0][1]==1: ijk_tg =2;          sens = 1
+                     else:           ijk_tg =rg[0][1]-4; sens =-1
 
-                     for k in range(wrange[2][0]-1,wrange[2][1]):
-                        for j in range(wrange[1][0]-1,wrange[1][1]):
+                     for k in range(rg[2][0]-1,rg[2][1]):
+                        for j in range(rg[1][0]-1,rg[1][1]):
                           for s in range(shift):
                             cellN[ijk_tg+ s*sens, j , k]=2.
-
                   #CL J
-                  if wrange[1][1] - wrange[1][0]==0:
-                     if wrange[1][1]==1: ijk_tg =2;              sens = 1
-                     else:               ijk_tg = wrange[1][1]-4;sens =-1
+                  if rg[1][1] - rg[1][0]==0:
+                     if rg[1][1]==1: ijk_tg =2;          sens = 1
+                     else:           ijk_tg = rg[1][1]-4;sens =-1
 
-                     for k in range(wrange[2][0]-1,wrange[2][1]):
-                        for i in range(wrange[0][0]-1,wrange[0][1]):
+                     for k in range(rg[2][0]-1,rg[2][1]):
+                        for i in range(rg[0][0]-1,rg[0][1]):
                           for s in range(shift):
                              cellN[i, ijk_tg+ s*sens  , k]=2.
-
                   #CL K
                   if numpy.shape(cellN)[2]!=1:
-                    if wrange[2][1] - wrange[2][0]==0:
-                       if wrange[2][1]==1: ijk_tg =2;               sens = 1
-                       else:               ijk_tg = wrange[2][1]-4; sens =-1
-                       for j in range(wrange[1][0]-1,wrange[1][1]):
-                         for i in range(wrange[0][0]-1,wrange[0][1]):
+                    if rg[2][1] - rg[2][0]==0:
+                       if rg[2][1]==1: ijk_tg =2;           sens = 1
+                       else:           ijk_tg = rg[2][1]-4; sens =-1
+                       for j in range(rg[1][0]-1,rg[1][1]):
+                         for i in range(rg[0][0]-1,rg[0][1]):
                            for s in range(shift):
                               cellN[i, j, ijk_tg+ s*sens ]=2.
               
@@ -2384,13 +2491,100 @@ def _BCcompact(t):
                data[1]                = param_real[ deb:deb+c ] # wrong shape?
                size_real = size_real + c
                j = j+1
+               
 
             size_int  = size_int  + 9 + Nb_data
             i         = i + 1
 
     return None
 
+#==============================================================================
+# Construit les donnees compactees pour traiter des flux conservatif en IBM
+#==============================================================================
+def _Fluxcompact(t):
+    # Data for each Base
+    bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
 
+    #Recherche du nombre de famille necessitant correction de flux
+    families=[]
+    for b in bases:
+        zones = Internal.getZones(b)
+        for z in zones:
+            tmp  = Internal.getNodeFromName1( z, 'Conservative_Flux')
+            if tmp is not None:
+              tmp1 = Internal.getNodesFromType1( tmp[2], 'UserDefinedData_t')
+              for family in tmp1:
+                 if family[0] not in families: families.append(family[0])
+
+    Nfamille =  len(families)
+    print("Correction de flux: Nb famille=", Nfamille, families)
+
+    #dimensionnememnt tableau
+    size_int = HOOK['MX_OMP_SIZE_INT']
+    for b in bases:
+        zones = Internal.getZones(b)
+        for z in zones:
+            
+            o    = Internal.getNodeFromName1( z, '.Solver#ownData')
+            tmp  = Internal.getNodeFromName1( z, 'Conservative_Flux')
+            if tmp is not None:
+               tmp1 = Internal.getNodesFromType1( tmp[2], 'UserDefinedData_t')
+               #calcul place necessaire dans param_int
+               size_int =1 + 6*Nfamille
+               for family in tmp1:
+                  
+                  faces= Internal.getNodesFromType1( family, 'DataArray_t')
+                  for f in faces:
+                    size_int += numpy.size(f[1])
+                    #print("compact flux", z[0],size_int)
+
+               #mise a jour size param_int
+               param_int = Internal.getNodeFromName1( o, 'Parameter_int')
+               size = numpy.shape(param_int[1])
+               c = 1
+               for s in size: c=c*s
+
+               #print(z[0],"SIZE int", size_int,"c=", c,"size_flux =",  size_int)
+               datap = numpy.zeros(size_int + c , numpy.int32)
+
+               datap[0:c]   = param_int[1][0:c]
+               datap[v.IBC_PT_FLUX]    = c                   # debut tableau flux dans param_int
+               param_int[1] = datap
+
+               deb = param_int[1][v.IBC_PT_FLUX]
+               param_int[1][ deb ]= Nfamille
+               #on reordone les familles pour a	voir toujour l'ordre de families
+               ordre=[];
+               count = numpy.zeros(Nfamille , numpy.int32)
+               c=0
+               for family in tmp1:
+                  i =  families.index(family[0])
+                  ordre.append( i )
+                  count[ i ] = c
+                  c+=1
+                  #if len(tmp1) !=1: print("verif family",family[0])
+
+               #on concatene les donnes flux dans param_int
+               #for family in tmp1:
+               deb1= param_int[1][v.IBC_PT_FLUX] + 1 + Nfamille*6
+               for l in sorted(ordre):
+
+                  family = tmp1[ count[l] ]
+                  #if len(tmp1) !=1: print("verif1 family",family[0],l)
+
+                  i = families.index(family[0])
+                  deb = param_int[1][v.IBC_PT_FLUX] + 1 + i*6
+                  faces= Internal.getNodesFromType1( family, 'DataArray_t')
+                  for f in faces:
+                    size = numpy.size(f[1])
+                    param_int[1][ deb ]= size
+                    param_int[1][ deb1:deb1+size ]= f[1][:]
+                    f[1]                          = param_int[1][ deb1:deb1+size ]
+
+                    deb   += 1   
+                    deb1  += size
+
+    return None
 
 #==============================================================================
 # Load t.cgns (data) tc.cgns (connectivity file) ts.cgns (stat)
@@ -2978,16 +3172,6 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
                 C._rmVars(z, 'centers:VelocityZ_M1' )
                 C._rmVars(z, 'centers:Temperature_M1')
                 C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
-    dtloc = Internal.getNodeFromName3(t2, '.Solver#dtloc')
-    if dtloc is not None:
-        dtloc = dtloc[1]
-        node =  Internal.getNodeFromName1(t, 'TimeLevelMotion')
-        if node is not None: node[1][0]= dtloc[3]
-        else: Internal.createUniqueChild(t, 'TimeLevelMotion', 'DataArray_t', value=dtloc[3])
-        node =  Internal.getNodeFromName1(t, 'TimeLevelTarget')
-        if node is not None: node[1][0]= dtloc[4]
-        else: Internal.createUniqueChild(t, 'TimeLevelTarget', 'DataArray_t', value=dtloc[4])
-
     # save
     if mpirun: # mpi run
         if split == 'single':  # output in a single file
@@ -3129,7 +3313,6 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
     baseName = os.path.basename(fileName)
     baseName = os.path.splitext(baseName)[0] # name without extension
     fileName = os.path.splitext(fileName)[0] # full path without extension
-    import Converter.PyTree as C
 
     # Rip/add some useless/usefull data (FastS)
     import Converter.PyTree as C
@@ -3139,6 +3322,7 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
     C._rmVars(t2, 'centers:VelocityZ_P1')
     C._rmVars(t2, 'centers:Temperature_P1')
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
+
 
     bases  = Internal.getNodesFromType1(t2    , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -3161,15 +3345,6 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
                 C._rmVars(z, 'centers:VelocityZ_M1' )
                 C._rmVars(z, 'centers:Temperature_M1')
                 C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
-
-    if dtloc is not None:
-       node =  Internal.getNodeFromName1(t, 'TimeLevelMotion')
-       if node is not None: node[1][0]= dtloc[3]
-       else: Internal.createUniqueChild(t, 'TimeLevelMotion', 'DataArray_t', value=dtloc[3])
-       node =  Internal.getNodeFromName1(t, 'TimeLevelTarget')
-       if node is not None: node[1][0]= dtloc[4]
-       else: Internal.createUniqueChild(t, 'TimeLevelTarget', 'DataArray_t', value=dtloc[4])
-
     # save
     if mpirun: # mpi run
         if split == 'single':  # output in a single file

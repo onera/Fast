@@ -266,14 +266,18 @@ c      c7     = c4/c5
              f2=flu(lf+v2flu  )*(f6-pos(3)) -flu(lf+v2flu*3)*(f4-pos(1))
              f3=flu(lf+v2flu*2)*(f4-pos(1)) -flu(lf+v2flu  )*(f5-pos(2))
 
-             effort(1) = effort(1) + flu(lf+v2flu  )
-             effort(2) = effort(2) + flu(lf+v2flu*2)
-             effort(3) = effort(3) + flu(lf+v2flu*3)
-             effort(4) = effort(4) + f1
-             effort(5) = effort(5) + f2
-             effort(6) = effort(6) + f3
-             effort(7) = effort(7) + si   
-             effort(8) = effort(8) + flu(lf)
+             effort(1) = effort(1)   + flu(lf+v2flu  )
+             effort(2) = effort(2)   + flu(lf+v2flu*2)
+             effort(3) = effort(3)   + flu(lf+v2flu*3)
+             effort(4) = effort(4)   + f1
+             effort(5) = effort(5)   + f2
+             effort(6) = effort(6)   + f3
+             effort(7) = effort(7)   + si   
+             effort(8) = effort(8)   + flu1*sens1
+             effort(9) = effort(9)   + flu2*sens1
+             effort(10) = effort(10) + flu3*sens1
+             effort(11) = effort(11) + flu4*sens1
+             effort(12) = effort(12) + flu5*sens1
            enddo
          ENDDO
         ENDDO
@@ -333,6 +337,10 @@ c      c7     = c4/c5
              effort(6) = effort(6) + f3
              effort(7) = effort(7) + sj  
              effort(8) = effort(8) + flu(lf)
+             effort(9) = effort(9)   + flu2*sens1
+             effort(10) = effort(10) + flu3*sens1
+             effort(11) = effort(11) + flu4*sens1
+             effort(12) = effort(12) + flu5*sens1
            enddo
          ENDDO
         ENDDO
@@ -392,6 +400,10 @@ c      c7     = c4/c5
              effort(6) = effort(6) + f3
              effort(7) = effort(7) + sk
              effort(8) = effort(8) + flu(lf)
+             effort(9) = effort(9)   + flu2*sens1
+             effort(10) = effort(10) + flu3*sens1
+             effort(11) = effort(11) + flu4*sens1
+             effort(12) = effort(12) + flu5*sens1
            enddo
 
          ENDDO

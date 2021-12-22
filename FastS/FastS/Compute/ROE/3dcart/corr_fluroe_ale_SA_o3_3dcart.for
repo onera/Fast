@@ -3,7 +3,8 @@ c     $Date: 2013-08-26 16:00:23 +0200 (lun. 26 août 2013) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine corr_fluroe_ale_SA_o3_3dcart(ndom,ithread,idir,
+      subroutine corr_fluroe_ale_SA_o3_3dcart(ndom,
+     &                 ithread,idir,
      &                 param_int, param_real,
      &                 ind_loop,
      &                 rop, drodm, wig,
@@ -32,6 +33,9 @@ c     I/O
 c_/    flu    : increment de la solution
 c***********************************************************************
       implicit none
+
+      real souszero
+      parameter(souszero=-1e-12)
 
 #include "FastS/param_solver.h"
 
@@ -65,16 +69,17 @@ C Var loc
 
       REAL_E c1,c2,c3,c4,c5,c6,c4sa,c5sa,c6sa,si,sj,sk,qm,qp,
      & tcx,tcy,tcz,tc,r1,h1,rou1,rov1,row1,r2,h2,rou2,rov2,row2,
-     & gam,gam1,qn1,qn2,u,tdu,p1p2,roref,uref,tam,tam1,son,c,gam2,
+     & gam,gam1,gam2,gam3,gam4,qn1,qn2,u,tdu,p1p2,roref,uref,tam,tam1,
      & qm1,qm2,qm3,qm4,qm5,qm6,qp1,qp2,qp3,qp4,qp5,qp6,mut1,mut2,
      & flu1,flu2,flu3,flu4,flu5,flu6,p1,p2,qen,sigma_1,ck_vent,
      & div,f1,f2,f3,f4,f5,f6,fv,fv5,volinv,test,cmus1,temp01,coesut,
      & tix,tiy,tiz,tix1,tiy1,tiz1,tjx,tjy,tjz,tjx1,tjy1,tjz1,tkx,
-     & tky,tkz,tkx1,tky1,tkz1,xmutvol,prandt,gam3,cvisq,rgp,venty,
-     & gradU_nx,gradU_ny,gradU_nz, gradV_nx,gradV_ny,gradV_nz,ventx,
-     & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,ventz,
+     & tky,tkz,tkx1,tky1,tkz1,xmutvol,cvisq,rgp,son,c,opt0,ventx,venty,
+     & gradU_nx,gradU_ny,gradU_nz, gradV_nx,gradV_ny,gradV_nz,ventz,
+     & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
-     & qn,r,v,w,h,q,r_1,psiroe,sens,flagi,flagj,flagk,norm
+     & qn,r,v,w,h,q,r_1,psiroe, xktvol, xmulam, xmutur, xmutot,
+     & sens,flagi,flagj,flagk,norm
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -111,10 +116,10 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       !-----Variables physiques
       gam    = param_real( GAMMA )
       rgp    = param_real( CVINF )*(gam-1.)  !Cv(gama-1)= R (gas parfait)
-      prandt = param_real( PRANDT )
       gam1   = gam/(gam-1.)
       gam2   = 1./gam
-      gam3    = gam1/ prandt*rgp
+      gam3    = gam1/ param_real( PRANDT )*rgp
+      gam4    = gam1/ param_real( PRANDT_TUR )*rgp
  
       cmus1  =    param_real( CS )
       temp01 = 1./param_real( TEMP0)
@@ -130,6 +135,8 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       c1     = 0.02*uref         ! modif suite chant metrique et suppression tc dans flux final
       c2     = 0.02/(uref*roref) ! modif suite chant metrique et suppression tc dans flux final
       c3     = -2.
+
+      opt0   = param_int(SENSORTYPE)
 
       !    roff MUSCL
       c6     = 1./6.
@@ -184,6 +191,8 @@ c      c7     = c4/c5
             l0= l  - shift
 #include    "FastS/Compute/ROE/3dcart/fluFaceEuler_ale_o3_3dcart_i.for"
 #include    "FastS/Compute/ROE/3dcart/fluFaceSA_ale_o3_3dcart_i.for"
+#include    "FastS/Compute/fluvisq_3dcart_i.for"          
+#include    "FastS/Compute/SA/fluvisq_SA_3dcart_i.for"            
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
          ENDDO
@@ -200,6 +209,8 @@ c      c7     = c4/c5
             l0= l  - shift
 #include    "FastS/Compute/ROE/3dcart/fluFaceEuler_ale_o3_3dcart_j.for"
 #include    "FastS/Compute/ROE/3dcart/fluFaceSA_ale_o3_3dcart_j.for"
+#include    "FastS/Compute/fluvisq_3dcart_j.for"         
+#include    "FastS/Compute/SA/fluvisq_SA_3dcart_j.for"           
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
          ENDDO
@@ -216,6 +227,8 @@ c      c7     = c4/c5
             l0= l  - shift                        
 #include    "FastS/Compute/ROE/3dcart/fluFaceEuler_ale_o3_3dcart_k.for"    
 #include    "FastS/Compute/ROE/3dcart/fluFaceSA_ale_o3_3dcart_k.for"     
+#include    "FastS/Compute/fluvisq_3dcart_k.for"            
+#include    "FastS/Compute/SA/fluvisq_SA_3dcart_k.for"               
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"         
            enddo                                  
                                                   

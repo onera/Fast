@@ -39,5 +39,3 @@ c.....Metrique
 #include "FastS/Compute/Vit_ent/qn_ale_3dfull_k.for"
 
 #include "FastS/Compute/Vit_ent/fludiffer_ale_3dfull_k.for"
-c        if(k.eq.1.and.ndom.eq.2)
-c     & write(*,'(a,6f20.14,2i4)')'FLU=',qen,rou1,rou2,flu1,j,l-lij

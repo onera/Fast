@@ -36,7 +36,7 @@ c***********************************************************************
 
 C     Var loc
       INTEGER_E ndf,lf,npass,incijk, nb_bc, iptdata, flag_correct_flu
-      INTEGER_E bc_type, pt_bc,pt_bcs, idir,nbdata,lskip
+      INTEGER_E bc_type, pt_bc,pt_bcs, idir,nbdata,lskip, iflow
       INTEGER_E ind_CL(6), ind_CL119(6)
       REAL_E mobile_coef
  
@@ -95,7 +95,11 @@ C     &     .and.bc_type.ne.BCINFLOW.and.bc_type.ne.BCINJ1)
 
          if (param_int(KFLUDOM).eq.5) then
 
-           call corr_fluroe_select(ndom, ithread, idir,
+           !!  attention flux convectif 6eme variable SA pas retranché
+           !! donc pas de garantie de flux(6) =0 a la paroi en Roe
+           iflow =1 
+           
+           call corr_fluroe_select(ndom, ithread, idir, iflow,
      &                        param_int, param_real,
      &                        ind_CL, 
      &                        rop, drodm  , wig,

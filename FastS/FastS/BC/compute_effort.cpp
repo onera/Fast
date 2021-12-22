@@ -177,7 +177,8 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 #ifdef _OPENMP
   Nbre_thread_max = omp_get_max_threads();
 #endif
-  FldArrayF          effort(8*Nbre_thread_max); 
+  E_Int sz_eff = 8;
+  FldArrayF         effort(sz_eff*Nbre_thread_max); 
   FldArrayI thread_topology(3*Nbre_thread_max); 
   FldArrayI   ind_dm_thread(6*Nbre_thread_max);  
 
@@ -209,9 +210,9 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 
        E_Int* ipt_thread_topology = thread_topology.begin() + (ithread-1)*3;
        E_Int* ind_loop            = ind_dm_thread.begin()   + (ithread-1)*6;
-       E_Float* effort_omp        = effort.begin()          + (ithread-1)*8;
+       E_Float* effort_omp        = effort.begin()          + (ithread-1)*sz_eff;
 
-       if(nd==0) for (E_Int i = 0; i < 8; i++) effort_omp[i]=0;
+       if(nd==0) for (E_Int i = 0; i < sz_eff; i++) effort_omp[i]=0;
 
        E_Int Nbre_thread_actif_loc; E_Int ithread_loc;
 
@@ -250,7 +251,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
     {
       for (E_Int ithread = 0; ithread < Nbre_thread_max ; ithread++) 
                     {
-                      E_Float* effort_omp   = effort.begin()  + ithread*8;
+                      E_Float* effort_omp   = effort.begin()  + ithread*sz_eff;
 
                         //printf("surf %f %d \n",  effort_omp[6], ithread );
                        ipteff[0]  = ipteff[0]  + effort_omp[0];

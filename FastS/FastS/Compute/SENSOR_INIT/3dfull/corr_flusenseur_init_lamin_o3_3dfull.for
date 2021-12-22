@@ -206,7 +206,6 @@ c      c7     = c4/c5
          ENDDO
         ENDDO
 
-
       ELSE
 
         shift =inck*shift

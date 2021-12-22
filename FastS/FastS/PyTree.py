@@ -126,6 +126,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
             fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)           
             #print('t_compute = %f'%(Time.time() - t0))
 
+            timelevel_target = int(dtloc[4])
+
             # dtloc GJeanmasson
             if exploc==1 and tc is not None:
                fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
@@ -139,13 +141,11 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                # Ghostcell
                if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
-               timelevel_target = int(dtloc[4])
                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax, rk, exploc)
 
                fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
 
                if nstep%2 == 0:
-                   timelevel_target = int(dtloc[4])
                    vars = ['Density']
                    _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, nitmax, rk, exploc, 2)
 
@@ -157,7 +157,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
               #Ghostcell
               vars = FastC.varsP
               if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
-              timelevel_target = int(dtloc[4])
               #t0=Time.time()
               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
               #print('t_fillGhost = ',  Time.time() - t0 ,'nstep =', nstep)
@@ -189,9 +188,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                                     interpInDnrFrame=interpInDnrFrame, hook=hookTransfer)
                     #print('t_transfert = ',  Time.time() - t0 ,'nstep =', nstep)
               #print('t_transferts = %f'%(Time.time() - t0)
-
-      dtloc[3] +=1    #time_level_motion
-      dtloc[4] +=1    #time_level_target
 
 
     else: ### layer C
@@ -347,6 +343,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t) 
     
+    # Contruction Conservative_int
+    FastC._Fluxcompact(t) 
+
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     #print 'int(dtloc[0])= ', int(dtloc[0])
@@ -687,33 +686,30 @@ def _createTBLESA(tc,nbpts_linelets=45):
 #==============================================================================
 # For periodic unsteady chimera join, parameter must be updated peridicaly 
 #==============================================================================
-def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_steady.cgns', directory='.'):
-
-    bases = Internal.getNodesFromType1(t      , 'CGNSBase_t')       # noeud
-    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
-    dtloc = None
-    if own is not None: dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
 
     #on cree les noeud infos insta pour chimere perio s'il n'existe pas 
-    TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget'] 
+    TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget','Iteration'] 
     for opt in TimeLevelOpts:
        tmp = Internal.getNodeFromName1(t, opt)
        if tmp is None: Internal.createUniqueChild(t, opt, 'DataArray_t', value=0)
 
-    if dtloc is not None:
-      dtloc            = Internal.getValue(dtloc) # tab numpy
-      timelevel_motion = dtloc[3]
-      timelevel_target = dtloc[4]
-    else:
-      timelevel_motion = Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0]
-      timelevel_target = Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0]
+    #mise a jour des info temporelle
+    if not init:
+      Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0] +=1
+      Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0] +=1
+      Internal.getNodeFromName1(t, 'Iteration'      )[1][0] +=1
+ 
+    timelevel_motion = Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0]
+    timelevel_target = Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0]
+    iteration        = Internal.getNodeFromName1(t, 'Iteration')[1][0]
 
     timelevel_period = timelevelInfos["TimeLevelPeriod"]
     timelevel_360    = timelevelInfos["TimeLevel360"]
     timelevel_perfile= timelevelInfos["TimeLevelPerFile"]
     timelevel_axeRot = timelevelInfos["TimeLevelRotationAxis"]
 
-    No_period = timelevel_motion//timelevel_period
+    No_period = timelevel_motion//timelevel_period 
     #
     #target in no more in tc; need need data in a new file
     #
@@ -723,29 +719,46 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
 
-       FILE = tc_steady
+       # steady part
+       FILE = dir_steady +'/'+ root_steady + '.cgns'
        if os.access(FILE, os.F_OK): tc  = C.convertFile2PyTree(FILE)
        else: print("error reading %s."%FILE)
-       FILE = directory+'/tc_'+str(root)+'.cgns'
-       print('File inst=', FILE, 'target=', timelevel_target, 'motionlevel=', timelevel_motion)
-       if os.access(FILE, os.F_OK): tc_inst  = C.convertFile2PyTree(FILE)
+
+       # unsteady part
+       FILE = dir_unsteady +'/'+root_unsteady+str(root)+'.cgns'
+       if os.access(FILE, os.F_OK):
+           tc_inst  = C.convertFile2PyTree(FILE)
+           print('File inst=', FILE, 'target=', timelevel_target, 'motionlevel=', timelevel_motion)
        else: print("error reading %s."%FILE)
+
+       #mise a zero timelevel_target en fin de fichier ou fin de periode azymutale
+       if timelevel_target == timelevel_perfile or timelevel_motion%timelevel_period == 0:
+          timelevel_target =0
+          Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0] = timelevel_target
 
        #
        #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
        #
        if timelevel_motion >= timelevel_period: 
-          bases  = Internal.getNodesFromType1(tc_inst , 'CGNSBase_t')       # noeud
 
-          sign =-1
-          if omega > 0: sign = 1
-          for base in bases:
-            if   base[0]=='Rotor': teta = -2*math.pi*timelevel_period/timelevel_360*No_period*sign
-            elif base[0]=='Stator':teta =  2*math.pi*timelevel_period/timelevel_360*No_period*sign
-            zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
-            for z in zones:
-              angles = Internal.getNodesFromName2(z, 'RotationAngle')
-              for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
+           No_period     = timelevel_motion//timelevel_period
+           iteration_loc = timelevel_motion - No_period*timelevel_period 
+
+           bases  = Internal.getNodesFromType1(tc_inst , 'CGNSBase_t')       # noeud
+           Rotors  = ['Base02', 'Base04', 'Base06']
+           Stators = ['Base01', 'Base03', 'Base05', 'Base07']
+
+           sign =-1
+           if omega > 0: sign = 1
+           for base in bases:
+             if   base[0] in Rotors  : teta = -2*math.pi*timelevel_period/timelevel_360*No_period*sign
+             elif base[0] in Stators : teta =  2*math.pi*timelevel_period/timelevel_360*No_period*sign
+             zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
+             for z in zones:
+               angles = Internal.getNodesFromName2(z, 'RotationAngle')
+               for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
+       else:
+            iteration_loc = timelevel_motion
 
        tc = Internal.merge( [tc, tc_inst] )
 
@@ -765,13 +778,19 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        X.miseAPlatDonorTree__(zones, tc, graph=g, list_graph=l)
 
-       #Remise zero target
-       if dtloc is not None: dtloc[4] = 0
-
     #
     #timelevel_motion larger than number of timelevels for 360degre 
     #
-    if timelevel_motion > timelevel_360: dtloc[3] = 0  # remise a zero du compteur si 360degres 
+    if timelevel_motion > timelevel_360:
+       timelevel_motion = 0
+       Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0] =timelevel_motion
+
+    base = Internal.getNodeFromType1(t   ,"CGNSBase_t")
+    own  = Internal.getNodeFromName1(base, '.Solver#ownData')
+    if own is not None: 
+       dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')[1]
+       dtloc[3]=timelevel_motion
+       dtloc[4]=timelevel_target
 
     return tc, graph
 
@@ -1289,6 +1308,67 @@ def initStats(filename):
     return tmy
 
 #==============================================================================
+# compute statistique (U  et urms)
+#==============================================================================
+def _postStats(tmy):
+
+    zones   = Internal.getZones(tmy)
+
+    vars=['Density','MomentumX','MomentumY','MomentumZ','Pressure','Pressure^2','ViscosityEddy','rou^2','rov^2','row^2','rouv','rouw','rovw']
+
+
+    for z in zones:
+      flowsol = Internal.getNodeFromName1(z,'FlowSolution#Centers')
+      #calcul vitesse
+      dens= Internal.getNodeFromName1(flowsol,'Density')
+      for v in vars[1:4]:
+         var = Internal.getNodeFromName1(flowsol,v)
+         if v == 'MomentumX': var[0]= 'VelocityX'
+         if v == 'MomentumY': var[0]= 'VelocityY'
+         if v == 'MomentumZ': var[0]= 'VelocityZ'
+         var[1]= var[1]/dens[1]
+      #calcul prms
+      pres = Internal.getNodeFromName1(flowsol,'Pressure')
+      pres2= Internal.getNodeFromName1(flowsol,'Pressure^2')
+      pres2[0]='Prms'
+      pres2[1]=numpy.sqrt( pres2[1]-pres[1]**2)
+      #calcul urms
+      pres = Internal.getNodeFromName1(flowsol,'VelocityX')
+      pres2= Internal.getNodeFromName1(flowsol,'rou^2')
+      pres2[0]='Urms'
+      pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
+      #calcul vrms
+      pres = Internal.getNodeFromName1(flowsol,'VelocityY')
+      pres2= Internal.getNodeFromName1(flowsol,'rov^2')
+      pres2[0]='Vrms'
+      pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
+      #calcul wrms
+      pres = Internal.getNodeFromName1(flowsol,'VelocityZ')
+      pres2= Internal.getNodeFromName1(flowsol,'row^2')
+      pres2[0]='Wrms'
+      pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
+      #calcul rou'v'
+      v1   = Internal.getNodeFromName1(flowsol,'VelocityX')
+      v2   = Internal.getNodeFromName1(flowsol,'VelocityY')
+      pres2= Internal.getNodeFromName1(flowsol,'rouv')
+      pres2[0]="Rhou'v'"
+      pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+      #calcul rou'w'
+      v1   = Internal.getNodeFromName1(flowsol,'VelocityX')
+      v2   = Internal.getNodeFromName1(flowsol,'VelocityZ')
+      pres2= Internal.getNodeFromName1(flowsol,'rouw')
+      pres2[0]="Rhou'w'"
+      pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+      #calcul rov'w'
+      v1   = Internal.getNodeFromName1(flowsol,'VelocityY')
+      v2   = Internal.getNodeFromName1(flowsol,'VelocityZ')
+      pres2= Internal.getNodeFromName1(flowsol,'rovw')
+      pres2[0]="Rhov'w'"
+      pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+
+    return None
+
+#==============================================================================
 # compute enstropy et TKE in place
 #==============================================================================
 def _computeEnstrophy(t, metrics, time):
@@ -1437,11 +1517,11 @@ def _computeGrad(t, metrics, varlist, order=2):
 #==============================================================================
 # Display
 #==============================================================================
-def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None):
+def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None ,verbose='firstlast'):
     """Display CFL and convergence information.""" 
-    return display_temporal_criteria(t, metrics, nitrun, format, gmres)
+    return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose)
     
-def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
+def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast'):
     zones        = Internal.getZones(t)
     dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
@@ -1465,7 +1545,10 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
     elif format == "ascii": lft = -2
     # enregistrement dans l'arbre uniquement
     elif format == "store": lft = 3
-    residu = fasts.display_ss_iteration( zones, metrics, cvg_numpy, nitrun, nssiter, lft)
+
+    iverb = 0
+    if verbose != 'firstlast': iverb=2
+    residu = fasts.display_ss_iteration( zones, metrics, cvg_numpy, nitrun, nssiter, lft, iverb)
 
     if gmres is None: return None
     else: return residu
@@ -1684,7 +1767,7 @@ def createStressNodes(t, BC=None, windows=None):
                             if familyBCDict[familyName] in BC: selectBC = True
                     else: # name is a type
                         if name in BC: selectBC = True
-                    print('selection', name, selectBC)
+                    #print('selection', name, selectBC)
                 else: name = v[0] 
 
                 if windows is None: windows = [None]
@@ -1877,11 +1960,10 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
 
     else:  hook1  = FastC.HOOK
 
-    effort  = numpy.empty(8, numpy.float64)
-    pos_eff = numpy.empty(3, numpy.float64)
+    effort  = numpy.empty( 8, numpy.float64)
+    pos_eff = numpy.empty( 3, numpy.float64)
     pos_eff[0] = xyz_ref[0]; pos_eff[1] = xyz_ref[1]; pos_eff[2] = xyz_ref[2]
 
-    #print('ompmode=', ompmode)
     fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, pos_eff, ompmode)
 
     return effort
@@ -2016,7 +2098,7 @@ def rmGhostCells(t, depth, adaptBCs=1):
 #==============================================================================
 # display CPU efficiency diagnostic
 #==============================================================================
-def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FILEOUT='listZonesSlow.dat', RECORD=None):
+def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FILEOUT='listZonesSlow.dat', FILEOUT1='diagCPU.dat', RECORD=None):
 
  bases = Internal.getNodesFromType1(t      , 'CGNSBase_t')       # noeud
  own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
@@ -2043,6 +2125,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
  cout            =0.
  cells_tot       =0
  data            ={}
+ f1 = open(FILEOUT1, 'w')
  for z in zones:
     echant    =  timer_omp[ ADR ]
     param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
@@ -2080,7 +2163,10 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       cout            += cout_zone
       data[ z[0] ]   = [ tps_zone_percell/echant/NbreThreads, cout_zone]
 
+      f1.write('cpumoy/cell=  '+str(tps_zone_percell/echant/NbreThreads)+"  cpumax= "+str(tps_zone_percell_max/echant)+" thread lent= "+str(ithread_max)+"  Nthtread actif="+str(NbreThreads)+" dim zone="+str(ijkv)+" dim tot="+str(cells_tot)+"  "+z[0]+'\n')
+
       cells_tot   += ijkv
+
       if RECORD is None: print('zone= ', z[0],'cpumoy/cell= ',tps_zone_percell/echant/NbreThreads,'cpumax= ',tps_zone_percell_max/echant,'thread lent=', ithread_max ,'Nthtread actif=', NbreThreads, ' dim zone=',ijkv,'dim tot=',cells_tot)
       if RECORD is not None:
           tape = tps_zone_percell/echant/NbreThreads
@@ -2108,6 +2194,9 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
  tps_percell/=cells_tot
  if RECORD is None: print('cpu moyen %cell en microsec: ', tps_percell, tps_percell_max/cells_tot)
 
+ f1.write('cpu moyen %cell en microsec: '+str(tps_percell)+'   '+str(tps_percell_max/cells_tot)+'\n')
+ f1.close()
+
  f = open(FILEOUT, 'w')
  sizeZones=[]
  for z in zones:
@@ -2126,6 +2215,205 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
  if RECORD is not None: return tape
  else: return None
 
+#
+#====================================================================================
+# Calcul info IBM conservatif pour l'arbre t
+#====================================================================================
+def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
+
+ dico ={}
+ families=[]
+ c=0
+ ztg=zNameCheck
+
+ tmp = Internal.getNodeFromName(t, 'FlowEquationSet')
+ DimPb = Internal.getNodeFromName(tmp, 'EquationDimension')[1][0]
+ for zc in Internal.getZones(tc):
+   #zc = zone donneuse
+   bcs = Internal.getNodesFromName(zc,"IBCD*")
+   for bc in bcs:
+       lprint =False
+       znameR = Internal.getValue(bc)
+       family = Internal.getNodeFromName(bc, 'FamilyName')
+       if family is not None: FamName = Internal.getValue(family)
+       else: FamName='all'
+       if FamName not in families: families.append(FamName)
+       if znameR == ztg: lprint =True
+
+       name_paroi = znameR + '#' + FamName
+       if name_paroi not in dico:
+            dico[name_paroi]=[0,0,0,0,0,0]
+
+       if lprint: print ("zone=",zc[0], bc[0], FamName)
+       #zone receveuse
+       zR      = Internal.getNodeFromName(t, znameR)
+       cellN   = Internal.getNodeFromName(zR, "cellN#Init")[1]
+       #on filtre les zones ou il n'y a pas de calcul NS; Sinon double  prise en compte CL
+       if 1 in cellN:
+         size    = numpy.size(cellN)
+         sh      = numpy.shape(cellN)
+         ptlistD = Internal.getNodeFromName(bc, "PointListDonor")[1]
+         celln  = cellN.reshape((size), order='F')
+         if lprint: print ("zone=",zc[0], bc[0],"shape=", sh)
+         for l in range(numpy.size(ptlistD)):
+
+            k =  ptlistD[l]//(sh[0]*sh[1])
+            j = (ptlistD[l] -k*sh[0]*sh[1])//sh[0]
+            i =  ptlistD[l] -k*sh[0]*sh[1] -j*sh[0]
+
+            if lprint:
+               print('croix ',celln[ ptlistD[l] ],celln[ ptlistD[l] +1 ],celln[ ptlistD[l] -1 ],celln[ ptlistD[l] + sh[0]],celln[ ptlistD[l] -sh[0] ], l, ptlistD[l], ptlistD[l] -sh[0],"ijk=",i,j,k)
+            if celln[ ptlistD[l] -1 ]==1 and  ptlistD[l]-2 >= 0 :
+              if lprint: print("imax", ptlistD[l])
+              dico[name_paroi][1] +=1
+            if celln[ ptlistD[l] +1 ]==1 and  ptlistD[l]+2 < size :
+              if lprint: print("imin", ptlistD[l])
+              dico[name_paroi][0] +=1
+            if celln[ ptlistD[l] - sh[0] ]==1 and  ptlistD[l]-2*sh[0] >= 0 :
+              if lprint: print("jmax", ptlistD[l])
+              dico[name_paroi][3] +=1
+            if celln[ ptlistD[l] + sh[0] ]==1 and  ptlistD[l]+2*sh[0] < size :
+              if lprint: print("jmin", ptlistD[l])
+              dico[name_paroi][2] +=1
+            # cas 3D
+            if DimPb ==3 :
+              if celln[ ptlistD[l] - sh[0]*sh[1] ]==1 and  ptlistD[l]-2*sh[0]*sh[1] >= 0 :
+                if lprint: print("kmax", ptlistD[l])
+                dico[name_paroi][5] +=1
+              if celln[ ptlistD[l] + sh[0]*sh[1] ]==1 and  ptlistD[l]+2*sh[0]*sh[1] < size :
+                if lprint: print("kmin", ptlistD[l])
+                dico[name_paroi][4] +=1
+
+ #dimensinonement numpy stockage No face
+ for key in dico:
+   if ztg in key: print("SIZE FLUX=", dico[key][0],dico[key][1],dico[key][2],dico[key][3],dico[key][4],dico[key][5])
+   #print (key, dico[key])
+   zsrname = key.split('#')
+   zname   = zsrname[0]
+   FamName = zsrname[1]
+
+   zR      = Internal.getNodeFromName(t, zname)
+   Internal.createUniqueChild(zR, 'Conservative_Flux', 'UserDefinedData_t')
+   tmp1     = Internal.getNodeFromName(zR, 'Conservative_Flux')
+   Internal.createUniqueChild(tmp1 ,FamName, 'UserDefinedData_t')
+   tmp      = Internal.getNodeFromName(tmp1, FamName)
+
+   FaceList = ['Face_imin','Face_imax', 'Face_jmin','Face_jmax','Face_kmin','Face_kmax']
+   if DimPb==2: FaceList = ['Face_imin','Face_imax', 'Face_jmin','Face_jmax']
+
+   c = 0
+   for face in FaceList:
+       datap = numpy.zeros( dico[key][c], numpy.int32)
+       Internal.createUniqueChild(tmp, face, 'DataArray_t', datap)
+       c+=1
+
+ if CHECK:
+   for z in Internal.getZones(t):
+      C._initVars(t,"{centers:cellI#conservatif}=0")
+      C._initVars(t,"{centers:cellJ#conservatif}=0")
+      if DimPb == 3: C._initVars(t,"{centers:cellK#conservatif}=0")
+
+ #stockage No face
+ for zc in Internal.getZones(tc):
+   #zc = zone donneuse
+   bcs = Internal.getNodesFromName(zc,"IBCD*")
+   for bc in bcs:
+      znameR = Internal.getValue(bc)
+
+      family = Internal.getNodeFromName(bc, 'FamilyName')
+      if family is not None: FamName = Internal.getValue(family)
+      else: FamName='all'
+
+      lprint =False
+      if znameR == ztg: lprint =True
+      #if not lprint  : continue
+      #if FamName != 'cuve3': continue
+      if lprint: print ("zone=",zc[0], "rac=", bc[0], 'fam=', FamName)
+      #zone receveuse
+      zR      = Internal.getNodeFromName(t, znameR)
+      cellN   = Internal.getNodeFromName(zR, "cellN#Init")[1]
+      if CHECK: checKi  = Internal.getNodeFromName(zR, "cellI#conservatif")[1]
+      if CHECK: checKj  = Internal.getNodeFromName(zR, "cellJ#conservatif")[1]
+      if CHECK and DimPb == 3: checKk  = Internal.getNodeFromName(zR, "cellK#conservatif")[1]
+
+      tmp1    = Internal.getNodeFromName(zR, "Conservative_Flux")
+      tmp     = Internal.getNodeFromName(tmp1, FamName)
+      Fimin   = Internal.getNodeFromName(tmp, "Face_imin")[1]
+      Fimax   = Internal.getNodeFromName(tmp, "Face_imax")[1]
+      Fjmin   = Internal.getNodeFromName(tmp, "Face_jmin")[1]
+      Fjmax   = Internal.getNodeFromName(tmp, "Face_jmax")[1]
+      sz_imin=  numpy.size(Fimin)
+      sz_imax=  numpy.size(Fimax)
+      sz_jmin=  numpy.size(Fjmin)
+      sz_jmax=  numpy.size(Fjmax)
+      sz_kmin=  0
+      sz_kmax=  0
+
+      if DimPb == 3:
+        Fkmin   = Internal.getNodeFromName(tmp, "Face_kmin")[1]
+        Fkmax   = Internal.getNodeFromName(tmp, "Face_kmax")[1]
+        sz_kmin=  numpy.size(Fkmin)
+        sz_kmax=  numpy.size(Fkmax)
+
+      if lprint: print("     size fluxes", sz_imin,sz_imax,sz_jmin,sz_jmax,sz_kmin,sz_kmax )
+
+      size    = numpy.size(cellN)
+      sh      = numpy.shape(cellN)
+      ptlistD = Internal.getNodeFromName(bc, "PointListDonor")[1]
+      celln  = cellN.reshape((size), order='F')
+      if CHECK:
+         check_i = checKi.reshape((size), order='F')
+         check_j = checKj.reshape((size), order='F')
+         if DimPb == 3: check_k = checKk.reshape((size), order='F')
+
+      val = families.index(FamName) +1
+
+      #on skipp les zones ou il n'y a pas de points calcules
+      if 1 in cellN:
+        for l in range(numpy.size(ptlistD)):
+
+           if celln[ ptlistD[l] -1 ]==1 and  ptlistD[l]-2 >= 0 :
+             c                  = Fimax[ sz_imax-1]  #astuce: on stocke le compteur dans la derniere case memoire
+             Fimax[c]           = ptlistD[l]+1
+             if CHECK: check_i[ ptlistD[l] ] += val*100
+             if c != sz_imax-1: Fimax[ sz_imax-1] += 1
+             if lprint: print("            verif imax", c, sz_imax, Fimax[ sz_imax-1], 'val=', Fimax[c], ptlistD[l], l,'celln=',  celln[Fimax[c]-1], celln[Fimax[c]-2] )
+
+           if celln[ ptlistD[l] +1 ]==1 and ptlistD[l]+2 < size :
+             c                  = Fimin[ sz_imin-1]  
+             Fimin[c]           = ptlistD[l]+1
+             if CHECK: check_i[ ptlistD[l] ] += val*100
+             if c != sz_imin-1: Fimin[ sz_imin-1] += 1
+             if lprint: print("verif imin", c, sz_imin, Fimin[ sz_imin-1], Fimin[c], ptlistD[l], l,'celln=', celln[Fimin[c]-1], celln[Fimin[c]])
+
+           if celln[ ptlistD[l] - sh[0] ]==1 and  ptlistD[l]-2*sh[0] >= 0 :
+             c                  = Fjmax[ sz_jmax-1]  
+             Fjmax[c]           = ptlistD[l]+1
+             if CHECK: check_j[ ptlistD[l] ] += val*10000
+             if c != sz_jmax-1: Fjmax[ sz_jmax-1] += 1
+             if lprint: print("verif jmax", c, sz_jmax, Fjmax[ sz_jmax-1], Fjmax[c], ptlistD[l], l,'celln=', celln[Fjmax[c]-1], celln[Fjmax[c]-1-sh[0]])
+
+           if celln[ ptlistD[l] +sh[0] ]==1 and  ptlistD[l]+2*sh[0] < size :
+             c                  = Fjmin[ sz_jmin-1] 
+             Fjmin[c]           = ptlistD[l]+1
+             if CHECK: check_j[ ptlistD[l] ] += val*10000
+             if c != sz_jmin-1: Fjmin[ sz_jmin-1] += 1
+             if lprint: print("verif jmin", c, sz_jmin, Fjmin[ sz_jmin-1], Fjmin[c], ptlistD[l], l, 'celln=', celln[Fjmin[c]-1], celln[Fjmin[c]-1+sh[0]])
+
+           if DimPb == 3:
+             if celln[ ptlistD[l] - sh[0]*sh[1] ]==1 and  ptlistD[l]-2*sh[0]*sh[1] >= 0 :
+                c                  = Fkmax[ sz_kmax-1]  
+                Fkmax[c]           = ptlistD[l]+1
+                if CHECK: check_k[ ptlistD[l] ] += val*1000000
+                if c != sz_kmax-1: Fkmax[ sz_kmax-1] += 1
+                if lprint: print("verif kmax", c, sz_kmax, Fkmax[ sz_kmax-1], Fkmax[c], ptlistD[l], l,'celln=', celln[Fkmax[c]-1], celln[Fkmax[c]-1-sh[0]*sh[1]])
+
+             if celln[ ptlistD[l] +sh[0]*sh[1] ]==1 and  ptlistD[l]+2*sh[0]*sh[1] < size :
+               c                  = Fkmin[ sz_kmin-1] 
+               Fkmin[c]           = ptlistD[l]+1
+               if CHECK: check_k[ ptlistD[l] ] += val*1000000
+               if c != sz_kmin-1: Fjmin[ sz_kmin-1] += 1
+               if lprint: print("verif kmin", c, sz_kmin, Fkmin[ sz_kmin-1], Fkmin[c], ptlistD[l], l, 'celln=', celln[Fkmin[c]-1], celln[Fkmin[c]-1+sh[0]*sh[1]])
 
 #====================================================================================
 # Calcule la CFL en chaque maille et la met dans l'arbre t pour dtloc instationnaire
@@ -2159,11 +2447,7 @@ def computeCFL_dtlocal(t):
     """             
     #print(liste_BCPeriodiques)
                  
-    print('av warmup')
-
     (t,tc,metrics) = warmup(t,tc=None) ### Oblige d appeler warmup afin de construire les metrics necessaires au calcul de la CFL
-
-    print('ap warmup')
 
     zones = Internal.getZones(t)
 

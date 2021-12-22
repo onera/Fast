@@ -1,9 +1,11 @@
                          //sortie de la carte d residu du Newton
                          if(lssiter_verif ==1  && nd_subzone ==0 && ( param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
                           {
-                            E_Int type   = 4;
-                            E_Int* verrou_lhs_thread= verrou_lhs + (mx_nidom + nd_current)*Nbre_thread_actif + ithread_loc -1; 
-                            verrou_c_( verrou_lhs_thread, type );
+                           if (nb_subzone !=1)// pour 1 drodm OK pour calcul residu
+                           {
+                             E_Int size = param_int[nd][NEQ]*param_int[nd][NDIMDX];
+                             flush_real_( size , iptdrodm + shift_zone);
+                           }
 
                             E_Int ijkv_lu[3];
 
@@ -34,6 +36,7 @@
 
 
                            //Go verrou residu pour chaque sous zone et chaque thread actif pour ne pas attaquer LU avant fin calcul residu en mode1: 
-                           type   = 1;
+                           E_Int type   = 1;
+                           E_Int* verrou_lhs_thread= verrou_lhs + (mx_nidom + nd_current)*Nbre_thread_actif + ithread_loc -1; 
                            verrou_c_( verrou_lhs_thread, type );
                           }

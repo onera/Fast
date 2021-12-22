@@ -5,6 +5,11 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
       //setInterpTransfersFastS(iptdrodm_transfer, vartype, param_int_tc,
       //                   param_real_tc, param_int, param_real, linelets_int, linelets_real,
       // 			 it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
+      
+      E_Int rk           = param_int[0][RK];
+      E_Int exploc       = param_int[0][EXPLOC];
+      E_Int numpassage   = 1;
+
       K_FASTC::setInterpTransfersFast(iptdrodm_transfer, vartype, param_int_tc,
                          param_real_tc, param_int, param_real, linelets_int, linelets_real,
       			 it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
@@ -32,22 +37,43 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
                       //verrou rhs
                       //
                       E_Int type = 2;
-                      for (E_Int th = 0; th < Nbre_thread_actif_loc; th++) 
-                      { 
+                      //si calcul residu on verifie que toutes les souszones sont pretes
+                      if(lssiter_verif ==1  && nd_subzone ==0 && omp_mode==1 && ( param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
+                      {
+                        if (nb_subzone !=1)// pour 1 drodm OK pour calcul residu
+                        {
+                          E_Int size = param_int[nd][NEQ]*param_int[nd][NDIMDX];
+                          flush_real_( size , iptdrodm + shift_zone);
+                        }
+                        for (E_Int nd_subzone_loc = 0; nd_subzone_loc < nb_subzone; nd_subzone_loc++)
+                        {
+                           E_Int       Ptomp = param_int[nd][PT_OMP];
+                           E_Int  PtrIterOmp = param_int[nd][Ptomp +nitcfg -1];   
+                           E_Int  PtZoneomp  = param_int[nd][PtrIterOmp + nd_subzone_loc];
+
+                           E_Int Nbre_thread_actif_loc1 = param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
+                           E_Int ithread_loc1           = param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
+  
+                           if (ithread_loc1 == -1) { continue;}
+
+                           for (E_Int th = 0; th < Nbre_thread_actif_loc1; th++) { 
+                             E_Int* verrou_lhs_thread= verrou_lhs + (nd_current+nd_subzone_loc)*Nbre_thread_actif +th;
+                             verrou_c_( verrou_lhs_thread, type );
+                           }
+                        }
+                      }
+                      else
+                      { //on verifie uniquememnt la souszone courante: nd_current
+                         for (E_Int th = 0; th < Nbre_thread_actif_loc; th++) { 
                            E_Int* verrou_lhs_thread= verrou_lhs + nd_current*Nbre_thread_actif +th;
                            verrou_c_( verrou_lhs_thread, type );
+                         }
                       }
-
-                      //#pragma omp flush
-                      E_Int size = param_int[nd][NEQ]*param_int[nd][NDIMDX];
-                      //flush_real_( size , iptdrodm + shift_zone);
                       if(nitcfg==1)
                       {
-                        size = param_int[nd][NEQ_COE]*param_int[nd][NDIMDX];
+                        E_Int size = param_int[nd][NEQ_COE]*param_int[nd][NDIMDX];
                         flush_real_( size , iptcoe + shift_coe);
                       }
-                      //size       = param_int[nd][NDIMDX];
-                      //flush_real_( size , iptmut[nd]);
 
                      //sortie de la carte d residu du Newton
 #include             "Compute/residus_navier.h"
@@ -73,6 +99,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
                           for (E_Int th = 0; th < Nbre_thread_actif_loc; th++) 
                             { 
                               E_Int* verrou_lhs_thread= verrou_lhs + (mx_nidom + nd_current)*Nbre_thread_actif +th;
+                          //if(nd==1 and nitrun==881 && nitcfg==1 ) printf("HUM_WAIT %d %d %d %d th= %d\n", (mx_nidom+nd_current)*Nbre_thread_actif, ithread, ithread_loc, Nbre_thread_actif_loc, th);
                               verrou_c_( verrou_lhs_thread, type );
                             }
                          } //sinon residu pas bon en omp_mode=1
@@ -91,7 +118,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
 				    ipti[nd]               , iptj[nd]                , iptk[nd]              ,
 				    iptventi[nd]           , iptventj[nd]            , iptventk[nd]          ,
 				    iptcoe  + shift_coe    , ipt_ssor_shift          , ssor_size);
-
+                             
                              if(nitrun*nitcfg > 15) //protection garbage collector
                              {
 #ifdef _OPENMP

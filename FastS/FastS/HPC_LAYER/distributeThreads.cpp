@@ -504,21 +504,22 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
             //{     E_Int target = cells_tg_save*(marge-1); 
             {     E_Int target = cells_tg_save*(1.06-1); 
                   Nthreads     = size_c/target+1;
+                  if(Nthreads > __NUMTHREADS__) Nthreads = __NUMTHREADS__;
                   cells_loc    = size_c/Nthreads;
                   cells_tg_loc =  cells_loc;
                   cells_tg_min = cells_loc; th_min=-1; 
             }
 
-            //printf("cell_tg %d, rmax= %d , cell_thmin= %d, th_min= %d , Nthreads= %d \n", cells_tg, rmax, cells_tg_min, th_min,Nthreads );
+            //printf("cell_tg %d, rmax= %d , cell_thmin= %d, th_min= %d , Nthreads= %d , zone %d \n", cells_tg, rmax, cells_tg_min, th_min,Nthreads, c );
             //if(c==8) printf("cell_tg %d %d , th_min= %d \n", cells_tg, rmax, th_min);
 
             E_Int lmin;
             if(param_int[No_zone][ITYPCP] == 2 ) lmin =  4;
             else  lmin = 10;
 
-            FldArrayI tab_dim_ijk(3*Nthreads);   
+            //FldArrayI tab_dim_ijk(3*Nthreads);   
             //E_Int* dim_ijk  = tab_dim_ijk.begin();
-            FldArrayI tab_res_ijk(3*Nthreads);   
+            //FldArrayI tab_res_ijk(3*Nthreads);   
             //E_Int* res_ijk  = tab_res_ijk.begin();
 
             E_Int search      = 1;
@@ -548,6 +549,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                          } 
                       }
                 //if(c==8) printf("nijk      a %d %d %d  \n", nijk[0], nijk[1],nijk[2]);
+                //printf("topo_LLLUUU %d %d %d %d \n", topo_lu[0], topo_lu[1],topo_lu[2], search_topo);
                 //if(c==0) printf("topo_LLLUUU %d %d %d %d \n", topo_lu[0], topo_lu[1],topo_lu[2], search_topo);
 
                 
@@ -653,6 +655,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                        }//while go
                   } // if res
 
+              //printf("topo dim0 %d %d %d  \n",dim_i[0], dim_j[0],dim_k[0] );
               //if(c==0) printf("topo dim0 %d %d %d  \n",dim_i[0], dim_j[0],dim_k[0] );
 
               for (E_Int dir = 0; dir < 3; dir++){
@@ -859,9 +862,9 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                       //if(th_current==__NUMTHREADS__-1) th_current = 0;
                     }
                 
-                  if(th_count == __NUMTHREADS__-1)
+                  if(th_count == __NUMTHREADS__-1 || list_affected[th_current]!=-1)
                   {
-                     E_Int blind = -100000;
+                     E_Int blind = -1000000000;
                      for (E_Int l = 0; l < __NUMTHREADS__; l++){
                         if(remaind[l] > blind && list_affected[l]==-1)
                         { blind = remaind[l];
@@ -1252,7 +1255,7 @@ E_Int K_FASTS::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin
     if(res >= lmin && dim_loc >= lmin ){ //K vers J 
                     dim_loc = cells_tg/(nijk[0]*nijk[2]/topo[1]);
                     res     = nijk[1]-(topo[2]-1)*dim_loc;
-                    if(res >= lmin && dim_loc >= lmin ){ topo[0]=topo[1];  topo[1]= topo[2]; /*printf("cou2 \n");*/ return test=1;}
+                    if(res >= lmin && dim_loc >= lmin ){ E_Int tmp=topo[0]; topo[0]=topo[1]; topo[1]= topo[2]; topo[2]=tmp;/*printf("cou2 \n");*/ return test=1;}
                    }
 
     //on test si on peut intervertir la direction J vers J et K vers I
@@ -1262,7 +1265,7 @@ E_Int K_FASTS::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin
     if(res >= lmin && dim_loc >= lmin){ //K vers I 
                     dim_loc = cells_tg/(nijk[1]*nijk[2]);
                     res     = nijk[0]-(topo[2]-1)*dim_loc;
-                    if(res >= lmin && dim_loc >= lmin ){ topo[0]=topo[2]; topo[2]=1; /*printf("cou3 \n");*/ return test=1;}
+                    if(res >= lmin && dim_loc >= lmin ){  topo[0]=topo[2]; topo[2]=1;  /*printf("cou3 \n");*/ return test=1;}
                    }
   }
   //

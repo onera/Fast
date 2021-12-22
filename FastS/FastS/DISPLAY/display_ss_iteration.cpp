@@ -29,12 +29,12 @@ using namespace K_FLD;
 PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* cvg_numpy;
-  E_Int nitrun; E_Int lft; E_Int nssiter;
+  E_Int nitrun; E_Int lft; E_Int nssiter;  E_Int iverb;
 
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOlll", &zones, &metrics, &cvg_numpy, &nitrun, &nssiter, &lft)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOllll", &zones, &metrics, &cvg_numpy, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
 #else 
-  if (!PyArg_ParseTuple(args, "OOOiii", &zones, &metrics, &cvg_numpy, &nitrun, &nssiter, &lft)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOiiii", &zones, &metrics, &cvg_numpy, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
 #endif
 
  
@@ -148,7 +148,7 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
        }   // neq
 
 
-     dpssiter_(nitrun, neq,it_bloc_loc, ipt_param_int[nd][ IFLOW ], ipt_param_int[nd][ ILES ], lft, name, size_name, iptrdm_glob, cvg_ptr+2*neq*nd);
+     dpssiter_(nitrun, neq,it_bloc_loc, ipt_param_int[nd][ IFLOW ], ipt_param_int[nd][ ILES ], lft, iverb, name, size_name, iptrdm_glob, cvg_ptr+2*neq*nd);
    } // if zone implicit ou explicit+pdtloc
    } // if lft > 0
     /* Convergence History from zone */

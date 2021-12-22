@@ -300,16 +300,21 @@ c     &   u_int/surf, (tcx*u +tcy*v +tcz*w)/surf, qen/surf,j,k
 
 c     & - (tauw*ut/unorm)*surf*sens,tauw,ut/unorm,surf,dist
 
-            flu1= 0.
-            flu2= tcx*p   - (tauw*ut/unorm)*surf*sens
-            flu3= tcy*p   - (tauw*vt/unorm)*surf*sens
-            flu4= tcz*p   - (tauw*wt/unorm)*surf*sens
-            flu5= 0.
             !flu1= 0.
-            !flu2= tcx*p  + u_int*u*r - (tauw*ut/unorm)*surf*sens
-            !flu3= tcy*p  + u_int*v*r - (tauw*vt/unorm)*surf*sens
-            !flu4= tcz*p  + u_int*w*r - (tauw*wt/unorm)*surf*sens
-            !flu5= p*qen              - qwall*surf*sens
+            !flu2= tcx*p   - (tauw*ut/unorm)*surf*sens
+            !flu3= tcy*p   - (tauw*vt/unorm)*surf*sens
+            !flu4= tcz*p   - (tauw*wt/unorm)*surf*sens
+            !flu5= 0.
+            qwall = 0.
+            flu1= 0.
+            flu2= tcx*p  + u_int*u*r - (tauw*ut/unorm)*surf*sens
+            flu3= tcy*p  + u_int*v*r - (tauw*vt/unorm)*surf*sens
+            flu4= tcz*p  + u_int*w*r - (tauw*wt/unorm)*surf*sens
+            flu5= p*qen              - qwall*surf*sens
+
+c        if(k.eq.10.and.i.eq.100) then
+c         write(*,'(a,6f20.13)')'wall', flu1,flu2,flu3,flu4,flu5,u_int
+c        endif  
 
             yplus = rop(l+v1)*utau*xmut(l+v2)/xmut(l)
             umod = utau*(5.424*atan((2.*yplus - 8.15)/16.7)

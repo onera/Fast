@@ -11,7 +11,7 @@ dico= {}
 dico["SENSOR_INIT"] = { 'name':'flusenseur_init', 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
-dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3']}
+dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3','o1']}
 
 rep = sys.argv[1]
 if rep not in dico:

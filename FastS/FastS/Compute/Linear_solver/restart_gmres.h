@@ -143,6 +143,10 @@ if( param_int_tc != NULL)
 #pragma omp master
     { //Raccord V0  
       
+    E_Int rk           = param_int[0][RK];
+    E_Int exploc       = param_int[0][EXPLOC];
+    E_Int numpassage   = 1;
+
       //setInterpTransfersFastS(iptkrylov_transfer, vartype, param_int_tc,
 //			      param_real_tc, param_int, param_real, linelets_int, linelets_real,
  //        		      it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);

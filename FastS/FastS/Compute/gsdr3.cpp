@@ -14,8 +14,13 @@
 using namespace K_FLD;
 using namespace std;
 
+#undef Conservatif
+//#define Conservatif
+
+
 #undef TimeShow
 //#define TimeShow
+
 
 #ifdef TimeShow
 
@@ -69,13 +74,9 @@ E_Int K_FASTS::gsdr3(
   E_Int rank =0; 
   E_Float* ipt_timecount = new E_Float[5];
   ipt_timecount[0:4] = 0.0;
+  E_Int nbpointsTot  =0;
 
-  E_Int nbpointsTot =0;
-
-  for (E_Int nd = 0; nd < nidom; nd++)
-      {
-        nbpointsTot = nbpointsTot + param_int[nd][ IJKV    ]*param_int[nd][ IJKV +1 ]*param_int[nd][ IJKV +2 ];
-      }
+  for (E_Int nd = 0; nd < nidom; nd++) { nbpointsTot = nbpointsTot + param_int[nd][ IJKV ]*param_int[nd][ IJKV +1 ]*param_int[nd][ IJKV +2 ]; }
 #else
   E_Float* ipt_timecount = NULL;        
 #endif
@@ -83,19 +84,9 @@ E_Int K_FASTS::gsdr3(
 #ifdef TimeShow
 
 #ifdef _MPI
-  if(mpi)
-  {
-    MPI_Comm_rank (MPI_COMM_WORLD, &rank);  
-  }
+  if(mpi) { MPI_Comm_rank (MPI_COMM_WORLD, &rank); }
 #endif
 
-  //ofstream outputfile;
-  //std::ostringstream tmp;
-
-  //tmp << "Output" << std::setw(4) << std::setfill('0') << std::to_string(rank);
-  //std::string filename = tmp.str();
-
- // outputfile.open(filename, ios::app);
   time_init = 0;
 #ifdef _OPENMP  
   time_init = omp_get_wtime();
@@ -109,6 +100,8 @@ E_Int K_FASTS::gsdr3(
       E_Int nptpsi        = 1;
       E_Int balance       = 0;
 
+   //if(nitcfg > 1) return ibord_ale;
+
       E_Int mx_sszone = mx_nidom/nidom;
 
       FldArrayI tot( 6*threadmax_sdm); E_Int* ipt_tot  =  tot.begin();
@@ -121,40 +114,31 @@ E_Int K_FASTS::gsdr3(
       //
       //
       E_Float** iptro_ssiter;
-      E_Int ishift,lfwmean;
       E_Float** iptro_CL; 
 
-      E_Int rk =  param_int[0][RK];
-      E_Int exploc = param_int[0][EXPLOC];
-      E_Int numpassage = 1;
 
       if (param_int[0][EXPLOC]== 1 and param_int[0][ITYPCP]==2)   //explicit local instationnaire
 	   {
 
-	   if (nitcfg%2 != 0){iptro_ssiter = iptro;  iptro_CL = iptrotmp; ishift  =1; lfwmean  = 1; }
+	   if (nitcfg%2 != 0){iptro_ssiter = iptro;  iptro_CL = iptrotmp;}
 	   else
 	     {
-	        if (nitcfg != param_int[0][NSSITER]){iptro_ssiter = iptrotmp;  iptro_CL = iptro; ishift  = -1; lfwmean = 0;}
+	        if (nitcfg != param_int[0][NSSITER]){iptro_ssiter = iptrotmp;  iptro_CL = iptro;}
                else {iptro_ssiter  = iptrotmp; iptro_CL = iptro;}
               }
-
 	   }
-
-
       else  // Explicit global ou Implicit
 	    {
-
-	       if( nitcfg == 1) { iptro_ssiter = iptro;  iptro_CL = iptrotmp; ishift  = 1; lfwmean  = 1; }
+	       if( nitcfg == 1) { iptro_ssiter = iptro;  iptro_CL = iptrotmp;}
 	       else
 	       {      
-		 if (param_int[0][ ITYPCP ] < 2                ) {iptro_ssiter = iptrotmp; ishift =-1; lfwmean  = 0; iptro_CL = iptrotmp;} // Implicite
-		 if (param_int[0][ ITYPCP ] == 2 && nitcfg%2==0 && nitcfg != param_int[0][ NSSITER ] ) {iptro_ssiter = iptrotmp;  iptro_CL = iptro; ishift =-1; lfwmean  = 0;} // Explicite
-		 else if (param_int[0][ ITYPCP ] == 2 && nitcfg%2==0 && nitcfg == param_int[0][ NSSITER ] ) {iptro_ssiter = iptrotmp;  iptro_CL = iptro;} // Explicite
-		 if  (param_int[0][ ITYPCP ] == 2 && nitcfg%2==1 && nitcfg != param_int[0][ NSSITER ]) {iptro_ssiter = iptro;  iptro_CL = iptrotmp; ishift =-1; lfwmean  = 0;} // Explicite
-		 else if  (param_int[0][ ITYPCP ] == 2 && nitcfg%2==1 && nitcfg == param_int[0][ NSSITER ]) {iptro_ssiter = iptro;  iptro_CL = iptrotmp;} // Explicite
+		 if      (param_int[0][ ITYPCP ]  < 2                                                    ) {iptro_ssiter = iptrotmp; iptro_CL = iptrotmp;} // Implicite
+		 if      (param_int[0][ ITYPCP ] == 2 && nitcfg%2==0 && nitcfg != param_int[0][ NSSITER ]) {iptro_ssiter = iptrotmp; iptro_CL = iptro;   } // Explicite
+		 else if (param_int[0][ ITYPCP ] == 2 && nitcfg%2==0 && nitcfg == param_int[0][ NSSITER ]) {iptro_ssiter = iptrotmp; iptro_CL = iptro;   } // Explicite
+		 if      (param_int[0][ ITYPCP ] == 2 && nitcfg%2==1 && nitcfg != param_int[0][ NSSITER ]) {iptro_ssiter = iptro;    iptro_CL = iptrotmp;} // Explicite
+		 else if (param_int[0][ ITYPCP ] == 2 && nitcfg%2==1 && nitcfg == param_int[0][ NSSITER ]) {iptro_ssiter = iptro;    iptro_CL = iptrotmp;} // Explicite
 	      }
 	    }
-
 
       //
       //Calcul taille tableau ssor par thread et mise a jour Nombre sous_iter pour implicit
@@ -171,9 +155,6 @@ E_Int K_FASTS::gsdr3(
            if(ipt_nisdom_residu[nitcfg-1] != 0) ipt_it_bloc[0] +=1;
           }
 
-    E_Int* ipt_nidom_loc= ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;
-
-
 	if (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1)
 	  {
 #ifdef _OPENMP
@@ -181,8 +162,6 @@ E_Int K_FASTS::gsdr3(
 #else
 	    E_Int Nbre_thread_actif = 1;
 #endif
-	    //E_Int nfic_ij = param_int[ nd ][ NIJK + 3 ];
-	    //E_Int nfic_k  = param_int[ nd ][ NIJK + 4 ];
 	    E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
 	    E_Int  nb_subzone    = ipt_nidom_loc [nitcfg-1];    
 	    //nbre sous-zone a la sousiter courante
@@ -243,13 +222,21 @@ E_Int K_FASTS::gsdr3(
 	  }  // if relax
       } // loop zone
 
+
+//modif Guillaume??
 if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
-//cout << "nidom= " << nidom << endl;
-//cout << "nitcfg= " << nitcfg << endl; 
-//if (nitcfg==4){deb_calcul = omp_get_wtime();}
+
+
 /****************************************************
 ----- Debut zone // omp
 ****************************************************/
+
+  E_Int Nthread_max  = omp_get_max_threads();
+  E_Int Nfamily      = param_int[0] [param_int[0][IBC_PT_FLUX] ];
+  E_Float masse[3];
+  E_Float debit[Nthread_max*2*6];
+  E_Float flux[Nthread_max*7*Nfamily];
+  E_Float ro_corr; E_Float varMasse;
 
 #pragma omp parallel default(shared)
   {
@@ -311,53 +298,23 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 #include           "Metric/cp_metric.cpp"
                    }
 
-
-	/// calcul de ndim
-
-	//E_Int ndim = 0;
-	//cout<<"ndim= "<< ndim << endl;
         //---------------------------------------------------------------------
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
         E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int nd_current=0;
 	E_Float rhs_end=0;
 
-	//E_Int shift_rk4=0;
-	//shift_rk4 = shift_rk4*(nitcfg - 1);
-	//cout << "shift_rk4= " << shift_rk4 << endl;
-	
-
         if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1) { ipt_norm_kry[ithread-1]=0.; }
         //calcul du sous domaine a traiter par le thread 
         for (E_Int nd = 0; nd < nidom; nd++)
           {
-
-
-	    //E_Int cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
-	    //if (param_int[0][EXPLOC] == 2 and param_int[0][RK] == 3 and cycl != 4 and nitcfg%cycl==cycl/4)
-	    //{
-	    //	 ndim = param_int[0][SHIFTLOCAL];
-		 //cout << "ndim= "<< ndim << endl;
-	    //		}
-	    //else
-	    //   {   
-	    //	 ndim = 0;
-	    //  }
-
            E_Int lmin = 10;
            if (param_int[nd][ITYPCP] == 2) lmin = 4;
-
-	   //E_Float deb_zone = omp_get_wtime();
 
 #include "Compute/rhs.cpp"
           shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
           shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
           shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-
-	  //E_Float fin_zone = omp_get_wtime();
-
-	  //if(ithread==1){cout <<"zone : "<< nd <<" "<< "temps= " << fin_zone - deb_zone <<" "<<"cycle =  " << cycl << endl;}
-	   
 
           } //Fin boucle sur zones pour calcul RHS
 #ifdef _WIN32
@@ -382,7 +339,13 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
           else
 	  { 
 #include   "Compute/lhs.cpp"
+
+#ifdef Conservatif
+#include   "Compute/conservatif.cpp"
+#endif
+
           }
+
 
           //
           //finalisation timer pour omp "dynamique"
@@ -393,205 +356,54 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
           E_Float     lhs_end = 0.;
 #endif
           timer_omp[ cpu_perthread +1 ] += lhs_end- rhs_end;
-          // if(ithread==1) printf(" time lhs= %g \n",lhs_end - rhs_end );
-          
 
 } // Fin zone // omp
-
 
 
 #ifdef TimeShow
 #ifdef _OPENMP  
      time_COM = omp_get_wtime();
-#endif
-//     outputfile << "Time in compute (gsdr3 omp//) " << time_COM - time_init << std::endl;
-//     outputfile << "Time adim: " <<  (time_COM - time_init)/nbpointsTot << " nidom " << nidom << std::endl;
-     // std::cout << " sizes (ni,nj,nk):" << std::endl;
-     // for (E_Int nd = 0; nd < nidom; nd++)
-     //      {
-     //      std::cout << param_int[nd][ IJKV    ] << "," << param_int[nd][ IJKV +1 ] << "," << param_int[nd][ IJKV  +2  ] << std::endl;
-     //      } 
-//     outputfile.close();
-#ifdef _OPENMP  
      time_init = omp_get_wtime();
 #endif 
 #endif 
 
 
  
-     //
+  //
   //
   //FillGhostcell si mise a jour necessaire et transfer dans C layer 
   //
-  //
+
+E_Int autorisation_bc[nidom];
+E_Int nitcfg_stk = nitcfg;
 if(lexit_lu ==0 && layer_mode==1)
 {   
-
-  //Swap (call to setInterpTransfer)
-
-  //E_Float trans_begin = omp_get_wtime();
-
-
-E_Int cycl;
-E_Float deb_dtlocal;
-E_Float tmps;
-E_Int flag_passage2=0;
+  //remplissage ghost transfert
+  #include "Compute/transfert_multiblock.cpp"
+  //E_Int cycl;
  
-  if (param_int[0][EXPLOC] == 0)
+  for (E_Int nd = 0; nd < nidom; nd++)
     {
-      K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
-                                   linelets_int, linelets_real, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
-
-    }//dt constant
-
-
-  if (param_int[0][EXPLOC] == 1)     // explicit local instationnaire
-
-   {
-
- 
-     dtlocal2para_c(iptro, iptrotmp, param_int_tc, param_real_tc, param_int, param_real, iptdrodm, iptcoe, stock, drodmstock, constk, nitcfg, omp_mode, taille_tabs, nidom);
-
-     
-
-     for (E_Int nd=0; nd < nidom; nd++)
-       {
-        cycl = nssiter/param_int[nd][LEVEL];
-        if (nitcfg%cycl == 0 and nitcfg != nssiter)
-	   {
-	     E_Float* ptsave  = iptro[nd]; 
-	     iptro[nd] = iptrotmp[nd]; 
-	     iptrotmp[nd] = ptsave;
-	   } 
-       }
-
-
-
-           
-    if (nitcfg != nssiter)
-    {  		
-      K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
-                        linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
-    }
-
-      
-       
-      recup3para_c(iptro, param_int_tc, param_real_tc, param_int, stock, nitcfg, omp_mode, taille_tabs, nidom);
-
-     
-     
-     //BC_local(iptro, iptrotmp, param_int_tc, param_real_tc, param_int, param_real, iptdrodm, iptcoe, ipt_ind_CL, ipti, iptj, iptk, iptx, ipty, iptz, iptventi, iptventj, iptventk, stock, drodmstock, constk, nitcfg, omp_mode, taille_tabs, nidom);
-
-     	 
-     numpassage=2;
-     for (E_Int nd=0; nd < nidom; nd++)
-       {
-	 cycl = nssiter/param_int[nd][LEVEL];
-	
-	 if (nitcfg%cycl == cycl/2 and (nitcfg/cycl)%2==1 )
-	   {
-             flag_passage2=1;
-	   }
-       }
-     
-     //cout << nitcfg << "  "  << flag_passage2 << endl;
-     
-     if (flag_passage2==1)
-      {
-
-        //debut = omp_get_wtime();
-        K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
-                               linelets_int, linelets_real, it_target   , nidom        , ipt_timecount, mpi       , nitcfg, nssiter, rk, exploc, numpassage);
-
-        //cout << "ap_2eme_passage" << endl;
-        flag_passage2=0;
-     }   
-     
-  
-
-    // if (nitcfg == nssiter){cout << "tps_transferts = " <<  param_real[0][TEMPS] << endl;}
-     
-
-   } // fin boucle test dtlocal
-
-
-
-
-  //E_Float trans_end = omp_get_wtime();
-  //E_Float trans_duree = trans_end - trans_begin;
-  //cout << "tps_trans  : "<< trans_duree  << endl;
-  //
-  //
-  //Apply BC (parcour Zones) + reinitialisation verrou pour calcul rhs
-  //
-  //
-    
- E_Int autorisation_bc[nidom];
- E_Int nitcfg_stk = nitcfg;
- 
-for (E_Int nd = 0; nd < nidom; nd++)
-  {
-   // flag pour transfert optimiser explicit local
-   autorisation_bc[nd]=0;
-   if (exploc == 1)    //if (rk == 3 and exploc == 2) 
-
+     // flag pour transfert optimiser explicit local
+     autorisation_bc[nd]=0;
+     if (param_int[0][EXPLOC] == 1)    //if (rk == 3 and exploc == 2) 
       {
 	cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
-	  
+	 
+        // modif de nitcfg pour appliquer les BC partout 
 	if      (nitcfg_stk%cycl == cycl/2 -1       and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}
 	else if (nitcfg_stk%cycl == cycl/2 + cycl/4 and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}	    
 	else if (nitcfg_stk%cycl == cycl-1          and cycl != 4 ){ nitcfg = 1; autorisation_bc[nd] = 1;}
 	else if((nitcfg_stk%cycl == 1 or nitcfg_stk%cycl == cycl/2  or nitcfg_stk%cycl== cycl-1) and cycl == 4 ) { nitcfg = 1; autorisation_bc[nd] = 1; }
       } 
-    else {autorisation_bc[nd] = 1;}
+     else {autorisation_bc[nd] = 1;}
+  }//loop zone
+} //lexit  
 
-    if(nitcfg==nitcfg_last-1)
-    {
-     ///mise a jour moyenne plan Lund si necessaire
-     E_Int pt_bcs = param_int[nd][PT_BC];
-     E_Int nb_bc  = param_int[nd][ pt_bcs ];
-     E_Float* ipt_data;
-     for ( E_Int ndf = 0; ndf < nb_bc; ndf++ )
-     {
-      E_Int pt_bc  = param_int[nd][pt_bcs+ 1 + ndf];
-
-      E_Int idir   = param_int[nd][pt_bc + BC_IDIR];
-      E_Int nbdata = param_int[nd][pt_bc + BC_NBDATA];
-      E_Int bc_type= param_int[nd][pt_bc + BC_TYPE];
-
-      if(bc_type==19) 
-      { 
-         E_Int* iptsize_data = param_int[nd] + pt_bc + BC_NBDATA + 1;
-         E_Int* ind_fen      = param_int[nd] + pt_bc + BC_FEN;
-         E_Int  inc_bc[3];
-         if ( idir <= 2 ) 
-         { inc_bc[0] = ind_fen[3] - ind_fen[2] + 1; // nombre element de la fenetre dans la direction J
-           inc_bc[1] = ind_fen[2]; // debut indice j
-           inc_bc[2] = ind_fen[4]; // debut indice k
-         }  
-         else if ( idir <= 4 )
-         { inc_bc[0] = ind_fen[1] - ind_fen[0] + 1; // nombre element de la fenetre dans la direction I
-           ind_fen[0]; // debut indice i
-           inc_bc[2] = ind_fen[4]; // debut indice k
-         }  
-         else
-         {inc_bc[0] = ind_fen[1] - ind_fen[0] + 1; // nombre element de la fenetre dans la direction I
-          inc_bc[1] = ind_fen[0]; // debut indice i
-          inc_bc[2] = ind_fen[2]; // debut indice j
-         }
-
-         if ( nbdata != 0 ) ipt_data = param_real[nd] + param_int[nd][pt_bcs + 1 + ndf + nb_bc];
-
-         E_Float* iptAvgPlanLund = ipt_data + 5*iptsize_data[0];
-         E_Float* iptParamLund   = ipt_data + 10*iptsize_data[0];
-
-         E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
-
-         mj_lund_planrecyl_(nd, idir, param_int[nd] , ind_fen, ipt_ind_dm_loc, inc_bc, iptsize_data[0],
-                            iptParamLund,  iptro[nd], iptAvgPlanLund); 
-      }//lund
-     }//ndf
-    }//nit_last
+//calcul sequentiel flux IBM et data CLs (lund, wallmodel) a toutes les ssiter
+for (E_Int nd = 0; nd < nidom; nd++)
+  {
+     #include  "Compute/data_ibm_bc.cpp"
   }//loop zone
  
 
@@ -614,84 +426,59 @@ E_Int lrhs=0; E_Int lcorner=0;
    if( omp_mode == 1) { Nbre_thread_actif_loc = 1;                 ithread_loc = 1;}
    else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
 
+   //
+   //Apply BC (parcour Zones) + reinitialisation verrou pour calcul rhs
+   //
+   if(lexit_lu ==0 && layer_mode==1)
+   { 
+    #include   "Compute/bcs.cpp"
+   }
 
-   E_Int* ipt_ind_dm_thread; 
-   E_Int nd_current =0;
+   #pragma omp for
    for (E_Int nd = 0; nd < nidom; nd++)
      {
        E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
-       E_Int  nb_subzone    = ipt_nidom_loc [nitcfg-1];                                           //nbre sous-zone a la sousiter courante
+       E_Int  nb_subzone    = ipt_nidom_loc [nitcfg_stk-1];                                       //nbre sous-zone a la sousiter courante
 
-       E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
-       E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
-       E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
-       E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
+       if (autorisation_bc[nd] == 1 && nb_subzone > 0)
+        {
+           E_Int pt_flu = param_int[nd][IBC_PT_FLUX];
+           E_Int shift =6*Nfamily +1 ;
+           if (pt_flu != -1)
+            {
+             E_Int ithread_local = 1; E_Int Nbre_thread_actif_local = 1;
+             for ( E_Int fam  = 0; fam <  Nfamily; fam++ )
+              {
+                E_Float* iptflu = flux + fam*7;
+                for ( E_Int idir = 1; idir<= 6; idir++ )
+                {
+                  E_Int size_fen =  param_int[nd][pt_flu+idir +fam*6];    
+                  if (size_fen != 0 )
+                   {
+                     E_Int* facelist = param_int[nd] + pt_flu  + shift;
+                     E_Float* iptijk; E_Float* ipventijk; E_Int neq_mtr;
+                     if      ( idir <= 2 ) { iptijk    = ipti[nd]; neq_mtr   = param_int[nd][NEQ_IJ]; ipventijk = iptventi[nd]; } 
+                     else if ( idir <= 4 ) { iptijk    = iptj[nd]; neq_mtr   = param_int[nd][NEQ_IJ]; ipventijk = iptventj[nd]; }
+                     else                  { iptijk    = iptk[nd]; neq_mtr   = param_int[nd][NEQ_K ]; ipventijk = iptventk[nd]; }
 
-       for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
-	 {
-	   E_Int ndo   = nd;
+                     corr_debit_ibm_(nd, idir, neq_mtr, ithread_local, Nbre_thread_actif_local,  param_int[nd],
+                                    size_fen, facelist, iptro_CL[nd], iptijk, iptvol[nd], iptCellN[nd], iptflu);
 
-	   E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
-
-	   E_Int* ipt_ind_dm_thread;
-	   if (omp_mode == 1)
-	     { 
-	       E_Int       Ptomp = param_int[nd][PT_OMP];
-	       E_Int  PtrIterOmp = param_int[nd][Ptomp +nitcfg -1];   
-	       E_Int  PtZoneomp  = param_int[nd][PtrIterOmp + nd_subzone];
-
-	       Nbre_thread_actif_loc = param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
-	       ithread_loc           = param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
-	       ipt_ind_dm_thread     = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
-
-	       if (ithread_loc == -1) { continue;}
-	     }
-	   else
-	     { 
-	       E_Int* ipt_topology_socket = ipt_topology       + (ithread-1)*3;
-	       E_Int* ipt_ind_dm_socket   = ipt_ind_dm_omp     + (ithread-1)*12;
-	       ipt_ind_dm_thread   = ipt_ind_dm_socket  +6;
-
-
-	       E_Int lmin = 10;
-	       if (param_int[nd][ITYPCP] == 2) lmin = 4;
-
-	       indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, lmin,
-				 ipt_ind_dm_loc,
-				 ipt_topology_socket, ipt_ind_dm_thread);
-	     }
-	   if (autorisation_bc[nd] == 1)
-	    {
-	       E_Int ierr = BCzone(nd, lrhs , nitcfg_stk, lcorner, param_int[nd], param_real[nd], npass,
-				   ipt_ind_dm_loc, ipt_ind_dm_thread, 
-				   ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
-				   iptro_CL[nd] , ipti[nd]            , iptj[nd]    , iptk[nd]       ,
-				   iptx[nd]     , ipty[nd]            , iptz[nd]    ,
-				   iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd], iptmut[nd]);
-
-	       correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptro_CL[nd]);
-	    }//autorisation
-
-           //Reinitialisation verrou omp
-           //
-           E_Int l =  nd_current*mx_synchro*Nbre_thread_actif  + (ithread_loc-1)*mx_synchro;
-           for (E_Int i = 0;  i < mx_synchro ; i++) { ipt_lok[ l + i ]  = 0; }
-           nd_current +=1;
-
-	 }//loop souszone
+                     shift += size_fen;
+                   }
+                }//dir
+               }//fam
+             }
+        }//autorisation
      }//loop zone
-
  }//fin zone omp
-
 
   nitcfg = nitcfg_stk;
 
-//     cout << "nidom= "<< nidom << endl;	 
 
-   //cout << "coucou" << endl;
-
- }//test exit_lu
-
+#ifdef Conservatif
+#include "Compute/postIBM.cpp"
+#endif
 
     //
     //omp "dynamic" balance

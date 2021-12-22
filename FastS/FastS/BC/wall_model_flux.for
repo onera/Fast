@@ -38,7 +38,7 @@ C     Var loc
       INTEGER_E ndf,lf,npass,incijk, nb_bc, iptdata, flag_correct_flu
       INTEGER_E bc_type, pt_bc,pt_bcs, idir,nbdata,lskip,size_data
       INTEGER_E ind_CL(6), ind_CL119(6), nitcfg, cycl, iptparam
-      INTEGER_E sampling, nitrun
+      INTEGER_E sampling, nitrun, iflow
       REAL_E mobile_coef
  
       ! pas de debordement coin pour calcul des flu
@@ -99,10 +99,13 @@ c     & , param_int(LEVEL)
 
         ! ---- Correction of the boundary face fluxes
 
+        ! on retranche flux convectif ET visqueux
+        iflow = 2
+
         if(param_int(KFLUDOM).eq.2.and.nitcfg.eq.1 .and.
      & param_int(EXPLOC) .eq. 0 ) then
 
-          call corr_flusenseur_init_select(ndom, ithread, idir,
+          call corr_flusenseur_init_select(ndom, ithread, idir, iflow,
      &                        param_int, param_real,
      &                        ind_CL,
      &                        rop, drodm  , wig,
@@ -112,7 +115,7 @@ c     & , param_int(LEVEL)
         elseif(param_int(KFLUDOM).eq.2.and.nitcfg.gt.1 .and.
      & param_int(EXPLOC) .eq. 0 ) then
 
-          call corr_flusenseur_select(ndom, ithread, idir,
+          call corr_flusenseur_select(ndom, ithread, idir, iflow,
      &                        param_int, param_real,
      &                        ind_CL,
      &                        rop, drodm  , wig,
@@ -122,7 +125,7 @@ c     & , param_int(LEVEL)
         elseif(param_int(KFLUDOM).eq.2.and.mod(nitcfg,cycl).eq.1
      & .and. param_int(EXPLOC) .ne. 0 ) then !!! senseur pour l'explicit local
 
-          call corr_flusenseur_init_select(ndom, ithread, idir,
+          call corr_flusenseur_init_select(ndom, ithread, idir, iflow,
      &                        param_int, param_real,
      &                        ind_CL,
      &                        rop, drodm  , wig,
@@ -132,7 +135,35 @@ c     & , param_int(LEVEL)
         elseif(param_int(KFLUDOM).eq.2.and.mod(nitcfg,cycl).ne.1
      & .and. param_int(EXPLOC) .ne. 0 ) then !!! senseur pour l'explicit local
 
-          call corr_flusenseur_select(ndom, ithread, idir,
+          call corr_flusenseur_select(ndom, ithread, idir, iflow,
+     &                        param_int, param_real,
+     &                        ind_CL,
+     &                        rop, drodm  , wig,
+     &                        venti, ventj, ventk,
+     &                        ti,tj,tk,vol, xmut)
+
+        elseif(param_int(KFLUDOM).eq.1.and.( param_int(EXPLOC).eq.0
+     &                                .or.(    param_int(EXPLOC).ne.0
+     &                                     .and.mod(nitcfg,cycl).eq.1
+     &                                    )
+     &                                     ) 
+     &        ) then
+
+          call corr_fluausm_select(ndom, ithread, idir, iflow,
+     &                        param_int, param_real,
+     &                        ind_CL,
+     &                        rop, drodm  , wig,
+     &                        venti, ventj, ventk,
+     &                        ti,tj,tk,vol, xmut)
+
+        elseif(param_int(KFLUDOM).eq.5.and.( param_int(EXPLOC).eq.0
+     &                                .or.(    param_int(EXPLOC).ne.0
+     &                                     .and.mod(nitcfg,cycl).eq.1
+     &                                    )
+     &                                     ) 
+     &        ) then
+
+          call corr_fluroe_select(ndom, ithread, idir, iflow,
      &                        param_int, param_real,
      &                        ind_CL,
      &                        rop, drodm  , wig,
@@ -140,10 +171,9 @@ c     & , param_int(LEVEL)
      &                        ti,tj,tk,vol, xmut)
 
         else
-          continue
+           call error('wallmodel_flu$',70,1)
         endif
 
-        !write(*,*)'avt wammmod',ndom,nitcfg
 
 #include "FastS/BC/CL_wallmodel_flu.for"
 

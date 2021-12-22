@@ -110,7 +110,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
      &                   ic,jc,kc,kc_vent,
      &                   ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale)
 
-      c_ale   =c_ale*2.*mobile_coef
+      c_ale   =c_ale*mobile_coef
       c_pertu = 1.
       if(lrhs.eq.1) then 
          c_ale   = 0.

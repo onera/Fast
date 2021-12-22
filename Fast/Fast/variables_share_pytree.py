@@ -50,6 +50,8 @@ LBM_spng_ymax               =122
 LBM_spng_zmin               =123
 LBM_spng_zmax               =124
 
+IBC_PT_FLUX                 =125
+
 LBM_c0                      =42
 LBM_taug                    =43
 LBM_difcoef                 =44

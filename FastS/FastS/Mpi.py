@@ -5,6 +5,7 @@ from .PyTree import display_temporal_criteria, createConvergenceHistory, extract
 import timeit
 import time as Time
 import numpy
+import sys
 
 try:
     import Converter.PyTree as C
@@ -24,7 +25,7 @@ try: range = xrange
 except: pass
 
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=None):
+def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=None, vtune=False):
 
     if isinstance(graph, list):
         #test pour savoir si graph est une liste de dictionnaires (explicite local)
@@ -55,7 +56,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
     dtloc   = Internal.getValue(dtloc) # tab numpy
     nitmax  = int(dtloc[0])
 
-
     #### a blinder...
     param_int_firstZone = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1]
     itypcp = param_int_firstZone[29]
@@ -63,6 +63,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
     exploc = param_int_firstZone[54]
     #### a blinder...
 
+    timelevel_target = int(dtloc[4])
+    tps_cp=  Time.time(); tps_cp=  tps_cp-tps_cp     
+    tps_tr=  Time.time(); tps_tr=  tps_tr-tps_tr     
     if layer == "Python": 
 
       if exploc==1 and tc is not None:
@@ -79,7 +82,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                 dest        = param_int_tc[pt_ech]
 
       hookTransfer = []
-                
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
          distrib_omp = 0
@@ -96,12 +98,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
             nstep_fin = nstep
             layer_mode= 0
             nit_c     = 1
-            #t0=Time.time()
-            #tic=Time.time()
+            tic=Time.time()
             fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
-            #toc1=Time.time()-tic  
-            #print('t_compute, rank= ', Time.time() - t0, Cmpi.rank)
-
+            tps_cp +=Time.time()-tic  
 
             # dtloc GJeanmasson
             if exploc==1 and tc is not None:
@@ -119,12 +118,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])    
 
                FastC.switchPointers2__(zones,nitmax,nstep)
-                
                # Ghostcell
 
                if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
-               timelevel_target = int(dtloc[4])
 
                if graph is not None and grapheliste == True:
                        procDict  = graph[nstep-1]['procDict']
@@ -140,7 +137,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                fasts.recup3para_mpi(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
 
                if nstep%2 == 0:
-                   timelevel_target = int(dtloc[4])
                    vars = ['Density'  ]
                    if graph is not None and grapheliste == True:
                        procDict  = graph[nitmax+nstep-1]['procDict']
@@ -155,19 +151,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                _applyBC(zones,metrics, hook1, nstep, ompmode,  var=vars[0])
 
 
-
             else: ### Autres schemas
                # Ghostcell
-               #tic=Time.time()  
-
                vars = FastC.varsP
                if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
 
-               timelevel_target = int(dtloc[4])
-              
-
-               #print ('target= ', timelevel_target)
-               #tic=Time.time()
+               tic=Time.time()
 
                _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict)
 
@@ -196,12 +185,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                                     time=time, absFrame=True,
                                     procDict=procDict, cellNName='cellN#Motion', 
                                     interpInDnrFrame=interpInDnrFrame, hook=hookTransfer)
-               #print('t_transferts, rank= ', Time.time() - t0, Cmpi.rank)
-               #toc1_=Time.time()-tic
-
-
-      dtloc[3] +=1    #time_level_motion
-      dtloc[4] +=1    #time_level_target
+               tps_tr +=Time.time()-tic  
 
     else: 
       nstep_deb = 1
@@ -209,30 +193,31 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
       layer_mode= 1
       nit_c     = NIT
       FastC.HOOK["mpi"] = 1
+      tic=Time.time()
       fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, FastC.HOOK)
+      tps_cp +=Time.time()-tic  
+
+    if vtune:
+       print('t_comp/trans=', tps_cp,tps_tr, ' rank et itTarget= ', Cmpi.rank, timelevel_target)
+       sys.stdout.flush
 
     #switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None :
-    #if exploc==2 and tc is not None and rk==3:
-         if layer == 'Python':
-             FastC.switchPointers__(zones, 1, 3)
-         else:
-             FastC.switchPointers3__(zones,nitmax)
+         if layer == 'Python': FastC.switchPointers__(zones, 1, 3)
+         else: FastC.switchPointers3__(zones,nitmax)
     else:
          case = NIT%3
-         #case = 2
          if case != 0 and itypcp < 2: FastC.switchPointers__(zones, case)
          if case != 0 and itypcp ==2: FastC.switchPointers__(zones, case, nitmax%2+2)
-
-    # Difference avec sequentiel: pourquoi??
-    #case = NIT%3
-    #if case != 0: FastC.switchPointers__(zones, case, order=orderRk)
 
     # flag pour derivee temporelle 1er pas de temps implicit
     FastC.HOOK["FIRST_IT"]  = 1
     FastC.FIRST_IT          = 1
-    return None
-    #return tps_calcul, tps_com_transferts
+
+    if vtune is None:
+      return None
+    else:
+      return tps_cp,tps_tr
 
 #==============================================================================
 def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=0, num_passage=1): 
@@ -262,8 +247,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
               #recuperation Nb pas instationnaire dans tc
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
               Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
-                                        nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1,
-                                        graph=graphIBCD, procDict=procDict)
+                                        nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict)
               type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
               Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                         nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict)
@@ -455,38 +439,47 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
     return ret1.tolist()
 
 #==============================================================================
+# display CPU efficiency diagnostic
+#==============================================================================
+def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FILEOUT='listZonesSlow.dat', FILEOUT1='diagCPU.dat', RECORD=None):
+
+    rank = Cmpi.rank
+    names   = FILEOUT.split('.')
+    fileout = names[0]+str(rank)+'.'+names[1]
+    names1   = FILEOUT1.split('.')
+    fileout1 = names1[0]+str(rank)+'.'+names1[1]
+
+    if RECORD is not None: 
+      tape = PyTree.display_cpu_efficiency(t, mask_cpu=mask_cpu, mask_cell=mask_cell, diag=diag, FILEOUT=fileout, FILEOUT1=fileout1, RECORD=RECORD)
+      return tape
+    else: 
+      PyTree.display_cpu_efficiency(t, mask_cpu=mask_cpu, mask_cell=mask_cell, diag=diag, FILEOUT=fileout, FILEOUT1=fileout1, RECORD=RECORD)
+      return None
+
 # For periodic unsteady chimera join, parameter must be updated peridicaly 
 #==============================================================================
-def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_steady.cgns', directory='.', iteration=0):
+def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
+#def _UpdateUnsteadyJoinParam(t, tc, tc_skel, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
 
-    bases = Internal.getNodesFromType1(t      , 'CGNSBase_t')       # noeud
-    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
-    #print('own= ', own)
- 
-    dtloc = None
-    if own is not None: dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
-   
+    #on cree/initialise le dico infos graph
+    if graph =={}  or graph ==None:
+       graph= {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
+
     #on cree les noeud infos insta pour chimere perio s'il n'existe pas 
-    TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget'] 
+    TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget','Iteration'] 
     for opt in TimeLevelOpts:
        tmp = Internal.getNodeFromName1(t, opt)
        if tmp is None: Internal.createUniqueChild(t, opt, 'DataArray_t', value=0)
 
-    if dtloc is not None:
-      dtloc            = Internal.getValue(dtloc) # tab numpy
-      timelevel_motion = dtloc[3]
-      timelevel_target = dtloc[4]
-    else:
-      timelevel_motion = Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0]
-      timelevel_target = Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0]
-
-
-    if iteration == 0:    
-       Node = Internal.getNodeFromName1(t, 'Iteration')
-       if Node is not None: timelevel_motion = Internal.getNodeFromName1(t, 'Iteration')[1][0] - 1
-       else: timelevel_motion = 0
-    else:
-       timelevel_motion = iteration
+    #mise a jour des info temporelle
+    if not init:
+      Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0] +=1
+      Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0] +=1
+      Internal.getNodeFromName1(t, 'Iteration'      )[1][0] +=1
+ 
+    timelevel_motion = Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0]
+    timelevel_target = Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0]
+    iteration        = Internal.getNodeFromName1(t, 'Iteration')[1][0]
 
     timelevel_period = timelevelInfos["TimeLevelPeriod"]
     timelevel_360    = timelevelInfos["TimeLevel360"]
@@ -500,73 +493,113 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
     if timelevel_target == timelevel_perfile or tc is None or timelevel_motion%timelevel_period == 0 : 
 
-       #print('timelevel_target=',timelevel_target)
        rank = Cmpi.rank
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
        if root > timelevel_period : root=timelevel_period ### Comme 8000 pas multiple de 60 on force le load de tc_8000
-       #print(root)
        if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target)
     
-       
-       FILE = tc_steady
-       if os.access(FILE, os.F_OK): 
-          tc = Cmpi.convertFile2SkeletonTree(FILE)
-          tc = Cmpi.readZones(tc, FILE, rank=rank)
+       if split == 'single':
 
-       FILE = directory+'/tc_'+str(root)+'.cgns'
-       if os.access(FILE, os.F_OK): 
-          tc_inst = Cmpi.convertFile2SkeletonTree(FILE)
-          tc_inst = Cmpi.readZones(tc_inst, FILE, rank=rank)
+          # steady part
+          FILE = dir_steady +'/'+ root_steady + '.cgns'
+          if os.access(FILE, os.F_OK): 
+             t0=timeit.default_timer()
+             tc = Cmpi.convertFile2SkeletonTree(FILE)
+             tc_skel= Internal.copyRef(tc)
+             tc = Cmpi.readZones(tc, FILE, rank=rank)
+             tc = Cmpi.convert2PartialTree(tc, rank=rank)
+             t1=timeit.default_timer()
+             print( "cout steady= ", t1-t0, 'rank=', rank)
+             sys.stdout.flush
+          # unsteady part
+          FILE = dir_unsteady +'/'+root_unsteady+str(root)+'.cgns'
+          if rank==0: print('chargement tc: timelevel_target=',timelevel_target, 'file=',FILE, root)
+          if os.access(FILE, os.F_OK): 
+             t0=timeit.default_timer()
+             tc_inst = Cmpi.convertFile2SkeletonTree(FILE)
+             tc_inst_skel= Internal.copyRef(tc_inst)
+             tc_inst = Cmpi.readZones(tc_inst, FILE, rank=rank)
+             tc_inst = Cmpi.convert2PartialTree(tc_inst, rank=rank)
+             t1=timeit.default_timer()
+             print( "cout unsteady= ", t1-t0, 'rank=', rank)
+             sys.stdout.flush
 
-       if dtloc is not None:
-           dtloc[4]=dtloc[4]%timelevel_perfile
-       if timelevel_motion%timelevel_period == 0: ### On force dtloc[4] a 0 a chaque fin de periode azymutale
-           dtloc[4]=0
+       else:
+          # steady part
+          t0=timeit.default_timer()
+          FILE_Skeleton = dir_steady +'/'+ root_steady + 'skeleton.cgns'
+          if os.access(FILE_Skeleton, os.F_OK): 
+             tc_skel = C.convertFile2PyTree(FILE_Skeleton)
+
+          FILE = dir_steady +'/'+ root_steady + str(rank) +'.cgns'
+          if os.access(FILE, os.F_OK): 
+             tc = C.convertFile2PyTree(FILE)
+          t1=timeit.default_timer()
+          print( "cout steady= ", t1-t0, 'rank=', rank)
+          sys.stdout.flush
+
+          # unsteady part: toto_Nit_skeleton.cgns
+          t0=timeit.default_timer()
+          FILE_Skeleton = dir_unsteady +'_'+str(root) +'/'+ root_unsteady +str(root) + '_skeleton.cgns'
+          if os.access(FILE_Skeleton, os.F_OK): 
+             tc_inst_skel = C.convertFile2PyTree(FILE_Skeleton)
+
+          # toto_Nit_proc.cgns
+          FILE = dir_unsteady+'_'+str(root) +'/'+root_unsteady+str(root)+'_'+str(rank)+'.cgns'
+          if os.access(FILE, os.F_OK): 
+             tc_inst = C.convertFile2PyTree(FILE)
+
+          t1=timeit.default_timer()
+          print( "cout unsteady= ", t1-t0, 'rank=', rank)
+          sys.stdout.flush
+
+       #mise a zero timelevel_target en fin de fichier ou fin de periode azymutale
+       if timelevel_target == timelevel_perfile or timelevel_motion%timelevel_period == 0:
+          timelevel_target = 0
+          Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0] = timelevel_target
 
        #
        #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
        #
        if timelevel_motion >= timelevel_period:
-            No_period = timelevel_motion//timelevel_period
-            iteration = timelevel_motion - No_period*timelevel_period 
+
+           No_period     = timelevel_motion//timelevel_period
+           iteration_loc = timelevel_motion - No_period*timelevel_period 
+
+           bases  = Internal.getNodesFromType1(tc_inst , 'CGNSBase_t')       # noeud
+           Rotors  = ['Base02', 'Base04', 'Base06']
+           Stators = ['Base01', 'Base03', 'Base05', 'Base07']
+
+           sign =-1
+           if omega > 0: sign = 1
+           for base in bases:
+             if   base[0] in Rotors  : teta = -2*math.pi*timelevel_period/timelevel_360*No_period*sign
+             elif base[0] in Stators : teta =  2*math.pi*timelevel_period/timelevel_360*No_period*sign
+             zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
+             for z in zones:
+               angles = Internal.getNodesFromName2(z, 'RotationAngle')
+               for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
        else:
-            iteration = timelevel_motion
+            iteration_loc = timelevel_motion
 
+       tc      = Internal.merge( [tc     , tc_inst     ] )
+       tc_skel = Internal.merge( [tc_skel, tc_inst_skel] )
 
-       if timelevel_motion >= timelevel_period: 
-          bases  = Internal.getNodesFromType1(tc_inst , 'CGNSBase_t')       # noeud
-          Rotors  = ['Base02', 'Base04', 'Base06']
-          Stators = ['Base01', 'Base03', 'Base05', 'Base07']
+       #on reordone les bases par alphabet  au cas ou tc_inst foireux
+       for tmp in [tc, tc_skel]:
+         Internal._sortByName(tmp,recursive=False)
+         bases  = Internal.getBases(tmp)
+         cgns   = Internal.getNodeFromName1(tmp,'CGNSLibraryVersion')
+         tmp[2] = [cgns]+bases
+         #on reordone les rac instat au cas ou tc_inst foireux
+         for z in Internal.getZones(tmp):
+            _sortByName(z)
 
-
-          sign =-1
-          if omega > 0: sign = 1
-          for base in bases:
-            if   base[0] in Rotors  : teta = -2*math.pi*timelevel_period/timelevel_360*No_period*sign
-            elif base[0] in Stators : teta =  2*math.pi*timelevel_period/timelevel_360*No_period*sign
-            zones  = Internal.getNodesFromType1(base , 'Zone_t')       # noeud
-            for z in zones:
-              angles = Internal.getNodesFromName2(z, 'RotationAngle')
-              for angle in angles: angle[1][:]= angle[1][:] + teta*timelevel_axeRot[:]
-       
-       tc = Internal.merge( [tc, tc_inst] )
-
-
-       graphID   = Cmpi.computeGraph(tc, type='ID', it=iteration)
-       graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
-       procDict  = D2.getProcDict(tc)
-
-       procList  = D2.getProcList(tc, sort=True)
-
-       if rank==0 :  print ('proclist= ', procList)
-   
-
-       graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
-
-
-       tc = Cmpi.convert2PartialTree(tc, rank=rank)
- 
+       graph['procDict'] = D2.getProcDict(tc_skel)
+       graph['procList'] = D2.getProcList(tc_skel, sort=True)
+       graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID'  , reduction=False, procDict=graph['procDict'], it=iteration_loc)
+       graph['graphIBCD']= Cmpi.computeGraph(tc_skel, type='IBCD', reduction=False, procDict=graph['procDict'])
 
        #Compactage tc
        # 
@@ -583,16 +616,11 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
        # Compactage arbre transfert
        zones = Internal.getZones(t)
 
-       #Remise zero target
-       #if dtloc is not None: dtloc[4] = 0
-       
+       t0=timeit.default_timer()
        X.miseAPlatDonorTree__(zones, tc, graph=graph)
-
-       #Remise zero target
-       #if dtloc is not None: dtloc[4] = 0
-       
-       #timelevel_motion larger than number of timelevels for 360degre 
-       #
+       t1=timeit.default_timer()
+       print("cout plat= ", t1-t0, 'rank=', rank)
+       sys.stdout.flush
 
     else:
        rank = Cmpi.rank
@@ -600,29 +628,64 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, graph, tc_steady='tc_
 
        if timelevel_motion >= timelevel_period:
             No_period = timelevel_motion//timelevel_period
-            iteration = timelevel_motion - No_period*timelevel_period 
+            iteration_loc = timelevel_motion - No_period*timelevel_period 
        else:
-            iteration = timelevel_motion
+            iteration_loc = timelevel_motion
     
-       if rank==0:print('calcul du graph it', iteration)
+       if rank==0:
+          print('calcul du graph it', iteration_loc)
+          sys.stdout.flush
 
-         
-       graphID   = Cmpi.computeGraph(tc, type='ID', it=iteration)
-       graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
-       procDict  = D2.getProcDict(tc)
-       procList  = D2.getProcList(tc, sort=True)
-
-       graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
-
-
-
+       #t0=timeit.default_timer()
+       graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID', reduction=False, procDict=graph['procDict'], it=iteration_loc)
+       #graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID', reduction=False, it=iteration_loc)
+       #t1=timeit.default_timer()
+       #print( "cout graphID= ", t1-t0 )
+       #graph['procDict'] = D2.getProcDict(tc_skel)
+       #graph['procList'] = D2.getProcList(tc_skel, sort=True)
 
     if timelevel_motion > timelevel_360:
        print('remise a ZERO dans updateUnsteady')
-       dtloc[3] = 0  # remise a zero du compteur si 360degres 
+       timelevel_motion = 0
+       Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0] = timelevel_motion
 
-    return tc, graph
+    base = Internal.getNodeFromType1(t   ,"CGNSBase_t")
+    own  = Internal.getNodeFromName1(base, '.Solver#ownData')
+    if own is not None: 
+       dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')[1]
+       dtloc[3]=timelevel_motion
+       dtloc[4]=timelevel_target
 
+    return tc, tc_skel, graph
+    #return tc, tc_skel
+
+#====================================================================================
+# reordonne  les raccord instationnaire par No croissant  pour chque zone
+#====================================================================================
+def _sortByName(t):
+    names = []
+    for i in t[2]:
+        toto = i[0].split('#')
+        if len(toto) == 2:
+            if toto[1][0].isdigit():
+                search =True
+                c=1
+                while search:
+                   if toto[1][c].isdigit():
+                      c+=1
+                   else: search = False
+                names.append(int(toto[1][0:c]))
+                #print i[0], toto[1][0:c]
+            else:
+                names.append(-1)
+
+        else: names.append(-1)
+    nodes = t[2]
+    zipped = zip(names, nodes)
+    zipped = sorted(zipped, key=lambda x: x[0])
+    ret = []
+    for i in zip(*zipped): ret = i
+    t[2] = list(ret)
 #====================================================================================
 # Calcule la CFL en chaque maille et la met dans l'arbre t pour dtloc instationnaire
 #====================================================================================

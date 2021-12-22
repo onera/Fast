@@ -662,11 +662,6 @@ else
 
    }//loop nstep
 
-   //data update for unsteady joins
-   if(layer_mode==1){ iptdtloc[3] +=1;  //time_level_motion 
-                      iptdtloc[4] +=1;  //time_level_target 
-                    }
-
    first_it = 1;
    //switch pointer
    //E_Float** ptsav = roM1; roM1 = roN; roN = roP1; roP1 = ptsav;

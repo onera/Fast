@@ -95,6 +95,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
       c2   =- c6*c0
       c3   = (2.- c5- c4)*c0
       
+      !c_ale = 0
       !write(*,'(a,7i4)')'BC', ind_loop, idir
 
       IF (idir.eq.1) THEN
@@ -113,6 +114,8 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
                lit  = 1
                li   = indbci(j,  k )
                
+               !pa(li) = pa(li) -26000
+               !ha(li) = ha(li) -19000
                !Init Newton
 #include       "FastS/BC/BCInflow_newton_1_firstrank.for"
                  

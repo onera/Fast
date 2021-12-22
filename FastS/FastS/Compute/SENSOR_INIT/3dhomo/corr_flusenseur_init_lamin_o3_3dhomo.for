@@ -92,11 +92,6 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       if(ind_loop(3).gt.ind_loop(4)) return 
       if(ind_loop(5).gt.ind_loop(6)) return
 
-c      if(ithread.eq.1.and.ind_loop(6).le.90.and.ind_loop(3).eq.1
-c     &  .and.ndom.eq.0)
-c     &  write(*,*)'corr_it1',ind_loop
-
-
       inci = 1
       incj = param_int(NIJK)
       inck = param_int(NIJK)*param_int(NIJK+1)
@@ -188,7 +183,7 @@ c      c7     = c4/c5
 #include   "FastS/Compute/loopI_begin.for"
                   
             l0= l  - shift
-#include "FastS/Compute/SENSOR_INIT/3dhomo/fluFaceEuler_o3_3dhomo_i.for"
+#include    "FastS/Compute/SENSOR_INIT/3dhomo/fluFaceEuler_o3_3dhomo_i.for"
 #include    "FastS/Compute/fluvisq_3dhomo_i.for"          
 #include    "FastS/Compute/assemble_drodm_corr.for"
            enddo
@@ -197,9 +192,6 @@ c      c7     = c4/c5
 
       ELSEIF(idir.le.4) THEN
 
-
-
-
         shift =incj*shift
         DO k = ind_loop(5), ind_loop(6)
          DO j = ind_loop(3), ind_loop(4)
@@ -207,7 +199,7 @@ c      c7     = c4/c5
 #include  "FastS/Compute/loopI_begin.for"
 
             l0= l  - shift
-#include "FastS/Compute/SENSOR_INIT/3dhomo/fluFaceEuler_o3_3dhomo_j.for"
+#include    "FastS/Compute/SENSOR_INIT/3dhomo/fluFaceEuler_o3_3dhomo_j.for"
 #include    "FastS/Compute/fluvisq_3dhomo_j.for"         
 #include    "FastS/Compute/assemble_drodm_corr.for"
            enddo
@@ -223,7 +215,7 @@ c      c7     = c4/c5
 #include  "FastS/Compute/loopI_begin.for"         
                                                   
             l0= l  - shift                        
-#include "FastS/Compute/SENSOR_INIT/3dhomo/fluFaceEuler_o3_3dhomo_k.for"
+#include    "FastS/Compute/SENSOR_INIT/3dhomo/fluFaceEuler_o3_3dhomo_k.for"    
 #include    "FastS/Compute/fluvisq_3dhomo_k.for"            
 #include    "FastS/Compute/assemble_drodm_corr.for"         
            enddo                                  

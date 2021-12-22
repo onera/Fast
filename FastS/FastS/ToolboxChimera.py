@@ -121,10 +121,11 @@ def modifyBCOverlapsForGhostMesh(t,NGhostCells):
 #-----------------------------------------------------------------------------
 def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, tCoord0, tAxis, etage_names=None , check=False):
 
+    import timeit
+
     (XC0,YC0,ZC0) = tCoord0
     (AXISX,AXISY,AXISZ) = tAxis
 
-    
     if etage_names is None :
         basenames  = ['Stator', 'Rotor' ]
     else :
@@ -137,7 +138,8 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
              baseRole=['Rotor','Stator']
     else:
              baseRole=['Stator','Rotor']
-     
+    #print ('baseRole',baseRole)
+
     donorBases = {}
     theta_meanDonor = {}
     theta_meanRecept= {}
@@ -146,31 +148,62 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
     theta_abs  = abs(THETA)
     dtheta_abs = abs(DTHETA)
 
+   
     print('tAxis= ', tAxis)
     print('theta_abs= ', theta_abs)
 
+    bbox={}
     for name in basenames:
        
        base   = Internal.getNodeFromName(tc[name], name)
       
        zones  = Internal.getZones(base)
+       for z in zones:
+         bbox[ z[0] ] = G.bbox(z)
 
        
        if AXISX > 0. or AXISZ > 0.:
           print("NAME=",name)
           thetameanD = C.getMeanValue(zones, 'CoordinateZ')
-          #zonesPerioD= T.translate(zones,(0, theta_abs, 0))
-          #zonesPerioG= T.translate(zones,(0,-theta_abs, 0))
           zonesPerioD= T.translate(zones,(0,0, theta_abs))
           zonesPerioG= T.translate(zones,(0,0,-theta_abs))
+          for c in range( len(zones)):
+            zonesPerioD[c][0]=  zones[c][0]+'_PeriodicD'
+            zonesPerioG[c][0]=  zones[c][0]+'_PeriodicG'
+            tmp=[]
+            for i in  bbox[ zones[c][0] ]: 
+               tmp.append(i)
+            bbox[ zonesPerioD[c][0] ] = tmp 
+            bbox[ zonesPerioD[c][0] ][2]= bbox[ zonesPerioD[c][0] ][2] + theta_abs
+            bbox[ zonesPerioD[c][0] ][5]= bbox[ zonesPerioD[c][0] ][5] + theta_abs
+
+            tmp1=[] 
+            for i in  bbox[ zones[c][0] ]: 
+              tmp1.append(i)
+            bbox[ zonesPerioG[c][0] ] = tmp1  
+            bbox[ zonesPerioG[c][0] ][2]= bbox[ zonesPerioG[c][0] ][2] - theta_abs
+            bbox[ zonesPerioG[c][0] ][5]= bbox[ zonesPerioG[c][0] ][5] - theta_abs
+
+
        elif AXISY > 0.: 
           thetameanD = C.getMeanValue(zones, 'CoordinateX')
           zonesPerioD= T.translate(zones,( theta_abs, 0, 0))
           zonesPerioG= T.translate(zones,(-theta_abs, 0, 0))
-
-       for c in range( len(zones)):
-          zonesPerioD[c][0]=  zones[c][0]+'_PeriodicD'
-          zonesPerioG[c][0]=  zones[c][0]+'_PeriodicG'
+          for c in range( len(zones)):
+            zonesPerioD[c][0]=  zones[c][0]+'_PeriodicD'
+            zonesPerioG[c][0]=  zones[c][0]+'_PeriodicG'
+            tmp=[]
+            for i in  bbox[ zones[c][0] ]: 
+               tmp.append(i)
+            bbox[ zonesPerioD[c][0] ] = tmp 
+            bbox[ zonesPerioD[c][0] ][0]= bbox[ zonesPerioD[c][0] ][0] + theta_abs
+            bbox[ zonesPerioD[c][0] ][3]= bbox[ zonesPerioD[c][0] ][3] + theta_abs
+            tmp1=[] 
+            for i in  bbox[ zones[c][0] ]: 
+              tmp1.append(i)
+            bbox[ zonesPerioG[c][0] ] = tmp1  
+            bbox[ zonesPerioG[c][0] ][0]= bbox[ zonesPerioG[c][0] ][0] - theta_abs
+            bbox[ zonesPerioG[c][0] ][3]= bbox[ zonesPerioG[c][0] ][3] - theta_abs
 
        newbase = Internal.newCGNSBase( name             ); newbase[2]  += zones
        newbaseD= Internal.newCGNSBase( name+'_PeriodicD'); newbaseD[2] += zonesPerioD
@@ -205,43 +238,34 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
     RotCenter[1] = YC0
     RotCenter[2] = ZC0
     
-    #tcyl['Rotor']       = C.initVars(tcyl['Rotor']      ,"CoordinateX0={CoordinateX}")
-    #tcyl['Rotor']       = C.initVars(tcyl['Rotor']      ,"CoordinateY0={CoordinateY}")
-    #donorBases['Rotor'] = C.initVars(donorBases['Rotor'],"CoordinateX0={CoordinateX}")
-    #donorBases['Rotor'] = C.initVars(donorBases['Rotor'],"CoordinateY0={CoordinateY}")
-
     for name in basenames:
         i = basenames.index(name)
         if (baseRole[i]=='Rotor'): 
             if AXISX > 0. or AXISZ > 0.:
-                #T._translate( tcyl['Rotor']       ,  (0, (IT_DEB-1)*DTHETA, 0))
-                #T._translate( donorBases['Rotor'] ,  (0, (IT_DEB-1)*DTHETA, 0))
-                #T._translate( tcyl[etage_names[1]]       ,  (0, (IT_DEB-1)*DTHETA, 0))
-                #T._translate( donorBases[etage_names[1]] ,  (0, (IT_DEB-1)*DTHETA, 0))
                 T._translate( tcyl[etage_names[i]]       ,  (0, 0, (IT_DEB-1)*DTHETA))
                 T._translate( donorBases[etage_names[i]] ,  (0, 0, (IT_DEB-1)*DTHETA))  
+                for z in Internal.getZones(donorBases[etage_names[i]]):
+                    bbox[ z[0] ][2]= bbox[ z[0] ][2] + (IT_DEB-1)*DTHETA
+                    bbox[ z[0] ][5]= bbox[ z[0] ][5] + (IT_DEB-1)*DTHETA
+
             elif AXISY > 0.:
-                #T._translate( tcyl['Rotor']       ,  ( (IT_DEB-1)*DTHETA, 0, 0))
-                #T._translate( donorBases['Rotor'] ,  ( (IT_DEB-1)*DTHETA, 0, 0))
                 T._translate( tcyl[etage_names[i]]       ,  ( (IT_DEB-1)*DTHETA, 0, 0))
                 T._translate( donorBases[etage_names[i]] ,  ( (IT_DEB-1)*DTHETA, 0, 0))
+                for z in Internal.getZones(donorBases[etage_names[i]]):
+                    bbox[ z[0] ][0]= bbox[ z[0] ][0] + (IT_DEB-1)*DTHETA
+                    bbox[ z[0] ][3]= bbox[ z[0] ][3] + (IT_DEB-1)*DTHETA
 
-    """
-    if AXISX > 0. or AXISZ > 0.:
-      #T._translate( tcyl['Rotor']       ,  (0, (IT_DEB-1)*DTHETA, 0))
-      #T._translate( donorBases['Rotor'] ,  (0, (IT_DEB-1)*DTHETA, 0))
-      #T._translate( tcyl[etage_names[1]]       ,  (0, (IT_DEB-1)*DTHETA, 0))
-      #T._translate( donorBases[etage_names[1]] ,  (0, (IT_DEB-1)*DTHETA, 0))
-      T._translate( tcyl[etage_names[1]]       ,  (0, 0, (IT_DEB-1)*DTHETA))
-      T._translate( donorBases[etage_names[1]] ,  (0, 0, (IT_DEB-1)*DTHETA))  
-    elif AXISY > 0.:
-      #T._translate( tcyl['Rotor']       ,  ( (IT_DEB-1)*DTHETA, 0, 0))
-      #T._translate( donorBases['Rotor'] ,  ( (IT_DEB-1)*DTHETA, 0, 0))
-      T._translate( tcyl[etage_names[1]]       ,  ( (IT_DEB-1)*DTHETA, 0, 0))
-      T._translate( donorBases[etage_names[1]] ,  ( (IT_DEB-1)*DTHETA, 0, 0))
-    """
+
+    bboxR={}
+    for key in bbox:
+      bboxR[key]= bbox[key][:]
+    #Hook optimisation recherche
+
     coef_secure = 1.3
     ReceptCyl={}
+    for rcpt in basenames:
+        ReceptCyl[ rcpt ] = Internal.getNodeFromName(tcyl[ rcpt ], rcpt )
+
     for it in range(IT_DEB, IT_FIN):
         print('-----------')
         print('theta(radians,degree,it) = ', it*DTHETA,' ,', it*DTHETA/math.pi*180,' ,', it)
@@ -249,59 +273,64 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
 
         for rcpt in basenames:
            print('  ')
+ 
+           t0=timeit.default_timer()
 
            RotAngleDG= [ numpy.zeros( (3), numpy.float64 ) , numpy.zeros( (3), numpy.float64), numpy.zeros( (3), numpy.float64) ]
 
-           ReceptCyl[ rcpt ] = Internal.getNodeFromName(tcyl[ rcpt ], rcpt )
+           #ReceptCyl[ rcpt ] = Internal.getNodeFromName(tcyl[ rcpt ], rcpt )
 
            #if rcpt == 'Rotor':
            i = basenames.index(rcpt)
            if (baseRole[i]=='Rotor'): 
               
                 #zones2translateR =  ReceptCyl['Rotor']
-                zones2translateR =  ReceptCyl[etage_names[i]]
                 #donor            = 'Stator'
+                zones2translateR =  ReceptCyl[etage_names[i]]
                 donor            = etage_names[baseRole.index('Stator')]
+                choice_tree      = 0
                 #angle moyen receveur
                 theta_meanR= theta_meanRecept[rcpt][0]+it*DTHETA
                 #angle moyen donneur
                 theta_meanDonorD= theta_meanDonor[donor][2]
                 theta_meanDonorG= theta_meanDonor[donor][0]
                 print('Rcpt  rotor.  <angle> receveur=', theta_meanR*180/math.pi, '<angle> donorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi)
-
            else:
-
-               
                 #zones2translateR =  donorBases['Rotor']
-                zones2translateR =  donorBases[etage_names[baseRole.index('Rotor')]]
                 #donor            = 'Rotor'
+                zones2translateR =  donorBases[etage_names[baseRole.index('Rotor')]]
                 donor            = etage_names[baseRole.index('Rotor')]
+                choice_tree      = 1
                 #angle moyen receveur
                 theta_meanR= theta_meanRecept[rcpt][0]
                 #angle moyen donneur
                 theta_meanDonorD= theta_meanDonor[donor][2] +it*DTHETA
                 theta_meanDonorG= theta_meanDonor[donor][0] +it*DTHETA
-                #print('theta_meanDonorD= ', theta_meanDonorD , 'theta_meanDonorG= ', theta_meanDonorG)
                 print('Rcpt stator. <angle> receveur=', theta_meanR*180/math.pi, '<angle> donorGD=',  theta_meanDonorG*180/math.pi, theta_meanDonorD*180/math.pi)
 
            Internal._rmNodesByName( donorBases[donor],'ID_*')
 
+
            if AXISX > 0. or AXISZ > 0.:
 
-                #C._initVars( zones2translateR ,'CoordinateY={CoordinateY0}')
-                #T._translate(zones2translateR ,(0, it*DTHETA, 0))
-
-                ##T._translate(zones2translateR ,(0, DTHETA, 0))
                 T._translate(zones2translateR ,(0, 0, DTHETA))
+                #mjr bbox
+                for z in Internal.getZones(zones2translateR):
+                    if choice_tree==0:
+                      bboxR[ z[0] ][2]= bboxR[ z[0] ][2] + DTHETA 
+                      bboxR[ z[0] ][5]= bboxR[ z[0] ][5] + DTHETA 
+                    else:
+                      bbox[ z[0] ][2]= bbox[ z[0] ][2] + DTHETA 
+                      bbox[ z[0] ][5]= bbox[ z[0] ][5] + DTHETA 
 
                 print('theta_meanR= ',theta_meanR*180/math.pi , 'theta_meanDonorD= ', theta_meanDonorD*180/math.pi)
 
                 if    theta_meanR +theta_abs*coef_secure <  theta_meanDonorD:
 
-                      #print 'COUCOU1'
-
-                      #T._translate(donorBases[donor][2],(0, -3*theta_abs, 0))
                       T._translate(donorBases[donor][2],(0,0,-3*theta_abs))
+                      for z in Internal.getZones(donorBases[donor][2]):
+                         bbox[ z[0] ][2]= bbox[ z[0] ][2] -3*theta_abs
+                         bbox[ z[0] ][5]= bbox[ z[0] ][5] -3*theta_abs
                     
                       #mise a jour base Gauche, centre, droite
                       tmp1 = donorBases[donor][0]
@@ -326,10 +355,10 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
 
                 elif theta_meanR -theta_abs*coef_secure >  theta_meanDonorG:
 
-                      #print 'COUCOU2'
-
-                      #T._translate(donorBases[donor][0],(0, 3*theta_abs, 0))
                       T._translate(donorBases[donor][0],(0,0,3*theta_abs))
+                      for z in Internal.getZones(donorBases[donor][0]):
+                         bbox[ z[0] ][2]= bbox[ z[0] ][2] +3*theta_abs
+                         bbox[ z[0] ][5]= bbox[ z[0] ][5] +3*theta_abs
 
                       #mise a jour base Gauche, centre, droite
                       tmp1 = donorBases[donor][2]
@@ -357,11 +386,20 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
                 #C._initVars(  zones2translateR , 'CoordinateX={CoordinateX0}')
                 #T._translate( zones2translateR , (it*DTHETA, 0, 0))
                 T._translate(zones2translateR ,( DTHETA, 0, 0))
-
+                for z in Internal.getZones(zones2translateR):
+                    if choice_tree==0:
+                      bboxR[ z[0] ][0]= bboxR[ z[0] ][0] + DTHETA
+                      bboxR[ z[0] ][3]= bboxR[ z[0] ][3] + DTHETA
+                    else:
+                      bbox[ z[0] ][0]= bbox[ z[0] ][0] + DTHETA
+                      bbox[ z[0] ][3]= bbox[ z[0] ][3] + DTHETA
 
                 if    theta_meanR +theta_abs*coef_secure <  theta_meanDonorD:
 
                       T._translate(donorBases[donor][2],( -3*theta_abs, 0, 0))
+                      for z in Internal.getZones(donorBases[donor][2]):
+                         bbox[ z[0] ][0]= bbox[ z[0] ][0] -3*theta_abs
+                         bbox[ z[0] ][3]= bbox[ z[0] ][3] -3*theta_abs
 
                       #mise a jour base Gauche, centre, droite
                       tmp1 = donorBases[donor][0]
@@ -385,6 +423,9 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
                 elif theta_meanR -theta_abs*coef_secure >  theta_meanDonorG:
 
                       T._translate(donorBases[donor][0],( 3*theta_abs, 0, 0))
+                      for z in Internal.getZones(donorBases[donor][0]):
+                         bbox[ z[0] ][0]= bbox[ z[0] ][0] +3*theta_abs
+                         bbox[ z[0] ][3]= bbox[ z[0] ][3] +3*theta_abs
 
                       #mise a jour base Gauche, centre, droite
                       tmp1 = donorBases[donor][2]
@@ -406,19 +447,75 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
 
                       print('Donor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonorG*180/math.pi)
 
+           t1=timeit.default_timer()
+           print( "cout rotation= ", t1-t0, 'it= ', it,rcpt)
+           t0=timeit.default_timer()
+
+           #tentative optim
+           #OPTIM_INTERP = False
+           OPTIM_INTERP = True
+           if OPTIM_INTERP == True:
+              baseR = Internal.getBases( ReceptCyl[rcpt] )
+              tcout = Internal.copyRef(donorBases[donor] )
+              baseD = Internal.getBases( tcout )
+
+              namebaseD=[]
+              for base in baseD:
+                namebaseD.append(base[0])
+
+              for zr in Internal.getZones(ReceptCyl[rcpt]):
+
+                 rminR= bboxR[zr[0]][1]; rmaxR= bboxR[zr[0]][4]; tminR= bboxR[zr[0]][2]; tmaxR= bboxR[zr[0]][5]
+          
+                 #print('receuse', zr[0],  rminR , bboxR[ zr[0] ][1],  rmaxR, bboxR[ zr[0] ][4], 'tmin=', tminR, bboxR[ zr[0] ][2], 'tmax=',tmaxR, bboxR[ zr[0] ][5], DTHETA)
+
+                 donor_filtre  = C.newPyTree(namebaseD)
+                 cpt=1
+                 for base in baseD:
+                   zDout=[] 
+                   for zd in Internal.getZones(base ):
+                      rminD= bbox[ zd[0] ][1]; rmaxD= bbox[ zd[0] ][4]; tminD= bbox[ zd[0] ][2]; tmaxD= bbox[ zd[0] ][5]
+                      #bbox[ zd[0] ] = G.bbox(zd)
+                      #print('doneuseCC', zd[0],  rminD,rmaxD, tminD, tmaxD)
+                      if rmaxD >= rminR and rminD <= rmaxR and tmaxD >= tminR and tminD <= tmaxR:
+                         #print('doneuse', zd[0],  rminD - bbox[ zd[0] ][1],  rmaxD- bbox[ zd[0] ][4], tminD- bbox[ zd[0] ][2], tmaxD- bbox[ zd[0] ][5])
+                         zDout.append(zd)
+                      
+                   donor_filtre[2][cpt][2]+= zDout
+                   cpt +=1
+
+                 RD = [  zr,  donor_filtre]
+                 #C.convertPyTree2File( RD[1] ,'RD1'+rcpt+str(it)+zr[0]+'.cgns')
+                 #C.convertPyTree2File( RD[0] ,'RD0'+rcpt+str(it)+zr[0]+'.cgns')
+  
+                 RD[1] = X.setInterpData( RD[0], RD[1], storage='inverse',loc='centers',penalty=1,nature=1,itype='chimera')
+
+                 for z in Internal.getZones(RD[1]):
+                   racs = Internal.getNodesFromName(z,'ID_*')
+                   ztg  = Internal.getNodeFromName(donorBases[donor], z[0])
+                   for rac in racs:
+                      check  = Internal.getNodeFromName(ztg, rac[0])
+                      if check is not None: rac[0] = rac[0]+"bis"
+                      ztg[2].append(rac)
+
            RD = [ ReceptCyl[rcpt] , donorBases[donor]]
 
-           
+           if OPTIM_INTERP == False:
+              RD[1] = X.setInterpData( RD[0], RD[1], storage='inverse',loc='centers',penalty=1,nature=1,itype='chimera')
 
-           #C._rmVars( RD[0], 'FlowSolution')
-           #C._rmVars( RD[1], 'FlowSolution')
+           t1=timeit.default_timer()
+           print( "cout interp= ", t1-t0, 'it= ', it, rcpt)
+           t0=timeit.default_timer()
+
+           #C.convertPyTree2File( RD[1],'donors'+str(it)+'.cgns')
+
+           ##C._rmVars( RD[0], 'FlowSolution')
+           ##C._rmVars( RD[1], 'FlowSolution')
 
            #if it == 10 :
            #C.convertPyTree2File( RD[0],'recept'+str(it)+'.cgns')
            #C.convertPyTree2File( RD[1],'donors'+str(it)+'.cgns')
 
-           RD[1] = X.setInterpData( RD[0], RD[1], storage='inverse',loc='centers',penalty=1,nature=1,itype='chimera')
-        
            # bloc perio Droite =RD[1][2] 
            # bloc original     =RD[1][1] 
            # bloc perio Gauche =RD[1][0]
@@ -438,18 +535,28 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
                zdperio = bloc_Perio[2][nozd]
                if zdperio[3] == "Zone_t":
                   zname  = zdperio[0].split('_Perio')[0]
-                  zdorig = Internal.getNodeFromName(tc[donor],zname)
-                  for zsr in Internal.getNodesFromName(zdperio,"ID_*"):
+                  zdorig = Internal.getNodeFromName1(tc[donor],zname)
+                  #for zsr in Internal.getNodesFromName(zdperio,"ID_*"):
+                  for zsr in Internal.getNodesFromType1(zdperio,'ZoneSubRegion_t'):
                     srname = Internal.getValue(zsr)
                     zsr[0] = 'IDPER'+source+'#%d_%s'%(it,srname)
-                    print('zoneD=',zdperio[0],'zoneR=',srname,'subRegionName=', zsr[0],'. teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c)
+                    #print('zoneD=',zdperio[0],'zoneR=',srname,'subRegionName=', zsr[0],'. teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c)
                     #modif pointlist pour calcul sur zone reduite
-                    _adaptRange(zdorig, zsr, infos_PtlistRebuild ) 
+                    _adaptRange(zname, zsr, infos_PtlistRebuild ) 
 
                     Internal.createChild(zsr,'RotationAngle' ,'DataArray_t',value=RotAngleDG[c])
                     Internal.createChild(zsr,'RotationCenter','DataArray_t',value=RotCenter)   
                     zdorig[2].append(zsr)
+
+                  ### efface les noeuds sinon perte HPC
+                  Internal._rmNodesByType1(zdperio,'ZoneSubRegion_t')
+                  #Internal._rmNodesByName(zdperio,'IDPER*')
              c+=1
+           '''
+           '''
+
+           t1=timeit.default_timer()
+           print( "cout adaptcoef= ", t1-t0, 'it= ', it, rcpt)
 
         #--------------CHECKS----------------------------
         if check:
@@ -486,7 +593,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
 #  dim_new = dictionnary of (ni,nj,nk) of true    zone
 #  shift   = dictionnary of (ni,nj,nk) of true    zone
 #------------------------------------------------------------------
-def _adaptRange(z, s, infos_Ptlist):
+def _adaptRange(zname, s, infos_Ptlist):
 
      # zonename du receveur
      recpt = Internal.getValue(s)
@@ -494,9 +601,9 @@ def _adaptRange(z, s, infos_Ptlist):
      ptlist  = Internal.getNodeFromName( s, "PointList" )[1]
      ptlistD = Internal.getNodeFromName( s, "PointListDonor" )[1]
 
-     shift   = infos_Ptlist[ z[0]  ] [0]
-     nijkOpt = infos_Ptlist[ z[0]  ] [1]
-     nijk    = infos_Ptlist[ z[0]  ] [2]
+     shift   = infos_Ptlist[ zname ] [0]
+     nijkOpt = infos_Ptlist[ zname ] [1]
+     nijk    = infos_Ptlist[ zname ] [2]
 
      shiftD  = infos_Ptlist[ recpt ] [0]
      nijkOptD= infos_Ptlist[ recpt ] [1]
@@ -520,6 +627,7 @@ def _adaptRange(z, s, infos_Ptlist):
      iD    = numpy.empty( ptlist.size, dtype=numpy.int32)
 
 
+
      k[:] =  ptlist[:]//ninj
      j[:] = (ptlist[:] -k[:]*ninj)//ni
      i[:] =  ptlist[:] -k[:]*ninj -j*ni
@@ -529,6 +637,14 @@ def _adaptRange(z, s, infos_Ptlist):
      iD[:]=  ptlistD[:] -kD[:]*ninjD -jD*niD
 
      #print iD[:]
+     '''
+     if z[0] == 'D_Stator_10.11' and  recpt == 'D_Rotor_69.1':
+       print("shift ,nijkOpt , nijk =", shift, nijkOpt, nijk)
+       print("shiftD,nijkOptD, nijkD=", shiftD, nijkOptD, nijkD)
+       for l in range(ptlist.size):
+           print('ptlist',  ptlist[l], k[l],j[l],i[l] )
+     '''
+
      
      ptlistD[:] = iD[:]+shiftD[0] + (jD[:]+shiftD[1])*niDnew + (kD[:]+shiftD[2])*ninjDnew
      ptlist[:]  =  i[:]+ shift[0] + ( j[:]+ shift[1])*ninew  + ( k[:]+ shift[2])*ninjnew
@@ -543,7 +659,7 @@ def ZonePrecond( base, NGhostCells, info_PtlistRebuild, etages, idir_tg, depth_t
 
      zones=[]
      for z in Internal.getZones(base):
-        print('ZONE selectionnee %s'%z[0])
+        #print('ZONE selectionnee %s'%z[0])
         #on cherche si interface =imin, imax, ...
         connect =Internal.getNodeFromType(z ,'ZoneGridConnectivity_t')
         conns   =Internal.getNodesFromType1(connect ,'GridConnectivity_t')
@@ -562,7 +678,7 @@ def ZonePrecond( base, NGhostCells, info_PtlistRebuild, etages, idir_tg, depth_t
              if idir_tg[ z[0] ]== "kmax": dir_tg = 5
 
              depth = depth_tg[ z[0] ]
-             print("Verif",base[0],etages[0],etages[1],idir) 
+             #print("Verif",base[0],etages[0],etages[1],idir) 
              
              if idir== dir_tg:
                 rg = Internal.getValue(ptrange)
@@ -593,7 +709,7 @@ def ZonePrecond( base, NGhostCells, info_PtlistRebuild, etages, idir_tg, depth_t
                 nijkOpt[ :] -=1
 
                 if idir == 0 or idir == 2 or idir == 4:
-                   shift_ijk[2] = NGhostCells
+                   shift_ijk[idir//2] = NGhostCells
                 elif idir == 1:
                    shift_ijk[0] = nijk[ 0] - nijkOpt[0] -NGhostCells
                 elif idir == 3:

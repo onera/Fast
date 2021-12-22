@@ -2,8 +2,8 @@
         lt1 = lt-incj_mtr
         lt2 = lt-incj2_mtr
 
-        lv1 = lv-incj_ven
-        lv2 = lv-incj2_ven
+        lv1 = lv-inci_ven
+        lv2 = lv-inci2_ven 
 c-----Metrque au centre en + ou - 1 : 
 
         tcx = 0.5*(tj(lt2,1)+tj(lt1,1))
@@ -25,9 +25,9 @@ c---- Valeurs propres aux centres des cellules i-1,j-1,k-1 : A => A+
 
         qn    = tcx*u+tcy*v+tcz*w
  
-        ue  = 0.5*(ventj(lv2      )+ventj(lv1      ))
-        ve  = 0.5*(ventj(lv2+v2ven)+ventj(lv1+v2ven))
-        we  = 0.5*(ventj(lv2+v3ven)+ventj(lv1+v3ven))
+        ue  = 0.5*(venti(lv2      )+venti(lv1      ))
+        ve  = 0.5*(venti(lv2+v2ven)+venti(lv1+v2ven))
+        we  = 0.5*(venti(lv2+v3ven)+venti(lv1+v3ven))
         qen = tcx*ue+tcy*ve+tcz*we*ck_vent
 
 c----- Evaluatjon de  dt/vol * [- A+(i-1) - Bi ] : normale entrante

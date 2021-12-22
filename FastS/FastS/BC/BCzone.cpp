@@ -22,19 +22,30 @@
 #include <omp.h>
 #endif
 
+//default state: staref de la base ou zone  si pas de staref dans la bc
 #define DEFAULT_STATE( string )                                                                   \
     FldArrayF data( 6 );                                                                          \
+    E_Float* ipt_data_loc  = data.begin( );                                                       \
     if ( nbdata == 0 ) {                                                                          \
-        ipt_data    = data.begin( );                                                              \
-        ipt_data[0] = param_real[ROINF];                                                          \
-        ipt_data[1] = param_real[VXINF] * param_real[ROINF];                                      \
-        ipt_data[2] = param_real[VYINF] * param_real[ROINF];                                      \
-        ipt_data[3] = param_real[VZINF] * param_real[ROINF];                                      \
-        ipt_data[4] = param_real[PINF] / ( param_real[GAMMA] - 1. ) +                             \
-                      0.5 * ( param_real[VXINF] * ipt_data[1] + param_real[VYINF] * ipt_data[2] + \
-                              param_real[VZINF] * ipt_data[3] );                                  \
-        ipt_data[5] = param_real[RONUTILDEINF];                                                   \
-    }
+        ipt_data_loc[0] = param_real[ROINF];                                                      \
+        ipt_data_loc[1] = param_real[VXINF] * param_real[ROINF];                                  \
+        ipt_data_loc[2] = param_real[VYINF] * param_real[ROINF];                                  \
+        ipt_data_loc[3] = param_real[VZINF] * param_real[ROINF];                                  \
+        ipt_data_loc[4] = param_real[PINF] / ( param_real[GAMMA] - 1. ) +                         \
+                      0.5 * ( param_real[VXINF] * ipt_data_loc[1] +                               \
+                              param_real[VYINF] * ipt_data_loc[2] +                               \
+                              param_real[VZINF] * ipt_data_loc[3] );                              \
+        ipt_data_loc[5] = param_real[RONUTILDEINF];                                               \
+    }                                                                                             \
+    else if ( nbdata == 21 ) {                                                                    \
+        ipt_data_loc[0] = ipt_data[3];                                                            \
+        ipt_data_loc[1] = ipt_data[4];                                                            \
+        ipt_data_loc[2] = ipt_data[5];                                                            \
+        ipt_data_loc[3] = ipt_data[6];                                                            \
+        ipt_data_loc[4] = ipt_data[7];                                                            \
+        ipt_data_loc[5] = ipt_data[16];                                                           \
+    }                                                                                             \
+    else{ ipt_data_loc = ipt_data;}
 
 using namespace std;
 using namespace K_FLD;
@@ -311,20 +322,20 @@ E_Int K_FASTS::BCzone(
                     DEFAULT_STATE( "BCFarfield" )
 
                     bvbs_farfield_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
-                                    iptijk, iptrop, ipt_data );
+                                    iptijk, iptrop, ipt_data_loc );
 
                 } else if ( bc_type == 10 ) {
                     DEFAULT_STATE( "BCOutflow" )
 
                     bvbs_outflow_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
-                                   iptijk, iptrop, ipt_data );
+                                   iptijk, iptrop, ipt_data_loc );
                 } else if ( bc_type == 13 ) {
                     DEFAULT_STATE( "BCInflow" )
 
                     if ( nbdata ==0 || ( nbdata !=0 && iptsize_data[0] <=6) )
                      {
                       bvbs_inflow_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk, iptijk,
-                                   iptrop, ipt_data );
+                                   iptrop, ipt_data_loc );
                      }
                     else
                      { 
@@ -396,7 +407,7 @@ E_Int K_FASTS::BCzone(
                     if ( nbdata ==0 || ( nbdata !=0 && iptsize_data[0] <=6) )
                      {
                       bvbs_inflow_supersonic_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6,
-                                             ipventijk, iptijk, iptrop, ipt_data );
+                                             ipventijk, iptijk, iptrop, ipt_data_loc );
                      }
                     else
                      { 
@@ -409,7 +420,7 @@ E_Int K_FASTS::BCzone(
                        E_Float* ipt_data3 = ipt_data2 + iptsize_data[0];    //rov
                        E_Float* ipt_data4 = ipt_data3 + iptsize_data[0];
                        E_Float* ipt_data5 = ipt_data4 + iptsize_data[0];    //roe
-                       E_Float* ipt_data6 = ipt_data5 + iptsize_data[0];    //nutilde
+                       E_Float* ipt_data6 = ipt_data5 + iptsize_data[0];    //ronutilde
 
                        bvbs_inflow_supersonic_fich_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                           iptijk, iptrop, ipt_data1, ipt_data2, ipt_data3, ipt_data4, ipt_data5,
@@ -425,18 +436,39 @@ E_Int K_FASTS::BCzone(
                                          iptrop );
 
                 } else if ( bc_type == 31) {
-                    E_Float mobile_coef            = 1.;
-                    if ( nbdata != 0 ) mobile_coef = ipt_data[0];
+#                   include "BC/INCREMENT_BC.h"
+                    E_Float mobile_coef = 1;
+                    E_Int shift_tab =  0;
+                    if ( nbdata !=0 && iptsize_data[0] ==1){ mobile_coef = ipt_data[0]; shift_tab = 1;}
 
-                    bvbs_wallexchange_( idir, lrhs_loc, neq_mtr, mobile_coef, c4, c5, c6, param_int, param_real, ipt_ind_CL, ipventijk, iptijk, iptrop, iptmut );
 
-                } else if ( bc_type == 30) {
+                    E_Float* iptAvgField    = ipt_data + shift_tab;
+                    //E_Float* iptparam_wmles = ipt_data + iptsize_data[shift_tab + 4];
+                    E_Float* iptparam_wmles = ipt_data + iptsize_data[shift_tab ];
+
+
+                    E_Int size_data = iptsize_data[1]-iptsize_data[0];
+                    if( shift_tab ==0) size_data = iptsize_data[0];
+
+                    E_Int Nechant   = int(iptparam_wmles[0]);
+                    E_Int sizetab   =  size_data/(Nechant*5);
+                    //printf("echant %d %d %d %d %d %d \n", nbdata, sizetab,Nechant, iptsize_data[0], iptsize_data[1], iptsize_data[2] );
+
+                
+                    bvbs_wallexchange_( idir, lrhs_loc, neq_mtr, mobile_coef, c4, c5, c6, param_int, param_real,
+                                        ipt_ind_CL, sizetab, inc_bc,
+                                        iptx, ipty, iptz,
+                                        ipventijk, iptijk, iptrop, iptmut , iptAvgField, iptparam_wmles);
+
+                //} else if ( bc_type == 30) {
+                } else if ( bc_type == 99) {
                     E_Float mobile_coef            = 1.;
                     if ( nbdata != 0 ) mobile_coef = ipt_data[0];
 
                     bvbs_wallmodel_( idir, lrhs_loc, neq_mtr, mobile_coef, c4, c5, c6, param_int, ipt_ind_CL, ipventijk, iptijk, iptrop, iptmut );
 
-                } else if ( ( bc_type == 6 || bc_type == 4 ) && param_int[IFLOW] > 1 ) {
+                //} else if ( ( bc_type == 6 || bc_type == 4 ) && param_int[IFLOW] > 1 ) {
+                } else if ( ( bc_type == 6 || bc_type == 4 || bc_type == 30 ) && param_int[IFLOW] > 1 ) {
                     E_Float mobile_coef            = 1.;
                     if ( nbdata != 0 ) mobile_coef = ipt_data[0];
 

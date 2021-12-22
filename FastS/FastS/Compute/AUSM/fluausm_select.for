@@ -381,7 +381,7 @@ C Var loc
      &                 ti, tj, tk, vol, xmut)
                                                
       ELSE
-         write(*,*) ' option = ' , option 
+         write(*,*) ' option AUSM = ' , option ,'ndom=',ndom
             write(*,*)'Unknown flux options'
            call error('gtfl3$',70,1)
 

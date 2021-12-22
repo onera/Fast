@@ -42,8 +42,8 @@
             w  =  rop(ldjr,4) -     rnd*c_pertu
 
             rop(l,1) = rop(ldjr,1)
-            rop(l,2) = ventx*c_ale - u
-            rop(l,3) = venty*c_ale - v
-            rop(l,4) = ventz*c_ale - w
+            rop(l,2) = 2.*ventx*c_ale - u
+            rop(l,3) = 2.*venty*c_ale - v
+            rop(l,4) = 2.*ventz*c_ale - w
 
             rop(l,5) = rop(ldjr,5)

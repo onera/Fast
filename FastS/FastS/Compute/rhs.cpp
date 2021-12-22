@@ -58,8 +58,10 @@
 
             //Init verrou rhs pour chaque sous zone et chaque thread actif:  init val to zero
             E_Int type = 4;
-            E_Int* verrou_lhs_thread= verrou_lhs + nd_current*Nbre_thread_actif + ithread_loc -1; 
+            E_Int* verrou_lhs_thread= verrou_lhs +             nd_current*Nbre_thread_actif + ithread_loc -1; 
             verrou_c_( verrou_lhs_thread, type);
+            verrou_lhs_thread       = verrou_lhs + (mx_nidom + nd_current)*Nbre_thread_actif + ithread_loc -1; //pour calcul residu avant LU
+            verrou_c_( verrou_lhs_thread, type );
 
             E_Int* ipt_lok_thread;
             //  Revoir cet adressage si scater et  socket>1 et ou nidom >1
@@ -107,6 +109,7 @@
                                   iptwig   + shift_wig    , iptstat_wig + shift_wig , iptrot+ shift_wig   ,
 				  iptdrodm + shift_zone   , iptcoe  + shift_coe     , iptdelta[nd]        , iptro_res[nd]  , iptsrc[nd]   );
 
+
             //end = clock();
             //E_Float ns_duree;
 //            E_Float ns_duree2;
@@ -147,7 +150,7 @@
                 printf("Just after the modules import of userscript.py, add the following python command:\n");
                 printf("#\n");
                 printf("#\n");
-                printf("Fast.FastI.MX_SSZONE= %d\n ", nd_current/nidom +3);
+                printf("FastC.MX_SSZONE= %d\n ", nd_current/nidom +3);
                 printf("------\n");
                 printf("End error msg\n");
                 printf("------\n");
@@ -155,4 +158,4 @@
                }
              }
             //
-          } //Fin boucle sur param_int[nd][ ILES ] sous-zones eventuelparam_int[nd][ ILES ] pour calcul RHS
+          } //Fin boucle sur souszone pour calcul RHS

@@ -327,7 +327,9 @@ extern "C"
 
    void     bvbs_wallexchange_(   E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Float& c4   , E_Float& c5, E_Float& c6, 
                                E_Int* param_int , E_Float* param_real, E_Int* ind_loop  ,
-                               E_Float* iptventi, E_Float* iptijk  , E_Float* iptro, E_Float* xmut);
+                               E_Int& sizetab   , E_Int* inc_bc,
+                               E_Float* iptx    , E_Float* ipty    , E_Float* iptz ,
+                               E_Float* iptventi, E_Float* iptijk  , E_Float* iptro, E_Float* xmut, E_Float* moy, E_Float* wmles);
 
    void     bvbs_wall_viscous_adia_(   E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
                                        E_Float* iptventi, E_Float* iptijk  , E_Float* iptro);
@@ -470,7 +472,7 @@ extern "C"
                         E_Float* ipti0 , E_Float* iptj0, E_Float* iptk0, E_Float* iptvol ,E_Float* venti, E_Float* ventj, E_Float* ventk);
 
 
-   void     dpssiter_(  E_Int& nitrun , E_Int& neq , E_Int& nssiter, E_Int& iflw, E_Int& iles, E_Int& lft, char*, E_Int& size_name, E_Float* rdm, E_Float* cvg_ptr);
+   void     dpssiter_(  E_Int& nitrun , E_Int& neq , E_Int& nssiter, E_Int& iflw, E_Int& iles, E_Int& lft, E_Int& iverb,  char*, E_Int& size_name, E_Float* rdm, E_Float* cvg_ptr);
 
    void     conv2pytree_(E_Float* cvg_pt, E_Int& nitrun, E_Int& neq, E_Int* LastRec, char* name, E_Int& size_name, E_Int& lft, E_Int& nrec, E_Int& nd, E_Int* Itnum, E_Float* Res_L2, E_Float* Res_oo);
 
@@ -482,6 +484,10 @@ extern "C"
                   E_Float* venti    ,  E_Float* ventj     ,  E_Float* ventk );
 
   void sfd_( E_Int* param_int, E_Float* param_real, E_Int& nitrun, E_Int* ind_loop, E_Float* ipt_CL, E_Float* iptrof, E_Float* iptcoe, E_Float* iptvol );
+
+  void cp_conservatif_( E_Int* param_int, E_Float* param_real, E_Int& nthreadmax, E_Int* ind_loop, E_Float* ipt_CL, E_Float* iptvol, E_Float* iptcellN, E_Float* debit  );
+
+  void corr_conservatif_( E_Int* param_int, E_Float* param_real, E_Int& nthreadmax, E_Int* ind_loop, E_Float* ipt_CL, E_Float* iptvol, E_Float* iptcellN, E_Float* debit  );
 
   void dpj_dpw_calc_meth_( E_Int& ndo        ,  E_Int& ithread       ,  E_Int* param_int, E_Float* param_real,  E_Int* param_int_eff,
                   E_Int* ind_loop      ,  E_Float* xyz_ref     ,
@@ -510,5 +516,13 @@ extern "C"
                               E_Float* dpJ_dpW          , E_Float* rhsIter    , E_Float* Adj);
 
  void mj_lund_planrecyl_(E_Int& nd, E_Int& idir, E_Int* param_int , E_Int* ind_fen,  E_Int* ind_dm_th, E_Int* inc_bc, E_Int& size_data, E_Float* lund_param, E_Float* rop, E_Float* rof2 );
+
+ void mj_wallmodel_plan_(E_Int& nd, E_Int& idir, E_Int* param_int , E_Int* ind_fen,  E_Int* ind_dm_th, E_Int* inc_bc, E_Int& size_data, E_Int& lprint, E_Float* lund_param, E_Float* rop, E_Float* moy,  E_Float* snap  );
+
+ void cp_debit_ibm_(E_Int& nd, E_Int& idir, E_Int& neq_mtr, E_Int& ithread, E_Int& Nthread_max,  E_Int& nitcfg, E_Int* param_int , E_Float* param_real, 
+                    E_Int& size_fen, E_Int* facelist,  E_Float* rop, E_Float* iptijk, E_Float* iptvol ,    E_Float* flux   );
+
+ void corr_debit_ibm_(E_Int& nd, E_Int& idir, E_Int& neq_mtr, E_Int& ithread, E_Int& Nthread_max, E_Int* param_int , E_Int& size_fen, E_Int* facelist,  E_Float* rop,
+                    E_Float* iptijk, E_Float* iptvol ,  E_Float* celln,  E_Float* flux   );
 
   }

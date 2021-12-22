@@ -725,7 +725,7 @@ void K_FASTS::setInterpTransfersIntra(
                                                                  vectOfDnrFields, vectOfRcvFields);
                         else if (varType == 2 || varType == 21)
                         {                                                                                      
-                          K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread,
+                         K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread,
                                                                  xPC    , xPC     +nbRcvPts, xPC     +nbRcvPts*2,
                                                                  xPW    , xPW     +nbRcvPts, xPW     +nbRcvPts*2,
                                                                  xPI    , xPI     +nbRcvPts, xPI     +nbRcvPts*2, 
@@ -734,9 +734,11 @@ void K_FASTS::setInterpTransfersIntra(
                                                                  densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
                                                                  densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,  
                                                                  ipt_tmp, size,
-                                                                 gamma, cv, muS, Cs, Ts, Pr,
+                                                                 param_real[ NoD ],
+                                                                 //gamma, cv, muS, Cs, Ts, Pr,
                                                                  vectOfDnrFields, vectOfRcvFields
-                                                                 ,nbptslinelets, linelets, indexlinelets);
+                                                                ,nbptslinelets, linelets, indexlinelets);
+
                         }
                         else if (varType == 3 || varType == 31)
                           K_CONNECTOR::setIBCTransfersCommonVar3(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread,
@@ -1291,9 +1293,11 @@ if (has_data_to_send) {
                                                              densPtr, densPtr+nbRcvPts, //dens + press
                                                              densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
                                                              densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
-                                                             densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,   
-                                                             ipt_tmp, size, gamma, cv, muS, Cs,
-                                                             Ts, Pr, vectOfDnrFields, vectOfRcvFields,
+                                                             densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,
+                                                             ipt_tmp, size,
+                                                             param_real[ NoD ],
+                                                             //gamma, cv, muS, Cs, Ts, Pr,
+                                                             vectOfDnrFields, vectOfRcvFields,
                                                              nbptslinelets, linelets, indexlinelets );
                     else if ( varType == 3 || varType == 31 )
                       K_CONNECTOR::setIBCTransfersCommonVar3(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread, 

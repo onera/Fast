@@ -11,7 +11,7 @@ dico= {}
 dico["SENSOR_INIT"] = { 'name':'flusenseur_init', 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
-dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3']}
+dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3','o1']}
 
 rep = sys.argv[1]
 if rep not in dico:
@@ -32,9 +32,7 @@ opt_mesh= {"3dfull":0, "3dhomo":1, "3dcart":2, "2d":3}
 
 
 #open template file for flux selection
-#select= open('template_correction_select.for','r')
-print("warning: corection flux Selection euler Et visqueux")
-select= open('template_correction_select_viscous.for','r')
+select= open('template_correction_select.for','r')
 lines_select = select.readlines()
 
 #open file for sources compilation
@@ -59,7 +57,6 @@ lines_select_beg = lines_select[0:c_index]
 lines_select_end = lines_select[c_index:c_index+8]
 
 fselecto = open(rep+'/correction_'+flux+'_select.for',"w")                  # ouvrir le fichier de sortie
-#fselecto = open(rep+'/correction_'+flux+'_select_viscous.for',"w")           # ouvrir le fichier de sortie
 
 for ale in TypeMotion:
 
@@ -73,9 +70,7 @@ for ale in TypeMotion:
                         option =  1000*opt_ale[ ale]  +  100*opt_slp[slope] +  10*opt_mod[eq] + opt_mesh[ typezone]
 
                         # ouvrir le fichier input
-                        #f     = open('template_correction.for','r')
-                        f     = open('template_correction_viscous.for','r')
-                        print("warning: corection flux euler Et visqueux")
+                        f     = open('template_correction.for','r')
                         lines = f.readlines()
 
 

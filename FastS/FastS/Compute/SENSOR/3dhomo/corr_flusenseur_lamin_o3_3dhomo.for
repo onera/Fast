@@ -56,8 +56,6 @@ c***********************************************************************
 
       REAL_E param_real(0:*)
 
-
-
 C Var loc
       INTEGER_E inc,incmax,l,lt,i,j,k,incmax2,nm,nm2,np,
      & l0,lt0,inci,incj,inck,ci,cj,lij,ltij,inci_mtr, incj_mtr,
@@ -86,7 +84,6 @@ C Var loc
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_vent_param.h"
 
-
       !limiteur 'minmod'
 
 CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
@@ -95,9 +92,6 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       if(ind_loop(3).gt.ind_loop(4)) return 
       if(ind_loop(5).gt.ind_loop(6)) return
 
-c      if(ithread.eq.1.and.ind_loop(6).le.90.and.ind_loop(3).eq.1
-c     &  .and.ndom.eq.0)
-c     &  write(*,*)'corr_it2',ind_loop
       inci = 1
       incj = param_int(NIJK)
       inck = param_int(NIJK)*param_int(NIJK+1)

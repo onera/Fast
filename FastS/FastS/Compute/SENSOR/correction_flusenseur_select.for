@@ -3,7 +3,7 @@ c     $Date: 2013-08-26 16:00:23 +0200 (lun. 26 aout 2013) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine corr_flusenseur_select(ndom, ithread, idir,
+      subroutine corr_flusenseur_select(ndom, ithread, idir, iflow,
      &                        param_int, param_real,
      &                        ind_loop, 
      &                        rop, drodm  , wig,
@@ -35,29 +35,26 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndom, ithread, idir, ind_loop(6), param_int(0:*)
+      INTEGER_E ndom, ithread, idir, iflow, ind_loop(6), param_int(0:*)
 
 
       REAL_E rop(*),drodm(*), ti(*),tj(*),tk(*),vol(*),
-     & venti(*),ventj(*),ventk(*), wig(*),xmut(*)
+     & venti(*),ventj(*),ventk(*), wig(*), xmut(*)
 
       REAL_E param_real(0:*)
 
 C Var loc
-      INTEGER_E option, iflow_loc, ale
+      INTEGER_E option, ale
 
       if(ind_loop(1).gt.ind_loop(2)) return 
       if(ind_loop(3).gt.ind_loop(4)) return 
       if(ind_loop(5).gt.ind_loop(6)) return
 
-      iflow_loc = param_int(IFLOW)
-      !if(iflow_loc.eq.2) iflow_loc = 1
-
       ale = min(param_int(LALE),1)
 
        option =1000*ale
      &        + 100*param_int(SLOPE)
-     &        +  10*iflow_loc
+     &        +  10*iflow
      &        +      param_int(ITYPZONE)
 
        IF  (option.eq.220) THEN

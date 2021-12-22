@@ -179,6 +179,9 @@
 #define LBM_spng_zmin         123
 #define LBM_spng_zmax         124
 
+/*IBM*/ 
+#define IBC_PT_FLUX           125
+
 #define BC_TYPE	      0
 #define BC_IDIR       1
 #define BC_FEN        2
