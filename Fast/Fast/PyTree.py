@@ -579,7 +579,7 @@ def tri_zones(zones, metrics):
 #==============================================================================
 # Display
 #==============================================================================
-def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
+def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None,verbose='firstlast'):
     zones        = Internal.getZones(t)
     dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
@@ -602,7 +602,10 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None):
 
     infos_zones = tri_zones( zones, metrics)  #info-zone: dico 4 keys contenant la list [ zones, metrics] pour Struct, unstruc, LBM, NS
 
-    residu = FastS.fasts.display_ss_iteration( infos_zones['struct'][0]  , infos_zones['struct'][1], cvg_numpy, nitrun, nssiter, lft)
+    iverb = 0
+    if verbose != 'firstlast': iverb=2
+
+    residu = FastS.fasts.display_ss_iteration( infos_zones['struct'][0]  , infos_zones['struct'][1], cvg_numpy, nitrun, nssiter, lft, iverb)
     residu = FastP.fastp.display_ss_iteration( infos_zones['unstruct'][0], infos_zones['unstruct'][1], cvg_numpy, nitrun, nssiter, lft)
 
     if gmres is None: return None
