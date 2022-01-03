@@ -232,7 +232,10 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 ****************************************************/
 
   E_Int Nthread_max  = omp_get_max_threads();
-  E_Int Nfamily      = param_int[0] [param_int[0][IBC_PT_FLUX] ];
+  E_Int iptflux      = param_int[0][IBC_PT_FLUX];
+  E_Int Nfamily      = 0;
+  if(iptflux != -1) Nfamily  = param_int[0][iptflux];
+
   E_Float masse[3];
   E_Float debit[Nthread_max*2*6];
   E_Float flux[Nthread_max*7*Nfamily];
@@ -313,8 +316,8 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 
 #include "Compute/rhs.cpp"
           shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-          shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
           shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
+          if(param_int[nd][ KFLUDOM ]==2){  shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;}
 
           } //Fin boucle sur zones pour calcul RHS
 #ifdef _WIN32
@@ -375,6 +378,8 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
   //
 
 E_Int autorisation_bc[nidom];
+for (E_Int nd = 0; nd < nidom; nd++) { autorisation_bc[nd]=1;}
+
 E_Int nitcfg_stk = nitcfg;
 if(lexit_lu ==0 && layer_mode==1)
 {   
