@@ -4,5 +4,6 @@ addlib build/ELSAPROD/libfastS2.a
 addlib build/ELSAPROD/libfastS3.a
 addlib build/ELSAPROD/libfastS4.a
 addlib build/ELSAPROD/libfastS5.a
+addlib build/ELSAPROD/libfastS6.a
 save
 end

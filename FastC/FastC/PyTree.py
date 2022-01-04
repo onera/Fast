@@ -101,7 +101,7 @@ def _reorder(t, tc=None, omp_mode=0):
           l = base_tc[2]
           orig = []
           for i in l:
-	           if i[3] != 'Zone_t': orig.append(i)
+              if i[3] != 'Zone_t': orig.append(i)
           base_tc[2]=  orig+new_zones
 
        # reordone les zones de t pour garantir meme ordre entre t et tc
@@ -131,7 +131,7 @@ def _reorder(t, tc=None, omp_mode=0):
            l = base[2]
            orig = []
            for i in l:
-	           if i[3] != 'Zone_t': orig.append(i)
+              if i[3] != 'Zone_t': orig.append(i)
            base[2] = new_zones + orig
 
 #==============================================================================
@@ -160,7 +160,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             if omp_mode == 1: count += 1
 
             #Sauvegarde noeud specifique car delete par init!!! Christophe??
-            FA_intext=  Internal.getNodeFromPath(z, 'NFaceElements/IntExt')
+            FA_intext = Internal.getNodeFromPath(z, 'NFaceElements/IntExt')
             if FA_intext is not None:
                FA_indx  =  Internal.getNodeFromPath(z, 'NFaceElements/ElementIndex')
                NG_intext=  Internal.getNodeFromPath(z, 'NGonElements/IntExt')
@@ -3496,7 +3496,8 @@ def _addPair(idic, z1, z2):
     return None
 
 # Retourne le nob noz des zones donneuses et remplit le dicOfAdt
-def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT):
+# center et axis servent dans le cas d'adt cylindrique
+def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT, center=(0,0,0), axis=(0,0,1)):
     """Fill dictOfAdt."""
     dnrnames=[]
     for i in intersectionDict.values(): dnrnames += i
@@ -3511,7 +3512,8 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT):
                 if Internal.getType(zc) == 'Zone_t':
                     zdnrname = Internal.getName(zc)
                     if zdnrname in dnrnames and zdnrname not in dictOfADT:
-                        if baseName == 'CARTESIAN': adt = None
+                        if 'CARTESIAN' in baseName: adt = None
+                        elif 'CYLINDER' in baseName: adt = C.createHookAdtCyl(zc, (0,0,0), (0,0,1))
                         else: adt = C.createHook(zc, 'adt')
                         dictOfADT[zdnrname] = adt
                         dictOfNobOfDnrZones[zdnrname] = nob

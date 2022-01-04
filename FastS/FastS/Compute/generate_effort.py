@@ -189,7 +189,7 @@ for ale in TypeMotion:
                               c+=1
 
                         select_out=[]
-                        if include == True:
+                        if include:
                            select_out.append('       ELSEIF (option.eq.'+str(option)+') THEN\n')
                            select_out.append('                                               \n') 
                            select_out.append('           call '+ name_routine+'(ndom, ithread, \n') 
@@ -220,7 +220,7 @@ include = True
 c = 0
 for l in lines_srcs: 
     if target in l: include = False
-if include == True: lines_srcs_beg.append("            'FastS/Compute/"+target+"\n")
+if include: lines_srcs_beg.append("            'FastS/Compute/"+target+"\n")
 
 for l in lines_srcs_beg: srcs.write(l)
 for l in lines_srcs_end: srcs.write(l)

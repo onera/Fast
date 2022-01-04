@@ -162,5 +162,6 @@ for it in range(nit):
 
 Internal._rmNodesFromName(t, 'Parameter_int')
 Internal._rmNodesFromName(t, 'Parameter_real')
+Internal._rmNodesFromName(t, '.Solver#dtloc')
 test.testT(t, 1)
 #C.convertPyTree2File(t, "out.cgns")
