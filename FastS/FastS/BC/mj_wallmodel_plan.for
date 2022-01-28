@@ -18,7 +18,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       REAL_E rop(param_int(NDIMDX), param_int(NEQ) )
       REAL_E moy( size_data       , param_int(NEQ) )
       REAL_E snap(size_data       , param_int(NEQ) )
-      REAL_E wmles_param(3)
+      REAL_E wmles_param(4)
 
 c  Var loc
       INTEGER_E i,j,k,l,nif,ninjf,ci,cj,ck,li,li1,
@@ -33,7 +33,7 @@ c  Var loc
 
       !!mise a jour echantillon lund
       !wmles_param(1): N+1 plan stockes: [ moyenne, snap1, snap2,... snapN]
-      !wmles_param(2): nbre de snap stockés
+      !wmles_param(2): nbre de snap stockï¿½s
       !wmles_param(3): nO du snap courant
 
       wmles_param(2) = wmles_param(2)+1

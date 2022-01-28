@@ -19,7 +19,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       REAL_E celln(param_int(NDIMDX))
       REAL_E tijk( param_int(NDIMDX_MTR) , neq_mtr )
       REAL_E vol( param_int(NDIMDX_MTR) )
-      REAL_E flux(4)
+      REAL_E flux(7)
 
 c  Var loc
       INTEGER_E f,l,l1,l2,lt,chunk, ideb,ifin,adr_flu,i,j,k,l0,

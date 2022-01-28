@@ -2505,7 +2505,7 @@ def _Fluxcompact(t):
     # Data for each Base
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
 
-    #Recherche du nombre de famille necessitant correction de flux
+    # Recherche du nombre de famille necessitant correction de flux
     families=[]
     for b in bases:
         zones = Internal.getZones(b)
@@ -2516,7 +2516,7 @@ def _Fluxcompact(t):
               for family in tmp1:
                  if family[0] not in families: families.append(family[0])
 
-    Nfamille =  len(families)
+    Nfamille = len(families)
     print("Correction de flux: Nb famille=", Nfamille, families)
 
     #dimensionnememnt tableau
