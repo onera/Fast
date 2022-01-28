@@ -6,7 +6,7 @@ c     $Date: 2013-08-26 16:00:23 +0200 (lun. 26 août 2013) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine eff_fluroe_lamin_o1_3dcart(ndom, ithread,
+      subroutine eff_flusenseur_euler_o3_2d(ndom, ithread,
      &                 param_int, param_real, param_int_eff,
      &                 ind_loop, effort, pos,
      &                 rop, flu, wig,
@@ -120,10 +120,8 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       tcx = ti(lt)
       tcy = tj(lt)
       tcz = 0. 
-      tcz = tk(lt)               
       si      = abs (tcx)
       sj      = abs (tcy)
-      sk      = abs (tcz)        
 
       volinv  = 0.5/vol(lvo)
 
@@ -223,31 +221,24 @@ c      c7     = c4/c5
 
 #include   "FastS/Compute/loopI_eff_begin.for"
                   
-#include    "FastS/Compute/ROE/3dcart/fluFaceEuler_o1_3dcart_i.for"
-#include    "FastS/Compute/fluvisq_3dcart_i.for"
+#include    "FastS/Compute/SENSOR/2d/fluFaceEuler_o3_2d_i.for"
 
              flu(lf         )=flu1*sens1
              flu(lf+v2flu   )=(flu2-param_real(PINF)*tcx      )*sens
              flu(lf+v2flu*2 )=(flu3-param_real(PINF)*tcy*flagj)*sens
-             flu(lf+v2flu*3 )=(flu4-param_real(PINF)*tcz*flagk)*sens
+             flu(lf+v2flu*3 )=0.
              flu(lf+v2flu*4 )=flu5*sens
 
              flu(lf+v2flu*5 )= gradU_nx*2.*volinv 
              flu(lf+v2flu*6 )= gradU_ny*2.*volinv 
-             flu(lf+v2flu*7 )= gradU_nz*2.*volinv     
-             flu(lf+v2flu*8 )= gradV_nx*2.*volinv 
-             flu(lf+v2flu*9 )= gradV_ny*2.*volinv 
-             flu(lf+v2flu*10)= gradV_nz*2.*volinv     
-             flu(lf+v2flu*11)= gradW_nx*2.*volinv     
-             flu(lf+v2flu*12)= gradW_ny*2.*volinv     
-             flu(lf+v2flu*13)= gradW_nz*2.*volinv     
-             flu(lf+v2flu*14)= gradT_nx*2.*volinv 
-             flu(lf+v2flu*15)= gradT_ny*2.*volinv 
-             flu(lf+v2flu*16)= gradT_nz*2.*volinv     
-             flu(lf+v2flu*17)= (0.5*(p1+p2)-param_real(PINF))*norm
-             flu(lf+v2flu*18)= 0.5*(xmut(ir)+xmut(il))
-             flu(lf+v2flu*19)= 0.5*(rop(ir)+rop(il))
-             flu(lf+v2flu*20)= 0.5*(p1+p2)
+             flu(lf+v2flu*7 )= gradV_nx*2.*volinv 
+             flu(lf+v2flu*8 )= gradV_ny*2.*volinv 
+             flu(lf+v2flu*9 )= gradT_nx*2.*volinv 
+             flu(lf+v2flu*10)= gradT_ny*2.*volinv 
+             flu(lf+v2flu*11)= (0.5*(p1+p2)-param_real(PINF))*norm
+             flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
+             flu(lf+v2flu*13)= 0.5*(rop(ir)+rop(il))
+             flu(lf+v2flu*14)= 0.5*(p1+p2)
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
              f5 =0.25*(y(lx)+ y(lx+inc_x1)+ y(lx+inc_x2)+ y(lx+inc_x3))
@@ -284,31 +275,24 @@ c      c7     = c4/c5
 
 #include  "FastS/Compute/loopI_eff_begin.for"
 
-#include    "FastS/Compute/ROE/3dcart/fluFaceEuler_o1_3dcart_j.for"
-#include    "FastS/Compute/fluvisq_3dcart_j.for"
+#include    "FastS/Compute/SENSOR/2d/fluFaceEuler_o3_2d_j.for"
 
              flu(lf         )=flu1*sens1
              flu(lf+v2flu   )=(flu2-param_real(PINF)*tcx*flagi)*sens
              flu(lf+v2flu*2 )=(flu3-param_real(PINF)*tcy      )*sens
-             flu(lf+v2flu*3 )=(flu4-param_real(PINF)*tcz*flagk)*sens
+             flu(lf+v2flu*3 )=0.
              flu(lf+v2flu*4 )=flu5*sens
 
              flu(lf+v2flu*5 )= gradU_nx*2.*volinv 
              flu(lf+v2flu*6 )= gradU_ny*2.*volinv 
-             flu(lf+v2flu*7 )= gradU_nz*2.*volinv     
-             flu(lf+v2flu*8 )= gradV_nx*2.*volinv 
-             flu(lf+v2flu*9 )= gradV_ny*2.*volinv 
-             flu(lf+v2flu*10)= gradV_nz*2.*volinv     
-             flu(lf+v2flu*11)= gradW_nx*2.*volinv     
-             flu(lf+v2flu*12)= gradW_ny*2.*volinv     
-             flu(lf+v2flu*13)= gradW_nz*2.*volinv     
-             flu(lf+v2flu*14)= gradT_nx*2.*volinv 
-             flu(lf+v2flu*15)= gradT_ny*2.*volinv 
-             flu(lf+v2flu*16)= gradT_nz*2.*volinv     
-             flu(lf+v2flu*17)= (0.5*(p1+p2)-param_real(PINF))*norm
-             flu(lf+v2flu*18)= 0.5*(xmut(ir)+xmut(il))
-             flu(lf+v2flu*19)= 0.5*(rop(ir)+rop(il))
-             flu(lf+v2flu*20)= 0.5*(p1+p2)
+             flu(lf+v2flu*7 )= gradV_nx*2.*volinv 
+             flu(lf+v2flu*8 )= gradV_ny*2.*volinv 
+             flu(lf+v2flu*9 )= gradT_nx*2.*volinv 
+             flu(lf+v2flu*10)= gradT_ny*2.*volinv 
+             flu(lf+v2flu*11)= (0.5*(p1+p2)-param_real(PINF))*norm
+             flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
+             flu(lf+v2flu*13)= 0.5*(rop(ir)+rop(il))
+             flu(lf+v2flu*14)= 0.5*(p1+p2)
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
              f5 =0.25*(y(lx)+ y(lx+inc_x1)+ y(lx+inc_x2)+ y(lx+inc_x3))
@@ -344,8 +328,6 @@ c      c7     = c4/c5
 
 #include  "FastS/Compute/loopI_eff_begin.for"
 
-#include    "FastS/Compute/ROE/3dcart/fluFaceEuler_o1_3dcart_k.for"  
-#include    "FastS/Compute/fluvisq_3dcart_k.for"          
 
 
              flu(lf         )=flu1*sens1
@@ -356,20 +338,14 @@ c      c7     = c4/c5
 
              flu(lf+v2flu*5 )= gradU_nx*2.*volinv 
              flu(lf+v2flu*6 )= gradU_ny*2.*volinv 
-             flu(lf+v2flu*7 )= gradU_nz*2.*volinv      
-             flu(lf+v2flu*8 )= gradV_nx*2.*volinv 
-             flu(lf+v2flu*9 )= gradV_ny*2.*volinv 
-             flu(lf+v2flu*10)= gradV_nz*2.*volinv      
-             flu(lf+v2flu*11)= gradW_nx*2.*volinv      
-             flu(lf+v2flu*12)= gradW_ny*2.*volinv      
-             flu(lf+v2flu*13)= gradW_nz*2.*volinv      
-             flu(lf+v2flu*14)= gradT_nx*2.*volinv 
-             flu(lf+v2flu*15)= gradT_ny*2.*volinv 
-             flu(lf+v2flu*16)= gradT_nz*2.*volinv      
-             flu(lf+v2flu*17)= (0.5*(p1+p2)-param_real(PINF))*norm
-             flu(lf+v2flu*18)= 0.5*(xmut(ir)+xmut(il))
-             flu(lf+v2flu*19)= 0.5*(rop(ir)+rop(il))
-             flu(lf+v2flu*20)= 0.5*(p1+p2)
+             flu(lf+v2flu*7 )= gradV_nx*2.*volinv 
+             flu(lf+v2flu*8 )= gradV_ny*2.*volinv 
+             flu(lf+v2flu*9 )= gradT_nx*2.*volinv 
+             flu(lf+v2flu*10)= gradT_ny*2.*volinv 
+             flu(lf+v2flu*11)= (0.5*(p1+p2)-param_real(PINF))*norm
+             flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
+             flu(lf+v2flu*13)= 0.5*(rop(ir)+rop(il))
+             flu(lf+v2flu*14)= 0.5*(p1+p2)
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
              f5 =0.25*(y(lx)+ y(lx+inc_x1)+ y(lx+inc_x2)+ y(lx+inc_x3))

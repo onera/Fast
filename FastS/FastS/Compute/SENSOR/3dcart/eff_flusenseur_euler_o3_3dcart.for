@@ -6,7 +6,7 @@ c     $Date: 2013-08-26 16:00:23 +0200 (lun. 26 août 2013) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine eff_fluroe_lamin_o1_3dcart(ndom, ithread,
+      subroutine eff_flusenseur_euler_o3_3dcart(ndom, ithread,
      &                 param_int, param_real, param_int_eff,
      &                 ind_loop, effort, pos,
      &                 rop, flu, wig,
@@ -223,8 +223,7 @@ c      c7     = c4/c5
 
 #include   "FastS/Compute/loopI_eff_begin.for"
                   
-#include    "FastS/Compute/ROE/3dcart/fluFaceEuler_o1_3dcart_i.for"
-#include    "FastS/Compute/fluvisq_3dcart_i.for"
+#include    "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3_3dcart_i.for"
 
              flu(lf         )=flu1*sens1
              flu(lf+v2flu   )=(flu2-param_real(PINF)*tcx      )*sens
@@ -284,8 +283,7 @@ c      c7     = c4/c5
 
 #include  "FastS/Compute/loopI_eff_begin.for"
 
-#include    "FastS/Compute/ROE/3dcart/fluFaceEuler_o1_3dcart_j.for"
-#include    "FastS/Compute/fluvisq_3dcart_j.for"
+#include    "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3_3dcart_j.for"
 
              flu(lf         )=flu1*sens1
              flu(lf+v2flu   )=(flu2-param_real(PINF)*tcx*flagi)*sens
@@ -344,8 +342,7 @@ c      c7     = c4/c5
 
 #include  "FastS/Compute/loopI_eff_begin.for"
 
-#include    "FastS/Compute/ROE/3dcart/fluFaceEuler_o1_3dcart_k.for"  
-#include    "FastS/Compute/fluvisq_3dcart_k.for"          
+#include    "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3_3dcart_k.for"  
 
 
              flu(lf         )=flu1*sens1
