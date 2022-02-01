@@ -177,7 +177,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 #ifdef _OPENMP
   Nbre_thread_max = omp_get_max_threads();
 #endif
-  E_Int sz_eff = 8;
+  E_Int sz_eff = 12;
   FldArrayF         effort(sz_eff*Nbre_thread_max); 
   FldArrayI thread_topology(3*Nbre_thread_max); 
   FldArrayI   ind_dm_thread(6*Nbre_thread_max);  
