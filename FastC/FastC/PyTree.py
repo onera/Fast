@@ -3464,7 +3464,53 @@ def _print2screen(mssg2print,txt_colour):
         print(mssg2print)
         sys.stdout.write(io_reset)
     print("--")
+#==============================================================================
+# Root mean squared Calculation for FastS
+# Input : ts from FastS
+# Output: ts w/ Mean, RMS, & Reynolds Stresses
+#==============================================================================
+def calc_post_stats(t,iskeeporig=False):
+    vars=['Density','MomentumX','MomentumY','MomentumZ','Pressure','Pressure^2',
+          'ViscosityEddy','rou^2','rov^2','row^2','rouv','rouw','rovw']
+    for z in Internal.getZones(t):
+        flowsol  = Internal.getNodeFromName1(z,'FlowSolution#Centers')
+        
+        #Calc Velocity from Momentum & Density
+        dens= Internal.getNodeFromName1(flowsol,'Density')
+        for v in vars[1:4]:
+            var = Internal.getNodeFromName1(flowsol,v)
+            var[0]= 'Velocity'+var[0][-1]
+            var[1]= var[1]/dens[1]
 
+        #Pressure RMS
+        pres     = Internal.getNodeFromName1(flowsol,'Pressure')
+        pres2    = Internal.getNodeFromName1(flowsol,'Pressure^2')
+        if iskeeporig:Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
+        pres2[0]=pres[0]+'_RMS'
+        pres2[1]=numpy.sqrt( numpy.abs(pres2[1]-pres[1]**2))
+
+        #Velocity RMS
+        dict_var={'VelocityX':'rou^2','VelocityY':'rov^2','VelocityZ':'row^2'}
+        for i in dict_var:
+            pres     = Internal.getNodeFromName1(flowsol,i)
+            pres2    = Internal.getNodeFromName1(flowsol,dict_var[i])
+            if iskeeporig:Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
+            pres2[0]=pres[0]+'_RMS'
+            pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
+
+        #Reynolds Stress
+        list_var=[['VelocityX','VelocityY','rouv',"rho_u'v'"],
+                  ['VelocityX','VelocityZ','rouw',"rho_u'w'"],
+                  ['VelocityY','VelocityZ','rovw',"rho_v'w'"]]
+        for i in list_var:
+            v1       = Internal.getNodeFromName1(flowsol,i[0])
+            v2       = Internal.getNodeFromName1(flowsol,i[1])
+            pres2    = Internal.getNodeFromName1(flowsol,i[2])
+            if iskeeporig:Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
+            pres2[0]=i[3]
+            pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+
+    return t
 #====================================================================
 # Usefull functions for Chimera + motion
 #====================================================================
