@@ -1,7 +1,7 @@
 # FastS + MPI
 from . import PyTree
 from . import fasts
-from .PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, distributeThreads, allocate_ssor, setIBCData_zero, display_cpu_efficiency
+from .PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, distributeThreads, allocate_ssor, setIBCData_zero, display_cpu_efficiency, _postStats
 import timeit
 import time as Time
 import numpy
@@ -42,13 +42,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
     else: 
         procDict=None; graphID=None; graphIBCD=None
 
-    base = Internal.getNodeFromType1(t   ,"CGNSBase_t")
-    own  = Internal.getNodeFromName1(base, '.Solver#ownData')  
+    own  = Internal.getNodeFromName1(t, '.Solver#ownData')  
     dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')
 
     zones= Internal.getZones(t)
 
-    node = Internal.getNodeFromName1(base, '.Solver#define')
+    node = Internal.getNodeFromName1(t, '.Solver#define')
     omp_node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode  = PyTree.OMP_MODE
     if  omp_node is not None: ompmode = Internal.getValue(omp_node)
@@ -84,22 +83,20 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
       hookTransfer = []
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
-         distrib_omp = 0
-         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
-         nidom_loc = hook1["nidom_tot"]
+         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode) )
 
          skip = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
 
          # calcul Navier Stokes + appli CL
-         if nidom_loc > 0 and skip ==0:
+         if skip ==0:
             # Navier-Stokes
             nstep_deb = nstep
             nstep_fin = nstep
             layer_mode= 0
             nit_c     = 1
             tic=Time.time()
-            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
+            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
             tps_cp +=Time.time()-tic  
 
             # dtloc GJeanmasson
@@ -187,6 +184,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                                     interpInDnrFrame=interpInDnrFrame, hook=hookTransfer)
                tps_tr +=Time.time()-tic  
 
+         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode) )
+
     else: 
       nstep_deb = 1
       nstep_fin = nitmax
@@ -194,12 +193,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
       nit_c     = NIT
       FastC.HOOK["mpi"] = 1
       tic=Time.time()
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, FastC.HOOK)
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
       tps_cp +=Time.time()-tic  
 
-    if vtune:
-       print('t_comp/trans=', tps_cp,tps_tr, ' rank et itTarget= ', Cmpi.rank, timelevel_target)
-       sys.stdout.flush
+    #if vtune:
+    #   print('t_comp/trans=', tps_cp,tps_tr, ' rank et itTarget= ', Cmpi.rank, timelevel_target)
+    #   sys.stdout.flush
 
     #switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None :
@@ -290,7 +289,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
 
     
-    dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
+    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)# tab numpy
     nssiter = dtloc[0]   
 
@@ -330,8 +329,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     for nstep in range(1, int(dtloc[0])+1):
         hook1 = FastC.HOOK.copy()
-        distrib_omp = 1
-        hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, distrib_omp) )
+        hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode) )
 
     _init_metric(t, metrics, ompmode)
 
@@ -458,7 +456,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
 
 # For periodic unsteady chimera join, parameter must be updated peridicaly 
 #==============================================================================
-def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
+def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False, updateGraph=True):
 #def _UpdateUnsteadyJoinParam(t, tc, tc_skel, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
 
     #on cree/initialise le dico infos graph
@@ -497,7 +495,6 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
        if root > timelevel_period : root=timelevel_period ### Comme 8000 pas multiple de 60 on force le load de tc_8000
-       if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target)
     
        if split == 'single':
 
@@ -559,6 +556,8 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
           timelevel_target = 0
           Internal.getNodeFromName1(t, 'TimeLevelTarget')[1][0] = timelevel_target
 
+       if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target)
+
        #
        #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
        #
@@ -596,6 +595,8 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
          for z in Internal.getZones(tmp):
             _sortByName(z)
 
+       if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target,"itGraph=",iteration_loc)
+
        graph['procDict'] = D2.getProcDict(tc_skel)
        graph['procList'] = D2.getProcList(tc_skel, sort=True)
        graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID'  , reduction=False, procDict=graph['procDict'], it=iteration_loc)
@@ -623,34 +624,32 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
        sys.stdout.flush
 
     else:
-       rank = Cmpi.rank
+      if updateGraph:
 
-
-       if timelevel_motion >= timelevel_period:
+        if timelevel_motion >= timelevel_period:
             No_period = timelevel_motion//timelevel_period
             iteration_loc = timelevel_motion - No_period*timelevel_period 
-       else:
+        else:
             iteration_loc = timelevel_motion
     
-       if rank==0:
+        rank = Cmpi.rank
+        if rank==0:
           print('calcul du graph it', iteration_loc)
           sys.stdout.flush
 
-       #t0=timeit.default_timer()
-       graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID', reduction=False, procDict=graph['procDict'], it=iteration_loc)
-       #graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID', reduction=False, it=iteration_loc)
-       #t1=timeit.default_timer()
-       #print( "cout graphID= ", t1-t0 )
-       #graph['procDict'] = D2.getProcDict(tc_skel)
-       #graph['procList'] = D2.getProcList(tc_skel, sort=True)
+        #t0=timeit.default_timer()
+        graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID', reduction=False, procDict=graph['procDict'], it=iteration_loc)
+        #t1=timeit.default_timer()
+        #print( "cout graphID= ", t1-t0 )
+        #graph['procDict'] = D2.getProcDict(tc_skel)
+        #graph['procList'] = D2.getProcList(tc_skel, sort=True)
 
     if timelevel_motion > timelevel_360:
        print('remise a ZERO dans updateUnsteady')
-       timelevel_motion = 0
+       timelevel_motion = 1
        Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0] = timelevel_motion
 
-    base = Internal.getNodeFromType1(t   ,"CGNSBase_t")
-    own  = Internal.getNodeFromName1(base, '.Solver#ownData')
+    own  = Internal.getNodeFromName1(t, '.Solver#ownData')
     if own is not None: 
        dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')[1]
        dtloc[3]=timelevel_motion

@@ -4,6 +4,7 @@
 cpp_srcs = ['FastC/checkNumericsValue.cpp',
             'FastC/getRange.cpp',
             'FastC/ALE/motionlaw.cpp',
+            #'FastC/HPC_LAYER/distributeThreads.cpp',
             'FastC/Com/setInterpTransfersFast.cpp']
 
 #==============================================================================
@@ -34,5 +35,4 @@ for_srcs = ['FastC/Metric/skmtr.for',
             'FastC/HPC_LAYER/topo_scater.for',
             'FastC/HPC_LAYER/verrou.for',
             'FastC/HPC_LAYER/flush_integer.for',
-            'FastC/HPC_LAYER/flush_real.for',
-            'FastC/HPC_LAYER/indice_boucle_lu.for']
+            'FastC/HPC_LAYER/flush_real.for']

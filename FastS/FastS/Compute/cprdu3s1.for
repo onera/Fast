@@ -57,12 +57,13 @@ c     & ii,jj,kk
 
 #include "FastS/formule.h"
 
-c      if (ithread.eq.1) write(*,'(a,8i7)')'ssdom=',ind_loop,ndom,
-c     & ndim_rdm
+c      if (ithread.eq.1.and.ndom.eq.0)
+c     &  write(*,'(a,6i4,a,4i4)')'ssdom=',ind_loop,' nstep ',nitcfg,
+c     & ndim_rdm,Nbre_thread_actif,nisdom_residu(nitcfg)
 
       cut0x = 1e-20
 
-      if(nisdom_residu(nitcfg).eq.0) goto 1000
+      !if(nisdom_residu(nitcfg).eq.0) goto 1000
 
       conv_loo = ALOG10(epsi)
 
@@ -77,14 +78,6 @@ c     & ndim_rdm
 c       write(*,'(a,9i7)')'ssdom=',imin_lu,jmin_lu,kmin_lu,
 c     & imax_lu,jmax_lu,kmax_lu,ndo,nitcfg,nisdom_residu(nitcfg)
 
-      if(omp_mode .eq.0) then
-!$OMP DO SCHEDULE(DYNAMIC,1)
-        DO no_rdm=1,ndim_rdm
-#include "FastS/Compute/cprdu3s1_incl.for"
-        ENDDO
-!$OMP END  DO
-      
-      else
         if(ndim_rdm.le.Nbre_thread_actif) then
            no_start = ithread
            no_end   = ithread
@@ -92,13 +85,12 @@ c     & imax_lu,jmax_lu,kmax_lu,ndo,nitcfg,nisdom_residu(nitcfg)
         else
            size_rdm = ndim_rdm/Nbre_thread_actif
            no_start = 1+ (ithread-1)*size_rdm
-           no_end   = 1+ (ithread)*size_rdm
+           no_end   =    ithread*size_rdm
            if(ithread.eq.Nbre_thread_actif) no_end = ndim_rdm
         endif
         DO no_rdm=no_start,no_end
 #include "FastS/Compute/cprdu3s1_incl.for"
         ENDDO
-      endif
 
 
 

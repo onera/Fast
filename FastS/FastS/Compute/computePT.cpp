@@ -44,12 +44,12 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* work; 
 
-  E_Int nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, nit_c; 
+  E_Int nitrun, nstep_deb, nstep_fin, layer_mode, nit_c; 
   
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOllllllO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &omp_mode, &nit_c, &work)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOlllllO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &nit_c, &work)) return NULL;
 #else 
-  if (!PyArg_ParseTuple(args, "OOiiiiiiO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &omp_mode, &nit_c, &work)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOiiiiiO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &nit_c, &work)) return NULL;
 #endif
 
 #if TIMER == 1
@@ -71,6 +71,8 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
+  E_Int omp_mode = iptdtloc[ 8 + nssiter];
+  E_Int* ipt_omp = iptdtloc +9 + nssiter;
 
   E_Int lcfl= 0;
  // 
@@ -118,16 +120,15 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
     {K_NUMPY::getFromNumpyArray(pyLinlets_real, linelets_real, true); ipt_linelets_real = linelets_real->begin();}
     else{ipt_linelets_real = NULL;}
   
-    
-    if(lcfl ==1)
-    {
+    PyObject* tmp1 = PyDict_GetItemString(work,"lssiter_loc"); 
+    if (PyLong_Check(tmp1) == true) lssiter_loc = PyLong_AsLong(tmp1);
+    else lssiter_loc = PyInt_AsLong(tmp1);
+
+    //if(lcfl ==1)
+    //{
       iskipArray = PyDict_GetItemString(work,"skip_lu");
       K_NUMPY::getFromNumpyArray(iskipArray, iskip_lu, true); ipt_iskip_lu = iskip_lu->begin();
-
-      PyObject* tmp1 = PyDict_GetItemString(work,"lssiter_loc"); 
-      if (PyLong_Check(tmp1) == true) lssiter_loc = PyLong_AsLong(tmp1);
-      else lssiter_loc = PyInt_AsLong(tmp1);
-    } 
+    //} 
  }
 else
  {
@@ -538,33 +539,42 @@ else
    //
    //E_Float** roN = iptro; E_Float** roM1 = iptro_m1;  E_Float** roP1 = iptro_p1;
 
-   E_Int nidom_tot;
-
    for (E_Int nstep = nstep_deb; nstep < nstep_fin+1; ++nstep)
    {
-     //printf("nstep= %d \n", nstep);
-     E_Int skip_navier = 1; //layer_mode 0: on calcul tout le temps gsdr3
+     //printf("nstep= %d %d \n", nstep, omp_mode);
      if (layer_mode ==1)
      {
-       souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, nidom_tot, lexit_lu, lssiter_verif);
-
-       E_Int display=0;
-       //calcul distri si implicit ou explicit local + modulo verif
-       if( omp_mode==1 && (lssiter_loc ==1 && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1)) && ipt_param_int[0][ITYPCP]==1) 
-       { 
-          distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
+       E_Int init_exit=0;
+       if( nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1 )
+       {
+         init_exit =1;
+         E_Int flag_res=1;
+         E_Int lssiter_tmp = lssiter_loc;
+         //if (nstep==1) printf("HAAAAA \n");
+         souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_tmp, nidom, nitrun_loc, nstep, flag_res,  lexit_lu, lssiter_verif);
        }
 
+       E_Int nitrun_split = nitrun_loc - 1;
+       if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2) )  && (nitrun_split%iptdtloc[1] == 0 || nitrun_loc == 1) ) 
+       {
+        E_Int flag_res = 0;
+       //if (nstep==1) printf("hiiiii %d %d %d %d \n",nitrun_split,lssiter_loc, nitrun_split%iptdtloc[1], ipt_param_int[0][ITYPCP]  );
+        souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_split, nstep, flag_res, lexit_lu, lssiter_verif);
+        if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
 
-       E_Int skip = 0;
-       if ( lssiter_verif == 0 && nstep == nstep_fin && ipt_param_int[0][ ITYPCP ] ==1){skip = 1;}
-       skip_navier = 0;
-       if (nidom_tot > 0 && skip ==0) skip_navier = 1;
+        E_Int display = 0;
+        distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
+       }
+       if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;}
+       
      }
 
-     //calcul Navier Stokes + appli CL
+     E_Int skip = 0;
+     if ( lssiter_verif == 0 && nstep == nssiter && ipt_param_int[0][ ITYPCP ] ==1){skip = 1;}
 
-     if (skip_navier ==1)
+     //calcul Navier Stokes + appli CL
+     //printf("sknavier %d %d  \n", skip, nstep );
+     if (skip ==0)
      {
       gsdr3( 
             ipt_param_int, ipt_param_real   ,
@@ -576,7 +586,7 @@ else
             ipt_ijkv_sdm       , 
             ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, vartype, timer_omp,
             iptludic           , iptlumax         ,
-            ipt_ind_dm         , ipt_it_lu_ssdom  ,
+            ipt_ind_dm         , ipt_it_lu_ssdom  , ipt_omp           ,
             ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size , ipt_drodmd,
             ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp  , ipt_givens,
             ipt_cfl            ,
@@ -598,46 +608,33 @@ else
 
        if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
        {
+         E_Int nbtask = ipt_omp[nstep-1]; 
+         E_Int ptiter = ipt_omp[nssiter+ nstep-1];
 
-         for (E_Int nd = 0; nd < nidom ; nd++) 
-         {
-           ipt_cfl_zones[nd][0] =  ipt_cfl[0 +nd*3*threadmax_sdm];
-           ipt_cfl_zones[nd][1] =  ipt_cfl[1 +nd*3*threadmax_sdm];
-           ipt_cfl_zones[nd][2] =  ipt_cfl[2 +nd*3*threadmax_sdm];
-           E_Int size_dom   = ipt_param_int[nd][ IJKV ]*ipt_param_int[nd][ IJKV +1]*ipt_param_int[nd][ IJKV +2];
-           E_Float scale    = size_dom;
+         for (E_Int ntask = 0; ntask < nbtask; ntask++)
+          {
+            E_Int pttask = ptiter + ntask*(6+threadmax_sdm*7);
+            E_Int nd = ipt_omp[ pttask ];
 
+            ipt_cfl_zones[nd][0] =  ipt_cfl[0 +nd*3*threadmax_sdm];
+            ipt_cfl_zones[nd][1] =  ipt_cfl[1 +nd*3*threadmax_sdm];
+            ipt_cfl_zones[nd][2] =  ipt_cfl[2 +nd*3*threadmax_sdm];
+            E_Int size_dom   = ipt_param_int[nd][ IJKV ]*ipt_param_int[nd][ IJKV +1]*ipt_param_int[nd][ IJKV +2];
+            E_Float scale    = size_dom;
 
-           E_Int Nbre_thread_actif_loc = threadmax_sdm;
-           if(omp_mode == 1) 
-              { E_Int  Ptomp     = ipt_param_int[nd][PT_OMP];
-                E_Int PtrIterOmp = ipt_param_int[nd][Ptomp];
-                E_Int PtZoneomp  = ipt_param_int[nd][PtrIterOmp];
+            E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + threadmax_sdm ];
 
-                Nbre_thread_actif_loc  = ipt_param_int[nd][ PtZoneomp  +  threadmax_sdm];
-              }
-
-           for (E_Int ithread = 1; ithread < Nbre_thread_actif_loc ; ithread++) 
-
+            for (E_Int ithread = 1; ithread < Nbre_thread_actif_loc ; ithread++) 
               {
-
-               E_Int ithread_loc = ithread;
-               if(omp_mode == 1) 
-                 { E_Int  Ptomp     = ipt_param_int[nd][PT_OMP];
-                   E_Int PtrIterOmp = ipt_param_int[nd][Ptomp];
-                   E_Int PtZoneomp  = ipt_param_int[nd][PtrIterOmp];
-                       ithread_loc  = ipt_param_int[nd][ PtZoneomp  +  ithread ];
-                 }
-
-               E_Float* ipt_cfl_thread  = ipt_cfl + ithread_loc*3+ nd*3*threadmax_sdm;
+               E_Float* ipt_cfl_thread  = ipt_cfl + ithread*3+ nd*3*threadmax_sdm;
 
                ipt_cfl_zones[nd][0] = max( ipt_cfl_zones[nd][0], ipt_cfl_thread[0]);
                ipt_cfl_zones[nd][1] = min( ipt_cfl_zones[nd][1], ipt_cfl_thread[1]);
                ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]+ ipt_cfl_thread[2];
               }
-           ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]/scale;
-           //printf("cpPT cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[nd][0],ipt_cfl_zones[nd][1],ipt_cfl_zones[nd][2]);
-         }
+            ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]/scale;
+            //printf("cpPT cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[nd][0],ipt_cfl_zones[nd][1],ipt_cfl_zones[nd][2]);
+          }
        }//test mise a jour cfl
 
        
@@ -693,7 +690,8 @@ else
     if (pyLinlets_int  != Py_None) { RELEASESHAREDN( pyLinlets_int , linelets_int ); }
     if (pyLinlets_real != Py_None) { RELEASESHAREDN( pyLinlets_real, linelets_real); }
 
-    if(lcfl ==1) RELEASESHAREDN( iskipArray, iskip_lu);
+    //if(lcfl ==1) RELEASESHAREDN( iskipArray, iskip_lu);
+    RELEASESHAREDN( iskipArray, iskip_lu);
   }
 
   RELEASEHOOK(hook)

@@ -59,12 +59,17 @@ def _setNum2Zones(a, num):
 #==============================================================================
 def _setNum2Base(a, num):
     """Set numeric data dictionary  in bases."""
+    '''
     bases = Internal.getNodesFromType1(a, 'CGNSBase_t')
     for b in bases:
         cont = Internal.createUniqueChild(b, '.Solver#define', 
                                           'UserDefinedData_t')
         for k in num: # some checks?
             Internal.createUniqueChild(cont, k, 'DataArray_t', num[k])
+    '''
+    cont = Internal.createUniqueChild(a, '.Solver#define', 'UserDefinedData_t')
+    for k in num: 
+         Internal.createUniqueChild(cont, k, 'DataArray_t', num[k])
     return None
 
 #==============================================================================
@@ -726,40 +731,24 @@ def _buildOwnData(t, Padding):
 
     levelg=[]; leveld=[]; val=1; i=0
     veclevel = []; mod=""; posg=[] 
-    for b in bases:
-
-           zones = Internal.getNodesFromType1(b, 'Zone_t')
-           for z in zones:
-               a = Internal.getNodeFromName2(z, 'GoverningEquations')
-               if a is not None: mod = Internal.getValue(a)
-               if mod == "nsspalart" or mod == "NSTurbulent": neq=6
-               else: neq = 5
-        
-           ### Recuperation du niveau en temps de chaque zone si on est en dtloc instationnaire ###          
-           d = Internal.getNodeFromName1(b, '.Solver#define')
-           if d is not None:
-               a = Internal.getNodeFromName1(d, 'temporal_scheme')
-               if a is not None:
-                   temporal_scheme = Internal.getValue(a)
-                   if temporal_scheme == 'explicit_local':
-                       for z in zones:
-                          dim = Internal.getZoneDim(z)
-                          i = dim[1]//2
-                          j = dim[2]//2
-                          k = dim[3]//2
-                          level = C.getValue(z, 'centers:niveaux_temps', (i,j,k))
-                          veclevel.append(int(level))
-                   else:
-                       for z in zones: veclevel.append(1)
-               else:
-                   for z in zones: veclevel.append(1)               
-
-           else:
-               for z in zones: veclevel.append(1)
+ 
+    d = Internal.getNodeFromName1(t, '.Solver#define')
+    a = Internal.getNodeFromName1(d, 'temporal_scheme')
+    zones = Internal.getZones(t)
+    if a is not None:
+       temporal_scheme = Internal.getValue(a)
+       if temporal_scheme == 'explicit_local':
+         for z in zones:
+            dim = Internal.getZoneDim(z)
+            i = dim[1]//2; j = dim[2]//2; k = dim[3]//2
+            level = C.getValue(z, 'centers:niveaux_temps', (i,j,k))
+            veclevel.append(int(level))
+       else:
+         for z in zones: veclevel.append(1)               
+    else:
+      for z in zones: veclevel.append(1)               
 
     maxlevel = max(veclevel)
-
-    #print('veclevel= ', veclevel)
 
     levelg = numpy.roll(veclevel,1)
     leveld = numpy.roll(veclevel,-1)
@@ -779,7 +768,7 @@ def _buildOwnData(t, Padding):
     'explicit_local_type':0    ## 0:explicit local non conservatif,  1:explicit local conservatif (correction du bilan de flux aux interface)  
     }
     keys4Zone = {
-    'scheme':['ausmpred', 'senseur', 'roe_min', 'roe', 'roe_nul', 'roe_kap'],
+    'scheme':['ausmpred', 'senseur', 'roe_min', 'roe', 'roe_nul', 'roe_kap', 'senseur_hyper'],
     'implicit_solver':['lussor', 'gmres'],
     'nb_relax':0,
     'nb_krylov':0,
@@ -806,6 +795,7 @@ def _buildOwnData(t, Padding):
     'cfl':1, 
     'niveaux_temps':0, 
     'psiroe':1, 
+    'coef_hyper':4, 
     'prandtltb':1, 
     'sfd':0, 
     'sfd_chi':1, 
@@ -846,10 +836,12 @@ def _buildOwnData(t, Padding):
     'lbm_ibm_connector':0       
     }
 
+    zones = Internal.getZones(t)
 
-    for b in bases:
+    for b in bases[0]:
         # Base define data
-        d = Internal.getNodeFromName1(b, '.Solver#define')
+        #d = Internal.getNodeFromName1(b, '.Solver#define')
+        d = Internal.getNodeFromName1(t, '.Solver#define')
 
         # - defaults -
         temporal_scheme = "implicit"
@@ -861,9 +853,14 @@ def _buildOwnData(t, Padding):
         t_init_ale      = temps
         timelevel_prfile= 0
         exploctype      = 0
+        ompmode         = 0
 
         if d is not None:
             checkKeys(d, keys4Base)
+            a = Internal.getNodeFromName1(d, 'omp_mode')
+            if a is not None: ompmode = Internal.getValue(a)
+            ompmode = max(ompmode, 0);  ompmode = min(ompmode, 1)
+
             a = Internal.getNodeFromName1(d, 'temporal_scheme')
             if a is not None: temporal_scheme = Internal.getValue(a)
             a = Internal.getNodeFromName1(d, 'ss_iteration')
@@ -887,8 +884,9 @@ def _buildOwnData(t, Padding):
 
            
         # Base ownData (generated)
-        o = Internal.createUniqueChild(b, '.Solver#ownData', 
-                                       'UserDefinedData_t')
+        #o = Internal.createUniqueChild(b, '.Solver#ownData', 'UserDefinedData_t')
+        o = Internal.createUniqueChild(t, '.Solver#ownData', 'UserDefinedData_t')
+
         if temporal_scheme == "explicit": nssiter = 3
         elif temporal_scheme == "explicit_lbm": nssiter = 1
         elif temporal_scheme == "implicit": nssiter = ss_iteration+1
@@ -906,10 +904,13 @@ def _buildOwnData(t, Padding):
         if rk == 2 and exploc==0 and temporal_scheme == "explicit": nssiter = 2 # explicit global
         if rk == 3 and exploc==0 and temporal_scheme == "explicit": nssiter = 3 # explicit global
 
-        
+        ntask =len(zones)*4  # 4 sous-zone max par zone en moyenne 
+        size_task=  (7 + 7*OMP_NUM_THREADS)*ntask
+        size_omp =  1 + nssiter*(2 + size_task)
 
         dtdim = nssiter + 8
-        datap = numpy.empty((dtdim), numpy.int32) 
+        #datap = numpy.empty((dtdim+ size_omp), numpy.int32) 
+        datap = numpy.zeros((dtdim+ size_omp), numpy.int32) 
         datap[0] = nssiter 
         datap[1] = modulo_verif
         datap[2] = restart_fields-1
@@ -919,6 +920,9 @@ def _buildOwnData(t, Padding):
         datap[6:dtdim-2] = 1
         datap[dtdim-2] = rk
         datap[dtdim-1] = it0
+        datap[dtdim  ] = ompmode
+        for it in range(nssiter):
+          datap[dtdim + 1 + it  ] = -1   #on initialise à -1 le nbre de "zone" a traiter pour forcer l'init dans warmup
         Internal.createUniqueChild(o, '.Solver#dtloc', 'DataArray_t', datap)
 
         dtloc = Internal.getNodeFromName1(o, '.Solver#dtloc')[1]
@@ -1026,6 +1030,7 @@ def _buildOwnData(t, Padding):
             ratiom          = 10000.
             meshtype        = 1  #stuctured
             senseurtype     = 1  #version celia laurent du schema senseur
+            coef_hyper      = [0.009,0.015] # coeff schema hypersonique M Lugrin
 
             ##LBM
             #General
@@ -1108,7 +1113,7 @@ def _buildOwnData(t, Padding):
             d = Internal.getNodeFromName1(z, '.Solver#define')
             if d is not None:
                 checkKeys(d, keys4Zone)
-                a = Internal.getNodeFromName2(b, 'temporal_scheme')
+                a = Internal.getNodeFromName2(t, 'temporal_scheme')
                 if a is not None: temporal_scheme = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'implicit_solver')
                 if a is not None: implicit_solver = Internal.getValue(a)
@@ -1126,6 +1131,8 @@ def _buildOwnData(t, Padding):
                 if a is not None: slope  = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'motion')
                 if a is not None: motion = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'coef_hyper')
+                if a is not None: coef_hyper = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'rotation')
                 if a is not None: rotation = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'filtrage')
@@ -1359,6 +1366,9 @@ def _buildOwnData(t, Padding):
               kfludom = 5
             elif scheme == "ausmpred_pattern":  
                 kfludom = 7
+            elif scheme == "senseur_hyper"  : 
+                kfludom = 8
+                islope  = 2
 
             else: print('Warning: Fast: scheme %s is invalid.'%scheme)
 
@@ -1554,7 +1564,7 @@ def _buildOwnData(t, Padding):
             
             # creation noeud parametre real 
             #size_real = 23 +  size_ale   
-            number_of_defines_param_real = 54                                    # Number Param REAL
+            number_of_defines_param_real = 56                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
@@ -1605,6 +1615,9 @@ def _buildOwnData(t, Padding):
             datap[38]=  prandtltb
             datap[39]=  epsi_linear
             datap[40]=  cups[1] # on garde la valeur max, pas la moyenne
+
+            datap[54]=  coef_hyper[0] 
+            datap[55]=  coef_hyper[1] 
 
             ##LBM
             datap[v.LBM_c0]      = lbm_c0
@@ -1701,7 +1714,9 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         ndimcoe += neq_coe*nijk       # surdimensionne ici
        
         if param_int[33]==2:   #schema senseur
-           ndimwig +=   3*nijk # surdimensionne ici
+           ndimwig +=   3*nijk 
+        elif param_int[33]==8: #schema senseur hyper
+           ndimwig +=   4*nijk 
 
         c       += 1
         
@@ -1716,7 +1731,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
     verrou      = MX_SSZONE*c*MX_SYNCHRO*mx_thread
 
-    timerOmp = numpy.zeros(  mx_thread*2*dtloc[0] + (mx_thread+1)*len(zones), dtype=numpy.float64)
+    timerOmp = numpy.zeros(  mx_thread*2*dtloc[0] + (mx_thread*2+1)*len(zones), dtype=numpy.float64)
 
 #    wig   = KCore.empty(ndimwig, CACHELINE)
 #    coe   = KCore.empty(ndimcoe, CACHELINE)
@@ -1760,7 +1775,6 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['coe']            = coe
     hook['rhs']            = drodm
     hook['grad']           = grad
-    #hook['forceterm']      = forceterm
     hook['tab_dtloc']      = tab_dtloc
     hook['flu_vecto']      = flu
     hook['verrou_omp']     = lok
@@ -1819,6 +1833,7 @@ def tagBC(bcname):
   elif bcname == "BCOverlap":               tag =22
   elif bcname == "BCWallModel":             tag =30
   elif bcname == "BCWallExchange":          tag =31
+  elif bcname == "BCWallViscousIsothermal": tag =32
 
   elif bcname == "LBM_BCPeriodic":           tag =100;#ok
   elif bcname == "LBM_BCSymmetryPlane":      tag =101;#ok

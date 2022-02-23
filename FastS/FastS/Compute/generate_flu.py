@@ -12,6 +12,7 @@ dico["SENSOR_INIT"] = { 'name':'flusenseur_init', 'model':['lamin','SA','euler']
 dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3','o1']}
+dico["SENSORHYPER"] = { 'name':'flushyper'      , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 
 rep = sys.argv[1]
 if rep not in dico:
@@ -23,7 +24,7 @@ TypeMotion = dico[ rep ]['TypeMotion']
 TypeMesh   = dico[ rep ]['TypeMesh']
 TypeSlope  = dico[ rep ]['TypeSlope']
 flux       = dico[ rep ]['name']
- 
+
 opt_ale = {'ale':1, '':0}
 opt_flu = {'flu_ausm':1, 'flu_senseur':2, 'flu_roe':5 }
 opt_mod = {'euler':1, 'lamin':2, 'SA':3 }
@@ -38,10 +39,10 @@ lines_select = select.readlines()
 #open file for sources compilation
 srcs= open('../../srcs.py','r')
 lines_srcs = srcs.readlines()
-srcs.close() 
+srcs.close()
 srcs= open('../../srcs.py','w')
 c = 0
-for l in lines_srcs: 
+for l in lines_srcs:
    if 'FastS/Compute/src_term.for' in l: c_index = c
    c+=1
 c_index +=1
@@ -51,7 +52,7 @@ lines_srcs_end = lines_srcs[c_index:]
 
 
 c = 0
-for l in lines_select: 
+for l in lines_select:
    if 'ELSE' in l: c_index = c
    c+=1
 
@@ -83,8 +84,15 @@ for ale in TypeMotion:
                         for i in range( len(lines) ):
                              lines[i]=lines[i].replace("FLUX_CONV", rep)
 
+
+                        # correction pour flushyper (wig dim)
+                        if flux == 'flushyper':
+                            for i in range( 60 ):
+                                lines[i]=lines[i].replace("wig( param_int(NDIMDX)     * 3                  )", "wig( param_int(NDIMDX)     * 4                  )")
+
+
                         # suppression fluk en 2d et metrique k (pour que mode debug soit OK)
-                        if typezone == '2d': 
+                        if typezone == '2d':
                                 c = 0
                                 for l in lines:
                                     if '3D only' in l: lines = lines[:c] + lines[c+1:]; c-=1
@@ -95,14 +103,14 @@ for ale in TypeMotion:
                                       lines[i]=lines[i].replace("tcz = tk(lt)","").replace("sk      = abs (tcz)","")
 
                         # suppression minmod
-                        if slope != 'minmod': 
+                        if slope != 'minmod'   :
                                 c = 0
                                 for l in lines:
                                     if 'avmin(c,r)' in l: lines = lines[:c] + lines[c+1:]; c-=1
                                     c+=1
                                 for i in range( len(lines) ):
                                      lines[i]=lines[i].replace("psiroe,avmin", 'psiroe')
-                          
+
                         # suppression Vitesse entrainement si ale=faux
                         if ale == '':
                                 c = 0
@@ -114,7 +122,7 @@ for ale in TypeMotion:
                                       lines[i]=lines[i].replace("lven= indven( i, j, k)","")
                         eq2=''
                         # Viscous flux suppression for Euler
-                        if eq == 'euler': 
+                        if eq == 'euler':
                                 c = 0
                                 for l in lines:
                                     if 'Rans' in l: lines = lines[:c] + lines[c+1:]; c-=1
@@ -151,11 +159,11 @@ for ale in TypeMotion:
                             lines[i]=lines[i].replace("fluViscLaminar_k",'fluvisq_'+typezone+'_k').replace("fluViscRans_k",'fluvisq_'+eq+'_'+typezone+'_k')
 
 
-                        #Include generation 
+                        #Include generation
                         Direction = ['i', 'j', 'k']
                         if (typezone == '2d'): Direction = ['i', 'j']
                         for dir  in Direction:
- 
+
                                 #Euler flux face
                                 feuler= open(rep+'/fluFaceEuler.for','r')                         # Template flux Euler
                                 lines_euler = feuler.readlines()
@@ -168,7 +176,7 @@ for ale in TypeMotion:
 
                                 if typezone == '2d':
                                         for i in range( len(lines_euler) ):
-                                            lines_euler[i]=lines_euler[i].replace("etat_GD",'etat_GD_2d').replace("etat_roe_GD",'etat_roe_GD_2d')
+                                            lines_euler[i]=lines_euler[i].replace("etat_GD",'etat_GD_2d').replace("etat_roe_GD",'etat_roe_GD_2d').replace("etat_hyper_GD",'etat_hyper_GD_2d')
                                         c = 0
                                         for l in lines_euler:
                                            if '3D only' in l: lines_euler = lines_euler[:c] + lines_euler[c+1:]; c-=1
@@ -180,8 +188,11 @@ for ale in TypeMotion:
                                       lines_euler[i]=lines_euler[i].replace("si"                , 's'  +dir)
                                       lines_euler[i]=lines_euler[i].replace("normale_3dfull_i"  , 'normale_'+typezone+'_'+dir)
                                       lines_euler[i]=lines_euler[i].replace("wiggle_i"          , 'wiggle_'+dir)
+                                      lines_euler[i]=lines_euler[i].replace("ducros_i"          , 'ducros_'+dir)
                                       lines_euler[i]=lines_euler[i].replace("wig_i"             , 'wig_'   +dir)
+                                      lines_euler[i]=lines_euler[i].replace("wigd_i"             , 'wigd_'   +dir)
                                       lines_euler[i]=lines_euler[i].replace("fluvector_3dfull_i", 'fluvector'+ale1 +typezone+'_'+dir)
+                                      lines_euler[i]=lines_euler[i].replace("fluhyper_3dfull_i", 'fluhyper'+ale1 +typezone+'_'+dir)
                                       lines_euler[i]=lines_euler[i].replace("fludiffer_3dfull_i", 'fludiffer'+ale1 +typezone+'_'+dir)
                                       lines_euler[i]=lines_euler[i].replace("qn_3dfull_i"       , 'qn'+ale1+typezone+'_'+dir)
                                       lines_euler[i]=lines_euler[i].replace("!3D only"          , '')
@@ -201,7 +212,7 @@ for ale in TypeMotion:
                                        lines_rans[i]=lines_rans[i].replace("mut_interface.for","mut_prandtltb_interface.for")
 
                                    for l in lines_rans: franso.write(l)
-                                   franso.close()     
+                                   franso.close()
 
                                 #Include generation for RANS
                                 if eq not in ['euler','lamin']:
@@ -224,23 +235,23 @@ for ale in TypeMotion:
 
                         for l in lines: fo.write(l)
                         fo.close()                               # fermer le fichier output global
-                        
+
                         #modif makefile
                         target = fout
                         include = True
                         c = 0
-                        for l in lines_srcs: 
+                        for l in lines_srcs:
                               if target in l: include = False
                         srcs_out=[]
                         if include == True: srcs_out.append("            'FastS/Compute/"+fout+"',\n")
 
-                        lines_srcs_beg = lines_srcs_beg +   srcs_out 
+                        lines_srcs_beg = lines_srcs_beg +   srcs_out
 
                         #flux selection function
                         target = 'option.eq.'+str(option)+') THEN'
                         include = True
                         c = 0
-                        for l in lines_select: 
+                        for l in lines_select:
                               if target in l: include = False
                               if 'ELSE' in l: c_index = c
                               c+=1
@@ -248,43 +259,43 @@ for ale in TypeMotion:
                         select_out=[]
                         if include == True:
                            select_out.append('       ELSEIF (option.eq.'+str(option)+') THEN\n')
-                           select_out.append('                                               \n') 
-                           select_out.append('           call '+ name_routine+'(ndom, ithread,\n') 
-                           select_out.append('     &                 param_int, param_real,\n') 
-                           select_out.append('     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,\n') 
-                           select_out.append('     &                 synchro_send_sock, synchro_send_th,\n') 
-                           select_out.append('     &                 synchro_receive_sock, synchro_receive_th,\n') 
-                           select_out.append('     &                 ibloc , jbloc , kbloc ,\n') 
-                           select_out.append('     &                 icache, jcache, kcache,\n') 
-                           select_out.append('     &                 rop, drodm, wig,\n') 
-                           select_out.append('     &                 venti, ventj, ventk,\n') 
-                           select_out.append('     &                 ti, tj, tk, vol, xmut)\n') 
-                           select_out.append('                                               \n') 
+                           select_out.append('                                               \n')
+                           select_out.append('           call '+ name_routine+'(ndom, ithread,\n')
+                           select_out.append('     &                 param_int, param_real,\n')
+                           select_out.append('     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,\n')
+                           select_out.append('     &                 synchro_send_sock, synchro_send_th,\n')
+                           select_out.append('     &                 synchro_receive_sock, synchro_receive_th,\n')
+                           select_out.append('     &                 ibloc , jbloc , kbloc ,\n')
+                           select_out.append('     &                 icache, jcache, kcache,\n')
+                           select_out.append('     &                 rop, drodm, wig,\n')
+                           select_out.append('     &                 venti, ventj, ventk,\n')
+                           select_out.append('     &                 ti, tj, tk, vol, xmut)\n')
+                           select_out.append('                                               \n')
 
-                        lines_select_beg = lines_select_beg +   select_out 
+                        lines_select_beg = lines_select_beg +   select_out
 
-                        f.close() 
+                        f.close()
 
 c       =0
 c_index =0
 for i in range( len(lines_select_beg) ):
     lines_select_beg[i]=lines_select_beg[i].replace("template_flu_select"                ,flux+'_select' )
-    if 'ELSEIF ' in lines_select_beg[i] and c_index ==0: 
+    if 'ELSEIF ' in lines_select_beg[i] and c_index ==0:
         c_index = c
     c+=1
 lines_select_beg[c_index]=lines_select_beg[c_index].replace("ELSEIF"                ,'IF ' )
- 
-#write of srcs.py file for makefile  
+
+#write of srcs.py file for makefile
 target = rep+'/'+flux+"_select.for',"
 include = True
 c = 0
-for l in lines_srcs: 
+for l in lines_srcs:
     if target in l: include = False
 if include == True: lines_srcs_beg.append("            'FastS/Compute/"+target+"\n")
 
 for l in lines_srcs_beg: srcs.write(l)
 for l in lines_srcs_end: srcs.write(l)
-srcs.close()          
+srcs.close()
 
 #write of rep/flux_select.for
 for l in lines_select_beg: fselecto.write(l)

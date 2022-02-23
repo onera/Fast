@@ -4,11 +4,11 @@ c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine init_ventijk( ndo, nidom, Nbre_thread_actif, 
-     &        ithread, Nbre_socket, socket, mx_synchro, omp_mode,
+     &        ithread, Nbre_socket, socket, mx_synchro,
      &        param_int, param_real,
      &        ijkv_sdm,
      &        ind_dm_zone, ind_dm_socket,
-     &        socket_topology, lok , topo_omp, inddm_omp,
+     &        socket_topology, lok , topo_s, ind_dm_omp,
      &        ti, tj, tk, vol, ti_df,tj_df,tk_df,
      &        venti, ventj, ventk, x, y ,z)
 
@@ -37,11 +37,11 @@ c***********************************************************************
       implicit none
 
       INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, 
-     & ithread, Nbre_socket, socket , compteur,omp_mode
+     & ithread, Nbre_socket, socket , compteur
 
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
      & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
-     & param_int(0:*), lok(*), topo_omp(3), inddm_omp(6)
+     & param_int(0:*), lok(*), topo_s(3)
 
       REAL_E ti(*),tj(*),tk(*),vol(*), venti(*),ventj(*),ventk(*),
      & x(*),y(*),z(*),ti_df(*),tj_df(*),tk_df(*)
@@ -59,10 +59,10 @@ C Var loc
 
       if(param_int(LALE).ge.1) then ! mise a jour Vent et tijk
 
-
         !coefficient pour calcul gradient ordre4 - c1=7./12 c2=1./12 ordre 4 - c1=0.5 c2=0 ordre 2
         c1 = 7./12
         c2 = 1./12
+
 
         nitrun   = -2
         nitcfg   = 1

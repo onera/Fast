@@ -47,6 +47,9 @@ tc = C.node2Center(t)
 if explicit_select != "explicit_local":
     tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse',sameName=1, method='lagrangian',dim=2)
 
+t1c= Internal.copyRef(tc)
+test.testT(t1c, 4)
+
 # Init
 t = C.addState(t, 'GoverningEquations', 'Euler')
 t = C.addState(t, 'EquationDimension', 2)
@@ -74,6 +77,9 @@ if explicit_select == "explicit_local":
     dt = dt * time_lvl_max
     tc = X.setInterpData2 (t, tc, nature=1, loc='centers', storage='inverse',sameName=1, method='lagrangian',dim=2)
      
+t1c= Internal.copyRef(tc)
+test.testT(t1c, 5)
+
 t = C.initVars(t, 'centers:cellN', 1.) # init pour les IBCs
 
 # Blanking
@@ -97,6 +103,8 @@ t = C.rmVars(t,['centers:gradxTurbulentDistance','centers:gradyTurbulentDistance
                 'TurbulentDistance','centers:TurbulentDistance'])
 tc = C.rmVars(tc, 'cellN') # tres important pour l'instant
 
+t1c= Internal.copyRef(tc)
+test.testT(t1c, 6)
 
 ##Local time stepping
 list_names = ['PointRange','PointRangeDonor','DirDonneur','DirReceveur','Transform','PointPivot','Profondeur','LevelZRcv','LevelZDnr', 'NMratio','DnrZoneName']
@@ -151,6 +159,14 @@ FastC._setNum2Base(t, numb)
 #C.convertPyTree2File(t ,"mesh.cgns")
 
 (t, tc, metrics) = FastS.warmup(t, tc)
+
+t1= Internal.copyRef(t)
+t1c= Internal.copyRef(tc)
+Internal._rmNodesFromName(t1, 'Parameter_int')
+Internal._rmNodesFromName(t1, 'Parameter_real')
+Internal._rmNodesFromName(t1, '.Solver#dtloc')
+test.testT(t1, 2)
+test.testT(t1c, 3)
 #C.convertPyTree2File(t, "Postout.cgns")
 
 nit = 100

@@ -6,14 +6,14 @@ c     $Date: 2010-11-04 13:25:50 +0100 (Thu, 04 Nov 2010) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine navier_stokes_struct_d(ndo, nidom, nbre_thread_actif, 
+      subroutine navier_stokes_struct_d(ndo, nbre_thread_actif, 
      &                   ithread, omp_mode, layer_mode, nbre_socket, 
      &                   socket , mx_synchro, lssiter_verif, nptpsi, 
      &                   nitcfg , nitrun    , first_it     , nb_pulse, 
      &                   flagcelln, mjr_dt, param_int, param_real,
      &                   temps, tot, ijkv_sdm, 
      &                   ind_dm_zone, ind_dm_socket, ind_dm_omp,
-     &                   socket_topology, lok, topo_omp, inddm_omp,
+     &                   socket_topology, lok, topo_s,
      &                   cfl, x, y, z, celln, rop_ssiter,
      &                   rop_ssiterd, krylov_in,
      &                   xmut, xmutd, 
@@ -32,14 +32,14 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, first_it,
+      INTEGER_E ndo,  Nbre_thread_actif , mx_synchro, first_it,
      & ithread, ithread_io, Nbre_socket, socket, nitrun, nptpsi, nitcfg,
      & nb_pulse,mjr_dt,
      & lssiter_verif,flagCellN,omp_mode,layer_mode
 c
-      INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
+      INTEGER_E  ijkv_sdm(3),ind_dm_zone(6), topo_s(3),
      & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
-     & param_int(0:*), topo_omp(3), inddm_omp(6), lok(*)
+     & param_int(0:*), lok(*)
 
       REAL_E rop_ssiter(*), xmut(*), 
      & coe(*), ti(*), tj(*), tk(*), vol(*), x(*), y(*), 
@@ -66,8 +66,10 @@ C Var loc
        
 #include "FastS/HPC_LAYER/SIZE_MIN.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+        return
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
+
 
          if(param_int(IFLOW).eq.3) then
 
@@ -86,64 +88,64 @@ C Var loc
         endif
 
            !! a modifier pour generaliser
-           call src_term_d(ndo, nitcfg, nb_pulse, param_int, param_real,
-     &                     ind_sdm, ind_rhs, ind_ssa,
-     &                     temps,
-     &                     rop_ssiter, rop_ssiterd, xmut, drodm, drodmd,
-     &                     coe, x,y,z,
-     &                     ti,tj,tk,vol, delta)
+c           call src_term_d(ndo, nitcfg, nb_pulse, param_int, param_real,
+c     &                     ind_sdm, ind_rhs, ind_ssa,
+c     &                     temps,
+c     &                     rop_ssiter, rop_ssiterd, xmut, drodm, drodmd,
+c     &                     coe, x,y,z,
+c     &                     ti,tj,tk,vol, delta)
 
-#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+c#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
 
           ! -----assemblage drodm euler+visqueux
           if(param_int(KFLUDOM).eq.1) then
 
-                call fluausm_select_d(ndo, nitcfg, ithread, 
-     &                        nptpsi, param_int, param_real,ind_dm_zone,
-     &                        ind_sdm, ijkv_thread, ijkv_sdm, 
-     &                        synchro_send_sock, synchro_send_th, 
-     &                        synchro_receive_sock, synchro_receive_th, 
-     &                        ibloc, jbloc, kbloc, 
-     &                        icache, jcache, kcache, 
-     &                        psi, wig, stat_wig, 
-     &                        rop_ssiter, rop_ssiterd,
-     &                        drodm, drodmd,
-     &                        ti, ti_df, tj, tj_df, tk,tk_df,vol,vol_df,
-     &                        venti, ventj, ventk, xmut, xmutd)
+c                call fluausm_select_d(ndo, nitcfg, ithread, 
+c     &                        nptpsi, param_int, param_real,ind_dm_zone,
+c     &                        ind_sdm, ijkv_thread, ijkv_sdm, 
+c     &                        synchro_send_sock, synchro_send_th, 
+c     &                        synchro_receive_sock, synchro_receive_th, 
+c     &                        ibloc, jbloc, kbloc, 
+c     &                        icache, jcache, kcache, 
+c     &                        psi, wig, stat_wig, 
+c     &                        rop_ssiter, rop_ssiterd,
+c     &                        drodm, drodmd,
+c     &                        ti, ti_df, tj, tj_df, tk,tk_df,vol,vol_df,
+c     &                        venti, ventj, ventk, xmut, xmutd)
 
 
 
           elseif(param_int(KFLUDOM).eq.5) then
 
-            call fluroe_select_d(ndo, nitcfg, ithread, 
-     &                        nptpsi, param_int, param_real,ind_dm_zone,
-     &                        ind_sdm, ijkv_thread, ijkv_sdm, 
-     &                        synchro_send_sock, synchro_send_th, 
-     &                        synchro_receive_sock, synchro_receive_th, 
-     &                        ibloc, jbloc, kbloc, 
-     &                        icache, jcache, kcache, 
-     &                        psi, wig, stat_wig, 
-     &                        rop_ssiter, rop_ssiterd,
-     &                        drodm, drodmd,
-     &                        ti, ti_df, tj, tj_df, tk,tk_df,vol,vol_df,
-     &                        venti, ventj, ventk, xmut, xmutd)
+c            call fluroe_select_d(ndo, nitcfg, ithread, 
+c     &                        nptpsi, param_int, param_real,ind_dm_zone,
+c     &                        ind_sdm, ijkv_thread, ijkv_sdm, 
+c     &                        synchro_send_sock, synchro_send_th, 
+c     &                        synchro_receive_sock, synchro_receive_th, 
+c     &                        ibloc, jbloc, kbloc, 
+c     &                        icache, jcache, kcache, 
+c     &                        psi, wig, stat_wig, 
+c     &                        rop_ssiter, rop_ssiterd,
+c     &                        drodm, drodmd,
+c     &                        ti, ti_df, tj, tj_df, tk,tk_df,vol,vol_df,
+c     &                        venti, ventj, ventk, xmut, xmutd)
 
           elseif (ithread .eq. 1) then
               write(*, *) 'Unknown flux', param_int(KFLUDOM)
           endif
 
-#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
+c#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
 
           !correction flux roe au CL si pas de mvt ALE,....
           nb_bc = param_int( param_int(PT_BC) )
           if(param_int(KFLUDOM).eq.5.and.nb_bc.ne.0) then
 
-            call bfl3_d(ndo, ithread, param_int, 
-     &                  param_real, ind_dm_zone, ind_sdm, 
-     &                  psi, wig, stat_wig, rop_ssiter,
-     &                  rop_ssiterd, drodm, drodmd,
-     &                  ti, ti_df, tj, tj_df, tk, tk_df, 
-     &                  vol, vol_df, venti, ventj, ventk , xmut, xmutd)
+c            call bfl3_d(ndo, ithread, param_int, 
+c     &                  param_real, ind_dm_zone, ind_sdm, 
+c     &                  psi, wig, stat_wig, rop_ssiter,
+c     &                  rop_ssiterd, drodm, drodmd,
+c     &                  ti, ti_df, tj, tj_df, tk, tk_df, 
+c     &                  vol, vol_df, venti, ventj, ventk , xmut, xmutd)
 
           endif
           if(param_int(ITYPCP).le.1.and.
@@ -151,7 +153,7 @@ C Var loc
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
               if(flagCellN.eq.0) then
 
-               call core3as2_kry_d(param_int, ind_mjr,drodm,drodmd, coe)
+c               call core3as2_kry_d(param_int, ind_mjr,drodm,drodmd, coe)
     
               else
                  if (ithread.eq.1)write(*, *) 

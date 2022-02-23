@@ -35,7 +35,7 @@ dt     = 2*0.0006*L0/U0
 
 if explicit_select == 'explicit_local':
     dt     = 2*dt   
-nit    = 500#int(tfinal/dt)
+nit    = 100#int(tfinal/dt)
 
 N      = 66 #Chosen to be a multiple of 3 for the three domains
 dx     = 2*math.pi*L0/N
@@ -145,6 +145,16 @@ if explicit_select == 'explicit_local':
         Internal.setValue(level,int(niveau))
             
 (t, tc, metrics)  = FastS.warmup(t, tc)
+
+t1 = Internal.copyRef(t)
+Internal._rmNodesByName(t1, '.Solver#Param')
+Internal._rmNodesByName(t1, '.Solver#ownData')
+test.testT(t1, 2)
+t1c = Internal.copyRef(tc)
+Internal._rmNodesByName(t1c, '.Solver#Param')
+Internal._rmNodesByName(t1c, '.Solver#ownData')
+test.testT(t1, 3)
+
 times= 0.
 timeStep = numz['time_step']
 
@@ -158,7 +168,7 @@ if isPrintAnalysis:
 for it in range(nit):
     FastS._compute(t, metrics, it, tc,layer='Python')
     times += timeStep
-    if it%10 == 0:
+    if it%100 == 0:
         print('- %d - %f'%(it, times))
         if isPrintAnalysis:
             (enstrophie, tke) = FastS._computeEnstrophy(t, metrics,times)

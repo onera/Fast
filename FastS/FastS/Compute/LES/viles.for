@@ -3,11 +3,12 @@ c     $Date: 2010-11-04 13:25:50 +0100 (Thu, 04 Nov 2010) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine viles( ndo, nidom, Nbre_thread_actif, 
-     &        ithread, Nbre_socket, socket, mx_synchro, neq_rot,
+      subroutine viles( ndo, Nbre_thread_actif, 
+     &        ithread, Nbre_socket, socket,mx_synchro,neq_rot,
      &        param_int, param_real, 
      &        ijkv_sdm,
-     &        ind_dm_zone, ind_dm_socket, ind_dm_omp,
+     &        ind_dm_zone, ind_dm_socket,
+     &        topo_s, ind_dm_omp,
      &        socket_topology, lok ,
      &        rop , ti, tj, tk, vol, xmut, dist, rot)
 
@@ -39,7 +40,7 @@ c***********************************************************************
      & ithread, Nbre_socket, socket , neq_rot
 
 
-      INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
+      INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),topo_s(3),
      & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
      & param_int(0:*), lok(*)
 
@@ -49,19 +50,17 @@ c***********************************************************************
 
 C Var loc 
       INTEGER_E nitrun, depth, ind_flt(6), ind_extrap(6)
-      INTEGER_E omp_mode, topo_omp(3), inddm_omp(6)
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
-
 
 #include "FastS/param_solver.h"
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 
       !On force le mode omp=0 pour init visco les. A supprimer quand mode 1 !stabiliser
-      omp_mode = 0
+      !omp_mode = 0
       nitrun   = 0
 
-
+      
 #include "FastS/HPC_LAYER/SIZE_MIN.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
@@ -70,11 +69,11 @@ C Var loc
 
       !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
       if(param_int(IFLOW).eq.2) then
-c
+
          if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
-c
+
             call invist(ndo, param_int, param_real, ind_coe, rop, xmut )
-c
+
          !LES selective mixed scale model
          else
             !depth =  param_int(NIJK+3)

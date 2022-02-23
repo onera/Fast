@@ -70,11 +70,9 @@ E_Float meaz       = 0;
     //---------------------------------------------------------------------
     // -----Boucle sur num.les domaines de la configuration
     // ---------------------------------------------------------------------
-    E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int nd_current=0;E_Int shift_rk4=0;  E_Int shift_grad=0;
+    E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int nd_current=0;E_Int shift_rk4=0;  E_Int shift_grad=0; E_Int shift_mu=0; E_Int ncells=0;
     if  (param_int[0][EXPLOC] == 0 and param_int[0][RK] == 4 ){ //or param_int[0][EXPLOC] == 0 and param_int[0][RK] == 5)
-      for (E_Int nd = 0; nd < nidom; nd++){
-	shift_rk4 = shift_rk4 + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-      }
+      for (E_Int nd = 0; nd < nidom; nd++){ shift_rk4 = shift_rk4 + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ]; }
     }
     E_Float rhs_end=0;
 
@@ -84,26 +82,36 @@ E_Float meaz       = 0;
 
     if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1) { ipt_norm_kry[ithread-1]=0.; }
     
-    //calcul du sous domaine a traiter par le thread 
-    for (E_Int nd = 0; nd < nidom; nd++){
+    //calcul du sous domaine a traiter par le thread
+    E_Int nbtask = ipt_omp[nitcfg-1]; 
+    E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+
+    //printf("nbtaaask %d %d \n", nbtask, ptiter);
+    for (E_Int ntask = 0; ntask < nbtask; ntask++)
+     {
+      E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+      E_Int nd = ipt_omp[ pttask ];
+ 
       E_Int cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
-      if (param_int[0][EXPLOC] == 1 and param_int[0][RK] == 3 and cycl != 4 and nitcfg%cycl==cycl/4){
-	for (E_Int nd = 0; nd < nidom; nd++){
-	  ndim = ndim + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-	}
-      }
-      else{   
-	ndim = 0;
-      }
+
+      shift_zone=0; shift_wig=0; shift_coe=0; shift_grad=0; ndim =0;
+      for (E_Int n = 0; n < nd; n++)
+        {
+          shift_zone = shift_zone + param_int[n][ NDIMDX ]*param_int[n][ NEQ ];
+          shift_coe  = shift_coe  + param_int[n][ NDIMDX ]*param_int[n][ NEQ_COE ];
+          if(param_int[n][ KFLUDOM ]==2){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*3;}
+          if(param_int[n][ITYPZONE ]==4){  shift_grad = shift_grad + param_int[n][ NDIMDX ]*param_int[n][ NEQ ]*3;}
+          if (param_int[0][EXPLOC] == 1 and param_int[0][RK] == 3 and cycl != 4 and nitcfg%cycl==cycl/4){ ndim = ndim + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ]; }
+        }
    
       E_Int lmin = 10;
       if (param_int[nd][ITYPCP] == 2) lmin = 4;
 
       if (param_int[nd][ITYPZONE] == 4){
 #include       "../../FastP/FastP/Compute/rhs.cpp"
-	shift_grad = shift_grad + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ]*3;
       }
-      else{
+      else
+      {
 	if (param_int[nd][IFLOW] == 4){
 	  lmin =1;
 #include       "../../FastLBM/FastLBM/Compute/cpp_files/lbm_collision_propagation.cpp"
@@ -112,10 +120,6 @@ E_Float meaz       = 0;
 #include       "../../FastS/FastS/Compute/rhs.cpp"
 	}
       }
-      shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-      shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
-      shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-
       //E_Float fin_zone = omp_get_wtime();
 
       //if(ithread==1){cout <<"zone : "<< nd <<" "<< "temps= " << fin_zone - deb_zone <<" "<<"cycle =  " << cycl << endl;}

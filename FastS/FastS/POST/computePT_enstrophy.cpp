@@ -43,6 +43,12 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
 
   PyObject* tmp = PyDict_GetItemString(work, "MX_SYNCHRO"); E_Int mx_synchro    = PyLong_AsLong(tmp); 
 
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+  E_Int ompmode  = iptdtloc[8+nssiter];
+  E_Int* ipt_omp = iptdtloc +9 + nssiter;
+
   E_Int nidom        = PyList_Size(zones);
   E_Int ndimdx       = 0;
 
@@ -110,9 +116,6 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
 //  
 //  Reservation tableau travail temporaire pour calcul du champ N+1
 //
-
-  //printf("thread =%d\n",threadmax_sdm);
-  FldArrayF compteur(     threadmax_sdm); E_Float*ipt_compteur   =  compteur.begin();
   FldArrayI ijkv_sdm(   3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(   3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
   FldArrayI ind_dm(     6*threadmax_sdm); E_Int* ipt_ind_dm     =  ind_dm.begin();
@@ -122,7 +125,7 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
   FldArrayF grad(neq_grad*3*ndimdx); E_Float* iptgrad =  grad.begin();
   FldArrayF  tke(    threadmax_sdm); E_Float* ipt_tke =  tke.begin();
   FldArrayF enst(    threadmax_sdm); E_Float* ipt_enst= enst.begin();
-
+  FldArrayF compteur(threadmax_sdm); E_Float* ipt_compteur =  compteur.begin();
 
   // Tableau de travail verrou omp
   PyObject* lokArray = PyDict_GetItemString(work,"verrou_omp"); FldArrayI* lok;
@@ -154,61 +157,64 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
       // ---------------------------------------------------------------------
-        for (E_Int nd = 0; nd < nidom; nd++)
-          {  
-            E_Int* ipt_lok_thread   = ipt_lok   + nd*mx_synchro*Nbre_thread_actif;
-            
-            E_Int* ipt_ind_dm_loc         = ipt_ind_dm         + (ithread-1)*6;
-            ipt_ind_dm_loc[0] = 1;
-            ipt_ind_dm_loc[2] = 1;
-            ipt_ind_dm_loc[4] = 1;
-            ipt_ind_dm_loc[1] = ipt_param_int[nd][ IJKV];
-            ipt_ind_dm_loc[3] = ipt_param_int[nd][ IJKV+1];
-            ipt_ind_dm_loc[5] = ipt_param_int[nd][ IJKV+2];
+      E_Int nitcfg =1;
 
-            E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
-            E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
-            E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
-            E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
+      E_Int nbtask = ipt_omp[nitcfg-1]; 
+      E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
 
-             // Distribution de la sous-zone sur les threads
-             E_Int lmin =4;
-             indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
-                              ipt_ind_dm_loc, 
-                              ipt_topology_socket, ipt_ind_dm_socket );
+      for (E_Int ntask = 0; ntask < nbtask; ntask++)
+        {
+          E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+          E_Int nd = ipt_omp[ pttask ];
 
-             post_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, neq_grad,
-                    ipt_param_int[nd], ipt_param_real[nd], ipt_tke[ithread-1], ipt_enst[ithread-1], ipt_compteur[ithread-1],
-                    ipt_ijkv_sdm_thread,
-                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
-                    ipt_topology_socket, ipt_lok_thread ,
-                    iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptgrad);
+          E_Int* ipt_ind_dm_loc         = ipt_ind_dm         + (ithread-1)*6;
+          ipt_ind_dm_loc[0] = 1; ipt_ind_dm_loc[2] = 1; ipt_ind_dm_loc[4] = 1;
+          ipt_ind_dm_loc[1] = ipt_param_int[nd][ IJKV];
+          ipt_ind_dm_loc[3] = ipt_param_int[nd][ IJKV+1];
+          ipt_ind_dm_loc[5] = ipt_param_int[nd][ IJKV+2];
 
-#pragma omp barrier
-#pragma omp single
-           {
+          E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
+          E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
+          E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
 
-             for (E_Int nd = 1; nd <Nbre_thread_actif ; nd++) {
-                 ipt_enst[0]    =  ipt_enst[0] + ipt_enst[nd];
-                 ipt_tke[0]     =  ipt_tke[0] + ipt_tke[nd];
-                 ipt_compteur[0]=  ipt_compteur[0] + ipt_compteur[nd];
-               }
-	     //ipt_enst[0]=  ipt_enst[0]/float( ipt_compteur[0]);
-	     // ipt_tke[0] =  ipt_tke[0]/ float( ipt_compteur[0]);
-	     enstr = enstr + ipt_enst[0];
-	     tk = tk + ipt_tke[0];
-	     compt = compt + ipt_compteur[0];
+          // Distribution de la sous-zone sur les threads
+          E_Int lmin =4;
 
-	     //cout << "enstr= " << enstr <<" "<<"zone"<<" "<< nd << endl;
-	     //cout << "compt= " << compt <<" "<<"zone"<<" "<< nd << endl;
+          E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
+          E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+          E_Int nd_subzone            = ipt_omp[ pttask + 1 ];
+          E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+          ipt_topo_omp                = ipt_omp + pttask + 3 + Nbre_thread_actif ;
+          ipt_inddm_omp               = ipt_omp + pttask + 6 + Nbre_thread_actif + (ithread_loc-1)*6;
 
-           }
-          }// boucle zone 
+          if (ithread_loc == -1) { continue;}
+
+          indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
+                            ipt_ind_dm_loc, 
+                            ipt_topology_socket, ipt_ind_dm_socket );
+
+          E_Int* ipt_lok_thread   = ipt_lok   + ntask*mx_synchro*Nbre_thread_actif;
+
+          post_( nd, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, neq_grad,
+                 ipt_param_int[nd], ipt_param_real[nd], ipt_tke[ithread-1], ipt_enst[ithread-1], ipt_compteur[ithread-1],
+                 ipt_ijkv_sdm_thread,
+                 ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_inddm_omp, ipt_topo_omp,
+                 ipt_topology_socket, ipt_lok_thread ,
+                 iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptgrad);
+
+        }// boucle zone 
 # include "HPC_LAYER/INIT_LOCK.h"
   }  // zone OMP
 
-  ipt_enst[0]=  enstr/compt;
-  ipt_tke[0] =  tk/ compt;
+  for (E_Int nd = 1; nd < __NUMTHREADS__ ; nd++) {
+    ipt_enst[0]    =  ipt_enst[0] + ipt_enst[nd];
+    ipt_tke[0]     =  ipt_tke[0] + ipt_tke[nd];
+    ipt_compteur[0]=  ipt_compteur[0] + ipt_compteur[nd];
+    }
+
+
+  ipt_enst[0]= ipt_enst[0] /ipt_compteur[0];
+  ipt_tke[0] = ipt_tke[0] / ipt_compteur[0];
 
 
   delete [] ipt_param_real;

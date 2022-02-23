@@ -1,14 +1,14 @@
-        if(omp_mode.eq.0) then
-!DIR$ ATTRIBUTES FORCEINLINE :: indice_boucle_scater
-           call indice_boucle_scater(ndo,ibloc,jbloc,kbloc,
-     &                            ithread, param_int( IO_THREAD),
-     &                            topo_s, size_thread, ijkv_thread,
-     &                            ijkvloc, thread_pos_tmp,ind_dm_socket,
-     &                            ind_dm_omp )
-        else
-          ind_dm_omp(1:6)= inddm_omp(1:6)
-        endif
-
+c        if(omp_mode.eq.0) then
+c!DIR$ ATTRIBUTES FORCEINLINE :: indice_boucle_scater
+cc           call indice_boucle_scater(ndo,ibloc,jbloc,kbloc,
+cc     &                            ithread, param_int( IO_THREAD),
+cc     &                            topo_s, size_thread, ijkv_thread,
+cc     &                            ijkvloc, thread_pos_tmp,ind_dm_socket,
+cc     &                            ind_dm_omp )
+c          ind_dm_omp(1:6)= inddm_omp(1:6)
+c        else
+c          ind_dm_omp(1:6)= inddm_omp(1:6)
+c        endif
 
            !mise en place du cache bloking + synchro
            if(param_int(KFLUDOM).ne.7)then

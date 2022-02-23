@@ -3,11 +3,11 @@ c     $Date: 2010-11-04 13:25:50 +0100 (Thu, 04 Nov 2010) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine post( ndo, nidom, Nbre_thread_actif, 
+      subroutine post( ndo, Nbre_thread_actif, 
      &        ithread, Nbre_socket, socket, mx_synchro, neq_grad,
      &        param_int, param_real, tke, enst, compteur,
      &        ijkv_sdm,
-     &        ind_dm_zone, ind_dm_socket, ind_dm_omp,
+     &        ind_dm_zone, ind_dm_socket, ind_dm_omp, topo_s,
      &        socket_topology, lok ,
      &        rop , ti, tj, tk, vol, grad)
 
@@ -35,10 +35,10 @@ c
 c***********************************************************************
       implicit none
 
-      INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, 
+      INTEGER_E ndo, Nbre_thread_actif , mx_synchro, 
      & ithread, Nbre_socket, socket , neq_grad
 
-      INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),ind_dm_omp(6),
+      INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),ind_dm_omp(6),topo_s(3),
      &  ind_dm_socket(6), socket_topology(3), param_int(0:*), lok(*)
 
       REAL_E rop(*), ti(*),tj(*),tk(*),vol(*), grad(*),tke,enst,compteur
@@ -47,7 +47,6 @@ c***********************************************************************
 
 C Var loc 
       INTEGER_E nitrun
-      INTEGER_E omp_mode, topo_omp(3), inddm_omp(6)
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
       REAL_E c1,c2,val
 
@@ -56,7 +55,6 @@ C Var loc
 #include "FastS/formule_mtr_param.h"
 
       !On force le mode 0 pour le Post. A supprimer quand mode 1 !stabiliser
-      omp_mode = 0
 
       !coefficient pour calcul gradient ordre4 - c1=7./12 c2=1./12 ordre 4 - c1=0.5 c2=0 ordre 2
       c1 = 7./12

@@ -3,6 +3,7 @@
     E_Int shift =6*Nfamily +1 ;
     E_Int ithread =1;
     E_Int Nthread_max=1;
+    E_Int nd_subzone = 0;
 
     if(nd ==0)
      {

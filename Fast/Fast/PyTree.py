@@ -52,7 +52,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     #global FastC.FIRST_IT, FastC.HOOK
     # Get omp_mode
     ompmode = OMP_MODE
-    node = Internal.getNodeFromName2(t, '.Solver#define')
+    node = Internal.getNodeFromName1(t, '.Solver#define')
     if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
         if  node is not None: ompmode = Internal.getValue(node)
@@ -65,7 +65,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     FastC._buildOwnData(t, Padding)
 
     #init hook necessaire pour info omp
-    dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
+    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
     nssiter = int(dtloc[0])
 
@@ -250,7 +250,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 #==============================================================================
 def allocate_metric(t,nghost):
     zones        = Internal.getZones(t)
-    dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
+    dtloc        = Internal.getNodeFromName2(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
     nssiter      = int(dtloc_numpy[0])
 
@@ -384,11 +384,10 @@ def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmo
 def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     """Compute a given number of iterations."""
 
-    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
-    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
+    own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
 
-    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(t, '.Solver#define')
     omp_node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode  = OMP_MODE
     if  omp_node is not None: ompmode = Internal.getValue(omp_node)
@@ -427,9 +426,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
 
          hook1 = FastC.HOOK.copy()
-         distrib_omp = 0
-         #hook1.update(  FastS.fasts.souszones_list(zones_str, metrics_str, FastC.HOOK, nitrun, nstep, distrib_omp) )
-         hook1.update(  FastS.fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
+         hook1.update(  FastS.fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode) )
 
          #nidom_loc = hook1["nidom_tot"] + len(zones_unstr)
          nidom_loc = hook1["nidom_tot"]
@@ -445,7 +442,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             layer_mode= 0
             nit_c     = 1
             #t0=Time.time()
-            fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)
+            fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
             #print('t_compute = %f'%(Time.time() - t0))
 
             # dtloc GJeanmasson
@@ -498,7 +495,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
           FastC.HOOK['param_int_tc']  = None
           FastC.HOOK['param_real_tc'] = None
 
-      fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c , FastC.HOOK)
+      fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c , FastC.HOOK)
 
     zones_ns    = infos_zones["NS"][0]
     metrics_ns  = infos_zones["NS"][1]
@@ -581,7 +578,7 @@ def tri_zones(zones, metrics):
 #==============================================================================
 def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None,verbose='firstlast'):
     zones        = Internal.getZones(t)
-    dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
+    dtloc        = Internal.getNodeFromName2(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
     nssiter      = int(dtloc_numpy[0])
     nzones	 = len(zones)

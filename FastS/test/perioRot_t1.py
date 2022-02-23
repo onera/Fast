@@ -4,6 +4,7 @@ import Generator.PyTree as G
 import Connector.PyTree as X
 import Converter.PyTree as C
 import FastS.PyTree as FastS
+import FastC.PyTree as FastC
 import Converter.Internal as Internal
 import KCore.test as test
 
@@ -78,6 +79,11 @@ C._initVars(t, '{centers:VelocityX}= {centers:CoordinateX}/{centers:Rayon}')
 C._initVars(t, '{centers:VelocityY}= {centers:CoordinateY}/{centers:Rayon}')
 C._initVars(t, '{centers:VelocityZ} = 1.')
 C._initVars(t, '{centers:Temperature}=1.')
+
+# Numerics
+numb = {}
+numb["temporal_scheme"]    = "explicit"
+FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, tc, graph=None)
 

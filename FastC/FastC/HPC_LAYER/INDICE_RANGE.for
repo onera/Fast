@@ -30,5 +30,5 @@
 #endif
 
 #if CHECK_SPLIT > 0
-#include "FastC/HPC_LAYER/check_split0.for"
+#include "../FastC/FastC/HPC_LAYER/check_split0.for"
 #endif

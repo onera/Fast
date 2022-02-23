@@ -7,7 +7,7 @@ c***********************************************************************
      &                    ind_sdm, ind_rhs, ind_ssa,
      &                    temps,
      &                    rop, xmut, drodm, coe, x,y,z,cellN_IBC,
-     &                    ti, tj, tk, vol, delta, ro_src)
+     &                    ti, tj, tk, vol, delta, ro_src, wig)
 c***********************************************************************
 c_P                          O N E R A
 c
@@ -34,7 +34,7 @@ c
       REAL_E ti(*),tj(*),tk(*), vol(*)
       REAL_E x(*),y(*),z(*), cellN_IBC(*)
       REAL_E param_real(0:*), temps
-      REAL_E delta(*), ro_src(*)
+      REAL_E delta(*), ro_src(*), wig(*)
 
 C Var loc
       INTEGER_E nacp,l,idirx,idirz,i,j,k,n,n2,i1,j1,k1,i2m1,j2m1,k2m1,
@@ -241,6 +241,16 @@ c**         Source term IBC a la funk ordre 0
           call ibcsource(ndom,param_int,ind_rhs,
      &                   rop, cellN_IBC, coe, drodm )
 
+        endif
+
+
+c***********************************************************************
+c**         Ducros pour senseur_hyper
+
+        if(param_int(KFLUDOM).eq.8) then 
+
+          call ducros(ndom,param_int, param_real,
+     &               ind_ssa, rop, ti,tj,tk,vol,wig)
         endif
 
 c***********************************************************************

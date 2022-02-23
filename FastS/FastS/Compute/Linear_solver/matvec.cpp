@@ -42,7 +42,7 @@ E_Float time_init;
   E_Float& temps,
   E_Int* ipt_ijkv_sdm  ,
   E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int& vartype, E_Float* timer_omp,
-  E_Int*     iptludic  , E_Int*   iptlumax      ,
+  E_Int*     iptludic  , E_Int*   iptlumax      , E_Int* ipt_omp       ,
   E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom  ,
   E_Float* ipt_VectG      , E_Float* ipt_VectY   , E_Float** iptssor       , E_Float** iptssortmp    , E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
   E_Float* ipt_Hessenberg, E_Float** iptkrylov      , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
@@ -149,16 +149,13 @@ if( param_int_tc != NULL)
    E_Int socket          = (ithread-1)/thread_parsock +1;
    E_Int  ithread_sock   = ithread-(socket-1)*thread_parsock;
 
-
-
-    E_Int lrhs = 2; E_Int lcorner = 0; E_Int npass = 0; E_Int ipt_shift_lu[6];
-    E_Int nd_current=0;
-    for (E_Int nd = 0; nd < nidom; nd++)
-      {
-       E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
-       E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
-       E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
-       E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
+   E_Int nbtask; E_Int ptiter;
+   E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int shift_mu=0;
+   E_Int lrhs = 2; E_Int lcorner = 0; E_Int npass = 0;
+    E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
+    E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
+    E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
+    E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
 #include  "HPC_LAYER/OMP_MODE_BEGIN.h"
 
            E_Int ierr = BCzone_d(nd, lrhs , nitcfg, lcorner, param_int[nd], param_real[nd], npass,
@@ -172,9 +169,7 @@ if( param_int_tc != NULL)
 
             correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptkrylov_transfer[nd]);
 
-            nd_current +=1;
 #include    "HPC_LAYER/OMP_MODE_END.h"
-      }//loop zone
 
 
 #pragma omp barrier
@@ -184,46 +179,28 @@ if( param_int_tc != NULL)
     // produit matrice:vecteur.
     // In: rop_ssiter, rop_ssiter_d
     // Out: drodmd
-    E_Int shift_zone=0;
-    E_Int shift_wig =0;
-    E_Int shift_coe =0;
-    E_Int shift_mu=0;
-    nd_current=0;
     ipt_norm_kry[ithread-1]=0;
-    for (E_Int nd = 0; nd < nidom; nd++)
-      {
 
-       E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3;
-       E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3;
-       E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
-       E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
-       E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
-       E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
-       E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
-       E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
+    E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3;
+    E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3;
+    E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
+    E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
 
+#include  "HPC_LAYER/OMP_MODE_BEGIN.h"
 
        E_Float* krylov_in    = NULL;
        E_Float* rop_ssiter_d = iptkrylov[nd] +  no_vect_test    * param_int[nd][NEQ] * param_int[nd][NDIMDX]; //matvec_x
        E_Float* ipt_drodmd   = iptkrylov[nd] + (no_vect_test+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX]; //matvec_out
 
-       E_Int lmin = 10;
-       if (param_int[nd][ITYPCP] == 2) lmin = 4;
-
-       E_Int* ipt_nidom_loc; 
-       E_Int nb_subzone; 
        E_Int mjr_dt =1;
 #include "Compute/Linear_solver/dRdp_tapenade.cpp"
 
-	shift_mu   = shift_mu   + param_int[nd][ NDIMDX ];
-	shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
 	//shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
 	// Warning
 	// Warning a blinder
 	// Warning
-	shift_zone = 0;
-	shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-      }
+	//shift_zone = 0;
+#include    "HPC_LAYER/OMP_MODE_END.h"
 
   }// omp
 

@@ -128,10 +128,10 @@ namespace K_FASTS
 
   void souszones_list_c( E_Int**& ipt_param_int, E_Float**& ipt_param_real, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom, PyObject* work ,
                          E_Int* dtloc          , E_Int* ipt_iskip_lu      , E_Int lssiter_loc       , E_Int nidom    , 
-                         E_Int nitrun          , E_Int nstep              , E_Int& nidom_tot        , E_Int& lexit_lu, E_Int& lssiter_verif);
+                         E_Int nitrun          , E_Int nstep              , E_Int flag_res          , E_Int& lexit_lu, E_Int& lssiter_verif);
 
-  void distributeThreads_c( E_Int**& ipt_param_int,  E_Float**& ipt_param_real, E_Int**& ipt_ind_dm, 
-                            E_Int& nidom          ,  E_Int& nssiter           , E_Int& mx_sszone   , E_Int& nstep, E_Int& nitrun, E_Int& display);
+  void distributeThreads_c( E_Int**& ipt_param_int,  E_Float**& ipt_param_real, E_Int**& ipt_ind_dm, E_Int& omp_mode,
+                            E_Int& nidom          ,  E_Int* ipt_dtloc         , E_Int& mx_sszone   , E_Int& nstep, E_Int& nitrun, E_Int& display);
 
   E_Int topo_test( E_Int* topo, E_Int* nijk, E_Int& cell_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k);
 
@@ -150,7 +150,7 @@ namespace K_FASTS
     E_Int* ipt_ijkv_sdm , 
     E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int& vartype, E_Float* timer_omp,
     E_Int* iptludic             , E_Int* iptlumax, 
-    E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom,
+    E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom, E_Int* ipt_omp              ,
     E_Float* ipt_VectG          , E_Float* ipt_VectY     , E_Float** ipt_ssor          , E_Float** ipt_ssortmp, E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
     E_Float* ipt_Hessenberg     , E_Float** iptkrylov    , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
     E_Float*   ipt_cfl          ,
@@ -184,7 +184,7 @@ namespace K_FASTS
     E_Float& temps,
     E_Int* ipt_ijkv_sdm , 
     E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int& vartype, E_Float* timer_omp,
-    E_Int* iptludic             , E_Int* iptlumax, 
+    E_Int* iptludic             , E_Int* iptlumax,  E_Int* ipt_omp,
     E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom,
     E_Float* ipt_VectG          , E_Float* ipt_VectY     , E_Float** ipt_ssor          , E_Float** ipt_ssortmp, E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
     E_Float* ipt_Hessenberg     , E_Float** iptkrylov    , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,

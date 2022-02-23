@@ -139,12 +139,12 @@ nit=NIT; times = 0.
 timeStep = numz['time_step']
 for it in range(nit):
     FastS._compute(t, metrics, it,tc,layer='Python')
-    if it%10 == 0:
+    if it%100 == 0:
         print('- %d - %f'%(it, times))
         FastS.display_temporal_criteria(t, metrics, it)
     times += timeStep
 
-t = P.computeGrad2(t, 'centers:Density')
+#t = P.computeGrad2(t, 'centers:Density')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 

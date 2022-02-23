@@ -46,34 +46,32 @@ def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
 # compute in place
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=None):
-#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1):
+#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1, ucData=None, vtune=None ):
+def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=None, vtune=None ):
     """Compute a given number of iterations."""
 
-    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
-    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
-    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+    bases  = Internal.getNodesFromType1(t , 'CGNSBase_t')       # noeud
+    own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
 
-    zones = []
-    for f in bases:
-        zones += Internal.getNodesFromType1(f, 'Zone_t')
+    zones = Internal.getZones(t)
 
-        ## Note: This error is currently placed as a peculiar behavior was observed for a specific
-        ##       test case.
-        ##       For identical parameters, mesh, running conditions, etc. the "c layer" mode resulted
-        ##       in wrong results while the "python layer" gave the correct results.
-        ##       However, for simplified regression & verification test cases "c layer" and "python layer"
-        ##       resulted in the same results. Therefore the below warning is just for precaution and if needed can be
-        ##       commented out.
+    ## Note: This error is currently placed as a peculiar behavior was observed for a specific
+    ##       test case.
+    ##       For identical parameters, mesh, running conditions, etc. the "c layer" mode resulted
+    ##       in wrong results while the "python layer" gave the correct results.
+    ##       However, for simplified regression & verification test cases "c layer" and "python layer"
+    ##       resulted in the same results. Therefore the below warning is just for precaution and if needed can be
+    ##       commented out.
         
-        d = Internal.getNodeFromName1(f, '.Solver#define')
-        a = Internal.getNodeFromName1(d, 'temporal_scheme')
-        if(Internal.getValue(a) == 'explicit_local' and layer=="c"):
-            print("ERROR(compute.py):: There is a bug with 'explicit_local' & 'c layer'")
-            print("ERROR(compute.py):: use 'python layer'...aborting.")
-            exit()
+    d = Internal.getNodeFromName1(t, '.Solver#define')
+    a = Internal.getNodeFromName1(d, 'temporal_scheme')
+    if(Internal.getValue(a) == 'explicit_local' and layer=="c"):
+         print("ERROR(compute.py):: There is a bug with 'explicit_local' & 'c layer'")
+         print("ERROR(compute.py):: use 'python layer'...aborting.")
+         exit()
 
-    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(t, '.Solver#define')
     omp_node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode  = OMP_MODE
     if  omp_node is not None: ompmode = Internal.getValue(omp_node)
@@ -90,6 +88,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
      
     if nitrun == 1: print('Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode))
 
+    tps_cp=  Time.time(); tps_cp=  tps_cp-tps_cp     
+    tps_tr=  Time.time(); tps_tr=  tps_tr-tps_tr  
     if layer == "Python":
         
       if exploc==1 and tc is not None:        
@@ -109,21 +109,21 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
-         distrib_omp = 0
-         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
-         nidom_loc = hook1["nidom_tot"]
+         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode) )
         
          skip = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
 
          # calcul Navier_stokes + appli CL
-         if nidom_loc > 0 and skip == 0:
+         if skip == 0:
             nstep_deb = nstep
             nstep_fin = nstep
             layer_mode= 0
             nit_c     = 1
             #t0=Time.time()
-            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, hook1)           
+            tic=Time.time()
+            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
+            tps_cp +=Time.time()-tic 
             #print('t_compute = %f'%(Time.time() - t0))
 
             timelevel_target = int(dtloc[4])
@@ -141,13 +141,13 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                # Ghostcell
                if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
-               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax, rk, exploc)
+               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc)
 
                fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
 
                if nstep%2 == 0:
                    vars = ['Density']
-                   _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, nitmax, rk, exploc, 2)
+                   _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep,  ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc, num_passage= 2)
 
                if   nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
                elif nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
@@ -158,7 +158,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
               vars = FastC.varsP
               if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
               #t0=Time.time()
+              tic=Time.time()
+
               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
+
               #print('t_fillGhost = ',  Time.time() - t0 ,'nstep =', nstep)
               # Add unsteady Chimera transfers here
               if ucData is not None:
@@ -188,7 +191,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                                     interpInDnrFrame=interpInDnrFrame, hook=hookTransfer)
                     #print('t_transfert = ',  Time.time() - t0 ,'nstep =', nstep)
               #print('t_transferts = %f'%(Time.time() - t0)
-
+              tps_tr +=Time.time()-tic
 
     else: ### layer C
 
@@ -201,7 +204,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
           FastC.HOOK['param_int_tc']  = None
           FastC.HOOK['param_real_tc'] = None
 
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, ompmode, nit_c, FastC.HOOK)
+      tic=Time.time()
+      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
+      tps_cp +=Time.time()-tic 
 
     # switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None:
@@ -216,8 +221,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
     FastC.HOOK["FIRST_IT"]  = 1
     FastC.FIRST_IT          = 1
 
-    return None
-
+    if vtune is None:
+      return None
+    else:
+      return tps_cp,tps_tr
 
 #==============================================================================
 # compute in place
@@ -225,15 +232,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 #==============================================================================
 def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
     
-    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
-    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
-    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+    own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
 
-    zones = []
-    for f in bases:
-        zones += Internal.getNodesFromType1(f, 'Zone_t') 
+    zones = Internal.getZones(t)
 
-    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
@@ -254,10 +258,10 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
 #==============================================================================
 def allocate_metric(t):
     zones        = Internal.getZones(t)
-    dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
+    dtloc        = Internal.getNodeFromName2(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
     nssiter      = int(dtloc_numpy[0])
-     
+
     metrics=[]; motion ='none'
     for z in zones:
         b = Internal.getNodeFromName2(z, 'motion')
@@ -279,7 +283,7 @@ def allocate_metric(t):
 #==============================================================================
 def allocate_ssor(t, metrics, hook, ompmode):
     zones = Internal.getZones(t)
-    dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')
+    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')
     dtloc_numpy = Internal.getValue(dtloc)
     nssiter = int(dtloc_numpy[0])
 
@@ -315,7 +319,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     # Get omp_mode
     ompmode = OMP_MODE
-    node = Internal.getNodeFromName2(t, '.Solver#define')
+    node = Internal.getNodeFromName1(t, '.Solver#define')
     if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
         if  node is not None: ompmode = Internal.getValue(node)
@@ -327,7 +331,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     FastC._buildOwnData(t, Padding)
     
     #init hook necessaire pour info omp
-    dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
+    tmp   = Internal.getNodeFromName1(t, '.Solver#ownData')
+    dtloc = Internal.getNodeFromName1(tmp, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
@@ -351,13 +356,13 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #print 'int(dtloc[0])= ', int(dtloc[0])
     for nstep in range(1, int(dtloc[0])+1):
         hook1       = FastC.HOOK.copy()
-        distrib_omp = 1
-        hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, distrib_omp) )   
+        hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode) )   
+
 
     #init metric
-    #print(ompmode)
     _init_metric(t, metrics, ompmode)
 
+   
     ssors = allocate_ssor(t, metrics, hook1, ompmode)
 
     # compact + align + init numa
@@ -402,6 +407,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         teta = infos_ale[0]; tetap = infos_ale[1]
         FastC._motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
+    #print("souci souszone list: distrib non appelee");
+    #import sys; sys.exit()
     #t1=timeit.default_timer()
     #print("cout mise a jour vitesse entr= ", t1-t0)
     #
@@ -785,8 +792,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_
        timelevel_motion = 0
        Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0] =timelevel_motion
 
-    base = Internal.getNodeFromType1(t   ,"CGNSBase_t")
-    own  = Internal.getNodeFromName1(base, '.Solver#ownData')
+    own  = Internal.getNodeFromName1(t, '.Solver#ownData')
     if own is not None: 
        dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')[1]
        dtloc[3]=timelevel_motion
@@ -1282,8 +1288,7 @@ def _computeStats(t, tmy, metrics):
     zones    = Internal.getZones(t)
     zones_my = Internal.getZones(tmy)
 
-    bases= Internal.getNodesFromType1(t,'CGNSBase_t')
-    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
@@ -1314,19 +1319,22 @@ def _postStats(tmy):
 
     zones   = Internal.getZones(tmy)
 
-    vars=['Density','MomentumX','MomentumY','MomentumZ','Pressure','Pressure^2','ViscosityEddy','rou^2','rov^2','row^2','rouv','rouw','rovw']
-
 
     for z in zones:
       flowsol = Internal.getNodeFromName1(z,'FlowSolution#Centers')
+      cyl = Internal.getNodeFromName1(flowsol,"Momentum_t")
+      if cyl ==None:
+          vars=[['MomentumX','VelocityX'],['MomentumY','VelocityY'],['MomentumZ','VelocityZ']]
+      else:
+          vars=[['MomentumX','VelocityX'],['Momentum_t','Velocity_t'],['Momentum_r','Velocity_r']]
+
       #calcul vitesse
       dens= Internal.getNodeFromName1(flowsol,'Density')
-      for v in vars[1:4]:
-         var = Internal.getNodeFromName1(flowsol,v)
-         if v == 'MomentumX': var[0]= 'VelocityX'
-         if v == 'MomentumY': var[0]= 'VelocityY'
-         if v == 'MomentumZ': var[0]= 'VelocityZ'
+      for v in vars:
+         var = Internal.getNodeFromName1(flowsol,v[0])
+         var[0]= v[1]
          var[1]= var[1]/dens[1]
+
       #calcul prms
       pres = Internal.getNodeFromName1(flowsol,'Pressure')
       pres2= Internal.getNodeFromName1(flowsol,'Pressure^2')
@@ -1337,34 +1345,73 @@ def _postStats(tmy):
       pres2= Internal.getNodeFromName1(flowsol,'rou^2')
       pres2[0]='Urms'
       pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
-      #calcul vrms
-      pres = Internal.getNodeFromName1(flowsol,'VelocityY')
-      pres2= Internal.getNodeFromName1(flowsol,'rov^2')
-      pres2[0]='Vrms'
-      pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
-      #calcul wrms
-      pres = Internal.getNodeFromName1(flowsol,'VelocityZ')
-      pres2= Internal.getNodeFromName1(flowsol,'row^2')
-      pres2[0]='Wrms'
-      pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
-      #calcul rou'v'
-      v1   = Internal.getNodeFromName1(flowsol,'VelocityX')
-      v2   = Internal.getNodeFromName1(flowsol,'VelocityY')
-      pres2= Internal.getNodeFromName1(flowsol,'rouv')
-      pres2[0]="Rhou'v'"
-      pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
-      #calcul rou'w'
-      v1   = Internal.getNodeFromName1(flowsol,'VelocityX')
-      v2   = Internal.getNodeFromName1(flowsol,'VelocityZ')
-      pres2= Internal.getNodeFromName1(flowsol,'rouw')
-      pres2[0]="Rhou'w'"
-      pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
-      #calcul rov'w'
-      v1   = Internal.getNodeFromName1(flowsol,'VelocityY')
-      v2   = Internal.getNodeFromName1(flowsol,'VelocityZ')
-      pres2= Internal.getNodeFromName1(flowsol,'rovw')
-      pres2[0]="Rhov'w'"
-      pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+
+      if cyl ==None:
+        #calcul vrms
+        pres = Internal.getNodeFromName1(flowsol,'VelocityY')
+        pres2= Internal.getNodeFromName1(flowsol,'rov^2')
+        pres2[0]='Vrms'
+        pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
+        #calcul wrms
+        pres = Internal.getNodeFromName1(flowsol,'VelocityZ')
+        pres2= Internal.getNodeFromName1(flowsol,'row^2')
+        pres2[0]='Wrms'
+        pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
+        #calcul rou'v'
+        v1   = Internal.getNodeFromName1(flowsol,'VelocityX')
+        v2   = Internal.getNodeFromName1(flowsol,'VelocityY')
+        pres2= Internal.getNodeFromName1(flowsol,'rouv')
+        pres2[0]="Rhou'v'"
+        pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+        #calcul rou'w'
+        v1   = Internal.getNodeFromName1(flowsol,'VelocityX')
+        v2   = Internal.getNodeFromName1(flowsol,'VelocityZ')
+        pres2= Internal.getNodeFromName1(flowsol,'rouw')
+        pres2[0]="Rhou'w'"
+        pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+        #calcul rov'w'
+        v1   = Internal.getNodeFromName1(flowsol,'VelocityY')
+        v2   = Internal.getNodeFromName1(flowsol,'VelocityZ')
+        pres2= Internal.getNodeFromName1(flowsol,'rovw')
+        pres2[0]="Rhov'w'"
+        pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+
+        C._initVars(z, '{centers:MomentumX}= {centers:Density}*{centers:VelocityX}')
+        C._initVars(z, '{centers:MomentumY}= {centers:Density}*{centers:VelocityY}')
+        C._initVars(z, '{centers:MomentumZ}= {centers:Density}*{centers:VelocityZ}')
+      else:
+        #calcul vrms
+        pres = Internal.getNodeFromName1(flowsol,'Velocity_t')
+        pres2= Internal.getNodeFromName1(flowsol,'roU_t^2')
+        pres2[0]='Vt_rms'
+        pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
+        #calcul wrms
+        pres = Internal.getNodeFromName1(flowsol,'Velocity_r')
+        pres2= Internal.getNodeFromName1(flowsol,'roU_r^2')
+        pres2[0]='Vr_rms'
+        pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
+        #calcul rou'v'
+        v1   = Internal.getNodeFromName1(flowsol,'VelocityX')
+        v2   = Internal.getNodeFromName1(flowsol,'Velocity_t')
+        pres2= Internal.getNodeFromName1(flowsol,'rouU_t')
+        pres2[0]="Rhou'v'"
+        pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+        #calcul rou'w'
+        v1   = Internal.getNodeFromName1(flowsol,'VelocityX')
+        v2   = Internal.getNodeFromName1(flowsol,'Velocity_r')
+        pres2= Internal.getNodeFromName1(flowsol,'rouU_r')
+        pres2[0]="Rhou'w'"
+        pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+        #calcul rov'w'
+        v1   = Internal.getNodeFromName1(flowsol,'Velocity_t')
+        v2   = Internal.getNodeFromName1(flowsol,'Velocity_r')
+        pres2= Internal.getNodeFromName1(flowsol,'roU_tU_r')
+        pres2[0]="Rhov'w'"
+        pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+        #calcul vrms
+        C._initVars(z, '{centers:MomentumX}= {centers:Density}*{centers:VelocityX}')
+        C._initVars(z, '{centers:MomentumY}= {centers:Density}*{centers:Velocity_t}')
+        C._initVars(z, '{centers:MomentumZ}= {centers:Density}*{centers:Velocity_r}')
 
     return None
 
@@ -1375,7 +1422,7 @@ def _computeEnstrophy(t, metrics, time):
     
 
     zones = Internal.getZones(t)
-    dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
+    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
 
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
@@ -1446,7 +1493,7 @@ def _computeVariables(t, metrics, varlist, order=2):
        if lcompact_Rotx: _compact(zones, fields=['centers:RotX' ])
        if lcompact_drodt: _compact(zones, fields=['centers:dDensitydt' ])
 
-       dtloc = Internal.getNodeFromName3(t , '.Solver#dtloc')  # noeud
+       dtloc = Internal.getNodeFromName2(t , '.Solver#dtloc')  # noeud
        dtloc = Internal.getValue(dtloc)                       # tab numpy
 
        # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
@@ -1506,7 +1553,7 @@ def _computeGrad(t, metrics, varlist, order=2):
         var_zones.append(var_loc)
       
     if lgrad:
-       dtloc = Internal.getNodeFromName3(t , '.Solver#dtloc')  # noeud
+       dtloc = Internal.getNodeFromName2(t , '.Solver#dtloc')  # noeud
        dtloc = Internal.getValue(dtloc)                       # tab numpy
 
        # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
@@ -1523,7 +1570,7 @@ def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None ,verbose
     
 def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast'):
     zones        = Internal.getZones(t)
-    dtloc        = Internal.getNodeFromName3(t, '.Solver#dtloc')
+    dtloc        = Internal.getNodeFromName2(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
     nssiter      = int(dtloc_numpy[0])
     nzones	 = len(zones)
@@ -1567,8 +1614,7 @@ def checkKeys(d, keys):
 #==============================================================================
 def _computeVelocityAle(t, metrics):
     
-
-    dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
+    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
 
     zones = Internal.getZones(t)
@@ -1576,8 +1622,7 @@ def _computeVelocityAle(t, metrics):
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
     
-    bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
-    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
@@ -1591,7 +1636,7 @@ def _computeVelocityAle(t, metrics):
 def copy_velocity_ale(t, metrics, it=0):
     
 
-    dtloc = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
+    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
 
     zones = Internal.getZones(t)
@@ -1599,8 +1644,7 @@ def copy_velocity_ale(t, metrics, it=0):
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
     
-    bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
-    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(t   , '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
@@ -1941,15 +1985,14 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     zones     = Internal.getZones(t)
     zones_eff = Internal.getZones(teff)
     
-    bases= Internal.getNodesFromType1(t, 'CGNSBase_t')
-    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(t   , '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = OMP_MODE
     if node is not None: ompmode = Internal.getValue(node)
     
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     if FastC.HOOK is None: 
-            dtloc  = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
+            dtloc  = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
             FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
             nitrun =0; nstep =1
@@ -1981,7 +2024,8 @@ def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
   display = 0
   if Display: display = 1
 
-  fasts.distributeThreads(zones , metrics, nstep, nssiter , nitrun, mx_omp_size_int, display)
+  dtloc = Internal.getNodeFromName2(t , '.Solver#dtloc')  # noeud
+  fasts.distributeThreads(zones , metrics, dtloc, nstep,  nitrun, mx_omp_size_int, display)
 
   return None
 
@@ -2100,11 +2144,10 @@ def rmGhostCells(t, depth, adaptBCs=1):
 #==============================================================================
 def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FILEOUT='listZonesSlow.dat', FILEOUT1='diagCPU.dat', RECORD=None):
 
- bases = Internal.getNodesFromType1(t      , 'CGNSBase_t')       # noeud
- own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
+ own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
  dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
 
- node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+ node = Internal.getNodeFromName1(t, '.Solver#define')
  node = Internal.getNodeFromName1(node, 'omp_mode')
  ompmode = OMP_MODE
  if  node is not None: ompmode = Internal.getValue(node)
@@ -2119,9 +2162,12 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
    print('nombre iterations insuffisant pour diagnostic: nitrun * ss_iteration > 15')
    return None
 
+ cellCount = numpy.zeros(2*OMP_NUM_THREADS, dtype=numpy.int32)
+
  zones = Internal.getZones(t)
  tps_percell     =0.
  tps_percell_max =0.
+ tps_percell_min =0.
  cout            =0.
  cells_tot       =0
  data            ={}
@@ -2141,33 +2187,51 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
     if diag == 'compact':
       tps_zone_percell     =0.
       tps_zone_percell_max =0.
+      tps_zone_percell_min =100000.
       ithread_max          = 0
+      ijkv                 = param_int[20]*param_int[21]*param_int[22]
       for i in range(OMP_NUM_THREADS):
+          if param_int[34]==0:#non ALE
+              cellCount[2*i]+=timer_omp[ ADR + 2+i*2 ]
+          else:
+              cellCount[2*i+1]+=timer_omp[ ADR + 2+i*2 ]
+
           if ompmode == 1:
             ithread = param_int[ PtZoneomp  +  i ]
             if ithread != -2:
-               tps_zone_percell += timer_omp[ ADR + 1+ithread ]
-               if timer_omp[ ADR + 1+ithread ] > tps_zone_percell_max: 
-                    tps_zone_percell_max = timer_omp[ ADR + 1+ithread ]
+               #print "check", z[0],timer_omp[ ADR + 1+i*2 ]/echant, timer_omp[ ADR + 2+i*2 ], i,"echant=",echant,ijkv
+               #tps_zone_percell += timer_omp[ ADR + 1+ithread ]
+               tps_zone_percell += timer_omp[ ADR + 1+i*2 ]*timer_omp[ ADR + 2+i*2 ]/float(ijkv)*NbreThreads   #tps * Nb cell
+               if timer_omp[ ADR + 1+i*2 ] > tps_zone_percell_max: 
+                    tps_zone_percell_max = timer_omp[ ADR + 1+i*2 ]
                     ithread_max          = ithread
+               if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min: 
+                    tps_zone_percell_min = timer_omp[ ADR + 1+i*2 ]
+                    ithread_min          = ithread
           else:
-            tps_zone_percell += timer_omp[ ADR + 1+i ]
-            if timer_omp[ ADR + 1+i ] > tps_zone_percell_max: 
-                 tps_zone_percell_max = timer_omp[ ADR + 1+i ]
+            tps_zone_percell += timer_omp[ ADR + 1+i*2 ]*timer_omp[ ADR + 2+i*2 ]/float(ijkv)*NbreThreads
+            if timer_omp[ ADR + 1+i*2 ] > tps_zone_percell_max: 
+                 tps_zone_percell_max = timer_omp[ ADR + 1+i*2 ]
                  ithread_max          = i
+            if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min: 
+                 tps_zone_percell_min = timer_omp[ ADR + 1+i*2 ]
+                 ithread_min          = i
       
-      ijkv             = param_int[20]*param_int[21]*param_int[22]
       tps_percell     += tps_zone_percell/echant/NbreThreads*ijkv
       tps_percell_max += tps_zone_percell_max/echant*ijkv
+      tps_percell_min += tps_zone_percell_min/echant*ijkv
       cout_zone        = tps_zone_percell/echant/NbreThreads*ijkv
+      #tps_percell     += tps_zone_percell/echant/NbreThreads/
+      #tps_percell_max += tps_zone_percell_max/echant
+      #cout_zone        = tps_zone_percell/echant/NbreThreads
       cout            += cout_zone
       data[ z[0] ]   = [ tps_zone_percell/echant/NbreThreads, cout_zone]
 
-      f1.write('cpumoy/cell=  '+str(tps_zone_percell/echant/NbreThreads)+"  cpumax= "+str(tps_zone_percell_max/echant)+" thread lent= "+str(ithread_max)+"  Nthtread actif="+str(NbreThreads)+" dim zone="+str(ijkv)+" dim tot="+str(cells_tot)+"  "+z[0]+'\n')
+      f1.write('cpumoy/cell=  '+str(tps_zone_percell/echant/NbreThreads)+"  cpumaxmin= "+str(tps_zone_percell_max/echant)+str(tps_zone_percell_min/echant) +" th lent/rap= "+str(ithread_max)+str(ithread_min)+"  Nthtread actif="+str(NbreThreads)+" dim zone="+str(ijkv)+" dim tot="+str(cells_tot)+"  "+z[0]+'\n')
 
       cells_tot   += ijkv
 
-      if RECORD is None: print('zone= ', z[0],'cpumoy/cell= ',tps_zone_percell/echant/NbreThreads,'cpumax= ',tps_zone_percell_max/echant,'thread lent=', ithread_max ,'Nthtread actif=', NbreThreads, ' dim zone=',ijkv,'dim tot=',cells_tot)
+      if RECORD is None: print('cpu/cell zone=', z[0],'moy=',tps_zone_percell/echant/NbreThreads,'maxmin=',tps_zone_percell_max/echant, tps_zone_percell_min/echant,'th maxmin=', ithread_max, ithread_min, 'Nbtread actif=', NbreThreads, ' dim zone=',ijkv,'dim tot=',cells_tot)
       if RECORD is not None:
           tape = tps_zone_percell/echant/NbreThreads
 
@@ -2184,17 +2248,20 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
           if ompmode ==1:
             ithread = param_int[ PtZoneomp  +  i ]
             if ithread != -2: 
-               if RECORD is None: print('zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread ]/echant,' th=  ', ithread, 'echant= ', echant)
+               if RECORD is None: print('zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread*2 ]/echant,' th=  ', ithread, 'echant= ', echant)
           else:
             ithread = i
-            if RECORD is None: print('zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread ]/echant,' th=  ', ithread, 'echant= ', echant)
+            if RECORD is None: print('zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread*2 ]/echant,' th=  ', ithread, 'echant= ', echant)
 
-    ADR+= OMP_NUM_THREADS+1
+    ADR+= OMP_NUM_THREADS*2+1
+
+ for i in range(OMP_NUM_THREADS):
+   print('Nbr cellule Fixe/ALE: ',cellCount[2*i],cellCount[2*i+1] , "pour th=", i)
 
  tps_percell/=cells_tot
- if RECORD is None: print('cpu moyen %cell en microsec: ', tps_percell, tps_percell_max/cells_tot)
+ if RECORD is None: print('cpu moyen %cell en microsec: ', tps_percell, tps_percell_max/cells_tot,tps_percell_min/cells_tot )
 
- f1.write('cpu moyen %cell en microsec: '+str(tps_percell)+'   '+str(tps_percell_max/cells_tot)+'\n')
+ f1.write('cpu moyen %cell en microsec: '+str(tps_percell)+'   '+str(tps_percell_max/cells_tot)+str(tps_percell_min/cells_tot)+ '\n')
  f1.close()
 
  f = open(FILEOUT, 'w')
@@ -3155,15 +3222,15 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
 #==============================================================================
 def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
-    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')       # noeud
-    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
-    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+    bases  = Internal.getNodesFromType1(t  , 'CGNSBase_t')       # noeud
+    own   = Internal.getNodeFromName1(t    , '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own  , '.Solver#dtloc')    # noeud
 
     zones = []
     for f in bases:
         zones += Internal.getNodesFromType1(f, 'Zone_t') 
 
-    node = Internal.getNodeFromName1(bases[0], '.Solver#define')
+    node = Internal.getNodeFromName1(   t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)

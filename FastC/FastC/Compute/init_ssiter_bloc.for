@@ -4,7 +4,7 @@ c     $Revision: 59 $
 c     $Author: MarcTerracol $
 c***********************************************************************
       subroutine init_ssiter_bloc(nd , nitcfg, nssiter,
-     &     lssiter_loc, itypcp,
+     &     lssiter_loc, itypcp, flag_res,
      &     ijkv, ijkv_lu, ijk_lu, size_ssdom,
      &     mx_ssdom_lu, iskip_lu, 
      &     ind_dm, nidom_loc, it_bloc, nisdom_residu,
@@ -24,7 +24,7 @@ c***********************************************************************
 #include "FastC/param_solver.h"
 
       INTEGER_E nd , nitcfg, nssiter,itypcp,
-     &     lssiter_loc, mx_ssdom_lu,
+     &     lssiter_loc, mx_ssdom_lu,flag_res,
      &     ijkv(3), ijkv_lu(3), ijk_lu(3,mx_ssdom_lu),
      &     size_ssdom(3), iskip_lu(nssiter,2) 
 
@@ -38,13 +38,12 @@ c***********************************************************************
 c     Var loc
       INTEGER_E i,j,k,ndo, icp,nitmin,iseuil,ndfin,b,cycl,count,no_sdm
 
-      cycl = param_int(NSSITER)/param_int(LEVEL)      
       
       !print*,'mx_ssdom_lu= ' , mx_ssdom_lu
       
 !     initialisation compteur ssiter par domain
-!     if (nitcfg.eq.1.and.itypcp.le.1) then !modifier pour afficher residu explict
-      if (nitcfg.eq.1) then
+      if (nitcfg.eq.1.and.flag_res.eq.1) then
+      !if (nitcfg.eq.1) then
 
          it_bloc                     = 0
          it_lu_ssdom(1:mx_ssdom_lu)  = 0  
@@ -53,11 +52,13 @@ c     Var loc
             call skip_lu(nssiter  , nssiter, iskip_lu )
             call skip_lu(nssiter-1, nssiter, iskip_lu )
          endif
-
       endif
+      !!  si on declenche le calcul residu, on ne modifie pas les souszones 
+      if (flag_res.eq.1) return
 
 !     on evalue les domaine a zapper a cette iteration du newton
-      ndfin        = 0
+      ndfin   = 0
+      cycl    = param_int(NSSITER)/param_int(LEVEL)      
 
       IF(lssiter_loc.eq.1 ) then
 
@@ -80,9 +81,6 @@ c     Var loc
      &        no_lu, nisdom_residu,
      &        ind_dm, ijk_lu )
 
-!     write(*,'(a18,7i5)')'init_ssiter impli',ind_dm(:,nd,nitcfg),nitcfg
-
-         
       ELSE IF (param_int(EXPLOC).eq.1) THEN ! Explicite local instationnaire d'ordre 3 
 
          
@@ -94,6 +92,8 @@ c     Var loc
      & MOD(nitcfg,cycl)==cycl-1) THEN
 
          ndfin = ndfin + 1
+
+         !write(*,*)'ndfin, nitcfg', ndfin, nitcfg
 
          ind_dm(1, ndfin, nitcfg)   = 1
          ind_dm(3, ndfin, nitcfg)   = 1

@@ -12,7 +12,7 @@
      & ithread_sock,ipt_lok,size_max_sock,neq_lok,taille,
      & ijkv_thread(3),kGbloc,jGbloc,iGbloc,ip,jp,kp,lth,
      & ibloc,jbloc,kbloc,ijkvloc(3),skip(3),shift(3),test(3),lwait,lgo,
-     & size_thread(3),topo_s(3),thread_pos(3),thread_pos_tmp(3),sens(3),
+     & size_thread(3),thread_pos(3),thread_pos_tmp(3),sens(3),
      & size_target(3), cache(3)
 
       INTEGER_E ind_coe(6),ind_grad(6),ind_sdm(6),ind_rhs(6),ind_mjr(6),

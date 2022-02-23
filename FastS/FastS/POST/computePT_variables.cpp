@@ -48,6 +48,12 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
 
   PyObject* tmp = PyDict_GetItemString(work, "MX_SYNCHRO"); E_Int mx_synchro    = PyLong_AsLong(tmp); 
 
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+  E_Int ompmode  = iptdtloc[8+nssiter];
+  E_Int* ipt_omp = iptdtloc +9 + nssiter;
+
   E_Int nidom        = PyList_Size(zones);
   E_Int ndimdx       = 0;
 
@@ -81,7 +87,6 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
   ipt_param_int     = new  E_Int*[nidom];
 
   vector<PyArrayObject*> hook;
-
 
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
@@ -193,106 +198,121 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
       // ---------------------------------------------------------------------
-        for (E_Int nd = 0; nd < nidom; nd++)
-          {  
 
-            E_Int flag_loc = flag;                   //pour eviter race omp
+  E_Int nitcfg =1;
+
+  E_Int nbtask = ipt_omp[nitcfg-1]; 
+  E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+
+  for (E_Int ntask = 0; ntask < nbtask; ntask++)
+    {
+       E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+       E_Int nd = ipt_omp[ pttask ];
+
+       E_Int* ipt_ind_dm_loc         = ipt_ind_dm         + (ithread-1)*6;
+       ipt_ind_dm_loc[0] = 1; ipt_ind_dm_loc[2] = 1; ipt_ind_dm_loc[4] = 1;
+       ipt_ind_dm_loc[1] = ipt_param_int[nd][ IJKV];
+       ipt_ind_dm_loc[3] = ipt_param_int[nd][ IJKV+1];
+       ipt_ind_dm_loc[5] = ipt_param_int[nd][ IJKV+2];
+
+       E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
+       E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
+       E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
+
+       // Distribution de la sous-zone sur les threads
+       E_Int lmin =10;
+       if (ipt_param_int[nd][ITYPCP] == 2) lmin = 4;
+
+       E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
+       E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+       E_Int nd_subzone            = ipt_omp[ pttask + 1 ];
+       E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+       ipt_topo_omp                = ipt_omp + pttask + 3 + Nbre_thread_actif ;
+       ipt_inddm_omp               = ipt_omp + pttask + 6 + Nbre_thread_actif + (ithread_loc-1)*6;
+
+       if (ithread_loc == -1) { continue;}
+
+       indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
+                         ipt_ind_dm_loc, 
+                         ipt_topology_socket, ipt_ind_dm_socket );
+
+       E_Int* ipt_lok_thread   = ipt_lok   + ntask*mx_synchro*Nbre_thread_actif;
+
+
+       E_Int flag_loc = flag;                   //pour eviter race omp
             
-            E_Int* ipt_lok_thread   = ipt_lok   + nd*mx_synchro*Nbre_thread_actif;
-            
-            E_Int* ipt_ind_dm_loc         = ipt_ind_dm         + (ithread-1)*6;
-            ipt_ind_dm_loc[0] = 1;
-            ipt_ind_dm_loc[2] = 1;
-            ipt_ind_dm_loc[4] = 1;
-            ipt_ind_dm_loc[1] = ipt_param_int[nd][ IJKV];
-            ipt_ind_dm_loc[3] = ipt_param_int[nd][ IJKV+1];
-            ipt_ind_dm_loc[5] = ipt_param_int[nd][ IJKV+2];
+       E_Int dim_grad= ipt_ind_dm_socket[1]-ipt_ind_dm_socket[0]+ 1 + ipt_param_int[nd][NIJK+3];
+       dim_grad = dim_grad + dim_grad%VECLENGTH;
 
-            E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
-            E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
-            E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
-            E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
-
-             // Distribution de la sous-zone sur les threads
-             E_Int lmin = 10;
-             if (ipt_param_int[nd][ ITYPCP ] == 2) lmin = 4;
-
-             indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
-                              ipt_ind_dm_loc, 
-                              ipt_topology_socket, ipt_ind_dm_socket );
-
-             int dim_grad= ipt_ind_dm_socket[1]-ipt_ind_dm_socket[0]+ 1 + ipt_param_int[nd][NIJK+3];
-             dim_grad = dim_grad + dim_grad%VECLENGTH;
-
-             if(flag_loc >= 1000)
-              {
+       if(flag_loc >= 1000)
+         {
                flag_loc = flag_loc - 1000;
 
-               post_drodt_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, flag, dim_grad,
+               post_drodt_( nd, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, flag, dim_grad,
                        ipt_param_int[nd], ipt_param_real[nd],
                        ipt_ijkv_sdm_thread,
-                       ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
+                       ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_inddm_omp, ipt_topo_omp,
                        ipt_topology_socket, ipt_lok_thread ,
                        iptro[nd] , iptro_m1[nd] , iptro_p1[nd] , iptdrodt[nd] );
-              }
+         }
              //critere Q' uniquement
-             if(flag_loc ==2)
-              { 
-                post_qprime_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, order, dim_grad,
+        if(flag_loc ==2)
+          { 
+            post_qprime_( nd, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, order, dim_grad,
                     ipt_param_int[nd], ipt_param_real[nd],
                     ipt_ijkv_sdm_thread,
-                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
+                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_inddm_omp, ipt_topo_omp,
                     ipt_topology_socket, ipt_lok_thread ,
                     iptro[nd] , iptro_m1[nd], ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd] , iptQ[nd] );
-              }
+          }
              //critere Q' +Rotx
-              else if(flag_loc==102)
-              {
+        else if(flag_loc==102)
+          {
                     //dudx=0, dudy=1, dudz=3, dvdx=4, ...., dwdz=8
                     //rotx= dwdy-dvdz
                     E_Int vr1 = 7*dim_grad; E_Int vr2 = 5*dim_grad;
 
-                post_qprime_1rot_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro,
-                                   order, dim_grad, vr1, vr2,
+            post_qprime_1rot_( nd, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro,
+                               order, dim_grad, vr1, vr2,
                     ipt_param_int[nd], ipt_param_real[nd],
                     ipt_ijkv_sdm_thread,
-                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
+                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_inddm_omp, ipt_topo_omp,
                     ipt_topology_socket, ipt_lok_thread ,
                     iptro[nd] , iptro_m1[nd], ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd] , iptQ[nd] , iptvort[nd]);
 
-              }
+          }
 
 
              //critere Q uniquement
-             if(flag_loc ==1)
-              { 
-                post_q_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, order, dim_grad,
+         if(flag_loc ==1)
+          { 
+            post_q_( nd, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, order, dim_grad,
                     ipt_param_int[nd], ipt_param_real[nd],
                     ipt_ijkv_sdm_thread,
-                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
+                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_inddm_omp, ipt_topo_omp,
                     ipt_topology_socket, ipt_lok_thread ,
                     iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptQ[nd], iptenst[nd], iptvort[nd]);
-              }
+          }
              //enstrohie uniquement
-             else if(flag_loc==10)
-              { 
-                post_enst_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, order, dim_grad,
+         else if(flag_loc==10)
+          { 
+            post_enst_( nd, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, order, dim_grad,
                     ipt_param_int[nd], ipt_param_real[nd],
                     ipt_ijkv_sdm_thread,
-                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
+                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_inddm_omp, ipt_topo_omp,
                     ipt_topology_socket, ipt_lok_thread ,
                     iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptQ[nd], iptenst[nd], iptvort[nd]);
-              }
+          }
              //enstrohie + Q
-             else if(flag_loc==11)
-              { 
-                post_q_enst_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, order, dim_grad,
+         else if(flag_loc==11)
+          { 
+            post_q_enst_( nd, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, order, dim_grad,
                     ipt_param_int[nd], ipt_param_real[nd],
                     ipt_ijkv_sdm_thread,
-                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
+                    ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_inddm_omp, ipt_topo_omp,
                     ipt_topology_socket, ipt_lok_thread ,
                     iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptQ[nd], iptenst[nd], iptvort[nd]);
-              }
+          }
 
              //else{ printf("flag inconnu %d \n", flag);}
           }// boucle zone 

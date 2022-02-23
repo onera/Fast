@@ -47,12 +47,12 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* work; 
 
-  E_Int nitrun, nstep_deb, nstep_fin, layer_mode, omp_mode, nit_c; 
+  E_Int nitrun, nstep_deb, nstep_fin, layer_mode, nit_c; 
   
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOllllllO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &omp_mode, &nit_c, &work)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOlllllO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &nit_c, &work)) return NULL;
 #else 
-  if (!PyArg_ParseTuple(args, "OOiiiiiiO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &omp_mode, &nit_c, &work)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOiiiiiO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &nit_c, &work)) return NULL;
 #endif
 
 #if TIMER == 1
@@ -74,6 +74,8 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
+  E_Int omp_mode = iptdtloc[ 8 + nssiter];
+  E_Int* ipt_omp = iptdtloc +9 + nssiter;
 
   E_Int lcfl= 0;
   // 
@@ -625,80 +627,63 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
       for (E_Int nstep = nstep_deb; nstep < nstep_fin+1; ++nstep)
 	{
-	  E_Int skip_navier = 1; //layer_mode 0: on calcul tout le temps gsdr3
 	  if (layer_mode ==1)
-	    {
-	      K_FASTS::souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, nidom_tot, lexit_lu, lssiter_verif);
+	   {
+            E_Int init_exit=0;
+            if( nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1 )
+              {
+               init_exit =1;
+               E_Int flag_res=1;
+               E_Int lssiter_tmp = lssiter_loc;
+               K_FASTS::souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_tmp, nidom,
+                                 nitrun_loc, nstep, flag_res,  lexit_lu, lssiter_verif);
+              }
 
-	      E_Int display=0;
-	      //calcul distri si implicit ou explicit local + modulo verif
-	      if( omp_mode==1 && (lssiter_loc ==1 && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1)) && ipt_param_int[0][ITYPCP]==1) 
-		{ 
-		  K_FASTS::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
-		}
+            E_Int nitrun_split = nitrun_loc - 1;
+            if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2) )  && (nitrun_split%iptdtloc[1] == 0 || nitrun_loc == 1) ) 
+              {
+                E_Int flag_res = 0;
+                K_FASTS::souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, 
+                                  nitrun_split, nstep, flag_res, lexit_lu, lssiter_verif);
+                if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
 
+                E_Int display = 0;
+                K_FASTS::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom, iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
+              }
+            if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;}
+	   }
 
-	      E_Int skip = 0;
-	      if ( lssiter_verif == 0 && nstep == nstep_fin && ipt_param_int[0][ ITYPCP ] ==1){skip = 1;}
-	      skip_navier = 0;
-	      if (nidom_tot > 0 && skip ==0) skip_navier = 1;
-	    }
-
+	  E_Int skip = 0;
+	  if ( lssiter_verif == 0 && nstep == nstep_fin && ipt_param_int[0][ ITYPCP ] ==1){skip = 1;}
 	  //calcul Navier Stokes + appli CL
 
-	  if (skip_navier ==1){
-	      gsdr3(ipt_param_int      , ipt_param_real    ,
-		    nidom              , nitrun_loc        ,
-		    nstep              , nstep_fin         ,
-		    nssiter            , it_target         ,
-		    first_it           , kimpli            ,
-		    lssiter_verif      , lexit_lu          ,
-		    omp_mode           , layer_mode        ,
-		    mpi                , nisdom_lu_max     ,
-		    mx_nidom           , ndimt_flt         ,
-		    threadmax_sdm      , mx_synchro        ,
-		    nb_pulse           , temps             ,
-		    ipt_ijkv_sdm       , ipt_ind_dm_omp    ,
-		    ipt_topology       , ipt_ind_CL        ,
-		    ipt_lok            , verrou_lhs        ,
-		    vartype            , timer_omp         ,
-		    iptludic           , iptlumax          ,
-		    ipt_ind_dm         , ipt_it_lu_ssdom   ,
-		    ipt_ng_pe          , ipt_nfconn        ,
-		    ipt_nfindex        , ipt_VectG         ,
-		    ipt_VectY          , iptssor           ,
-		    iptssortmp         , ipt_ssor_size     ,
-		    ipt_drodmd         , ipt_Hessenberg    ,
-		    iptkrylov          , iptkrylov_transfer,
-		    ipt_norm_kry       , ipt_gmrestmp      ,
-		    ipt_givens         , ipt_cfl           ,
-		    iptx               , ipty              ,
-		    iptz               , iptCellN          ,
-		    iptCellN_IBC       , ipt_degen         ,
-		    iptro              , iptroQ_m1         ,
-		    iptroQ_p1          , iptro_sfd         ,
-		    iptmut             , ipt_xmutd         ,
-		    ipti               , iptj              ,
-		    iptk               , iptvol            , 
-		    ipti0              , iptj0             ,
-		    iptk0              , ipti_df           ,
-		    iptj_df            , iptk_df           ,
-		    iptvol_df          , iptventi          ,
-		    iptventj           , iptventk          ,  
-		    iptrdm             , iptroflt          ,
-		    iptroflt2          , iptgrad           ,
-		    iptwig             , iptstat_wig       ,
-		    iptflu             , iptdrodm          ,
-		    iptcoe             , iptrot            ,
-		    iptdelta           , iptro_res         ,
-		    iptdrodm_transfer  , ipt_param_int_tc  ,
-		    ipt_param_real_tc  , ipt_linelets_int  ,
-		    ipt_linelets_real  , taille_tabs       ,
-		    iptstk             , iptdrodmstk       ,
-		    iptcstk            , iptsrc            , 
-		    iptdrodm           , iptdrodm_transfer ,
-		    iptSpongeCoef      , iptmacro_m1       ,
-		    iptdist2ibc        , iptQeq            ,
+	  if (skip ==0){
+	      gsdr3(ipt_param_int      , ipt_param_real    , nidom              , nitrun_loc        ,
+		    nstep              , nstep_fin         , nssiter            , it_target         ,
+		    first_it           , kimpli            , lssiter_verif      , lexit_lu          ,
+		    omp_mode           , layer_mode        , mpi                , nisdom_lu_max     ,
+		    mx_nidom           , ndimt_flt         , threadmax_sdm      , mx_synchro        ,
+		    nb_pulse           , temps             , ipt_ijkv_sdm       , ipt_ind_dm_omp    , ipt_omp           ,
+		    ipt_topology       , ipt_ind_CL        , ipt_lok            , verrou_lhs        ,
+		    vartype            , timer_omp         , iptludic           , iptlumax          ,
+		    ipt_ind_dm         , ipt_it_lu_ssdom   , ipt_ng_pe          , ipt_nfconn        ,
+		    ipt_nfindex        , ipt_VectG         , ipt_VectY          , iptssor           ,
+		    iptssortmp         , ipt_ssor_size     , ipt_drodmd         , ipt_Hessenberg    ,
+		    iptkrylov          , iptkrylov_transfer, ipt_norm_kry       , ipt_gmrestmp      ,
+		    ipt_givens         , ipt_cfl           , iptx               , ipty              ,
+		    iptz               , iptCellN          , iptCellN_IBC       , ipt_degen         ,
+		    iptro              , iptroQ_m1         , iptroQ_p1          , iptro_sfd         ,
+		    iptmut             , ipt_xmutd         , ipti               , iptj              ,
+		    iptk               , iptvol            , ipti0              , iptj0             ,
+		    iptk0              , ipti_df           , iptj_df            , iptk_df           ,
+		    iptvol_df          , iptventi          , iptventj           , iptventk          ,  
+		    iptrdm             , iptroflt          , iptroflt2          , iptgrad           ,
+		    iptwig             , iptstat_wig       , iptflu             , iptdrodm          ,
+		    iptcoe             , iptrot            , iptdelta           , iptro_res         ,
+		    iptdrodm_transfer  , ipt_param_int_tc  , ipt_param_real_tc  , ipt_linelets_int  ,
+		    ipt_linelets_real  , taille_tabs       , iptstk             , iptdrodmstk       ,
+		    iptcstk            , iptsrc            , iptdrodm           , iptdrodm_transfer ,
+		    iptSpongeCoef      , iptmacro_m1       , iptdist2ibc        , iptQeq            ,
 		    iptQneq            , iptcellN_IBC_LBM  );
 
 	      if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas

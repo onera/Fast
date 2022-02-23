@@ -1,5 +1,6 @@
         nd_rdm = 1
 
+        !no_rdm: mono indice parcours sousbloc
         k_lu= 1+(no_rdm-1)/(ijkv_lu(1)*ijkv_lu(2))
         j_lu= 1+(no_rdm-1-ijkv_lu(1)*ijkv_lu(2)*(k_lu-1))/ijkv_lu(1)
         i_lu= no_rdm-(j_lu-1)*ijkv_lu(1)-(k_lu-1)*ijkv_lu(1)*ijkv_lu(2)
@@ -141,15 +142,15 @@ C              endif
           enddo
 
           xro1  = ALOG10(max(rdm_sdm(it_bloc,1,2,no_rdm),cut0x))
-     &          - ALOG10(max(rdm_sdm(1 ,1,2,no_rdm),cut0x))
+     &          - ALOG10(max(rdm_sdm(1      ,1,2,no_rdm),cut0x))
           xrou1 = ALOG10(max(rdm_sdm(it_bloc,2,2,no_rdm),cut0x))
-     &          - ALOG10(max(rdm_sdm(1 ,2,2,no_rdm),cut0x)) 
+     &          - ALOG10(max(rdm_sdm(1      ,2,2,no_rdm),cut0x)) 
           xrov1 = ALOG10(max(rdm_sdm(it_bloc,3,2,no_rdm),cut0x))
-     &          - ALOG10(max(rdm_sdm(1 ,3,2,no_rdm),cut0x)) 
+     &          - ALOG10(max(rdm_sdm(1      ,3,2,no_rdm),cut0x)) 
           xrow1 = ALOG10(max(rdm_sdm(it_bloc,4,2,no_rdm),cut0x)) 
-     &          - ALOG10(max(rdm_sdm(1 ,4,2,no_rdm),cut0x))
+     &          - ALOG10(max(rdm_sdm(1      ,4,2,no_rdm),cut0x))
           xroe1 = ALOG10(max(rdm_sdm(it_bloc,5,2,no_rdm),cut0x))
-     &          - ALOG10(max(rdm_sdm(1 ,5,2,no_rdm),cut0x))
+     &          - ALOG10(max(rdm_sdm(1      ,5,2,no_rdm),cut0x))
 
           if(nijk(5).ne.0) then
             rmax = (xrou1+xrov1+xrow1+xro1+xroe1)*0.2
@@ -167,6 +168,8 @@ C          endif
 
             it_temp_ssdom(no_rdm) = it_lu_ssdom(no_rdm)
 
+
+            !Si convergence ricrac, on ajoute une iter de gras
             if(it_temp_ssdom(no_rdm).eq.it_target_ssdom(no_rdm)
      &         .and.nssiter.eq.nitcfg) then
 
@@ -189,5 +192,7 @@ C          endif
         it_target_old(no_rdm)  = it_target_ssdom(no_rdm)
         it_target_ssdom(no_rdm)=max(3, it_temp_ssdom(no_rdm)+1)
 
-      !write(*,*)'tgt old',it_target_ssdom(no_rdm),it_target_old(no_rdm)
+c      if(ndom.eq.0.and.ithread.eq.1)
+c     & write(*,*)'tgt old',it_target_ssdom(no_rdm),
+c     & it_target_old(no_rdm),no_rdm
        endif

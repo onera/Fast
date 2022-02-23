@@ -47,6 +47,7 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
+  E_Int* ipt_omp = iptdtloc +9 + nssiter;
 
 
   E_Int nidom    = PyList_Size(zones);
@@ -182,9 +183,7 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   Nbre_thread_max = omp_get_max_threads();
 #endif
   FldArrayI err(Nbre_thread_max);  E_Int* ierr  = err.begin();
-  FldArrayI thread_topology(3*Nbre_thread_max); 
-  FldArrayI   ind_dm_thread(6*Nbre_thread_max);  
-  FldArrayI          ind_CL(24*Nbre_thread_max);        
+  FldArrayI ind_CL(24*Nbre_thread_max); E_Int* ipt_ind_CL  = ind_CL.begin();       
 
 #pragma omp parallel default(shared)
   {
@@ -198,71 +197,48 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
 #endif
 
    E_Int Nbre_thread_actif_loc, ithread_loc;
-   if( omp_mode == 0){ Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
+   E_Int* ipt_ind_dm_thread; 
 
-       E_Int nd_current =0;
+   E_Int nbtask = ipt_omp[nstep-1]; 
+   E_Int ptiter = ipt_omp[nssiter+ nstep-1];
 
-       for (E_Int nd = 0; nd < nidom; nd++)
-          
-	 {
+   for (E_Int ntask = 0; ntask < nbtask; ntask++)
+     {
+       E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+       E_Int nd = ipt_omp[ pttask ];
 
-           E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
-           E_Int nb_subzone     = ipt_nidom_loc [nstep -1];
+       ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+       E_Int nd_subzone      = ipt_omp[ pttask + 1 ];
+       Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+       ipt_ind_dm_thread     = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
 
-           E_Int* ipt_ind_CL          = ind_CL.begin() + (ithread-1)*6;
-           E_Int* ipt_ind_CL119       = ind_CL.begin() + (ithread-1)*6 + Nbre_thread_max*6 ;
-           E_Int* ipt_ind_CLgmres     = ind_CL.begin() + (ithread-1)*6 + Nbre_thread_max*12;
-           E_Int* ipt_shift_lu        = ind_CL.begin() + (ithread-1)*6 + Nbre_thread_max*18;
-   
-          for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
-          {
-            E_Int ndo   = nd;
+       if (ithread_loc == -1) {continue;}
 
-            E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nstep-1)*6*ipt_param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
+       E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
+       E_Int  nb_subzone    = ipt_nidom_loc [nstep -1];                                           //nbre sous-zone a la sousiter courante
 
-            E_Int* ipt_ind_dm_thread;
-            if (omp_mode == 1)
-            { 
-              E_Int       Ptomp = ipt_param_int[nd][PT_OMP];
-              E_Int  PtrIterOmp = ipt_param_int[nd][Ptomp +nstep -1];   
-              E_Int  PtZoneomp  = ipt_param_int[nd][PtrIterOmp + nd_subzone];
+       E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
+       E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
+       E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
+       E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
 
-              Nbre_thread_actif_loc = ipt_param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
-              ithread_loc           = ipt_param_int[nd][ PtZoneomp  +  ithread -1       ] +1 ;
-              ipt_ind_dm_thread     = ipt_param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+       E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nstep -1)*6*ipt_param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
 
-              if (ithread_loc == -1) {nd_current++; continue;}
-            }
-            else
-            { 
-             E_Int* ipt_thread_topology = thread_topology.begin() + (ithread-1)*3;
-                    ipt_ind_dm_thread   = ind_dm_thread.begin()   + (ithread-1)*6;
-
-             E_Int lmin = 10;
-             if (ipt_param_int[nd][ITYPCP] == 2) lmin = 4;
-
-             indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, lmin,
-                               ipt_ind_dm_loc,
-                               ipt_thread_topology, ipt_ind_dm_thread);
-
-	     //cout << ipt_ind_dm_thread[0]<<" "<<ipt_ind_dm_thread[1]<<" "<<ipt_ind_dm_thread[2]<<" "<<ipt_ind_dm_thread[3]<<endl;
-            }
-
-	    
-	    if (autorisation_bc[nd] == 1)
+       if (autorisation_bc[nd] == 1)
 	    {
-		ierr[ithread-1] = BCzone(nd, lrhs , nstep, lcorner, ipt_param_int[nd], ipt_param_real[nd], npass,
+
+       ierr[ithread-1] = BCzone(nd, lrhs , nstep, lcorner, ipt_param_int[nd], ipt_param_real[nd], npass,
                                      ipt_ind_dm_loc, ipt_ind_dm_thread, 
-                                     ipt_ind_CL    , ipt_ind_CL119   , ipt_ind_CLgmres, ipt_shift_lu,
-                                     iptro[nd]     , ipti[nd]        , iptj[nd]       , iptk[nd]    ,
-                                     iptx[nd]      , ipty[nd]        , iptz[nd]     ,
-                                     iptventi[nd]  , iptventj[nd]    , iptventk[nd], iptro[nd], iptmut[nd]);
+                                     ipt_ind_CL_thread  , ipt_ind_CL119   , ipt_ind_CLgmres, ipt_shift_lu,
+                                     iptro[nd]          , ipti[nd]        , iptj[nd]       , iptk[nd]    ,
+                                     iptx[nd]           , ipty[nd]        , iptz[nd]     ,
+                                     iptventi[nd]       , iptventj[nd]    , iptventk[nd], iptro[nd], iptmut[nd]);
 
-		correct_coins_(nd,  ipt_param_int[nd], ipt_ind_dm_thread , iptro[nd]);
-	    } // autorisation
+              correct_coins_(nd,  ipt_param_int[nd], ipt_ind_dm_thread , iptro[nd]);
 
-          }//loop souszone
-       }//loop zone
+	    }//autorisation
+     }//loop zone
+
   }//fin zone omp
 
 

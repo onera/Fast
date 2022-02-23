@@ -18,6 +18,7 @@
 */
 
 # include "fastS.h"
+# include "fastc.h"
 # include "param_solver.h"
 # include <string.h>
 using namespace std;
@@ -30,24 +31,24 @@ using namespace K_FLD;
 // 
 void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom, PyObject* work,
                                 E_Int* iptdtloc   , E_Int* ipt_iskip_lu, E_Int lssiter_loc       , E_Int nidom      , 
-                                E_Int nitrun      , E_Int nstep        , E_Int& nidom_tot        , E_Int& lexit_lu  , E_Int& lssiter_verif )
+                                E_Int nitrun      , E_Int nstep        , E_Int  flag_res         , E_Int& lexit_lu  , E_Int& lssiter_verif )
 {
 
   lexit_lu      = 0; // par defaut on ne skippe pas l'appel des routine LU
   lssiter_verif = 0; // par defaut, pas de calcul cfl , ni residu Newton
-  nidom_tot     = 0;  
 
   vector<PyArrayObject*> hook;
 
+  E_Int nssiter   = iptdtloc[0];
+  E_Int nidom_loc = iptdtloc[nssiter+9+nstep-1];
   //calcul dimension et nombre souszone
-  if(nitrun % iptdtloc[1] == 0 || nitrun == 1)   //iptdtloc[1] = kmod
+  if(nitrun % iptdtloc[1] == 0 || nidom_loc == -1)   //iptdtloc[1] = kmod
   {
      E_Int itypcp;
      for (E_Int nd = 0; nd < nidom; nd++)
      {    
-
        itypcp = param_int[nd][ ITYPCP ];
-       if (param_int[nd][ITYPZONE] ==4) { nidom_tot +=1; continue;} //on skippe les zone non structuree
+       if (param_int[nd][ITYPZONE] ==4) { continue;} //on skippe les zone non structuree
 
        E_Int ijkv_lu[3];
        ijkv_lu[0] = K_FUNC::E_max( 1, param_int[nd][ IJKV    ]/param_int[nd][ SIZE_SSDOM   ]);
@@ -64,34 +65,24 @@ void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
        E_Int*   ipt_nidom_loc     = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*iptdtloc[0] + iptdtloc[0];    //nidom_loc(nssiter)
        E_Int*   ipt_it_bloc       = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*iptdtloc[0] + iptdtloc[0]*2;  //it_bloc(nidom)
 
-
        {  
            FldArrayI ijk_lu(param_int[nd][ MXSSDOM_LU ]*3); E_Int* ipt_ijk_lu  = ijk_lu.begin();
  
            init_ssiter_bloc_( nd                        , nstep                    ,  iptdtloc[0] ,
-                             lssiter_loc                , param_int[nd][ ITYPCP ]  ,
+                             lssiter_loc                , param_int[nd][ ITYPCP ]  , flag_res      , 
                              param_int[nd] + IJKV       , ijkv_lu                  , ipt_ijk_lu    , param_int[nd] + SIZE_SSDOM ,
                              param_int[nd][ MXSSDOM_LU ], ipt_iskip_lu         ,
                              ipt_ind_dm[nd]             , ipt_nidom_loc        , ipt_it_bloc[0]    , ipt_nisdom_residu,
                              ipt_it_lu_ssdom_loc        , ipt_it_target_ssdom  , ipt_it_target_old , ipt_no_lu, param_int[nd]);
-           
-           nidom_tot = nidom_tot + ipt_nidom_loc[0];
        }
        
-
      } // loop zone 
 
      lssiter_verif = 1;
 
      if (nstep == iptdtloc[0] && itypcp!=2) lexit_lu  = 1;
-     iptdtloc[nstep+5] = nidom_tot;
-
-
 
    }  //fin if module_verif
-
-  else
-   {nidom_tot = iptdtloc[nstep+5];}
 
   RELEASEHOOK(hook)
 
@@ -113,7 +104,7 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "OOOiii", &zones , &metrics, &work, &nitrun, &nstep, &distrib_omp)) return NULL; 
 #endif
   
-  E_Int lexit_lu, nidom_tot, lssiter_verif;
+  E_Int lexit_lu, lssiter_verif;
 
   // Tableau de parametre schema temporel
   PyObject* dtlocArray  = PyDict_GetItemString(work, "dtloc"); FldArrayI*  dtloc;
@@ -168,19 +159,35 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
        }
   }
 
-  souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun, nstep, nidom_tot, lexit_lu, lssiter_verif);
+  E_Int nssiter   = iptdtloc[0];
+  E_Int nidom_loc =  iptdtloc[nssiter+9+nstep-1];
+  lexit_lu        = 0; // par defaut on ne skippe pas l'appel des routine LU
+  lssiter_verif   = 0; // par defaut, pas de calcul cfl , ni residu Newton
 
-  //calcul distri si implicit ou explicit local + modulo verif et maillage structuré
-  if( (distrib_omp==1 || (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2))  && (nitrun%iptdtloc[1] == 0 || nitrun == 1)) && ipt_param_int[0][ITYPZONE] !=4)
+  //declenchememnt calcul residu
+  if( ( nidom_loc==-1 || nitrun%iptdtloc[1] == 0 || nitrun == 1) && ipt_param_int[0][ITYPZONE] !=4)
   {
+    //printf("1ere passe %d %d %d %d %d \n", nidom_loc, nstep, nitrun,nitrun%iptdtloc[1], iptdtloc[1] );
+    E_Int flag_res = 1;
+    souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun, nstep, flag_res, lexit_lu, lssiter_verif);
+  }
+
+  //calcul distri si implicit ou explicit local + modulo verif et maillage structure 
+  //E_Int nitrun_loc = nitrun;
+  E_Int nitrun_loc = nitrun - 1;
+  if( ( nidom_loc==-1 || (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2))  && (nitrun_loc%iptdtloc[1] == 0 || nitrun == 1)) && ipt_param_int[0][ITYPZONE] !=4)
+  {
+    //printf("2eme passe %d %d\n", nstep, nitrun);
+    E_Int flag_res = 0;
+    souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, flag_res, lexit_lu, lssiter_verif);
+    lexit_lu      = 0;
+    lssiter_verif = 0;
     E_Int display = 0;
-    if (nstep==1) display = 1;
-    distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , iptdtloc[0] , mx_omp_size_int , nstep, nitrun, display );
+    if (nstep==1 and  nidom_loc==-1) display = 1;
+    distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, distrib_omp, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun, display );
   }
 
   PyObject* dico = PyDict_New();
-  tmp = Py_BuildValue("i", nidom_tot);
-  PyDict_SetItemString(dico , "nidom_tot"    , tmp);
 
   tmp = Py_BuildValue("i", lexit_lu);
   PyDict_SetItemString(dico , "lexit_lu"     , tmp);
@@ -197,3 +204,4 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
 
   return dico;
 }
+

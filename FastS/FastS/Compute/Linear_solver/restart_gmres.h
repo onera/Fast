@@ -25,22 +25,16 @@
 #endif
 
     //iptkrylov[nd] = iptkrylov[nd] / normL2_sum
-    nd_current =0;
-    for (E_Int nd = 0; nd < nidom; nd++)
-      {
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
-
 	  normalisation_vect_(normL2_sum, param_int[nd], ipt_ind_dm_thread , iptkrylov[nd]);
-
-          nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
-      }
+
 #ifdef _OPENMP
 E_Float lhs_end = omp_get_wtime();
 #else
 E_Float lhs_end = 0.;
 #endif
-if (ithread==100) printf("cpu normalisation_vect %g \n", lhs_end-lhs_beg);
+if (ithread==1) printf("cpu normalisation_vect %g \n", lhs_end-lhs_beg);
 //
 //
 // Loop sur vectuer krylov
@@ -56,15 +50,12 @@ while ((kr < num_max_vect - 1) && continue_gmres)
 lhs_beg = omp_get_wtime();
 #endif
     // 2.1) Calcul de V_kr = A * V_kr-1
-        shift_coe=0; shift_zone=0; nd_current=0;
-	for (E_Int nd = 0; nd < nidom; nd++)
-	  {
+#include "HPC_LAYER/OMP_MODE_BEGIN.h"
+#include "Compute/LU/prep_lussor.h"
+
 	   //sur ind_sdm
 	   E_Float* krylov_in = iptkrylov[nd] +  kr     *param_int[nd][NEQ] * param_int[nd][NDIMDX];
 	   E_Float* krylov_out= iptkrylov[nd] + (kr + 1)*param_int[nd][NEQ] * param_int[nd][NDIMDX];
-
-#include "HPC_LAYER/OMP_MODE_BEGIN.h"
-#include "Compute/LU/prep_lussor.h"
 
              // CL sur rhs pour implicitation
 		 E_Int lrhs=1; E_Int lcorner=1;
@@ -102,32 +93,23 @@ lhs_beg = omp_get_wtime();
 
 	   dp_dw_vect_(param_int[nd], param_real[nd],ipt_ind_dm_thread , iptro_ssiter[nd], krylov_in,  krylov_out, ssor_size);
 
-	   nd_current +=1;
-#include "HPC_LAYER/OMP_MODE_END.h"
-	   shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-	   shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ     ];
-
 	   //Tableau de pointeur pour les raccords V_kr
 	   iptkrylov_transfer[nd] = krylov_out;
+#include "HPC_LAYER/OMP_MODE_END.h"
 
-	  }//loop zone
+
 #ifdef _OPENMP
 lhs_end = omp_get_wtime();
 #endif
-if (ithread==100) printf("cpu invlu + dpdw       %g \n", lhs_end-lhs_beg);
+if (ithread==1) printf("cpu invlu + dpdw       %g \n", lhs_end-lhs_beg);
 
 #pragma omp barrier
     //Reinitialisation verrou omp
     //
-    nd_current=0;
-    for (E_Int nd = 0; nd < nidom; nd++)
-      {
 #include  "HPC_LAYER/OMP_MODE_BEGIN.h"
-           E_Int l =  nd_current*mx_synchro*Nbre_thread_actif  + (ithread_loc-1)*mx_synchro;
+           E_Int l =  ntask*mx_synchro*Nbre_thread_actif  + (ithread_loc-1)*mx_synchro;
            for (E_Int i = 0;  i < mx_synchro ; i++) { ipt_lok[ l + i ]  = 0; }
-           nd_current +=1;
 #include  "HPC_LAYER/OMP_MODE_END.h"
-      }//loop zone
 
 
     //
@@ -162,12 +144,9 @@ lhs_beg = omp_get_wtime();
 #ifdef _OPENMP
 lhs_end = omp_get_wtime();
 #endif
-if (ithread==100) printf("transfert              %g \n", lhs_end-lhs_beg);
+if (ithread==1) printf("transfert              %g \n", lhs_end-lhs_beg);
 
-    E_Int lrhs = 2; E_Int lcorner = 0; E_Int npass = 0; E_Int ipt_shift_lu[6];
-    nd_current=0;
-    for (E_Int nd = 0; nd < nidom; nd++)
-      {
+    E_Int lrhs = 2; E_Int lcorner = 0; E_Int npass = 0; 
        E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
        E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
        E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
@@ -195,13 +174,11 @@ if (ithread==100) printf("transfert              %g \n", lhs_end-lhs_beg);
 
             correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptkrylov_transfer[nd]);
 
-            nd_current +=1;
 #include    "HPC_LAYER/OMP_MODE_END.h"
-      }//loop zone
 #ifdef _OPENMP
 lhs_end = omp_get_wtime();
 #endif
-if (ithread==100) printf("bczone                 %g \n", lhs_end-lhs_beg);
+if (ithread==1) printf("bczone                 %g \n", lhs_end-lhs_beg);
 
 #ifdef _OPENMP
 lhs_beg = omp_get_wtime();
@@ -220,27 +197,20 @@ lhs_beg = omp_get_wtime();
     nd_current    =0;
     E_Int mjr_dt  =0;
     ipt_norm_kry[ithread-1]=0;
-    for (E_Int nd = 0; nd < nidom; nd++)
-      {
+#include  "HPC_LAYER/OMP_MODE_BEGIN.h"
+
        E_Float* krylov_in    = iptkrylov[nd] +  kr    * param_int[nd][NEQ] * param_int[nd][NDIMDX];
        E_Float* rop_ssiter_d = iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
 
-       E_Int lmin = 10;
-       if (param_int[nd][ITYPCP] == 2) lmin = 4;
-       
-     
+       printf("NEQ  %d %d \n",  param_int[nd][NEQ],  param_int[nd][NDIMDX]);
 #include "Compute/Linear_solver/dRdp_tapenade.cpp"
+#include    "HPC_LAYER/OMP_MODE_END.h"
 
-	shift_mu   = shift_mu   + param_int[nd][ NDIMDX ];
-	shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;
-	shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-	shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-      }
 #pragma omp barrier
 #ifdef _OPENMP
 lhs_end = omp_get_wtime();
 #endif
-if (ithread==100) printf("tapenade               %g \n", lhs_end-lhs_beg);
+if (ithread==1) printf("tapenade               %g \n", lhs_end-lhs_beg);
 
 /*
     // norm L2 pour verrif bug
@@ -252,28 +222,23 @@ if (ithread==100) printf("tapenade               %g \n", lhs_end-lhs_beg);
 lhs_beg = omp_get_wtime();
 #endif
     // kry(kr+1) = kry(kr) + drodmd
-    shift_zone=0;
-    nd_current=0;
-    for (E_Int nd = 0; nd < nidom; nd++)
-      {
+#include "HPC_LAYER/OMP_MODE_BEGIN.h"
+
         E_Float* krylov_in = iptkrylov[nd] +  kr    * param_int[nd][NEQ] * param_int[nd][NDIMDX];
         E_Float* krylov_out= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
-#include "HPC_LAYER/OMP_MODE_BEGIN.h"
 #include   "Compute/LU/prep_lussor.h"
 	    if      (param_int[nd][NB_RELAX] == 1 && param_int[nd][LU_MATCH]==0) krylov_in = ipt_gmrestmp[nd];
 	    else if (param_int[nd][NB_RELAX] >= 1) krylov_in = ipt_ssortmp_shift;
 
   	    id_vect_(param_int[nd], ipt_ind_dm_thread, ipt_drodmd + shift_zone, krylov_out, krylov_in, ssor_size);
 
-	    nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
 
-        shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-      }
+
 #ifdef _OPENMP      
 lhs_end = omp_get_wtime();
 #endif
-if (ithread==100) printf("id_vect                %g \n", lhs_end-lhs_beg);
+if (ithread==1) printf("id_vect                %g \n", lhs_end-lhs_beg);
 #ifdef _OPENMP
 lhs_beg = omp_get_wtime();
 #endif
@@ -291,20 +256,15 @@ lhs_beg = omp_get_wtime();
 	normL2_sum             = 0.;
         ipt_norm_kry[ithread-1]= 0.;
         nd_current             = 0;
-	for (E_Int nd = 0; nd < nidom; nd++)
-	  {
+#include "HPC_LAYER/OMP_MODE_BEGIN.h"
 	   E_Float* krylov_i   = iptkrylov[nd] +   i    * param_int[nd][NEQ] * param_int[nd][NDIMDX];
 	   E_Float* krylov_krp1= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
 
-#include "HPC_LAYER/OMP_MODE_BEGIN.h"
+	   scal_prod_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, ipt_norm_kry[ithread-1]);
 
-	       scal_prod_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, ipt_norm_kry[ithread-1]);
-
-               nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
-	  }//loop zone
-//lhs_end = omp_get_wtime();
-//if (ithread==100) printf("scal_prod              %g \n", lhs_end-lhs_beg);
+lhs_end = omp_get_wtime();
+if (ithread==1) printf("scal_prod              %g \n", lhs_end-lhs_beg);
 //lhs_beg = omp_get_wtime();
 
 #pragma omp barrier
@@ -326,18 +286,13 @@ lhs_beg = omp_get_wtime();
         //
         // + calcul de la norme L2^2 mais seulement la derniere est utilisee
         ipt_norm_kry[ithread-1]= 0.;
-        nd_current =0;
-	for (E_Int nd = 0; nd < nidom; nd++)
-	  {
+#include "HPC_LAYER/OMP_MODE_BEGIN.h"
 	   E_Float* krylov_i   = iptkrylov[nd] +   i    * param_int[nd][NEQ] * param_int[nd][NDIMDX];
 	   E_Float* krylov_krp1= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
 
-#include "HPC_LAYER/OMP_MODE_BEGIN.h"
 	       vect_rvect_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, sum_value, ipt_norm_kry[ithread-1]);
 
-               nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
-          }
 //lhs_end = omp_get_wtime();
 //if (ithread==100) printf("vect_rvect             %g %d \n", lhs_end-lhs_beg, i);
 
@@ -417,12 +372,9 @@ if (ithread==100) printf("Normalisation de V_kr  %g \n", lhs_end-lhs_beg);
 #ifdef _OPENMP
 lhs_beg = omp_get_wtime();
 #endif
-    nd_current =0;
     ipt_norm_kry[ithread-1]= 0.;
-    for (E_Int nd = 0; nd < nidom; nd++)
-      {
-       E_Float* krylov_krp1= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
+       E_Float* krylov_krp1= iptkrylov[nd] + (kr+1) * param_int[nd][NEQ] * param_int[nd][NDIMDX];
 	       normalisation_vect_(normL2_sum, param_int[nd], ipt_ind_dm_thread , krylov_krp1);
 
              /*
@@ -434,9 +386,9 @@ lhs_beg = omp_get_wtime();
 	          scal_prod_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, ipt_norm_kry[ithread-1]);
                   printf("normvect   %g %d  \n", ipt_norm_kry[ithread-1] , i);
                }*/
-               nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
-      }
+
+
 #ifdef _OPENMP
 lhs_end = omp_get_wtime();
 #endif
@@ -507,19 +459,14 @@ lhs_beg = omp_get_wtime();
 
   kr++;
   //Calcul de X solution du GMRES, stockage dans drodm
-  shift_zone =0; nd_current =0;
-  for (E_Int nd = 0; nd < nidom; nd++)
-    {
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
        // 
        // inverser les loop et vectoriser avec simd reduction
        // 
        prod_mat_vect_(param_int[nd], ipt_ind_dm_thread, iptkrylov[nd],
                       ipt_VectY, iptdrodm + shift_zone, kr);
-       nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
-     shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-    }//loop zone
+
 #ifdef _OPENMP
 lhs_end = omp_get_wtime();
 #endif
@@ -527,9 +474,6 @@ if (ithread==100) printf("prod_mat_vect          %g \n", lhs_end-lhs_beg);
 #ifdef _OPENMP
 lhs_beg = omp_get_wtime();
 #endif
-      shift_coe =0; shift_zone =0; nd_current =0;
-      for (E_Int nd  = 0; nd < nidom; nd++)
-        {
 #include "HPC_LAYER/OMP_MODE_BEGIN.h"
 #include "Compute/LU/prep_lussor.h"
 
@@ -560,9 +504,6 @@ lhs_beg = omp_get_wtime();
 
             nd_current +=1;
 #include "HPC_LAYER/OMP_MODE_END.h"
-          shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-          shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-         }//loop zone
 #ifdef _OPENMP
 lhs_end = omp_get_wtime();
 #endif

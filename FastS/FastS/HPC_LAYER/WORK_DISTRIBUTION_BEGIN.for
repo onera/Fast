@@ -12,11 +12,8 @@
       lerr          =.false.
 
       thread_parsock =  Nbre_thread_actif/Nbre_socket
-
 #include   "FastS/HPC_LAYER/topo_cache.for"
-
 #include   "FastS/HPC_LAYER/loopBloc_begin.for"
-
 #include   "FastS/HPC_LAYER/loop_scater.for"
-
 #include   "FastS/HPC_LAYER/verif_loksize.for"
+

@@ -3,7 +3,7 @@ c     $Date: 2010-11-04 13:25:50 +0100 (Thu, 04 Nov 2010) $
 c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine navier_stokes_struct( ndo, nidom, Nbre_thread_actif,
+      subroutine navier_stokes_struct( ndo, Nbre_thread_actif,
      &        ithread, ithread_io, 
      &        omp_mode, layer_mode, Nbre_socket, socket, mx_synchro, 
      &        lssiter_verif, lexit_lu,
@@ -13,7 +13,7 @@ c***********************************************************************
      &        temps, tot,
      &        ijkv_sdm,
      &        ind_dm_zone, ind_dm_socket, ind_dm_omp,
-     &        socket_topology, lok , topo_omp, inddm_omp,timer_omp,
+     &        socket_topology, lok , topo_s, timer_omp,
      &        krylov, norm_kry,
      &        cfl,
      &        x , y , z, cellN, cellN_IBC,
@@ -49,14 +49,14 @@ c***********************************************************************
       implicit none
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndo, nidom, Nbre_thread_actif , mx_synchro, first_it,
+      INTEGER_E ndo, Nbre_thread_actif , mx_synchro, first_it,
      & ithread, ithread_io, Nbre_socket, socket, nitrun, nptpsi, nitcfg,
      & nb_pulse,lexit_lu,
      & lssiter_verif,flagCellN,omp_mode,layer_mode,nssiter
 c
-      INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),
+      INTEGER_E  ijkv_sdm(3),ind_dm_zone(6), topo_s(3),
      & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
-     & param_int(0:*), topo_omp(3), inddm_omp(6), lok(*), cycl
+     & param_int(0:*), lok(*), cycl
 
       REAL_E rop(*),rop_m1(*),rop_tmp(*),rop_ssiter(*),xmut(*),drodm(*),
      & coe(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
@@ -75,6 +75,7 @@ C Var loc
 #include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
 
+
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
      & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2,
      & flag_wait,cells, it_dtloc
@@ -88,14 +89,12 @@ C Var loc
 
       include 'omp_lib.h'
 
-
        rhs_begin = OMP_GET_WTIME()
 
 #include "FastS/HPC_LAYER/SIZE_MIN.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
 #include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastS/HPC_LAYER/INDICE_RANGE.for"
-
 
           flag_wait = 0
 
@@ -312,12 +311,10 @@ c       endif
            ! - Ajout d'un eventuel terme source au second membre
            ! - initialisation drodm
            call src_term(ndo, nitcfg, nb_pulse, param_int, param_real,
-c     &                   ind_sdm, ind_rhs, ind_grad,
      &                   ind_sdm, ind_rhs, ind_ssa,
      &                   temps,
      &                   rop_ssiter, xmut, drodm, coe, x,y,z,cellN_IBC,
-     &                   ti,tj,tk,vol, delta, ro_src)
-
+     &                   ti,tj,tk,vol, delta, ro_src, wig)
 
 
            IF(flag_wait.eq.0) then
@@ -424,6 +421,20 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
               elseif(param_int(KFLUDOM).eq.5) then
 
                 call fluroe_select(ndo,nitcfg,ithread, nptpsi,
+     &                        param_int, param_real,
+     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
+     &                        synchro_send_sock, synchro_send_th,
+     &                        synchro_receive_sock, synchro_receive_th,
+     &                        ibloc , jbloc , kbloc ,
+     &                        icache, jcache, kcache,
+     &                        psi,wig,stat_wig, rop_ssiter, drodm,
+     &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
+     &                        venti, ventj, ventk, xmut)
+
+
+             elseif(param_int(KFLUDOM).eq.8) then
+
+                call flushyper_select(ndo,nitcfg,ithread, nptpsi,
      &                        param_int, param_real,
      &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
      &                        synchro_send_sock, synchro_send_th,
@@ -570,22 +581,23 @@ c     &                   ind_sdm, ind_rhs, ind_grad,
               endif
           end if
 
-
 #include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
 #include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
 
 
-
            !!! omp barriere
-      if(lexit_lu.eq.0.and.nitrun*nitcfg.gt.15) then 
+      if(lexit_lu.eq.0.and.nitrun*nitcfg.gt.15
+     &                .and.(nitcfg.lt.3.or.nitcfg.eq.nssiter-1)) then 
         rhs_end = OMP_GET_WTIME()
         cells = (ind_dm_omp(2)-ind_dm_omp(1)+1)
      &         *(ind_dm_omp(4)-ind_dm_omp(3)+1)
      &         *(ind_dm_omp(6)-ind_dm_omp(5)+1)
 
         timer_omp(1)=timer_omp(1)+(rhs_end-rhs_begin)/float(cells)
+        timer_omp(2)=float(cells)
       endif
+
 
 
       end

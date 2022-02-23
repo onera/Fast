@@ -12,6 +12,7 @@ dico["SENSOR_INIT"] = { 'name':'flusenseur_init', 'model':['lamin','euler'], 'Ty
 dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3','o1']}
+dico["SENSORHYPER"] = { 'name':'flushyper'      , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 
 rep = sys.argv[1]
 if rep not in dico:
@@ -84,10 +85,15 @@ for ale in TypeMotion:
                         for i in range( len(lines) ):
                              lines[i]=lines[i].replace("FLUX_CONV", rep)
 
+                        # correction pour flushyper (wig dim)
+                        if flux == 'flushyper':
+                            for i in range( 60 ):
+                                lines[i]=lines[i].replace("wig( param_int(NDIMDX)     * 3                  )", "wig( param_int(NDIMDX)     * 4                  )")
+
                         # correction pour Roe (p1p2)
                         if flux == 'fluroe':
                             for i in range( 90, len(lines) ):
-                                lines[i]=lines[i].replace("p1p2", "0.5*p1p2")
+                                lines[i]=lines[i].replace("", "0.5*p1p2")
 
                         # suppression fluk en 2d et metrique k (pour que mode debug soit OK)
                         if typezone == '2d': 

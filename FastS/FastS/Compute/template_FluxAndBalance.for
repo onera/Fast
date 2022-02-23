@@ -65,10 +65,11 @@ c***********************************************************************
       REAL_E param_real(0:*)
 
 C Var loc
-      INTEGER_E inc,incmax,l,lt,i,j,k,incmax2,nm,nm2,np,
+      INTEGER_E inc,incmax,l,lt,i,j,k,incmax2,nm,nm2,np,np2,
      & l0,lt0,inci,incj,inck,ci,cj,lij,ltij,inci_mtr, incj_mtr,
      & inck_mtr,icorr,jcorr,ls,v1,v2,v3,v4,v5,v6,wig_i,wig_j,wig_k,
-     & v1ven,v2ven,v3ven,lven,lvij,                                 !ALE only
+     & wigd,
+     & v1ven,v2ven,v3ven,lven,lvij,                    !ALE only
      & lt200,lt100,lt010,lt210,lt020,lt110,lt002,lt012,lt102,lt001,
      & lt021,lt201,lt120,lvo,lvo200,lvo020,lvo002,vslp,lvol,lvor,ir,il,
      & l200,l100,l010,l020,l110,l101,l011,v1mtr,v2mtr,v3mtr,
@@ -76,8 +77,8 @@ C Var loc
 
       REAL_E c1,c2,c3,c4,c5,c6,c4sa,c5sa,c6sa,si,sj,sk,qm,qp,
      & tcx,tcy,tcz,tc,r1,h1,rou1,rov1,row1,r2,h2,rou2,rov2,row2,
-     & gam,gam1,gam2,gam3,gam4,qn1,qn2,u,tdu,p1p2,roref,uref,tam,tam1,
-     & qm1,qm2,qm3,qm4,qm5,qm6,qp1,qp2,qp3,qp4,qp5,qp6,mut1,mut2,
+     & gam,gam1,gam2,gam3,gam4,qn1,qn2,u,us,tdu,p1p2,roref,uref,tam,
+     & tam1,qm1,qm2,qm3,qm4,qm5,qm6,qp1,qp2,qp3,qp4,qp5,qp6,mut1,mut2,
      & flu1,flu2,flu3,flu4,flu5,flu6,p1,p2,qen,sigma_1,ck_vent,
      & div,f1,f2,f3,f4,f5,f6,fv,fv5,volinv,test,cmus1,temp01,coesut,
      & tix,tiy,tiz,tix1,tiy1,tiz1,tjx,tjy,tjz,tjx1,tjy1,tjz1,tkx,
@@ -85,7 +86,8 @@ C Var loc
      & gradU_nx,gradU_ny,gradU_nz, gradV_nx,gradV_ny,gradV_nz,ventz,
      & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
-     & qn,r,v,w,h,q,r_1,psiroe,avmin, xktvol, xmulam, xmutur, xmutot
+     & qn,r,v,w,h,q,r_1,psiroe,avmin, xktvol, xmulam, xmutur, xmutot,
+     & qmm1,qmm2,qmm3,qmm4,qmm5,qmm6,qmp1,qmp2,qmp3,qmp4,qmp5,qmp6
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -174,6 +176,7 @@ c      c7     = c4/c5
       wig_i = v1
       wig_j = v2
       wig_k = v3
+      wigd = v4
 
       ck_vent = 1                                       !ALE only
       if(param_int(NEQ_VENT).eq.2) ck_vent =0.          !ALE only

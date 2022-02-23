@@ -38,12 +38,12 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* work; 
 
-  E_Int nitrun, no_vect_test, omp_mode; 
+  E_Int nitrun, no_vect_test; 
   
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOlllO" , &zones , &metrics, &nitrun, &no_vect_test, &omp_mode, &work)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOllO" , &zones , &metrics, &nitrun, &no_vect_test,  &work)) return NULL;
 #else 
-  if (!PyArg_ParseTuple(args, "OOiiiO" , &zones , &metrics, &nitrun, &no_vect_test, &omp_mode, &work)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOiiO" , &zones , &metrics, &nitrun, &no_vect_test,  &work)) return NULL;
 #endif
 
   //* tableau pour stocker dimension sous-domaine omp *//
@@ -59,6 +59,8 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
+  E_Int omp_mode = iptdtloc[ 8 + nssiter];
+  E_Int* ipt_omp = iptdtloc +9 + nssiter;
 
   E_Int lcfl= 0;
  // 
@@ -439,16 +441,16 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
    E_Int nitrun_loc = 1;
    E_Int nstep =1;
    
-   E_Int nidom_tot;
-   
-   E_Int skip_navier = 1; //layer_mode 0: on calcul tout le temps gsdr3
-   souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, nidom_tot, lexit_lu, lssiter_verif);
+   E_Int flag_res=0;
+   souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, flag_res, lexit_lu, lssiter_verif);
+   flag_res=1;
+   souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, flag_res, lexit_lu, lssiter_verif);
 
    E_Int display=0;
    //calcul distri si implicit ou explicit local + modulo verif
    if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1) )
        {
-         distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , nssiter , mx_omp_size_int , nstep, nitrun_loc, display );
+         distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_loc, display );
        }
 
    E_Int layer_mode=1;
@@ -461,7 +463,7 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
             temps              ,
             ipt_ijkv_sdm       , 
             ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, vartype, timer_omp,
-            iptludic           , iptlumax         ,
+            iptludic           , iptlumax         , ipt_omp          ,
             ipt_ind_dm         , ipt_it_lu_ssdom  ,
             ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size, ipt_drodmd, 
 	    ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp, ipt_givens,

@@ -60,6 +60,7 @@ C Var loc
       INTEGER_E inc,incmax,l,lt,i,j,k,incmax2,nm,nm2,np,
      & l0,lt0,inci,incj,inck,ci,cj,lij,ltij,inci_mtr, incj_mtr,
      & inck_mtr,icorr,jcorr,ls,v1,v2,v3,v4,v5,v6,wig_i,wig_j,wig_k,
+     & wigd,
      & v1ven,v2ven,v3ven,lven,lvij,                                 !ALE only
      & lt200,lt100,lt010,lt210,lt020,lt110,lt002,lt012,lt102,lt001,
      & lt021,lt201,lt120,shift,lvo,lvo200,lvo020,lvo002,vslp,
@@ -67,7 +68,7 @@ C Var loc
      & l200,l100,l010,l020,l110,l101,l011,v1mtr,v2mtr,v3mtr,
      & l001,l002,l210,l220,l201,l202,l021,l022,l120,l102,l012
 
-      REAL_E c1,c2,c3,c4,c5,c6,c4sa,c5sa,c6sa,si,sj,sk,qm,qp,
+      REAL_E c1,c2,c3,c4,c5,c6,c4sa,c5sa,c6sa,si,sj,sk,qm,qp,us,
      & tcx,tcy,tcz,tc,r1,h1,rou1,rov1,row1,r2,h2,rou2,rov2,row2,
      & gam,gam1,gam2,gam3,gam4,qn1,qn2,u,tdu,p1p2,roref,uref,tam,tam1,
      & qm1,qm2,qm3,qm4,qm5,qm6,qp1,qp2,qp3,qp4,qp5,qp6,mut1,mut2,
@@ -79,7 +80,7 @@ C Var loc
      & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
      & qn,r,v,w,h,q,r_1,psiroe,avmin, xktvol, xmulam, xmutur, xmutot,
-     & sens,flagi,flagj,flagk,norm
+     & sens,flagi,flagj,flagk,norm,opt0
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"

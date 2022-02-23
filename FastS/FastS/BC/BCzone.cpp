@@ -494,6 +494,16 @@ E_Int K_FASTS::BCzone(
                     bvbs_wall_viscous_transition_( idir, lrhs_loc, nstep, neq_mtr, mobile_coef, random_bc, size_data, inc_bc, param_int, ipt_ind_CL, param_real,
                                                    iptx, ipty, iptz, ipventijk, iptijk, iptrop);
                 }
+                  else if ( bc_type == 32 && param_int[IFLOW] > 1){
+#                   include "BC/INCREMENT_BC.h"
+                    E_Float mobile_coef            = 1.;
+                    if ( nbdata != 0 ) mobile_coef = ipt_data[0];
+                    E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
+                    E_Float* ipt_data1 = ipt_data;
+
+                    bvbs_wall_viscous_isothermal_( idir, lrhs_loc, neq_mtr, mobile_coef, param_int, ipt_ind_CL, param_real, ipventijk,
+                                                   iptijk, iptrop, ipt_data1, iptsize_data[0], inc_bc, size_work );
+                }
 
                 else if ( bc_type == 11 ) {
                     bvbs_periodique_( idir, lrhs_loc, param_int, ipt_ind_CL119, iptrop );

@@ -86,6 +86,7 @@ if(lexit_lu ==0 && layer_mode==1)
 	    E_Int pt_bcs = param_int[nd][PT_BC];
 	    E_Int nb_bc  = param_int[nd][ pt_bcs ];
 	    E_Float* ipt_data=NULL;
+             E_Int nd_subzone =0;
 	    for ( E_Int ndf = 0; ndf < nb_bc; ndf++ )
 	      {
 		E_Int pt_bc  = param_int[nd][pt_bcs+ 1 + ndf];

@@ -49,7 +49,7 @@ E_Int K_FASTS::gsdr3(
   E_Int* ipt_ijkv_sdm  ,
   E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int& vartype, E_Float* timer_omp,
   E_Int*     iptludic  , E_Int*   iptlumax      ,
-  E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom  ,
+  E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom  , E_Int* ipt_omp, 
   E_Float* ipt_VectG      , E_Float* ipt_VectY   , E_Float** iptssor       , E_Float** iptssortmp    , E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
   E_Float* ipt_Hessenberg, E_Float** iptkrylov      , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
   E_Float*   ipt_cfl,
@@ -67,9 +67,7 @@ E_Int K_FASTS::gsdr3(
   E_Int*&    param_int_tc    , E_Float*& param_real_tc    , E_Int*& linelets_int   , E_Float*& linelets_real , 
   E_Int&     taille_tabs     , E_Float*& stock            , E_Float*& drodmstock   , E_Float*& constk        , E_Float** iptsrc)
 
-
  {
-   
 #ifdef TimeShow  
   E_Int rank =0; 
   E_Float* ipt_timecount = new E_Float[5];
@@ -140,86 +138,58 @@ E_Int K_FASTS::gsdr3(
 	      }
 	    }
 
-      //
-      //Calcul taille tableau ssor par thread et mise a jour Nombre sous_iter pour implicit
-      //
-      E_Int nd_subzone = 0;
-      for (E_Int nd = 0; nd < nidom; nd++)
+      E_Int nbtask = ipt_omp[nitcfg-1]; 
+      E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+
+      for (E_Int ntask = 0; ntask < nbtask; ntask++)
       {
-        //mise a jour Nombre sous_iter pour implicit (simplification gestion OMP)
-        if(param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1 || lssiter_verif ==1 )
-          {
-           E_Int* ipt_nisdom_residu   =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter;                //nisdom_residu(nssiter)
-           E_Int* ipt_it_bloc         =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter*2;    //it_bloc(nidom)
-
-           if(ipt_nisdom_residu[nitcfg-1] != 0) ipt_it_bloc[0] +=1;
-          }
-
-	if (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1)
-	  {
 #ifdef _OPENMP
 	    E_Int  Nbre_thread_actif = __NUMTHREADS__;
 #else
 	    E_Int Nbre_thread_actif = 1;
 #endif
+        E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+        E_Int nd         = ipt_omp[ pttask ];
+        E_Int nd_subzone = ipt_omp[ pttask + 1 ];
+
+       //
+       //mise a jour Nombre sous_iter pour implicit (simplification gestion OMP)
+       //
+        //if(param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1 || lssiter_verif ==1 )
+        //if( param_int[nd][ DTLOC ]== 1 || lssiter_verif ==1 )
+        if( lssiter_verif ==1 )
+          {
+           E_Int* ipt_nisdom_residu   =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter;                //nisdom_residu(nssiter)
+           E_Int* ipt_it_bloc         =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter*2;    //it_bloc(nidom)
+
+           //if(ipt_nisdom_residu[nitcfg-1] != 0) ipt_it_bloc[0] +=1;
+           if(nd_subzone== 0) ipt_it_bloc[0] +=1;
+           //printf("itbloc %d %d %d %d \n",ipt_it_bloc[0], nd, nitcfg, nitrun );
+          }
+
+        //
+        //Calcul taille tableau ssor par thread 
+        //
+	if (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1)
+	  {
 	    E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
-	    E_Int  nb_subzone    = ipt_nidom_loc [nitcfg-1];    
-	    //nbre sous-zone a la sousiter courante
 
-	    for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
-	      {
-		if (omp_mode == 1)
-		  {
-		    E_Int       Ptomp = param_int[nd][PT_OMP];
-		    E_Int  PtrIterOmp = param_int[nd][Ptomp];   
-		    E_Int  PtZoneomp  = param_int[nd][PtrIterOmp + nd_subzone];
+            E_Int* ipt_inddm_omp;
+            E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+            for (E_Int i = 0; i < Nbre_thread_actif; i++)
+            {
+              E_Int ithread_loc           = ipt_omp[ pttask + 2 + i] +1 ;
+              ipt_inddm_omp         = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
 
-		    for (E_Int i = 0; i < Nbre_thread_actif; i++)
-		      {
-			if (param_int[nd][PtZoneomp + i] != - 2)
-			  {
-			    E_Int* ipt_ind_dm_thread = param_int[nd] + PtZoneomp +  Nbre_thread_actif + 4 + (param_int[nd][PtZoneomp + i]) * 6;
-			    E_Int indice             = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
-		            ipt_ssor_size[indice]=(ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] +1 +2*param_int[nd][ NIJK +3 ])*
-	                                	  (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] +1 +2*param_int[nd][ NIJK +3 ])*
-		                                  (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] +1 +2*param_int[nd][ NIJK +4 ]);
-			  }
-                         else { E_Int indice = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
-                                ipt_ssor_size[indice]=0;
-                              }
-		      }
-		  }
-		else //ompmode = 0
-		  {
-                    E_Int* ipt_ind_dm_loc  = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;
-		    E_Int ipt_topology_socket[3];
-		    E_Int ipt_ind_dm_thread[6];
-		    E_Int lmin = 10;
-		    if (param_int[nd][ITYPCP] == 2) lmin = 4;
-
-		    for (E_Int i = 0; i < Nbre_thread_actif; i++)
-		      {
-			E_Int ithread = i + 1;
-			E_Int indice = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
-
-			indice_boucle_lu_(nd, ithread, Nbre_thread_actif, lmin,
-					  ipt_ind_dm_loc,
-					  ipt_topology_socket, ipt_ind_dm_thread);
-
-			if (ithread > ipt_topology_socket[0]*ipt_topology_socket[1]*ipt_topology_socket[2])
-		         { ipt_ssor_size[indice]=0;
-			  //break;
-                         }
-                        else
-                         {
-		          ipt_ssor_size[indice]=(ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] +1 +2*param_int[nd][ NIJK +3 ])*
-	                                        (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] +1 +2*param_int[nd][ NIJK +3 ])*
-		                                (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] +1 +2*param_int[nd][ NIJK +4 ]);
-                         }
-		      }
-		  }// ompmode
-	      }//loop subzone
-	  }  // if relax
+              E_Int indice = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
+              if (ithread_loc != -1)
+                { ipt_ssor_size[indice]=(ipt_inddm_omp[1] - ipt_inddm_omp[0] +1 +2*param_int[nd][ NIJK +3 ])*
+                                        (ipt_inddm_omp[3] - ipt_inddm_omp[2] +1 +2*param_int[nd][ NIJK +3 ])*
+                                        (ipt_inddm_omp[5] - ipt_inddm_omp[4] +1 +2*param_int[nd][ NIJK +4 ]);
+                }
+              else { ipt_ssor_size[indice]=0; }
+            } // loop threads
+	  } // if relax
       } // loop zone
 
 
@@ -304,22 +274,33 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
         //---------------------------------------------------------------------
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
-        E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int nd_current=0;
-	E_Float rhs_end=0;
+        E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int shift_mu=0; E_Int nd_current=0;
+	E_Float rhs_end=0; E_Int ncells=0;
 
         if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1) { ipt_norm_kry[ithread-1]=0.; }
-        //calcul du sous domaine a traiter par le thread 
-        for (E_Int nd = 0; nd < nidom; nd++)
+
+        E_Int nbtask = ipt_omp[nitcfg-1]; 
+        E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+
+        for (E_Int ntask = 0; ntask < nbtask; ntask++)
           {
-           E_Int lmin = 10;
-           if (param_int[nd][ITYPCP] == 2) lmin = 4;
+             E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+             E_Int nd = ipt_omp[ pttask ];
 
+             E_Int lmin = 10;
+             if (param_int[nd][ITYPCP] == 2) lmin = 4;
+
+          shift_zone=0; shift_wig=0; shift_coe=0;
+          for (E_Int n = 0; n < nd; n++)
+          {
+            shift_zone = shift_zone + param_int[n][ NDIMDX ]*param_int[n][ NEQ ];
+            shift_coe  = shift_coe  + param_int[n][ NDIMDX ]*param_int[n][ NEQ_COE ];
+            if(param_int[n][ KFLUDOM ]==2){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*3;}
+            if(param_int[n][ KFLUDOM ]==8){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*4;}
+          }
 #include "Compute/rhs.cpp"
-          shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
-          shift_coe  = shift_coe  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ_COE ];
-          if(param_int[nd][ KFLUDOM ]==2){  shift_wig  = shift_wig  + param_int[nd][ NDIMDX ]*3;}
+          }
 
-          } //Fin boucle sur zones pour calcul RHS
 #ifdef _WIN32
 #pragma omp barrier
 #endif
@@ -331,12 +312,15 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 #endif
           E_Int cpu_perthread = (ithread-1)*2 +(nitcfg-1)*Nbre_thread_actif*2;
           timer_omp[ cpu_perthread] += rhs_end - rhs_begin;
+          //if(ncells !=0 )printf(" time rhs= %g %d  %d %d %d  \n",(rhs_end - rhs_begin)/float(ncells) , ithread, ncells, nitcfg, nssiter);
+	  //if(ithread==1) printf("========= \n");
           //if(ithread==1) printf(" time rhs= %g %g  %d %d  \n",timer_omp[ cpu_perthread], rhs_end - rhs_begin , cpu_perthread, nitcfg);
 
           if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1)
 	  {
 #include   "Compute/Linear_solver/lhs.cpp"
           }
+
 
           // LUSGS
           else
@@ -346,7 +330,6 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 #ifdef Conservatif
 #include   "Compute/conservatif.cpp"
 #endif
-
           }
 
 

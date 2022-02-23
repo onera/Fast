@@ -47,6 +47,12 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
   //PyObject* tmp = PyList_GetItem(work, 8); E_Int mx_synchro    = PyLong_AsLong(tmp); 
   PyObject* tmp = PyDict_GetItemString(work, "MX_SYNCHRO"); E_Int mx_synchro    = PyLong_AsLong(tmp); 
 
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+  E_Int ompmode  = iptdtloc[8+nssiter];
+  E_Int* ipt_omp = iptdtloc +9 + nssiter;
+
   E_Int nidom        = PyList_Size(zones);
   E_Int ndimdx_max   = 0;
   E_Int neq_rot      = 3;
@@ -140,14 +146,23 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
     E_Int Nbre_thread_actif = 1;
 #endif
 # include "HPC_LAYER/INFO_SOCKET.h"
+
       //
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
       // ---------------------------------------------------------------------
-      for (E_Int nd = 0; nd < nidom; nd++)
-        {  
-           //if(ipt_param_int[nd][ILES]==1)
-           //{
+      E_Int nitcfg =1;
+
+      E_Int nbtask = ipt_omp[nitcfg-1]; 
+      E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+
+      //printf("ntask %d %d \n", nbtask, 9 + nssiter +nitcfg-1);
+
+      for (E_Int ntask = 0; ntask < nbtask; ntask++)
+        {
+             E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+             E_Int nd = ipt_omp[ pttask ];
+
              E_Int* ipt_lok_thread   = ipt_lok   + nd*mx_synchro*Nbre_thread_actif;
             
              E_Int* ipt_ind_dm_loc         = ipt_ind_dm         + (ithread-1)*6;
@@ -161,24 +176,35 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
              E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
              E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
              E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
-             E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
 
              // Distribution de la sous-zone sur les threads
              E_Int lmin =10;
 	     if (ipt_param_int[nd][ITYPCP] == 2) lmin = 4;
              if (ipt_param_int[nd][ILES]==1 and lmin==4) lmin=8;
 
+             E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
+             E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+             E_Int nd_subzone            = ipt_omp[ pttask + 1 ];
+             E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+             ipt_topo_omp                = ipt_omp + pttask + 3 + Nbre_thread_actif ;
+             ipt_inddm_omp               = ipt_omp + pttask + 6 + Nbre_thread_actif + (ithread_loc-1)*6;
+
+             if (ithread_loc == -1) { continue;}
+
              indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
                                ipt_ind_dm_loc, 
                                ipt_topology_socket, ipt_ind_dm_socket );
 
-             viles_(nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, neq_rot,
+             //printf("inddom %d %d %d %d %d %d \n", ipt_inddm_omp[0], ipt_inddm_omp[1],  ipt_inddm_omp[2], ipt_inddm_omp[3], ithread_loc, nd);
+             //printf("dist topo %d %d %d %d  \n", ipt_topo_omp[0], ipt_topo_omp[1],  ipt_topo_omp[2 ],  Nbre_thread_actif  +3 + pttask);
+             //printf("nidom     %d %d %d %d  \n", nidom,Nbre_thread_actif_loc,  Nbre_socket, socket);
+
+             viles_(nd, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, neq_rot,
                      ipt_param_int[nd], ipt_param_real[nd], ipt_ijkv_sdm_thread,
-                     ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
+                     ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_topo_omp, ipt_inddm_omp,
                      ipt_topology_socket, ipt_lok_thread ,
                      iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptmut[nd], iptdist[nd], iptrot);
-           //}
- 
+
         }// boucle zone 
 # include "HPC_LAYER/INIT_LOCK.h"
   }  // zone OMP

@@ -244,6 +244,10 @@
 #define LBM_gamma_precon        52
 #define LBM_zlim                53
 
+/*schema HYPERSONIc*/
+#define HYPER_COEF1  54  
+#define HYPER_COEF2  55  
+
 #define SA_CKARM    0.41 
 #define SA_CB1      0.1355
 #define SA_CB2      0.622
