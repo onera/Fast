@@ -18,7 +18,7 @@ try:
     import Converter.PyTree as C
     import Converter.Internal as Internal
     import FastS.PyTree as FastS  
-    import FastP.PyTree as FastP
+    #import FastP.PyTree as FastP
     import FastLBM.PyTree as FastLBM
     import Connector.PyTree as X
 except:
@@ -36,18 +36,21 @@ except: OMP_NUM_THREADS = 1
 def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, SizeBlockTarget=1000,nghost=2):
     """Perform necessary operations for the solver to run."""
 
+    # Barriere si version sans FastP
+    for z in Internal.getZones(t):
+        if Internal.getZoneType(z) == 2:
+            raise TypeError('warmup: unstructured zones detected and no FastP. Please suppress them from pyTree.')
+
     # renumerotation cellule/face si necessaire pour HPC (threading et cache blocking)
     node = Internal.getNodeFromName(t, 'HpcSplitInfo')
     lsplit = True
     if node is not None:
        Nthread = node[1][0]
        Ncache  = node[1][1]
-
        if Ncache == SizeBlockTarget and Nthread == OMP_NUM_THREADS: lsplit = False
-
        print("INFOSPLIT initial: Nthread=",Nthread,'Ncache=',Ncache,'NewSplit=',lsplit)
 
-    if lsplit: t,tc = FastP.SplitThreadCache(t, tc, SizeBlockTarget)
+    #if lsplit: t,tc = FastP.SplitThreadCache(t, tc, SizeBlockTarget)
 
     #global FastC.FIRST_IT, FastC.HOOK
     # Get omp_mode
@@ -85,9 +88,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
             zones_lbm.append(z)
          else:
             zones_ns.append(z)
-            
-       else:
-         zones_unstr.append(z)
+       else: zones_unstr.append(z)
 
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
@@ -122,7 +123,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     
     #init metric 
     FastS.fasts.init_metric(zones_str  , metrics_str  , ompmode)
-    FastP.fastp.init_metric(zones_unstr, metrics_unstr, FastC.HOOK)
+    #FastP.fastp.init_metric(zones_unstr, metrics_unstr, FastC.HOOK)
 
     # compact + align + init numa
     rmConsVars=True
@@ -180,7 +181,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
         teta = infos_ale[0];  tetap = infos_ale[1]
         FastC._motionlaw(t, teta, tetap)
         if len(zones_str) != 0: FastS.fasts.computePT_velocity_ale(zones_str,  metrics_str, FastC.HOOK, ompmode)
-        if len(zones_unstr) != 0: print("coder fastp.computePT_velocity_ale(zones_unstr,  metrics_unstr")
+        #if len(zones_unstr) != 0: print("coder fastp.computePT_velocity_ale(zones_unstr,  metrics_unstr")
     #
     # Compactage arbre transfert et mise a jour FastC.HOOK
     #
@@ -239,7 +240,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     FastS.fasts._computePT_mut(infos_zones['struct'][0], infos_zones['struct'][1], hook1)
     #FastP.fastp._computePT_mut(infos_zones['unstruct'][0], infos_zones['unstruct'][1], hook1)
-    print("decommenter _computePT_mut dans warmup Fast pour zone non structure.")
+    #print("decommenter _computePT_mut dans warmup Fast pour zone non structure.")
        
     return (t, tc, metrics)
 
@@ -266,7 +267,7 @@ def allocate_metric(t,nghost):
                grid_init[0] = 'GridCoordinates#Init'
                Internal.addChild(z, grid_init, pos=-1) # last
 
-        ztype = Internal.getValue(  Internal.getNodeFromName(z, 'ZoneType') )
+        ztype = Internal.getValue(Internal.getNodeFromName(z, 'ZoneType'))
         if ztype == 'Structured':
            param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
 
@@ -274,7 +275,7 @@ def allocate_metric(t,nghost):
               metrics.append(FastLBM.fastlbm.allocate_metric(z, nssiter,nghost))
            else:
               metrics.append(FastS.fasts.allocate_metric(z, nssiter))
-        else: metrics.append(FastP.fastp.allocate_metric(z, nssiter))
+        #else: metrics.append(FastP.fastp.allocate_metric(z, nssiter))
     return metrics
 
 #==============================================================================
@@ -303,7 +304,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
           if param_int is None:
               raise ValueError("_compact: Parameter_int is missing for zone %s."%z[0])
           opt = 1
-          if init: FastP.fastp.initNuma(a1, eq, eq1, eq2, param_int, c, thread_numa, opt)
+          #if init: FastP.fastp.initNuma(a1, eq, eq1, eq2, param_int, c, thread_numa, opt)
           # Replace numpys with slice
           a[1]       = eq
           FaceSch[1] = eq1
@@ -335,7 +336,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
                   if init: 
                     if ztype == 'Structured':
                       FastS.fasts.initNuma(ptr, eq,  param_int, c, thread_numa)
-                    else: FastP.fastp.initNuma(ptr, eq, eq, eq, param_int, c, thread_numa, opt) 
+                    #else: FastP.fastp.initNuma(ptr, eq, eq, eq, param_int, c, thread_numa, opt) 
 
                   # Replace numpys with slice
                   a[1] = eq[c*(size)+c*param_int[1][66]:(c+1)*(size)+c*param_int[1][66]]
@@ -531,7 +532,7 @@ def _applyBC(infos_zones, hook1, nstep, ompmode, var=["Density","Q1"]):
     varType=4
     FastS.fasts._applyBC(infos_zones["struct"][0]  , infos_zones["struct"][1]    , hook1, nstep, ompmode, varns  )
     FastLBM.fastlbm._applyBC(infos_zones["LBM"][0] , infos_zones["LBM"][1]       , hook1, nstep, ompmode, varType,varlbm )
-    FastP.fastp._applyBC(infos_zones["unstruct"][0], infos_zones["unstruct"][1]  , hook1, nstep, ompmode, varns  )
+    #FastP.fastp._applyBC(infos_zones["unstruct"][0], infos_zones["unstruct"][1]  , hook1, nstep, ompmode, varns  )
     
     return None
 
@@ -599,7 +600,7 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None,verbos
     if verbose != 'firstlast': iverb=2
 
     residu = FastS.fasts.display_ss_iteration(infos_zones['struct'][0], infos_zones['struct'][1], cvg_numpy, nitrun, nssiter, lft, iverb)
-    residu = FastP.fastp.display_ss_iteration( infos_zones['unstruct'][0], infos_zones['unstruct'][1], cvg_numpy, nitrun, nssiter, lft)
+    #residu = FastP.fastp.display_ss_iteration( infos_zones['unstruct'][0], infos_zones['unstruct'][1], cvg_numpy, nitrun, nssiter, lft)
 
     if gmres is None: return None
     else: return residu

@@ -12,7 +12,7 @@ import numpy
 import Apps.Fast.LBM as App
 
 myApp = App.LBM(format='single')
-nit = 1000
+nit = 300
 VARSMACRO = ['Density','VelocityX','VelocityY','VelocityZ','Temperature']
 
 # Geometry and mesh
@@ -120,8 +120,7 @@ C._initVars(t,"{centers:VelocityX}={centers:VelocityX}*%20.16g/{centers:Density}
 C._initVars(t,'{centers:VelocityY}={centers:VelocityY}*%20.16g/{centers:Density}'%(v_adiminv))
 C._initVars(t,'{centers:VelocityZ}={centers:VelocityZ}*%20.16g/{centers:Density}'%(v_adiminv))
 
-
 test.testT(t,1)
-t=FastLBM.rmGhostCells(t,NG)
-C.convertPyTree2File(t,"restart.cgns")
+#t=FastLBM.rmGhostCells(t,NG)
+#C.convertPyTree2File(t,"restart.cgns")
 

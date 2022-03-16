@@ -46,7 +46,6 @@ for it in range(nit):
     Fast._compute(t, metrics, it, NIT=100)
     #Fast._compute(t, metrics, it, NIT=1)
 
-
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)
