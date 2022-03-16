@@ -35,7 +35,7 @@ numb = {'temporal_scheme':'explicit', 'ss_iteration':20}
 numz = {'time_step':0.0007*2., 'scheme':'ausmpred'}
 Fast._setNum2Base(t, numb)
 Fast._setNum2Zones(t, numz);
-C.convertPyTree2File(t,'test.cgns')
+#C.convertPyTree2File(t,'test.cgns')
 #(t, tc, metrics) = FastS.warmup(t, None)
 (t, tc, metrics) = Fast.warmup(t, None)
 

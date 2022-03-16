@@ -412,7 +412,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
          print('Nechant',Nechant) 
          vars=['Density','VelocityX','VelocityY','VelocityZ','Temperature']
          if Nechant==0:
-            wmles[1]=1  #nb echantillon initialisé
+            wmles[1]=1  #nb echantillon initialise
             wmles[2]=1  #position dernier echantillon calculer
             moy  = Internal.getNodeFromName1(Prop, "AvgPlane-Primitive" )[1]
             shift=0
@@ -675,9 +675,9 @@ def _build_omp(t):
 
             size_scheduler = 0
             if dims[3] == 'NGON':
-               CellScheduler = Internal.getNodeFromName1( z, 'CellScheduler')[1]
+               CellScheduler = Internal.getNodeFromName1(z, 'CellScheduler')[1]
                size_scheduler += numpy.size(CellScheduler)
-               Nbr_BlkIntra = Internal.getNodeFromName1( z, 'Nbr_BlkIntra')[1]
+               Nbr_BlkIntra = Internal.getNodeFromName1(z, 'Nbr_BlkIntra')[1]
                size_scheduler += numpy.size(Nbr_BlkIntra)
 
             #print("SIZE int", size_int,"c=", c,"size_sched=",  size_scheduler)
@@ -881,7 +881,6 @@ def _buildOwnData(t, Padding):
             a = Internal.getNodeFromName1(d, 'time_begin_ale')
             if a is not None: t_init_ale = Internal.getValue(a)
 
-
            
         # Base ownData (generated)
         #o = Internal.createUniqueChild(b, '.Solver#ownData', 'UserDefinedData_t')
@@ -922,7 +921,7 @@ def _buildOwnData(t, Padding):
         datap[dtdim-1] = it0
         datap[dtdim  ] = ompmode
         for it in range(nssiter):
-          datap[dtdim + 1 + it  ] = -1   #on initialise à -1 le nbre de "zone" a traiter pour forcer l'init dans warmup
+          datap[dtdim + 1 + it  ] = -1   #on initialise a -1 le nbre de "zone" a traiter pour forcer l'init dans warmup
         Internal.createUniqueChild(o, '.Solver#dtloc', 'DataArray_t', datap)
 
         dtloc = Internal.getNodeFromName1(o, '.Solver#dtloc')[1]
@@ -975,7 +974,7 @@ def _buildOwnData(t, Padding):
                jv = dims[2]-5
                kv = dims[3]-5
                #kv = dims[3]-3 #[AJ] Hard coded for LBM and 1 ghost point
-               if kv == -3 : kv =1
+               if kv == -3: kv =1
                if pad: 
                   target = [iv,jv,kv]
                   if target in sizeIJK:
@@ -1001,7 +1000,7 @@ def _buildOwnData(t, Padding):
             temporal_scheme = "implicit"
             scheme          = "ausmpred"
             slope           = "o3"
-            if ngon : slope ='o2'
+            if ngon:  slope ='o2'
             motion          = "none"
             filtrage        = "off"
             io_th           = 0
@@ -1455,7 +1454,8 @@ def _buildOwnData(t, Padding):
                nfac_elconn_size = numpy.size( nfac_elconn[1])
                datap[12]  = nfac_elconn_size
                #Nb cache bloc
-               Nb_Cache_Bloc = numpy.shape(Internal.getNodeFromName1(z, 'CellScheduler')[1])[2]
+               cellScheduler = Internal.getNodeFromName1(z, 'CellScheduler')
+               Nb_Cache_Bloc = numpy.shape(cellScheduler[1])[2]
                print("Nb_Cache_Bloc",Nb_Cache_Bloc)
                datap[13]  = Nb_Cache_Bloc
 
@@ -2241,7 +2241,7 @@ def _BCcompactNG(t):
                size_real = size_real + c
 
         # zone ownData (generated)
-        o = Internal.getNodeFromName1( z, '.Solver#ownData')
+        o = Internal.getNodeFromName1(z, '.Solver#ownData')
 
         #on concatene les donnes BC dans param_int et param_real
         param_int = Internal.getNodeFromName1( o, 'Parameter_int')
@@ -2271,8 +2271,8 @@ def _BCcompactNG(t):
     zones = Internal.getZones(t)
     for z in zones:
 
-        o             = Internal.getNodeFromName1( z, '.Solver#ownData')
-        param_int     = Internal.getNodeFromName1( o, 'Parameter_int')[1]
+        o             = Internal.getNodeFromName1(z, '.Solver#ownData')
+        param_int     = Internal.getNodeFromName1(o, 'Parameter_int')[1]
         FaceScheduler = Internal.getNodeFromName1(z, 'FaceScheduler')[1]
 
         pt_bcs_int   =  size_param_int[no]
