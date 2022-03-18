@@ -63,13 +63,13 @@ namespace K_FASTC
   /* Call to transfers from FastS */
 
   void setInterpTransfersFast(
-  E_Float**& iptro_tmp    , E_Int& vartype             , E_Int*& param_int_tc, E_Float*& param_real_tc , E_Int**& param_int     , E_Float**& param_real,
+  E_Float**& iptro_tmp    , E_Int& vartype             , E_Int*& param_int_tc, E_Float*& param_real_tc , E_Int**& param_int     , E_Float**& param_real, E_Int*& ipt_omp,
   E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& it_target    , E_Int& nidom            , E_Float*& ipt_timecount, E_Int& mpi           ,
   E_Int& nitcfg           , E_Int& nssiter             , E_Int& rk           , E_Int& exploc           , E_Int& numpassage );
   
   /* Transferts FastS Intra process */
-  void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int& vartype         , E_Int*& ipt_param_int   , E_Float*& ipt_param_real   ,
-                              E_Int**& param_int, E_Float**& param_real  , E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
+  void setInterpTransfersIntra(E_Float**& ipt_ro, E_Int& vartype         , E_Int*& ipt_param_int   , E_Float*& ipt_param_real, 
+                              E_Int**& param_int, E_Float**& param_real  , E_Int*& ipt_omp         , E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
                               E_Int& NoTransfert, E_Float*& ipt_timecount,
                               E_Int& nitcfg     , E_Int& nssiter         , E_Int& rk, E_Int& exploc, E_Int& numpassage );
 
@@ -103,8 +103,8 @@ namespace K_FASTC
 
   #ifdef _MPI
   /* Transferts FastS Inter process */
-  void setInterpTransfersInter(E_Float**& ipt_ro , E_Int& vartype        , E_Int*& ipt_param_int   , E_Float*& ipt_param_real   ,
-                               E_Int**& param_int, E_Float**& param_real , E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
+  void setInterpTransfersInter(E_Float**& ipt_ro , E_Int& vartype        , E_Int*& ipt_param_int   , E_Float*& ipt_param_real ,
+                               E_Int**& param_int, E_Float**& param_real , E_Int*& ipt_omp, E_Int*& ipt_linelets_int, E_Float*& ipt_linelets_real, E_Int& TypeTransfert, E_Int& nitrun, E_Int& nidom,
                                E_Int& NoTransfert,
                                std::pair<RecvQueue*, SendQueue*>*& pair_of_queue,
                                E_Float*& ipt_timecount,

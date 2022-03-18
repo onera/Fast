@@ -62,7 +62,7 @@ c***********************************************************************
 
       REAL_E param_real(0:*), pos(3)
 
-      REAL_E flu( param_int_eff(NDIMDX)*param_int_eff(NEQ) ), effort(8)
+      REAL_E flu( param_int_eff(NDIMDX)*param_int_eff(NEQ) ), effort(12)
 
 C Var loc
       INTEGER_E inc,incmax,l,lt,i,j,k,incmax2,nm,nm2,np,

@@ -771,7 +771,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_
 
        # Get omp_mode
        ompmode = OMP_MODE
-       node = Internal.getNodeFromName2(t, '.Solver#define')
+       node = Internal.getNodeFromName1(t, '.Solver#define')
        if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
         if  node is not None: ompmode = Internal.getValue(node)
@@ -840,6 +840,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
    # timecount = numpy.zeros(4, dtype=numpy.float64)
 
    if hook1['lexit_lu'] ==0:
+ 
 
        #transfert
        if tc is not None:
@@ -854,11 +855,13 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
               if hook1["neq_max"] == 5: varType = 2
               else                    : varType = 21
 
+              dtloc = hook1['dtloc']
+
               for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
-              Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
+              Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
 
        #apply BC
        #t0=timeit.default_timer()

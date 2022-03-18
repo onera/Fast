@@ -56,7 +56,8 @@
 #define BCPERIODIC               15
 #define BCOUTPRES                16
 #define BCINJ1                   17
-
+#define BCWALLMODEL              30
+#define BCWALLEXCHANGE           31
 
 #if (CACHELINE == 64)
 #define VECLENGTH     8
@@ -105,7 +106,7 @@
 #define RK	     52
 #define LEVEL	     53
 #define EXPLOC       54
-#define ITEXPLOC     55
+#define EXPLOCTYPE   55
 #define LEVELG	     56
 #define LEVELD	     57
 #define NSSITER	     58
@@ -134,6 +135,7 @@
 #define SCHEDULER    87
 #define WM_FUNCTION  88
 #define WM_SAMPLING  89
+
 
 /*LBM*/
 #define NEQ_LBM             86
@@ -186,6 +188,9 @@
 #define BC_IDIR       1
 #define BC_FEN        2
 #define BC_NBDATA     8
+
+   
+
 
 #define DTC          0
 #define STAREF       1
@@ -242,7 +247,6 @@
 /*schema HYPERSONIc*/
 #define HYPER_COEF1  54  
 #define HYPER_COEF2  55  
-
 
 #define SA_CKARM    0.41 
 #define SA_CB1      0.1355

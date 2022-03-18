@@ -239,16 +239,18 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
               if hook1['neq_max'] == 5: varType = 2
               else                    : varType = 21
 
+              dtloc = hook1['dtloc']
+
               for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
               #if rank == 0: print('fillGC: timeleveltarget= ', timelevel_target)
 
               #recuperation Nb pas instationnaire dans tc
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-              Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
+              Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                         nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict)
               type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-              Xmpi.__setInterpTransfers(zones , zonesD, vars, param_int, param_real, type_transfert, timelevel_target,#timecount,
+              Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                         nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict)
 
               #toc = Time.time() - tic
@@ -273,7 +275,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     # Get omp_mode
     ompmode = PyTree.OMP_MODE
-    node = Internal.getNodeFromName2(t, '.Solver#define')
+    node = Internal.getNodeFromName1(t, '.Solver#define')
     if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
         if  node is not None: ompmode = Internal.getValue(node)
@@ -288,8 +290,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
 
-    
-    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
+    tmp   = Internal.getNodeFromName1(t  , '.Solver#ownData')
+    dtloc = Internal.getNodeFromName1(tmp, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)# tab numpy
     nssiter = dtloc[0]   
 
@@ -321,6 +323,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
     metrics = allocate_metric(t)
+
 
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t) 
@@ -456,7 +459,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
 
 # For periodic unsteady chimera join, parameter must be updated peridicaly 
 #==============================================================================
-def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False, updateGraph=True):
+def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single',root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False, layer='Python'):
 #def _UpdateUnsteadyJoinParam(t, tc, tc_skel, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
 
     #on cree/initialise le dico infos graph
@@ -490,6 +493,9 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
     #
 
     if timelevel_target == timelevel_perfile or tc is None or timelevel_motion%timelevel_period == 0 : 
+
+       graph= {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
+       tc =None; tc_skel =None
 
        rank = Cmpi.rank
        tmp  = No_period*timelevel_period
@@ -595,6 +601,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
          for z in Internal.getZones(tmp):
             _sortByName(z)
 
+       if layer !='Python': iteration_loc =None
        if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target,"itGraph=",iteration_loc)
 
        graph['procDict'] = D2.getProcDict(tc_skel)
@@ -606,7 +613,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
        # 
        # Get omp_mode
        ompmode = PyTree.OMP_MODE
-       node = Internal.getNodeFromName2(t, '.Solver#define')
+       node = Internal.getNodeFromName1(t, '.Solver#define')
        if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
         if  node is not None: ompmode = Internal.getValue(node)
@@ -614,17 +621,24 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
        # Reordone les zones pour garantir meme ordre entre t et tc
        FastC._reorder(t, tc, ompmode)
 
-       # Compactage arbre transfert
-       zones = Internal.getZones(t)
+       # Compactage arbre transfert. Si init, compactage dans warmup plus tard
+       #
+       if not init: 
 
-       t0=timeit.default_timer()
-       X.miseAPlatDonorTree__(zones, tc, graph=graph)
-       t1=timeit.default_timer()
-       print("cout plat= ", t1-t0, 'rank=', rank)
-       sys.stdout.flush
+          zones = Internal.getZones(t)
+
+          t0=timeit.default_timer()
+          X.miseAPlatDonorTree__(zones, tc, graph=graph)
+          t1=timeit.default_timer()
+          print("cout plat= ", t1-t0, 'rank=', rank)
+          sys.stdout.flush
+
+          FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int')[1]
+          param_real_tc              = Internal.getNodeFromName1( tc, 'Parameter_real')
+          if param_real_tc is not None: FastC.HOOK['param_real_tc']= param_real_tc[1]
 
     else:
-      if updateGraph:
+      if layer =='Python':
 
         if timelevel_motion >= timelevel_period:
             No_period = timelevel_motion//timelevel_period
@@ -656,7 +670,6 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
        dtloc[4]=timelevel_target
 
     return tc, tc_skel, graph
-    #return tc, tc_skel
 
 #====================================================================================
 # reordonne  les raccord instationnaire par No croissant  pour chque zone

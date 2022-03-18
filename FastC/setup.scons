@@ -101,6 +101,7 @@ env = Environment(tools=tools, CC=cc, CXX=cxx, AR=AR, CFLAGS=[], CXXFLAGS=[],
                   SHLIBSUFFIX=so_ext, SHLIBPREFIX='',
                   LINKFLAGS=Dist.getLinkArgs(),
                   ENV=Dist.getEnvForScons())
+#env.Replace(CPPPATH=["FastC -I/stck/imary/Cassiopee/Apps/PModules/FastC"]+additionalIncludePaths+includeDirs)
 env.Replace(CPPPATH=["FastC"]+additionalIncludePaths+includeDirs)
 
 ELSAPROD = os.environ.get('ELSAPROD', 'x86_r8')

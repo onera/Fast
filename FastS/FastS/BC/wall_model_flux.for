@@ -37,7 +37,7 @@ c***********************************************************************
 C     Var loc
       INTEGER_E ndf,lf,npass,incijk, nb_bc, iptdata, flag_correct_flu
       INTEGER_E bc_type, pt_bc,pt_bcs, idir,nbdata,lskip,size_data
-      INTEGER_E ind_CL(6), ind_CL119(6), nitcfg, cycl, iptparam
+      INTEGER_E ind_CL(6), ind_CL119(6), nitcfg, cycl
       INTEGER_E sampling, nitrun, iflow
       REAL_E mobile_coef
  
@@ -62,8 +62,8 @@ C     Var loc
         idir   = param_int( pt_bc + BC_IDIR)
         nbdata = param_int( pt_bc + BC_NBDATA)
         size_data = param_int(ndom) + pt_bc + BC_NBDATA + 1
+        iptdata = 0
         if (nbdata.ne.0) iptdata = param_int( pt_bcs + 1 + ndf + nb_bc)
-        iptparam = iptdata + size_data
 
        !calcul intersection sous domaine et fenetre CL
         call indice_cl_sdm(idir,npass,lskip,param_int( pt_bc+BC_TYPE),

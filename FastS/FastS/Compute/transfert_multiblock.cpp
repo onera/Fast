@@ -8,7 +8,7 @@ E_Int exploc       = param_int[0][EXPLOC];
 
   if (param_int[0][EXPLOC] == 0) //   dt constant
   {
-      K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+      K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real, ipt_omp,
                                    linelets_int, linelets_real, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
 
   }
@@ -31,7 +31,7 @@ E_Int exploc       = param_int[0][EXPLOC];
 
      if (nitcfg != nssiter)
       {  		
-        K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+        K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real, ipt_omp,
                                         linelets_int, linelets_real, it_target, nidom , ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
       }
 
@@ -42,7 +42,7 @@ E_Int exploc       = param_int[0][EXPLOC];
      numpassage=2;
      if (flag_passage2==1)
       {
-        K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real,
+        K_FASTC::setInterpTransfersFast(iptro_CL, vartype, param_int_tc, param_real_tc , param_int, param_real, ipt_omp,
                                        linelets_int, linelets_real, it_target, nidom, ipt_timecount, mpi , nitcfg, nssiter, rk, exploc, numpassage);
         flag_passage2=0;
       }   

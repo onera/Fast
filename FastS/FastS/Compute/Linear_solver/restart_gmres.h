@@ -133,7 +133,7 @@ if( param_int_tc != NULL)
 //			      param_real_tc, param_int, param_real, linelets_int, linelets_real,
  //        		      it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
       K_FASTC::setInterpTransfersFast(iptkrylov_transfer, vartype, param_int_tc,
-			      param_real_tc, param_int, param_real, linelets_int, linelets_real,
+			      param_real_tc, param_int, param_real, ipt_omp, linelets_int, linelets_real,
          		      it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
     }
   }

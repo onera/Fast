@@ -49,6 +49,7 @@ libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 
+
 if mpi:
     libraryDirs.append(mpiLibDir)
     includeDirs.append(mpiIncDir)
@@ -75,8 +76,9 @@ def addSourceScannerToTargets(target, source, env):
    return (target, source)
 
 PP = Dist.getPP() # preprocessing des fortrans
-#f77CppArgs = '-D_NOOPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'
-f77CppArgs = '-D_OPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'
+f77CppArgs = '-D_NOOPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'
+#f77CppArgs = '-D_OPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'+" -I'"+fastcIncDir+"'"
+#f77CppArgs = '-D_OPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN -I"/stck/imary/Cassiopee/Apps/PModules/FastC"'
 cacheLine = Dist.getCacheLine()
 if cacheLine == 1: f77CppArgs += ' -DCACHELINE=16'
 else: f77CppArgs += ' -DCACHELINE=%d'%cacheLine
@@ -111,6 +113,7 @@ env.SConsignFile('build/'+ELSAPROD+'/.sconsign.dblite')
 env = Dist.createFortranScanner(env)
 
 # Pre processing du C
+#cppArgs = Dist.getCppArgs()+['-g']+["-DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN"]+["-I'"+fastcIncDir+"'"]
 cppArgs = Dist.getCppArgs()+['-g']+["-DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN"]
 if Dist.getCacheLine() == 1: cppArgs += ['-DCACHELINE=16']
 env.Replace(CPPFLAGS=cppArgs+ADDITIONALCPPFLAGS)
@@ -118,7 +121,10 @@ env.Replace(CPPFLAGS=cppArgs+ADDITIONALCPPFLAGS)
 ### voir installBase de KCore pour option de compil par defaut
 if f90compiler == 'ifort':
    #env.Replace(FORTRANFLAGS=Dist.getForArgs() +["-I/usr/include/openmpi-x86_64"] )
-   env.Replace(FORTRANFLAGS=Dist.getForArgs())
+   #env.Replace(FORTRANFLAGS=Dist.getForArgs())
+   #FFLAGS = Dist.getForArgs()+["-I"+fastcIncDir]
+   FFLAGS = Dist.getForArgs()
+   env.Replace(FORTRANFLAGS=FFLAGS)
 else:
    env.Replace(FORTRANFLAGS=Dist.getForArgs())
 

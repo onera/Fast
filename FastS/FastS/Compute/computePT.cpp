@@ -544,26 +544,28 @@ else
      //printf("nstep= %d %d \n", nstep, omp_mode);
      if (layer_mode ==1)
      {
-       E_Int init_exit=0;
-       if( nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1 )
+       E_Int nidom_loc = iptdtloc[nssiter+9+nstep-1];
+       E_Int init_exit =0;
+       if( nitrun_loc%iptdtloc[1] == 0 )
        {
          init_exit =1;
-         E_Int flag_res=1;
-         E_Int lssiter_tmp = lssiter_loc;
-         //if (nstep==1) printf("HAAAAA \n");
-         souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_tmp, nidom, nitrun_loc, nstep, flag_res,  lexit_lu, lssiter_verif);
+         E_Int flag_res=1; //init Nbe ssiter, pas de modif des souszone
+         
+         souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom,
+                           nitrun_loc, nstep, flag_res,  lexit_lu, lssiter_verif);
        }
 
        E_Int nitrun_split = nitrun_loc - 1;
-       if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2) )  && (nitrun_split%iptdtloc[1] == 0 || nitrun_loc == 1) ) 
+       if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2) )  && nitrun_split%iptdtloc[1] == 0 ) 
        {
-        E_Int flag_res = 0;
-       //if (nstep==1) printf("hiiiii %d %d %d %d \n",nitrun_split,lssiter_loc, nitrun_split%iptdtloc[1], ipt_param_int[0][ITYPCP]  );
-        souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_split, nstep, flag_res, lexit_lu, lssiter_verif);
-        if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
-
-        E_Int display = 0;
-        distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
+         E_Int flag_res = 0;
+         
+         souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom,
+                           nitrun_split, nstep, flag_res, lexit_lu, lssiter_verif);
+         if(init_exit  ==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
+         if(iptdtloc[1]==1){ lssiter_verif = 1; if (nstep == iptdtloc[0] && ipt_param_int[0][ITYPCP]!=2){ lexit_lu = 1;} }
+         E_Int display = 0;
+         distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
        }
        if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;}
        
@@ -572,6 +574,7 @@ else
      E_Int skip = 0;
      if ( lssiter_verif == 0 && nstep == nssiter && ipt_param_int[0][ ITYPCP ] ==1){skip = 1;}
 
+     //printf("nitrun %d , nstep= %d , lssiter= %d , lexit= %d ,skip=  %d \n",nitrun_loc, nstep, lssiter_verif, lexit_lu, skip );
      //calcul Navier Stokes + appli CL
      //printf("sknavier %d %d  \n", skip, nstep );
      if (skip ==0)
