@@ -17,7 +17,7 @@
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
 #define K_ARRAY_UNIQUE_SYMBOL
-#include "fastc.h"
+#include "FastC/fastc.h"
 
 // ============================================================================
 /* Dictionnary of all functions of the python module */

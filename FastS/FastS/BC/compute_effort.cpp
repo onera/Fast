@@ -16,8 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
-# include "fastS.h"
-# include "param_solver.h"
+# include "FastS/fastS.h"
+# include "FastS/param_solver.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif

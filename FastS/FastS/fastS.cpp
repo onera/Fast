@@ -17,7 +17,7 @@
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
 #define K_ARRAY_UNIQUE_SYMBOL
-#include "fastS.h"
+#include "FastS/fastS.h"
 
 int __activation__;
 

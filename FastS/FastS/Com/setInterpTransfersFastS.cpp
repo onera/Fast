@@ -18,8 +18,8 @@
 */
 
 #include "connector.h"
-#include "fastS.h"
-#include "param_solver.h"
+#include "FastS/fastS.h"
+#include "FastS/param_solver.h"
 
 #ifdef _MPI
 #include <mpi.h>

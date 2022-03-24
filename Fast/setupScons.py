@@ -69,7 +69,7 @@ listExtensions = []
 listExtensions.append(
     Extension('Fast.fast',
               sources=['Fast/fast.cpp'],
-              include_dirs=["Fast"]+additionalIncludePaths+includeDirs,
+              include_dirs=[".","Fast"]+additionalIncludePaths+includeDirs,
               library_dirs=additionalLibPaths+libraryDirs,
               libraries=libraries+additionalLibs,
               extra_compile_args=Dist.getCppArgs(),

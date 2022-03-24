@@ -17,7 +17,7 @@
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
  
-#include "fastc.h"
+#include "FastC/fastc.h"
 
 //=============================================================================
 /*

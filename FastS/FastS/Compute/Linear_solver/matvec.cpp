@@ -1,6 +1,6 @@
-# include "fastS.h"
+# include "FastS/fastS.h"
 # include "fastc.h"
-# include "param_solver.h"
+# include "FastS/param_solver.h"
 # include "connector.h"
 # include <string.h>
 //# include <CMP/include/pending_message_container.h>

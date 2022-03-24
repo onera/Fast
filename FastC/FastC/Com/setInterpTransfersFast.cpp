@@ -18,8 +18,8 @@
 */
 
 #include "connector.h"
-#include "fastc.h"
-#include "param_solver.h"
+#include "FastC/fastc.h"
+#include "FastC/param_solver.h"
 
 #ifdef _MPI
 #include <mpi.h>
@@ -158,7 +158,7 @@ void K_FASTC::setInterpTransfersFast(
         {
           for (E_Int ircv = 1; ircv < nbcomIBC_nstep +1; ++ircv)
             {
-              // voir xavier pour comprendre?  pt_deb  obscur, voir buggé.
+              // voir xavier pour comprendre?  pt_deb  obscur, voir buggï¿½.
               pt_rcv_queue_IBC->emplace_back(param_int_tc[pt_deb + ircv], 404);
               CMP::RecvBuffer& recv_buffer = pt_rcv_queue_IBC->back_message_buffer();
               recv_buffer.irecv();
@@ -881,7 +881,7 @@ void K_FASTC::setInterpTransfersInter(
   // Preparation du buffer d'envoi :
   CMP::SendBuffer& send_buffer = *(*pt_snd_queue)[nb_send_buffer-1].message_buffer;//back_message_buffer();
   
-  // A partir d'ici pour allouer les tableaux a  remplir
+  // A partir d'ici pour allouer les tableaux aï¿½ remplir
   std::vector<CMP::SendBuffer::PackedData*> pck_data;
 
   //on optimise les transfert pour implicit local

@@ -18,7 +18,7 @@
 */
 
 // Grille cartesienne reguliere
-# include "fastS.h"
+# include "FastS/fastS.h"
 
 using namespace std;
 using namespace K_FLD;

@@ -17,8 +17,8 @@
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <iostream>
-# include "fastS.h"
-# include "param_solver.h"
+# include "FastS/fastS.h"
+# include "FastS/param_solver.h"
 # include <string.h>
 # include <omp.h>
 using namespace std;

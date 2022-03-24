@@ -20,7 +20,7 @@
 # include <stdlib.h>
 # include <string.h>
 
-# include "fastS.h"
+# include "FastS/fastS.h"
 //# include "converter.h"
 # include "kcore.h"
 

@@ -18,8 +18,8 @@
 */
 
 #include <iostream>
-# include "fastS.h"
-# include "param_solver.h"
+# include "FastS/fastS.h"
+# include "FastS/param_solver.h"
 # include <string.h>
 using namespace std;
 using namespace K_FLD;

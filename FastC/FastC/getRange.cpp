@@ -17,8 +17,8 @@
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
  
-#include "fastc.h"
-#include "param_solver.h"
+#include "FastC/fastc.h"
+#include "FastC/param_solver.h"
 
 using namespace std;
 using namespace K_FLD;

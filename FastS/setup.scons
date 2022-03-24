@@ -49,7 +49,6 @@ libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 
-
 if mpi:
     libraryDirs.append(mpiLibDir)
     includeDirs.append(mpiIncDir)
@@ -106,7 +105,7 @@ env = Environment(tools=tools, CC=cc, CXX=cxx, AR=AR, CFLAGS=[], CXXFLAGS=[],
                   SHLIBSUFFIX=so_ext, SHLIBPREFIX='',
                   LINKFLAGS=Dist.getLinkArgs(),
                   ENV=Dist.getEnvForScons())
-env.Replace(CPPPATH=["FastS"]+additionalIncludePaths+includeDirs)
+env.Replace(CPPPATH=[".","FastS"]+additionalIncludePaths+includeDirs)
 ELSAPROD = os.environ.get('ELSAPROD', 'x86_r8')
 env.SConsignFile('build/'+ELSAPROD+'/.sconsign.dblite')
 #env.Replace(CPPSUFFIXES=env.get('CPPSUFFIXES')+['.for'])

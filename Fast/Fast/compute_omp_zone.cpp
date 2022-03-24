@@ -108,7 +108,7 @@ E_Float meaz       = 0;
       if (param_int[nd][ITYPCP] == 2) lmin = 4;
 
       if (param_int[nd][ITYPZONE] == 4){
-#include       "../../FastP/FastP/Compute/rhs.cpp"
+//#include       "../../FastP/FastP/Compute/rhs.cpp"
       }
       else
       {

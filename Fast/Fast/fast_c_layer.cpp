@@ -223,13 +223,13 @@ if(lexit_lu ==0 && layer_mode==1)
 		    }
 		  else
 		    {
-		      E_Int lrhs=0; E_Int lcorner=0;
-		      K_FASTP::BCzone( nd, ithread, lrhs, lcorner,
-				       param_int[nd], param_real[nd],
-				       npass, temps,
-				       ipt_ind_CL119  , 
-				       ipt_ng_pe[nd]          , iptro_CL[nd]   ,
-				       ipti[nd] , iptventi[nd], iptx[nd] , ipty[nd] , iptz[nd] );
+		      //E_Int lrhs=0; E_Int lcorner=0;
+		      //K_FASTP::BCzone( nd, ithread, lrhs, lcorner,
+		      //		       param_int[nd], param_real[nd],
+                      //		       npass, temps,
+                      //	       ipt_ind_CL119  , 
+                      //	       ipt_ng_pe[nd]          , iptro_CL[nd]   ,
+                      //	       ipti[nd] , iptventi[nd], iptx[nd] , ipty[nd] , iptz[nd] );
 		    }
 		}//autorisation
 

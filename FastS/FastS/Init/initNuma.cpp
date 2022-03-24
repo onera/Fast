@@ -22,10 +22,10 @@
 //# include <numa.h>
 //# include </usr/src/kernels/2.6.32-573.12.1.el6.x86_64/include/linux/numa.h>
 
-# include "fastS.h"
+# include "FastS/fastS.h"
 //# include "converter.h"
 # include "kcore.h"
-# include "param_solver.h"
+# include "FastS/param_solver.h"
 
 using namespace std;
 using namespace K_FLD;

@@ -18,7 +18,7 @@
 */
 
 
-# include "fastc.h"
+# include "FastC/fastc.h"
 # include "param_solver.h"
 # include "string.h"
 #ifdef _OPENMP
@@ -39,7 +39,6 @@ PyObject* K_FASTC::_motionlaw(PyObject* self, PyObject* args)
 #else
   if (!PyArg_ParseTuple(args, "Off", &zones, &teta, &tetap)) return NULL;
 #endif
-
 
   /* tableau pour stocker dimension sous-domaine omp */
   E_Int nidom        = PyList_Size(zones);

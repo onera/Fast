@@ -17,8 +17,7 @@
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Grille cartesienne reguliere
-# include "fastS.h"
+# include "FastS/fastS.h"
 #ifdef vtune
 //#include "ittnotify.h"
 #endif
