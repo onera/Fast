@@ -1557,7 +1557,6 @@ def _buildOwnData(t, Padding):
             #correction flux paroi ibm
             datap[v.IBC_PT_FLUX]   = -1
 
-
             i += 1
          
             Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
@@ -2532,7 +2531,7 @@ def _Fluxcompact(t):
                  if family[0] not in families: families.append(family[0])
 
     Nfamille = len(families)
-    print("Correction de flux: Nb famille=", Nfamille, families)
+    #print("Correction de flux: Nb famille=", Nfamille, families)
 
     #dimensionnememnt tableau
     size_int = HOOK['MX_OMP_SIZE_INT']

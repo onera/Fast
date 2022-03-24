@@ -34,7 +34,7 @@ Dist.writeSetupCfg()
 (fastsVersion, fastsIncDir, fastsLibDir) = Dist.checkFastS()
 
 # Test if fastp exists =====================================================
-(fastpVersion, fastpIncDir, fastpLibDir) = Dist.checkFastP()
+#(fastpVersion, fastpIncDir, fastpLibDir) = Dist.checkFastP()
 
 # Test if fastlbm exists =====================================================
 (fastlbmVersion, fastlbmIncDir, fastlbmLibDir) = Dist.checkFastLBM()
@@ -49,9 +49,9 @@ prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastpLibDir, fastlbmLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir, fastsIncDir, fastpIncDir, fastlbmIncDir]
-libraries = ["fast", "fasts", "fastp", "fastlbm", "fastc", "connector", "xcore", "kcore"]
+libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastlbmLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir, fastsIncDir, fastlbmIncDir]
+libraries = ["fast", "fasts", "fastlbm", "fastc", "connector", "xcore", "kcore"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
