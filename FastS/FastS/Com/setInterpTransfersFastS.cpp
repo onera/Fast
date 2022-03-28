@@ -718,7 +718,7 @@ void K_FASTS::setInterpTransfersIntra(
                                                                  xPI, xPI+nbRcvPts, xPI+nbRcvPts*2, 
                                                                  densPtr, densPtr+nbRcvPts, //dens + press
                                                                  densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
-                                                                 densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                                 densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, densPtr+nbRcvPts*12,// utau + yplus
                                                                  densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,  
                                                                  ipt_tmp, size,
                                                                  gamma, cv, muS, Cs, Ts, Pr,
@@ -731,7 +731,7 @@ void K_FASTS::setInterpTransfersIntra(
                                                                  xPI    , xPI     +nbRcvPts, xPI     +nbRcvPts*2, 
                                                                  densPtr, densPtr+nbRcvPts, //dens + press
                                                                  densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
-                                                                 densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                                 densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, densPtr+nbRcvPts*12,// utau + yplus
                                                                  densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,  
                                                                  ipt_tmp, size,
                                                                  param_real[ NoD ],
@@ -747,7 +747,7 @@ void K_FASTS::setInterpTransfersIntra(
                                                                  xPI    , xPI     +nbRcvPts, xPI     +nbRcvPts*2, 
                                                                  densPtr, densPtr+nbRcvPts, //dens + press
                                                                  densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
-                                                                 densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                                 densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, densPtr+nbRcvPts*12,// utau + yplus
                                                                  densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,  
                                                                  ipt_tmp, size,
                                                                  gamma, cv, muS, Cs, Ts, Pr,
@@ -1281,7 +1281,7 @@ if (has_data_to_send) {
                                                              xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
                                                              densPtr, densPtr+nbRcvPts, //dens + press
                                                              densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
-                                                             densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                             densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, densPtr+nbRcvPts*12,// utau + yplus
                                                              densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,  
                                                              ipt_tmp, size, gamma, cv, muS, Cs,
                                                              Ts,  Pr,vectOfDnrFields, vectOfRcvFields );
@@ -1292,7 +1292,7 @@ if (has_data_to_send) {
                                                              xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
                                                              densPtr, densPtr+nbRcvPts, //dens + press
                                                              densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
-                                                             densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                             densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, densPtr+nbRcvPts*12,// utau + yplus
                                                              densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,
                                                              ipt_tmp, size,
                                                              param_real[ NoD ],
@@ -1306,7 +1306,7 @@ if (has_data_to_send) {
                                                              xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
                                                              densPtr, densPtr+nbRcvPts, //dens + press
                                                              densPtr+nbRcvPts*2, densPtr+nbRcvPts*3, densPtr+nbRcvPts*4, // vx + vy + vz 
-                                                             densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, // utau + yplus
+                                                             densPtr+nbRcvPts*5, densPtr+nbRcvPts*6, densPtr+nbRcvPts*12,// utau + yplus
                                                              densPtr+nbRcvPts*7, densPtr+nbRcvPts*8, densPtr+nbRcvPts*9, densPtr+nbRcvPts*10, densPtr+nbRcvPts*11,   
                                                              ipt_tmp, size, gamma, cv, muS, Cs,
                                                              Ts, Pr, vectOfDnrFields, vectOfRcvFields );
