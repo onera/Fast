@@ -224,7 +224,7 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
 
           for (E_Int nv = 0; nv < nivar[nd]; nv++)
             { 
-                post_grad_(nd, Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro, neq_grad, order,
+                post_grad_(nd, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, neq_grad, order,
                              ipt_param_int[nd]  , ipt_param_real[nd], ipt_ijkv_sdm_thread,
                              ipt_ind_dm_loc     , ipt_ind_dm_socket , ipt_inddm_omp, ipt_topo_omp,
                              ipt_topology_socket, ipt_lok_thread    ,

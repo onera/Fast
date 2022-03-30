@@ -184,8 +184,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                                     interpInDnrFrame=interpInDnrFrame, hook=hookTransfer)
                tps_tr +=Time.time()-tic  
 
-         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode) )
-
     else: 
       nstep_deb = 1
       nstep_fin = nitmax

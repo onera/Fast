@@ -111,7 +111,7 @@ namespace K_FASTC
                                E_Int& nitcfg, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& numpassage , E_Int& nb_send_buffer);
 
   /* Get Transfert Inter process */
-  void getTransfersInter(E_Float**& ipt_roD, E_Int**& param_int, E_Int*& param_int_tc , std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
+  void getTransfersInter(E_Int& nbcom, E_Float**& ipt_roD, E_Int**& param_int, E_Int*& param_int_tc , std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);
 
   /* Init Transfert Inter process */
   void init_TransferInter(std::pair<RecvQueue*, SendQueue*>*& pair_of_queue);

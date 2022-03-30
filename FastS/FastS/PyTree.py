@@ -257,11 +257,13 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
 # alloue retourne la metrique
 #==============================================================================
 def allocate_metric(t):
-    zones        = Internal.getZones(t)
-    dtloc        = Internal.getNodeFromName2(t, '.Solver#dtloc')
+
+    own          = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+    dtloc        = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc_numpy  = Internal.getValue(dtloc)
     nssiter      = int(dtloc_numpy[0])
 
+    zones  = Internal.getZones(t)
     metrics=[]; motion ='none'
     for z in zones:
         b = Internal.getNodeFromName2(z, 'motion')
@@ -282,11 +284,12 @@ def allocate_metric(t):
 # alloue retourne tableau ssor
 #==============================================================================
 def allocate_ssor(t, metrics, hook, ompmode):
-    zones = Internal.getZones(t)
-    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')
+    own         = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+    dtloc       = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc_numpy = Internal.getValue(dtloc)
     nssiter = int(dtloc_numpy[0])
 
+    zones = Internal.getZones(t)
     ssors = []
     ssors = fasts.allocate_ssor(zones, metrics, nssiter, hook, ompmode)
 
@@ -1423,11 +1426,11 @@ def _postStats(tmy):
 #==============================================================================
 def _computeEnstrophy(t, metrics, time):
     
-
-    zones = Internal.getZones(t)
-    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
+    own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
 
+    zones = Internal.getZones(t)
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
 
@@ -1496,7 +1499,8 @@ def _computeVariables(t, metrics, varlist, order=2):
        if lcompact_Rotx: _compact(zones, fields=['centers:RotX' ])
        if lcompact_drodt: _compact(zones, fields=['centers:dDensitydt' ])
 
-       dtloc = Internal.getNodeFromName2(t , '.Solver#dtloc')  # noeud
+       own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+       dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
        dtloc = Internal.getValue(dtloc)                       # tab numpy
 
        # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
@@ -1521,7 +1525,6 @@ def _computeGrad(t, metrics, varlist, order=2):
 
     ##verifie si les noeuds existent dans l'arbre
     zones = Internal.getZones(t)
-    nd =0
     for z in zones:
         #
         dim   = Internal.getZoneDim(z)
@@ -1552,7 +1555,7 @@ def _computeGrad(t, metrics, varlist, order=2):
 
                if lcompact: _compact(z, fields=['centers:'+vargrad[cgrad],'centers:'+vargrad[cgrad+1],'centers:'+vargrad[cgrad+2]])
                cgrad+=3
-        nd += 1
+
         var_zones.append(var_loc)
       
     if lgrad:
@@ -1572,10 +1575,12 @@ def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None ,verbose
     return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose)
     
 def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast'):
-    zones        = Internal.getZones(t)
-    dtloc        = Internal.getNodeFromName2(t, '.Solver#dtloc')
+    own          = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+    dtloc        = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc_numpy  = Internal.getValue(dtloc)
     nssiter      = int(dtloc_numpy[0])
+
+    zones        = Internal.getZones(t)
     nzones	 = len(zones)
  
     #a = Internal.getNodeFromName2(zones[0], 'model')
@@ -1617,7 +1622,8 @@ def checkKeys(d, keys):
 #==============================================================================
 def _computeVelocityAle(t, metrics):
     
-    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
+    own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
 
     zones = Internal.getZones(t)
@@ -1639,7 +1645,8 @@ def _computeVelocityAle(t, metrics):
 def copy_velocity_ale(t, metrics, it=0):
     
 
-    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
+    own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
 
     zones = Internal.getZones(t)
@@ -1995,7 +2002,8 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     if FastC.HOOK is None: 
-            dtloc  = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
+            own    = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+            dtloc  = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
             FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
             nitrun =0; nstep =1
@@ -2027,7 +2035,8 @@ def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
   display = 0
   if Display: display = 1
 
-  dtloc = Internal.getNodeFromName2(t , '.Solver#dtloc')  # noeud
+  own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+  dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
   fasts.distributeThreads(zones , metrics, dtloc, nstep,  nitrun, mx_omp_size_int, display)
 
   return None
@@ -3206,7 +3215,8 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
     zones_eff = Internal.getZones(teff)
 
     if FastC.HOOK is None: 
-            dtloc  = Internal.getNodeFromName3(t, '.Solver#dtloc')  # noeud
+            own    = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+            dtloc  = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
             FastC.HOOK   = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
             nitrun =0; nstep =1

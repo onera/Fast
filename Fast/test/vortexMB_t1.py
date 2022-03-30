@@ -92,7 +92,7 @@ numz["time_step"]=dt # pour l instant pas de viscosite
 myApp.set(numb=numb) 
 myApp.set(numz=numz)
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
-C.convertPyTree2File(t,"restart.cgns")
+#C.convertPyTree2File(t,"restart.cgns")
 (t, tc, metrics)  = FastLBM.warmup(t, tc)
 
 for it in range(1,nit+1):    
