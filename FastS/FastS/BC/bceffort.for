@@ -90,6 +90,16 @@ C Var loc
      &                        venti, ventj, ventk,
      &                        ti, tj, tk, vol, xmut)
 
+      ELSEIF (kflu_loc.eq.8) THEN
+
+          call eff_flushyper_select(ndom, ithread,
+     &                        param_int, param_real,param_int_eff,
+     &                        ind_loop, effort, xyz_ref,
+     &                        rop, flu, wig,
+     &                        x, y, z,
+     &                        venti, ventj, ventk,
+     &                        ti, tj, tk, vol, xmut)
+
 c         ndf    = param_int_eff(EFF_NDF)
 c
 c         pt_bcs = param_int(PT_BC)

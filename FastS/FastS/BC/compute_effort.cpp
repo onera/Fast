@@ -33,11 +33,10 @@ using namespace K_FLD;
 PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 {
   PyObject *zones; PyObject *zones_eff; PyObject *metrics; PyObject* work; PyObject* effarray; PyObject* pos_eff;
-  E_Int omp_mode;
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOOOOl", &zones, &zones_eff, &metrics, &work, &effarray, &pos_eff, &omp_mode)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOOOOO", &zones, &zones_eff, &metrics, &work, &effarray, &pos_eff)) return NULL;
 #else
-  if (!PyArg_ParseTuple(args, "OOOOOOi", &zones, &zones_eff, &metrics, &work, &effarray, &pos_eff, &omp_mode)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOOOOO", &zones, &zones_eff, &metrics, &work, &effarray, &pos_eff)) return NULL;
 #endif
 
   E_Int**   ipt_param_int;
@@ -85,6 +84,13 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
   K_NUMPY::getFromNumpyArray(wigArray, wig, true); E_Float* iptwig = wig->begin();
   K_NUMPY::getFromNumpyArray(effarray, eff, true); E_Float* ipteff = eff->begin();
   K_NUMPY::getFromNumpyArray(pos_eff , pos, true); E_Float* xyz_ref= pos->begin();
+
+  /// Tableau pour // omp
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+  E_Int omp_mode = iptdtloc[ 8 + nssiter];
+  E_Int* ipt_omp = iptdtloc +9 + nssiter;
 
   
   ///
@@ -150,10 +156,10 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
   ///
   E_Int**  ipt_param_int_eff;  E_Float** iptflu;
 
-  nidom             = PyList_Size(zones_eff);
-  ipt_param_int_eff = new E_Int*[nidom]; iptflu = new E_Float*[nidom];
+  E_Int nidom_eff  = PyList_Size(zones_eff);
+  ipt_param_int_eff = new E_Int*[nidom_eff]; iptflu = new E_Float*[nidom_eff];
 
-  for (E_Int nd = 0; nd < nidom; nd++)
+  for (E_Int nd = 0; nd < nidom_eff; nd++)
   { 
 
      PyObject* zone   = PyList_GetItem(zones_eff , nd); 
@@ -199,14 +205,29 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-     for (E_Int nd = 0; nd < nidom; nd++)
+
+    E_Int nitcfg = 1;
+    E_Int nbtask = ipt_omp[nitcfg-1]; 
+    E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+
+    E_Int pttask;
+     for (E_Int nd = 0; nd < nidom_eff; nd++)
        { 
 
        E_Int nd_ns  = ipt_param_int_eff[nd][EFF_NONZ];
 
+       for (E_Int ntask = 0; ntask < nbtask; ntask++)
+        {
+         pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+         if (ipt_omp[ pttask ] == nd_ns) break;
+        }
        //printf("no zone ns %d %d \n", nd, nd_ns);
        E_Int shift_wig = 0;
-       for (E_Int i = 0; i < nd_ns; i++) shift_wig  = shift_wig  + ipt_param_int[i][ NDIMDX ]*3;
+       for (E_Int i = 0; i < nd_ns; i++)
+          {
+            if(ipt_param_int[i][ KFLUDOM ]==2){  shift_wig  = shift_wig  + ipt_param_int[i][ NDIMDX ]*3;}
+            if(ipt_param_int[i][ KFLUDOM ]==8){  shift_wig  = shift_wig  + ipt_param_int[i][ NDIMDX ]*4;}
+          }
 
        E_Int* ipt_thread_topology = thread_topology.begin() + (ithread-1)*3;
        E_Int* ind_loop            = ind_dm_thread.begin()   + (ithread-1)*6;
@@ -214,21 +235,10 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 
        if(nd==0) for (E_Int i = 0; i < sz_eff; i++) effort_omp[i]=0;
 
-       E_Int Nbre_thread_actif_loc; E_Int ithread_loc;
+       E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+       E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
 
-       if(omp_mode == 1)
-        { E_Int       Ptomp = ipt_param_int[nd_ns][PT_OMP];
-          E_Int  PtrIterOmp = ipt_param_int[nd_ns][Ptomp];
-          E_Int  PtZoneomp  = ipt_param_int[nd_ns][PtrIterOmp]; 
-
-          Nbre_thread_actif_loc = ipt_param_int[nd_ns][ PtZoneomp + Nbre_thread_actif ];
-          ithread_loc           = ipt_param_int[nd_ns][ PtZoneomp +  ithread -1       ] +1 ;
-          if (ithread_loc == -1) {continue;}
-        }
-       else 
-        { Nbre_thread_actif_loc = Nbre_thread_actif;
-          ithread_loc = ithread;
-        }
+       if (ithread_loc == -1) {continue;}
 
        indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, lmin,
                            ipt_param_int_eff[nd]+EFF_LOOP,

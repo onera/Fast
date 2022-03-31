@@ -1995,11 +1995,6 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     zones     = Internal.getZones(t)
     zones_eff = Internal.getZones(teff)
     
-    node = Internal.getNodeFromName1(t   , '.Solver#define')
-    node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode = OMP_MODE
-    if node is not None: ompmode = Internal.getValue(node)
-    
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     if FastC.HOOK is None: 
             own    = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
@@ -2018,7 +2013,7 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
     pos_eff = numpy.empty( 3, numpy.float64)
     pos_eff[0] = xyz_ref[0]; pos_eff[1] = xyz_ref[1]; pos_eff[2] = xyz_ref[2]
 
-    fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, pos_eff, ompmode)
+    fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, pos_eff)
 
     return effort
 
