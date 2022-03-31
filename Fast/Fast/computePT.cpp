@@ -19,10 +19,10 @@
 // Mettre a 1 pour un CPU timer
 #define TIMER 0
 
-# include "fastS.h"
-# include "fast.h"
+# include "FastS/fastS.h"
+# include "Fast/fast.h"
 
-# include "../Fast/param_solver.h"
+# include "Fast/param_solver.h"
 # include <string.h>
 #include <cstdlib>
 //# include <omp.h>

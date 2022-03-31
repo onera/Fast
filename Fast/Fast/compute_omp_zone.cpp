@@ -60,7 +60,7 @@ E_Float meaz       = 0;
       }//zone
 
       // calcul metric si maillage deformable structure
-#include           "../../FastS/FastS/Metric/cp_metric.cpp"
+#include       "FastS/Metric/cp_metric.cpp"
     }
 
 
@@ -114,10 +114,10 @@ E_Float meaz       = 0;
       {
 	if (param_int[nd][IFLOW] == 4){
 	  lmin =1;
-#include       "../../FastLBM/FastLBM/Compute/cpp_files/lbm_collision_propagation.cpp"
+#include       "FastLBM/Compute/cpp_files/lbm_collision_propagation.cpp"
 	}
 	else{
-#include       "../../FastS/FastS/Compute/rhs.cpp"
+#include       "FastS/Compute/rhs.cpp"
 	}
       }
       //E_Float fin_zone = omp_get_wtime();

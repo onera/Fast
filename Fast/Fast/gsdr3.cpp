@@ -1,9 +1,9 @@
-# include "fastS.h"
+# include "FastS/fastS.h"
 //# include "fastP.h"
-# include "fastLBM.h"
-# include "fastc.h"
-# include "fast.h"
-# include "../Fast/param_solver.h"
+# include "FastLBM/fastLBM.h"
+# include "FastC/fastc.h"
+# include "Fast/fast.h"
+# include "Fast/param_solver.h"
 # include "connector.h"
 # include <string.h>
 #ifdef _OPENMP

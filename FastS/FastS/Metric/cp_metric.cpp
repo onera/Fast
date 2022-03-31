@@ -14,7 +14,7 @@
               {
                if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
                {
-#                include "Metric/indice_omp1.h" 
+#                include "FastS/Metric/indice_omp1.h" 
                  cp_tijk_( param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], ind_mtr);
 
                  if(nd==nidom-1)
@@ -28,7 +28,7 @@
               {
                if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
                {
-#                include "Metric/indice_omp1.h" 
+#                include "FastS/Metric/indice_omp1.h" 
                  cp_vol_(  param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], ind_mtr);
 
                  for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
@@ -54,7 +54,7 @@
               {
                if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
                {
-#               include "Metric/indice_omp1.h" 
+#               include "FastS/Metric/indice_omp1.h" 
                 if (param_int[nd][ ITYPZONE ] != 2  && ithread_loc == 1)
                 {
                  ipt_ind_dm_loc[0]   = 1; 

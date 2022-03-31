@@ -19,7 +19,7 @@
 
 
 # include "fastS.h"
-# include "fastc.h"
+# include "FastC/fastc.h"
 # include "param_solver.h"
 # include "string.h"
 #ifdef _OPENMP
