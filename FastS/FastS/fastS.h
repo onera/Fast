@@ -31,7 +31,6 @@ typedef typename CMP::PendingMsgContainer<CMP::SendBuffer> SendQueue;
 # include "connector.h"
 # include "kcore.h"
 # include "Fortran.h"
-
 //# include "Zone.h"
 using namespace K_FLD;
 
