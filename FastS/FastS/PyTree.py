@@ -109,7 +109,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
-         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode) )
+         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
         
          skip = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
@@ -247,7 +247,7 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
     hook1       = FastC.HOOK.copy()
     distrib_omp = 0
     nitrun      = 0
-    hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
+    hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
         
     fasts._matvecPT(zones, metrics, nitrun, no_vect_test, ompmode, hook1)
 
@@ -317,7 +317,7 @@ def _init_metric(t, metrics, omp_mode):
 # Initialisation parametre calcul: calcul metric + var primitive + compactage 
 # + alignement + placement DRAM
 #==============================================================================
-def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None):
+def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0):
     """Perform necessary operations for the solver to run."""
 
     # Get omp_mode
@@ -359,7 +359,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #print 'int(dtloc[0])= ', int(dtloc[0])
     for nstep in range(1, int(dtloc[0])+1):
         hook1       = FastC.HOOK.copy()
-        hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode) )   
+        hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode, verbose) )   
 
 
     #init metric
@@ -1989,7 +1989,7 @@ def createStressNodes(t, BC=None, windows=None):
 # Calcul des efforts (in place)
 #
 #==============================================================================
-def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
+def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
     """Compute efforts in teff."""
     
     zones     = Internal.getZones(t)
@@ -2005,7 +2005,7 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
 
             distrib_omp = 0
             hook1 = FastC.HOOK.copy()
-            hook1.update(fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
+            hook1.update(fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
 
     else:  hook1  = FastC.HOOK
 
@@ -2022,20 +2022,15 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.) ):
 # Calcul distribution threads
 #
 #==============================================================================
-def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, Display=False):
+def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, verbose=0):
 
   zones          = Internal.getZones(t)
   mx_omp_size_int= work["MX_OMP_SIZE_INT"]
-  #print 'mx_omp_size_int', mx_omp_size_int
-  display = 0
-  if Display: display = 1
-
+  
   own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
   dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
-  fasts.distributeThreads(zones , metrics, dtloc, nstep,  nitrun, mx_omp_size_int, display)
-
+  fasts.distributeThreads(zones , metrics, dtloc, nstep,  nitrun, mx_omp_size_int, verbose)
   return None
-
 
 #==============================================================================
 #
@@ -3204,8 +3199,6 @@ def _distribMpiDtloc(t,niveauMax,NP):
 #==============================================================================
 def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
 
-    
-
     zones     = Internal.getZones(t)
     zones_eff = Internal.getZones(teff)
 
@@ -3217,7 +3210,7 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
             nitrun =0; nstep =1
             hook1  = FastC.HOOK.copy()
             distrib_omp = 0
-            hook1.update(fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp) )
+            hook1.update(fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
     else:   hook1  = FastC.HOOK
 
     fasts.compute_dpJ_dpW(zones, zones_eff, metrics, hook1, cosAoA, sinAoA, surfinv)
@@ -3261,7 +3254,7 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
 #    nstep=1
 #    hook1  = FastC.HOOK.copy()
-#    hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nit_adjoint, nstep) )
+#    hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nit_adjoint, nstep, 0) )
 #    hook1  = FastC.HOOK
     
 

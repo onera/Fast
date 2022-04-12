@@ -97,11 +97,11 @@ void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
 PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* work;
-  E_Int nitrun; E_Int nstep; E_Int distrib_omp;
+  E_Int nitrun; E_Int nstep; E_Int distrib_omp; E_Int verbose;
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOlll", &zones , &metrics, &work, &nitrun, &nstep, &distrib_omp)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOllll", &zones , &metrics, &work, &nitrun, &nstep, &distrib_omp, &verbose)) return NULL; 
 #else 
-  if (!PyArg_ParseTuple(args, "OOOiii", &zones , &metrics, &work, &nitrun, &nstep, &distrib_omp)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOiiii", &zones , &metrics, &work, &nitrun, &nstep, &distrib_omp, &verbose)) return NULL; 
 #endif
   
   E_Int lexit_lu, lssiter_verif;
@@ -145,7 +145,6 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
                        o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
     ipt_param_real[nd]    = K_PYTREE::getValueAF(o, hook);
 
-
     // get metric
     PyObject* metric     = PyList_GetItem(metrics, nd); // metric du domaine i
     if(ipt_param_int[nd][ITYPZONE]==4 ) 
@@ -184,10 +183,11 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
     if (iptdtloc[1]==1) {lssiter_verif = 1; if (nstep == iptdtloc[0] && ipt_param_int[0][ITYPCP]!=2){ lexit_lu = 1;}  }
     E_Int display = 0;
     if (nstep==1 and  nidom_loc==-1) display = 1;
+    if (verbose == 0) display = 0;
     distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, distrib_omp, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun, display );
   }
 
-  if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;}
+  if (init_exit==0) {lexit_lu= 0;lssiter_verif = 0;}
 
   PyObject* dico = PyDict_New();
 

@@ -55,7 +55,7 @@ Contents
 Preparation
 --------------------------
 
-.. py:function:: FastS.PyTree.warmup(t, tc, graph=None, infos_ale=None)
+.. py:function:: FastS.PyTree.warmup(t, tc, graph=None, infos_ale=None, tmy=None, verbose=0)
 
     Compute all necessary pre-requisites for solver:
 
@@ -76,8 +76,12 @@ Preparation
     :type tc: pyTree
     :param graph: input communication graph
     :type graph: dictionary
-    :para infos_ale: input [position angle (rad), angle rotation speed (rad s^1)]
+    :param infos_ale: input [position angle (rad), angle rotation speed (rad s^1)]
     :type infos_ale: list
+    :param tmy: stat tree if any
+    :type tmy: pyTree
+    :param verbose: if 1, display information about threads distribution
+    :param verbose: int (0 or 1)
     :return: (t, tc, metrics)
     :rtype: tuple
 

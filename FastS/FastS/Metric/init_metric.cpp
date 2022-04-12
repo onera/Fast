@@ -106,7 +106,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
     /* get distance paroi */
 
-    //Pointeur visqeux: mut, dist, zgris sont en acces compact
+    //Pointeur visqueux: mut, dist, zgris sont en acces compact
     if(param_int[nd][ IFLOW ] ==  3)
       { PyObject* sol_center;
         sol_center  = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
