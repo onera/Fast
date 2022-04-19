@@ -257,7 +257,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 
   ipteff[0] = 0.; ipteff[1] = 0.; ipteff[2] = 0.; ipteff[3] = 0.; ipteff[4] = 0.; ipteff[5] = 0.; ipteff[6] = 0.; ipteff[7] = 0.;
 
-  if(nidom > 0)
+  if(nidom_eff > 0)
     {
       for (E_Int ithread = 0; ithread < Nbre_thread_max ; ithread++) 
                     {

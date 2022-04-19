@@ -390,6 +390,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         FastC.HOOK['param_real_tc'] = None
         FastC.HOOK['param_int_tc']  = None 
 
+
     if ssors is not []:
         FastC.HOOK['ssors'] = ssors
     else:
@@ -599,13 +600,19 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
          for z in Internal.getZones(tmp):
             _sortByName(z)
 
-       if layer !='Python': iteration_loc =None
-       if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target,"itGraph=",iteration_loc)
-
+       t0=timeit.default_timer()
        graph['procDict'] = D2.getProcDict(tc_skel)
        graph['procList'] = D2.getProcList(tc_skel, sort=True)
-       graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID'  , reduction=False, procDict=graph['procDict'], it=iteration_loc)
        graph['graphIBCD']= Cmpi.computeGraph(tc_skel, type='IBCD', reduction=False, procDict=graph['procDict'])
+
+       graph['graphID_Steady'],graph['graphID_Unsteady'] = Cmpi.computeGraph(tc_skel, type='ID_Unsteady', reduction=False, procDict=graph['procDict'])
+
+       graph['graphID'] = Cmpi.mergeGraph( graph['graphID_Steady'], graph['graphID_Unsteady'][iteration_loc] )
+
+       t1=timeit.default_timer()
+       if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target,"itGraph=",iteration_loc,"cout Graph=", t1-t0)
+
+       #print("steady",graph['graphID'] )
 
        #Compactage tc
        # 
@@ -645,16 +652,14 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
             iteration_loc = timelevel_motion
     
         rank = Cmpi.rank
-        if rank==0:
-          print('calcul du graph it', iteration_loc)
-          sys.stdout.flush
 
-        #t0=timeit.default_timer()
-        graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID', reduction=False, procDict=graph['procDict'], it=iteration_loc)
-        #t1=timeit.default_timer()
-        #print( "cout graphID= ", t1-t0 )
-        #graph['procDict'] = D2.getProcDict(tc_skel)
-        #graph['procList'] = D2.getProcList(tc_skel, sort=True)
+        t0=timeit.default_timer()
+        graph['graphID'] = Cmpi.mergeGraph( graph['graphID_Steady'], graph['graphID_Unsteady'][iteration_loc] )
+        #graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID', reduction=False, procDict=graph['procDict'], it=iteration_loc)
+        t1=timeit.default_timer()
+        if rank==0:
+          print('calcul du graph it', iteration_loc, "cout graphID= ", t1-t0)
+          sys.stdout.flush
 
     if timelevel_motion > timelevel_360:
        print('remise a ZERO dans updateUnsteady')

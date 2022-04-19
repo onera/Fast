@@ -47,7 +47,10 @@ using namespace K_FLD;
 E_Int timeShowFastS = 1;
 #endif
 
-static E_Int nitrun_loc=0;
+static E_Int timelevel_tc=0;
+
+static E_Int NbprocMax=2048;
+static E_Int source_flag[2048];
 
 #ifdef _MPI
 
@@ -57,10 +60,8 @@ static double recv_buffer_time = 0.;
 static double isend_time = 0.;
 #endif
 
-#ifdef _MPI
 static std::pair<RecvQueue*, SendQueue*>* pair_of_queue = NULL;
 static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_IBC = NULL;
-#endif
 
 void K_FASTC::init_TransferInter(
     std::pair<RecvQueue*, SendQueue*>*& pair_of_queue_loc) {
@@ -111,36 +112,57 @@ void K_FASTC::setInterpTransfersFast(
   if ( (param_int_tc != NULL) && (param_real_tc != NULL))
   {
     E_Int TypeTransfert ;    
-    E_Int nbcomIBC = param_int_tc[1];
-    E_Int nbcomID  = param_int_tc[2+nbcomIBC];
-    E_Int shift_graph = nbcomIBC + nbcomID + 2;
+    E_Int sizecomIBC = param_int_tc[2];
+    E_Int sizecomID  = param_int_tc[3+sizecomIBC];
+    E_Int shift_graph = sizecomIBC + sizecomID + 3;
 
     #ifdef _MPI
     //std::pair<RecvQueue*, SendQueue*>* pair_of_queue;
     RecvQueue* pt_rcv_queue     = NULL;
     RecvQueue* pt_rcv_queue_IBC = NULL;
 
-    E_Int nbcomID_nstep; E_Int nbcomIBC_nstep; E_Int pt_deb;
+    //premier passage dans transfert couche C depuis  mise a plat de tc
+    if (param_int_tc[0]==0 and mpi)
+    { E_Int szCom;
+      MPI_Comm_size(MPI_COMM_WORLD, &szCom);
+      for (E_Int proc = 0; proc < szCom; ++proc){source_flag[proc]=0;}
 
-    if (exploc==1 and mpi)
-      {
-       pt_deb         = param_int_tc[2+nbcomIBC+nstep+(numpassage-1)*nitmax] + 2 +nbcomIBC+1;
-       nbcomID_nstep  = param_int_tc[ pt_deb ];
-       pt_deb         = param_int_tc[1+nstep+(numpassage-1)*nitmax] + 2;
-       nbcomIBC_nstep = param_int_tc[ pt_deb ];
-      }
-    else
-      {
-        pt_deb         = 1;
-        nbcomID_nstep  = nbcomID;
-        nbcomIBC_nstep = nbcomIBC;
-      }
-    //ptdeb defini ci dessus et va servir dans emplace_back. A comprendre car valeur me semble fantaisiste
-    
-    if (mpi and (nbcomID_nstep != 0 or nbcomIBC_nstep != 0))
-    //if (mpi and nbcomIBC_nstep != 0)
+      E_Int ech        = param_int_tc[1 + shift_graph];
+      timelevel_tc     = param_int_tc[ech + 3];
+ 
+      if (pair_of_queue  != NULL)
+        {
+          K_FASTC::del_TransferInter(pair_of_queue);
+          K_FASTC::del_TransferInter(pair_of_queue_IBC);
+        }
+      //flag transfer initilisé. Remise a zero dans miseAplat.
+      param_int_tc[0]==1;
+    }
+
+    E_Int nbcomID_S; E_Int nbcomID_U;  E_Int nbcomIBC_S; E_Int pt_debID_S; E_Int pt_debID_U; E_Int pt_debIBC_S;
+
+    // info Comm ID instationnaire et dtloc G Jeanmass
+    E_Int iter = 1;
+    if (exploc==1 and mpi) { iter = nstep; nbcomID_U =0;}
+    else if(timelevel_tc !=0)
+       {  
+          pt_debID_U = param_int_tc[3+sizecomIBC+ iter + 1 + it_target] + 3 +sizecomIBC+1;
+          nbcomID_U  = param_int_tc[ pt_debID_U ];
+       }
+    else { nbcomID_U =0;}
+
+
+    // info Comm ID stationnaire
+    pt_debID_S = param_int_tc[3+sizecomIBC+iter] + 3 +sizecomIBC+1;
+    nbcomID_S  = param_int_tc[ pt_debID_S ];
+
+
+    // info Comm IBC stationnaire
+    pt_debIBC_S= param_int_tc[2+iter] + 3;
+    nbcomIBC_S = param_int_tc[ pt_debIBC_S];
+
+    if (mpi and (nbcomID_S != 0 or nbcomIBC_S != 0 or nbcomID_U != 0))
     {
-       
       if (pair_of_queue     == NULL) { K_FASTC::init_TransferInter(pair_of_queue    );}
       if (pair_of_queue_IBC == NULL) { K_FASTC::init_TransferInter(pair_of_queue_IBC);}
 
@@ -157,10 +179,9 @@ void K_FASTC::setInterpTransfersFast(
 
       if (pt_rcv_queue_IBC->size() == 0)
         {
-          for (E_Int ircv = 1; ircv < nbcomIBC_nstep +1; ++ircv)
+          for (E_Int ircv = 1; ircv < nbcomIBC_S +1; ++ircv)
             {
-              // voir xavier pour comprendre?  pt_deb  obscur, voir bugg�.
-              pt_rcv_queue_IBC->emplace_back(param_int_tc[pt_deb + ircv], 404);
+              pt_rcv_queue_IBC->emplace_back(param_int_tc[pt_debIBC_S + ircv], 404);
               CMP::RecvBuffer& recv_buffer = pt_rcv_queue_IBC->back_message_buffer();
               recv_buffer.irecv();
               //printf("receptionIBM source  nstep= %d , tag= %d  size= %d \n",  nstep,  recv_buffer.tag(), recv_buffer.size());
@@ -168,7 +189,7 @@ void K_FASTC::setInterpTransfersFast(
         }
       else
         {
-          assert(pt_rcv_queue_IBC->size() == nbcomIBC_nstep );
+          assert(pt_rcv_queue_IBC->size() == nbcomIBC_S );
           for ( auto iterBuf = pt_rcv_queue_IBC->begin(); iterBuf != pt_rcv_queue_IBC->end(); ++iterBuf )
             {
               CMP::RecvBuffer& recv_buffer = iterBuf->get_message_buffer();
@@ -186,7 +207,7 @@ void K_FASTC::setInterpTransfersFast(
       //MPI_Barrier(MPI_COMM_WORLD);
 
       int nb_send_buffer = 0;
-      for (E_Int ip2p = 1; ip2p < param_int_tc[0]+1; ++ip2p)
+      for (E_Int ip2p = 1; ip2p < param_int_tc[1]+1; ++ip2p)
       {
         E_Int ech  = param_int_tc[ip2p + shift_graph];
         dest       = param_int_tc[ech];
@@ -208,7 +229,7 @@ void K_FASTC::setInterpTransfersFast(
     #endif
 
     //comm local pour recouvrememnt transfert IBC
-    for (E_Int ip2p = 1; ip2p < param_int_tc[0]+1; ++ip2p)
+    for (E_Int ip2p = 1; ip2p < param_int_tc[1]+1; ++ip2p)
     {
       E_Int ech  = param_int_tc[ip2p+shift_graph];
       dest       = param_int_tc[ech];
@@ -231,7 +252,7 @@ void K_FASTC::setInterpTransfersFast(
       //comm multi processus: wait + remplissage IBC
       //  printf("get IBM  %d %d \n", dest, nstep );
       //
-      K_FASTC::getTransfersInter(nbcomIBC_nstep, iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
+      K_FASTC::getTransfersInter(nbcomIBC_S, iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
 
       #ifdef TimeShow
        E_Float time_out = omp_get_wtime();
@@ -247,29 +268,54 @@ void K_FASTC::setInterpTransfersFast(
     //
     //
     
-    pt_deb  = nbcomIBC + 2;
-    if (exploc==1 and mpi) { pt_deb = param_int_tc[2+nbcomIBC+nstep+(numpassage-1)*nitmax] + 2 +nbcomIBC+1; }
-
-    if (mpi and nbcomID_nstep != 0)
+    if (mpi and (nbcomID_S != 0 or nbcomID_U != 0) )
     {
-      //if (pair_of_queue     == NULL) { K_FASTC::init_TransferInter(pair_of_queue    );}
 
+/*
+      pt_rcv_queue  = pair_of_queue->first;
+
+      for (E_Int ircv = 1; ircv < nbcomID_S +1; ++ircv)
+        {
+         E_Int source =  param_int_tc[ pt_debID_S + ircv]
+         if (source_flag[ source] == 0 )
+          {
+            pt_rcv_queue->emplace_back( source , 405);
+            CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
+            recv_buffer.irecv();
+
+            source_flag[ source] = 1;
+          }
+         else
+          {
+          }
+        }
+*/
       pt_rcv_queue     = pair_of_queue->first;
 
       if (pt_rcv_queue->size() == 0 )
         {
-          for (E_Int ircv = 1; ircv < nbcomID_nstep +1; ++ircv)
+          for (E_Int ircv = 1; ircv < nbcomID_S +1; ++ircv)
            {
-            pt_rcv_queue->emplace_back( param_int_tc[ pt_deb + ircv], 405);
+            E_Int source = param_int_tc[ pt_debID_S + ircv];
+            pt_rcv_queue->emplace_back( source , 405);
             CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
             recv_buffer.irecv();
 
-            //printf("reception ID source  %d %d \n", param_int_tc[pt_deb + ircv], nstep );
+            //printf("reception ID source  %d %d \n", param_int_tc[pt_debID + ircv], nstep );
+           }
+          for (E_Int ircv = 1; ircv < nbcomID_U +1; ++ircv)
+           {
+            E_Int source = param_int_tc[ pt_debID_U + ircv];
+            pt_rcv_queue->emplace_back( source , 405);
+            CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
+            recv_buffer.irecv();
+
+            //printf("reception ID source  %d %d \n", param_int_tc[pt_debID + ircv], nstep );
            }
         }
       else
-        {
-            assert(pt_rcv_queue->size() == nbcomID_nstep );
+        {   E_Int nbcomID_tot = nbcomID_S + nbcomID_U;
+            assert(pt_rcv_queue->size() == nbcomID_tot );
             for ( auto iterBuf = pt_rcv_queue->begin(); iterBuf != pt_rcv_queue->end(); ++iterBuf )
               {
                 CMP::RecvBuffer& recv_buffer = iterBuf->get_message_buffer();
@@ -286,7 +332,7 @@ void K_FASTC::setInterpTransfersFast(
       #endif
 
       int cpt_send_buffer = 0;
-      for (E_Int ip2p = 1; ip2p < param_int_tc[0]+1; ++ip2p)
+      for (E_Int ip2p = 1; ip2p < param_int_tc[1]+1; ++ip2p)
         {
          E_Int ech  = param_int_tc[ip2p+shift_graph];
          dest       = param_int_tc[ech];
@@ -308,7 +354,7 @@ void K_FASTC::setInterpTransfersFast(
 
 
     //comm local pour recouvrememnt
-    for (E_Int ip2p = 1; ip2p < param_int_tc[0]+1; ++ip2p)
+    for (E_Int ip2p = 1; ip2p < param_int_tc[1]+1; ++ip2p)
     {
       E_Int ech  = param_int_tc[ip2p+shift_graph];
       dest       = param_int_tc[ech];
@@ -332,7 +378,8 @@ void K_FASTC::setInterpTransfersFast(
        //comm multi processus: wait + remplissage ID
        //printf(" get ID  %d %d \n", dest, nstep );
        //
-       K_FASTC::getTransfersInter(nbcomID_nstep, iptro_tmp, param_int, param_int_tc , pair_of_queue);
+       E_Int nbcomID = nbcomID_S + nbcomID_U;
+       K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_int_tc , pair_of_queue);
 
        #ifdef TimeShow
         E_Float time_out         = omp_get_wtime();
@@ -342,7 +389,7 @@ void K_FASTC::setInterpTransfersFast(
         outputfile << "Time InterpTransfert (Intra)  " << ipt_timecount[1] << std::endl;
         outputfile << "Time in MPI send_buffer, irecv "<< ipt_timecount[0] << std::endl;
         outputfile << "Time InterpTransfert (Inter)  " << ipt_timecount[2] << std::endl;
-        outputfile << "Nb com. p2p " << param_int_tc[0] +1 << std::endl;
+        outputfile << "Nb com. p2p " << param_int_tc[1] +1 << std::endl;
         outputfile << std::endl << std::endl;
         outputfile.close();
 
@@ -364,8 +411,8 @@ void K_FASTC::setInterpTransfersFast(
 //=============================================================================
 void K_FASTC::setInterpTransfersIntra(
 
-    E_Float**& ipt_ro, E_Int& varType, E_Int*& ipt_param_int_tc,
-    E_Float*& ipt_param_real_tc, E_Int**& param_int, E_Float**& param_real,  E_Int*& ipt_omp, E_Int*& linelets_int, E_Float*& linelets_real,
+    E_Float**& ipt_ro, E_Int& varType, E_Int*& param_int_tc,
+    E_Float*& param_real_tc, E_Int**& param_int, E_Float**& param_real,  E_Int*& ipt_omp, E_Int*& linelets_int, E_Float*& linelets_real,
     E_Int& TypeTransfert, E_Int& it_target, E_Int& nidom, E_Int& NoTransfert,
     E_Float*& ipt_timecount, E_Int& nstep, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& num_passage)
 {
@@ -390,16 +437,15 @@ void K_FASTC::setInterpTransfersIntra(
   
   E_Int* ipt_cnd = NULL;  // ONLY FOR STRUCTURED
   
-  E_Int nbcomIBC = ipt_param_int_tc[1];
-  E_Int nbcomID  = ipt_param_int_tc[2 + nbcomIBC];
-  
-  E_Int shift_graph = nbcomIBC + nbcomID + 2;
+  E_Int sizecomIBC = param_int_tc[2];
+  E_Int sizecomID  = param_int_tc[3+sizecomIBC];
+  E_Int shift_graph = sizecomIBC + sizecomID + 3;
 
   E_Int threadmax_sdm = __NUMTHREADS__;
-  E_Int ech           = ipt_param_int_tc[NoTransfert + shift_graph];
-  E_Int nrac          = ipt_param_int_tc[ech + 1];  // nb total de raccord
-  E_Int nrac_inst     = ipt_param_int_tc[ech + 2];  // nb total de raccord instationnaire
-  E_Int timelevel     = ipt_param_int_tc[ech + 3];  // nb de pas de temps stocker pour chaque raccord instationnaire
+  E_Int ech           = param_int_tc[NoTransfert + shift_graph];
+  E_Int nrac          = param_int_tc[ech + 1];  // nb total de raccord
+  E_Int nrac_inst     = param_int_tc[ech + 2];  // nb total de raccord instationnaire
+  E_Int timelevel     = param_int_tc[ech + 3];  // nb de pas de temps stocker pour chaque raccord instationnaire
   E_Int nrac_steady   = nrac - nrac_inst;        // nb total de raccord stationnaire
 
   //gestion nombre de pass pour raccord instationnaire
@@ -440,7 +486,7 @@ void K_FASTC::setInterpTransfersIntra(
   {
     E_Int irac_deb = 0;
     E_Int irac_fin = nrac_steady;
-    if(pass_inst == 1){ irac_deb = ipt_param_int_tc[ ech + 4 + it_target ]; irac_fin = ipt_param_int_tc[ ech + 4 + it_target + timelevel ]; }
+    if(pass_inst == 1){ irac_deb = param_int_tc[ ech + 4 + it_target ]; irac_fin = param_int_tc[ ech + 4 + it_target + timelevel ]; }
 
    for (E_Int irac = irac_deb; irac < irac_fin; irac++) 
     {
@@ -450,7 +496,7 @@ void K_FASTC::setInterpTransfersIntra(
       autorisation_transferts[pass_inst][irac_auto]=0;
 
       //  si incompatibilite pass et typeTransfert, on skippe le raccord
-      E_Int ibcType = ipt_param_int_tc[shift_rac + nrac * 3];
+      E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
 
       if (ibcType > ibcTypeMax){ ibcTypeMax= ibcType;}
       E_Int ibc = 1;
@@ -463,8 +509,8 @@ void K_FASTC::setInterpTransfersIntra(
       if(exploc == 1)
 	{
 	  E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
-	  E_Int levelD = ipt_param_int_tc[debut_rac + 25];
-	  E_Int levelR = ipt_param_int_tc[debut_rac + 24];
+	  E_Int levelD = param_int_tc[debut_rac + 25];
+	  E_Int levelR = param_int_tc[debut_rac + 24];
 	  E_Int cyclD  = nssiter/levelD;
 
 	  // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse   
@@ -492,13 +538,13 @@ void K_FASTC::setInterpTransfersIntra(
 	}
       // Sinon, on autorise les transferts  si la zone donneuse a ete modifiee a l'iteration nstep
       else {
-             E_Int NoD      =  ipt_param_int_tc[ shift_rac + nrac*5     ];
+             E_Int NoD      =  param_int_tc[ shift_rac + nrac*5     ];
              if (impli_local[NoD]==1) autorisation_transferts[pass_inst][irac_auto]=1;
            }
 
       if (autorisation_transferts[pass_inst][irac_auto]==1)
 	   { 
-	      E_Int nbRcvPts = ipt_param_int_tc[shift_rac + nrac * 10 + 1];
+	      E_Int nbRcvPts = param_int_tc[shift_rac + nrac * 10 + 1];
     
 	      if (nbRcvPts > nbRcvPts_mx) nbRcvPts_mx = nbRcvPts;
 
@@ -552,8 +598,8 @@ void K_FASTC::setInterpTransfersIntra(
         E_Int irac_deb = 0;
         E_Int irac_fin = nrac_steady;
         if (pass_inst == 1) {
-          irac_deb = ipt_param_int_tc[ech + 4 + it_target];
-          irac_fin = ipt_param_int_tc[ech + 4 + it_target + timelevel];
+          irac_deb = param_int_tc[ech + 4 + it_target];
+          irac_fin = param_int_tc[ech + 4 + it_target + timelevel];
         }
 
         // printf("iracdeb=  %d, iracfin= %d \n", irac_deb, irac_fin  );
@@ -566,14 +612,14 @@ void K_FASTC::setInterpTransfersIntra(
           E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
           //printf("ipass_typ = %d, pass_inst= %d, irac=  %d, ithread= %d \n", ipass_typ,pass_inst,irac , ithread ); 
           // ipass_typ,ipass_inst,irac , ithread );
-          E_Int ibcType = ipt_param_int_tc[shift_rac + nrac * 3];
+          E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
           E_Int ibc = 1;
           if (ibcType < 0) ibc = 0;
 
-          E_Int NoD       = ipt_param_int_tc[shift_rac + nrac * 5     ];
-          E_Int NoR       = ipt_param_int_tc[shift_rac + nrac * 11 + 1];
-          E_Int nvars_loc = ipt_param_int_tc[shift_rac + nrac * 13 + 1];  // neq fonction raccord rans/LES
-          E_Int rotation  = ipt_param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
+          E_Int NoD       = param_int_tc[shift_rac + nrac * 5     ];
+          E_Int NoR       = param_int_tc[shift_rac + nrac * 11 + 1];
+          E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 + 1];  // neq fonction raccord rans/LES
+          E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
 
           E_Float Pr    = param_real[ NoD ][ PRANDT ];
           E_Float Ts    = param_real[ NoD ][ TEMP0 ];
@@ -605,17 +651,17 @@ void K_FASTC::setInterpTransfersIntra(
           ////
           ////
 
-          E_Int nbRcvPts = ipt_param_int_tc[shift_rac + nrac * 10 + 1];
-          // E_Int nbDonPts = ipt_param_int_tc[ shift_rac                ];
+          E_Int nbRcvPts = param_int_tc[shift_rac + nrac * 10 + 1];
+          // E_Int nbDonPts = param_int_tc[ shift_rac                ];
 
           E_Int pos;
-          pos = ipt_param_int_tc[shift_rac + nrac * 7];      E_Int* ntype    = ipt_param_int_tc  + pos;
-          pos = pos + 1 + ntype[0];                          E_Int* types    = ipt_param_int_tc  + pos;
-          pos = ipt_param_int_tc[shift_rac + nrac * 6];      E_Int* donorPts = ipt_param_int_tc  + pos;
-          pos = ipt_param_int_tc[shift_rac + nrac * 12 + 1]; E_Int* rcvPts   = ipt_param_int_tc  + pos;  // donor et receveur inverser car storage donor
-          pos = ipt_param_int_tc[shift_rac + nrac * 8];    E_Float* ptrCoefs = ipt_param_real_tc + pos;
+          pos = param_int_tc[shift_rac + nrac * 7];      E_Int* ntype    = param_int_tc  + pos;
+          pos = pos + 1 + ntype[0];                      E_Int* types    = param_int_tc  + pos;
+          pos = param_int_tc[shift_rac + nrac * 6];      E_Int* donorPts = param_int_tc  + pos;
+          pos = param_int_tc[shift_rac + nrac * 12 + 1]; E_Int* rcvPts   = param_int_tc  + pos;  // donor et receveur inverser car storage donor
+          pos = param_int_tc[shift_rac + nrac * 8];    E_Float* ptrCoefs = param_real_tc + pos;
 
-          E_Int nbInterpD = ipt_param_int_tc[shift_rac + nrac];
+          E_Int nbInterpD = param_int_tc[shift_rac + nrac];
           E_Float* xPC = NULL;
           E_Float* xPI = NULL;
           E_Float* xPW = NULL;
@@ -786,7 +832,7 @@ void K_FASTC::setInterpTransfersIntra(
 // in place + from zone + tc compact
 //=============================================================================
 void K_FASTC::setInterpTransfersInter(
-    E_Float**& ipt_ro   , E_Int& varType   , E_Int*& ipt_param_int_tc, E_Float*& ipt_param_real_tc,
+    E_Float**& ipt_ro   , E_Int& varType   , E_Int*& param_int_tc, E_Float*& param_real_tc,
     E_Int**& param_int  , E_Float**& param_real, E_Int*& ipt_omp, E_Int*& linelets_int    , E_Float*& linelets_real, 
     E_Int& TypeTransfert, E_Int& it_target, E_Int& nidom, E_Int& NoTransfert,
     std::pair<RecvQueue*, SendQueue*>*& pair_of_queue_loc,
@@ -824,19 +870,18 @@ void K_FASTC::setInterpTransfersInter(
   else
     nvars = 6;
 
-  E_Int nbcomIBC = ipt_param_int_tc[1];
-  E_Int nbcomID  = ipt_param_int_tc[2 + nbcomIBC];
-
-  E_Int shift_graph = nbcomIBC + nbcomID + 2;
+  E_Int sizecomIBC = param_int_tc[2];
+  E_Int sizecomID  = param_int_tc[3+sizecomIBC];
+  E_Int shift_graph = sizecomIBC + sizecomID + 3;
 
   E_Int threadmax_sdm = __NUMTHREADS__;
-  E_Int ech  = ipt_param_int_tc[NoTransfert + shift_graph];
-  E_Int nrac = ipt_param_int_tc[ech + 1];  // nb total de raccord
-  E_Int nrac_inst = ipt_param_int_tc[ech + 2];  // nb total de raccord instationnaire
-  E_Int timelevel = ipt_param_int_tc[ech + 3];  // nb de pas de temps stocker pour
+  E_Int ech       = param_int_tc[NoTransfert + shift_graph];
+  E_Int dest      = param_int_tc[ech    ];  // processus destination
+  E_Int nrac      = param_int_tc[ech + 1];  // nb total de raccord
+  E_Int nrac_inst = param_int_tc[ech + 2];  // nb total de raccord instationnaire
+  E_Int timelevel = param_int_tc[ech + 3];  // nb de pas de temps stocker pour
                                              // chaque raccord instationnaire
 
-  
   E_Int nrac_steady = nrac - nrac_inst;  // nb total de raccord stationnaire
   E_Int pass_inst_deb=0; 
   E_Int pass_inst_fin=1;
@@ -848,16 +893,15 @@ void K_FASTC::setInterpTransfersInter(
 
   if (nrac_inst > 0) {
    pass_inst_fin=2;
-   nrac_inst_level = ipt_param_int_tc[ech + 4 + it_target + timelevel] - ipt_param_int_tc[ech + 4 + it_target] + 1; 
+   nrac_inst_level = param_int_tc[ech + 4 + it_target + timelevel] - param_int_tc[ech + 4 + it_target] + 1; 
   } 
   
   // on dimension tableau travail pour IBC et pour transfert
-  // E_Int nrac_inst_level = ipt_param_int_tc[ech + 4 + it_target + timelevel] -
-  //                         ipt_param_int_tc[ech + 4 + it_target] + 1;
+  // E_Int nrac_inst_level = param_int_tc[ech + 4 + it_target + timelevel] -
+  //                         param_int_tc[ech + 4 + it_target] + 1;
 
   std::vector<E_Float*> frp(nrac_steady + nrac_inst_level);
 
-  int dest = ipt_param_int_tc[ipt_param_int_tc[NoTransfert + shift_graph]]; 
 
   int rank;
 #ifdef _MPI
@@ -913,8 +957,8 @@ void K_FASTC::setInterpTransfersInter(
         E_Int irac_fin = nrac_steady;
         if ( pass_inst == 1 ) 
         {
-            irac_deb = ipt_param_int_tc[ech + 4 + it_target];
-            irac_fin = ipt_param_int_tc[ech + 4 + it_target + timelevel];
+            irac_deb = param_int_tc[ech + 4 + it_target];
+            irac_fin = param_int_tc[ech + 4 + it_target + timelevel];
         }
 
         for ( E_Int irac = irac_deb; irac < irac_fin; irac++ ) 
@@ -926,7 +970,7 @@ void K_FASTC::setInterpTransfersInter(
 	  E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
 
           //  si incompatibilite pass et typeTransfert, on skippe le raccord
-          E_Int ibcType = ipt_param_int_tc[shift_rac + nrac * 3];
+          E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
 
           if (ibcType > ibcTypeMax){ ibcTypeMax= ibcType;}
           E_Int ibc = 1;
@@ -937,8 +981,8 @@ void K_FASTC::setInterpTransfersInter(
 	  if(exploc == 1)
 	    {
 	      E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;     
-	      E_Int levelD = ipt_param_int_tc[debut_rac + 25];
-	      E_Int levelR = ipt_param_int_tc[debut_rac + 24];
+	      E_Int levelD = param_int_tc[debut_rac + 25];
+	      E_Int levelR = param_int_tc[debut_rac + 24];
 	      E_Int cyclD  = nssiter/levelD;
 
 	      // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse   
@@ -966,7 +1010,7 @@ void K_FASTC::setInterpTransfersInter(
 	    }
            // Sinon, on autorise les transferts  si la zone donneuse a ete modifiee a l'iteration nstep
 	   else {
-                   E_Int NoD      =  ipt_param_int_tc[ shift_rac + nrac*5     ];
+                   E_Int NoD      =  param_int_tc[ shift_rac + nrac*5     ];
                    //if (impli_local[NoD]==1) autorisation_transferts[pass_inst][irac_auto]=1;
                    autorisation_transferts[pass_inst][irac_auto]=1;
                 }
@@ -974,7 +1018,7 @@ void K_FASTC::setInterpTransfersInter(
 	  if (autorisation_transferts[pass_inst][irac_auto]==1)
 	   { 
 	      E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
-	      E_Int nbRcvPts = ipt_param_int_tc[shift_rac + nrac * 10 + 1];
+	      E_Int nbRcvPts = param_int_tc[shift_rac + nrac * 10 + 1];
     
 	      if (nbRcvPts > nbRcvPts_mx) nbRcvPts_mx = nbRcvPts;
 	      has_data_to_send |= (TypeTransfert == ibc);
@@ -1003,8 +1047,8 @@ if (has_data_to_send) {
       E_Int irac_deb = 0;
       E_Int irac_fin = nrac_steady;
       if ( pass_inst == 1 ) {
-          irac_deb = ipt_param_int_tc[ech + 4 + it_target];
-          irac_fin = ipt_param_int_tc[ech + 4 + it_target + timelevel]; }
+          irac_deb = param_int_tc[ech + 4 + it_target];
+          irac_fin = param_int_tc[ech + 4 + it_target + timelevel]; }
 
       for ( E_Int irac = irac_deb; irac < irac_fin; irac++ ) 
       {
@@ -1014,25 +1058,23 @@ if (has_data_to_send) {
 	{ 
 	    E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
       
-	    E_Int nbRcvPts  = ipt_param_int_tc[shift_rac + nrac * 10 + 1];
-	    E_Int nvars_loc = ipt_param_int_tc[shift_rac + nrac * 13 + 1];  // flag raccord rans/LES
-	    E_Int Nozone    = ipt_param_int_tc[shift_rac + nrac * 11 + 1];
+	    E_Int nbRcvPts  = param_int_tc[shift_rac + nrac * 10 + 1];
+	    E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 + 1];  // flag raccord rans/LES
+	    E_Int Nozone    = param_int_tc[shift_rac + nrac * 11 + 1];
 
             // on determine un No zone pipeau pour skipper remplissage inutile en implicit local
-            E_Int NoD       = ipt_param_int_tc[shift_rac + nrac * 5     ];
+            E_Int NoD       = param_int_tc[shift_rac + nrac * 5     ];
             E_Int Nozone_loc   = Nozone; 
             E_Int nbRcvPts_loc = nbRcvPts;
             if (impli_local[NoD] == 0) {Nozone_loc = -999; nbRcvPts_loc=1;}
 
-            //if(Nozone==5 and count_rac==0 and nitrun_loc==0 and TypeTransfert ==1) { Nozone_loc =-1;}
-            //if(Nozone==5 and count_rac==0 and nitrun_loc==1 and TypeTransfert ==1) { Nozone_loc =-2;}
             //if(Nozone==5 and count_rac==0 ) { printf("Nozone_loc %d \n", Nozone_loc);}
 
 	    send_buffer << Nozone_loc;  
 
 	    pck_data.push_back(&send_buffer.push_inplace_array(nvars_loc * nbRcvPts_loc * sizeof(E_Float) ));    
-	    E_Int PtlistDonor  = ipt_param_int_tc[shift_rac + nrac * 12 + 1];
-	    E_Int* ipt_listRcv = ipt_param_int_tc + PtlistDonor;
+	    E_Int PtlistDonor  = param_int_tc[shift_rac + nrac * 12 + 1];
+	    E_Int* ipt_listRcv = param_int_tc + PtlistDonor;
 
 	    send_buffer << CMP::vector_view<E_Int>(ipt_listRcv, nbRcvPts_loc);
 
@@ -1052,8 +1094,8 @@ if (has_data_to_send) {
       E_Int irac_deb = 0;
       E_Int irac_fin = nrac_steady;
       if ( pass_inst == 1 ) {
-          irac_deb = ipt_param_int_tc[ech + 4 + it_target];
-          irac_fin = ipt_param_int_tc[ech + 4 + it_target + timelevel]; }
+          irac_deb = param_int_tc[ech + 4 + it_target];
+          irac_fin = param_int_tc[ech + 4 + it_target + timelevel]; }
 
       for ( E_Int irac = irac_deb; irac < irac_fin; irac++ ) 
       {
@@ -1124,16 +1166,16 @@ if (has_data_to_send) {
                 E_Int irac_fin = nrac_steady;
                 if ( pass_inst == 1 ) 
                 {
-                    irac_deb = ipt_param_int_tc[ech + 4 + it_target];
-                    irac_fin = ipt_param_int_tc[ech + 4 + it_target + timelevel];
+                    irac_deb = param_int_tc[ech + 4 + it_target];
+                    irac_fin = param_int_tc[ech + 4 + it_target + timelevel];
                 }
 
                 for ( E_Int irac = irac_deb; irac < irac_fin; irac++ ) 
                 {
 
                   E_Int shift_rac = ech + 4 + timelevel*2 + irac;
-                  E_Int NoD       = ipt_param_int_tc[shift_rac + nrac * 5 ];
-                  E_Int nvars_loc = ipt_param_int_tc[shift_rac + nrac * 13 +1];  // neq fonction raccord rans/LES
+                  E_Int NoD       = param_int_tc[shift_rac + nrac * 5 ];
+                  E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 +1];  // neq fonction raccord rans/LES
 
                   // on determine un envoi pipeau de taille 1*neq pour skipper remplissage inutile en implicit local
 		  if ( impli_local[NoD]==0)
@@ -1146,15 +1188,15 @@ if (has_data_to_send) {
 		  if (autorisation_transferts[pass_inst][irac_auto]==1 and impli_local[NoD]==1)
 		   {
  
-                   E_Int ibcType = ipt_param_int_tc[shift_rac + nrac * 3];
+                   E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
 
                    E_Int ibc = 1;
 	           if (ibcType < 0) ibc = 0;
 
-                   //E_Int loc       = ipt_param_int_tc[shift_rac + nrac * 9  + 1];  //+1 a cause du nrac mpi
-                   E_Int nbRcvPts  = ipt_param_int_tc[shift_rac + nrac * 10 + 1];
-                   E_Int NoR       = ipt_param_int_tc[shift_rac + nrac * 11 + 1];
-                   E_Int rotation  = ipt_param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
+                   //E_Int loc       = param_int_tc[shift_rac + nrac * 9  + 1];  //+1 a cause du nrac mpi
+                   E_Int nbRcvPts  = param_int_tc[shift_rac + nrac * 10 + 1];
+                   E_Int NoR       = param_int_tc[shift_rac + nrac * 11 + 1];
+                   E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
          
                    E_Float Pr    = param_real[ NoD ][ PRANDT ];
                    E_Float Ts    = param_real[ NoD ][ TEMP0 ];
@@ -1182,18 +1224,18 @@ if (has_data_to_send) {
                    ////
                    ////
                    E_Int pos;
-                   pos               = ipt_param_int_tc[shift_rac + nrac * 7];
-                   E_Int* ntype      = ipt_param_int_tc + pos;
+                   pos               = param_int_tc[shift_rac + nrac * 7];
+                   E_Int* ntype      = param_int_tc + pos;
                    pos               = pos + 1 + ntype[0];
-                   E_Int* types      = ipt_param_int_tc + pos;
-                   pos               = ipt_param_int_tc[shift_rac + nrac * 6];
-                   E_Int* donorPts   = ipt_param_int_tc + pos;
-                   pos               = ipt_param_int_tc[shift_rac + nrac * 8];
-                   E_Float* ptrCoefs = ipt_param_real_tc + pos;
-                   // pos               = ipt_param_int_tc[shift_rac + nrac * 12 + 1];
-                   // E_Int* rcvPts     = ipt_param_int_tc +  pos;
+                   E_Int* types      = param_int_tc + pos;
+                   pos               = param_int_tc[shift_rac + nrac * 6];
+                   E_Int* donorPts   = param_int_tc + pos;
+                   pos               = param_int_tc[shift_rac + nrac * 8];
+                   E_Float* ptrCoefs = param_real_tc + pos;
+                   // pos               = param_int_tc[shift_rac + nrac * 12 + 1];
+                   // E_Int* rcvPts     = param_int_tc +  pos;
          
-                   E_Int nbInterpD = ipt_param_int_tc[shift_rac + nrac];
+                   E_Int nbInterpD = param_int_tc[shift_rac + nrac];
                    E_Float* xPC = NULL;
                    E_Float* xPI = NULL;
                    E_Float* xPW = NULL;
@@ -1259,11 +1301,11 @@ if (has_data_to_send) {
          
                   noi     = shiftDonor;  // compteur sur le tableau d indices donneur
                   indCoef = ( pt_deb - ideb ) * sizecoefs + shiftCoef;
-                  //E_Int NoR = ipt_param_int_tc[shift_rac + nrac * 11 + 1];
-                  //if (ipt_param_int_tc[ech]==0) printf("No rac= %d , NoR= %d, NoD= %d, Ntype= %d, ptdeb= %d, ptfin= %d, NptD= %d, neq= %d, skip= %d, rank= %d, dest= %d,  thread= %d\n",
+                  //E_Int NoR = param_int_tc[shift_rac + nrac * 11 + 1];
+                  //if (param_int_tc[ech]==0) printf("No rac= %d , NoR= %d, NoD= %d, Ntype= %d, ptdeb= %d, ptfin= %d, NptD= %d, neq= %d, skip= %d, rank= %d, dest= %d,  thread= %d\n",
                   //irac, NoR,NoD, ntype[ 1 + ndtyp],pt_deb,pt_fin , 
-                  //ipt_param_int_tc[ shift_rac + nrac*10+1  ], ipt_param_int_tc[ shift_rac + nrac*13+1  ], ipt_param_int_tc[ shift_rac + nrac*15+1  ], 
-                  //rank, ipt_param_int_tc[ ech  ], ithread );
+                  //param_int_tc[ shift_rac + nrac*10+1  ], param_int_tc[ shift_rac + nrac*13+1  ], param_int_tc[ shift_rac + nrac*15+1  ], 
+                  //rank, param_int_tc[ ech  ], ithread );
                   if ( nvars_loc == 5 ) {
 #include "commonInterpTransfersD_reorder_5eq.h"
                         } else if ( nvars_loc == 6 ) {
@@ -1294,8 +1336,8 @@ if (has_data_to_send) {
                                                              nbptslinelets, linelets, indexlinelets );
                   
                   }  // ibc
-	           E_Int PtlistDonor  = ipt_param_int_tc[shift_rac + nrac * 12 + 1];
-	           E_Int* ipt_listRcv = ipt_param_int_tc + PtlistDonor;
+	           E_Int PtlistDonor  = param_int_tc[shift_rac + nrac * 12 + 1];
+	           E_Int* ipt_listRcv = param_int_tc + PtlistDonor;
 
                   //        } //chunk
                   ideb        = ideb + ifin;
@@ -1349,7 +1391,7 @@ if (has_data_to_send) {
 // Retourne une liste de numpy directement des champs interpoles
 // in place + from zone + tc compact
 //=============================================================================
-void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param_int, E_Int*& ipt_param_int_tc, std::pair<RecvQueue*, SendQueue*>*& pair_of_queue_loc) {
+void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param_int, E_Int*& param_int_tc, std::pair<RecvQueue*, SendQueue*>*& pair_of_queue_loc) {
  
   if( nbcom != 0)
   {
