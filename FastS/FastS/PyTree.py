@@ -47,7 +47,7 @@ def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
 #def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1, ucData=None, vtune=None ):
-def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=None, vtune=None ):
+def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=None, vtune=None):
     """Compute a given number of iterations."""
 
     bases  = Internal.getNodesFromType1(t , 'CGNSBase_t')       # noeud
@@ -66,7 +66,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
         
     d = Internal.getNodeFromName1(t, '.Solver#define')
     a = Internal.getNodeFromName1(d, 'temporal_scheme')
-    if(Internal.getValue(a) == 'explicit_local' and layer=="c"):
+    if Internal.getValue(a) == 'explicit_local' and layer=="c":
          print("ERROR(compute.py):: There is a bug with 'explicit_local' & 'c layer'")
          print("ERROR(compute.py):: use 'python layer'...aborting.")
          exit()
@@ -1876,7 +1876,6 @@ def createStressNodes(t, BC=None, windows=None):
                         kfin = dim[2,1]+inck
 
                         #print('subZ', ideb,ifin,jdeb,jfin,kdeb,kfin)
-
                         zp = T.subzone(z, (ideb,jdeb,kdeb), (ifin,jfin,kfin))
                         zp[0] = z[0]+'_'+v[0]+str(inum)
                         inum  += 1
@@ -1887,6 +1886,22 @@ def createStressNodes(t, BC=None, windows=None):
                             c += 1
                         #print('zone name=',zp[0])
                         #print('dim0=',dim[0,0],dim[0,1],dim[1,0],dim[1,1],dim[2,0],dim[2,1])
+
+                        # Recuperation du GridCoordinates#Init si il existe
+                        ci = Internal.getNodeFromName1(z, 'GridCoordinates#Init')
+                        if ci is not None:
+                            cin = Internal.createUniqueChild(z, 'GridCoordinate#Init', 'GridCoordinates_t')
+                            zp[2].append(cin)
+                            n = Internal.getNodeFromName1(ci, 'CoordinateX')
+                            sl = n[1][ideb-1:ifin, jdeb-1:jfin, kdeb-1:kfin]
+                            print(ideb,ifin, sl.shape)
+                            Internal.newDataArray('CoordinateX', value=sl, parent=cin)
+                            n = Internal.getNodeFromName1(ci, 'CoordinateY')
+                            sl = n[1][ideb-1:ifin, jdeb-1:jfin, kdeb-1:kfin]
+                            Internal.newDataArray('CoordinateY', value=sl, parent=cin)
+                            n = Internal.getNodeFromName1(ci, 'CoordinateZ')
+                            sl = n[1][ideb-1:ifin, jdeb-1:jfin, kdeb-1:kfin]
+                            Internal.newDataArray('CoordinateZ', value=sl, parent=cin)
 
                         if idir <= 1:
                             ni1  = nj
@@ -1918,7 +1933,7 @@ def createStressNodes(t, BC=None, windows=None):
 
                         param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
                         if param_int is None:
-                            raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%zp[0])
+                            raise ValueError("_createStressNodes: Parameter_int is missing for zone %s."%zp[0])
 
                         #print('loop effort',imin,imax,jmin,jmax,kmin,kmax)
                         #modifie le moeud param_int de l'arbre teffort (issue de subzone) pour la fonction initNuma
@@ -1979,9 +1994,11 @@ def createStressNodes(t, BC=None, windows=None):
     Internal._rmNodesByName(teff, 'type_zone')
     Internal._rmNodesByName(teff, 'model')
     Internal._rmNodesByName(teff, 'temporal_scheme')
-    Internal._rmNodesByName(teff, 'GridCoordinates#Init')
     Internal._rmNodesByName(teff, 'FlowSolution')
-
+    Internal._rmNodesByName(teff, 'Motion')
+    
+    #Internal._rmNodesByName(teff, 'GridCoordinates#Init')
+    
     return teff
 
 #==============================================================================

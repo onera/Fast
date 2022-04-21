@@ -1724,8 +1724,8 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     ndimface = min(ndimface, 2000000000)
     #si pas de temps local inactif (rk3)
     #if rk!=3 or exploc !=2: ndimface=1
-    if exploc !=1: ndimface=1
-    else: print('taille tab dtloc=%d'%ndimface)
+    if exploc != 1: ndimface=1
+    #else: print('taille tab dtloc=%d'%ndimface)
 
     mx_thread   = OMP_NUM_THREADS       # surdimensionne : doit etre = a OMP_NUM_THREADS
     verrou      = MX_SSZONE*c*MX_SYNCHRO*mx_thread

@@ -33,7 +33,7 @@ except: OMP_NUM_THREADS = 1
 # Initialisation parametre calcul: calcul metric + var primitive + compactage 
 # + alignement + placement DRAM
 #==============================================================================
-def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, SizeBlockTarget=1000,nghost=2):
+def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, SizeBlockTarget=1000, nghost=2, verbose=0):
     """Perform necessary operations for the solver to run."""
 
     # Barriere si version sans FastP
@@ -119,7 +119,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
        for nstep in range(1, int(dtloc[0])+1):
            hook1       = FastC.HOOK.copy()
            distrib_omp = 1
-           hook1.update(FastS.fasts.souszones_list(zones_str, metrics_str, FastC.HOOK, 1, nstep, distrib_omp, 0) )   
+           hook1.update(FastS.fasts.souszones_list(zones_str, metrics_str, FastC.HOOK, 1, nstep, distrib_omp, verbose) )
     
     #init metric 
     FastS.fasts.init_metric(zones_str  , metrics_str  , ompmode)
