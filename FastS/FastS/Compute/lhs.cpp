@@ -82,7 +82,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
       }// test residu
 
 //#pragma omp flush
-//#pragma omp barrier
+#pragma omp barrier
     for (E_Int ntask = 0; ntask < nbtask; ntask++)
       {
         

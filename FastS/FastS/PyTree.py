@@ -1890,11 +1890,10 @@ def createStressNodes(t, BC=None, windows=None):
                         # Recuperation du GridCoordinates#Init si il existe
                         ci = Internal.getNodeFromName1(z, 'GridCoordinates#Init')
                         if ci is not None:
-                            cin = Internal.createUniqueChild(z, 'GridCoordinate#Init', 'GridCoordinates_t')
-                            zp[2].append(cin)
+                            cin = Internal.createUniqueChild(zp, 'GridCoordinates#Init', 'GridCoordinates_t')
+                            cin[2] = []
                             n = Internal.getNodeFromName1(ci, 'CoordinateX')
                             sl = n[1][ideb-1:ifin, jdeb-1:jfin, kdeb-1:kfin]
-                            print(ideb,ifin, sl.shape)
                             Internal.newDataArray('CoordinateX', value=sl, parent=cin)
                             n = Internal.getNodeFromName1(ci, 'CoordinateY')
                             sl = n[1][ideb-1:ifin, jdeb-1:jfin, kdeb-1:kfin]
