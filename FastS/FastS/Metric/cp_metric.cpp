@@ -25,6 +25,10 @@
        	        #pragma omp barrier
                }
               }
+              if( barrier == 1)
+              {
+       	       #pragma omp barrier
+              }
               // loop calcul volume
               barrier = 0;
               for (E_Int nd = 0; nd < nidom; nd++)
@@ -47,16 +51,16 @@
                     }
                    }
                   }
-                 if(nd==nidom-1)
-                   {
-       	           #pragma omp barrier
-                   }
                }//ale
                if(nd == nidom-1 && barrier == 1)
                {
        	         #pragma omp barrier
                }
               }//loop zone
+              if(barrier ==1)
+              {
+       	         #pragma omp barrier
+              }
 
               // loop extrapolation
               for (E_Int nd = 0; nd < nidom; nd++)

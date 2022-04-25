@@ -22,8 +22,9 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
 
     E_Float* ipt_ssor_shift; E_Float* ipt_ssortmp_shift; E_Int ssor_size;
     //calcul residu si necessaire
+    E_Int barrier_residu = 0; 
     if(lssiter_verif ==1 )
-      {    
+      {
        for (E_Int ntask = 0; ntask < nbtask; ntask++)
         {
          E_Int pttask     = ptiter + ntask*(6+Nbre_thread_actif*7);
@@ -81,8 +82,10 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
         }// loop task residu
       }// test residu
 
-//#pragma omp flush
-#pragma omp barrier
+    if(barrier_residu==1)
+    {
+     #pragma omp barrier
+    }
     for (E_Int ntask = 0; ntask < nbtask; ntask++)
       {
         
@@ -154,10 +157,15 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
                   
                         E_Int Nbre_thread_actif_loc1 = ipt_omp[ pttask_loc + 2 + Nbre_thread_actif ];
 
-                        if(nd == nd_loc &&  nd_subzone_loc == 0)
+                        if(nd == nd_loc &&  nd_subzone_loc == 0 && barrier_residu==0 )
                         {
                             for (E_Int th = 0; th < Nbre_thread_actif_loc1; th++) 
-                             { E_Int* verrou_lhs_thread= verrou_lhs + (mx_nidom + ntask_loc)*Nbre_thread_actif + th; verrou_c_( verrou_lhs_thread, type); } 
+                             { 
+                               E_Int shift = (ithread_loc-1 + th)%Nbre_thread_actif_loc1;
+           
+                               E_Int* verrou_lhs_thread= verrou_lhs + (nbtask + ntask_loc)*Nbre_thread_actif + shift; 
+                               verrou_c_( verrou_lhs_thread, type); 
+                             }
                         }
                       }//loop taskloc
 

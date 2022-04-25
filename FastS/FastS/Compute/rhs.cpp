@@ -23,7 +23,8 @@
             E_Int type = 4;
             E_Int* verrou_lhs_thread= verrou_lhs +             ntask*Nbre_thread_actif + ithread_loc -1; 
             verrou_c_( verrou_lhs_thread, type);
-            verrou_lhs_thread       = verrou_lhs + (mx_nidom + ntask)*Nbre_thread_actif + ithread_loc -1; //pour calcul residu avant LU
+            //verrou_lhs_thread       = verrou_lhs + (mx_nidom + ntask)*Nbre_thread_actif + ithread_loc -1; //pour calcul residu avant LU
+            verrou_lhs_thread       = verrou_lhs + (nbtask + ntask)*Nbre_thread_actif + ithread_loc -1; //pour calcul residu avant LU
             verrou_c_( verrou_lhs_thread, type );
 
             E_Int* ipt_lok_thread;

@@ -4,6 +4,7 @@
      E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
 
      //printf("nbtaaask %d %d \n", nbtask, ptiter);
+     E_Int barrier_residu = 0;
      for (E_Int ntask = 0; ntask < nbtask; ntask++)
        {
          E_Int pttask     = ptiter + ntask*(6+Nbre_thread_actif*7);

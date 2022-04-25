@@ -94,6 +94,7 @@ Actions
  
         + 'ausmpred' (see  p49 https://tel.archives-ouvertes.fr/pastel-00834850/document)
         + 'senseur'   (see  p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
+        + 'senseur_hyper' (DNS/LES with shock: see  pdf M. Lugrin)
         + 'roe'
         + default value is 'ausmpred'
 

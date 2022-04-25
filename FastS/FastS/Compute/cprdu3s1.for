@@ -47,8 +47,7 @@ c***********************************************************************
 c Var loc
       logical lcomput
       INTEGER_E l,i,j,k,ne,no_rdm,nd_rdm,i_lu,j_lu,k_lu,it,iunit,
-     & ind_loop_lu(6),imin_lu,jmin_lu,kmin_lu,imax_lu,jmax_lu,kmax_lu,
-     & size_rdm, no_start,no_end 
+     & ind_loop_lu(6), size_rdm, no_start,no_end 
 c     & ii,jj,kk
       REAL_E xinterm(6,2),xp,rmax,rmoy,xro1,xrou1,xrov1,xrow1,xroe1,
      & conv_loo, cut0x
@@ -67,17 +66,6 @@ c     & ndim_rdm,Nbre_thread_actif,nisdom_residu(nitcfg)
 
       conv_loo = ALOG10(epsi)
 
-
-      imin_lu = 1 + ind_loop(1)/size_ssdom(1)
-      imax_lu =  max( 1, ind_loop(2)/size_ssdom(1))
-      jmin_lu = 1 + ind_loop(3)/size_ssdom(2)
-      jmax_lu =  max( 1, ind_loop(4)/size_ssdom(2))
-      kmin_lu = 1 + ind_loop(5)/size_ssdom(3)
-      kmax_lu =  max( 1, ind_loop(6)/size_ssdom(3))
-
-c       write(*,'(a,9i7)')'ssdom=',imin_lu,jmin_lu,kmin_lu,
-c     & imax_lu,jmax_lu,kmax_lu,ndo,nitcfg,nisdom_residu(nitcfg)
-
         if(ndim_rdm.le.Nbre_thread_actif) then
            no_start = ithread
            no_end   = ithread
@@ -88,11 +76,10 @@ c     & imax_lu,jmax_lu,kmax_lu,ndo,nitcfg,nisdom_residu(nitcfg)
            no_end   =    ithread*size_rdm
            if(ithread.eq.Nbre_thread_actif) no_end = ndim_rdm
         endif
+
         DO no_rdm=no_start,no_end
-#include "FastS/Compute/cprdu3s1_incl.for"
+#include   "FastS/Compute/cprdu3s1_incl.for"
         ENDDO
-
-
 
  1000 continue
 

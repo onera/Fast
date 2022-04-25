@@ -498,7 +498,7 @@ else
   //revoir dimension nisdom_lu_max: trop gros
   E_Int mx_nidom   = mx_sszone*nidom; // nombre maximale de domaine une fois la partition Lu local active
 
-  //printf("thread =%d\n",threadmax_sdm);
+  //printf("threadmax = %d  , mx_nidom= %d \n",threadmax_sdm, mx_nidom );
   FldArrayI ijkv_sdm(         3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(         3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
   FldArrayI ind_CL(          24*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();

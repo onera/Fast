@@ -144,9 +144,7 @@ c       endif
          IF (param_int(EXPLOC) .eq. 0) then !!! explicit global ou implicit
 
 
-             IF(nitcfg.eq.1) then
-
-
+            IF(nitcfg.eq.1) then
 
               if(param_int(LALE).eq.1) then ! mise a jour Vent et tijk si mvt corps solide
                 call mjr_ale(ndo,nitcfg, ithread,
@@ -158,14 +156,11 @@ c       endif
      &                        icache, jcache, kcache,
      &                        x,y,z,ti,ti_df,tj,tj_df,tk,tk_df,vol,
      &                        venti, ventj, ventk)
+              endif
 
-                endif
-
-                !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
-                if(param_int(IFLOW).eq.2) then
+              !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
+              if(param_int(IFLOW).eq.2) then
                  
-
-
                  if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
                 
                    if(param_int(ITYPCP).le.1) then 
@@ -175,8 +170,6 @@ c       endif
                      call invist(ndo, param_int, param_real, ind_grad,
      &                           rop_ssiter, xmut )
                    endif
-
-
                  !LES selective mixed scale model
                  else
                    neq_rot = 3
@@ -187,41 +180,35 @@ c       endif
      &                          xmut, rop_ssiter, ti,tj,tk, vol, rot)
                  endif
 
-                elseif(param_int(IFLOW).eq.3) then
+              elseif(param_int(IFLOW).eq.3) then
 
-                !! remplissage tableau xmut si SA uniquememnt. 
-                !! Pour ZDES, remplissage dans terme source 
-                !call vispalart(ndo, param_int, param_real, ind_grad,
-                call vispalart(ndo, param_int, param_real, ind_coe,
+                 !! remplissage tableau xmut si SA uniquememnt. 
+                 !! Pour ZDES, remplissage dans terme source 
+                 !call vispalart(ndo, param_int, param_real, ind_grad,
+                 call vispalart(ndo, param_int, param_real, ind_coe,
      &                         xmut,rop_ssiter)
-
               endif
 
-             !!sinon cfl foireux
-             IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
-#include      "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
-               flag_wait = 1
-             ENDIF
+              !!sinon cfl foireux
+              IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
+#include       "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+                flag_wait = 1
+              ENDIF
 
-             ! Calcul du pas de temps
-             call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
-     &                   flagCellN, param_int, param_real,
-     &                   ind_sdm, ind_grad, ind_coe,
-     &                   cfl, xmut,rop_ssiter, cellN, coe,
-     &                   ti,tj,tk, vol,venti)
-
+              ! Calcul du pas de temps
+              call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
+     &                    flagCellN, param_int, param_real,
+     &                    ind_sdm, ind_grad, ind_coe,
+     &                    cfl, xmut,rop_ssiter, cellN, coe,
+     &                    ti,tj,tk, vol,venti)
            ENDIF!!1ere sous-iteration
-
 
 
          ELSE !!!  explicite local instationnaire
          
-
              IF(mod(nitcfg,cycl).eq.1) then !!! On teste si on est a la premiere ss-ite de la zone
 
-
-
-                if(param_int(LALE).ge.1) then ! mise a jour Vent et tijk
+                if(param_int(LALE).eq.1) then ! mise a jour Vent et tijk si mvt corps solide
                    call mjr_ale(ndo,nitcfg, ithread,
      &                        param_int, param_real,
      &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
@@ -231,63 +218,56 @@ c       endif
      &                        icache, jcache, kcache,
      &                        x,y,z,ti,ti_df,tj,tj_df,tk,tk_df,vol,
      &                        venti, ventj, ventk)
-
                 endif
 
                 !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
                 if(param_int(IFLOW).eq.2) then
                  
-
-
-                if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
+                  if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
                 
-                   if(param_int(ITYPCP).le.1) then 
-                     call invist(ndo, param_int, param_real, ind_coe,
-     &                           rop_ssiter, xmut )
-                   else 
-                     call invist(ndo, param_int, param_real, ind_grad,
-     &                           rop_ssiter, xmut )
-                   endif
+                     if(param_int(ITYPCP).le.1) then 
+                       call invist(ndo, param_int, param_real, ind_coe,
+     &                             rop_ssiter, xmut )
+                     else 
+                       call invist(ndo, param_int, param_real, ind_grad,
+     &                             rop_ssiter, xmut )
+                     endif
+                  !LES selective mixed scale model
+                  else
+#include            "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+                     flag_wait = 1
 
-
-                !LES selective mixed scale model
-                else
-#include          "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
-                   flag_wait = 1
-
-                   neq_rot = 3
-                   depth   = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
-                   call lesvist(ndo, param_int,param_real,neq_rot,depth,
-     &                          ithread,
-     &                          ind_grad, ind_coe, ind_dm_zone,
-     &                          xmut, rop_ssiter, ti,tj,tk, vol, rot)
-                endif
+                     neq_rot = 3
+                     depth   = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
+                     call lesvist(ndo,param_int,param_real,
+     &                            neq_rot,depth,ithread,
+     &                            ind_grad, ind_coe, ind_dm_zone,
+     &                            xmut, rop_ssiter, ti,tj,tk, vol, rot)
+                  endif
 
                 elseif(param_int(IFLOW).eq.3) then
 
-                !! remplissage tableau xmut si SA uniquememnt. 
-                !! Pour ZDES, remplissage dans terme source 
-                !call vispalart(ndo, param_int, param_real, ind_grad,
-                call vispalart(ndo, param_int, param_real, ind_coe,
-     &                         xmut,rop_ssiter)
+                  !! remplissage tableau xmut si SA uniquememnt. 
+                  !! Pour ZDES, remplissage dans terme source 
+                  !call vispalart(ndo, param_int, param_real, ind_grad,
+                  call vispalart(ndo, param_int, param_real, ind_coe,
+     &                           xmut,rop_ssiter)
+                endif
 
-              endif
+               !!sinon cfl foireux
+               IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
+#include        "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+                 flag_wait = 1
+               ENDIF
 
-             !!sinon cfl foireux
-             IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
-#include      "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
-               flag_wait = 1
-             ENDIF
+               ! Calcul du pas de temps
+               call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
+     &                     flagCellN, param_int, param_real,
+     &                     ind_sdm, ind_grad, ind_coe,
+     &                     cfl, xmut,rop_ssiter, cellN, coe,
+     &                     ti,tj,tk, vol,venti)
 
-             ! Calcul du pas de temps
-             call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
-     &                   flagCellN, param_int, param_real,
-     &                   ind_sdm, ind_grad, ind_coe,
-     &                   cfl, xmut,rop_ssiter, cellN, coe,
-     &                   ti,tj,tk, vol,venti)
-
-           ENDIF !!1ere sous-ite de la zone
-
+             ENDIF !!1ere sous-ite de la zone
 
          ENDIF !! fin test explicit local
 

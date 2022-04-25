@@ -25,8 +25,14 @@
          E_Int* ipt_it_temp_ssdom   =  ipt_it_lu_ssdom[nd] + param_int[nd][ MXSSDOM_LU ]*3;
          E_Int* ipt_no_lu           =  ipt_it_lu_ssdom[nd] + param_int[nd][ MXSSDOM_LU ]*4;
 
+
+         //protection pour effet de bord OMP quand grand nombre de thread test souvent le meme verrou
+         if(ndim_rdm < Nbre_thread_actif_loc){barrier_residu=1;}
+         
          if (ithread_loc != -1)
          { 
+           //rhs_begin = omp_get_wtime();
+
            cprdu3s1_(nd,nitcfg, nssiter          , param_int[nd][ NEQ ], param_int[nd][ NDIMDX ], ndim_rdm , nitrun,
                    param_int[nd][ IFLOW ]      , param_int[nd][ ILES ] ,
                    ithread_loc                 , Nbre_thread_actif_loc , omp_mode,
@@ -38,8 +44,11 @@
                    ipt_it_temp_ssdom    , ipt_no_lu            ,
                    iptdrodm + shift_zone   , iptrdm[nd]); 
 
+           //rhs_end = omp_get_wtime();
+           //if(ithread_loc == 1) {printf(" time residu= %g  %d  %d \n",(rhs_end - rhs_begin), nitcfg, ithread);}
+
            //Go verrou residu pour chaque sous zone et chaque thread actif pour ne pas attaquer LU avant fin calcul residu en mode1: 
            E_Int type   = 1;
-           if(ithread_loc != -1){E_Int* verrou_lhs_thread= verrou_lhs +(mx_nidom + ntask)*Nbre_thread_actif + ithread_loc -1; verrou_c_( verrou_lhs_thread, type );}
+           if(ithread_loc != -1){E_Int* verrou_lhs_thread= verrou_lhs +(nbtask + ntask)*Nbre_thread_actif + ithread_loc -1; verrou_c_( verrou_lhs_thread, type );}
          }// test ithread_loc =-1
        }

@@ -116,6 +116,8 @@ void K_FASTC::setInterpTransfersFast(
     E_Int sizecomID  = param_int_tc[3+sizecomIBC];
     E_Int shift_graph = sizecomIBC + sizecomID + 3;
 
+    //printf("VERIF %d %d init= %d , nstep = %d , mpi= %d \n", sizecomID, sizecomIBC, param_int_tc[0], nstep, mpi);
+
     #ifdef _MPI
     //std::pair<RecvQueue*, SendQueue*>* pair_of_queue;
     RecvQueue* pt_rcv_queue     = NULL;
@@ -134,9 +136,10 @@ void K_FASTC::setInterpTransfersFast(
         {
           K_FASTC::del_TransferInter(pair_of_queue);
           K_FASTC::del_TransferInter(pair_of_queue_IBC);
+          //printf("ALLO %d %d init= %d , nstep = %d , mpi= %d \n", sizecomID, sizecomIBC, param_int_tc[0], nstep, mpi);
         }
       //flag transfer initilisé. Remise a zero dans miseAplat.
-      param_int_tc[0]==1;
+      param_int_tc[0]=1;
     }
 
     E_Int nbcomID_S; E_Int nbcomID_U;  E_Int nbcomIBC_S; E_Int pt_debID_S; E_Int pt_debID_U; E_Int pt_debIBC_S;
@@ -250,7 +253,7 @@ void K_FASTC::setInterpTransfersFast(
      if (mpi )
     {
       //comm multi processus: wait + remplissage IBC
-      //  printf("get IBM  %d %d \n", dest, nstep );
+        //printf("get IBM  %d %d %d \n", dest, nstep, nbcomIBC_S );
       //
       K_FASTC::getTransfersInter(nbcomIBC_S, iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
 
@@ -301,7 +304,7 @@ void K_FASTC::setInterpTransfersFast(
             CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
             recv_buffer.irecv();
 
-            //printf("reception ID source  %d %d \n", param_int_tc[pt_debID + ircv], nstep );
+            //printf("reception ID Steady source  %d %d \n", source, nstep );
            }
           for (E_Int ircv = 1; ircv < nbcomID_U +1; ++ircv)
            {
@@ -310,7 +313,7 @@ void K_FASTC::setInterpTransfersFast(
             CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
             recv_buffer.irecv();
 
-            //printf("reception ID source  %d %d \n", param_int_tc[pt_debID + ircv], nstep );
+            //printf("reception ID Unsteady source  %d %d \n", source, nstep );
            }
         }
       else
@@ -337,7 +340,7 @@ void K_FASTC::setInterpTransfersFast(
          E_Int ech  = param_int_tc[ip2p+shift_graph];
          dest       = param_int_tc[ech];
 
-         // printf("rank = %d, dest = %d \n",rank, dest );
+          //printf("rank = %d, dest = %d \n",rank, dest );
          if (dest != rank)  // Inter Process Id
           {             
             TypeTransfert = 0;
@@ -376,10 +379,13 @@ void K_FASTC::setInterpTransfersFast(
     if (mpi)
     {
        //comm multi processus: wait + remplissage ID
-       //printf(" get ID  %d %d \n", dest, nstep );
        //
        E_Int nbcomID = nbcomID_S + nbcomID_U;
+       //printf(" get ID  %d %d \n",  nstep,  nbcomID);
+
        K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_int_tc , pair_of_queue);
+
+       //printf(" apres get ID  %d %d \n", nstep,  nbcomID);
 
        #ifdef TimeShow
         E_Float time_out         = omp_get_wtime();
@@ -477,8 +483,8 @@ void K_FASTC::setInterpTransfersIntra(
   E_Int autorisation_transferts[pass_inst_fin][size_autorisation]; // Pour l explicite local
 
  
-  E_Int rank=0;
-  MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+  //E_Int rank=0;
+  //MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 
   // on dimension tableau travail pour IBC
   E_Int nbRcvPts_mx = 0; E_Int ibcTypeMax=0;
@@ -896,6 +902,8 @@ void K_FASTC::setInterpTransfersInter(
    nrac_inst_level = param_int_tc[ech + 4 + it_target + timelevel] - param_int_tc[ech + 4 + it_target] + 1; 
   } 
   
+  //printf("send %d , nrac= %d , nrac_inst= %d , timelevelNb= %d \n", dest, nrac, nrac_inst, nrac_inst_level);
+
   // on dimension tableau travail pour IBC et pour transfert
   // E_Int nrac_inst_level = param_int_tc[ech + 4 + it_target + timelevel] -
   //                         param_int_tc[ech + 4 + it_target] + 1;
@@ -1432,6 +1440,8 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
 
           recv_size[irac] = recv_listRc[irac].size();
           recv_nvarloc[irac] = recv_frp[irac].size() / recv_size[irac];
+          
+           //printf("Nozone Verif= %d %d %d  \n", recv_nozone[irac],recv_size[irac], irac );
          }
 
 #pragma omp parallel

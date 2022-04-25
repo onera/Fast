@@ -1,25 +1,24 @@
-        nd_rdm = 1
+       nd_rdm = 1
 
-        !no_rdm: mono indice parcours sousbloc
-        k_lu= 1+(no_rdm-1)/(ijkv_lu(1)*ijkv_lu(2))
-        j_lu= 1+(no_rdm-1-ijkv_lu(1)*ijkv_lu(2)*(k_lu-1))/ijkv_lu(1)
-        i_lu= no_rdm-(j_lu-1)*ijkv_lu(1)-(k_lu-1)*ijkv_lu(1)*ijkv_lu(2)
-
-        do while( (no_lu(nd_rdm).ne.no_rdm.and.
+       do while( (no_lu(nd_rdm).ne.no_rdm.and.
      &            nd_rdm.lt.nisdom_residu(nitcfg)) )
-          nd_rdm    =  nd_rdm + 1
-        enddo
+          nd_rdm = nd_rdm + 1
+       enddo
        
-        if(no_lu(nd_rdm).eq.no_rdm) then
-          lcomput=.true.
-        else
-          lcomput=.false.
-        endif
+       if(no_lu(nd_rdm).eq.no_rdm) then
+         lcomput=.true.
+       else
+         lcomput=.false.
+       endif
 
        IF(lcomput) THEN
 
           xinterm = 0.
 
+          !no_rdm: mono indice parcours sousbloc
+          k_lu=1+(no_rdm-1)/(ijkv_lu(1)*ijkv_lu(2))
+          j_lu=1+(no_rdm-1-ijkv_lu(1)*ijkv_lu(2)*(k_lu-1))/ijkv_lu(1)
+          i_lu=no_rdm-(j_lu-1)*ijkv_lu(1)-(k_lu-1)*ijkv_lu(1)*ijkv_lu(2)
 
           ind_loop_lu(1) = 1 + (i_lu-1)*size_ssdom(1)
           ind_loop_lu(3) = 1 + (j_lu-1)*size_ssdom(2)
