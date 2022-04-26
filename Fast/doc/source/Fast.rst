@@ -114,6 +114,7 @@ Actions
 
         + 'none' (no motion)
         + 'rigid' (ALE without deformation see p47 https://tel.archives-ouvertes.fr/tel-01011273/document)
+        + 'deformation' (ALE with deformation)
         + default value is 'none'
 
     - **'time_step'**: 
@@ -157,6 +158,7 @@ Actions
         + 'Euler'
         + 'NSLaminar'
         + 'NSTurbulent'(only Spalart available)
+        + 'LBMLaminar'
         + default value is 'Euler'
 
     - **'prandtltb'**:
@@ -196,6 +198,7 @@ Actions
 
         + 0   
         + 1  (save div(F_Euler-F_viscous) in the FlowSolution#Centers node)
+        + 2  (save dqdt + div(F_Euler-F_viscous) in the FlowSolution#Centers node)
         + default value is 0
 
     - **'source'**: possible values are

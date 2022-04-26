@@ -317,14 +317,22 @@ void K_FASTC::setInterpTransfersFast(
            }
         }
       else
-        {   E_Int nbcomID_tot = nbcomID_S + nbcomID_U;
-            assert(pt_rcv_queue->size() == nbcomID_tot );
+        {   pt_rcv_queue->resize(nbcomID_S);
+            assert(pt_rcv_queue->size() == nbcomID_S );
             for ( auto iterBuf = pt_rcv_queue->begin(); iterBuf != pt_rcv_queue->end(); ++iterBuf )
               {
                 CMP::RecvBuffer& recv_buffer = iterBuf->get_message_buffer();
                 recv_buffer.irecv();
-
                 //printf("reception ID OLD     %d  \n", nstep );
+              }
+            for (E_Int ircv = 1; ircv < nbcomID_U +1; ++ircv)
+              {
+                 E_Int source = param_int_tc[ pt_debID_U + ircv];
+                 pt_rcv_queue->emplace_back( source , 405);
+                 CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
+                 recv_buffer.irecv();
+
+                //printf("reception ID Unsteady source  %d %d \n", source, nstep );
               }
         }
 
