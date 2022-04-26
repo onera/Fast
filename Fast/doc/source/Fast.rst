@@ -109,6 +109,11 @@ Actions
 
         + 0 : correction for speed only
         + 1 : correction for speed, density and pressure
+
+    - **'coef_hyper'**:  only valid for 'senseur_hyper' scheme. Possible values are
+
+        + [coeff1, coeff2] (see pdf M. Lugrin)
+        + default value are [0.009, 0.015]
         
     - **'motion'**: possible values are
 
