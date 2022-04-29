@@ -54,8 +54,8 @@ Actions
 
     - **'temporal_scheme'**: possible values are
 
-        + 'explicit' (RK3 scheme, see p49 http://publications.onera.fr/exl-php/util/documents/accede_document.php )
-        + 'implicit' (BDF2 or BDF1 if local time stepping  )
+        + 'explicit' (RK3 scheme, see p49 http://publications.onera.fr/exl-php/util/documents/accede_document.php)
+        + 'implicit' (BDF2 or BDF1 if local time stepping)
         + 'implicit_local' (see p107 http://publications.onera.fr/exl-php/docs/ILS_DOC/227155/DOC356618_s1.pdf)
         + default value is 'implicit'
 
@@ -92,9 +92,9 @@ Actions
 
     - **'scheme'**: possible values are
  
-        + 'ausmpred' (see  p49 https://tel.archives-ouvertes.fr/pastel-00834850/document)
-        + 'senseur'   (see  p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
-        + 'senseur_hyper' (DNS/LES with shock: see  pdf M. Lugrin)
+        + 'ausmpred' (see p49 https://tel.archives-ouvertes.fr/pastel-00834850/document)
+        + 'senseur'   (for DNS/LES, see p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
+        + 'senseur_hyper' (for DNS/LES with shock, see :download:`Lugrin scheme <documents/SCHEMA_lugrin.pdf>`)
         + 'roe'
         + default value is 'ausmpred'
 

@@ -93,6 +93,7 @@ then
     sed -i 's/Fast.Fast/Fast/g' build/Fast.html
     cp build/Fast.html $DEST
     cp build/Fast.pdf $DEST
+    cp -rf source/documents $DEST/
 fi
 
 # Copie des release Notes
