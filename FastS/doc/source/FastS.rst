@@ -271,7 +271,7 @@ Post
 
 ----------------------------------------------------
 
-.. py:function:: FastS.PyTree._computeStress(t, teff, metrics)
+.. py:function:: FastS.PyTree._computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.))
 
     Compute in teff (in place) data related to a list of Boundary conditions defined by FastS._createStressNodes.
 
@@ -281,6 +281,8 @@ Post
     :type teff: pyTree
     :param metrics: metrics of t
     :type metrics: metrics
+    :param xyz_ref: reference point for momentum computation
+    :type xyz_ref: tupple of 3 floats
     :return: effort
     :rtype: list
 

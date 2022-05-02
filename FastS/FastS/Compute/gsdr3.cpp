@@ -268,7 +268,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 
                    // calcul metric si maillage deformable
                    //  
-#include           "Metric/cp_metric.cpp"
+#include           "FastS/Metric/cp_metric.cpp"
                    }
 
         //---------------------------------------------------------------------
@@ -298,7 +298,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
             if(param_int[n][ KFLUDOM ]==2){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*3;}
             if(param_int[n][ KFLUDOM ]==8){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*4;}
           }
-#include "Compute/rhs.cpp"
+#include "FastS/Compute/rhs.cpp"
           }
 
 #ifdef _WIN32
@@ -318,17 +318,18 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 
           if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1)
 	  {
-#include   "Compute/Linear_solver/lhs.cpp"
+#include   "FastS/Compute/Linear_solver/lhs.cpp"
           }
+
 
 
           // LUSGS
           else
 	  { 
-#include   "Compute/lhs.cpp"
+#include   "FastS/Compute/lhs.cpp"
 
 #ifdef Conservatif
-#include   "Compute/conservatif.cpp"
+#include   "FastS/Compute/conservatif.cpp"
 #endif
           }
 
@@ -367,7 +368,7 @@ E_Int nitcfg_stk = nitcfg;
 if(lexit_lu ==0 && layer_mode==1)
 {   
   //remplissage ghost transfert
-  #include "Compute/transfert_multiblock.cpp"
+  #include "FastS/Compute/transfert_multiblock.cpp"
   //E_Int cycl;
  
   for (E_Int nd = 0; nd < nidom; nd++)
@@ -391,7 +392,7 @@ if(lexit_lu ==0 && layer_mode==1)
 //calcul sequentiel flux IBM et data CLs (lund, wallmodel) a toutes les ssiter
 for (E_Int nd = 0; nd < nidom; nd++)
   {
-     #include  "Compute/data_ibm_bc.cpp"
+     #include  "FastS/Compute/data_ibm_bc.cpp"
   }//loop zone
  
 
@@ -419,7 +420,7 @@ E_Int lrhs=0; E_Int lcorner=0;
    //
    if(lexit_lu ==0 && layer_mode==1)
    { 
-    #include   "Compute/bcs.cpp"
+    #include   "FastS/Compute/bcs.cpp"
    }
 
    #pragma omp for
@@ -463,9 +464,8 @@ E_Int lrhs=0; E_Int lcorner=0;
 
   nitcfg = nitcfg_stk;
 
-
 #ifdef Conservatif
-#include "Compute/postIBM.cpp"
+#include "FastS/Compute/postIBM.cpp"
 #endif
 
     //

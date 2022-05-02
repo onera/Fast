@@ -23,13 +23,11 @@
             E_Int type = 4;
             E_Int* verrou_lhs_thread= verrou_lhs +             ntask*Nbre_thread_actif + ithread_loc -1; 
             verrou_c_( verrou_lhs_thread, type);
-            //verrou_lhs_thread       = verrou_lhs + (mx_nidom + ntask)*Nbre_thread_actif + ithread_loc -1; //pour calcul residu avant LU
             verrou_lhs_thread       = verrou_lhs + (nbtask + ntask)*Nbre_thread_actif + ithread_loc -1; //pour calcul residu avant LU
             verrou_c_( verrou_lhs_thread, type );
 
-            E_Int* ipt_lok_thread;
             //  Revoir cet adressage si scater et  socket>1 et ou nidom >1
-            ipt_lok_thread   = ipt_lok   + ntask*mx_synchro*Nbre_thread_actif;
+            E_Int* ipt_lok_thread   = ipt_lok   + ntask*mx_synchro*Nbre_thread_actif;
 
             E_Int* ipt_ind_dm_loc         = ipt_ind_dm[nd]  + (nitcfg-1)*6*param_int[nd][ MXSSDOM_LU ] + 6*nd_subzone;      //ind_dm(6, < ssdom_lu,nssiter)
             E_Float* ipt_cfl_thread       = ipt_cfl         + (ithread_loc-1)*3+ ndo*3*Nbre_thread_actif;

@@ -13,17 +13,12 @@
               E_Int barrier = 0;
               for (E_Int nd = 0; nd < nidom; nd++)
               {
-               if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
-               {
-                 barrier = 1;
-#                include "FastS/Metric/indice_omp1.h" 
-                 cp_tijk_( param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], ind_mtr);
-
-               }
-               if (nd == nidom-1 && barrier == 1)
-               {
-       	        #pragma omp barrier
-               }
+                 if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
+                 {
+                   barrier = 1;
+#                  include "FastS/Metric/indice_omp1.h" 
+                   cp_tijk_( param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], ind_mtr);
+                 }
               }
               if( barrier == 1)
               {
@@ -33,29 +28,25 @@
               barrier = 0;
               for (E_Int nd = 0; nd < nidom; nd++)
               {
-               if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
-               {
-                 barrier = 1;
-#                include "FastS/Metric/indice_omp1.h" 
-                 cp_vol_(  param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], ind_mtr);
+                 if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
+                 {
+                   barrier = 1;
+#                  include "FastS/Metric/indice_omp1.h" 
+                   cp_vol_(  param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], ind_mtr);
 
-                 for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
-                  for (E_Int j = ind_mtr[2]; j <= ind_mtr[3]; j++){ 
-                   for (E_Int i = ind_mtr[0]; i <= ind_mtr[1]; i++){ 
+                   for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
+                    for (E_Int j = ind_mtr[2]; j <= ind_mtr[3]; j++){ 
+                     for (E_Int i = ind_mtr[0]; i <= ind_mtr[1]; i++){ 
 
-                     E_Int l =  (i+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR]
-                              + (j+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR+1]
-                              + (k+ param_int[nd][NIJK_MTR+4]-1)*param_int[nd][NIJK_MTR+2];
+                       E_Int l =  (i+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR]
+                                + (j+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR+1]
+                                + (k+ param_int[nd][NIJK_MTR+4]-1)*param_int[nd][NIJK_MTR+2];
 
-                     iptvol[nd][l] = K_FUNC::E_max(iptvol[nd][l], 1.e-30);
+                       iptvol[nd][l] = K_FUNC::E_max(iptvol[nd][l], 1.e-30);
+                      }
+                     }
                     }
-                   }
-                  }
-               }//ale
-               if(nd == nidom-1 && barrier == 1)
-               {
-       	         #pragma omp barrier
-               }
+                 }//ale
               }//loop zone
               if(barrier ==1)
               {
