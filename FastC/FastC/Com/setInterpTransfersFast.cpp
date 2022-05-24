@@ -40,7 +40,7 @@ using namespace K_FLD;
 
 #include <iostream>
 #include <fstream>
-#include <string> 
+#include <string>
 #include <iomanip>
 #include <sstream>
 
@@ -218,8 +218,8 @@ void K_FASTC::setInterpTransfersFast(
         if (dest != rank)  // Inter Process ibc
         {
           nb_send_buffer += 1;
-          TypeTransfert = 1;  
-          #ifdef _MPI      
+          TypeTransfert = 1;
+          #ifdef _MPI
           //printf("inter IBM  %d %d \n", dest, nstep );
           K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
                                            param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
@@ -339,7 +339,7 @@ void K_FASTC::setInterpTransfersFast(
 
       #ifdef TimeShow
        E_Float time_out = omp_get_wtime();
-       ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;  
+       ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;
       #endif
 
       int cpt_send_buffer = 0;
@@ -350,7 +350,7 @@ void K_FASTC::setInterpTransfersFast(
 
           //printf("rank = %d, dest = %d \n",rank, dest );
          if (dest != rank)  // Inter Process Id
-          {             
+          {
             TypeTransfert = 0;
             cpt_send_buffer += 1;
             //printf(" inter ID  %d %d \n", dest, nstep );
@@ -361,7 +361,7 @@ void K_FASTC::setInterpTransfersFast(
           }
         }//loop ip2p
     } // Endif MPI
-    #endif 
+    #endif
 
 
     //comm local pour recouvrememnt
@@ -370,7 +370,7 @@ void K_FASTC::setInterpTransfersFast(
       E_Int ech  = param_int_tc[ip2p+shift_graph];
       dest       = param_int_tc[ech];
       if (dest == rank)  // Intra Process Id
-      {        
+      {
         TypeTransfert = 0;
         K_FASTC::setInterpTransfersIntra(iptro_tmp, vartype   , param_int_tc, param_real_tc ,
                                          param_int, param_real,  ipt_omp    ,linelets_int, linelets_real, TypeTransfert , it_target, nidom, ip2p, 
@@ -430,7 +430,7 @@ void K_FASTC::setInterpTransfersIntra(
     E_Int& TypeTransfert, E_Int& it_target, E_Int& nidom, E_Int& NoTransfert,
     E_Float*& ipt_timecount, E_Int& nstep, E_Int& nssiter, E_Int& rk, E_Int& exploc, E_Int& num_passage)
 {
-  
+
 #ifdef TimeShow
   E_Float time_in = omp_get_wtime();
 #endif
@@ -448,7 +448,7 @@ void K_FASTC::setInterpTransfersIntra(
     nvars = param_int[0][NEQ_LBM];
   else
     nvars = 6;
-  
+
   E_Int* ipt_cnd = NULL;  // ONLY FOR STRUCTURED
   
   E_Int sizecomIBC = param_int_tc[2];
@@ -463,7 +463,7 @@ void K_FASTC::setInterpTransfersIntra(
   E_Int nrac_steady   = nrac - nrac_inst;        // nb total de raccord stationnaire
 
   //gestion nombre de pass pour raccord instationnaire
-  E_Int pass_inst_deb=0; 
+  E_Int pass_inst_deb=0;
   E_Int pass_inst_fin=1;
 
   if (nrac_inst > 0) pass_inst_fin=2;
@@ -490,19 +490,19 @@ void K_FASTC::setInterpTransfersIntra(
 
   E_Int autorisation_transferts[pass_inst_fin][size_autorisation]; // Pour l explicite local
 
- 
+
   //E_Int rank=0;
   //MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 
   // on dimension tableau travail pour IBC
   E_Int nbRcvPts_mx = 0; E_Int ibcTypeMax=0;
-  for (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++) 
+  for (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++)
   {
     E_Int irac_deb = 0;
     E_Int irac_fin = nrac_steady;
     if(pass_inst == 1){ irac_deb = param_int_tc[ ech + 4 + it_target ]; irac_fin = param_int_tc[ ech + 4 + it_target + timelevel ]; }
 
-   for (E_Int irac = irac_deb; irac < irac_fin; irac++) 
+   for (E_Int irac = irac_deb; irac < irac_fin; irac++)
     {
       E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
 
@@ -527,13 +527,13 @@ void K_FASTC::setInterpTransfersIntra(
 	  E_Int levelR = param_int_tc[debut_rac + 24];
 	  E_Int cyclD  = nssiter/levelD;
 
-	  // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse   
-	  if (levelD > levelR and num_passage == 1)		
+	  // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse
+	  if (levelD > levelR and num_passage == 1)
 	    {
 	      if (nstep%cyclD==cyclD-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1)) { autorisation_transferts[pass_inst][irac_auto]=1; }
 	    }
 	  // Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
-	  else if (levelD < levelR and num_passage == 1) 
+	  else if (levelD < levelR and num_passage == 1)
 	    {
 	      if (nstep%cyclD==1 or nstep%cyclD==cyclD/4 or nstep%cyclD== cyclD/2-1 or nstep%cyclD== cyclD/2+1 or nstep%cyclD== cyclD/2+cyclD/4 or nstep%cyclD== cyclD-1)
 		{ autorisation_transferts[pass_inst][irac_auto]=1; }
@@ -544,7 +544,7 @@ void K_FASTC::setInterpTransfersIntra(
 	      if (nstep%cyclD==cyclD/2-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==0) or nstep%cyclD==cyclD-1)
 		{ autorisation_transferts[pass_inst][irac_auto]=1; }
 	    }
-	  // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse (cas du deuxieme passage)   
+	  // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse (cas du deuxieme passage)
 	  else if (levelD == levelR and num_passage == 2)
 	    {
 	      if (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1) { autorisation_transferts[pass_inst][irac_auto]=1; }
@@ -572,9 +572,9 @@ void K_FASTC::setInterpTransfersIntra(
   if (r != 0) size = size + 8 - r;  // on rajoute du bas pour alignememnt 64bits
   if (ibcTypeMax <= 1) size = 0;        // tableau inutile
 
-  FldArrayF tmp(size * 14 * threadmax_sdm);
+  FldArrayF tmp(size * 17 * threadmax_sdm);
   E_Float* ipt_tmp = tmp.begin();
- 	
+
 
 //# pragma omp parallel default(shared)  num_threads(1)
 #pragma omp parallel default(shared)
@@ -601,10 +601,10 @@ void K_FASTC::setInterpTransfersIntra(
     E_Int count_racIBC = 0;
 
      for  (E_Int ipass_typ=pass_deb; ipass_typ< pass_fin; ipass_typ++)
-     {    
+     {
       // 1ere pass_inst: les raccord fixe
       // 2eme pass_inst: les raccord instationnaire
-      for (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++) 
+      for (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++)
       {
         //  printf("pass %d %d %d %d \n", rank ,ipass_typ, pass_inst, it_target ); 
         // printf("ipass_inst = %d, level= %d \n",  ipass_inst, nrac_inst_level
@@ -618,13 +618,13 @@ void K_FASTC::setInterpTransfersIntra(
 
         // printf("iracdeb=  %d, iracfin= %d \n", irac_deb, irac_fin  );
         for (E_Int irac = irac_deb; irac < irac_fin; irac++) {
-	  
+
 	 E_Int irac_auto= irac-irac_deb;
 	 if (autorisation_transferts[pass_inst][irac_auto]==1)
 	  {
 
           E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
-          //printf("ipass_typ = %d, pass_inst= %d, irac=  %d, ithread= %d \n", ipass_typ,pass_inst,irac , ithread ); 
+          //printf("ipass_typ = %d, pass_inst= %d, irac=  %d, ithread= %d \n", ipass_typ,pass_inst,irac , ithread );
           // ipass_typ,ipass_inst,irac , ithread );
           E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
           E_Int ibc = 1;
@@ -642,7 +642,7 @@ void K_FASTC::setInterpTransfersIntra(
           E_Float cv    = param_real[ NoD ][ CVINF ];
           E_Float gamma = param_real[ NoD ][ GAMMA ];
 
-          E_Int meshtype = param_int[ NoD ][ MESHTYPE ] ; 
+          E_Int meshtype = param_int[ NoD ][ MESHTYPE ] ;
 
           E_Int cnNfldD = 0;
           E_Int* ptrcnd = NULL;
@@ -654,11 +654,11 @@ void K_FASTC::setInterpTransfersIntra(
             vectOfRcvFields[eq] = ipt_ro[NoR] + eq * param_int[NoR][ NDIMDX];
             vectOfDnrFields[eq] = ipt_ro[NoD] + eq * param_int[NoD][ NDIMDX];
           }
-          imd = param_int[ NoD ][NIJK  ];  
+          imd = param_int[ NoD ][NIJK  ];
           jmd = param_int[ NoD ][NIJK+1];
           // }
 
-          imdjmd = imd * jmd;          
+          imdjmd = imd * jmd;
 
           ////
           //  Interpolation parallele
@@ -682,21 +682,21 @@ void K_FASTC::setInterpTransfersIntra(
           E_Float* densPtr = NULL;
           E_Float* linelets    = NULL;
           E_Int* indexlinelets = NULL;
-          E_Int nbptslinelets  = 0;      
-          if (ibc == 1) {            
+          E_Int nbptslinelets  = 0;
+          if (ibc == 1) {
             xPC = ptrCoefs + nbInterpD;
             xPI = ptrCoefs + nbInterpD + 3 * nbRcvPts;
             xPW = ptrCoefs + nbInterpD + 6 * nbRcvPts;
             densPtr = ptrCoefs + nbInterpD + 9 * nbRcvPts;
 
             if (linelets_int != NULL )
-               {                        
+               {
                nbptslinelets        = linelets_int[0];
                E_Int addrlinelets   = linelets_int[count_racIBC + 3 ];
                linelets             = linelets_real + addrlinelets;
                indexlinelets        = linelets_int + linelets_int[1]+1 + 3;
-               count_racIBC         = count_racIBC + 1;               
-               }                     
+               count_racIBC         = count_racIBC + 1;
+               }
           }
 
           E_Int ideb = 0;
@@ -710,7 +710,7 @@ void K_FASTC::setInterpTransfersIntra(
             SIZECF(type, meshtype, sizecoefs);
             ifin = ifin + ntype[1 + ndtyp];
 
-            
+
             // // *      New school: meilleur equilibrage, mais gestion looop
             // dynamique rame...
             // // *
@@ -733,7 +733,7 @@ void K_FASTC::setInterpTransfersIntra(
             //         #pragma omp for nowait schedule(dynamic,1)
             //         for (E_Int nd = 0; nd < Nbchunk; nd++)
             //         {
-            
+
             E_Int pt_deb, pt_fin;
 
             /// oldschool
@@ -780,24 +780,24 @@ void K_FASTC::setInterpTransfersIntra(
                       indCoef   = (pt_deb-ideb)*sizecoefs +  shiftCoef;
                       if     (nvars_loc==5)
                       {
-            #           include "commonInterpTransfers_reorder_5eq.h" 
+            #           include "commonInterpTransfers_reorder_5eq.h"
                       }
                       else if(nvars_loc==6)
                       {
-            #           include "commonInterpTransfers_reorder_6eq.h" 
+            #           include "commonInterpTransfers_reorder_6eq.h"
                       }
                       else
                       {
 			//            #           include "LBM/commonInterpTransfers_reorder_neq.h"
                       }
-                       
+
                       // Prise en compte de la periodicite par rotation
                       if (rotation == 1)
                       {
                        E_Float* angle = ptrCoefs + nbInterpD;
             #          include "includeTransfers_rotation.h"
                       }
-                      // ibc    
+                      // ibc
                       if (ibc == 1)
                       {                                                                                
                           K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread,
@@ -811,7 +811,7 @@ void K_FASTC::setInterpTransfersIntra(
                                                                  vectOfDnrFields, vectOfRcvFields,
                                                                  nbptslinelets, linelets, indexlinelets);
                         
-                      }//ibc          
+                      }//ibc
                       //*
                       //        } //chunk
                       //*/
@@ -819,21 +819,21 @@ void K_FASTC::setInterpTransfersIntra(
                       shiftCoef  = shiftCoef   +  ntype[1+ndtyp]*sizecoefs; //shift coef   entre 2 types successif
                       shiftDonor= shiftDonor +  ntype[1+ndtyp];           //shift donor entre 2 types successif
 
-                   }// type 
+                   }// type
               #pragma omp barrier 
 	          } //autorisation transfert
                 }//irac
                }//pass_inst
-              #pragma omp barrier 
+              #pragma omp barrier
     }  // ipass
   }    // omp
-  
+
 #ifdef TimeShow
   E_Float time_out = omp_get_wtime();
   ipt_timecount[1] = ipt_timecount[1] + time_out - time_in;
   time_in = omp_get_wtime();
 #endif
-  
+
   delete[] ipt_cnd;
   // return varType;
 }
@@ -856,7 +856,7 @@ void K_FASTC::setInterpTransfersInter(
 {
 #ifdef TimeShow
     E_Float time_in = omp_get_wtime();
-#endif    
+#endif
 
   E_Int pass_deb, pass_fin, etiquette;
   if (TypeTransfert == 0) {
@@ -897,7 +897,7 @@ void K_FASTC::setInterpTransfersInter(
                                              // chaque raccord instationnaire
 
   E_Int nrac_steady = nrac - nrac_inst;  // nb total de raccord stationnaire
-  E_Int pass_inst_deb=0; 
+  E_Int pass_inst_deb=0;
   E_Int pass_inst_fin=1;
   E_Int nrac_inst_level = 0;
 
@@ -933,7 +933,7 @@ void K_FASTC::setInterpTransfersInter(
 
   // Preparation du buffer d'envoi :
   CMP::SendBuffer& send_buffer = *(*pt_snd_queue)[nb_send_buffer-1].message_buffer;//back_message_buffer();
-  
+
   // A partir d'ici pour allouer les tableaux a� remplir
   std::vector<CMP::SendBuffer::PackedData*> pck_data;
 
@@ -966,22 +966,22 @@ void K_FASTC::setInterpTransfersInter(
   E_Int count_rac = 0;
   E_Int nbRcvPts_mx = 0;
   E_Int ibcTypeMax  = 0;
-  
-  for  (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++) 
+
+  for  (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++)
     {
         E_Int irac_deb = 0;
         E_Int irac_fin = nrac_steady;
-        if ( pass_inst == 1 ) 
+        if ( pass_inst == 1 )
         {
             irac_deb = param_int_tc[ech + 4 + it_target];
             irac_fin = param_int_tc[ech + 4 + it_target + timelevel];
         }
 
-        for ( E_Int irac = irac_deb; irac < irac_fin; irac++ ) 
+        for ( E_Int irac = irac_deb; irac < irac_fin; irac++ )
         {
-        
+
 	  E_Int irac_auto= irac-irac_deb;
-	  autorisation_transferts[pass_inst][irac_auto]=0;	  
+	  autorisation_transferts[pass_inst][irac_auto]=0;
 
 	  E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
 
@@ -996,18 +996,18 @@ void K_FASTC::setInterpTransfersInter(
 
 	  if(exploc == 1)
 	    {
-	      E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;     
+	      E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
 	      E_Int levelD = param_int_tc[debut_rac + 25];
 	      E_Int levelR = param_int_tc[debut_rac + 24];
 	      E_Int cyclD  = nssiter/levelD;
 
-	      // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse   
-	      if (levelD > levelR and num_passage == 1)		
+	      // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse
+	      if (levelD > levelR and num_passage == 1)
 		{
 		  if (nstep%cyclD==cyclD-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1)){autorisation_transferts[pass_inst][irac_auto]=1;}
 		}
 	      // Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
-	      else if (levelD < levelR and num_passage == 1) 
+	      else if (levelD < levelR and num_passage == 1)
 		{
 		  if (nstep%cyclD==1 or nstep%cyclD==cyclD/4 or nstep%cyclD== cyclD/2-1 or nstep%cyclD== cyclD/2+1 or nstep%cyclD== cyclD/2+cyclD/4 or nstep%cyclD== cyclD-1)
                      {autorisation_transferts[pass_inst][irac_auto]=1;}
@@ -1016,9 +1016,9 @@ void K_FASTC::setInterpTransfersInter(
 	      else if (levelD == levelR and num_passage == 1)
 		{
 		  if (nstep%cyclD==cyclD/2-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==0) or nstep%cyclD==cyclD-1) { autorisation_transferts[pass_inst][irac_auto]=1; }
-		  
+
 		}
-	      // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse (cas du deuxieme passage)   
+	      // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse (cas du deuxieme passage)
 	      else if (levelD ==  levelR and num_passage == 2)
 		{
 		  if (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1){autorisation_transferts[pass_inst][irac_auto]=1;}
@@ -1032,18 +1032,18 @@ void K_FASTC::setInterpTransfersInter(
                 }
 	  
 	  if (autorisation_transferts[pass_inst][irac_auto]==1)
-	   { 
+	   {
 	      E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
 	      E_Int nbRcvPts = param_int_tc[shift_rac + nrac * 10 + 1];
-    
+
 	      if (nbRcvPts > nbRcvPts_mx) nbRcvPts_mx = nbRcvPts;
 	      has_data_to_send |= (TypeTransfert == ibc);
 	      //has_data_to_send = true;
 	      count_rac += 1;
 
-	     }// autorisation transfert	
+	     }// autorisation transfert
         } // irac
-    }  // pas inst 
+    }  // pas inst
 
 
 if (has_data_to_send) {
@@ -1052,12 +1052,12 @@ if (has_data_to_send) {
  ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
  time_in  = omp_get_wtime();
 #endif
-    
+
 
     send_buffer << count_rac;
 
     count_rac = 0;
-    
+
     for (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++)
     {
       E_Int irac_deb = 0;
@@ -1066,14 +1066,14 @@ if (has_data_to_send) {
           irac_deb = param_int_tc[ech + 4 + it_target];
           irac_fin = param_int_tc[ech + 4 + it_target + timelevel]; }
 
-      for ( E_Int irac = irac_deb; irac < irac_fin; irac++ ) 
+      for ( E_Int irac = irac_deb; irac < irac_fin; irac++ )
       {
-	
+
 	E_Int irac_auto= irac-irac_deb;
 	if (autorisation_transferts[pass_inst][irac_auto]==1)
 	{ 
 	    E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
-      
+
 	    E_Int nbRcvPts  = param_int_tc[shift_rac + nrac * 10 + 1];
 	    E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 + 1];  // flag raccord rans/LES
 	    E_Int Nozone    = param_int_tc[shift_rac + nrac * 11 + 1];
@@ -1113,32 +1113,32 @@ if (has_data_to_send) {
           irac_deb = param_int_tc[ech + 4 + it_target];
           irac_fin = param_int_tc[ech + 4 + it_target + timelevel]; }
 
-      for ( E_Int irac = irac_deb; irac < irac_fin; irac++ ) 
+      for ( E_Int irac = irac_deb; irac < irac_fin; irac++ )
       {
 	E_Int irac_auto= irac-irac_deb;
 	if (autorisation_transferts[pass_inst][irac_auto]==1)
-	 { 
+	 {
 	    E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
 
 	    frp[count_rac] = pck_data[count_rac]->data<E_Float>();
 	    count_rac += 1;
 	  }// autorisation transfert
       } // irac
-    } // pass_inst   
+    } // pass_inst
   } // if has data to send
 
 #ifdef TimeShow
     E_Float time_out = omp_get_wtime();
     ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
     time_in  = omp_get_wtime();
-#endif    
+#endif
 
   E_Int size = (nbRcvPts_mx / threadmax_sdm) + 1;  // on prend du gras pour gerer le residus
   E_Int r = size % 8;
   if (r != 0) size = size + 8 - r;  // on rajoute du bas pour alignememnt 64bits
   if (ibcTypeMax <= 1) size = 0;        // tableau inutile
 
-  FldArrayF tmp(size * 14 * threadmax_sdm);
+  FldArrayF tmp(size * 17 * threadmax_sdm);
   E_Float* ipt_tmp = tmp.begin();
 
   // // tableau temporaire pour utiliser la routine commune
@@ -1170,7 +1170,7 @@ if (has_data_to_send) {
 
     E_Int count_racIBC = 0;
 
-    for ( E_Int ipass_typ = pass_deb; ipass_typ < pass_fin; ipass_typ++ ) 
+    for ( E_Int ipass_typ = pass_deb; ipass_typ < pass_fin; ipass_typ++ )
         {
             // 1ere pass_inst: les raccord fixe
             // 2eme pass_inst: les raccord instationnaire
@@ -1180,13 +1180,13 @@ if (has_data_to_send) {
             {
                 E_Int irac_deb = 0;
                 E_Int irac_fin = nrac_steady;
-                if ( pass_inst == 1 ) 
+                if ( pass_inst == 1 )
                 {
                     irac_deb = param_int_tc[ech + 4 + it_target];
                     irac_fin = param_int_tc[ech + 4 + it_target + timelevel];
                 }
 
-                for ( E_Int irac = irac_deb; irac < irac_fin; irac++ ) 
+                for ( E_Int irac = irac_deb; irac < irac_fin; irac++ )
                 {
 
                   E_Int shift_rac = ech + 4 + timelevel*2 + irac;
@@ -1203,7 +1203,7 @@ if (has_data_to_send) {
 		  E_Int irac_auto = irac-irac_deb;
 		  if (autorisation_transferts[pass_inst][irac_auto]==1 and impli_local[NoD]==1)
 		   {
- 
+
                    E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
 
                    E_Int ibc = 1;
@@ -1213,7 +1213,7 @@ if (has_data_to_send) {
                    E_Int nbRcvPts  = param_int_tc[shift_rac + nrac * 10 + 1];
                    E_Int NoR       = param_int_tc[shift_rac + nrac * 11 + 1];
                    E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
-         
+
                    E_Float Pr    = param_real[ NoD ][ PRANDT ];
                    E_Float Ts    = param_real[ NoD ][ TEMP0 ];
                    E_Float Cs    = param_real[ NoD ][ CS ];
@@ -1224,7 +1224,7 @@ if (has_data_to_send) {
                    E_Int meshtype = 1;  // ONLY FOR STRUCTURE ipt_ndimdxD[NoD + nidom*6];
                    E_Int cnNfldD  = 0;
                    E_Int* ptrcnd  = NULL;
-         
+
                    // printf("navr_loc %d %d %d \n", nvars_loc, nvars, Rans);
                    for (E_Int eq = 0; eq < nvars_loc; eq++) {
                      vectOfRcvFields[eq] = frp[count_rac] + eq * nbRcvPts;
@@ -1250,7 +1250,7 @@ if (has_data_to_send) {
                    E_Float* ptrCoefs = param_real_tc + pos;
                    // pos               = param_int_tc[shift_rac + nrac * 12 + 1];
                    // E_Int* rcvPts     = param_int_tc +  pos;
-         
+
                    E_Int nbInterpD = param_int_tc[shift_rac + nrac];
                    E_Float* xPC = NULL;
                    E_Float* xPI = NULL;
@@ -1258,7 +1258,7 @@ if (has_data_to_send) {
                    E_Float* densPtr = NULL;
                    E_Float* linelets   = NULL;
                    E_Int* indexlinelets = NULL;
-                   E_Int nbptslinelets = 0;    
+                   E_Int nbptslinelets = 0;
                    if (ibc == 1) {
                      xPC = ptrCoefs + nbInterpD;
                      xPI = ptrCoefs + nbInterpD + 3 * nbRcvPts;
@@ -1266,29 +1266,29 @@ if (has_data_to_send) {
                      densPtr = ptrCoefs + nbInterpD + 9 * nbRcvPts;
 
                      if (linelets_int != NULL )
-                        {                        
+                        {
                         nbptslinelets= linelets_int[0];
                         //E_Int addrlinelets   = linelets_int[count_racIBC + 3 ];
                         //E_Float* linelets    = linelets_real + addrlinelets;
                         //E_Int* indexlinelets = linelets_int + linelets_int[1]+1 + 3;
                         count_racIBC = count_racIBC + 1;
-                        }                    
+                        }
                    }
-         
+
                    E_Int ideb = 0;
                    E_Int ifin = 0;
                    E_Int shiftCoef = 0;
                    E_Int shiftDonor = 0;
-         
+
                    for (E_Int ndtyp = 0; ndtyp < ntype[0]; ndtyp++) {
                      type = types[ifin];
-         
+
                      SIZECF(type, meshtype, sizecoefs);
-         
+
                      ifin = ifin + ntype[1 + ndtyp];
-         
+
                      E_Int pt_deb, pt_fin;
-         
+
                      /// oldschool
                      // Calcul du nombre de champs a traiter par chaque thread
                      E_Int size_bc = ifin - ideb;
@@ -1302,7 +1302,7 @@ if (has_data_to_send) {
                        pt_deb = ideb + (chunk + 1) * r + (ithread - r - 1) * chunk;
                        pt_fin = pt_deb + chunk;
                      }
-         
+
                      // Si type 0, calcul sequentiel
                      if (type == 0) {
                        if (ithread == 1) {
@@ -1313,8 +1313,8 @@ if (has_data_to_send) {
                          pt_fin = ideb;
                        }
                      }
-         
-         
+
+
                   noi     = shiftDonor;  // compteur sur le tableau d indices donneur
                   indCoef = ( pt_deb - ideb ) * sizecoefs + shiftCoef;
                   //E_Int NoR = param_int_tc[shift_rac + nrac * 11 + 1];
@@ -1336,7 +1336,7 @@ if (has_data_to_send) {
                         }
 
                   // ibc
-                  if (ibc == 1) 
+                  if (ibc == 1)
                   {
                     // tableau temporaire pour utiliser la routine commune K_CONNECTOR::setIBCTransfersCommon
                     for ( E_Int noind = pt_deb; noind < pt_fin; noind++ ) rcvPts[noind] = noind;
@@ -1348,8 +1348,9 @@ if (has_data_to_send) {
                                                              densPtr, 
                                                              ipt_tmp, size,
                                                              param_real[ NoD ],
-                                                             vectOfDnrFields, vectOfRcvFields,
-                                                             nbptslinelets, linelets, indexlinelets );
+                                                             //gamma, cv, muS, Cs, Ts, Pr,
+                                                             vectOfDnrFields, vectOfRcvFields
+                                                             ,nbptslinelets, linelets, indexlinelets);
                   
                   }  // ibc
 	           E_Int PtlistDonor  = param_int_tc[shift_rac + nrac * 12 + 1];
@@ -1367,7 +1368,7 @@ if (has_data_to_send) {
 #pragma omp barrier
         }  // ipass
   }    // omp
-  
+
  #ifdef TimeShow
     E_Float time_out = omp_get_wtime();
     ipt_timecount[2] = ipt_timecount[2] + time_out - time_in;
@@ -1385,7 +1386,7 @@ if (has_data_to_send) {
 
   //if (has_data_to_send) { send_buffer.isend();  printf("envoi  ID  %d %d  %d \n", dest, TypeTransfert, nstep ); }
   if (has_data_to_send) { send_buffer.isend(); }
-  
+
 #ifdef TimeShow
     E_Float time_out = omp_get_wtime();
     ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
@@ -1435,7 +1436,7 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
 #endif
          E_Int recv_nrac;
          recv_buffer >> recv_nrac;
-  
+
          recv_frp.resize(recv_nrac);
          recv_nozone.resize(recv_nrac);
          recv_nvarloc.resize(recv_nrac);
@@ -1474,8 +1475,8 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
               for (size_t irecv = 0; irecv < sz; ++irecv) 
                {
 
-                ilistrecv = recv_listRc[irac] [irecv]; 
-  
+                ilistrecv = recv_listRc[irac] [irecv];
+
                 ipt_ro[NoR][ilistrecv          ] = recv_frp[irac][irecv];
                 ipt_ro[NoR][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * sz];
                 ipt_ro[NoR][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * sz];
@@ -1487,7 +1488,7 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
             {
             //#pragma omp for nowait
             #pragma omp for
-            for (size_t irecv = 0; irecv < sz; ++irecv) 
+            for (size_t irecv = 0; irecv < sz; ++irecv)
                {
 
                 ilistrecv = recv_listRc[irac] [irecv]; 

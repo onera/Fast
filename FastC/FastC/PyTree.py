@@ -146,14 +146,14 @@ def _reorder(t, tc=None, omp_mode=0):
 # IN: adim: etat de reference, on utilise uniquement cvInf pour la temperature.
 # IN: rmConsVars: if True, remove the conservative variables
 #==============================================================================
-def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
+def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False):
     """Create primitive vars from conservative vars."""
     tp = Internal.copyRef(t)
-    first_iter , vars_zones = _createPrimVars(tp, omp_mode, rmConsVars, Adjoint)
+    first_iter , vars_zones = _createPrimVars(tp, omp_mode, rmConsVars, Adjoint, gradP)
     return tp, first_iter, vars_zones
 
 #==============================================================================
-def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
+def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False):
     """Create primitive vars from conservative vars."""
     vars_zones=[]
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
@@ -172,7 +172,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                NG_indx  =  Internal.getNodeFromPath(z, 'NGonElements/FaceIndex')
                NG_pe    =  Internal.getNodeFromPath(z, 'NGonElements/ParentElements')
 
-            sa, lbmflag, neq_lbm, FIRST_IT  = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint)
+            sa, lbmflag, neq_lbm, FIRST_IT  = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint,gradP)
             
             if FA_intext is not None:
                Internal.getNodeFromPath(z, 'NFaceElements')[2] +=[FA_indx, FA_intext] 
@@ -257,6 +257,13 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
                for v in vars_c:
                  fields2compact.append('centers:Res_'+v)
                vars.append(fields2compact)
+            if gradP:
+              fields2compact = []
+              for v in ['Density', 'Temperature']:
+                fields2compact.append('centers:'+'gradx'+v)
+                fields2compact.append('centers:'+'grady'+v)
+                fields2compact.append('centers:'+'gradz'+v)
+              vars.append(fields2compact)
     
             # on compacte les variables "visqueuse"
             loc            ='centers:'
@@ -280,6 +287,11 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
             # on compacte CellN
             fields2compact = []
             if  C.isNamePresent(z, loc+'cellN') == 1: fields2compact.append(loc+'cellN')
+            if len(fields2compact) != 0: vars.append(fields2compact)
+
+            # on compacte Pression
+            fields2compact = []
+            if  C.isNamePresent(z, loc+'Pressure') == 1: fields2compact.append(loc+'Pressure')
             if len(fields2compact) != 0: vars.append(fields2compact)
             
             # on compacte CellN_IBC
@@ -307,7 +319,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False):
 #==============================================================================
 # Init/create primitive Variable 
 #==============================================================================
-def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
+def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=False):
     import timeit
     # Get model
     model = "Euler"
@@ -376,6 +388,15 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False):
        if C.isNamePresent(zone, 'centers:VelocityZ_P1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_P1')
        if C.isNamePresent(zone, 'centers:Temperature_P1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_P1')
        if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_P1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_P1')
+
+       if (gradP and C.isNamePresent(zone, 'centers:gradxDensity') != 1):
+        C._initVars(zone, 'centers:gradxDensity', 1e-15)
+        C._initVars(zone, 'centers:gradyDensity', 1e-15)
+        C._initVars(zone, 'centers:gradzDensity', 1e-15)
+
+        C._initVars(zone, 'centers:gradxTemperature', 1e-15)
+        C._initVars(zone, 'centers:gradyTemperature', 1e-15)
+        C._initVars(zone, 'centers:gradzTemperature', 1e-15)
     else:
        neq_lbm = Internal.getNodeFromName2(zone, 'Parameter_int')[1][86]
 
@@ -728,6 +749,18 @@ def _buildOwnData(t, Padding):
     if first is not None: timelevel_motion = Internal.getValue(first)
     first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
     if first is not None: timelevel_target = Internal.getValue(first)
+
+    MafzalMode = 3
+    first = Internal.getNodeFromName1(t, 'MafzalMode')
+    if first is not None: MafzalMode = Internal.getValue(first)
+
+    AlphaGradP = 1
+    first = Internal.getNodeFromName1(t, 'AlphaGradP')
+    if first is not None: AlphaGradP = Internal.getValue(first)
+
+    NbptsLinelets = 0
+    first = Internal.getNodeFromName1(t, 'NbptsLinelets')
+    if first is not None: NbptsLinelets = Internal.getValue(first)
 
     levelg=[]; leveld=[]; val=1; i=0
     veclevel = []; mod=""; posg=[] 
@@ -1563,7 +1596,7 @@ def _buildOwnData(t, Padding):
             
             # creation noeud parametre real 
             #size_real = 23 +  size_ale   
-            number_of_defines_param_real = 56                                    # Number Param REAL
+            number_of_defines_param_real = 59                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
@@ -1617,6 +1650,11 @@ def _buildOwnData(t, Padding):
 
             datap[54]=  coef_hyper[0] 
             datap[55]=  coef_hyper[1] 
+
+            # Ben's WM
+            datap[56] = MafzalMode
+            datap[57] = AlphaGradP
+            datap[58] = NbptsLinelets
 
             ##LBM
             datap[v.LBM_c0]      = lbm_c0

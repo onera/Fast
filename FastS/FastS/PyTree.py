@@ -13,6 +13,7 @@ try:
     import Converter.Internal as Internal
     import Connector
     import Connector.PyTree as X
+    import Connector.OversetData as XOD
     import FastC.PyTree as FastC
     import KCore
     import math
@@ -46,8 +47,7 @@ def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
 # compute in place
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
-#def _compute(t, metrics, nitrun, tc=None, graph=None, layer="Python", NIT=1, ucData=None, vtune=None ):
-def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=None, vtune=None):
+def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=None, gradP=False, TBLE=False):
     """Compute a given number of iterations."""
 
     bases  = Internal.getNodesFromType1(t , 'CGNSBase_t')       # noeud
@@ -77,15 +77,15 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
     if  omp_node is not None: ompmode = Internal.getValue(omp_node)
 
     dtloc   = Internal.getValue(dtloc) # tab numpy
-    nitmax  = int(dtloc[0])                 
+    nitmax  = int(dtloc[0])
 
     #### a blinder...
     param_int_firstZone = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1]
     itypcp = param_int_firstZone[29]
     rk     = param_int_firstZone[52]
     exploc = param_int_firstZone[54]
-    #### a blinder...            
-     
+    #### a blinder...
+
     if nitrun == 1: print('Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode))
 
     tps_cp=  Time.time(); tps_cp=  tps_cp-tps_cp     
@@ -103,14 +103,14 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
                 shift_graph = nbcomIBC + param_int_tc[2+nbcomIBC] + 2
                 comm_P2P    = param_int_tc[0]
                 pt_ech      = param_int_tc[comm_P2P + shift_graph]
-                dest        = param_int_tc[pt_ech] 
+                dest        = param_int_tc[pt_ech]
 
       hookTransfer = []        
 
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
          hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
-        
+
          skip = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
 
@@ -132,25 +132,25 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
             if exploc==1 and tc is not None:
                fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
                
-               if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
-               elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
-               _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])    
+               if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
+               elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
+               _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])
                
                FastC.switchPointers2__(zones,nitmax,nstep)
-                
+
                # Ghostcell
                if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc)
 
-               fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
+               fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1)
 
                if nstep%2 == 0:
                    vars = ['Density']
                    _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep,  ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc, num_passage= 2)
 
-               if   nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
-               elif nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
+               if   nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
+               elif nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
                _applyBC(zones, metrics, hook1, nstep, ompmode, var=vars[0])
                
             else:
@@ -160,14 +160,17 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
               #t0=Time.time()
               tic=Time.time()
 
-              _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1)
+              if not tc2:
+                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP)
+              else:
+                _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP)
 
               #print('t_fillGhost = ',  Time.time() - t0 ,'nstep =', nstep)
               # Add unsteady Chimera transfers here
               if ucData is not None:
-                (graphX, intersectionDict, dictOfADT, 
+                (graphX, intersectionDict, dictOfADT,
                 dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                dictOfNobOfDnrZones, dictOfNozOfDnrZones,
                 dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
                 time, procDict, interpInDnrFrame, varType, tfreq) = ucData
                 
@@ -203,7 +206,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
       if tc is None:
           FastC.HOOK['param_int_tc']  = None
           FastC.HOOK['param_real_tc'] = None
-
       tic=Time.time()
       fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
       tps_cp +=Time.time()-tic 
@@ -231,7 +233,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1, ucData=N
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
 def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
-    
+
     own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
 
@@ -248,7 +250,7 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
     distrib_omp = 0
     nitrun      = 0
     hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
-        
+
     fasts._matvecPT(zones, metrics, nitrun, no_vect_test, ompmode, hook1)
 
     return None
@@ -303,7 +305,7 @@ def _init_metric(t, metrics, omp_mode):
     zones        = Internal.getZones(t)
 
     fasts.init_metric(zones, metrics, omp_mode)
-    
+
     c=0
     for metric in metrics:
        z = zones[c]
@@ -314,11 +316,24 @@ def _init_metric(t, metrics, omp_mode):
     return None
 
 #==============================================================================
-# Initialisation parametre calcul: calcul metric + var primitive + compactage 
+# Initialisation parametre calcul: calcul metric + var primitive + compactage
 # + alignement + placement DRAM
 #==============================================================================
-def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0):
+def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0, Re=-1, Lref=1., gradP=False):
     """Perform necessary operations for the solver to run."""
+
+    # compute info linelets
+    nbpts_linelets = 0
+    if tc is not None:
+      if Re > 0: #Adaptive method
+        h0, hn, nbpts_linelets = computeLineletsInfo(tc, Re=Re, Lref=Lref, q=1.1)
+      elif Re == 0: 
+        h0, hn, nbpts_linelets = computeLineletsInfo2(tc, q=1.1)
+      else: #Alferez' og method
+        h0, nbpts_linelets = 1.e-6, 45
+
+    first = Internal.getNodeFromName1(t, 'NbptsLinelets')
+    if first is None: Internal.createUniqueChild(t, 'NbptsLinelets', 'DataArray_t', value=nbpts_linelets)
 
     # Get omp_mode
     ompmode = OMP_MODE
@@ -332,6 +347,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     
     # Construction param_int et param_real des zones
     FastC._buildOwnData(t, Padding)
+
+    t = Internal.rmNodesByName(t, 'NbptsLinelets')
     
     #init hook necessaire pour info omp
     tmp   = Internal.getNodeFromName1(t, '.Solver#ownData')
@@ -342,14 +359,14 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
 
     # allocation d espace dans param_int pour stockage info openmp  
-    FastC._build_omp(t) 
+    FastC._build_omp(t)
     
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
     metrics = allocate_metric(t)
     
     # Contruction BC_int et BC_real pour CL
-    FastC._BCcompact(t) 
+    FastC._BCcompact(t)
     
     # Contruction Conservative_int
     FastC._Fluxcompact(t) 
@@ -373,17 +390,18 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     adjoint=Adjoint
 
     
-    t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint)
+    t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP)
     FastC.HOOK['FIRST_IT']= FastC.FIRST_IT
 
-    #compactage des champs en fonction option de calcul  
+    #compactage des champs en fonction option de calcul
     count = -1
-    if ompmode == 1: count = 0          
+    if ompmode == 1: count = 0
     for data in zones2compact:
         if ompmode == 1: count += 1
         zone    = data[0]
         varnames= data[1]
         for fields in varnames:
+            # print(fields)
             _compact(zone, fields=fields, mode=count)
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
@@ -417,27 +435,48 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #
     # Compactage arbre transfert et mise a jour FastC.HOOK
     #
-    if tc is not None:  
-       X.miseAPlatDonorTree__(zones, tc, graph=graph,list_graph=list_graph) 
-    
+
+    if tc is not None:
+       # Add linelets arrays in the FastC.HOOK for ODE-based WallModel (IBC)
+       # nbpts_linelets = 0
+       # _createTBLESA(tc,nbpts_linelets)
+
+       if Re > 0: #Adaptive method
+         # h0, hn, nbpts_linelets = computeLineletsInfo(tc, Re=Re, Lref=Lref, q=1.1)
+         _createTBLESA(tc, h0=h0, hn=hn, nbpts_linelets=nbpts_linelets)
+         _createTBLESA2(t, tc, h0=h0, hn=hn, nbpts_linelets=nbpts_linelets)
+       elif Re == 0: 
+         # h0, hn, nbpts_linelets = computeLineletsInfo2(tc, q=1.1)
+         _createTBLESA(tc, h0=h0, hn=hn, nbpts_linelets=nbpts_linelets)
+         _createTBLESA2(t, tc, h0=h0, hn=hn, nbpts_linelets=nbpts_linelets)
+       else: #Alferez' og method
+         # h0, nbpts_linelets = 1.e-6, 45
+         _createTBLESA(tc, h0=h0, hn=-1, nbpts_linelets=nbpts_linelets)
+         _createTBLESA2(t, tc, h0=h0, hn=-1, nbpts_linelets=nbpts_linelets)
+ 
+       X.miseAPlatDonorTree__(zones, tc, graph=graph, list_graph=list_graph, nbpts_linelets=nbpts_linelets)
+
        FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
        param_real_tc        = Internal.getNodeFromName1( tc, 'Parameter_real')
        if param_real_tc is not None: FastC.HOOK['param_real_tc']= param_real_tc[1]
 
-       
-       # Add linelets arrays in the FastC.HOOK for ODE-based WallModel (IBC)
-       nbpts_linelets = 45
-       _createTBLESA(tc,nbpts_linelets)
+       # FastC.HOOK['param_real_tc'][ 58 ] = nbpts_linelets
+
+       # # Add linelets arrays in the FastC.HOOK for ODE-based WallModel (IBC)
+       # nbpts_linelets = 45
+       # _createTBLESA(tc,nbpts_linelets)
+       # _createTBLESA2(tc,nbpts_linelets)
+
     else:
         FastC.HOOK['param_real_tc'] = None
-        FastC.HOOK['param_int_tc']  = None  
+        FastC.HOOK['param_int_tc']  = None
 
     if ssors is not []:
         FastC.HOOK['ssors'] = ssors
     else:
         FastC.HOOK['ssors'] = None
 
-    
+
     # Compactage arbre moyennes stat
     #
     if tmy is not None:
@@ -458,7 +497,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4])
 
-    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1) 
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1)
+
     if tc is not None: C._rmVars(tc, 'FlowSolution')
 
     #
@@ -492,7 +532,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
             # Create an equivalent contiguous numpy [flat]
     	    #eq = KCore.empty(size*nfields, CACHELINE)
             eq = numpy.empty(nfields*(size+ param_int[1][66]), dtype=numpy.float64) # add a shift  between prim. variables (param_int[1][SHIFTVAR])
-            c = 0        
+            c = 0
             if param_int is None:
                 raise ValueError("_compact: Parameter_int is missing for zone %s."%z[0])
             for a in val:
@@ -508,7 +548,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
                 ## marc fasts.initNuma( ptr, eq, param_int, c )
                 #fasts.initNuma( a[1], eq, param_int, c )
                 #fasts.initNuma( ptr , eq, param_int, c )
-                #eq[c*size:(c+1)*size] = ptr[:]   
+                #eq[c*size:(c+1)*size] = ptr[:]
                 # Replace numpys with slice
                 a[1] = eq[c*(size)+c*param_int[1][66]:(c+1)*(size)+c*param_int[1][66]]
                 a[1] = a[1].reshape(sh, order='F')
@@ -516,65 +556,74 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
                 ## marc a[1] = a[1].reshape(sh, order='F')
                 #print 'a1',a[0],a[1].shape
                 ##a[1] = a[1].reshape( (size), order='F')
-                #print 'a',a[0],a[1].shape 
+                #print 'a',a[0],a[1].shape
 
                 c += 1
     return None
 
 #==============================================================================
 # Prepare IBC ODE (TBLE + Spalart 1D)
+# Info stored and compacted in linelets_int and linelets_real
+# Seq only
 #==============================================================================
-def _createTBLESA(tc,nbpts_linelets=45):
-      
+def _createTBLESA(tc, h0, hn, nbpts_linelets=45):
       nfields_lin  = 6 # u,nutild,y,matm,mat,matp
       count_racIBC = 0
       addr_IBC = 0
-      addrIBC  = []       
+      addrIBC  = []
       size_IBC = 0
 
       linelets_int_tc  = Internal.getNodeFromName(tc,'linelets_int')
       linelets_real_tc = Internal.getNodeFromName(tc,'linelets_real')
       if linelets_int_tc is not None:
-         FastC.HOOK['linelets_int'] = Internal.getValue(linelets_int_tc)                  
-      if linelets_real_tc is not None:   
+         FastC.HOOK['linelets_int'] = Internal.getValue(linelets_int_tc)
+      if linelets_real_tc is not None:
          FastC.HOOK['linelets_real']= Internal.getValue(linelets_real_tc)
 
-      zones_tc = Internal.getZones(tc)             
-         
+      zones_tc = Internal.getZones(tc)
+
       for z in zones_tc:
-          subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')  
+          subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
           if subRegions is not None:
-                for s in subRegions:                              
+                for s in subRegions:
                   zsrname = s[0]
                   sname  = zsrname[0:2]
                   if sname == 'IB':
                      zsrname = zsrname.split('_')
-                     if len(zsrname)<3: 
+                     if len(zsrname)<3:
                         print('Warning: createTBLESA: non consistent with the version of IBM preprocessing.')
                      else:
-                       if zsrname[1] == '6':              
+                       if zsrname[1] == '6':
                         print('Using TBLE SA wall model')
-                        pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor') 
+                        pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
-                        addrIBC.append(size_IBC) 
+                        addrIBC.append(size_IBC)
                         # size_IBC      = size_IBC + Nbpts_D*nbpts_linelets*nfields_lin
                         size_IBC      = size_IBC + Nbpts_D*(nbpts_linelets*nfields_lin + 1)
-                        count_racIBC  = count_racIBC + 1 
+                        count_racIBC  = count_racIBC + 1
+                       elif zsrname[1] == '15':
+                        print('Using MuskerSA wall model')
+                        pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
+                        Nbpts_D       = numpy.shape(pointlistD[1])[0]
+                        addrIBC.append(size_IBC)
+                        # size_IBC      = size_IBC + Nbpts_D*nbpts_linelets*nfields_lin
+                        size_IBC      = size_IBC + Nbpts_D*(nbpts_linelets*nfields_lin + 1)
+                        count_racIBC  = count_racIBC + 1
 
-      # addrIBC.append(size_IBC)                
-      # print "Nb Rac =",count_racIBC-1 
-                                   
-      if size_IBC > 0: 
+      # addrIBC.append(size_IBC)
+      # print "Nb Rac =",count_racIBC-1
+
+      if size_IBC > 0:
         if FastC.HOOK['linelets_int'] is None:   # No TBLE Data in tc
          print('TBLE data missing in tc, they will be built...')
-            
-         # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)  
-         Nbpts_Dtot = size_IBC//(nbpts_linelets*nfields_lin+1)     
-         _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=numpy.int32)            
-     
+
+         # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)
+         Nbpts_Dtot = size_IBC//(nbpts_linelets*nfields_lin+1)
+         _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=numpy.int32)
+
          FastC.HOOK['linelets_int'] = _addrIBC
-            
-         linelets = numpy.zeros(size_IBC + Nbpts_Dtot, dtype=numpy.float64)  
+
+         linelets = numpy.zeros(size_IBC + Nbpts_Dtot, dtype=numpy.float64)
 
 
          # ====================== Debug (Interp linelets from fine grid) ======================
@@ -588,114 +637,453 @@ def _createTBLESA(tc,nbpts_linelets=45):
 
          # coordYdata = Internal.getNodeFromName(t,'CoordinateY')
          # coordYdataval = Internal.getValue(coordYdata)
-         # Iw = numpy.argwhere(coordYdataval<0)    
-         # indexWall = Iw[-1][1]   
-         
+         # Iw = numpy.argwhere(coordYdataval<0)
+         # indexWall = Iw[-1][1]
+
 
          # ptlist = Internal.getNodeFromName(tc,'PointListDonor')#'TurbulentSANuTilde')#'VelocityX')
          # ptlistval = Internal.getValue(ptlist)
 
-         # dimI   = Internal.getZoneDim(zones[0])[1]            
+         # dimI   = Internal.getZoneDim(zones[0])[1]
 
-         # nbptD = 190 
-         # ycoord = numpy.zeros(nbptD,dtype=numpy.float64) 
-         # field  = numpy.zeros(nbptD,dtype=numpy.float64)    
+         # nbptD = 190
+         # ycoord = numpy.zeros(nbptD,dtype=numpy.float64)
+         # field  = numpy.zeros(nbptD,dtype=numpy.float64)
 
-                          
+
          shift        = 0
          for z in zones_tc:
-                       subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')  
-                       if subRegions is not None:                        
+                       subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+                       if subRegions is not None:
                           for s in subRegions:
                               zsrname = s[0]
                               sname  = zsrname[0:2]
-                              if sname == 'IB':                              
+                              if sname == 'IB':
                                  zsrname = zsrname.split('_')
-                                 if len(zsrname)<3: 
+                                 if len(zsrname)<3:
                                    print('Warning: createTBLESA: non consistent with the version of IBM preprocessing.')
-                                 else:   
-                                   if zsrname[1] == '6':                                                                                                
-                                     pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor') 
-                                     Nbpts_D       = numpy.shape(pointlistD[1])[0]                                   
-                                     
-   
+                                 else:
+                                   if zsrname[1] == '6' or zsrname[1] == '15':
+                                     pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
+                                     Nbpts_D       = numpy.shape(pointlistD[1])[0]
+
+
                                      zI = Internal.getNodeFromName1(s,'CoordinateZ_PI')
                                      valzI = Internal.getValue(zI)
                                      yI = Internal.getNodeFromName1(s,'CoordinateY_PI')
-                                     valyI = Internal.getValue(yI)    
+                                     valyI = Internal.getValue(yI)
                                      xI = Internal.getNodeFromName1(s,'CoordinateX_PI')
-                                     valxI = Internal.getValue(xI)      
+                                     valxI = Internal.getValue(xI)
                                      zW = Internal.getNodeFromName1(s,'CoordinateZ_PW')
-                                     valzW = Internal.getValue(zW) 
+                                     valzW = Internal.getValue(zW)
                                      yW = Internal.getNodeFromName1(s,'CoordinateY_PW')
-                                     valyW = Internal.getValue(yW)    
+                                     valyW = Internal.getValue(yW)
                                      xW = Internal.getNodeFromName1(s,'CoordinateX_PW')
-                                     valxW = Internal.getValue(xW)    
-   
+                                     valxW = Internal.getValue(xW)
+
                                      if Nbpts_D > 1:
-                                       
+
                                          for noind in range(0,Nbpts_D):
-                                             
+
                                              b0 = valxI[noind]-valxW[noind]
                                              b1 = valyI[noind]-valyW[noind]
                                              b2 = valzI[noind]-valzW[noind]
                                              normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
-                                             
-                                             _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
+
+                                             if hn < 0:
+                                               hn = 0.6*normb
+
+                                             # _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
+                                             _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
                                      else:
-   
+
                                              b0 = valxI-valxW
                                              b1 = valyI-valyW
                                              b2 = valzI-valzW
-                                             normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)                                  
-                                             
-                                             # _stretch(linelets[shift : shift + nbpts_linelets],nbpts_linelets,1.0e-6,0.0,normb)  
-                                             _stretch(linelets[shift : shift + nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)  
-   
-   
-                                     Internal.createUniqueChild(s, 'CoordinateN_ODE', 'DataArray_t', 
-                                                                linelets[shift : shift + Nbpts_D*nbpts_linelets])
-                                     Internal.createUniqueChild(s, 'VelocityT_ODE', 'DataArray_t', 
-                                                                linelets[shift + Nbpts_D*nbpts_linelets : shift + 2*Nbpts_D*nbpts_linelets ]) 
-                                     Internal.createUniqueChild(s, 'TurbulentSANuTilde_ODE', 'DataArray_t', 
-                                                                linelets[shift + 2*Nbpts_D*nbpts_linelets  : shift + 3*Nbpts_D*nbpts_linelets ]) 
-   
-                                        
+                                             normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
+
+                                             if hn < 0:
+                                               hn = 0.6*normb
+
+                                             # _stretch(linelets[shift : shift + nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
+                                             _stretch(linelets[shift : shift + nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
+
+
+                                     #Internal.createUniqueChild(s, 'CoordinateN_ODE', 'DataArray_t',
+                                     #                           linelets[shift : shift + Nbpts_D*nbpts_linelets])
+                                     #Internal.createUniqueChild(s, 'VelocityT_ODE', 'DataArray_t',
+                                     #                           linelets[shift + Nbpts_D*nbpts_linelets : shift + 2*Nbpts_D*nbpts_linelets ])
+                                     #Internal.createUniqueChild(s, 'TurbulentSANuTilde_ODE', 'DataArray_t',
+                                     #                           linelets[shift + 2*Nbpts_D*nbpts_linelets  : shift + 3*Nbpts_D*nbpts_linelets ])
+
+
                                      # ========================= Debug interp from fine grid =============
-   
+
                                      # for noind in range(0,Nbpts_D):
                                      #     ltarget = ptlistval[noind]
                                      #     itarget = ltarget%(dimI-1)
-                                                    
+
                                      #     ycoord[:] = coordYdataval[itarget,indexWall+1:indexWall+nbptD+1,0]
                                      #     field[:]  =   velxDataval[itarget,indexWall+1:indexWall+nbptD+1,0] # VelocityX
-                                       
-                                     #     fasts._interpfromzone(nbptD,nbpts_linelets,ycoord, 
+
+                                     #     fasts._interpfromzone(nbptD,nbpts_linelets,ycoord,
                                      #                                       linelets[shift : shift + nbpts_linelets],
                                      #                                       field,
-                                     #                                       linelets[shift + Nbpts_D*nbpts_linelets  + noind*nbpts_linelets : shift + Nbpts_D*nbpts_linelets + (noind+1)*nbpts_linelets])                                                                         
-                                                           
-                                     #     field[:]  =   turbSADataval[itarget,indexWall+1:indexWall+nbptD+1,0] # TurbulentSANutTilde
-                                       
-                                     #     fasts._interpfromzone(nbptD,nbpts_linelets,ycoord, 
-                                     #                                       linelets[shift : shift + nbpts_linelets],
-                                     #                                       field,                                                                         
-                                     #                                       linelets[shift + 2*Nbpts_D*nbpts_linelets  + noind*nbpts_linelets : shift + 2*Nbpts_D*nbpts_linelets + (noind+1)*nbpts_linelets])
-                                      
-                                     shift = shift + Nbpts_D*(nbpts_linelets*nfields_lin + 1)                                     
+                                     #                                       linelets[shift + Nbpts_D*nbpts_linelets  + noind*nbpts_linelets : shift + Nbpts_D*nbpts_linelets + (noind+1)*nbpts_linelets])
 
-            
-         FastC.HOOK['linelets_real'] = linelets 
+                                     #     field[:]  =   turbSADataval[itarget,indexWall+1:indexWall+nbptD+1,0] # TurbulentSANutTilde
+
+                                     #     fasts._interpfromzone(nbptD,nbpts_linelets,ycoord,
+                                     #                                       linelets[shift : shift + nbpts_linelets],
+                                     #                                       field,
+                                     #                                       linelets[shift + 2*Nbpts_D*nbpts_linelets  + noind*nbpts_linelets : shift + 2*Nbpts_D*nbpts_linelets + (noind+1)*nbpts_linelets])
+
+                                     shift = shift + Nbpts_D*(nbpts_linelets*nfields_lin + 1)
+
+
+         FastC.HOOK['linelets_real'] = linelets
 
          Internal.createUniqueChild(tc, 'linelets_real', 'DataArray_t', FastC.HOOK['linelets_real'])
          Internal.createUniqueChild(tc, 'linelets_int', 'DataArray_t', FastC.HOOK['linelets_int'])
 
-      return None    
+      return None
+
+#==============================================================================
+# Compute linelets info
+# Adaptive h0
+#==============================================================================
+def computeLineletsInfo(tc, Re=6.e6, Cf_law='ANSYS', Lref=1., q=1.2):
+    if Cf_law == 'ANSYS':
+        def compute_Cf(Re):
+            return 0.058*Re**(-0.2)
+    elif Cf_law == 'PW':
+        def compute_Cf(Re):
+            return 0.026*Re**(-1/7.)
+    elif Cf_law == 'PipeDiameter':
+        def compute_Cf(Re):
+            return 0.079*Re**(-0.25)
+    elif Cf_law == 'Laminar':
+        def compute_Cf(Re):
+            return 1.46*Re**(-0.5)
+
+    hmod = 0.
+
+    zones_tc = Internal.getZones(tc)
+
+    for z in zones_tc:
+        subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+        if subRegions is not None:
+              for s in subRegions:
+                zsrname = s[0]
+                sname  = zsrname[0:2]
+                if sname == 'IB':
+                  zI = Internal.getNodeFromName1(s,'CoordinateZ_PI')[1]
+                  yI = Internal.getNodeFromName1(s,'CoordinateY_PI')[1]
+                  xI = Internal.getNodeFromName1(s,'CoordinateX_PI')[1]
+                  zW = Internal.getNodeFromName1(s,'CoordinateZ_PW')[1]
+                  yW = Internal.getNodeFromName1(s,'CoordinateY_PW')[1]
+                  xW = Internal.getNodeFromName1(s,'CoordinateX_PW')[1]
+                  pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
+                  Nbpts_D       = numpy.shape(pointlistD[1])[0]
+
+                  for i in range(Nbpts_D):
+                    hmod = max(hmod, math.sqrt( (xI[i]-xW[i])**2 + (yI[i]-yW[i])**2 + (zI[i]-zW[i])**2 ))
+
+
+    h0 = (Lref*math.sqrt(2))/(Re*math.sqrt(compute_Cf(Re)))
+    # hmod = sum(0,n) h0*q**n
+    n = int(math.ceil(math.log(1-((hmod/h0)*(1-q)))/(math.log(q)))) - 1
+    # (n+1) intervalles / (n+2) points
+
+    return (h0, h0*q**n, n+2)   
+
+#==============================================================================
+# Compute linelets info
+# Fixed h0 1e-6
+#==============================================================================
+def computeLineletsInfo2(tc, q=1.2):
+    hmod = 0.
+
+    zones_tc = Internal.getZones(tc)
+
+    for z in zones_tc:
+        subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+        if subRegions is not None:
+              for s in subRegions:
+                zsrname = s[0]
+                sname  = zsrname[0:2]
+                if sname == 'IB':
+                  zI = Internal.getNodeFromName1(s,'CoordinateZ_PI')[1]
+                  yI = Internal.getNodeFromName1(s,'CoordinateY_PI')[1]
+                  xI = Internal.getNodeFromName1(s,'CoordinateX_PI')[1]
+                  zW = Internal.getNodeFromName1(s,'CoordinateZ_PW')[1]
+                  yW = Internal.getNodeFromName1(s,'CoordinateY_PW')[1]
+                  xW = Internal.getNodeFromName1(s,'CoordinateX_PW')[1]
+                  pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
+                  Nbpts_D       = numpy.shape(pointlistD[1])[0]
+
+                  for i in range(Nbpts_D):
+                    hmod = max(hmod, math.sqrt( (xI[i]-xW[i])**2 + (yI[i]-yW[i])**2 + (zI[i]-zW[i])**2 ))
+                    
+    h0 = 1.e-6
+    n = int(math.ceil(math.log(1-((hmod/h0)*(1-q)))/(math.log(q)))) - 1
+
+    return (h0, h0*q**n, n+2)   
 
 
 #==============================================================================
-# For periodic unsteady chimera join, parameter must be updated peridicaly 
+# Prepare IBC ODE (Spalart 1D)
+# Info stored and compacted in IBCD ZONES
+# Para friendly
 #==============================================================================
+def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
+      nfields_lin  = 6 # u,nutild,y,matm,mat,matp
+      count_racIBC = 0
+      addr_IBC = 0
+      addrIBC  = []
+      size_IBC = 0
+      isODEDataPresent = 0
+      distIW = 0.
+
+      zones_tc = Internal.getZones(tc)
+
+      for z in zones_tc:
+          subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+          if subRegions is not None:
+                for s in subRegions:
+                  zsrname = s[0]
+                  sname  = zsrname[0:2]
+                  if sname == 'IB':
+                     zsrname = zsrname.split('_')
+                     if len(zsrname)<3:
+                        print('Warning: createTBLESA: non consistent with the version of IBM preprocessing.')
+                     else:
+                       if zsrname[1] == '16':
+                        print('Using MuskerSA2 wall model')
+                        pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
+                        Nbpts_D       = numpy.shape(pointlistD[1])[0]
+                        addrIBC.append(size_IBC)
+                        size_IBC      = size_IBC + Nbpts_D*(nbpts_linelets*nfields_lin + 1)
+                        count_racIBC  = count_racIBC + 1
+                        u_ODE = Internal.getNodeFromName1(s, 'VelocityT_ODE')
+                        if u_ODE is not None: isODEDataPresent = 1
+                       elif zsrname[1] == '17':
+                        print('Using FULL_TBLE_SA wall model')
+                        pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
+                        Nbpts_D       = numpy.shape(pointlistD[1])[0]
+                        addrIBC.append(size_IBC)
+                        size_IBC      = size_IBC + Nbpts_D*(nbpts_linelets*nfields_lin + 1)
+                        count_racIBC  = count_racIBC + 1
+                        u_ODE = Internal.getNodeFromName1(s, 'VelocityT_ODE')
+                        if u_ODE is not None: isODEDataPresent = 1
+                       elif zsrname[1] == '18':
+                        print('Using FULL_TBLE_Prandtl wall model')
+                        pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
+                        Nbpts_D       = numpy.shape(pointlistD[1])[0]
+                        addrIBC.append(size_IBC)
+                        size_IBC      = size_IBC + Nbpts_D*(nbpts_linelets*nfields_lin + 1)
+                        count_racIBC  = count_racIBC + 1
+                        u_ODE = Internal.getNodeFromName1(s, 'VelocityT_ODE')
+                        if u_ODE is not None: isODEDataPresent = 1
+                       elif zsrname[1] == '19':
+                        print('Using MafzalSA wall model')
+                        pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
+                        Nbpts_D       = numpy.shape(pointlistD[1])[0]
+                        addrIBC.append(size_IBC)
+                        size_IBC      = size_IBC + Nbpts_D*(nbpts_linelets*nfields_lin + 1)
+                        count_racIBC  = count_racIBC + 1
+                        u_ODE = Internal.getNodeFromName1(s, 'VelocityT_ODE')
+                        if u_ODE is not None: isODEDataPresent = 1
+
+      if size_IBC > 0:
+        if not isODEDataPresent:   # No ODE Data in tc
+         print('ODE data missing in tc, they will be built...')
+
+         if Internal.getNodeFromName1(t, 'nbpts_linelets') is None: 
+          Internal.createUniqueChild(t, 'nbpts_linelets', 'DataArray_t', value=nbpts_linelets)
+
+         # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)
+         Nbpts_Dtot = size_IBC//(nbpts_linelets*nfields_lin+1)
+         _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=numpy.int32)
+
+         linelets = numpy.zeros(size_IBC + Nbpts_Dtot, dtype=numpy.float64)
+
+         shift = 0
+         for z in zones_tc:
+           subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+           if subRegions is not None:
+              for s in subRegions:
+                  zsrname = s[0]
+                  sname  = zsrname[0:2]
+                  if sname == 'IB':
+                     zsrname = zsrname.split('_')
+                     if len(zsrname)<3:
+                       print('Warning: createTBLESA2: non consistent with the version of IBM preprocessing.')
+                     else:
+                       if zsrname[1] == '16' or zsrname[1] == '17' or zsrname[1] == '18' or zsrname[1] == '19':
+                         pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
+                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
+
+                         gradxP = Internal.getNodeFromName1(s, 'gradxPressure')
+                         if gradxP is None:
+                            Internal.createUniqueChild(s, 'gradxPressure', 'DataArray_t',
+                                                    numpy.zeros(Nbpts_D, numpy.float64))
+                            Internal.createUniqueChild(s, 'gradyPressure', 'DataArray_t',
+                                                    numpy.zeros(Nbpts_D, numpy.float64))
+                            Internal.createUniqueChild(s, 'gradzPressure', 'DataArray_t',
+                                                    numpy.zeros(Nbpts_D, numpy.float64))
+
+
+                         zI = Internal.getNodeFromName1(s,'CoordinateZ_PI')
+                         valzI = Internal.getValue(zI)
+                         yI = Internal.getNodeFromName1(s,'CoordinateY_PI')
+                         valyI = Internal.getValue(yI)
+                         xI = Internal.getNodeFromName1(s,'CoordinateX_PI')
+                         valxI = Internal.getValue(xI)
+                         zW = Internal.getNodeFromName1(s,'CoordinateZ_PW')
+                         valzW = Internal.getValue(zW)
+                         yW = Internal.getNodeFromName1(s,'CoordinateY_PW')
+                         valyW = Internal.getValue(yW)
+                         xW = Internal.getNodeFromName1(s,'CoordinateX_PW')
+                         valxW = Internal.getValue(xW)
+
+                         if Nbpts_D > 1:
+
+                             for noind in range(0,Nbpts_D):
+
+                                 b0 = valxI[noind]-valxW[noind]
+                                 b1 = valyI[noind]-valyW[noind]
+                                 b2 = valzI[noind]-valzW[noind]
+                                 normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
+
+                                 if hn < 0:
+                                   hn = 0.6*normb
+
+                                 # _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
+                                 _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
+                         else:
+
+                                 b0 = valxI-valxW
+                                 b1 = valyI-valyW
+                                 b2 = valzI-valzW
+                                 normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
+
+                                 if hn < 0:
+                                   hn = 0.6*normb
+
+                                 # _stretch(linelets[shift : shift + nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
+                                 _stretch(linelets[shift : shift + nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
+
+
+                         Internal.createUniqueChild(s, 'CoordinateN_ODE', 'DataArray_t',
+                                                    linelets[shift : shift + Nbpts_D*nbpts_linelets])
+                         Internal.createUniqueChild(s, 'VelocityT_ODE', 'DataArray_t',
+                                                    linelets[shift + 1*Nbpts_D*nbpts_linelets :  shift + 2*Nbpts_D*nbpts_linelets ])
+                         Internal.createUniqueChild(s, 'TurbulentSANuTilde_ODE', 'DataArray_t',
+                                                    linelets[shift + 2*Nbpts_D*nbpts_linelets :  shift + 3*Nbpts_D*nbpts_linelets ])
+                         Internal.createUniqueChild(s, 'Psi_ODE', 'DataArray_t',
+                                                    numpy.zeros(Nbpts_D*nbpts_linelets, numpy.float64))
+                         Internal.createUniqueChild(s, 'Matm_ODE', 'DataArray_t',
+                                                    linelets[shift + 3*Nbpts_D*nbpts_linelets :  shift + 4*Nbpts_D*nbpts_linelets ])
+                         Internal.createUniqueChild(s, 'Mat_ODE', 'DataArray_t',
+                                                    linelets[shift + 4*Nbpts_D*nbpts_linelets :  shift + 5*Nbpts_D*nbpts_linelets ])
+                         Internal.createUniqueChild(s, 'Matp_ODE', 'DataArray_t',
+                                                    linelets[shift + 5*Nbpts_D*nbpts_linelets :  shift + 6*Nbpts_D*nbpts_linelets ])
+
+                         Internal.createUniqueChild(s, 'alphasbeta_ODE', 'DataArray_t',
+                                                    numpy.zeros(Nbpts_D, numpy.float64))
+                         Internal.createUniqueChild(s, 'index_ODE', 'DataArray_t',
+                                                    numpy.zeros(Nbpts_D, numpy.float64))
+
+                         # Internal.createUniqueChild(s, 'Matm_ODE', 'DataArray_t',
+                         #                            numpy.ones(Nbpts_D*45, numpy.float64)*2)
+
+                         # Internal.createUniqueChild(s, 'Mat_ODE', 'DataArray_t',
+                         #                            numpy.ones(Nbpts_D*45, numpy.float64)*3)
+                         
+                         # Internal.createUniqueChild(s, 'Matp_ODE', 'DataArray_t',
+                         #                            numpy.ones(Nbpts_D*45, numpy.float64)*4)
+
+                         # Internal.createUniqueChild(s, 'alphasbeta_ODE', 'DataArray_t',
+                         #                            numpy.ones(Nbpts_D, numpy.float64)*5)
+
+                         # Internal.createUniqueChild(s, 'index_ODE', 'DataArray_t',
+                         #                            numpy.ones(Nbpts_D, numpy.float64)*6)
+
+
+                         shift = shift + Nbpts_D*(nbpts_linelets*nfields_lin + 1)
+
+      return None
+
+
+
+#==============================================================================
+# Update gradx/y/zPressure in tc IBCD zones using first (slow) method without compact
+# For tc2 the type may have to be '2_IBCD' instead of 'IBCD'
+#==============================================================================
+def _updateGradPInfo(t, tc, metrics, type='IBCD'): 
+
+  varGrad = ['Density', 'Temperature']
+  variablesIBC = ["Density", "Temperature", "gradxDensity", "gradyDensity", "gradzDensity", "gradxTemperature", "gradyTemperature", "gradzTemperature"]
+
+  for var in varGrad:
+   C._rmVars(t, 'gradx{}'.format(var))
+   C._rmVars(t, 'grady{}'.format(var))
+   C._rmVars(t, 'gradz{}'.format(var))
+
+   _computeGrad(t, metrics, varGrad)
+   for v in variablesIBC: C._cpVars(t, 'centers:'+v, tc, v)
+   XOD._setInterpTransfers(t, tc, variables=variablesIBC, variablesIBC=[], compact=0, compactD=0)
+   XOD._setIBCTransfers4GradP(t, tc, variablesIBC=variablesIBC)
+
+   C._rmVars(tc, variablesIBC)
+
+  return None
+
+#==============================================================================
+# Update gradx/y/zPressure in tc IBCD zones using first (slow) method without compact
+# For tc2 the type may have to be '2_IBCD' instead of 'IBCD'
+#==============================================================================
+def _updateGradPInfoHO(t, tc, metrics, type='IBCD', algo="Fast"): 
+  import Post.PyTree as P
+
+  variablesIBC = ["Pressure"]
+  varGrad = []
+
+  for var in variablesIBC:
+    for direction in ["x", "y", "z"]:
+      C._rmVars(t, "grad{}{}".format(direction,var))
+      varGrad.append("grad{}{}".format(direction,var))
+
+  varGrad2 = []
+  for var in varGrad:
+    for direction in ["x", "y", "z"]:
+      C._rmVars(t, "grad{}{}".format(direction,var))
+      varGrad2.append("grad{}{}".format(direction,var))
+
+  if algo == "Fast":
+    _computeGrad(t, metrics, variablesIBC)
+    _computeGrad(t, metrics, varGrad)
+  else:
+    for var in variablesIBC:
+      print(var)
+      t = P.computeGrad(t, 'centers:'+var)
+    for var in varGrad:
+      print(var)
+      t = P.computeGrad(t, 'centers:'+var)
+
+  variables = variablesIBC+varGrad+varGrad2
+
+  print(variables)
+
+  for v in variables: C._cpVars(t, 'centers:'+v, tc, v)
+  XOD._setInterpTransfers(t, tc, variables=variables, variablesIBC=[], compact=0, compactD=0)
+  XOD._setIBCTransfers4GradP2(t, tc, variablesIBC=variables)
+
+  C._rmVars(tc, variables)
+
+  return None
+
 def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
 
     #on cree les noeud infos insta pour chimere perio s'il n'existe pas 
@@ -723,8 +1111,8 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_
     #
     #target in no more in tc; need need data in a new file
     #
-    #if timelevel_target == timelevel_perfile+1 or tc is None: 
-    if timelevel_target == timelevel_perfile or tc is None: 
+    #if timelevel_target == timelevel_perfile+1 or tc is None:
+    if timelevel_target == timelevel_perfile or tc is None:
 
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
@@ -749,7 +1137,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_
        #
        #timelevel_motion larger than calculated peridicity; need to modify angle of rotation for azymuth periodicity
        #
-       if timelevel_motion >= timelevel_period: 
+       if timelevel_motion >= timelevel_period:
 
            No_period     = timelevel_motion//timelevel_period
            iteration_loc = timelevel_motion - No_period*timelevel_period 
@@ -789,7 +1177,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_
        X.miseAPlatDonorTree__(zones, tc, graph=g, list_graph=l)
 
     #
-    #timelevel_motion larger than number of timelevels for 360degre 
+    #timelevel_motion larger than number of timelevels for 360degre
     #
     if timelevel_motion > timelevel_360:
        timelevel_motion = 0
@@ -838,10 +1226,11 @@ def _applyBC(t, metrics, hook1, nstep,omp_mode, var="Density"):
     return None
 
 #==============================================================================
-def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1): 
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False):
 
    # timecount = numpy.zeros(4, dtype=numpy.float64)
 
+   varsGrad = []
    if hook1['lexit_lu'] ==0:
  
 
@@ -862,6 +1251,26 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
               for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
+              if gradP:
+                  varsGrad = ['Density', 'gradxDensity']
+                  for v in varsGrad: C._cpVars(zones, 'centers:'+v, zonesD,  v)
+                  varType = 22 ; type_transfert = 2 ; no_transfert   = 1
+                  # varType 22 means that there is 6 variables and 6 gradVariables to transfers
+                  # to avoid interfering with the original ___setInterpTransfers, we instead use ___setInterpTransfers4GradP
+                  Connector.connector.___setInterpTransfers4GradP(zones, zonesD, varsGrad, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
+                  varType = 21
+
+              if TBLE: # need to be optimised
+                  variablesIBC = ["Density", "Temperature", "gradxDensity", "gradyDensity", "gradzDensity", "gradxTemperature", "gradyTemperature", "gradzTemperature",
+                  'gradxVelocityX','gradyVelocityX','gradzVelocityX',
+                  'gradxVelocityY','gradyVelocityY','gradzVelocityY',
+                  'gradxVelocityZ','gradyVelocityZ','gradzVelocityZ',
+                  'VelocityX','VelocityY','VelocityZ',
+                  ]
+                  for v in variablesIBC: C._cpVars(zones, 'centers:'+v, zonesD, v)
+                  XOD._setInterpTransfers(zones, zonesD, type_transfert=0, variables=variablesIBC, variablesIBC=[], compact=0)
+                  XOD._setIBCTransfers4FULLTBLE(zones, zonesD, variablesIBC=variablesIBC)
+
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
               Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
@@ -874,7 +1283,78 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
        #print("Time BC",(t1-t0))
 
    return None
-   
+
+#==============================================================================
+# modified _fillGhostCells for two image points (tc + tc2) for gradP 
+#==============================================================================
+def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False):
+
+   # timecount = numpy.zeros(4, dtype=numpy.float64)
+
+   if hook1['lexit_lu'] ==0:
+
+       #transfert
+       if tc is not None :
+           tc_compact = Internal.getNodeFromName1( tc, 'Parameter_real')
+           #Si param_real n'existe pas, alors pas de raccord dans tc
+           if tc_compact is not  None:
+
+              param_real= tc_compact[1]
+              param_int = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
+              zonesD    = Internal.getZones(tc)
+              zonesD2   = Internal.getZones(tc2)
+
+              if hook1["neq_max"] == 5: varType = 2
+              else                    : varType = 21
+
+              dtloc = hook1['dtloc']
+
+              for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
+
+              if gradP:
+                  tc2_compact = Internal.getNodeFromName1( tc2, 'Parameter_real')
+                  param_real2= tc2_compact[1]
+                  param_int2 = Internal.getNodeFromName1(tc2, 'Parameter_int' )[1]
+                  varsGrad = ['Density', 'gradxDensity']
+                  for v in varsGrad: 
+                    C._cpVars(zones, 'centers:'+v, zonesD,  v)
+                    C._cpVars(zones, 'centers:'+v, zonesD2, v)
+                  #tc2 -> RCV ZONES
+                  varType = 23 ; type_transfert = 2 ; no_transfert   = 1
+                  Connector.connector.___setInterpTransfers4GradP(zones, zonesD2, varsGrad, param_int2, param_real2, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)
+                  #RCV ZONES -> tc
+                  varType = 24 ; type_transfert = 1 ; no_transfert   = 1
+                  Connector.connector.___setInterpTransfers4GradP(zones, zonesD, varsGrad, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)
+                  varType = 21
+
+              elif TBLE: # need to be optimised
+                  variablesIBC = ["Density", "Temperature", "gradxDensity", "gradyDensity", "gradzDensity", "gradxTemperature", "gradyTemperature", "gradzTemperature",
+                  'gradxVelocityX','gradyVelocityX','gradzVelocityX',
+                  'gradxVelocityY','gradyVelocityY','gradzVelocityY',
+                  'gradxVelocityZ','gradyVelocityZ','gradzVelocityZ',
+                  'VelocityX','VelocityY','VelocityZ',
+                  ]
+                  for v in variablesIBC: C._cpVars(zones, 'centers:'+v, zonesD, v)
+                  XOD._setInterpTransfers(zones, zonesD,  type_transfert=0, variables=variablesIBC, variablesIBC=[], compact=0)
+                  for v in variablesIBC: C._cpVars(zones, 'centers:'+v, zonesD2, v)
+                  XOD._setIBCTransfers4FULLTBLE(zones, zonesD2, variablesIBC=variablesIBC)                  
+                  XOD._setIBCTransfers4FULLTBLE2(zones, zonesD, variablesIBC=variablesIBC)                  
+
+              type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
+              no_transfert   = 1  # dans la list des transfert point a point
+              Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
+
+       #apply BC
+       #t0=timeit.default_timer()
+       if(exploc != 1):
+       #if(rk != 3 and exploc != 2):
+          _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
+       #t1=timeit.default_timer()
+       #print "Time BC",(t1-t0)
+
+
+   return None
+
 #==============================================================================
 # Cree un noeud POST
 # IN: t: tree
@@ -914,7 +1394,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
     for i in range(len(varmy)): varmy[i] = 'centers:'+varmy[i]
 
     # on determine le nbr de cellule fictive active pour le calcul des moyennes
-    numcellfic = 2 
+    numcellfic = 2
     ific       = 2   # a adapter en DF
     if lgrad == 1: numcellfic = 1
 
@@ -976,7 +1456,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             zp = T.subzone(z, (1,1,1), (1,-1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
-            
+
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, 1 , dim_tr[1], dim_tr[2] ]
             datap[0]  = 1                                                # nbr direction homogene
@@ -1011,7 +1491,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][3] = datap[9]
             param_int[1][4] = datap[10]
             param_int[1][20]= 1                     #ijkv
-            param_int[1][21]= dim_my[2]-1 -2*ific 
+            param_int[1][21]= dim_my[2]-1 -2*ific
             param_int[1][22]= dim_my[3]-1 -2*ific*inck
             param_int[1][66]= 0                           # pas de padding pour les variables stats
 
@@ -1026,11 +1506,11 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             dim  = Internal.getZoneDim(z)
             inck = 1
             if dim[3] == 2: inck =  0
-            
+
             zp = T.subzone(z, (1,1,1), (-1,1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
-            
+
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, dim_tr[1], 1, dim_tr[2] ]
             datap[0]  = 1                                                # nbr direction homogene
@@ -1051,7 +1531,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             datap[14] =  1                                               # loop moyenne jmax
             datap[15] =  1 - numcellfic*inck                             # loop moyenne kmin
             datap[16] =  datap[8] -2*ific*inck + numcellfic*inck         # loop moyenne kmax
-            
+
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
@@ -1064,27 +1544,27 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][3] = datap[9]
             param_int[1][4] = datap[10]
             param_int[1][20]= dim_my[2]-1 -2*ific   #ijkv
-            param_int[1][21]= 1                    
+            param_int[1][21]= 1
             param_int[1][22]= dim_my[3]-1 -2*ific*inck
             param_int[1][66]= 0                           # pas de padding pour les variables stats
-            
+
             zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
     elif dir == 'k':
         for z in zones:
             datap = numpy.empty(17, numpy.int32)
-            
+
             dim  = Internal.getZoneDim(z)
             inck = 1
             if dim[3] == 2: inck =  0
-            
+
             zp = T.subzone(z, (1,1,1), (-1,-1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, dim_tr[1], dim_tr[2], 1 ]
-            
+
             datap[0]  = 1                                                # nbr direction homogene
             datap[1]  = 3                                                # dir homogne
             datap[2]  = nsamples                                         # nbre echantillon
@@ -1103,7 +1583,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             datap[14] =  (dim_my[2]-1) -2*ific + numcellfic              # loop moyenne jmax
             datap[15] =  1                                               # loop moyenne kmin
             datap[16] =  1                                               # loop moyenne kmax
-            
+
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
@@ -1116,25 +1596,25 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][3] = datap[9]
             param_int[1][4] = 0
             param_int[1][20]= dim_my[1]-1 -2*ific   #ijkv
-            param_int[1][21]= dim_my[2]-1 -2*ific 
+            param_int[1][21]= dim_my[2]-1 -2*ific
             param_int[1][22]= 1
             param_int[1][66]= 0                           # pas de padding pour les variables stats
-            
+
             zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
     elif dir == 'ij':
         for z in zones:
-            
+
             datap = numpy.empty((17), numpy.int32)
             dim   = Internal.getZoneDim(z)
             inck = 1
             if dim[3] == 2: inck =  0
-            
+
             zp = T.subzone(z, (1,1,1), (1,1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
-            
+
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, 1, 1, dim_tr[1] ]
             datap[0]  = 2                                                # nbr direction homogene
@@ -1155,7 +1635,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             datap[14] =  1                                               # loop moyenne jmax
             datap[15] =  1 - numcellfic*inck                             # loop moyenne kmin
             datap[16] =  datap[8] -2*ific*inck + numcellfic*inck         # loop moyenne kmax
-            
+
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
@@ -1168,25 +1648,25 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][3] = datap[9]
             param_int[1][4] = datap[10]
             param_int[1][20]= 1                     #ijkv
-            param_int[1][21]= 1                    
+            param_int[1][21]= 1
             param_int[1][22]= dim_my[3]-1 -2*ific*inck
             param_int[1][66]= 0                           # pas de padding pour les variables stats
-            
+
             zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
     elif dir == 'ik':
         for z in zones:
             datap = numpy.empty((17), numpy.int32)
-            
+
             dim   = Internal.getZoneDim(z)
             inck = 1
             if dim[3] == 2: inck =  0
-            
+
             zp = T.subzone(z, (1,1,1), (1,-1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
-            
+
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, 1, dim_tr[1], 1 ]
             datap[0]  = 2                                                # nbr direction homogene
@@ -1207,7 +1687,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             datap[14] =  datap[7] -2*ific + numcellfic                   # loop moyenne jmax
             datap[15] =  1                                               # loop moyenne kmin
             datap[16] =  1                                               # loop moyenne kmax
-            
+
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
@@ -1220,10 +1700,10 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             param_int[1][3] = datap[9]
             param_int[1][4] = datap[10]
             param_int[1][20]= 1                     #ijkv
-            param_int[1][21]= dim_my[2]-1 -2*ific                    
+            param_int[1][21]= dim_my[2]-1 -2*ific
             param_int[1][22]= 1
             param_int[1][66]= 0                           # pas de padding pour les variables stats
-            
+
             zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
@@ -1237,7 +1717,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             zp = T.subzone(z, (1,1,1), (-1,1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
-            
+
             dim_tr = Internal.getZoneDim(zp)
             dim_my = [ 0, dim_tr[1], 1, 1 ]
             datap[0]  = 2                                                # nbr direction homogene
@@ -1258,7 +1738,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             datap[14] =  1                                               # loop moyenne imax
             datap[15] =  1                                               # loop moyenne kmin
             datap[16] =  1                                               # loop moyenne kmax
-            
+
             param_int = Internal.getNodeFromName2(zp, 'Parameter_int')  # noeud
             if param_int is None:
                 raise ValueError("_createStatNodes: Parameter_int is missing for zone %s."%z[0])
@@ -1266,7 +1746,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             ##modifie le moeud param_int de l'arbre tmy (issue de subzone) pour la fonction initNuma
             param_int[1]    = numpy.copy(param_int[1])    # sinon tableau partager avec param de la zone NS
             param_int[1][0] = dim_my[1]-1             #nijk
-            param_int[1][1] = dim_my[2]  
+            param_int[1][1] = dim_my[2]
             param_int[1][2] = dim_my[3]
             param_int[1][3] = datap[9]
             param_int[1][4] = datap[10]
@@ -1282,7 +1762,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
     Internal._rmNodesByType(b,'ZoneBC_t')
     Internal._rmNodesByType(b,'ZoneGridConnectivity_t')
 
-    _compact(tmy, fields=varmy) 
+    _compact(tmy, fields=varmy)
 
     return tmy
 
@@ -1314,7 +1794,7 @@ def initStats(filename):
     varmy=[]
     for v in var: varmy.append('centers:'+v[0])
 
-    _compact(tmy, fields=varmy) 
+    _compact(tmy, fields=varmy)
 
     return tmy
 
@@ -1425,10 +1905,10 @@ def _postStats(tmy):
 # compute enstropy et TKE in place
 #==============================================================================
 def _computeEnstrophy(t, metrics, time):
-    
     own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
+
 
     zones = Internal.getZones(t)
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
@@ -1443,7 +1923,7 @@ def _computeEnstrophy(t, metrics, time):
 #==============================================================================
 def _computeVariables(t, metrics, varlist, order=2):
     """Compute given variables."""
-    
+
 
     if   isinstance(varlist, str): vars = [varlist]
     elif isinstance(varlist, list): vars = varlist
@@ -1459,19 +1939,19 @@ def _computeVariables(t, metrics, varlist, order=2):
 
     for var in vars:
        #print 'var=',var
-       if var == 'QCriterion':  
+       if var == 'QCriterion':
           flag += 1
           var_loc.append('QCriterion')
-       elif var == 'QpCriterion':  
+       elif var == 'QpCriterion':
           flag += 2
           var_loc.append('QpCriterion')
-       elif var == 'Enstrophy': 
+       elif var == 'Enstrophy':
           flag += 10
           var_loc.append('Enstrophy')
-       elif var == 'RotX': 
+       elif var == 'RotX':
           flag += 100
           var_loc.append('RotX')
-       elif var == 'dDensitydt': 
+       elif var == 'dDensitydt':
           flag += 1000
           var_loc.append('dDensitydt')
 
@@ -1482,7 +1962,7 @@ def _computeVariables(t, metrics, varlist, order=2):
         dim = Internal.getZoneDim(z)
         size = (dim[1]-1)*(dim[2]-1)*(dim[3]-1)
         solution = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
-     
+
         for var in var_loc:
             node = Internal.getNodeFromName1(solution, var)
             if node is None:
@@ -1513,7 +1993,7 @@ def _computeVariables(t, metrics, varlist, order=2):
 #==============================================================================
 def _computeGrad(t, metrics, varlist, order=2):
     """Compute gradient of fiven variables."""
-    
+
 
     if isinstance(varlist, str): vars = [varlist]
     elif isinstance(varlist, list): vars = varlist
@@ -1571,9 +2051,9 @@ def _computeGrad(t, metrics, varlist, order=2):
 # Display
 #==============================================================================
 def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None ,verbose='firstlast'):
-    """Display CFL and convergence information.""" 
+    """Display CFL and convergence information."""
     return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose)
-    
+
 def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast'):
     own          = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc        = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
@@ -1582,17 +2062,17 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbo
 
     zones        = Internal.getZones(t)
     nzones	 = len(zones)
- 
+
     #a = Internal.getNodeFromName2(zones[0], 'model')
     #model = Internal.getValue(a)
     #neq = 5
     #if (model == 'nsspalart' or model =='NSTurbulent'): neq = 6
     neq_max = 6
-   
+
     cvg_numpy = numpy.empty((nzones,2*neq_max), dtype=numpy.float64)
-    # sortie sur stdout "simple precision" 
+    # sortie sur stdout "simple precision"
     lft = 1
-    # sortie sur stdout "double precision" 
+    # sortie sur stdout "double precision"
     if format == "double": lft = 0
     # sortie sur Fichier Fortran binaire
     elif format == "flush": lft = -1
@@ -1607,7 +2087,7 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbo
 
     if gmres is None: return None
     else: return residu
-    
+
 #==============================================================================
 # IN: d: container
 # IN: keys: les cles possibles
@@ -1621,7 +2101,7 @@ def checkKeys(d, keys):
 # init velocity (ALE)
 #==============================================================================
 def _computeVelocityAle(t, metrics):
-    
+
     own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
@@ -1630,7 +2110,7 @@ def _computeVelocityAle(t, metrics):
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
-    
+
     node = Internal.getNodeFromName1(t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = OMP_MODE
@@ -1643,7 +2123,6 @@ def _computeVelocityAle(t, metrics):
 # init velocity (ALE) from DADS maillage deformable
 #==============================================================================
 def copy_velocity_ale(t, metrics, it=0):
-    
 
     own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
@@ -1653,7 +2132,7 @@ def copy_velocity_ale(t, metrics, it=0):
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
-    
+
     node = Internal.getNodeFromName1(t   , '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode = OMP_MODE
@@ -1699,7 +2178,7 @@ def createConvergenceHistory(t, nrec):
        if model == 'nsspalart' or model =='NSTurbulent': neq = 6
     for z in zones:
         c = Internal.createUniqueChild(z, 'ZoneConvergenceHistory',
-                                       'ConvergenceHistory_t', value=curIt) 
+                                       'ConvergenceHistory_t', value=curIt)
         tmp = numpy.empty((nrec), numpy.int32)
         Internal.createChild(c, 'IterationNumber', 'DataArray_t', tmp)
         for var in varsR:
@@ -1731,11 +2210,11 @@ def extractConvergenceHistory(t, fileout):
         a = Internal.getNodeFromPath(t, i+"/ZoneConvergenceHistory/RSD_oo")
         RSD_oo = numpy.reshape(a[1],(neq,nrec),order='F')
         a='"'
-        if neq == 5: 
+        if neq == 5:
             var="VARIABLES = it RO_l2 ROU_l2 ROV_l2 ROW_l2 ROE_l2 ROoo ROUoo ROVoo ROWoo ROEoo\n"
-        if neq == 6: 
+        if neq == 6:
             var="VARIABLES = it RO_l2 ROU_l2 ROV_l2 ROW_l2 ROE_l2 NUT_l2 ROoo ROUoo ROVoo ROWoo ROEoo NUToo\n"
-        if nd == 0: FileCvg.write("%s"%(var)) 
+        if nd == 0: FileCvg.write("%s"%(var))
         nd =+ 1
         FileCvg.write("ZONE T=%sbloc %s %s I=%d F=POINT\n"%(a,i,a,lastRec))
         c = it[1]
@@ -2007,12 +2486,12 @@ def createStressNodes(t, BC=None, windows=None):
 #==============================================================================
 def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
     """Compute efforts in teff."""
-    
+
     zones     = Internal.getZones(t)
     zones_eff = Internal.getZones(teff)
     
     # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
-    if FastC.HOOK is None: 
+    if FastC.HOOK is None:
             own    = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
             dtloc  = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
@@ -2063,7 +2542,7 @@ def setIBCData_zero(t, surf, dim=None):
   for b in Internal.getBases(surf):
       body = Internal.getZones(b)
       bodies.append(body)
-  
+
   # Matrice de masquage (arbre d'assemblage)
   nbodies = len(bodies)
   nbases = len(bases)
@@ -2096,7 +2575,7 @@ def setIBCData_zero(t, surf, dim=None):
         ibc[2]= numpy.amax( itemindex[0] )-1
         ibc[3]= numpy.amin( itemindex[1] )-1
         ibc[4]= numpy.amax( itemindex[1] )-1
-  
+
         if cellN_IBC.shape[2]!=1:
            #print'verifier en 3d'
            ibc[5]= numpy.amin( itemindex[2] )-1
@@ -2106,7 +2585,7 @@ def setIBCData_zero(t, surf, dim=None):
         cellN_IBC[0:] -= 1
 
         print('Zone', z[0],': plage IBC=', ibc[1:7])
-      
+
         numz["IBC"]  = ibc
 
         FastC._setNum2Zones(z, numz)
@@ -2132,7 +2611,7 @@ def rmGhostCells(t, depth, adaptBCs=1):
  for z in zones:
    dim = Internal.getZoneDim(z)
    zname = z[0]
-   if dim[3]==2:  #zone 2D 
+   if dim[3]==2:  #zone 2D
       coordz = Internal.getNodeFromName2( z, "CoordinateZ" )[1]
       dz = coordz[2,2,1]-coordz[2,2,0]
       z = T.subzone(z,(1,1,1),(-1,-1,1))
@@ -2153,7 +2632,7 @@ def rmGhostCells(t, depth, adaptBCs=1):
  tp = C.newPyTree([basename])
  # Attache les zones
  tp[2][1][2] += zout
-  
+
  return tp
 
 
@@ -2171,7 +2650,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
  if  node is not None: ompmode = Internal.getValue(node)
 
  dtloc = Internal.getValue(dtloc) # tab numpy
- ss_iteration  = int(dtloc[0]) 
+ ss_iteration  = int(dtloc[0])
 
  timer_omp = FastC.HOOK["TIMER_OMP"]
  ADR = OMP_NUM_THREADS*2*(ss_iteration)
@@ -2196,7 +2675,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
     solver_def= Internal.getNodeFromName2(z, '.Solver#define')
     if ompmode == 1:
        Ptomp       = param_int[69]
-       PtrIterOmp  = param_int[Ptomp] 
+       PtrIterOmp  = param_int[Ptomp]
        PtZoneomp   = param_int[PtrIterOmp]
        NbreThreads = param_int[ PtZoneomp  + OMP_NUM_THREADS ]
     else:
@@ -2255,7 +2734,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
 
       tps_zone_percell = max(tps_zone_percell, 1.e-11)
       tps_zone_percell_max = max(tps_zone_percell_max, 1.e-11)
-      
+
       perfo = numpy.empty(2, dtype=numpy.float64)
       perfo[0]= int(echant*NbreThreads/tps_zone_percell)
       perfo[1]= int(echant/tps_zone_percell_max)
@@ -2265,7 +2744,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       for i in range(OMP_NUM_THREADS):
           if ompmode ==1:
             ithread = param_int[ PtZoneomp  +  i ]
-            if ithread != -2: 
+            if ithread != -2:
                if RECORD is None: print('zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread*2 ]/echant,' th=  ', ithread, 'echant= ', echant)
           else:
             ithread = i
@@ -2293,7 +2772,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
        if sizeZone not in sizeZones:
           sizeZones.append(sizeZone)
           if RECORD is None: print('zone ', z[0],'(',param_int[20],param_int[21],param_int[22],'):  surcout cpu= ', cout_relatif ,' , temps necessaire a cette zone (%)=', effort_relatif)
- 
+
           f.write(z[0]+','+str(param_int[20])+","+str(param_int[21])+","+str(param_int[22])+","+str(param_int[25])+","+str(param_int[27])+","+str(param_int[29])+","+str(param_int[33])+'\n')
  f.close()
 
@@ -2506,8 +2985,8 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
 def computeCFL_dtlocal(t):
 
     import math
-    import Transform.PyTree as T        
-   
+    import Transform.PyTree as T
+
     t = C.initVars(t,'centers:CFL', 0.)
 
     dimPb = 3
@@ -2515,7 +2994,7 @@ def computeCFL_dtlocal(t):
     if node is not None: dimPb = Internal.getValue(node)
 
     liste_BCPeriodiques = []
-    
+
     """
     BCMatch = Internal.getNodesFromType(t, 'GridConnectivity1to1_t')
     for match in BCMatch:
@@ -2524,22 +3003,22 @@ def computeCFL_dtlocal(t):
             rotCenter  = Internal.getNodeFromName(perio, 'RotationCenter')[1]
             rotAngle   = Internal.getNodeFromName(perio, 'RotationAngle')[1]
             translation = Internal.getNodeFromName(perio, 'Translation')[1]
-         
+
             list1 = [abs(translation).tolist(),abs(rotAngle).tolist(),rotCenter.tolist()]
- 
-            if (list1 not in liste_BCPeriodiques) :            
+
+            if (list1 not in liste_BCPeriodiques) :
                  liste_BCPeriodiques.append(list1)
-    """             
+    """
     #print(liste_BCPeriodiques)
-                 
+
     (t,tc,metrics) = warmup(t,tc=None) ### Oblige d appeler warmup afin de construire les metrics necessaires au calcul de la CFL
 
     zones = Internal.getZones(t)
 
     dim = Internal.getZoneDim(zones[0])
-    
+
     print('dimPb= ', dimPb)
-    
+
     fasts.prep_cfl(zones, metrics,1,1,1)
 
     #t = Internal.rmGhostCells(t, t, 2)
@@ -2554,7 +3033,7 @@ def computeCFL_dtlocal(t):
     C._rmVars(t, 'VelocityY_P1')
     C._rmVars(t, 'VelocityZ_M1')
     C._rmVars(t, 'VelocityZ_P1')
-    
+
     cflmax_glob = 0.0
     cflmin_glob = 1.0e15
 
@@ -2581,9 +3060,9 @@ def computeCFL_dtlocal(t):
 
     dtmin = 1.0/cflmax_glob
     dtmax = 1.0/cflmin_glob
-     
+
     exposant_max = math.floor(math.log2(dtmax/dtmin))
-    
+
     print('exposant maximal = ', exposant_max)
     print(dtmin)
     print(dtmax)
@@ -2617,7 +3096,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
     numZone = []
 
     liste_BCPeriodiques = []
-    
+
     BCMatch = Internal.getNodesFromType(t, 'GridConnectivity1to1_t')
     for match in BCMatch:
         perio = Internal.getNodesFromName(match, 'GridConnectivityProperty')
@@ -2625,24 +3104,24 @@ def _decoupe2(t, exposantMax = 2, NP=0):
             rotCenter  = Internal.getNodeFromName(perio, 'RotationCenter')[1]
             rotAngle   = Internal.getNodeFromName(perio, 'RotationAngle')[1]
             translation = Internal.getNodeFromName(perio, 'Translation')[1]
-         
+
             list1 = [abs(translation).tolist(),abs(rotAngle).tolist(),rotCenter.tolist()]
- 
+
             if list1 not in liste_BCPeriodiques:
-            
+
                  liste_BCPeriodiques.append(list1)
                  print(liste_BCPeriodiques)
 
-  
-    t = Internal.rmGhostCells(t, t, 2) 
-    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t') 
+
+    t = Internal.rmGhostCells(t, t, 2)
+    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')
 
     for b in bases:
         zones += Internal.getNodesFromType1(b, 'Zone_t')
 
     somme = 0
     numZone.append(somme)
-    
+
     for z in zones:
         dim = Internal.getZoneDim(z)
         ni = dim[1]-1
@@ -2650,7 +3129,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
         nk = dim[3]-1
 
         dimPb = dim[4]
-        
+
         if dimPb==2:nk=1
 
         nbbloc_i = ni/taille_bloc
@@ -2664,13 +3143,13 @@ def _decoupe2(t, exposantMax = 2, NP=0):
         if nbbloc_k*taille_bloc < nk: nbbloc_k = nbbloc_k + 1
 
         somme += nbbloc_i*nbbloc_j*nbbloc_k
-        
+
         numZone.append(somme)
 
         print(nbbloc_i,nbbloc_j,nbbloc_k)
-        
+
         print('decoupage de la zone', z[0])
-         
+
         for k in range(0,nbbloc_k):
             for j in range(0,nbbloc_j):
                 for i in range(0,nbbloc_i):
@@ -2684,7 +3163,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
                     kmax = min((k+1)*taille_bloc+1,nk+1)
 
                     if dimPb==2:kmax=1
-                   
+
                     zp = T.subzone(z,(imin,jmin,kmin),(imax,jmax,kmax))
 
                     cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
@@ -2692,11 +3171,11 @@ def _decoupe2(t, exposantMax = 2, NP=0):
                     if dtmin_loc < dtmin: dtmin = dtmin_loc
 
                     zones_decoupe.append(zp)
-                    
+
     zones_decoupe_=[]
     for zp in zones_decoupe :
         cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
-        dtmin_loc = 1./cflmax_loc        
+        dtmin_loc = 1./cflmax_loc
         niveauTps = math.log(((2**exposantMax)*dtmin)/dtmin_loc)/math.log(2)
         if niveauTps < 0.0: niveauTps = 0
         #print(niveauTps, math.ceil(niveauTps))
@@ -2708,7 +3187,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
 
     print('Nb de zones= ', len(zones_decoupe))
 
-    
+
     t[2][1][2] = zones_decoupe
 
     base=Internal.getBases(t)
@@ -2720,27 +3199,27 @@ def _decoupe2(t, exposantMax = 2, NP=0):
     for perio in liste_BCPeriodiques:
         #print('perio[0]= ', perio[0])
         t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
-    
 
-   
+
+
     newZones = Internal.getZones(t)
 
-   
+
     ### On controle si les zones en contact ont, au plus, un rapport 2 entre leur niveau en temps ###
     ### Tant que ce n'est pas le cas, on modifie les niveaux afin d arriver dans cette situtation ###
-    
+
     chgt = 1
-    
+
     while chgt != 0 :
 
-        chgt = 0      
+        chgt = 0
         for z in newZones :
 
             gcs = Internal.getNodesFromType2(z, 'GridConnectivity_t')
             for gc in gcs :
- 
+
                 name = Internal.getValue(gc)
-                
+
                 if dicoTps[z[0]] - dicoTps[name] > 1:
                     dicoTps[name] = dicoTps[z[0]] - 1
                     node = Internal.getNodeFromName(t, name)
@@ -2749,18 +3228,18 @@ def _decoupe2(t, exposantMax = 2, NP=0):
 
             gcs = Internal.getNodesFromType2(z, 'GridConnectivity1to1_t')
             for gc in gcs :
- 
+
                 name = Internal.getValue(gc)
-                
+
                 if dicoTps[z[0]] - dicoTps[name] > 1:
                     dicoTps[name] = dicoTps[z[0]] - 1
                     node = Internal.getNodeFromName(t, name)
                     C._initVars(node, 'centers:niveaux_temps', dicoTps[name])
                     chgt = 1
-            
+
         print('chgt= ', chgt)
 
-    #### Il se peut que des niveaux les plus bas aient disparu avec les chgts faits pour avor un rapport 2 entre niveaux adjacents #####    
+    #### Il se peut que des niveaux les plus bas aient disparu avec les chgts faits pour avor un rapport 2 entre niveaux adjacents #####
     #### On met donc à jour les niveaux en temps ###
 
     niveau_min = 100000
@@ -2768,18 +3247,18 @@ def _decoupe2(t, exposantMax = 2, NP=0):
          niveau = C.getMaxValue(z, 'centers:niveaux_temps')
          if niveau < niveau_min :
              niveau_min = niveau
-             
+
     print('niveau_min= ', niveau_min)
     if niveau_min != 0:
         for z in newZones:
-            niveau_precedent = C.getMaxValue(z, 'centers:niveaux_temps')         
-            C._initVars(z, 'centers:niveaux_temps', niveau_precedent - niveau_min)         
-     
+            niveau_precedent = C.getMaxValue(z, 'centers:niveaux_temps')
+            C._initVars(z, 'centers:niveaux_temps', niveau_precedent - niveau_min)
+
 
 
     #### On fusionne lorsque c est possible les zones de même pas de temps ####
-    
-    zones_merged=[]    
+
+    zones_merged=[]
     for i in range(len(zones)):
         print(numZone[i], numZone[i+1])
         zones_a_meger =  zones_decoupe[numZone[i]:numZone[i+1]]
@@ -2787,33 +3266,33 @@ def _decoupe2(t, exposantMax = 2, NP=0):
         niveauMax = 0
         niveauMin = 1000
         dico_niveau={}
-        
+
         for za in zones_a_meger:
 
             niveau = C.getMaxValue(za, 'centers:niveaux_temps')
 
             if niveau > niveauMax : niveauMax = niveau
             if niveau < niveauMin : niveauMin = niveau
-             
+
         niveauMin = int(niveauMin)
         niveauMax = int(niveauMax)
 
-            
+
         for niv in range(niveauMin,niveauMax+1):
             iso_niveau=[]
             for za in zones_a_meger:
                 if C.getMaxValue(za, 'centers:niveaux_temps') == niv:
                     iso_niveau.append(za)
-                    
+
             print('nb zones av merge', len(iso_niveau))
             iso_niveau_ = T.merge(iso_niveau, tol=1.e-11)
             print('nb zones ap merge', len(iso_niveau_))
 
             for ziso in iso_niveau_ :
                 zones_merged.append(ziso)
- 
-        
-    print('nb zones final', len(zones_merged))                
+
+
+    print('nb zones final', len(zones_merged))
     t[2][1][2] = zones_merged
 
 
@@ -2830,15 +3309,14 @@ def _decoupe2(t, exposantMax = 2, NP=0):
     base=Internal.getBases(t)
     base[0][2].append(fes)
     base[0][2].append(rs)
-        
+
     t = X.connectMatch(t, tol=1.e-6, dim=dimPb)
     for perio in liste_BCPeriodiques:
         t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
 
-    C.convertPyTree2File(t, 'essai.cgns') 
-    
-    return t        
+    C.convertPyTree2File(t, 'essai.cgns')
 
+    return t
 
 ## NOTE: _decoupe4 vs _decoupe2
 ## _decoupe4 is heavy based on _decoupe2 and is just a "cleaning" of what is done in the latter.
@@ -3168,7 +3646,7 @@ def set_dt_lts(t,running_cfl=None,dt=None):
     return dt_max
 
 #==============================================================================
-# distribution mpi pour dtloc instationnaire 
+# distribution mpi pour dtloc instationnaire
 #==============================================================================
 def _distribMpiDtloc(t,niveauMax,NP):
 
@@ -3179,7 +3657,7 @@ def _distribMpiDtloc(t,niveauMax,NP):
 
     zones = Internal.getZones(t)
 
-    exposant_max = math.log(niveauMax)/math.log(2)    
+    exposant_max = math.log(niveauMax)/math.log(2)
     exposant_max = int(exposant_max)
 
     for exposant in range(0,exposant_max+1):
@@ -3192,7 +3670,7 @@ def _distribMpiDtloc(t,niveauMax,NP):
         level = C.getValue( z, 'centers:niveaux_temps', (i,j,k))
         if pow(2,exposant) == int(level):
              list.append(z) ### list contient toutes les zones de meme niveau en temps
-      list_level.append(list) 
+      list_level.append(list)
 
 
     tp = C.newPyTree(['Base'])
@@ -3201,11 +3679,11 @@ def _distribMpiDtloc(t,niveauMax,NP):
       level = T.splitSize(level,N=0, multigrid=0, dirs=[1,2,3], R=NP, minPtsPerDir=5)
       level = X.connectMatch(level)
       level, stats = D2.distribute(level, NP,algorithm='gradient')
-      
+
       print(stats)
 
       tp[2][1][2] += level
-    
+
 
     return tp
 
@@ -3218,7 +3696,7 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
     zones     = Internal.getZones(t)
     zones_eff = Internal.getZones(teff)
 
-    if FastC.HOOK is None: 
+    if FastC.HOOK is None:
             own    = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
             dtloc  = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
             dtloc  = Internal.getValue(dtloc)                       # tab numpy
@@ -3245,7 +3723,7 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
     zones = []
     for f in bases:
-        zones += Internal.getNodesFromType1(f, 'Zone_t') 
+        zones += Internal.getNodesFromType1(f, 'Zone_t')
 
     node = Internal.getNodeFromName1(   t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
@@ -3253,8 +3731,9 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
     if  node is not None: ompmode = Internal.getValue(node)
 
     dtloc = Internal.getValue(dtloc) # tab numpy
-    nitmax = int(dtloc[0])                 
+    nitmax = int(dtloc[0])
     orderRk = int(dtloc[len(dtloc)-1])
+
 
     if tc is not None:
          bases = Internal.getNodesFromType1(tc, 'CGNSBase_t')  # noeud
@@ -3262,17 +3741,17 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
          if tc_compact is not None:
                 param_real= tc_compact[1]
                 param_int = Internal.getNodeFromName1( bases[0], 'Parameter_int' )[1]
-                
+
                 zonesD = []
                 for f in bases:
-                    tmp = Internal.getNodesFromType1(f, 'Zone_t') 
+                    tmp = Internal.getNodesFromType1(f, 'Zone_t')
                     zonesD += tmp
 
 #    nstep=1
 #    hook1  = FastC.HOOK.copy()
 #    hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nit_adjoint, nstep, 0) )
 #    hook1  = FastC.HOOK
-    
+
 
    #--------------------------------------------------------------------------
    #  0  peut-on faire ici un test pour verifier que dpJdpW a bien ete prealablement
@@ -3285,7 +3764,7 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
        #      vars = ['dpCLp_dpDensity']
        #      Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, type_transfert, no_transfert)
 
-       # if indFunc == 2 : 
+       # if indFunc == 2 :
        #      vars = ['dpCDp_dpDensity']
        #      Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType,  type_transfert, no_transfert)
 
@@ -3302,16 +3781,16 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
 #    if indFunc == 1:
 #        vars = ['AdjCLp_RDensity']     # should work for the five variables of incAdj (?)
-#           
-#    if indFunc == 2: 
+#
+#    if indFunc == 2:
 #        vars = ['AdjCDp_RDensity']     # should work for the five variables of incAdj (?)
 #
 #    # apply transfers
-#    if tc is not None and hook1[12] ==0: 
+#    if tc is not None and hook1[12] ==0:
 #       if   hook1[10] == 5: varType = 2
 #       else               : varType = 21
 
-#    #print 'transfert', nstep, skip,hook1[13], hook1[12]        
+#    #print 'transfert', nstep, skip,hook1[13], hook1[12]
 #    if tc_compact is not None:
 #       for v in vars: C._cpVars(t, 'centers:'+v, tc, v)
 #       type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
@@ -3321,34 +3800,34 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
 
 #    #-----------------------------------------------------------------
-#    #  2 calcul membres de droite et de gauche de l'algo iteratif pour l'adjoint 
+#    #  2 calcul membres de droite et de gauche de l'algo iteratif pour l'adjoint
 #    #--------------------------------------------
 
 #    fasts.compute_RhsIterAdjoint(zones, metrics, nit_adjoint, nstep, indFunc, omp_mode, hook1)
 
 #    return None
- 
+
 
     #-----------------------------------------------------------------
-    #  3 calcul membres de droite de l'algo iteratif pour l'adjoint 
+    #  3 calcul membres de droite de l'algo iteratif pour l'adjoint
     #--------------------------------------------
-    
-''' 
-     vars = ['IncAdj']     
 
-     do i=1,6 
-  
+'''
+     vars = ['IncAdj']
+
+     do i=1,6
+
        fasts.compute_LorUAdjoint(zones, metrics, nitrun, nstep, indFunc, omp_mode, hook1)
 
        Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, type_transfert, no_transfert)
-       enddo 
+       enddo
     #-----------------------------------------------------------------
     #  4 update
     #------------------------------------------------------
- 
+
     if indFunc == 1:
         # adjCLp = adjCLp + incAdj
-    if indFunc == 2: 
+    if indFunc == 2:
         # adjCDp = adjCDp + incAdj
 '''
 
@@ -3368,7 +3847,7 @@ def _computedJdX(t, metrics, nitrun, tc=None, graph=None, indFunc):
 
     zones = []
     for f in bases:
-        zones += Internal.getNodesFromType1(f, 'Zone_t') 
+        zones += Internal.getNodesFromType1(f, 'Zone_t')
 
     node = Internal.getNodeFromName1(bases[0], '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
@@ -3376,9 +3855,9 @@ def _computedJdX(t, metrics, nitrun, tc=None, graph=None, indFunc):
     if  node is not None: omp_mode = Internal.getValue(node)
 
     dtloc = Internal.getValue(dtloc) # tab numpy
-    nitmax = int(dtloc[0])                 
+    nitmax = int(dtloc[0])
     orderRk = int(dtloc[len(dtloc)-1])
-    
+
 
     if tc is not None:
          bases = Internal.getNodesFromType1(tc, 'CGNSBase_t')  # noeud
@@ -3386,10 +3865,10 @@ def _computedJdX(t, metrics, nitrun, tc=None, graph=None, indFunc):
          if tc_compact is not None:
                 param_real= tc_compact[1]
                 param_int = Internal.getNodeFromName1( bases[0], 'Parameter_int' )[1]
-                
+
                 zonesD = []
                 for f in bases:
-                    tmp = Internal.getNodesFromType1(f, 'Zone_t') 
+                    tmp = Internal.getNodesFromType1(f, 'Zone_t')
                     zonesD += tmp
 
    #--------------------------------------------------------------------------------
@@ -3399,7 +3878,3 @@ def _computedJdX(t, metrics, nitrun, tc=None, graph=None, indFunc):
     return None
 
 '''
-
-
-
-    
