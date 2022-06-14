@@ -223,10 +223,6 @@ Actions
 
     .. literalinclude:: ../build/Examples/Fast/setNum2ZonesPT.py
 
-    * `Create a source term (pyTree) <Examples/Fast/createSrcTermPT.py>`_:
-
-    .. literalinclude:: ../build/Examples/Fast/createSrcTermPT.py
-
 ..  ----------------------------------------------------
 .. ..py:function:: Fast.PyTree.metric(a)
 .. Compute the metric needed by the solvers.

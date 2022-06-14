@@ -892,8 +892,8 @@ def _buildOwnData(t, Padding):
             checkKeys(d, keys4Base)
             a = Internal.getNodeFromName1(d, 'omp_mode')
             if a is not None: ompmode = Internal.getValue(a)
-            ompmode = max(ompmode, 0);  ompmode = min(ompmode, 1)
-
+            ompmode = max(ompmode, 0); ompmode = min(ompmode, 1)
+            
             a = Internal.getNodeFromName1(d, 'temporal_scheme')
             if a is not None: temporal_scheme = Internal.getValue(a)
             a = Internal.getNodeFromName1(d, 'ss_iteration')
@@ -2599,26 +2599,26 @@ def _Fluxcompact(t):
                #print(z[0],"SIZE int", size_int,"c=", c,"size_flux =",  size_int)
                datap = numpy.zeros(size_int + c , numpy.int32)
 
-               datap[0:c]   = param_int[1][0:c]
-               datap[v.IBC_PT_FLUX]    = c                   # debut tableau flux dans param_int
+               datap[0:c] = param_int[1][0:c]
+               datap[v.IBC_PT_FLUX] = c                   # debut tableau flux dans param_int
                param_int[1] = datap
 
                deb = param_int[1][v.IBC_PT_FLUX]
                param_int[1][ deb ]= Nfamille
                #on reordone les familles pour a	voir toujour l'ordre de families
-               ordre=[];
-               count = numpy.zeros(Nfamille , numpy.int32)
-               c=0
+               ordre = []
+               count = numpy.zeros(Nfamille, numpy.int32)
+               c = 0
                for family in tmp1:
-                  i =  families.index(family[0])
+                  i = families.index(family[0])
                   ordre.append( i )
                   count[ i ] = c
-                  c+=1
+                  c += 1
                   #if len(tmp1) !=1: print("verif family",family[0])
 
                #on concatene les donnes flux dans param_int
                #for family in tmp1:
-               deb1= param_int[1][v.IBC_PT_FLUX] + 1 + Nfamille*6
+               deb1 = param_int[1][v.IBC_PT_FLUX] + 1 + Nfamille*6
                for l in sorted(ordre):
 
                   family = tmp1[ count[l] ]

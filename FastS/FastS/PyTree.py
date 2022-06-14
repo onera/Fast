@@ -254,7 +254,7 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
     fasts._matvecPT(zones, metrics, nitrun, no_vect_test, ompmode, hook1)
 
     return None
-#
+
 #==============================================================================
 # alloue retourne la metrique
 #==============================================================================
@@ -281,7 +281,7 @@ def allocate_metric(t):
                Internal.addChild(z, grid_init, pos=-1) # last
         metrics.append(fasts.allocate_metric(z, nssiter))
     return metrics
-#
+
 #==============================================================================
 # alloue retourne tableau ssor
 #==============================================================================
@@ -297,7 +297,6 @@ def allocate_ssor(t, metrics, hook, ompmode):
 
     return ssors
 
-#
 #==============================================================================
 # alloue retourne la metrique
 #==============================================================================
@@ -1388,7 +1387,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
         varmy[11]='rouU_r'
         varmy[12]='roU_tU_r'
       if var == 'thermique':
-        varmy += ['Temperature','T^2','rouT','rovT','rowT','Eps_T' ]
+        varmy += ['Temperature','T^2','rouT','rovT','rowT','Eps_T']
         lgrad =  1
 
     for i in range(len(varmy)): varmy[i] = 'centers:'+varmy[i]
@@ -1425,7 +1424,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             datap[5]  = 1                                                # nbre cellule homogene
             datap[6]  = 1                                                # incerment i
             datap[7]  = dim_my[1]-1                                      # increment j
-            datap[8]  =(dim_my[1]-1)*(dim_my[2]-1)                       # increment k
+            datap[8]  = (dim_my[1]-1)*(dim_my[2]-1)                       # increment k
             datap[9]  =  ific                                            # ific: a adapter  si DF
             datap[10] =  ific                                            # kfic: a adapter  si DF
             if dim_my[3] == 2: datap[10] =  0
@@ -1793,7 +1792,6 @@ def initStats(filename):
 
     varmy=[]
     for v in var: varmy.append('centers:'+v[0])
-
     _compact(tmy, fields=varmy)
 
     return tmy
@@ -1805,11 +1803,10 @@ def _postStats(tmy):
 
     zones   = Internal.getZones(tmy)
 
-
     for z in zones:
       flowsol = Internal.getNodeFromName1(z,'FlowSolution#Centers')
       cyl = Internal.getNodeFromName1(flowsol,"Momentum_t")
-      if cyl ==None:
+      if cyl is None:
           vars=[['MomentumX','VelocityX'],['MomentumY','VelocityY'],['MomentumZ','VelocityZ']]
       else:
           vars=[['MomentumX','VelocityX'],['Momentum_t','Velocity_t'],['Momentum_r','Velocity_r']]
@@ -1832,7 +1829,7 @@ def _postStats(tmy):
       pres2[0]='Urms'
       pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
 
-      if cyl ==None:
+      if cyl is None:
         #calcul vrms
         pres = Internal.getNodeFromName1(flowsol,'VelocityY')
         pres2= Internal.getNodeFromName1(flowsol,'rov^2')
@@ -1900,6 +1897,57 @@ def _postStats(tmy):
         C._initVars(z, '{centers:MomentumZ}= {centers:Density}*{centers:Velocity_r}')
 
     return None
+
+# Compact stat tree
+def _compactStats(ts):
+    sol = Internal.getNodesFromName3(ts, 'FlowSolution#Centers')
+    var = Internal.getNodesFromType1(sol[0], 'DataArray_t')
+    varmy = []
+    for v in var: varmy.append('centers:'+v[0])
+    FastS._compact(ts, fields=varmy)
+    return None
+
+# Return phase number
+def phase(time, omega, dpsi):
+    psi = time*omega*180./numpy.pi
+    psi = psi %360
+    p = int(psi/dpsi)
+    return p
+
+# IN: time: current time
+# IN: omega: rotation speed (rad/s)
+# IN: dpsi: phase range in psi
+def _computePhaseStats(t, ts, metrics, time, omega, dpsi):
+    import Converter.Mpi as Cmpi
+    import Compressor.PyTree as Compressor
+    psi = time*omega*180./numpy.pi
+    p = phase(time, omega, dpsi)
+    #if Cmpi.rank == 0: print(p)
+    if ts is None: 
+        if not os.access("tstat_%d.cgns"%p,os.F_OK):
+            ts = FastS.createStatNodes(t, vars=['cylindrique'])
+            Internal._createUniqueChild(ts, 'phase', 'DataArray_t', value=p)
+            _compactStats(ts)
+        else:
+            #ts=Fast.loadFile("tstat_%d.cgns"%p,mpirun=True)
+            ts = Cmpi.convertFile2PyTree("tstat_%d.cgns"%p, proc=Cmpi.rank)
+            _compactStats(ts)
+    else:
+        phase_ts = Internal.getNodeFromName1(ts,'phase')
+        phase_ts = Internal.getValue(phase_ts)
+        if phase_ts != p:
+            Compressor._compressCartesian(ts)
+            Cmpi.convertPyTree2File(ts, 'tstat_%d.cgns'%phase_ts)
+            if os.access("tstat_%d.cgns"%p, os.F_OK):
+                ts = Cmpi.convertFile2PyTree("tstat_%d.cgns"%p, proc=Cmpi.rank)
+                _compactStats(ts)
+            else : 
+                ts = FastS.createStatNodes(t,vars=['cylindrique'])
+                Internal._createUniqueChild(ts,'phase','DataArray_t', value=p)
+                _compactStats(ts)
+
+    _computeStats(t, ts, metrics)
+    return ts
 
 #==============================================================================
 # compute enstropy et TKE in place

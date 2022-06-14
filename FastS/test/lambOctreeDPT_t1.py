@@ -10,11 +10,13 @@ import Converter.Internal as Internal
 import KCore.test as test
 import sys
 
+LOCAL = test.getLocal()
+
 #mpirun -np 2 -genv OMP_NUM_THREADS=1 python lambOctreeDPT_t1.py
 MInf = 0.7
 
 rank = Cmpi.rank; size = Cmpi.size
-FILE = 'lamb.cgns'; FILED = 'lambD.cgns'
+FILE = LOCAL+'/lamb.cgns'; FILED = LOCAL+'/lambD.cgns'
 # lecture du squelette
 t = Cmpi.convertFile2SkeletonTree(FILE)
 tc = Cmpi.convertFile2SkeletonTree(FILED)
@@ -32,11 +34,11 @@ tc = Cmpi.readZones(tc, FILED, rank=rank)
 t = Cmpi.convert2PartialTree(t)
 tc = Cmpi.convert2PartialTree(tc)
 
-Cmpi.convertPyTree2File(t, 't1.cgns')
-Cmpi.convertPyTree2File(tc, 't1c.cgns')
+Cmpi.convertPyTree2File(t, LOCAL+'/t1.cgns')
+Cmpi.convertPyTree2File(tc, LOCAL+'/t1c.cgns')
 #sys.exit()
 Cmpi.barrier()
-t,tc,ts,graph=Fast.load('t1.cgns','t1c.cgns', split='single', restart=False)
+t,tc,ts,graph=Fast.load(LOCAL+'/t1.cgns', LOCAL+'/t1c.cgns', split='single', restart=False)
 
 # Init
 t = C.addState(t, 'GoverningEquations', 'Euler')
