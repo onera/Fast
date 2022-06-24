@@ -2674,7 +2674,7 @@ def rmGhostCells(t, depth, adaptBCs=1):
    else:
       z = Internal.rmGhostCells(z, z, 2, adaptBCs=adaptBCs)
 
-   z[0]=zname
+   z[0] = zname
    zout.append(z)
 
  tp = C.newPyTree([basename])
@@ -2682,7 +2682,6 @@ def rmGhostCells(t, depth, adaptBCs=1):
  tp[2][1][2] += zout
 
  return tp
-
 
 #==============================================================================
 # display CPU efficiency diagnostic
