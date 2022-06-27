@@ -37,8 +37,3 @@ for nitrun in range(1,200):
     FastS._compute(t, metrics, nitrun)
     FastS._computeStats(t, tmy, metrics)
 C.convertPyTree2File(tmy, 'stat.cgns')
-
-
-
-
-
