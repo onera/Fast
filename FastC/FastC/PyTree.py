@@ -46,6 +46,12 @@ MX_OMP_SIZE_INT = 250*OMP_NUM_THREADS
 #==============================================================================
 # Met un dictionnaire de numerics dans une/des zones
 #==============================================================================
+def setNum2Zones(a, num):
+    """Set numeric data dictionary  in zones."""
+    ap = Internal.copyRef(a)
+    _setNum2Zones(ap, num)
+    return ap
+
 def _setNum2Zones(a, num):
     """Set numeric data dictionary  in zones."""
     zones = Internal.getNodesFromType2(a, 'Zone_t')
@@ -57,16 +63,14 @@ def _setNum2Zones(a, num):
     return None
 
 #==============================================================================
+def setNum2Base(a, num):
+    """Set numeric data dictionary in bases."""
+    ap = Internal.copyRef(a)
+    _setNum2Base(ap, num)
+    return ap
+
 def _setNum2Base(a, num):
-    """Set numeric data dictionary  in bases."""
-    '''
-    bases = Internal.getNodesFromType1(a, 'CGNSBase_t')
-    for b in bases:
-        cont = Internal.createUniqueChild(b, '.Solver#define', 
-                                          'UserDefinedData_t')
-        for k in num: # some checks?
-            Internal.createUniqueChild(cont, k, 'DataArray_t', num[k])
-    '''
+    """Set numeric data dictionary in bases."""
     cont = Internal.createUniqueChild(a, '.Solver#define', 'UserDefinedData_t')
     for k in num: 
          Internal.createUniqueChild(cont, k, 'DataArray_t', num[k])

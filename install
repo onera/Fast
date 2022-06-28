@@ -54,9 +54,9 @@ do
 done
 
 # Fini avec la doc KCore pour genindex...
-if [ "$1" = "doc" -o "$1" = "all" ]; then
-    cd ../Modules/KCore/doc
-    ./install 1 2
-    [ $? != 0 ] && exit 1;
-    cd ../..
-fi
+#if [ "$1" = "doc" -o "$1" = "all" ]; then
+#    cd ../Modules/KCore/doc
+#    ./install 1 2
+#    [ $? != 0 ] && exit 1;
+#    cd ../..
+#fi

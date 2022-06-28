@@ -9,7 +9,8 @@ __version__ = Fast.__version__
 OMP_MODE = 0
 try:
     import FastC.PyTree as FastC
-    from FastC.PyTree import _setNum2Zones, _setNum2Base, load, save, loadFile, loadFileG, saveFile, loadTree, saveTree, \
+    from FastC.PyTree import _setNum2Zones, _setNum2Base, setNum2Zones, setNum2Base, load, \
+            save, loadFile, loadFileG, saveFile, loadTree, saveTree, \
             getDictOfNobNozOfRcvZones, _addPair, getDictOfNobNozOfDnrZones, _pushCenters
 except ImportError: 
     raise ImportError("Fast.PyTree: requires FastC module.")
