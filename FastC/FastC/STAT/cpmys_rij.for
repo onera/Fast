@@ -166,13 +166,13 @@ c      write(*,'(a,2f18.9)')'cn,cm',cn*c3,cnm
              end do
              end do
          endif       !2d/3D 
-        Else
+        Else if (lcyl.eq.1) then ! cylindrique x
          if(type_zone.ne.3) then  !dom 3D
              do k=kdeb,kfin
              do j=jdeb,jfin
 !DEC$ IVDEP
              do i=ideb,ifin
-#include      "FastC/STAT/cpmys_rij_ufavre_3d_cyl.for"
+#include      "FastC/STAT/cpmys_rij_ufavre_3d_cylx.for"
              end do
              end do
              end do
@@ -180,10 +180,28 @@ c      write(*,'(a,2f18.9)')'cn,cm',cn*c3,cnm
              do j=jdeb,jfin
 !DEC$ IVDEP
              do i=ideb,ifin
-#include      "FastC/STAT/cpmys_rij_ufavre_2d_cyl.for"
+#include      "FastC/STAT/cpmys_rij_ufavre_2d_cylx.for"
              end do
              end do
-         endif       !2d/3D 
+         endif       !2d/3D
+        Else ! suivant z
+         if(type_zone.ne.3) then  !dom 3D
+             do k=kdeb,kfin
+             do j=jdeb,jfin
+!DEC$ IVDEP
+             do i=ideb,ifin
+#include      "FastC/STAT/cpmys_rij_ufavre_3d_cylz.for"
+             end do
+             end do
+             end do
+         else !dom 2d
+             do j=jdeb,jfin
+!DEC$ IVDEP
+             do i=ideb,ifin
+#include      "FastC/STAT/cpmys_rij_ufavre_2d_cylz.for"
+             end do
+             end do
+         endif       !2d/3D
         Endif
 
       ELSEIF(lthermique.eq.0.and.lreynolds.eq.1) THEN  !moyenne u + bilan Eq transport rij

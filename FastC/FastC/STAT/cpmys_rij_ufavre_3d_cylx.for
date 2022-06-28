@@ -1,5 +1,11 @@
-          m =indmy(i, j, k)
-          l =inddm(i, j, k)
+          m  =indmy(i, j, k)
+          l  =inddm(i, j, k)
+          lx =indcg(i, j, k)
+
+          r  = sqrt( y(lx)*y(lx) + z(lx)*z(lx))
+          r  = max(r, 1.e-13)
+          co = z(lx)/r
+          si = y(lx)/r
 
           !cn prise en compte Nb echantillon espace et temps
           rho        = rop(l,1)
@@ -8,11 +14,12 @@
           rho_1      = 1. / rho
 
           rou_cn     = rop(l,2)*rho_cn
-          rov_cn     = rop(l,3)*rho_cn
-          row_cn     = rop(l,4)*rho_cn
+          rov_cn     = (-rop(l,3)*co+rop(l,4)*si)*rho_cn
+          row_cn     = ( rop(l,3)*si+rop(l,4)*co)*rho_cn
+
           u1         = rop(l,2)
-          u2         = rop(l,3) 
-          u3         = rop(l,4)
+          u2         = (-rop(l,3)*co+rop(l,4)*si)
+          u3         = ( rop(l,3)*si+rop(l,4)*co)
 
           p          = rop(l,5)*rho*rg
           p_cn       = p* cn

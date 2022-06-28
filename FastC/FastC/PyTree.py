@@ -3520,14 +3520,46 @@ def _print2screen(mssg2print,txt_colour):
         print(mssg2print)
         sys.stdout.write(io_reset)
     print("--")
+
 #==============================================================================
 # Root mean squared Calculation for FastS
 # Input : ts from FastS
+# IN: mode: xyz, cylx, cylz
 # Output: ts w/ Mean, RMS, & Reynolds Stresses
 #==============================================================================
-def calc_post_stats(t,iskeeporig=False):
-    vars=['Density','MomentumX','MomentumY','MomentumZ','Pressure','Pressure^2',
-          'ViscosityEddy','rou^2','rov^2','row^2','rouv','rouw','rovw']
+def calc_post_stats(t, iskeeporig=False, mode=None, tetaPhase=None):
+    if mode is None or mode == 'xyz':
+        vars=['Density','MomentumX','MomentumY','MomentumZ','Pressure','Pressure^2',
+              'ViscosityEddy','rou^2','rov^2','row^2','rouv','rouw','rovw']
+        dict_var={'VelocityX':'rou^2','VelocityY':'rov^2','VelocityZ':'row^2'}
+        list_var=[['VelocityX','VelocityY','rouv',"rho_u'v'"],
+                  ['VelocityX','VelocityZ','rouw',"rho_u'w'"],
+                  ['VelocityY','VelocityZ','rovw',"rho_v'w'"]]
+
+    elif mode == 'cylx':
+        vars=['Density','MomentumX','Momentum_t','Momentum_r','Pressure','Pressure^2',
+          'ViscosityEddy','rou^2', 'roU_t^2','roU_r^2','rouU_t','rouU_r','roU_tU_r']
+        dict_var={'Velocityt':'roU_t^2','Velocityr':'roU_r^2','VelocityX':'rou^2'}
+        list_var=[['Velocityt','Velocityr','roU_tU_r',"rho_U_t'U_r'"],
+                  ['Velocityt','VelocityX','rouU_t',"rho_U_t'u'"],
+                  ['Velocityr','VelocityX','rouU_r',"rho_U_r'u'"]]
+
+    elif mode == 'cylz':
+        vars=['Density','Momentum_t','Momentum_r','MomentumZ','Pressure','Pressure^2',
+              'ViscosityEddy','roU_t^2','roU_r^2','row^2','roU_tU_r','rowU_t','rowU_r']
+        dict_var={'Velocityt':'roU_t^2','Velocityr':'roU_r^2','VelocityZ':'row^2'}
+        list_var=[['Velocityt','Velocityr','roU_tU_r',"rho_U_t'U_r'"],
+                  ['Velocityt','VelocityZ','rowU_t',"rho_U_t'w'"],
+                  ['Velocityr','VelocityZ','rowU_r',"rho_U_r'w'"]]
+
+    else:
+        vars=['Density','MomentumX','MomentumY','MomentumZ','Pressure','Pressure^2',
+              'ViscosityEddy','rou^2','rov^2','row^2','rouv','rouw','rovw']
+        dict_var={'VelocityX':'rou^2','VelocityY':'rov^2','VelocityZ':'row^2'}
+        list_var=[['VelocityX','VelocityY','rouv',"rho_u'v'"],
+                  ['VelocityX','VelocityZ','rouw',"rho_u'w'"],
+                  ['VelocityY','VelocityZ','rovw',"rho_v'w'"]]
+
     for z in Internal.getZones(t):
         flowsol  = Internal.getNodeFromName1(z,'FlowSolution#Centers')
         
@@ -3542,22 +3574,18 @@ def calc_post_stats(t,iskeeporig=False):
         pres     = Internal.getNodeFromName1(flowsol,'Pressure')
         pres2    = Internal.getNodeFromName1(flowsol,'Pressure^2')
         if iskeeporig:Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
-        pres2[0]=pres[0]+'_RMS'
-        pres2[1]=numpy.sqrt( numpy.abs(pres2[1]-pres[1]**2))
+        pres2[0] = pres[0]+'_RMS'
+        pres2[1] = numpy.sqrt( numpy.abs(pres2[1]-pres[1]**2))
 
         #Velocity RMS
-        dict_var={'VelocityX':'rou^2','VelocityY':'rov^2','VelocityZ':'row^2'}
         for i in dict_var:
             pres     = Internal.getNodeFromName1(flowsol,i)
             pres2    = Internal.getNodeFromName1(flowsol,dict_var[i])
             if iskeeporig:Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
-            pres2[0]=pres[0]+'_RMS'
-            pres2[1]=numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
+            pres2[0] = pres[0]+'_RMS'
+            pres2[1] = numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
 
         #Reynolds Stress
-        list_var=[['VelocityX','VelocityY','rouv',"rho_u'v'"],
-                  ['VelocityX','VelocityZ','rouw',"rho_u'w'"],
-                  ['VelocityY','VelocityZ','rovw',"rho_v'w'"]]
         for i in list_var:
             v1       = Internal.getNodeFromName1(flowsol,i[0])
             v2       = Internal.getNodeFromName1(flowsol,i[1])
@@ -3566,7 +3594,19 @@ def calc_post_stats(t,iskeeporig=False):
             pres2[0]=i[3]
             pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
 
+        # Passage en xy si cylindrique
+        if mode == "cylz" and tetaPhase is not None:
+            cteta = numpy.cos(numpy.radians(tetaPhase))
+            steta = numpy.sin(numpy.radians(tetaPhase))
+            
+            C._initVars(z, '{centers:VelocityX} = {centers:Velocityr}*%20.16g - {centers:Velocityt}*%20.16g'%(cteta,steta))
+            C._initVars(z, '{centers:VelocityY} = {centers:Velocityr}*%20.16g + {centers:Velocityt}*%20.16g'%(steta,cteta))
+            C._rmVars(z, ['centers:Velocityr', 'centers:Velocityt'])
+            C._initVars(z, "{centers:VelocityX_RMS} = {centers:Velocityr_RMS}*%20.16g + {centers:Velocityt_RMS}*%20.16g - %20.16g*{centers:rho_U_t'U_r'}/{centers:Density}"%(cteta**2,steta**2,2*cteta*steta))
+            C._initVars(z, "{centers:VelocityY_RMS} = {centers:Velocityr_RMS}*%20.16g + {centers:Velocityt_RMS}*%20.16g + %20.16g*{centers:rho_U_t'U_r'}/{centers:Density}"%(steta**2,cteta**2,2*cteta*steta))
+            
     return t
+
 #====================================================================
 # Usefull functions for Chimera + motion
 #====================================================================

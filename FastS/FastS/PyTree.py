@@ -1378,15 +1378,23 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
     varmy = ['MomentumX','MomentumY','MomentumZ','Density','Pressure','Pressure^2','ViscosityEddy','rou^2','rov^2','row^2','rouv','rouw','rovw']
     lgrad = 0
     for var in vars:
-      if var == 'cylindrique':
-        varmy[1]='Momentum_t'
-        varmy[2]='Momentum_r'
-        varmy[8]='roU_t^2'
-        varmy[9]='roU_r^2'
-        varmy[10]='rouU_t'
-        varmy[11]='rouU_r'
-        varmy[12]='roU_tU_r'
-      if var == 'thermique':
+      if var == 'cylindrique' or var == 'cylx':
+        varmy[1] = 'Momentum_t'
+        varmy[2] = 'Momentum_r'
+        varmy[8] = 'roU_t^2'
+        varmy[9] = 'roU_r^2'
+        varmy[10] = 'rouU_t'
+        varmy[11] = 'rouU_r'
+        varmy[12] = 'roU_tU_r'
+      elif var == 'cylz':
+        varmy[0] = 'Momentum_t'
+        varmy[1] = 'Momentum_r'
+        varmy[7] = 'roU_t^2'
+        varmy[8] = 'roU_r^2'
+        varmy[10] = 'roU_tU_r'
+        varmy[11] = 'rowU_t'
+        varmy[12] = 'rowU_r'
+      elif var == 'thermique':
         varmy += ['Temperature','T^2','rouT','rovT','rowT','Eps_T']
         lgrad =  1
 

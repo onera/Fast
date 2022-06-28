@@ -78,7 +78,7 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
 
   vector<PyArrayObject*> hook;
 
-  E_Int lcyl = 1;
+  E_Int lcyl = 0;
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
     // check zone
@@ -97,7 +97,7 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
     t            = K_PYTREE::getNodeFromName1(sol_center, "Density");
     iptro[nd]    = K_PYTREE::getValueAF(t, hook);
 
-    if(ipt_param_int[nd][ IFLOW ] > 1)
+    if (ipt_param_int[nd][ IFLOW ] > 1)
       { t  = K_PYTREE::getNodeFromName1(sol_center, "ViscosityEddy");
         if (t == NULL) { PyErr_SetString(PyExc_ValueError, "viscosity is missing for NS computation."); return NULL; }
         else           { iptmut[nd]   = K_PYTREE::getValueAF(t, hook);}
@@ -121,10 +121,14 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
     iptromoy[nd] = K_PYTREE::getValueAF(t, hook);
 
     t            = K_PYTREE::getNodeFromName1(sol_center, "Momentum_t");
-    if ( t == NULL) { lcyl =0;}
+    PyObject* t2 = K_PYTREE::getNodeFromName1(sol_center, "MomentumX");
+    if (t != NULL && t2 != NULL) { lcyl = 1;} // suivant X
+
+    t2           = K_PYTREE::getNodeFromName1(sol_center, "MomentumZ");
+    if (t != NULL && t2 != NULL) { lcyl = 2;} // suivant Z
 
     t  = K_PYTREE::getNodeFromName1(zone_my, ".Solver#post");
-    if ( t == NULL) { PyErr_SetString(PyExc_ValueError, "stat: .Solver#post is missing or is invalid."); return 0; }
+    if (t == NULL) { PyErr_SetString(PyExc_ValueError, "stat: .Solver#post is missing or is invalid."); return 0; }
 
     iptmoy_param[nd]= K_PYTREE::getValueAI(t, hook);
 
