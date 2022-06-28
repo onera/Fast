@@ -288,11 +288,11 @@ Post
 
     in the tree **teff**, the following variables are updated in the **FlowSolution#Centers** node thanks to primitive variable of t:
 
-        1. Density     (contains the numerical fluxes linked to the mass conservation) 
-        2. MomentumX   (contains the numerical fluxes linked to the MomentumX conservation minus pinf*n)
+        1. Density     (contains the numerical fluxes linked to the mass conservation: rho (U . n) x S) 
+        2. MomentumX   (contains the normalized numerical fluxes linked to the MomentumX conservation minus P_inf*n: (( rho (U . n) Ux + (P-P_inf).nx ) x S ) x 0.5/rho_inf/U_inf^2 
         3. MomentumY...
         4. MomentumZ...
-        5. EnergyStagnationDensity  (contains the numerical fluxes of the linked to the energy conservation)
+        5. EnergyStagnationDensity  (contains the normalized numerical fluxes of the linked to the energy conservation)
         6. gradxVelocityX (gradient in the x direction of VelocityX at the position of the BC)
         7. gradyVelocityX 
         8. gradzVelocityX 
@@ -307,19 +307,24 @@ Post
         17. gradzTemperature
         18. CoefPressure
         19. ViscosityMolecular + ViscosityEddy
-        20. Density2 (contains density)
+        20. Density2: contains density (kg/m^3)
         21. Pressure
+    
+    Normalized data are normalized by 0.5 rho_inf U_inf^2 defined in the ReferenceState CGNS node
 
     the return of the function, effort, is a list of 8 items which contains integral over the surface of the BC of different variables of teff:
 
-        1. integral of MomentumX (numerical fluxes linked to the MomentumX conservation) give access to cx (stored in effort[0]) 
-        2. integral of MomentumY (numerical fluxes linked to the MomentumY conservation) give access to cy (stored in effort[1])
-        3. integral of MomentumZ (numerical fluxes linked to the MomentumZ conservation) give access to cz (stored in effort[2])
+        1. integral of MomentumX (normalized numerical fluxes linked to the MomentumX conservation) give access to cx (stored in effort[0]) 
+        2. integral of MomentumY (normalized numerical fluxes linked to the MomentumY conservation) give access to cy (stored in effort[1])
+        3. integral of MomentumZ (normalized numerical fluxes linked to the MomentumZ conservation) give access to cz (stored in effort[2])
         4. give access to cmx (stored in effort[3])
         5. give access to cmy (stored in effort[4])
         6. give access to cmz (stored in effort[5])
         7. give access to surface of the BC (stored in effort[6])
-        8. integral of Density (numerical fluxes linked to the Density conservation) give access to mass flow rate (stored in effort[7]) 
+        8. integral of Density   (numerical fluxes linked to the Density conservation) give access to mass flow rate (stored in effort[7]) 
+        9. integral of MomemtumX (numerical fluxes linked to the MomentumX conservation) give access to the stress (Newton) in the X direction (stored in effort[8]) 
+        10. integral of MomemtumY (numerical fluxes linked to the MomentumY conservation) give access to the stress (Newton) in the Y direction (stored in effort[9]) 
+        11. integral of MomemtumZ (numerical fluxes linked to the MomentumZ conservation) give access to the stress (Newton) in the Z direction (stored in effort[10]) 
 
     For a 2D computation in (x,y) plan, with an angle of attack of theta:
 
