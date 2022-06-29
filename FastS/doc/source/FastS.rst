@@ -37,7 +37,7 @@ List of functions
 .. autosummary::
 
     FastS.PyTree._compute
-    FastS.PyTree.displayTemporalCriteria
+    FastS.PyTree.display_temporal_criteria
 
 **-- Post**
 
@@ -104,18 +104,18 @@ Preparation
 .. py:function:: FastS.PyTree.createConvergenceHistory(t, nrec)
 
     Create a node in each zone with convergence information (residuals)
-    MUST be called before displayTemporalCriteria() and only for steady case.
+    MUST be called before display_temporal_criteria() and only for steady case.
     t is a pyTree, nrec is the size of the data arrays to store the residuals.
-    The data arrays are stored during the call to  **FastS.displayTemporalCriteria**
+    The data arrays are stored during the call to  **FastS.display_temporal_criteria**
 
-    :param t: input pyTRee
+    :param t: input pyTree
     :type t: pyTree
     :param nrec: ??
     :type nrec: ??
 
     *Example of use:*
 
-    * `ConvergenceHistory (Pytree) <Examples/FastS/convergenceHistoryPT.py>`_:
+    * `ConvergenceHistory (PyTree) <Examples/FastS/convergenceHistoryPT.py>`_:
 
     .. literalinclude:: ../build/Examples/FastS/convergenceHistoryPT.py
 
@@ -221,9 +221,9 @@ Running computation
 
 -------------------------------------------
 
-.. py:function:: FastS.PyTree.displayTemporalCriteria(t, metrics, nit, format=None)
+.. py:function:: FastS.PyTree.display_temporal_criteria(t, metrics, nit, format=None)
 
-    Display CFL and implicit convergence informations.
+    Displays CFL and implicit convergence information.
 
     :param t: input pyTree
     :type t: pyTree

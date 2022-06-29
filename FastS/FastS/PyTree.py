@@ -3295,7 +3295,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
         print('chgt= ', chgt)
 
     #### Il se peut que des niveaux les plus bas aient disparu avec les chgts faits pour avor un rapport 2 entre niveaux adjacents #####
-    #### On met donc à jour les niveaux en temps ###
+    #### On met donc a jour les niveaux en temps ###
 
     niveau_min = 100000
     for z in newZones:
@@ -3311,7 +3311,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
 
 
 
-    #### On fusionne lorsque c est possible les zones de même pas de temps ####
+    #### On fusionne lorsque c est possible les zones de meme pas de temps ####
 
     zones_merged=[]
     for i in range(len(zones)):

@@ -1,7 +1,8 @@
 # FastS + MPI
 from . import PyTree
 from . import fasts
-from .PyTree import display_temporal_criteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, distributeThreads, allocate_ssor, setIBCData_zero, display_cpu_efficiency, _postStats, _stretch, _computePhaseStats
+
+from .PyTree import display_temporal_criteria, displayTemporalCriteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, distributeThreads, allocate_ssor, setIBCData_zero, display_cpu_efficiency, _postStats, _stretch, _computePhaseStats
 import timeit
 import time as Time
 import numpy
@@ -655,8 +656,8 @@ def _updateGradPInfo(t, tc, metrics, type='IBCD'):
 
    _computeGrad(t, metrics, varGrad)
    for v in variablesIBC: C._cpVars(t, 'centers:'+v, tc, v)
-   Xmpi._setInterpTransfers(t, tc, type_transfert=0, variables=variablesIBC, variablesIBC=[], compact=0, type='ID')
-   Xmpi._setInterpTransfers(t, tc, type_transfert=3, variables=[], variablesIBC=variablesIBC, compact=0, type=type)
+   Xmpi._setInterpTransfers(t, tc, variables=variablesIBC, variablesIBC=[], compact=0, type='ID')
+   Xmpi._setInterpTransfers(t, tc, variables=[], variablesIBC=variablesIBC, compact=0, type=type)
    C._rmVars(tc, variablesIBC)
 
   return None
