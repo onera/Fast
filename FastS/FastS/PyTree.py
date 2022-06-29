@@ -2106,7 +2106,7 @@ def _computeGrad(t, metrics, varlist, order=2):
 #==============================================================================
 # Display
 #==============================================================================
-def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None ,verbose='firstlast'):
+def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast'):
     """Display CFL and convergence information."""
     return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose)
 

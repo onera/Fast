@@ -27,7 +27,7 @@ numz["time_step_nature"]   = "local"
 numz["cfl"]                = 4.0
 numz["scheme"]             = "roe"
 numz["slope"]              = "minmod"
-FastC._setNum2Zones(t, numz) ; FastC._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
@@ -46,7 +46,7 @@ time_step = Internal.getValue(time_step)
 for it in range(nit):
     FastS._compute(t, metrics, it, tc)
     if it%modulo_verif == 0:
-    	FastS.display_temporal_criteria(t, metrics, it)
+    	FastS.displayTemporalCriteria(t, metrics, it)
     time += time_step
 
 # time stamp

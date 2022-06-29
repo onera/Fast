@@ -75,7 +75,7 @@ if restart == False:
     t = C.addState(t, 'GoverningEquations', 'Euler')
     t = C.addState(t, MInf=MInf, alphaZ=alpha)
     t = I.initConst(t, MInf=MInf, alphaZ=alpha, loc='centers')
-    FastC._setNum2Zones(t, numz) ; FastC._setNum2Base(t, numb)
+    FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
     #C.convertPyTree2File(t, 'out.cgns') ; sys.exit()
     C.convertPyTree2File(t ,"mesh.cgns")
     C.convertPyTree2File(tc, "tc.cgns")

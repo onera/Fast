@@ -17,7 +17,7 @@ numz = { 'ssdom_IJK': [600, 30, 20000],
          'cfl': 7., 
          'scheme':'ausmpred', 
          'epsi_newton': 0.5}
-Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
+Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
@@ -26,7 +26,7 @@ for it in range(nit):
     FastS._compute(t, metrics, it)
     if it%50 == 0:
         print('- %d - %g'%(it, time))
-        FastS.display_temporal_criteria(t, metrics, it)
+        FastS.displayTemporalCriteria(t, metrics, it)
     time += numz['time_step']
 
 Internal._rmNodesByName(t, '.Solver#Param')

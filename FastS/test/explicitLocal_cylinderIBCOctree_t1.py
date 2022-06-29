@@ -174,7 +174,7 @@ for it in range(nit):
     FastS._compute(t, metrics, nit, tc,layer="Python")
     if it%100 == 0:
         print('- %d -'%it); 
-        FastS.display_temporal_criteria(t, metrics, it)
+        FastS.displayTemporalCriteria(t, metrics, it)
 
 Internal._rmNodesFromName(t, 'Parameter_int')
 Internal._rmNodesFromName(t, 'Parameter_real')

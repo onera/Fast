@@ -1,4 +1,4 @@
-# - display_temporal_criteria (pyTree) - 
+# - displayTemporalCriteria (pyTree) - 
 import Converter.PyTree as C
 import Generator.PyTree as G
 import Connector.PyTree as X
@@ -33,7 +33,6 @@ FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 # Compute
 for it in range(1,5):
     FastS._compute(t, metrics, it)
-    FastS.display_temporal_criteria(t, metrics, it)
+    FastS.displayTemporalCriteria(t, metrics, it)
 
-# Save
 C.convertPyTree2File(t, 'out.cgns')
