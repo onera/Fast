@@ -184,7 +184,7 @@ Actions
         + "zdes1_w" (mode 1 by Chauvet)
         + "zdes2"   (mode 2)
         + "zdes2_w" (mode 2 by Chauvet)
-        + "zdes3"   (mode 3, see p118 https://tel.archives-ouvertes.fr/tel-01365361/document))
+        + "zdes3"   (mode 3, see p118 https://tel.archives-ouvertes.fr/tel-01365361/document)
         + default value is 'none'
 
     - **'DES_debug'**: possible values are
