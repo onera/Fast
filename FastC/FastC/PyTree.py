@@ -3680,3 +3680,81 @@ def _pushCenters(t, tc, baseNames):
             czp = Internal.getNodeFromPath(zp, 'GridCoordinates/CoordinateZ')
             czp[1][:] = cz[1][:]
     return None
+
+#==============================================================================
+#Stats post processing for IBM
+#==============================================================================
+def add2instIBC(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3):
+    ##Removing useless Variables  
+    vars = ['centers:Density_M1'    , 'centers:Temperature_M1' ,
+            'centers:VelocityX_M1'  ,'centers:VelocityY_M1'    , 'centers:VelocityZ_M1'  ]
+    tout = C.rmVars(tout, vars)
+    
+    for z in Internal.getZones(tout):
+        zout = Internal.getNodeFromName(z,'FlowSolution#Centers')
+        VARSMACRO   =['Density','VelocityX','VelocityY','VelocityZ']
+        for v in VARSMACRO:Internal._renameNode(zout, v, v+"inst")
+        Internal._renameNode(zout, "Temperature", "Temperatureinst")
+        
+        
+    VARSMACRO.append('Pressure')
+    for v in VARSMACRO:C._initVars(tout,'{centers:'+v+'}=0.')
+    
+    VARSMACRO   =['Density','VelocityX','VelocityY','VelocityZ','Pressure']
+    if dim_in==dim_out:
+        for z in Internal.getZones(tout):
+            zin    = Internal.getNodesFromName(tin, z[0])
+            for v in VARSMACRO: C._cpVars(zin,'centers:'+v,z,'centers:'+v)
+    else:
+        for z in Internal.getZones(tout):
+            for v in VARSMACRO:
+                zout   = Internal.getNodeFromName(z,'FlowSolution#Centers')        
+                zin    = Internal.getNodesFromName(Internal.getNodesFromName(tin, z[0]), 'FlowSolution#Centers')
+        	
+                varout = Internal.getNodeFromName(zout, v)[1]
+                varin  = Internal.getNodeFromName(zin , v)[1]
+            
+                sh  = numpy.shape(varout)
+                if direction_copy2Dto3D==3:
+                    for k in range( sh[direction_copy2Dto3D-1]):
+                        varout[:,:,k]  = varin[:,:]
+                elif direction_copy2Dto3D==2:
+                    for k in range( sh[direction_copy2Dto3D-1]):
+                        varout[:,k,:]  = varin[:,:]
+                else:
+                    for k in range( sh[direction_copy2Dto3D-1]):
+                        varout[k,:,:]  = varin[:,:]
+            
+    
+    return tout
+
+
+def tcStat_IBC(t,tc,tcase,vartTypeIBC=2,bcTypeIB=3):
+    import Connector.PyTree as X
+    tc   = Internal.rmNodesByName(tc, 'FlowSolution') 
+    for z in Internal.getZones(tc):
+        subRegions = Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+        for s in subRegions:
+            sname = s[0][0:2]
+            if sname == 'ID':
+                Internal._rmNode(tc,s)
+    
+    [RoInf, RouInf, RovInf, RowInf, RoeInf, PInf, TInf, cvInf, MInf,
+     ReInf, Cs, Gamma, RokInf, RoomegaInf, RonutildeInf,
+     Mus, Cs, Ts, Pr] = C.getState(t)
+       
+    C._initVars(t,'{centers:Temperature}={centers:Pressure}/(287.053*{centers:Density})')
+    VARSMACRO   =['Density','VelocityX','VelocityY','VelocityZ','Temperature']
+    for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
+    
+    X._setInterpTransfers(t,tc,
+                          cellNVariable="cellN",
+                          variables=VARSMACRO,
+                          variablesIBC=VARSMACRO,
+                          varType=vartTypeIBC,
+                          bcType=bcTypeIB,
+                          storage=1,
+                          Gamma=Gamma,Cv=cvInf,MuS=Mus,Cs=Cs,Ts=Ts,compact=0)
+    
+    C._rmVars(tc, 'FlowSolution')
+    return tc
