@@ -3684,23 +3684,37 @@ def _pushCenters(t, tc, baseNames):
 #==============================================================================
 #Stats post processing for IBM
 #==============================================================================
-def add2instIBC(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3):
-    ##Removing useless Variables  
-    vars = ['centers:Density_M1'    , 'centers:Temperature_M1' ,
-            'centers:VelocityX_M1'  ,'centers:VelocityY_M1'    , 'centers:VelocityZ_M1'  ]
+def add2inst(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3,mode=None):
+    
+    VARSMACRO_global     =['Density','VelocityX','VelocityY','VelocityZ']
+    if mode is None:
+        VARSMACRO_save   =['Density','VelocityX','VelocityY','VelocityZ']
+    elif mode == 'cylx':
+        VARSMACRO_save   =['Density','VelocityX','Velocityr','Velocityt']
+    elif mode == 'cylz':
+        VARSMACRO_save   =['Density','VelocityZ','Velocityr','Velocityt']
+
+    VARSMACRO=VARSMACRO_global
+    vars=[]
+    for v in VARSMACRO:
+        vars.append('centers:'+v+'_M1')
+    vars.append('centers:Temperature_M1')
     tout = C.rmVars(tout, vars)
     
     for z in Internal.getZones(tout):
         zout = Internal.getNodeFromName(z,'FlowSolution#Centers')
-        VARSMACRO   =['Density','VelocityX','VelocityY','VelocityZ']
         for v in VARSMACRO:Internal._renameNode(zout, v, v+"inst")
         Internal._renameNode(zout, "Temperature", "Temperatureinst")
+
+    if mode == 'cylx':
+        vars=['VelocityY','VelocityZ']
+    elif mode == 'cylz':
+        vars=['VelocityX','VelocityY']
+    tout = C.rmVars(tout, vars)
         
-        
+    VARSMACRO   =VARSMACRO_save
     VARSMACRO.append('Pressure')
-    for v in VARSMACRO:C._initVars(tout,'{centers:'+v+'}=0.')
     
-    VARSMACRO   =['Density','VelocityX','VelocityY','VelocityZ','Pressure']
     if dim_in==dim_out:
         for z in Internal.getZones(tout):
             zin    = Internal.getNodesFromName(tin, z[0])
@@ -3728,7 +3742,68 @@ def add2instIBC(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3):
     
     return tout
 
+def calc_cp_cf(t,h,listzones,isRANS=False,wallType='BCWall',mode=None):
+    h._loadZones(t, znp=listzones)
 
+    #Removing useless Variables
+    if mode is None:
+        vars   =['centers:Densityinst'   ,'centers:Temperatureinst' ,
+                 'centers:VelocityXinst' ,'centers:VelocityYinst'   , 'centers:VelocityZinst' ,
+                 'centers:ViscosityEddy' ]
+    elif mode == 'cylx':
+        vars   =['centers:Densityinst'   ,'centers:Temperatureinst' ,
+                 'centers:VelocityXinst' ,'centers:Velocityrinst'   , 'centers:Velocitytinst' ,
+                 'centers:ViscosityEddy' ]
+    elif mode == 'cylz':
+        vars   =['centers:Densityinst'   ,'centers:Temperatureinst' ,
+                 'centers:Velocityrinst' ,'centers:Velocitytinst'   , 'centers:VelocityZinst' ,
+                 'centers:ViscosityEddy' ]
+    t = C.rmVars(t, vars)
+    
+    ##Selecting zone
+    bases = Internal.getBases(t)
+    for b in bases:
+        zones = Internal.getZones(b)
+        for z in zones:
+            if b[0]+'/'+z[0] not in listzones:
+                Internal._rmNode(t,z)
+                    
+    [RoInf, RouInf, RovInf, RowInf, RoeInf, PInf, TInf, cvInf, MInf,
+     ReInf, Cs, Gamma, RokInf, RoomegaInf, RonutildeInf,
+     Mus, Cs, Ts, Pr] = C.getState(t)
+        
+    betas    = Mus*(Ts+Cs)/(Ts**(3./2.))
+    gam1cv   = (Gamma-1.)*cvInf
+    RoUInf2I = 1./(RouInf*RouInf+RovInf*RovInf+RowInf*RowInf)
+    if not isRANS:
+        C._initVars(t,'{centers:Temperature}={centers:Pressure}/(287.053*{centers:Density})')
+    else:
+        C._initVars(t,'{centers:Pressure}={centers:Temperature}*(287.053*{centers:Density})')
+            
+    ##RM unnecessary data
+    test = Internal.getNodeFromType1(t, 'FlowEquationSet_t')
+    Internal._rmNode(t, test)
+    
+    t=C.center2Node(t,"FlowSolution#Centers")
+    Internal._rmNodesByName(t,"FlowSolution#Centers")
+
+    ### Calculate Shear Stress
+    if mode is None:
+        t = P.computeExtraVariable(t, 'ShearStress')
+
+    Internal._rmGhostCells(t,t,2,adaptBCs=1)
+    w       = C.extractBCOfType(t,wallType)
+    
+    if mode is None:       
+        w = P.computeExtraVariable(w, 'SkinFriction')
+        w = P.computeExtraVariable(w, 'SkinFrictionTangential')
+        C._initVars(w,'{Cf}=2*sqrt({SkinFrictionTangentialX}**2+{SkinFrictionTangentialY}**2+{SkinFrictionTangentialZ}**2)*%g*%g'%(RoInf,RoUInf2I))
+    C._initVars(w,'{Cp}=2*%g*({Pressure}-%g)*%g'%(RoInf,PInf,RoUInf2I))
+
+    return w
+    
+
+    
 def tcStat_IBC(t,tc,tcase,vartTypeIBC=2,bcTypeIB=3):
     import Connector.PyTree as X
     tc   = Internal.rmNodesByName(tc, 'FlowSolution') 
