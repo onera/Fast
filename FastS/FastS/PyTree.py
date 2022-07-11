@@ -273,7 +273,7 @@ def allocate_metric(t):
         num = Internal.getNodeFromName1(z, '.Solver#ownData')
         if num is None:
             raise ValueError("metric: numerics is missing for zone %s."%z[0])
-        if motion == 'rigid' or  motion == 'deformation':
+        if motion == 'rigid' or motion == 'deformation':
             grids = Internal.getNodesFromType1(z, 'GridCoordinates_t')
             if len(grids) == 1:
                grid_init = Internal.copyTree(grids[0])
@@ -385,8 +385,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     ssors = allocate_ssor(t, metrics, hook1, ompmode)
 
     # compact + align + init numa
-    rmConsVars=True
-    adjoint=Adjoint
+    rmConsVars = True
+    adjoint = Adjoint
 
     
     t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP)
@@ -2096,7 +2096,7 @@ def _computeGrad(t, metrics, varlist, order=2):
       
     if lgrad:
        dtloc = Internal.getNodeFromName2(t , '.Solver#dtloc')  # noeud
-       dtloc = Internal.getValue(dtloc)                       # tab numpy
+       dtloc = Internal.getValue(dtloc)                        # tab numpy
 
        # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
        if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
@@ -2202,7 +2202,7 @@ def copy_velocity_ale(t, metrics, it=0):
       if tmp is not None:
           zones_aleDeformation.append(z)
           metric_aleDeformation.append(metrics[c])
-      c+=1
+      c += 1
 
     fasts.copy_velocity_ale(zones_aleDeformation, metric_aleDeformation, FastC.HOOK, ompmode, it)
     return None
@@ -3066,7 +3066,7 @@ def computeCFL_dtlocal(t):
     """
     #print(liste_BCPeriodiques)
 
-    (t,tc,metrics) = warmup(t,tc=None) ### Oblige d appeler warmup afin de construire les metrics necessaires au calcul de la CFL
+    (t,tc,metrics) = warmup(t, tc=None) ### Oblige d'appeler warmup afin de construire les metrics necessaires au calcul de la CFL
 
     zones = Internal.getZones(t)
 

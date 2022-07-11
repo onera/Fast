@@ -161,7 +161,7 @@ for ale in TypeMotion:
 
                         #Include generation
                         Direction = ['i', 'j', 'k']
-                        if (typezone == '2d'): Direction = ['i', 'j']
+                        if typezone == '2d': Direction = ['i', 'j']
                         for dir  in Direction:
 
                                 #Euler flux face

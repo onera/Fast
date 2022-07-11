@@ -3523,11 +3523,12 @@ def _print2screen(mssg2print,txt_colour):
 
 #==============================================================================
 # Root mean squared Calculation for FastS
-# Input : ts from FastS
+# Input: ts from FastS
 # IN: mode: xyz, cylx, cylz
+# IN: cartesian: if True and cyl, return cartesian velocities
 # Output: ts w/ Mean, RMS, & Reynolds Stresses
 #==============================================================================
-def calc_post_stats(t, iskeeporig=False, mode=None, tetaPhase=None):
+def calc_post_stats(t, iskeeporig=False, mode=None, cartesian=True):
     if mode is None or mode == 'xyz':
         vars=['Density','MomentumX','MomentumY','MomentumZ','Pressure','Pressure^2',
               'ViscosityEddy','rou^2','rov^2','row^2','rouv','rouw','rovw']
@@ -3564,16 +3565,16 @@ def calc_post_stats(t, iskeeporig=False, mode=None, tetaPhase=None):
         flowsol  = Internal.getNodeFromName1(z,'FlowSolution#Centers')
         
         #Calc Velocity from Momentum & Density
-        dens= Internal.getNodeFromName1(flowsol,'Density')
+        dens = Internal.getNodeFromName1(flowsol, 'Density')
         for v in vars[1:4]:
             var = Internal.getNodeFromName1(flowsol,v)
-            var[0]= 'Velocity'+var[0][-1]
-            var[1]= var[1]/dens[1]
+            var[0] = 'Velocity'+var[0][-1]
+            var[1] = var[1]/dens[1]
 
         #Pressure RMS
         pres     = Internal.getNodeFromName1(flowsol,'Pressure')
         pres2    = Internal.getNodeFromName1(flowsol,'Pressure^2')
-        if iskeeporig:Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
+        if iskeeporig: Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
         pres2[0] = pres[0]+'_RMS'
         pres2[1] = numpy.sqrt( numpy.abs(pres2[1]-pres[1]**2))
 
@@ -3581,7 +3582,7 @@ def calc_post_stats(t, iskeeporig=False, mode=None, tetaPhase=None):
         for i in dict_var:
             pres     = Internal.getNodeFromName1(flowsol,i)
             pres2    = Internal.getNodeFromName1(flowsol,dict_var[i])
-            if iskeeporig:Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
+            if iskeeporig: Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
             pres2[0] = pres[0]+'_RMS'
             pres2[1] = numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
 
@@ -3590,21 +3591,33 @@ def calc_post_stats(t, iskeeporig=False, mode=None, tetaPhase=None):
             v1       = Internal.getNodeFromName1(flowsol,i[0])
             v2       = Internal.getNodeFromName1(flowsol,i[1])
             pres2    = Internal.getNodeFromName1(flowsol,i[2])
-            if iskeeporig:Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
-            pres2[0]=i[3]
-            pres2[1]=pres2[1] - v1[1]*v2[1]*dens[1]
+            if iskeeporig: Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
+            pres2[0] = i[3]
+            pres2[1] = pres2[1] - v1[1]*v2[1]*dens[1]
 
-        # Passage en xy si cylindrique
-        if mode == "cylz" and tetaPhase is not None:
-            cteta = numpy.cos(numpy.radians(tetaPhase))
-            steta = numpy.sin(numpy.radians(tetaPhase))
-            
-            C._initVars(z, '{centers:VelocityX} = {centers:Velocityr}*%20.16g - {centers:Velocityt}*%20.16g'%(cteta,steta))
-            C._initVars(z, '{centers:VelocityY} = {centers:Velocityr}*%20.16g + {centers:Velocityt}*%20.16g'%(steta,cteta))
-            C._rmVars(z, ['centers:Velocityr', 'centers:Velocityt'])
-            C._initVars(z, "{centers:VelocityX_RMS} = {centers:Velocityr_RMS}*%20.16g + {centers:Velocityt_RMS}*%20.16g - %20.16g*{centers:rho_U_t'U_r'}/{centers:Density}"%(cteta**2,steta**2,2*cteta*steta))
-            C._initVars(z, "{centers:VelocityY_RMS} = {centers:Velocityr_RMS}*%20.16g + {centers:Velocityt_RMS}*%20.16g + %20.16g*{centers:rho_U_t'U_r'}/{centers:Density}"%(steta**2,cteta**2,2*cteta*steta))
-            
+        # Passage en xyz des vitesses si cylindrique
+        if mode == "cylz" and cartesian:
+            C._initVars(z,"{centers:Radius} = ( {centers:CoordinateX}**2 +{centers:CoordinateY}**2 )**0.5")
+            C._initVars(z,"{centers:co} = {centers:CoordinateX}/{centers:Radius}")
+            C._initVars(z,"{centers:si} = {centers:CoordinateY}/{centers:Radius}")
+            C._initVars(z, '{centers:VelocityX} = {centers:Velocityr}*{centers:co} - {centers:Velocityt}*{centers:si}')
+            C._initVars(z, '{centers:VelocityY} = {centers:Velocityr}*{centers:si} + {centers:Velocityt}*{centers:co}')
+            C._initVars(z, "{centers:VelocityX_RMS} = {centers:Velocityr_RMS}*{centers:co}**2 + {centers:Velocityt_RMS}*{centers:si}**2 - 2*{centers:si}*{centers:co}*{centers:rho_U_t'U_r'}/{centers:Density}")
+            C._initVars(z, "{centers:VelocityY_RMS} = {centers:Velocityr_RMS}*{centers:si}**2 + {centers:Velocityt_RMS}*{centers:co}**2 + 2*{centers:si}*{centers:co}*{centers:rho_U_t'U_r'}/{centers:Density}")
+            # C._initVars(z,"{centers:rho_U_rp^2} = {centers:roU_r^2} -{centers:Density}*{centers:Velocityr}**2 ")
+            # C._initVars(z,"{centers:rho_U_tp^2} = {centers:roU_t^2} -{centers:Density}*{centers:Velocityt}**2 ")
+            # C._initVars(z,"{centers:rho_u'v'} = {centers:rho_U_rp^2} *%20.16g + {centers:rho_U_t'U_r'}*%20.16g -{centers:rho_U_tp^2}*%20.16g "%(cteta*steta , cteta**2 -steta**2,cteta*steta )) 
+            C._initVars(z,"{centers:rho_u'w'} = {centers:rho_U_r'w'}*{centers:co} - {centers:rho_U_t'w'}*{centers:si}")       
+            C._initVars(z,"{centers:rho_v'w'} = {centers:rho_U_r'w'}*{centers:si} + {centers:rho_U_t'w'}*{centers:co}")   
+            C._rmVars(z, ['centers:Velocityr_RMS', 'centers:Velocityt_RMS' ,'centers:Velocityr', 'centers:Velocityt' ,"centers:rho_U_r'w'","centers:rho_U_t'w'","centers:rho_U_t'U_r'",'centers:co','centers:si','centers:Radius'])
+        elif mode == "cylx" and cartesian:
+            pass
+            #C._initVars(z, '{centers:VelocityY} = {centers:Velocityr}*%20.16g - {centers:Velocityt}*%20.16g'%(cteta,steta))
+            #C._initVars(z, '{centers:VelocityZ} = {centers:Velocityr}*%20.16g + {centers:Velocityt}*%20.16g'%(steta,cteta))
+            #C._rmVars(z, ['centers:Velocityr', 'centers:Velocityt'])
+            #C._initVars(z, "{centers:VelocityX_RMS} = {centers:Velocityr_RMS}*%20.16g + {centers:Velocityt_RMS}*%20.16g - %20.16g*{centers:rho_U_t'U_r'}/{centers:Density}"%(cteta**2,steta**2,2*cteta*steta))
+            #C._initVars(z, "{centers:VelocityY_RMS} = {centers:Velocityr_RMS}*%20.16g + {centers:Velocityt_RMS}*%20.16g + %20.16g*{centers:rho_U_t'U_r'}/{centers:Density}"%(steta**2,cteta**2,2*cteta*steta))
+
     return t
 
 #====================================================================

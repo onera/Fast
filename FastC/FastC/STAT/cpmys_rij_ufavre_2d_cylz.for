@@ -10,7 +10,7 @@
           rou_cn     = rop(l,2)*rho_cn
           rov_cn     = rop(l,3)*rho_cn
           u1         = rop(l,2)
-          u2         = rop(l,3) 
+          u2         = rop(l,3)
 
           p          = rop(l,5)*rho*rg
           p_cn       = p* cn
@@ -27,5 +27,4 @@
           moy (m, 8) = moy(m, 8) + rou_cn * u1 
           moy (m, 9) = moy(m, 9) + rov_cn * u2 
           moy (m,11) = moy(m,11) + rou_cn * u2 
-
 

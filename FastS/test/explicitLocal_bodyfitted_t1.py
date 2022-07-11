@@ -20,8 +20,9 @@ LOCAL = test.getLocal()
 
 ## BEGINNING OF COMPUTE
 if not os.path.isfile(LOCAL+'/cgns_lts/t3DLTS.cgns'):
+    if LOCAL != '.': shutil.copy("cgns_lts.tar.gz", LOCAL+'/cgns_lts.tar.gz')
     tar = tarfile.open(LOCAL+'/cgns_lts.tar.gz', "r:gz")
-    tar.extractall()
+    tar.extractall(path=LOCAL)
     tar.close()
 
 t  = Fast.loadTree(LOCAL+'/cgns_lts/t3DLTS.cgns')

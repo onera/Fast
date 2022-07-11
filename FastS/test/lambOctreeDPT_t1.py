@@ -16,7 +16,7 @@ LOCAL = test.getLocal()
 MInf = 0.7
 
 rank = Cmpi.rank; size = Cmpi.size
-FILE = LOCAL+'/lamb.cgns'; FILED = LOCAL+'/lambD.cgns'
+FILE = 'lamb.cgns'; FILED = 'lambD.cgns'
 # lecture du squelette
 t = Cmpi.convertFile2SkeletonTree(FILE)
 tc = Cmpi.convertFile2SkeletonTree(FILED)

@@ -118,14 +118,14 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
     /*----------------------------------*/
     sol_center   = K_PYTREE::getNodeFromName1(zone_my   , "FlowSolution#Centers");
     t            = K_PYTREE::getNodeFromName1(sol_center, "MomentumX");
-    iptromoy[nd] = K_PYTREE::getValueAF(t, hook);
+    PyObject* t2 = K_PYTREE::getNodeFromName1(sol_center, "Momentum_t");
+    if (t2 != NULL && t != NULL) lcyl = 1; // cyl x
+    else if (t2 != NULL & t == NULL) lcyl = 2; // cylz
+    else lcyl = 0;
 
-    t            = K_PYTREE::getNodeFromName1(sol_center, "Momentum_t");
-    PyObject* t2 = K_PYTREE::getNodeFromName1(sol_center, "MomentumX");
-    if (t != NULL && t2 != NULL) { lcyl = 1;} // suivant X
-
-    t2           = K_PYTREE::getNodeFromName1(sol_center, "MomentumZ");
-    if (t != NULL && t2 != NULL) { lcyl = 2;} // suivant Z
+    if (lcyl == 0) iptromoy[nd] = K_PYTREE::getValueAF(t, hook);
+    else if (lcyl == 1) iptromoy[nd] = K_PYTREE::getValueAF(t, hook);
+    else if (lcyl == 2) iptromoy[nd] = K_PYTREE::getValueAF(t2, hook);
 
     t  = K_PYTREE::getNodeFromName1(zone_my, ".Solver#post");
     if (t == NULL) { PyErr_SetString(PyExc_ValueError, "stat: .Solver#post is missing or is invalid."); return 0; }
