@@ -2106,11 +2106,11 @@ def _computeGrad(t, metrics, varlist, order=2):
 #==============================================================================
 # Display
 #==============================================================================
-def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast'):
+def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast',isSaveFirst=True):
     """Display CFL and convergence information."""
-    return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose)
+    return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose,isSaveFirst)
 
-def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast'):
+def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast',isSaveFirst=True):
     own          = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc        = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc_numpy  = Internal.getValue(dtloc)
@@ -2123,9 +2123,10 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbo
     #model = Internal.getValue(a)
     #neq = 5
     #if (model == 'nsspalart' or model =='NSTurbulent'): neq = 6
+
     neq_max = 6
 
-    cvg_numpy = numpy.empty((nzones,2*neq_max), dtype=numpy.float64)
+    cvg_numpy = numpy.empty((nzones,4*neq_max), dtype=numpy.float64)
     # sortie sur stdout "simple precision"
     lft = 1
     # sortie sur stdout "double precision"
@@ -2139,7 +2140,7 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbo
 
     iverb = 0
     if verbose != 'firstlast': iverb=2
-    residu = fasts.display_ss_iteration( zones, metrics, cvg_numpy, nitrun, nssiter, lft, iverb)
+    residu = fasts.display_ss_iteration( zones, metrics, cvg_numpy, nitrun, nssiter, lft, iverb,int(isSaveFirst))
 
     if gmres is None: return None
     else: return residu
@@ -2220,7 +2221,7 @@ def _movegrid(t):
 #==============================================================================
 def createConvergenceHistory(t, nrec):
     """Create a node in tree to store convergence history."""
-    varsR   = ['RSD_L2','RSD_oo']
+    varsR   = ['RSD_L2','RSD_oo','RSD_L2_diff','RSD_oo_diff']
     bases   = Internal.getNodesFromType1(t, 'CGNSBase_t')
     curIt   = 0
     for b in bases:
@@ -2235,50 +2236,73 @@ def createConvergenceHistory(t, nrec):
     for z in zones:
         c = Internal.createUniqueChild(z, 'ZoneConvergenceHistory',
                                        'ConvergenceHistory_t', value=curIt)
-        tmp = numpy.empty((nrec), numpy.int32)
+        tmp = numpy.zeros((nrec), numpy.int32)
         Internal.createChild(c, 'IterationNumber', 'DataArray_t', tmp)
         for var in varsR:
-            tmp = numpy.empty((nrec*neq), numpy.float64)
+            tmp = numpy.zeros((nrec*neq), numpy.float64)
             Internal.createChild(c, var ,'DataArray_t', tmp)
     return None
 
 #==============================================================================
 # extraction des residus du Pytree dans fichier tecplot ascii
 # ==============================================================================
+def write_plt_format(t,i,FileCvg,nd,it = [],RSD_L2 = [],RSD_oo = [],RSD_L2_diff = [], RSD_oo_diff = [], a = [],convergence_name='ZoneConvergenceHistory'):
+    node    = Internal.getNodeFromPath(t, i+'/'+convergence_name)
+    lastRec = node[1][0]
+
+    add_local = '/'+convergence_name+'/'
+    it = Internal.getNodeFromPath(t,i+add_local+"IterationNumber")
+    
+    a      = Internal.getNodeFromPath(t, i+add_local+"RSD_L2")
+     
+    nrec = it[1].size
+    neq  = a[1].size//nrec
+
+    RSD_L2 = numpy.reshape(a[1],(neq,nrec),order='F')
+    
+    a = Internal.getNodeFromPath(t, i+add_local+"RSD_oo")
+    RSD_oo = numpy.reshape(a[1],(neq,nrec),order='F')
+    
+    a = Internal.getNodeFromPath(t, i+add_local+"RSD_L2_diff")
+    RSD_L2_diff = numpy.reshape(a[1],(neq,nrec),order='F')
+    
+    a = Internal.getNodeFromPath(t, i+add_local+"RSD_oo_diff")
+    RSD_oo_diff = numpy.reshape(a[1],(neq,nrec),order='F')
+    
+    a='"'
+    if neq == 5:
+        var="VARIABLES = it RO_l2 ROU_l2 ROV_l2 ROW_l2 ROE_l2 ROoo ROUoo ROVoo ROWoo ROEoo RO_l2_diff ROU_l2_diff ROV_l2_diff ROW_l2_diff ROE_l2_diff ROoo_diff ROUoo_diff ROVoo_diff ROWoo_diff ROEoo_diff\n"
+    if neq == 6:
+        var="VARIABLES = it RO_l2 ROU_l2 ROV_l2 ROW_l2 ROE_l2 NUT_l2 ROoo ROUoo ROVoo ROWoo ROEoo NUToo RO_l2_diff ROU_l2_diff ROV_l2_diff ROW_l2_diff ROE_l2_diff NUT_l2_diff ROoo_diff ROUoo_diff ROVoo_diff ROWoo_diff ROEoo_diff NUToo_diff\n"
+    if nd == 0: FileCvg.write("%s"%(var))
+    nd =+ 1
+    FileCvg.write("ZONE T=%sbloc %s %s I=%d F=POINT\n"%(a,i,a,lastRec))
+    c = it[1]
+    for l in range(lastRec):
+       a  = ""
+       for k in range(neq): a = a+"{0:7f} ".format(RSD_L2     [(k,l)])
+       for k in range(neq): a = a+"{0:7f} ".format(RSD_oo     [(k,l)])
+       for k in range(neq): a = a+"{0:7f} ".format(RSD_L2_diff[(k,l)])
+       for k in range(neq): a = a+"{0:7f} ".format(RSD_oo_diff[(k,l)])           
+       FileCvg.write('%s %s\n'%(1+c[l],a))
+    return nd
+
+
 def extractConvergenceHistory(t, fileout):
     """Extract residuals in an ascii file."""
     zones = Internal.getZonePaths(t)
-    it = []; RSD_L2 = []; RSD_oo = []; a = []
     nd = 0
     FileCvgName = fileout
     FileCvg = open(FileCvgName,'w')
     for i in zones:
-        node = Internal.getNodeFromPath(t, i+'/ZoneConvergenceHistory')
-        lastRec = node[1][0]
-        #it = C.convertPyTree2Array(i+"/ZoneConvergenceHistory/IterationNumber", t)
-        #a  = C.convertPyTree2Array(i+"/ZoneConvergenceHistory/RSD_L2", t)
-        it = Internal.getNodeFromPath(t,i+"/ZoneConvergenceHistory/IterationNumber")
-        a = Internal.getNodeFromPath(t, i+"/ZoneConvergenceHistory/RSD_L2")
-        nrec = it[1].size
-        neq = a[1].size//nrec
-        RSD_L2 = numpy.reshape(a[1],(neq,nrec),order='F')
-        #a = C.convertPyTree2Array(i+"/ZoneConvergenceHistory/RSD_oo", t)
-        a = Internal.getNodeFromPath(t, i+"/ZoneConvergenceHistory/RSD_oo")
-        RSD_oo = numpy.reshape(a[1],(neq,nrec),order='F')
-        a='"'
-        if neq == 5:
-            var="VARIABLES = it RO_l2 ROU_l2 ROV_l2 ROW_l2 ROE_l2 ROoo ROUoo ROVoo ROWoo ROEoo\n"
-        if neq == 6:
-            var="VARIABLES = it RO_l2 ROU_l2 ROV_l2 ROW_l2 ROE_l2 NUT_l2 ROoo ROUoo ROVoo ROWoo ROEoo NUToo\n"
-        if nd == 0: FileCvg.write("%s"%(var))
-        nd =+ 1
-        FileCvg.write("ZONE T=%sbloc %s %s I=%d F=POINT\n"%(a,i,a,lastRec))
-        c = it[1]
-        for l in range(lastRec):
-           a  = ""
-           for k in range(neq): a = a+"{0:7f} ".format(RSD_L2[(k,l)])
-           for k in range(neq): a = a+"{0:7f} ".format(RSD_oo[(k,l)])
-           FileCvg.write('%s %s\n'%(1+c[l],a))
+        nd = write_plt_format(t,i,FileCvg,nd,it = [],RSD_L2 = [],RSD_oo = [],RSD_L2_diff = [], RSD_oo_diff = [], a = [],convergence_name='ZoneConvergenceHistory')
+
+    for i in Internal.getPathsFromType(t, 'CGNSBase_t'):
+        base       = Internal.getNodeFromPath(t, i)
+        zone_check =Internal.getNodeByName(base,'GlobalConvergenceHistory')
+        if Internal.getChildren(zone_check):
+            nd   = write_plt_format(t,i,FileCvg,nd,it = [],RSD_L2 = [],RSD_oo = [],RSD_L2_diff = [], RSD_oo_diff = [], a = [],convergence_name='GlobalConvergenceHistory')
+           
     FileCvg.close()
 
 #==============================================================================
@@ -3933,3 +3957,134 @@ def _computedJdX(t, metrics, nitrun, tc=None, graph=None, indFunc):
     return None
 
 '''
+
+
+##ADD to the t_conv_history
+def add2previous(var_list,zone_save,zone_current,it0):
+    
+    new_value_node = Internal.getValue(zone_current) + Internal.getValue(zone_save)
+    
+    for var_local in var_list:
+        RSD_tmp   =Internal.getNodeByName(zone_current,var_local)[1]
+        RSD_sv    =Internal.getNodeByName(zone_save,var_local)[1]
+
+        sh_local  = numpy.shape(RSD_sv)[0]
+
+        nrec        = Internal.getValue(zone_save)
+        nrec_tmp    = Internal.getValue(zone_current)
+               
+        sh_tmp = nrec_tmp*sh_local//nrec
+        sh     = nrec    *sh_local//nrec        
+        
+        local_val = numpy.zeros(sh+sh_tmp)
+    
+        shift_local=0
+        if var_local=='IterationNumber':shift_local    = it0
+        for i in range(sh):local_val[i]=RSD_sv[i]
+        for i in range(sh_tmp):local_val[i+sh]=RSD_tmp[i]+shift_local    
+        Internal.createUniqueChild(zone_save,var_local,'DataArray_t',value=local_val)
+    Internal.setValue(zone_save,new_value_node)
+    return None
+
+
+##POPULATE GLOBAL CONVERGENCE FOR EACH BASE
+def calc_global_convergence(t):
+
+    var_list    =['RSD_oo','RSD_L2','RSD_oo_diff','RSD_L2_diff']
+    var_list_L2 =['RSD_L2','RSD_L2_diff']
+    var_list_Loo=['RSD_oo','RSD_oo_diff']
+    neq=5
+    if Internal.getValue(Internal.getNodeFromType(t, 'GoverningEquations_t'))=='NSTurbulent':
+        neq = 6
+
+    for b in Internal.getBases(t):
+        nzones= len(Internal.getZones(b))
+        c     = Internal.getNodeByName(b,'GlobalConvergenceHistory')
+        
+        zones                 = Internal.getZones(b)
+        zone_cong_history     = Internal.getNodeByName(zones[0],'ZoneConvergenceHistory')
+        RSD_                  = Internal.getNodeByName(zone_cong_history,'IterationNumber')[1]
+        nrec                  = Internal.getValue(zone_cong_history)
+
+        ##NOTE: the value of the ZoneConvergenceHistory node has the number of rec taking at time t
+        ##      the shape of the array of IterationNumber is total number of nrec.
+                
+        Internal.setValue(c, nrec);
+
+        ##IterationNumber Node
+        Internal.createChild(c, 'IterationNumber', 'DataArray_t', numpy.zeros((nrec), numpy.int32))
+        RSD_b                 = Internal.getNodeByName(c,'IterationNumber')[1]
+        for i in range(nrec):RSD_b[i]=RSD_[i]
+
+        ##The rest of the nodes in the convergence history
+        for var in var_list:
+            tmp = numpy.zeros((nrec*neq), numpy.float64)
+            Internal.createChild(c, var ,'DataArray_t', tmp)                    
+        
+        for z in Internal.getZones(b):
+            zone_cong_history     =Internal.getNodeByName(z,'ZoneConvergenceHistory')
+
+            ##Loo per base
+            for var_local in var_list_Loo:
+                RSD_     = Internal.getNodeByName(zone_cong_history,var_local)[1]
+                RSD_b    = Internal.getNodeByName(c,var_local)[1]
+                sh_local = numpy.shape(RSD_b)[0]
+                sh       = nrec    *sh_local//nrec
+                for i in range(sh):
+                    RSD_b[i]=max(RSD_b[i],RSD_[i])
+
+            ##L2 per base (here only sum)
+            for var_local in var_list_L2:
+                RSD_     = Internal.getNodeByName(zone_cong_history,var_local)[1]
+                RSD_b    = Internal.getNodeByName(c,var_local)[1]
+                sh_local = numpy.shape(RSD_b)[0]
+                sh       = nrec    *sh_local//nrec
+                for i in range(sh):
+                    RSD_b[i]+=RSD_[i]
+
+        ##Average L2 per base            
+        for var_local in var_list_L2:
+                RSD_b    = Internal.getNodeByName(c,var_local)[1]
+                RSD_b[:] = RSD_b[:]/nzones            
+    return t
+
+
+##ADD or CREATE a t_conv_history (tree that stores only the convergence history)
+def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
+    var_list    =['IterationNumber','RSD_oo','RSD_L2','RSD_oo_diff','RSD_L2_diff']
+    var_list_L2 =['RSD_L2','RSD_L2_diff']
+    var_list_Loo=['RSD_oo','RSD_oo_diff']
+    
+    ##Create local copy by removing unnecessary stuff
+    t=Internal.rmNodesByName(t2,'ReferenceState')
+    list_vars=['.Solver#define','.Solver#ownData']
+    for var in list_vars:Internal._rmNodesByName(t,var)
+
+    ##Remove unncessary nodes in the zones    
+    for z in Internal.getZones(t):
+        listzones_rm=[]
+        for z2 in Internal.getChildren(z):
+            if z2[0] != 'ZoneConvergenceHistory':
+                listzones_rm.append(z2)
+        for z2 in listzones_rm:
+            Internal._rmNode(z,z2)
+       
+    ##Check to see if I need to write the file or append    
+    if t_conv_hist==None:
+        return t    
+    else:
+        for z in Internal.getZones(t_conv_hist):
+            zone_save     =Internal.getNodeByName(z,'ZoneConvergenceHistory')
+            zone_current  =Internal.getNodeByName(Internal.getNodeByName(t,z[0]),'ZoneConvergenceHistory')
+            add2previous(var_list,zone_save,zone_current,it0)
+            
+        for z in Internal.getBases(t_conv_hist):
+            zone_save    = Internal.getNodeByName(z,'GlobalConvergenceHistory')
+            
+            zone_current = Internal.getNodeByName(Internal.getNodeByName(t,z[0]),'GlobalConvergenceHistory')
+            if Internal.getChildren(zone_current) and Internal.getChildren(zone_save):
+                add2previous(var_list,zone_save,zone_current,it0)
+            
+        return t_conv_hist
+
+

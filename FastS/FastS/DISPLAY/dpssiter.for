@@ -24,7 +24,7 @@ c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       implicit none
 #define ALOG10 LOG10
       INTEGER_E nitrun, neq,nssiter_loc,lft,iles,iflw,size_name,iverb
-      REAL_E rdm(nssiter_loc,neq,2), cvg_ptr(2*neq)
+      REAL_E rdm(nssiter_loc,neq,2), cvg_ptr(4*neq)
 
       character(len=size_name) zone_name 
 c Var loc
@@ -201,10 +201,17 @@ c
  2        continue
 C
       endif
-          do ne=1,neq
-          cvg_ptr(ne)     = ALOG10(max(rdm(1,ne,1),cut0x))
-          cvg_ptr(neq+ne) = ALOG10(max(rdm(1,ne,2),cut0x))
-          enddo
+      do ne=1,neq
+            cvg_ptr(ne)     = ALOG10(max(rdm(1,ne,1),cut0x))
+            cvg_ptr(neq+ne) = ALOG10(max(rdm(1,ne,2),cut0x))
+
+            cvg_ptr(2*neq+ne) = ALOG10(max(rdm(last_it,ne,1),cut0x))
+     &                        - ALOG10(max(rdm(      1,ne,1),cut0x)) 
+            cvg_ptr(3*neq+ne) = ALOG10(max(rdm(last_it,ne,2),cut0x))
+     &                        - ALOG10(max(rdm(      1,ne,2),cut0x))         
+ 
+
+      enddo
 C
 
 
