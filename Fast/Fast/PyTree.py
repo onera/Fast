@@ -11,7 +11,8 @@ try:
     import FastC.PyTree as FastC
     from FastC.PyTree import _setNum2Zones, _setNum2Base, setNum2Zones, setNum2Base, load, \
             save, loadFile, loadFileG, saveFile, loadTree, saveTree, \
-            getDictOfNobNozOfRcvZones, _addPair, getDictOfNobNozOfDnrZones, _pushCenters
+            getDictOfNobNozOfRcvZones, _addPair, getDictOfNobNozOfDnrZones, _pushCenters, \
+            ramp, _pushWalls
 except ImportError: 
     raise ImportError("Fast.PyTree: requires FastC module.")
 
@@ -226,8 +227,8 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4]) 
 
-    if   len(infos_zones["LBM"][0]) ==0:  vars=FastC.varsN + FastC.varsMLBM
-    elif len(infos_zones["NS"][0]) ==0 and len(infos_zones["unstruct"][0]) ==0: vars=FastC.varsMLBM + FastC.varsN
+    if   len(infos_zones["LBM"][0]) == 0:  vars=FastC.varsN + FastC.varsMLBM
+    elif len(infos_zones["NS"][0]) == 0 and len(infos_zones["unstruct"][0]) == 0: vars=FastC.varsMLBM + FastC.varsN
     else:
       print("echange NS-LBM a coder")
       import sys; sys.exit()

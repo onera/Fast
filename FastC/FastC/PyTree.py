@@ -3675,7 +3675,7 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT, center=(0,0,0), a
                         dictOfNozOfDnrZones[zdnrname] = nozc
     return (dictOfNobOfDnrZones,dictOfNozOfDnrZones)
 
-# in the case of deforming grids, coordinates are modified in t
+# In the case of deforming grids, coordinates are modified in t
 # this functions update tc from t coordinates
 def _pushCenters(t, tc, baseNames):
     for n in baseNames:
@@ -3694,8 +3694,46 @@ def _pushCenters(t, tc, baseNames):
             czp[1][:] = cz[1][:]
     return None
 
+# Valeur rampe entre it0 et itf
+# retourne 0 pour it0, 1. pour itf
+def ramp(it, it0, itf):
+    if it >= itf: return 1.
+    return (it-it0)*1./(itf-it0)
+
+# Modify time step in t and numz
+def _setTimeStep(t, numz, dt):
+    numz["time_step"] = dt
+    _setNum2Zones(t, numz)
+    zones = Internal.getZones(t)
+    for z in zones:
+        n = Internal.getNodeFromName2(z, 'Parameter_real')[1]
+        n[0] = dt
+    return
+
+# Push t wall centers to teff coordinates
+def _pushWalls(t, teff):
+    walls = C.extractBCOfType(t, 'BCWall')
+    # suppose ordering is the same for walls and teff
+    ezones = Internal.getZones(teff)
+    for c, w in enumerate(walls):
+        z = ezones[c]
+        contw = Internal.getNodeFromName1(w, 'GridCoordinates')
+        cwx = Internal.getNodeFromName1(contw, 'CoordinateX')[1]
+        cwy = Internal.getNodeFromName1(contw, 'CoordinateY')[1]
+        cwz = Internal.getNodeFromName1(contw, 'CoordinateZ')[1]
+        
+        cont = Internal.getNodeFromName1(z, 'GridCoordinates')
+        cx = Internal.getNodeFromName1(cont, 'CoordinateX')[1]
+        cy = Internal.getNodeFromName1(cont, 'CoordinateY')[1]
+        cz = Internal.getNodeFromName1(cont, 'CoordinateZ')[1]
+
+        cx[:] = cwx[:]
+        cy[:] = cwy[:]
+        cz[:] = cwz[:]
+    return None
+
 #==============================================================================
-#Stats post processing for IBM
+# Stats post processing for IBM
 #==============================================================================
 def add2inst(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3,mode=None):
     
@@ -3751,8 +3789,6 @@ def add2inst(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3,mode=None):
                 else:
                     for k in range( sh[direction_copy2Dto3D-1]):
                         varout[k,:,:]  = varin[:,:]
-            
-    
     return tout
 
 def calc_cp_cf(t,h,listzones,isRANS=False,wallType='BCWall',mode=None):
