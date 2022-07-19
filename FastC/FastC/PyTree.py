@@ -3498,17 +3498,22 @@ def pointwise2D_2Fast(t):
 #==============================================================================
 def _print2screen(mssg2print,txt_colour):
     import sys
-    io_fatal_warning   = 1
-    io_pass            = 2
-    io_warning         = 3
-    io_gen_info        = 4
-    io_reset           = "\033[0;0m"
+    io_fatal_warning_pass = 0
+    io_fatal_warning      = 1
+    io_pass               = 2
+    io_warning            = 3
+    io_gen_info           = 4
+    io_reset              = "\033[0;0m"
 
     if txt_colour==io_fatal_warning:
         sys.stdout.write("\033[1;31m")
         print(mssg2print)
         sys.stdout.write(io_reset)
         exit()
+    elif txt_colour==io_fatal_warning_pass:
+        sys.stdout.write("\033[1;31m")
+        print(mssg2print)
+        sys.stdout.write(io_reset)
     elif txt_colour==io_gen_info:
         sys.stdout.write("\033[1;34m")
         print(mssg2print)
@@ -3519,7 +3524,7 @@ def _print2screen(mssg2print,txt_colour):
         sys.stdout.write("\033[1;33m")
         print(mssg2print)
         sys.stdout.write(io_reset)
-    print("--")
+    print("---")
 
 #==============================================================================
 # Root mean squared Calculation for FastS
