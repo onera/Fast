@@ -6,7 +6,8 @@ c***********************************************************************
       subroutine calcul_cfl(ndom , param_int, param_real,
      &                  ind_loop,
      &                  cfl,
-     &                  rop,xmut,venti, ti,tj,tk,vol,ipt_cfl)
+     &                  rop,xmut,venti, ti,tj,tk,vol,ipt_cfl,isconv,
+     &     isvisc,isSound)
 c***********************************************************************
 c_U   USER :  PECHIER
 c
@@ -25,7 +26,8 @@ c**********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndom, param_int(0:*), ind_loop(6)
+      INTEGER_E ndom, param_int(0:*), ind_loop(6),isconv,isvisc
+      INTEGER_E isSound
 
       REAL_E  xmut( param_int(NDIMDX) )
       REAL_E   rop( param_int(NDIMDX) , param_int(NEQ) )
@@ -62,8 +64,6 @@ C var local
 
 c******* NS unsteady *****
       If (param_int(LALE).ge.1.and.(param_int(IFLOW).ge.2)) Then
-         
-
          inci_ven = param_int(NIJK_VENT)
 
          if(param_int(NEQ_VENT).eq.2) then
@@ -114,20 +114,8 @@ c******* NS unsteady *****
               w  = w - we
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
- 
-              xinvspc = 1./(sp+c)
-              xinvkt  = gam1/xmut(l)
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
 
-              vis   = 2.*r*vol(lvo)*vol(lvo)*surf*surf*xinvkt
-              conv  = 2.*vol(lvo) * surf * xinvspc
-              comp  = min(vis,conv)
-
-              cfloc = 1.0/comp
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
 #include   "FastS/Compute/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.1) then
@@ -163,19 +151,8 @@ c******* NS unsteady *****
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-              xinvkt  = gam1/xmut(l)
-
-              vis   = 2.*r*vol(lvo)*vol(lvo)*surf*surf*xinvkt
-              conv  = 2.*vol(lvo) * surf * xinvspc
-              comp  = min(vis,conv)
-
-              cfloc = 1.0/comp
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.2) then
@@ -209,19 +186,7 @@ c******* NS unsteady *****
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-              xinvkt  = gam1/xmut(l)
-
-              vis   = 2.*r*vol(lvo)*vol(lvo)*surf*surf*xinvkt
-              conv  = 2.*vol(lvo) * surf * xinvspc
-              comp  = min(vis,conv)
-
-              cfloc = 1.0/comp
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
 102   continue
 
        else
@@ -251,19 +216,8 @@ c******* NS unsteady *****
               ur2 = u*u + v*v
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-              xinvkt  = gam1/xmut(l)
-
-              vis   = 2.*r*vol(lvo)*vol(lvo)*surf*surf*xinvkt
-              conv  = 2.*vol(lvo) * surf * xinvspc
-              comp  = min(vis,conv)
-
-              cfloc = 1.0/comp
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
        endif
@@ -307,19 +261,8 @@ c******* NS steady *****
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-              xinvkt  = gam1/xmut(l)
-
-              vis   = 2.*r*vol(lvo)*vol(lvo)*surf*surf*xinvkt
-              conv  = 2.*vol(lvo) * surf * xinvspc
-              comp  = min(vis,conv)
-
-              cfloc = 1.0/comp
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
 
@@ -350,19 +293,8 @@ c******* NS steady *****
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-              xinvkt  = gam1/xmut(l)
-
-              vis   = 2.*r*vol(lvo)*vol(lvo)*surf*surf*xinvkt
-              conv  = 2.*vol(lvo) * surf * xinvspc
-              comp  = min(vis,conv)
-
-              cfloc = 1.0/comp
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
 
@@ -391,19 +323,8 @@ c******* NS steady *****
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-              xinvkt  = gam1/xmut(l)
-
-              vis   = 2.*r*vol(lvo)*vol(lvo)*surf*surf*xinvkt
-              conv  = 2.*vol(lvo) * surf * xinvspc
-              comp  = min(vis,conv)
-
-              cfloc = 1.0/comp
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 202   continue
 
        else
@@ -429,19 +350,8 @@ c******* NS steady *****
               ur2 = u*u + v*v
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-              xinvkt  = gam1/xmut(l)
-
-              vis   = 2.*r*vol(lvo)*vol(lvo)*surf*surf*xinvkt
-              conv  = 2.*vol(lvo) * surf * xinvspc
-              comp  = min(vis,conv)
-
-              cfloc = 1.0/comp
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
        endif
@@ -449,9 +359,8 @@ c******* NS steady *****
 c******* Euler unsteady *****
 
       Elseif (param_int(LALE).ge.1.and.param_int(IFLOW).lt.2) Then
-
+         isvisc = 0
          inci_ven = param_int(NIJK_VENT)
-
 
          if(param_int(NEQ_VENT).eq.2) then
             ck_vent =0.
@@ -502,17 +411,9 @@ c******* Euler unsteady *****
               w  = w - we
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
- 
-              xinvspc = 1./(sp+c)
-
-              conv  = 2.*vol(lvo) * surf * xinvspc
-
-              cfloc = 1.0/conv
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+              
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.1) then
@@ -549,16 +450,8 @@ c******* Euler unsteady *****
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-
-              conv  = 2.*vol(lvo) * surf * xinvspc
-
-              cfloc = 1.0/conv
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.2) then
@@ -590,16 +483,8 @@ c******* Euler unsteady *****
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-
-              conv  = 2.*vol(lvo) * surf * xinvspc
-
-              cfloc = 1.0/conv
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 302   continue
 
        else
@@ -628,16 +513,8 @@ c******* Euler unsteady *****
               ur2 = u*u + v*v
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-
-              conv  = 2.*vol(lvo) * surf * xinvspc
-
-              cfloc = 1.0/conv
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
        endif
@@ -680,16 +557,8 @@ c******* Euler steady *****
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-
-              conv  = 2.*vol(lvo) * surf * xinvspc
-
-              cfloc = 1.0/conv
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.1) then
@@ -717,15 +586,8 @@ c******* Euler steady *****
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-
-              conv  = 2.*vol(lvo) * surf * xinvspc
-
-              cfloc = 1.0/conv
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.2) then
@@ -751,16 +613,8 @@ c******* Euler steady *****
               ur2 = u*u + v*v + w*w
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-
-              conv  = 2.*vol(lvo) * surf * xinvspc
-
-              cfloc = 1.0/conv
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 402   continue
 
        else
@@ -784,16 +638,8 @@ c******* Euler steady *****
               ur2 = u*u + v*v
               sp  = sqrt(ur2)
  
-              xinvspc = 1./(sp+c)
-
-              conv  = 2.*vol(lvo) * surf * xinvspc
-
-              cfloc = 1.0/conv
-
-              cfl(1) = max(cfl(1),cfloc)
-              cfl(2) = min(cfl(2),cfloc)
-              cfl(3) = cfl(3) + cfloc
-              ipt_cfl(l)=cfloc
+#include "FastS/Compute/DTLOC/calc_visc_conv.for"             
+              
 #include   "FastS/Compute/loop_end.for"
 
        endif

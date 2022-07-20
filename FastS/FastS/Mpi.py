@@ -899,9 +899,9 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
 
 # For periodic unsteady chimera join, parameter must be updated peridicaly 
 #==============================================================================
-def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single',root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False, layer='Python'):
+def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single',root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False, layer='Python',Rotors  = ['Base02', 'Base04', 'Base06'],Stators = ['Base01', 'Base03', 'Base05', 'Base07']):
 #def _UpdateUnsteadyJoinParam(t, tc, tc_skel, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
-
+    
     #on cree/initialise le dico infos graph
     if graph =={}  or graph ==None:
        graph= {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
@@ -940,6 +940,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
        rank = Cmpi.rank
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
+       ##[AJ] Rotor-Stator WARNING !!! this line needs to be commented !!!
        if root > timelevel_period : root=timelevel_period ### Comme 8000 pas multiple de 60 on force le load de tc_8000
     
        if split == 'single':
@@ -1013,8 +1014,12 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
            iteration_loc = timelevel_motion - No_period*timelevel_period 
 
            bases  = Internal.getNodesFromType1(tc_inst , 'CGNSBase_t')       # noeud
-           Rotors  = ['Base02', 'Base04', 'Base06']
-           Stators = ['Base01', 'Base03', 'Base05', 'Base07']
+           
+           #Rotors  = ['Base02', 'Base04', 'Base06']
+           #Stators = ['Base01', 'Base03', 'Base05', 'Base07']
+
+           #Rotors  = ['Base02']
+           #Stators = ['Base03']
 
            sign =-1
            if omega > 0: sign = 1

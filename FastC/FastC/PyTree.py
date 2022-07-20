@@ -69,6 +69,7 @@ def setNum2Base(a, num):
     _setNum2Base(ap, num)
     return ap
 
+
 def _setNum2Base(a, num):
     """Set numeric data dictionary in bases."""
     cont = Internal.createUniqueChild(a, '.Solver#define', 'UserDefinedData_t')
@@ -1940,6 +1941,7 @@ def getField2Compact__(z, field):
         if ar is not None: return ar
     return None
     
+
 def getFields2Compact__(z, containers, fields):
     out = []
     if fields is not None:
@@ -2079,7 +2081,6 @@ def checkKeys(d, keys):
         fail = True
     if fail:
       import sys; sys.exit(0) # much stronger os._exit(0)?
-
 
 
 #==============================================================================
@@ -2723,12 +2724,13 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             else:
                 FILE = fileNameC+extC
                 tc = Cmpi.convertFile2SkeletonTree(FILE)
-                Cmpi._readZones(tc, FILE, rank=rank)        
-                graphID = Cmpi.computeGraph(tc, type='ID',reduction=False)
-                graphIBCD = Cmpi.computeGraph(tc, type='IBCD',reduction=False)
-                procDict = D2.getProcDict(tc)
-                procList = D2.getProcList(tc, sort=True)
-                graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+                Cmpi._readZones(tc, FILE, rank=rank)
+                graph=prep_graphs(t)
+                #graphID   = Cmpi.computeGraph(tc, type='ID',reduction=False)
+                #graphIBCD = Cmpi.computeGraph(tc, type='IBCD',reduction=False)
+                #procDict = D2.getProcDict(tc)
+                #procList = D2.getProcList(tc, sort=True)
+                #graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
                 Cmpi._convert2PartialTree(tc)
             # Load data (t)
             FILE = '%s/%s_%d%s'%(fileName, baseName, rank, ext)
@@ -2868,12 +2870,12 @@ def save(t, fileName='restart', split='single', NP=0, cartesian=False):
         else:
             # Get and save graph
             import Distributor2.PyTree as D2
-            graphID = Cmpi.computeGraph(t2, type='ID')
-            graphIBCD = Cmpi.computeGraph(t2, type='IBCD')
-            
-            procDict = D2.getProcDict(t2)
-            procList = D2.getProcList(t2, sort=True)
-            objet = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList}
+            objet=prep_graphs(t)
+            #graphID   = Cmpi.computeGraph(t2, type='ID')
+            #graphIBCD = Cmpi.computeGraph(t2, type='IBCD')
+            #procDict = D2.getProcDict(t2)
+            #procList = D2.getProcList(t2, sort=True)
+            #objet = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList}
 
             # Rebuild local trees
             for i in range(max(1,-NP)):
@@ -2935,37 +2937,40 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
             #if mp+1 != size: #### COMMENTE PAR GUILLAUME POUR PASSER LE CREATE
             #    raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d).'%(size,mp+1))
 
-            if graph and exploc == False:
+            graphN=prep_graphs(t,exploc=exploc)
 
-                graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
-                graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
-                procDict  = D2.getProcDict(t)
-                procList  = D2.getProcList(t, sort=True)
-                graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
-
-            if graph and exploc == True : ### dtloc instationnaire : on sort une liste de graphes (un graph par ssiter)
-
-                list_graph=[]
-                graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=True)
-                graphIBCD  = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=True)
-                procDict  = D2.getProcDict(t)
-                procList  = D2.getProcList(t,  sort=True)
-              
-  
-                i=0
-                graphN={}
-                if graphID is not None:
-                    for g in graphID:
-                        graphN={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
-                        list_graph.append(graphN)
-                        i += 1
-
-                
-                elif graphIBCD is not None:
-                    for g in graphIBCD:
-                        graphN={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
-                        list_graph.append(graphN)
-                        i += 1
+            ###THE BELOW IS IN prep_graphs
+            #if graph and exploc == False:
+            #
+            #    graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
+            #    graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
+            #    procDict  = D2.getProcDict(t)
+            #    procList  = D2.getProcList(t, sort=True)
+            #    graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+            #
+            #if graph and exploc == True : ### dtloc instationnaire : on sort une liste de graphes (un graph par ssiter)
+            #
+            #    list_graph=[]
+            #    graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=True)
+            #    graphIBCD  = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=True)
+            #    procDict  = D2.getProcDict(t)
+            #    procList  = D2.getProcList(t,  sort=True)
+            #  
+            #
+            #    i=0
+            #    graphN={}
+            #    if graphID is not None:
+            #        for g in graphID:
+            #            graphN={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
+            #            list_graph.append(graphN)
+            #            i += 1
+            #
+            #    
+            #    elif graphIBCD is not None:
+            #        for g in graphIBCD:
+            #            graphN={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
+            #            list_graph.append(graphN)
+            #            i += 1
 
 
             t = Cmpi.readZones(t, FILE, rank=rank)
@@ -2994,11 +2999,13 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                        no += 1
                     if t != []:
                         t        = Internal.merge(t)
-                        graphID  = Cmpi.computeGraph(t, type='ID'  , reduction=False)
-                        graphIBCD= Cmpi.computeGraph(t, type='IBCD', reduction=False)
-                        procDict = D2.getProcDict(t)
-                        procList = D2.getProcList(t,  sort=True)
-                        graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+                        graphN=prep_graphs(t)
+                        ###THE BELOW IS IN prep_graphs
+                        #graphID  = Cmpi.computeGraph(t, type='ID'  , reduction=False)
+                        #graphIBCD= Cmpi.computeGraph(t, type='IBCD', reduction=False)
+                        #procDict = D2.getProcDict(t)
+                        #procList = D2.getProcList(t,  sort=True)
+                        #graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
                     else: print('graph non calculable: manque de fichiers connectivite.')
 
 
@@ -3023,26 +3030,28 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                     if t != []:
                         t        = Internal.merge(t)
                         list_graph=[]
-                        graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=True)
-                        graphIBC  = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=True)
-                        procDic   = D2.getProcDict(t)
-                        procLis   = D2.getProcList(t,  sort=True)
-              
-  
-                        i=0
-                        graphN={}
-                        if graphID is not None:
-                            for g in graphID :
-                                graphN={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
-                                list_graph.append(graphN)
-                                i += 1
-
-                
-                        elif graphIBCD is not None:
-                            for g in graphIBCD :
-                                graphN ={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
-                                list_graph.append(graphN)
-                                i += 1
+                        graphN=prep_graphs(t,exploc=exploc)
+                        ###THE BELOW IS IN prep_graphs
+                        #graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=True)
+                        #graphIBC  = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=True)
+                        #procDic   = D2.getProcDict(t)
+                        #procLis   = D2.getProcList(t,  sort=True)
+                        #
+                        #
+                        #i=0
+                        #graphN={}
+                        #if graphID is not None:
+                        #    for g in graphID :
+                        #        graphN={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
+                        #        list_graph.append(graphN)
+                        #        i += 1
+                        #
+                        #
+                        #elif graphIBCD is not None:
+                        #    for g in graphIBCD :
+                        #        graphN ={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
+                        #        list_graph.append(graphN)
+                        #        i += 1
 
 
             FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
@@ -3098,33 +3107,37 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
             if mp+1 != size: 
                 raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d)'%(mp+1,size)) 
             if graph:
-                graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
-                graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
-                procDict  = D2.getProcDict(t)
-                procList  = D2.getProcList(t,  sort=True)
-                graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+                graphN =prep_graphs(t,exploc=False)
+                graphN_=prep_graphs(t,exploc=True)
 
-                graphID_   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=True)
-                graphIBCD_  = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=True)
-                procDict_  = D2.getProcDict(t)
-                procList_  = D2.getProcList(t,  sort=True)
-              
-                #print(graphID_)
-  
-                i=0
-                graphN_={}
-                if graphID_ is not None:
-                    for g in graphID_:
-                        graphN_={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
-                        list_graph.append(graphN_)
-                        i += 1
-
-                
-                elif graphIBCD_ is not None:
-                    for g in graphIBCD_:
-                        graphN_={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
-                        list_graph.append(graphN_)
-                        i += 1
+                ###THE BELOW IS IN prep_graphs
+                #graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
+                #graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
+                #procDict  = D2.getProcDict(t)
+                #procList  = D2.getProcList(t,  sort=True)
+                #graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+                #
+                #graphID_   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=True)
+                #graphIBCD_  = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=True)
+                #procDict_  = D2.getProcDict(t)
+                #procList_  = D2.getProcList(t,  sort=True)
+                #
+                ##print(graphID_)
+                #
+                #i=0
+                #graphN_={}
+                #if graphID_ is not None:
+                #    for g in graphID_:
+                #        graphN_={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
+                #        list_graph.append(graphN_)
+                #        i += 1
+                #
+                #
+                #elif graphIBCD_ is not None:
+                #    for g in graphIBCD_:
+                #        graphN_={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
+                #        list_graph.append(graphN_)
+                #        i += 1
                 
                 #print(list_graph)
             
@@ -3151,11 +3164,13 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
                        no += 1
                     if t != []:
                         t        = Internal.merge(t)
-                        graphID  = Cmpi.computeGraph(t, type='ID'  , reduction=False)
-                        graphIBCD= Cmpi.computeGraph(t, type='IBCD', reduction=False)
-                        procDict = D2.getProcDict(t)
-                        procList = D2.getProcList(t,  sort=True)
-                        graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+                        graphN=prep_graphs(t)
+                        ###THE BELOW IS IN prep_graphs
+                        #graphID  = Cmpi.computeGraph(t, type='ID'  , reduction=False)
+                        #graphIBCD= Cmpi.computeGraph(t, type='IBCD', reduction=False)
+                        #procDict = D2.getProcDict(t)
+                        #procList = D2.getProcList(t,  sort=True)
+                        #graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
                     else: print('graph non calculable: manque de fichiers connectivite.')
 
             FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
@@ -3288,11 +3303,13 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
             FILE = directory+'/'+fileName+'.cgns'
             t = Cmpi.convertFile2SkeletonTree(FILE)
             if graph:
-                graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
-                graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
-                procDict  = D2.getProcDict(t)
-                procList  = D2.getProcList(t,  sort=True)
-                graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+                graphN=prep_graphs(t)
+                ###THE BELOW IS IN prep_graphs
+                #graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False)
+                #graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False)
+                #procDict  = D2.getProcDict(t)
+                #procList  = D2.getProcList(t,  sort=True)
+                #graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
             t = Cmpi.readZones(t, FILE, rank=rank)
             zones = Internal.getZones(t)
             t = Cmpi.convert2PartialTree(t, rank=rank)
@@ -3319,11 +3336,13 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
                        no += 1
                     if no == size and t != []:
                         t        = Internal.merge(t)
-                        graphID  = Cmpi.computeGraph(t, type='ID'  , reduction=False)
-                        graphIBCD= Cmpi.computeGraph(t, type='IBCD', reduction=False)
-                        procDict = D2.getProcDict(t)
-                        procList = D2.getProcList(t,  sort=True)
-                        graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+                        graphN=prep_graphs(t)
+                        ###THE BELOW IS IN prep_graphs
+                        #graphID  = Cmpi.computeGraph(t, type='ID'  , reduction=False)
+                        #graphIBCD= Cmpi.computeGraph(t, type='IBCD', reduction=False)
+                        #procDict = D2.getProcDict(t)
+                        #procList = D2.getProcList(t,  sort=True)
+                        #graphN   = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
                     else: print('graph non calculable: manque de fichiers connectivite.')
 
             #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
@@ -3415,83 +3434,6 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
     else: # sequential run
         FILE = directory+'/'+fileName+'.cgns'
         C.convertPyTree2File(t2, FILE)
-
-# Convert input file 
-def convertpointwise2fast(FILEIN):
-    """This script converts Pointwise meshes to a format that can be used for FastS."""
-    t  = C.convertFile2PyTree(FILEIN+".cgns")
-    ##A few comments: Assumes unspecified is empty!!
-    for fam in Internal.getNodesFromType(t,'Family_t'):
-        if fam[0] == "Unspecified":
-            Internal.rmNode(t,fam)
-
-    ## The code below was provided by Thomas Renaud. Thank you!_____________________                             
-    dicofambc={}                                                                   #|   
-    for fam in Internal.getNodesFromType(t,'Family_t'):                            #|       
-        fambc = Internal.getValue(Internal.getNodeFromType(fam,'FamilyBC_t'))      #|                 
-        dicofambc[fam[0]]=fambc                                                    #|         
-                                                                                   #|                                                                          #|           
-    for bc in Internal.getNodesFromType(t,'BC_t'):                                 #|             
-        if Internal.getValue(bc)=='FamilySpecified':                               #|                  
-            famname = Internal.getNodeFromType(bc,'FamilyName_t')                  #|                  
-            valbc = dicofambc[Internal.getValue(famname)]                          #|                    
-            Internal.setValue(bc,valbc)                                            #|                     
-            Internal.rmNode(bc,famname)                                            #|                     
-    Internal._rmNodesByType(t,'Family_t')                                          #|               
-    ##                                               _______________________________|
-
-    ## Remove further unneccesary information
-    ## output is bare bones for FastS
-    vars = ['Descriptor_t','FamilyName_t','DataClass_t','DimensionalUnits_t','GridLocation_t','FamilyName']
-    for v in vars:
-        for fam in Internal.getNodesFromType(t,v):
-            Internal.rmNode(t,fam)
-    
-    return t
-    
-
-def change_name_BC_pointwise(t):
-    import sys
-    zones = Internal.getNodesFromType2(t, 'Zone_t')
-    count=0
-    for z in zones:
-        zonebc = Internal.getNodesFromType(z, 'BC_t')
-        for zbc in zonebc:
-            count +=1
-            Internal.setName(zbc, Internal.getValue(zbc)+str(count));
-    return None
-
-
-def pointwise2D_2Fast(t):
-    import numpy as np
-    zones = Internal.getNodesFromType2(t, 'Zone_t')
-    for z in zones:
-        zonebc = Internal.getNodesFromType(z, 'BC_t')
-        for zbc in zonebc:
-            s = np.ones((3,2), dtype=np.int32)
-            for j in range(0,2):
-                for i in range(0,2):
-                    s[j][i]=zbc[2][0][1][j][i]
-            Internal.setValue(zbc[2][0],s)
-        zonebc = Internal.getNodesFromType(z, 'GridConnectivity1to1_t')
-        for zbc in zonebc:
-            s  = np.ones((3,2), dtype=np.int32)
-            s2 = np.ones((3,2), dtype=np.int32)
-            for j in range(0,2):
-                for i in range(0,2):
-                    s [j][i]=zbc[2][1][1][j][i]
-                    s2[j][i]=zbc[2][2][1][j][i]
-            Internal.setValue(zbc[2][1],s)
-            Internal.setValue(zbc[2][2],s2)
-
-        zonegrid = Internal.getNodesFromType(z, 'GridCoordinates_t')
-        for zgrid in zonegrid:            
-            if Internal.getNodeFromName(zgrid, 'CoordinateZ') is None:
-                coordz=Internal.copyNode(Internal.getNodeFromName(zgrid, 'CoordinateX'))
-                Internal.setName(coordz, 'CoordinateZ')
-                Internal.setValue(coordz,np.zeros((np.shape(coordz[1])[0],np.shape(coordz[1])[1])))
-                Internal.addChild(zgrid, coordz, pos=-1)
-    return None
 
 #==============================================================================
 # Enhance IO (with colours) (cleaned)
@@ -3737,6 +3679,8 @@ def _pushWalls(t, teff):
         cz[:] = cwz[:]
     return None
 
+
+
 #==============================================================================
 # Stats post processing for IBM
 #==============================================================================
@@ -3891,5 +3835,156 @@ def tcStat_IBC(t,tc,vartTypeIBC=2,bcTypeIB=3):
     
     tc = Internal.rmNodesByName(tc, 'FlowSolution')
     return tc
+
+
+#==============================================================================
+# Graph related functions
+#==============================================================================
+def prep_graphs(t,exploc=False):
+    graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False,exploc=exploc)
+    graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False,exploc=exploc)
+    procDict  = D2.getProcDict(t)
+    procList  = D2.getProcList(t,  sort=True)
+    list_graph= []
+    if not exploc:
+        graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+    else:
+        i=0
+        graphN={}
+        if graphID is not None:
+            for g in graphID:
+                graphN={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
+                list_graph.append(graphN)
+                i += 1
+        elif graphIBCD is not None:
+            for g in graphIBCD:
+                graphN={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
+                list_graph.append(graphN)
+                i += 1
+        graphN=list_graphN
+    return graphN
+
+
+def print_graph(t,directory='.',exploc=False):
+    graphN = prep_graphs(t,exploc)
+    # Write graph
+    try: import cPickle as pickle
+    except: import pickle
+    file = open('%s/graph.pk'%directory, 'wb')
+    pickle.dump(graphN, file, protocol=pickle.HIGHEST_PROTOCOL)
+    file.close()
+
+
+## Add immersed boundary - method = penalization
+def add_trip_IBC_penalization(t,list_trips):
+    count=1
+    for tsurf in list_trips:
+        bases = Internal.getBases(tsurf)
+        count=1
+        for b in bases:
+            Internal.setName(b,"trip"+str(count) )
+            count+=1
+    tsurf  = Internal.merge(list_trips)
+    t      = FastS.setIBCData_zero(t, tsurf)
+    return t
+
+
+##Connect Near Match
+def connectnearmatch_postghost(t,dim,depth=2):
+    t = C.fillEmptyBCWith(t,'inactive','BCExtrapolate',dim=dim)
+    t = C.rmBCOfType(t,'BCNearMatch')
+    t = C.fillEmptyBCWith(t,'nm','BCOverlap',dim=dim)
+    t = X.applyBCOverlaps(t,depth=depth)
+    t = C.rmBCOfType(t,'BCExtrapolate')
+    return t
+
+
+##Pointwise related functions
+def convertpointwise2fast(FILEIN):
+    """This script converts Pointwise meshes to a format that can be used for FastS."""
+    t  = C.convertFile2PyTree(FILEIN+".cgns")
+    ##A few comments: Assumes unspecified is empty!!
+    for fam in Internal.getNodesFromType(t,'Family_t'):
+        if fam[0] == "Unspecified":
+            Internal.rmNode(t,fam)
+
+    dicofambc={}                                                                      
+    for fam in Internal.getNodesFromType(t,'Family_t'):                                   
+        fambc = Internal.getValue(Internal.getNodeFromType(fam,'FamilyBC_t'))                       
+        dicofambc[fam[0]]=fambc                                                             
+                                                                                                                                                             
+    for bc in Internal.getNodesFromType(t,'BC_t'):                                              
+        if Internal.getValue(bc)=='FamilySpecified':                                                 
+            famname = Internal.getNodeFromType(bc,'FamilyName_t')                                    
+            valbc = dicofambc[Internal.getValue(famname)]                                              
+            Internal.setValue(bc,valbc)                                                                 
+            Internal.rmNode(bc,famname)                                                                 
+    Internal._rmNodesByType(t,'Family_t')                                                         
+
+    ## Remove further unneccesary information
+    ## output is bare bones for FastS
+    vars = ['Descriptor_t','FamilyName_t','DataClass_t','DimensionalUnits_t','GridLocation_t','FamilyName']
+    for v in vars:
+        for fam in Internal.getNodesFromType(t,v):
+            Internal.rmNode(t,fam)
+    
+    return t
+    
+
+def change_name_BC_pointwise(t):
+    import sys
+    zones = Internal.getNodesFromType2(t, 'Zone_t')
+    count=0
+    for z in zones:
+        zonebc = Internal.getNodesFromType(z, 'BC_t')
+        for zbc in zonebc:
+            count +=1
+            Internal.setName(zbc, Internal.getValue(zbc)+str(count));
+    return None
+
+
+def pointwise2D_2Fast(t):
+    import numpy as np
+    zones = Internal.getNodesFromType2(t, 'Zone_t')
+    for z in zones:
+        zonebc = Internal.getNodesFromType(z, 'BC_t')
+        for zbc in zonebc:
+            s = np.ones((3,2), dtype=np.int32)
+            for j in range(0,2):
+                for i in range(0,2):
+                    s[j][i]=zbc[2][0][1][j][i]
+            Internal.setValue(zbc[2][0],s)
+        zonebc = Internal.getNodesFromType(z, 'GridConnectivity1to1_t')
+        for zbc in zonebc:
+            s  = np.ones((3,2), dtype=np.int32)
+            s2 = np.ones((3,2), dtype=np.int32)
+            for j in range(0,2):
+                for i in range(0,2):
+                    s [j][i]=zbc[2][1][1][j][i]
+                    s2[j][i]=zbc[2][2][1][j][i]
+            Internal.setValue(zbc[2][1],s)
+            Internal.setValue(zbc[2][2],s2)
+
+        zonegrid = Internal.getNodesFromType(z, 'GridCoordinates_t')
+        for zgrid in zonegrid:            
+            if Internal.getNodeFromName(zgrid, 'CoordinateZ') is None:
+                coordz=Internal.copyNode(Internal.getNodeFromName(zgrid, 'CoordinateX'))
+                Internal.setName(coordz, 'CoordinateZ')
+                Internal.setValue(coordz,np.zeros((np.shape(coordz[1])[0],np.shape(coordz[1])[1])))
+                Internal.addChild(zgrid, coordz, pos=-1)
+    return None
+
+
+def cassiopee2pointwise(fileName):
+    t = C.convertFile2PyTree(fileName)
+    t = C.rmBCOfType(t, 'BC*')         
+    t = C.rmBCOfType(t, 'BCMatch')     
+    t = C.rmBCOfType(t, 'BCOverlap')   
+    t = C.rmBCOfType(t, 'UserDefined') 
+    t = Internal.rmNodesByName(t, 'FlowSolution#Init')
+    baseName = os.path.basename(fileName)
+    baseName = os.path.splitext(baseName)[0] # name without extension
+    fileName = os.path.splitext(fileName)[0] # full path without extension
+    C.convertPyTree2File(t, fileName+'_pointwise.cgns')
 
 

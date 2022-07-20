@@ -2817,6 +2817,9 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       perfo = numpy.empty(2, dtype=numpy.float64)
       perfo[0]= int(echant*NbreThreads/tps_zone_percell)
       perfo[1]= int(echant/tps_zone_percell_max)
+      ## CUPS  : [0] MEAN VALUE [1] MIN VALUE
+      ## 1/CUPS=mus/iter(time * sub-iter)/cellspercore
+
       Internal.createUniqueChild(solver_def, 'Cups', 'DataArray_t', value=perfo)
 
     else:
@@ -3061,7 +3064,7 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
 #====================================================================================
 # Calcule la CFL en chaque maille et la met dans l'arbre t pour dtloc instationnaire
 #====================================================================================
-def computeCFL_dtlocal(t):
+def computeCFL_dtlocal(t,isconv=1,isvisc=1,isSound=1):
 
     import math
     import Transform.PyTree as T
@@ -3088,7 +3091,7 @@ def computeCFL_dtlocal(t):
             if (list1 not in liste_BCPeriodiques) :
                  liste_BCPeriodiques.append(list1)
     """
-    #print(liste_BCPeriodiques)
+    
 
     (t,tc,metrics) = warmup(t, tc=None) ### Oblige d'appeler warmup afin de construire les metrics necessaires au calcul de la CFL
 
@@ -3098,7 +3101,7 @@ def computeCFL_dtlocal(t):
 
     print('dimPb= ', dimPb)
 
-    fasts.prep_cfl(zones, metrics,1,1,1)
+    fasts.prep_cfl(zones, metrics,1,1,1,isconv,isvisc,isSound)
 
     #t = Internal.rmGhostCells(t, t, 2)
 

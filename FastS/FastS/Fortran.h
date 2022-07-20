@@ -139,7 +139,7 @@ extern "C"
   void initdrodm_(E_Int* ipt_param_int , E_Int* ind_loop,   E_Float* drodm, E_Float* drodm2);
 
   void calcul_cfl_(E_Int& ndom, E_Int* ipt_param_int , E_Float* ipt_param_real,  E_Int* ind_loop, E_Float* ipt_cfl,   E_Float* iptro, E_Float* xmut, E_Float* venti, 
-		   E_Float* ti, E_Float* tj, E_Float* tk, E_Float* vol, E_Float* ipt_cfl_);
+		   E_Float* ti, E_Float* tj, E_Float* tk, E_Float* vol, E_Float* ipt_cfl_,E_Int& isconv,E_Int& isvisc,E_Int& isSound);
 
   void init_ventijk_( E_Int& ndo  , E_Int& nidom  , E_Int& Nbre_thread_actif, E_Int& ithread    , E_Int& Nbre_socket,  E_Int& socket    , E_Int& mx_synchro   ,
                       E_Int* ipt_param_int        , E_Float* ipt_param_real , 

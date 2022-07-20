@@ -35,12 +35,12 @@ using namespace K_FLD;
 PyObject* K_FASTS::prep_cfl(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; 
-  E_Int nitrun; E_Int nstep; E_Int omp_mode;
+  E_Int nitrun; E_Int nstep; E_Int omp_mode;E_Int isconv;E_Int isvisc;E_Int isSound;
 
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOlll", &zones , &metrics, &nitrun, &nstep, &omp_mode)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOllllll", &zones , &metrics, &nitrun, &nstep, &omp_mode, &isconv, &isvisc,&isSound)) return NULL; 
 #else 
-  if (!PyArg_ParseTuple(args, "OOiii", &zones , &metrics, &nitrun, &nstep, &omp_mode)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOiiiiii", &zones , &metrics, &nitrun, &nstep, &omp_mode, &isconv, &isvisc,&isSound)) return NULL; 
 #endif
 
 #if TIMER == 1
@@ -336,7 +336,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
 
 
     calcul_cfl_(nd, ipt_param_int[nd] , ipt_param_real[nd], ind_loop, ipt_cfl,  iptro[nd], iptmut[nd], iptventi[nd], 
-    		   ipti[nd], iptj[nd],iptk[nd], iptvol[nd], ipt_cfl_[nd]);
+		ipti[nd], iptj[nd],iptk[nd], iptvol[nd], ipt_cfl_[nd],isconv,isvisc,isSound);
 
   }
 
