@@ -33,9 +33,9 @@ mpi_i = 2
 mpi_j = 2
 mpi_k = 2
 
-kpos = rank/(mpi_i*mpi_j)
-jpos = ( rank-kpos*(mpi_i*mpi_j))/mpi_i
-ipos =  rank-kpos*(mpi_i*mpi_j) -jpos*mpi_i
+ipos = int(rank%mpi_i)
+jpos = int((rank-ipos)/mpi_i%mpi_j)
+kpos = int((rank-ipos-jpos*mpi_i)/(mpi_i*mpi_j))
 
 #print "rank", rank, "pos", ipos,jpos,kpos
 # Bloc avec ghost cells
@@ -206,9 +206,10 @@ for i in range(size):
   procList.append(['cart'+str(i)])
   rank =i
   
-  kpos = rank/(mpi_i*mpi_j)
-  jpos = ( rank-kpos*(mpi_i*mpi_j))/mpi_i
-  ipos =  rank-kpos*(mpi_i*mpi_j) -jpos*mpi_i
+  ipos = int(rank%mpi_i)
+  jpos = int((rank-ipos)/mpi_i%mpi_j)
+  kpos = int((rank-ipos-jpos*mpi_i)/(mpi_i*mpi_j))
+  
   racs =[]
   if mpi_i != 1:
      #Imin
@@ -270,7 +271,8 @@ numz = {}
 numz["time_step"]          = 0.003
 numz["scheme"]             = "senseur"
 FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
-
+Cmpi.convertPyTree2File(t, 't.cgns')
+exit()
 #Initialisation parametre calcul: calcul metric + var primitive + compactage + alignement + placement DRAM
 (t, tc, metrics) = FastSmpi.warmup(t, tc, graph)
 
