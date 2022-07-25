@@ -897,9 +897,9 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       PyTree.display_cpu_efficiency(t, mask_cpu=mask_cpu, mask_cell=mask_cell, diag=diag, FILEOUT=fileout, FILEOUT1=fileout1, RECORD=RECORD)
       return None
 
-# For periodic unsteady chimera join, parameter must be updated peridicaly 
+# For periodic unsteady chimera join, parameter must be updated periodicaly 
 #==============================================================================
-def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single',root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False, layer='Python',Rotors  = ['Base02', 'Base04', 'Base06'],Stators = ['Base01', 'Base03', 'Base05', 'Base07']):
+def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single',root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False, layer='Python', Rotors=['Base02','Base04','Base06'], Stators=['Base01','Base03','Base05','Base07']):
 #def _UpdateUnsteadyJoinParam(t, tc, tc_skel, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
     
     #on cree/initialise le dico infos graph

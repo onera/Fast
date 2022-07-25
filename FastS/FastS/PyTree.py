@@ -2106,17 +2106,17 @@ def _computeGrad(t, metrics, varlist, order=2):
 #==============================================================================
 # Display
 #==============================================================================
-def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast',isSaveFirst=True):
+def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', isSaveFirst=True):
     """Display CFL and convergence information."""
-    return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose,isSaveFirst)
+    return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose, isSaveFirst)
 
-def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast',isSaveFirst=True):
+def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', isSaveFirst=True):
     own          = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc        = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc_numpy  = Internal.getValue(dtloc)
     nssiter      = int(dtloc_numpy[0])
 
-    zones        = Internal.getZones(t)
+    zones    = Internal.getZones(t)
     nzones	 = len(zones)
 
     #a = Internal.getNodeFromName2(zones[0], 'model')
@@ -2140,7 +2140,7 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbo
 
     iverb = 0
     if verbose != 'firstlast': iverb=2
-    residu = fasts.display_ss_iteration( zones, metrics, cvg_numpy, nitrun, nssiter, lft, iverb,int(isSaveFirst))
+    residu = fasts.display_ss_iteration( zones, metrics, cvg_numpy, nitrun, nssiter, lft, iverb, int(isSaveFirst))
 
     if gmres is None: return None
     else: return residu
@@ -3064,7 +3064,7 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
 #====================================================================================
 # Calcule la CFL en chaque maille et la met dans l'arbre t pour dtloc instationnaire
 #====================================================================================
-def computeCFL_dtlocal(t,isconv=1,isvisc=1,isSound=1):
+def computeCFL_dtlocal(t, isconv=1, isvisc=1, isSound=1):
 
     import math
     import Transform.PyTree as T
@@ -3101,7 +3101,7 @@ def computeCFL_dtlocal(t,isconv=1,isvisc=1,isSound=1):
 
     print('dimPb= ', dimPb)
 
-    fasts.prep_cfl(zones, metrics,1,1,1,isconv,isvisc,isSound)
+    fasts.prep_cfl(zones, metrics,1,1,1, isconv, isvisc, isSound)
 
     #t = Internal.rmGhostCells(t, t, 2)
 
