@@ -3430,13 +3430,16 @@ def calc_post_stats(t, iskeeporig=False, mode=None, cartesian=True):
             C._initVars(z,"{centers:rho_v'w'} = {centers:rho_U_r'w'}*{centers:si} + {centers:rho_U_t'w'}*{centers:co}")   
             C._rmVars(z, ['centers:Velocityr_RMS', 'centers:Velocityt_RMS' ,'centers:Velocityr', 'centers:Velocityt' ,"centers:rho_U_r'w'","centers:rho_U_t'w'","centers:rho_U_t'U_r'",'centers:co','centers:si','centers:Radius'])
         elif mode == "cylx" and cartesian:
-            pass
-            #C._initVars(z, '{centers:VelocityY} = {centers:Velocityr}*%20.16g - {centers:Velocityt}*%20.16g'%(cteta,steta))
-            #C._initVars(z, '{centers:VelocityZ} = {centers:Velocityr}*%20.16g + {centers:Velocityt}*%20.16g'%(steta,cteta))
-            #C._rmVars(z, ['centers:Velocityr', 'centers:Velocityt'])
-            #C._initVars(z, "{centers:VelocityX_RMS} = {centers:Velocityr_RMS}*%20.16g + {centers:Velocityt_RMS}*%20.16g - %20.16g*{centers:rho_U_t'U_r'}/{centers:Density}"%(cteta**2,steta**2,2*cteta*steta))
-            #C._initVars(z, "{centers:VelocityY_RMS} = {centers:Velocityr_RMS}*%20.16g + {centers:Velocityt_RMS}*%20.16g + %20.16g*{centers:rho_U_t'U_r'}/{centers:Density}"%(steta**2,cteta**2,2*cteta*steta))
-
+            C._initVars(z,"{centers:Radius} = ( {centers:CoordinateY}**2 +{centers:CoordinateZ}**2 )**0.5")
+            C._initVars(z,"{centers:co} = {centers:CoordinateZ}/{centers:Radius}")
+            C._initVars(z,"{centers:si} = {centers:CoordinateY}/{centers:Radius}")
+            C._initVars(z, '{centers:VelocityZ} = {centers:Velocityr}*{centers:co} + {centers:Velocityt}*{centers:si}')
+            C._initVars(z, '{centers:VelocityY} = {centers:Velocityr}*{centers:si} - {centers:Velocityt}*{centers:co}')
+            C._initVars(z, "{centers:VelocityZ_RMS} = {centers:Velocityr_RMS}*{centers:co}**2 + {centers:Velocityt_RMS}*{centers:si}**2 + 2*{centers:si}*{centers:co}*{centers:rho_U_t'U_r'}/{centers:Density}")
+            C._initVars(z, "{centers:VelocityY_RMS} = {centers:Velocityr_RMS}*{centers:si}**2 + {centers:Velocityt_RMS}*{centers:co}**2 - 2*{centers:si}*{centers:co}*{centers:rho_U_t'U_r'}/{centers:Density}")
+            C._initVars(z,"{centers:rho_u'w'} = {centers:rho_U_r'u'}*{centers:co} + {centers:rho_U_t'u'}*{centers:si}")
+            C._initVars(z,"{centers:rho_u'v'} = {centers:rho_U_r'u'}*{centers:si} - {centers:rho_U_t'u'}*{centers:co}")
+            C._rmVars(z, ['centers:Velocityr_RMS', 'centers:Velocityt_RMS' ,'centers:Velocityr', 'centers:Velocityt' ,"centers:rho_U_r'w'","centers:rho_U_t'w'","centers:rho_U_t'U_r'",'centers:co','centers:si','centers:Radius'])
     return t
 
 #====================================================================
@@ -3509,11 +3512,12 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT,
                         dictOfADT[zdnrname] = adt
                         dictOfNobOfDnrZones[zdnrname] = nob
                         dictOfNozOfDnrZones[zdnrname] = nozc
-    return (dictOfNobOfDnrZones,dictOfNozOfDnrZones)
+    return (dictOfNobOfDnrZones, dictOfNozOfDnrZones)
 
 # In the case of deforming grids, coordinates are modified in t
 # this functions update tc from t coordinates
 def _pushCenters(t, tc, baseNames):
+    """Push centers of t in tc."""
     for n in baseNames:
         b = Internal.getNodeFromName1(t, n)
         bpc = C.node2Center(b) # centers
@@ -3530,24 +3534,50 @@ def _pushCenters(t, tc, baseNames):
             czp[1][:] = cz[1][:]
     return None
 
-# Valeur rampe entre it0 et itf
+# Scalar value ramp between it0 et itf
 # retourne 0 pour it0, 1. pour itf
 def ramp(it, it0, itf):
+    """Return a value in [0,1] depending on it."""
     if it >= itf: return 1.
     return (it-it0)*1./(itf-it0)
 
+# Motion ramp between it0 et itf
+# Ramp motion node between 0 and correct speed
+def _rampMotion(t, it, it0, itf):
+    """Ramp motion node."""
+    for z in Internal.getZones(t):
+        m = Internal.getNodeFromName1(z, 'Motion')
+        if m is not None:
+            vx = Internal.getNodeFromName1(m, 'VelocityX')
+            vy = Internal.getNodeFromName1(m, 'VelocityY')
+            vz = Internal.getNodeFromName1(m, 'VelocityZ')
+            coeff = ramp(it, it0, itf)
+            vx[1][:] = coeff * vx[1][:]
+            vy[1][:] = coeff * vy[1][:]
+            vz[1][:] = coeff * vz[1][:]
+    return None
+
 # Modify time step in t and numz
 def _setTimeStep(t, numz, dt):
+    """Set time step."""
     numz["time_step"] = dt
     _setNum2Zones(t, numz)
     zones = Internal.getZones(t)
     for z in zones:
         n = Internal.getNodeFromName2(z, 'Parameter_real')[1]
         n[0] = dt
-    return
+    return None
+
+# Ramp time step
+def _rampTimeStep(t, numz, it, it0, itf):
+    """Ramp time step."""
+    dt = ramp(it, it0, itf)
+    _setTimeStep(t, numz, dt)
+    return None
 
 # Push t wall centers to teff coordinates
 def _pushWalls(t, teff):
+    """Push wall coordinates of t in teff."""
     walls = C.extractBCOfType(t, 'BCWall')
     # suppose ordering is the same for walls and teff
     ezones = Internal.getZones(teff)
@@ -3567,8 +3597,6 @@ def _pushWalls(t, teff):
         cy[:] = cwy[:]
         cz[:] = cwz[:]
     return None
-
-
 
 #==============================================================================
 # Stats post processing for IBM
@@ -3633,7 +3661,6 @@ def add2inst(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3,mode=None):
                         varout[k,:,:]  = varin[:,:]
     return tout
     
-
 def get_wall_values(t,isRANS=False,wallType='BCWall',mode=None):
     ##Removing useless Variables
     vars   =['centers:Densityinst'   ,'centers:Temperatureinst' ,

@@ -74,7 +74,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
     node = Internal.getNodeFromName1(t, '.Solver#define')
     omp_node = Internal.getNodeFromName1(node, 'omp_mode')
     ompmode  = OMP_MODE
-    if  omp_node is not None: ompmode = Internal.getValue(omp_node)
+    if omp_node is not None: ompmode = Internal.getValue(omp_node)
 
     dtloc   = Internal.getValue(dtloc) # tab numpy
     nitmax  = int(dtloc[0])
@@ -3754,7 +3754,6 @@ def _distribMpiDtloc(t,niveauMax,NP):
              list.append(z) ### list contient toutes les zones de meme niveau en temps
       list_level.append(list)
 
-
     tp = C.newPyTree(['Base'])
 
     for level in list_level: ### On distribue chaque niveau en tps de maniere independante sur NP proc
@@ -4073,7 +4072,7 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
             Internal._rmNode(z,z2)
        
     ##Check to see if I need to write the file or append    
-    if t_conv_hist==None:
+    if t_conv_hist is None:
         return t    
     else:
         for z in Internal.getZones(t_conv_hist):
