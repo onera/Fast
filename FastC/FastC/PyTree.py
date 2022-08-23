@@ -3342,8 +3342,8 @@ def _print2screen(mssg2print,txt_colour):
 
 #==============================================================================
 # Root mean squared Calculation for FastS
-# Input: ts from FastS
-# IN: mode: xyz, cylx, cylz
+# Input: t is ts from FastS
+# IN: mode: xyz, cylx, cylz or None
 # IN: cartesian: if True and cyl, return cartesian velocities
 # Output: ts w/ Mean, RMS, & Reynolds Stresses
 #==============================================================================
@@ -3620,7 +3620,7 @@ def add2inst(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3,mode=None):
     ##Rename Density, Velocities, & Temperature in t
     for z in Internal.getZones(tout):
         zout = Internal.getNodeFromName(z,'FlowSolution#Centers')
-        for v in VARSMACRO:Internal._renameNode(zout, v, v+"inst")
+        for v in VARSMACRO: Internal._renameNode(zout, v, v+"inst")
         Internal._renameNode(zout, "Temperature", "Temperatureinst")
 
     ## Selecting variables to copy from tstat to t
@@ -3629,15 +3629,15 @@ def add2inst(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3,mode=None):
     elif mode == 'cylz':
         vars=['VelocityX','VelocityY']
     tout = C.rmVars(tout, vars)
-        
-    VARSMACRO   =VARSMACRO_save
+    
+    VARSMACRO = VARSMACRO_save
     VARSMACRO.append('Pressure')
     
     ##Creating variables in t to which the variables in tstat will be copied to
-    for v in VARSMACRO:C._initVars(tout,'{centers:'+v+'}=0')
-    if dim_in==dim_out:
+    for v in VARSMACRO: C._initVars(tout,'{centers:'+v+'}=0')
+    if dim_in == dim_out:
         for z in Internal.getZones(tout):
-            zin    = Internal.getNodesFromName(tin, z[0])
+            zin = Internal.getNodesFromName(tin, z[0])
             for v in VARSMACRO: C._cpVars(zin,'centers:'+v,z,'centers:'+v)
     else:       
         for z in Internal.getZones(tout):
@@ -3696,15 +3696,15 @@ def get_wall_values(t,isRANS=False,wallType='BCWall',mode=None):
     Internal._rmNode(t, test)
     
     t = C.center2Node(t, "FlowSolution#Centers")
-    Internal._rmNodesByName(t,"FlowSolution#Centers")
-    Internal._rmGhostCells(t,t,2,adaptBCs=1)
+    Internal._rmNodesByName(t, "FlowSolution#Centers")
+    Internal._rmGhostCells(t, t, 2, adaptBCs=1)
 
     ### Calculate Shear Stress
     if mode is None:
         C._initVars(t,'{ViscosityMolecular}=%5.12f*sqrt({Temperature})/(1.+%5.12f/{Temperature})'%(betas,Cs))
         t = P.computeExtraVariable(t, 'ShearStress')
 
-    w = C.extractBCOfType(t,wallType)
+    w = C.extractBCOfType(t, wallType)
 
     return w
 
