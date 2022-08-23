@@ -2819,6 +2819,8 @@ def save(t, fileName='restart', split='single', NP=0, cartesian=False):
     C._rmVars(t2, 'centers:VelocityZ_P1')
     C._rmVars(t2, 'centers:Temperature_P1')
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
+    Internal._rmNodesFromName(t2, 'Displacement#0')
+    
     zones = Internal.getZones(t2)
     for z in zones: Internal._rmNodeByPath(z, '.Solver#ownData')
     if cartesian: 
@@ -3629,7 +3631,7 @@ def add2inst(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3,mode=None):
     elif mode == 'cylz':
         vars=['VelocityX','VelocityY']
     tout = C.rmVars(tout, vars)
-    
+        
     VARSMACRO = VARSMACRO_save
     VARSMACRO.append('Pressure')
     
