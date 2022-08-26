@@ -3522,9 +3522,10 @@ def _pushCenters(t, tc, baseNames):
     """Push centers of t in tc."""
     for n in baseNames:
         b = Internal.getNodeFromName1(t, n)
+        bc = Internal.getNodeFromName1(tc, n)
         bpc = C.node2Center(b) # centers
         for z in Internal.getZones(bpc): # push centers in tc
-            zp = Internal.getNodeFromName2(tc, z[0])
+            zp = Internal.getNodeFromName2(bc, z[0])
             cx = Internal.getNodeFromPath(z, 'GridCoordinates/CoordinateX')
             cxp = Internal.getNodeFromPath(zp, 'GridCoordinates/CoordinateX')
             cxp[1][:] = cx[1][:]
