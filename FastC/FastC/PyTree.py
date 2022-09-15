@@ -24,6 +24,8 @@ try:
     import Converter.Internal as Internal
     import Post.PyTree as P
     import Fast.variables_share_pytree as v
+    import Post.ExtraVariables2 as PE
+    import RigidMotion.PyTree as R
     import math
 except:
     raise ImportError("Fast.Internal: requires Converter and Post module.")
@@ -69,7 +71,6 @@ def setNum2Base(a, num):
     _setNum2Base(ap, num)
     return ap
 
-
 def _setNum2Base(a, num):
     """Set numeric data dictionary in bases."""
     cont = Internal.createUniqueChild(a, '.Solver#define', 'UserDefinedData_t')
@@ -92,7 +93,7 @@ def _reorder(t, tc=None, omp_mode=0):
           size_zone =[]
           for z in zones:
              dim = Internal.getZoneDim(z)
-             if dim[0]=='Structured':
+             if dim[0] == 'Structured':
                 if dim[3] == 1: kfic = 0
                 else          : kfic = 2
                 ndimdx = (dim[1]-4)*(dim[2]-4)*(dim[3]-kfic) 
@@ -3694,23 +3695,49 @@ def get_wall_values(t,isRANS=False,wallType='BCWall',mode=None):
     else:
         C._initVars(t,'{centers:Pressure}={centers:Temperature}*(287.053*{centers:Density})')
             
-    ##RM unnecessary data
+    ## RM unnecessary data
     test = Internal.getNodeFromType1(t, 'FlowEquationSet_t')
     Internal._rmNode(t, test)
     
-    t = C.center2Node(t, "FlowSolution#Centers")
-    Internal._rmNodesByName(t, "FlowSolution#Centers")
-    Internal._rmGhostCells(t, t, 2, adaptBCs=1)
+    # Version Antoine
+    #t = C.center2Node(t, "FlowSolution#Centers")
+    #Internal._rmNodesByName(t, "FlowSolution#Centers")
+    #Internal._rmGhostCells(t, t, 2, adaptBCs=1)
+    #if mode is None:
+    #    C._initVars(t,'{ViscosityMolecular}=%5.12f*sqrt({Temperature})/(1.+%5.12f/{Temperature})'%(betas,Cs))
+    #    t = P.computeExtraVariable(t, 'ShearStress')
+    #w = C.extractBCOfType(t, wallType)
 
-    ### Calculate Shear Stress
+    # Version Alexis
+    Internal._rmNodesFromName(t, 'Motion')
+    Internal._rmNodesFromName(t, 'Densityinst')
+    Internal._rmNodesFromName(t, 'VelocityXinst')
+    Internal._rmNodesFromName(t, 'VelocityYinst')
+    Internal._rmNodesFromName(t, 'VelocityZinst')
+    Internal._rmNodesFromName(t, 'Temperatureinst')
+    Internal._rmNodesFromName(t, 'TurbulentSANuTilde_M1')
     if mode is None:
-        C._initVars(t,'{ViscosityMolecular}=%5.12f*sqrt({Temperature})/(1.+%5.12f/{Temperature})'%(betas,Cs))
-        t = P.computeExtraVariable(t, 'ShearStress')
+      PE._extractViscosityMolecular(t)
+      P._computeGrad2(t,'centers:VelocityX', ghostCells=True)
+      P._computeGrad2(t,'centers:VelocityY', ghostCells=True)
+      P._computeGrad2(t,'centers:VelocityZ', ghostCells=True)
 
-    w = C.extractBCOfType(t, wallType)
+    FlowSol = Internal.getNodeFromName(t, 'FlowSolution#Centers')
+    t = C.center2Node(t, "FlowSolution#Centers")
+    R._switchGridAndGridInit(t)
+    Internal._rmNodesByName(t, "GridCoordinates#Init")
+    Internal._rmGhostCells(t, t, 2, adaptBCs=1)
+    t = C.center2Node(t,['centers:gradxVelocityX','centers:gradxVelocityY','centers:gradxVelocityZ','centers:gradyVelocityX','centers:gradyVelocityY','centers:gradyVelocityZ','centers:gradzVelocityX','centers:gradzVelocityY','centers:gradzVelocityZ'])
+    Internal._rmNodesByName(t, "FlowSolution#Centers")
+    w = C.extractBCOfType(t, 'BCWall')
+    w = C.node2Center(w, 'FlowSolution')
+    Internal._rmNodesByName(w, 'FlowSolution')
+    if mode is None:       
+      PE._extractShearStress(w)
+      PE._extractFrictionVector(w)
+      PE._extractFrictionMagnitude(w)
 
     return w
-
 
 def get_skin_friction(w,RoInf,PInf,RoUInf2I):
     w = P.computeExtraVariable(w, 'SkinFriction')

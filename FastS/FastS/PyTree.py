@@ -195,7 +195,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                                     hook=hookTransfer)
                     #print('t_transfert = ',  Time.time() - t0 ,'nstep =', nstep)
               #print('t_transferts = %f'%(Time.time() - t0)
-              tps_tr +=Time.time()-tic
+              tps_tr += Time.time()-tic
 
     else: ### layer C
 
@@ -391,7 +391,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     
     t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP)
-    FastC.HOOK['FIRST_IT']= FastC.FIRST_IT
+    FastC.HOOK['FIRST_IT'] = FastC.FIRST_IT
 
     #compactage des champs en fonction option de calcul
     count = -1
@@ -401,7 +401,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         zone    = data[0]
         varnames= data[1]
         for fields in varnames:
-            # print(fields)
             _compact(zone, fields=fields, mode=count)
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
@@ -457,7 +456,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
        X.miseAPlatDonorTree__(zones, tc, graph=graph, list_graph=list_graph, nbpts_linelets=nbpts_linelets)
 
        FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
-       param_real_tc        = Internal.getNodeFromName1( tc, 'Parameter_real')
+       param_real_tc = Internal.getNodeFromName1(tc, 'Parameter_real')
        if param_real_tc is not None: FastC.HOOK['param_real_tc']= param_real_tc[1]
 
        # FastC.HOOK['param_real_tc'][ 58 ] = nbpts_linelets

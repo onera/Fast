@@ -156,7 +156,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                vars = FastC.varsP
                if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
 
-               tic=Time.time()
+               tic = Time.time()
 
                if not tc2:
                 _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE)
@@ -169,7 +169,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                    dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                    dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
                    dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
-                   time, procDict, interpInDnrFrame, varType, tfreq) = ucData
+                   time, procDict, interpInDnrFrame, varType, tfreq, order) = ucData
 
                    if nstep%2 == 0 and itypcp == 2: 
                        VARS = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
@@ -187,8 +187,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                                     dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
                                     time=time, absFrame=True,
                                     procDict=procDict, cellNName='cellN#Motion', 
-                                    interpInDnrFrame=interpInDnrFrame, hook=hookTransfer)
-               tps_tr +=Time.time()-tic  
+                                    interpInDnrFrame=interpInDnrFrame, order=order, 
+                                    hook=hookTransfer)
+               tps_tr += Time.time()-tic  
 
     else: 
       nstep_deb = 1
@@ -196,9 +197,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
       layer_mode= 1
       nit_c     = NIT
       FastC.HOOK["mpi"] = 1
-      tic=Time.time()
+      tic = Time.time()
       fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
-      tps_cp +=Time.time()-tic  
+      tps_cp += Time.time()-tic  
 
     #if vtune:
     #   print('t_comp/trans=', tps_cp,tps_tr, ' rank et itTarget= ', Cmpi.rank, timelevel_target)
@@ -874,9 +875,12 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
     """Compute efforts in teff.""" 
     ret = PyTree._computeStress(t, teff, metrics, xyz_ref)
+    Cmpi.trace("computeStress after seq")
     ret = numpy.array(ret, dtype=numpy.float64)
-    ret1 = numpy.empty(ret.shape, dtype=numpy.float64)
-    Cmpi.Allreduce(ret, ret1, Cmpi.SUM)
+    ret1 = numpy.zeros(ret.shape, dtype=numpy.float64)
+    #Cmpi.Allreduce(ret, ret1, Cmpi.SUM)
+    Cmpi.KCOMM.Allreduce(ret, ret1, op=Cmpi.SUM)
+    Cmpi.trace("computeStress after all reduce")
     return ret1.tolist()
 
 #==============================================================================
@@ -903,7 +907,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
 #def _UpdateUnsteadyJoinParam(t, tc, tc_skel, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
     
     #on cree/initialise le dico infos graph
-    if graph =={}  or graph ==None:
+    if graph =={}  or graph is None:
        graph= {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
 
     #on cree les noeud infos insta pour chimere perio s'il n'existe pas 
@@ -941,7 +945,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
        ##[AJ] Rotor-Stator WARNING !!! this line needs to be commented !!!
-       if root > timelevel_period : root=timelevel_period ### Comme 8000 pas multiple de 60 on force le load de tc_8000
+       if root > timelevel_period: root=timelevel_period ### Comme 8000 pas multiple de 60 on force le load de tc_8000
     
        if split == 'single':
 
