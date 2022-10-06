@@ -25,7 +25,8 @@ c***********************************************************************
     
 c Var loc 
       INTEGER_E incmax,i,j,k,l,inci,incj,inck,inci_mtr,
-     & incj_mtr,inck_mtr, l1,l2,l3,l4,l5,l6,ltij,lij,lt,ndimdx,lvo,v4
+     & incj_mtr,inck_mtr, l1,l2,l3,l4,l5,l6,ltij,lij,lt,
+     & ndimdx,lvo,v4,wigd
 
       REAL_E adtild,adtild1,ad1,adelta1,adelta2,
      &  testzg2,testzg,fw,fv1,fv2,fvv1,amulam,anulam,
@@ -40,7 +41,7 @@ c Var loc
      & tix,tiy,tiz,tix1,tiy1,tiz1,
      & tkx,tky,tkz,tkx1,tky1,tkz1,u1,u2,u3,u4,u5,u6,xvol,dudx,dudy,dudz,
      & dx,dy,dz,tn,tx,ty,tz,nx,ny,nz,
-     & divx, divy, divz, div,wigd,umag,rgp,gam,mach,coef1,coef2
+     & divx,divy,divz,div,umag,rgp,gam,mach,coef1,coef2
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"

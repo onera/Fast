@@ -46,6 +46,12 @@ c
                xvol = 0.5/vol(lvo)
                rot     = abs(rotz)* xvol
 
+               S11   = dudx
+               S22   = dvdy
+               S12   = 0.5*(dudy + dvdx)
+               St    = S11**2+S22**2+2*S12**2
+               St    = sqrt(2*St) * xvol
+
                cc = -3.5*rop(l,1)*rop(l,6)**2/(gam*rgp*rop(l,5))
      &              *(dudx**2+dudy**2+dvdx**2+dvdy**2)
 
@@ -67,11 +73,11 @@ c
               u3 = rop(l,6)*rop(l,1) + rop(l1,6)*rop(l1,1)
               u4 = rop(l,6)*rop(l,1) + rop(l4,6)*rop(l4,1)
               !dudx
-               dudx = dudx* (  u3*tix1 - u1*tix
+              dudx = dudx* (  u3*tix1 - u1*tix
      &                       + u2*tjx1 - u4*tjx )
 
               !dudy
-               dudy = dudy* (  u3*tiy1 - u1*tiy
+              dudy = dudy* (  u3*tiy1 - u1*tiy
      &                       + u2*tjy1 - u4*tjy )
 
-               anvisc    = ( c1*(dudx+dudy) + cc ) *xvol*xvol
+              anvisc    = ( c1*(dudx+dudy) + cc ) *xvol*xvol

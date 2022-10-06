@@ -33,11 +33,9 @@ c
 
                rotz    = rotz + dudx
 
-
                !! mise a jour rot et auijuij par le volume
                xvol = 0.5/vol(lvo)
                rot     = abs(rotz)* xvol
-
 
                !formulation compressible complete
                u1 = (rop(l,6)+rop(l2,6))

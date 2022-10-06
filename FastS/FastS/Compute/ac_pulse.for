@@ -75,8 +75,8 @@ C Var loc
       IF(param_int(ITYPZONE).eq.2) THEN  !3D cart
 
 
-        do 10 k = ind_loop(5), ind_loop(6)
-        do 10 j = ind_loop(3), ind_loop(4)
+        do k = ind_loop(5), ind_loop(6)
+        do j = ind_loop(3), ind_loop(4)
 
           lij  = inddm(  ind_loop(1) , j, k)
           lxij = lij -  indcg( ind_loop(1) , j, k)
@@ -84,7 +84,7 @@ C Var loc
           lvo  = lt
 
 !DEC$ IVDEP
-          do 10 l = lij,  lij + ind_loop(2) - ind_loop(1)
+          do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
             lx = l  - lxij
 
@@ -115,22 +115,23 @@ c            sro = eps*vol(lvo)/(1.+r2)
   
             drodm(l,1) = drodm(l,1) + sro
             drodm(l,5) = drodm(l,5) + sroe
-
-   10 continue
-
+          enddo
+        enddo
+        enddo
+    
 
       ELSE
 
 
-      do 50 k = ind_loop(5), ind_loop(6)
-      do 50 j = ind_loop(3), ind_loop(4)
+      do k = ind_loop(5), ind_loop(6)
+      do j = ind_loop(3), ind_loop(4)
 
         lij  = inddm(  ind_loop(1) , j, k)
         lxij = lij - indcg( ind_loop(1) , j, k)
         ltij = lij - indmtr(ind_loop(1) , j, k)
 
 !DEC$ IVDEP
-        do 50 l = lij,  lij + ind_loop(2) - ind_loop(1)
+        do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
           lx = l  - lxij
           lt = l  - ltij
@@ -171,7 +172,9 @@ c        sro = eps*vol(lvo)/(1.+r2)
         drodm(l,1) = drodm(l,1) + sro
         drodm(l,5) = drodm(l,5) + sroe
 
-   50 continue
+        enddo
+        enddo
+        enddo
 
       ENDIF
 

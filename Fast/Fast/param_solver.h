@@ -196,13 +196,14 @@
 /*IBM*/ 
 #define IBC_PT_FLUX           125
 
+/* SA options */
+#define SA_LOW_RE     126
+#define SA_ROT_CORR   127 
+
 #define BC_TYPE	      0
 #define BC_IDIR       1
 #define BC_FEN        2
 #define BC_NBDATA     8
-
-   
-
 
 #define DTC          0
 #define STAREF       1
@@ -268,8 +269,12 @@
 #define SA_CV3      0.9
 #define SA_CW2      0.3
 #define SA_CW3      64.
+#define SA_CROT     2.0
+#define SA_CW4      0.21
+#define SA_CW5      1.5
 #define SA_SIGMA    (2./3.)
 #define SA_RCTEDES  0.65
+#define SA_CROT     2.0
 
 #define SA_IDES      1   
 #define SA_IDIST     2   

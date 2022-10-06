@@ -35,7 +35,7 @@
                u6 = (rop(l,2)+rop(l6,2))
 
                !dudx
-               dudy = (   u3*tix1 - u1*tix
+               dudx = (   u3*tix1 - u1*tix
      &                  + u2*tjx1 - u4*tjx 
      &                  + u5*tkx1 - u6*tkx ) 
 
@@ -62,7 +62,7 @@
      &                  + u5*tkx1 - u6*tkx  ) 
 
                !dvdy
-               dvdx = (   u3*tiy1 - u1*tiy
+               dvdy = (   u3*tiy1 - u1*tiy
      &                  + u2*tjy1 - u4*tjy 
      &                  + u5*tky1 - u6*tky  ) 
 
@@ -89,9 +89,9 @@
      &                  + u5*tky1 - u6*tky  ) 
 
                !dwdz
-               dwdy = (   u3*tiy1 - u1*tiy
-     &                  + u2*tjy1 - u4*tjy 
-     &                  + u5*tky1 - u6*tky  )
+               dwdz = (   u3*tiz1 - u1*tiz
+     &                  + u2*tjz1 - u4*tjz 
+     &                  + u5*tkz1 - u6*tkz  )
 
                rotx    = dwdy - dvdz
                roty    = dudz - dwdx
@@ -99,7 +99,16 @@
 
                !! mise a jour rot et auijuij par le volume
                xvol = 0.5/vol(lvo)
-               rot     = sqrt(rotx*rotx+roty*roty+rotz*rotz)* xvol
+               rot   = sqrt(rotx*rotx+roty*roty+rotz*rotz)* xvol
+
+               S11   = dudx
+               S22   = dvdy
+               S33   = dwdz
+               S12   = 0.5*(dudy + dvdx)
+               S13   = 0.5*(dudz + dwdx)
+               S23   = 0.5*(dvdz + dwdy)
+               St    = S11**2+S22**2+S33**2+2*S12**2+2*S13**2+2*S23**2
+               St    = sqrt(2*St) * xvol
 
                cc = -3.5*rop(l,1)*rop(l,6)**2/(gam*rgp*rop(l,5))
      &              *(dudx**2+dudy**2+dudz**2
@@ -121,7 +130,8 @@
                !dudy
                dudy = (   u3*tiy1 - u1*tiy
      &                  + u2*tjy1 - u4*tjy 
-     &                  + u5*tky1 - u6*tky ) 
+     &                  + u5*tky1 - u6*tky )
+     
                !dudz
                dudz = (   u3*tiz1 - u1*tiz
      &                  + u2*tjz1 - u4*tjz 

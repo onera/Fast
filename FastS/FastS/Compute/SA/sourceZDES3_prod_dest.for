@@ -16,14 +16,22 @@
 
           stild    = rot + (anutild*f2)/(SA_CKARM*SA_CKARM*dist*dist)
 
-          prod     = rop(l,1)*SA_CB1*stild*anutild
+          !!Correction SA-R
+          stild    = stild + SWITCH_SA_ROT_CORR
+     &               *SA_CROT*min(0.00000000000000000001,St-rot) 
 
+          prod     = rop(l,1)*SA_CB1*stild*anutild
        
           !CALCUL DU TERME DE DESTRUCTION
           stild     = max(stild,0.00000000000000000001)
           r         = anutild/(stild*SA_CKARM*SA_CKARM*dist*dist)
           r         = min(r,10.)
-          g         = r *(1.+  SA_CW2*(r*r*r*r*r-1.) )
+          r5        = (r*r*r*r*r-1.)
+          g         = r *(1.+SA_CW2*r5)
+          !!Correction SA-LRE
+          SA_CW2_LRE = SA_CW4 + SA_CW5 / ( (1.+ chi/40.)**2) 
+          g  = SWITCH_SA_LOW_RE*r*(1.+SA_CW2_LRE*r5) +
+     &               (1.-SWITCH_SA_LOW_RE)*g
           fwg       = (1.-testfa) + testfa*fw(g)
 
           destruc   =rop(l,1)*cw1*fwg*(anutild/dist)*(anutild/dist)

@@ -69,7 +69,9 @@ c Var loc
      & tjx,tjy,tjz,tjx1,tjy1,tjz1,si,sj,sk,
      & tix,tiy,tiz,tix1,tiy1,tiz1,
      & tkx,tky,tkz,tkx1,tky1,tkz1,u1,u2,u3,u4,u5,u6,xvol,dudx,dudy,dudz,
-     & dx,dy,dz,tn,dn,tx,ty,tz,nx,ny,nz
+     & dx,dy,dz,tn,dn,tx,ty,tz,nx,ny,nz,
+     & SA_CW2_LRE,S11,S22,S33,S12,S13,S23,St,r5,
+     & SWITCH_SA_LOW_RE,SWITCH_SA_ROT_CORR
 
 
 #include "FastS/formule_param.h"
@@ -80,6 +82,8 @@ c.....formulation originelle
       fv1(s)     = 1./(1.+SA_CV1/(s*s*s))
       fv2(s,t)   = 1.-s/(1.+s*t)
 
+      SWITCH_SA_LOW_RE = param_int(SA_LOW_RE)
+      SWITCH_SA_ROT_CORR = param_int(SA_ROT_CORR)
       cmus1  = param_real(VISCO+4)
       temp01 = 1./param_real(VISCO+3)
       coesut =  param_real(VISCO+2) * (1.+cmus1*temp01)

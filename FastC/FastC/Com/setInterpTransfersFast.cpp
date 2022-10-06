@@ -49,7 +49,6 @@ E_Int timeShowFastS = 1;
 
 static E_Int timelevel_tc=0;
 
-static E_Int NbprocMax=2048;
 static E_Int source_flag[2048];
 
 #ifdef _MPI
@@ -1488,7 +1487,7 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
             {
             //#pragma omp for nowait
             #pragma omp for
-            for (size_t irecv = 0; irecv < sz; ++irecv)
+            for (E_Int irecv = 0; irecv < sz; ++irecv)
                {
 
                 ilistrecv = recv_listRc[irac] [irecv]; 
@@ -1505,7 +1504,7 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
                  for (int eq = 0; eq < recv_nvarloc[irac]; ++eq)
                  {
                   #pragma omp for nowait
-                  for (size_t irecv = 0; irecv < sz; ++irecv)
+                  for (E_Int irecv = 0; irecv < sz; ++irecv)
                    {
                     ilistrecv = recv_listRc[irac] [irecv]; 
 

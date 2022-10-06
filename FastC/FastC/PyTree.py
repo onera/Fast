@@ -1435,8 +1435,8 @@ def _buildOwnData(t, Padding):
             leveld=0
 
             
-            number_of_defines_param_int = 125                           # Number Param INT
-            size_int                   = number_of_defines_param_int +1 # number of defines + 1
+            number_of_defines_param_int = 127                            # Number Param INT
+            size_int                    = number_of_defines_param_int +1 # number of defines + 1
 
             datap      = numpy.empty(size_int, numpy.int32)
 
@@ -1595,6 +1595,10 @@ def _buildOwnData(t, Padding):
 
             #correction flux paroi ibm
             datap[v.IBC_PT_FLUX]   = -1
+
+            # options SA
+            datap[126] = 0 # active Low Reynolds correction
+            datap[127] = 0 # active Rotation correction
 
             i += 1
          
@@ -2139,7 +2143,7 @@ def switchPointers2__(zones,nitmax,nstep):
             model  = Internal.getNodeFromName1(own, 'model')
             model  = Internal.getValue(model)
 
-            if model == 'nsspalart' or model=='NSTurbulent': 
+            if model == 'nsspalart' or model == 'NSTurbulent': 
                 cf   =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde')
                 cfM1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_M1')
                 cfP1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_P1')
@@ -2197,7 +2201,7 @@ def switchPointers3__(zones,nitmax):
             model  = Internal.getNodeFromName1(own, 'model')
             model  = Internal.getValue(model)
 
-            if model == 'nsspalart' or model=='NSTurbulent': 
+            if model == 'nsspalart' or model == 'NSTurbulent': 
                 cf   =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde')
                 cfM1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_M1')
                 cfP1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_P1')
