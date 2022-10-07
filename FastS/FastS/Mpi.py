@@ -875,12 +875,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
     """Compute efforts in teff.""" 
     ret = PyTree._computeStress(t, teff, metrics, xyz_ref)
-    Cmpi.trace("computeStress after seq")
     ret = numpy.array(ret, dtype=numpy.float64)
     ret1 = numpy.zeros(ret.shape, dtype=numpy.float64)
     #Cmpi.Allreduce(ret, ret1, Cmpi.SUM)
     Cmpi.KCOMM.Allreduce(ret, ret1, op=Cmpi.SUM)
-    Cmpi.trace("computeStress after all reduce")
     return ret1.tolist()
 
 #==============================================================================

@@ -842,6 +842,8 @@ def _buildOwnData(t, Padding):
     'sfd_init_iter':0, 
     'slope':["o1", "o3", "minmod"],
     'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3", "zdes3_w"],
+    'SA_add_LowRe': 0,
+    'SA_add_RotCorr': 0,
     'snear': 1, # ignored
     'DES_debug':['none','active'],
     'extract_res':0,
