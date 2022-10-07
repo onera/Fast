@@ -172,7 +172,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
    FldArrayI tab_nosszone(mxzone); E_Int* ipt_nosszone= tab_nosszone.begin();
 
    FldArrayI tab_size_subzone(nidom);   E_Int*  size_subzone = tab_size_subzone.begin();
-   FldArrayI tab_size_task(mxzone);     E_Int*  size_task    = tab_size_task.begin();
+   FldArrayI tab_size_task(mxzone);     //E_Int*  size_task    = tab_size_task.begin();
 
    FldArrayI newtab_nijk(mxzone*3*2); E_Int* ipt_nijk_new    = newtab_nijk.begin();
    FldArrayI newtab_ndimdx(mxzone);   E_Int* ipt_ndimdx_new  = newtab_ndimdx.begin();
@@ -353,7 +353,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
         E_Int* ind_dm    = ipt_inddm_zone   + 6*c;
 
         E_Int* nozone_new   = ipt_nozone_new   +   c;
-        E_Int  No_zone      = nozone_new[0];
+        //E_Int  No_zone      = nozone_new[0];
 
         E_Float* hpc_cups = ipt_HPC_CUPS_new +   c;
 

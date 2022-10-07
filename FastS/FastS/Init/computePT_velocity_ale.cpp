@@ -47,12 +47,12 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
 #endif
 
   PyObject* tmp = PyDict_GetItemString(work,"MX_SYNCHRO"); E_Int mx_synchro = PyLong_AsLong(tmp); 
-            tmp = PyDict_GetItemString(work,"MX_SSZONE");  E_Int mx_sszone  = PyLong_AsLong(tmp);
+            tmp = PyDict_GetItemString(work,"MX_SSZONE");  //E_Int mx_sszone  = PyLong_AsLong(tmp);
 
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
-  E_Int ompmode  = iptdtloc[8+nssiter];
+  //E_Int ompmode  = iptdtloc[8+nssiter];
   E_Int* ipt_omp = iptdtloc +9 + nssiter;
 
   E_Int nidom        = PyList_Size(zones);
@@ -202,7 +202,7 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
 
            E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
            E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
-           E_Int nd_subzone            = ipt_omp[ pttask + 1 ];
+           //E_Int nd_subzone            = ipt_omp[ pttask + 1 ];
            E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
            ipt_topo_omp                = ipt_omp + pttask + 3 + Nbre_thread_actif ;
            ipt_inddm_omp               = ipt_omp + pttask + 6 + Nbre_thread_actif + (ithread_loc-1)*6;

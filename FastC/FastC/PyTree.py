@@ -819,7 +819,7 @@ def _buildOwnData(t, Padding):
     'sgsmodel': ['smsm','Miles'],
     'wallmodel': ['musker','power'],
     'wallmodel_sample': 0,
-    'ransmodel': ['SA','SA_comp','SA_diff'],
+    'ransmodel': ['SA', 'SA_comp', 'SA_diff'],
     'cache_blocking_I':0,
     'cache_blocking_J':0,
     'cache_blocking_K':0,
@@ -1358,7 +1358,7 @@ def _buildOwnData(t, Padding):
                cacheblckJ = max(cacheblckJ,4)
                cacheblckK = max(cacheblckK,4)
 
-            iwallmodel =1
+            iwallmodel = 1
             if wallmodel == 'musker': iwallmodel = 0
 
             #par defaut valeur petite, car determine le niveau de parallelisme pour calcul residu en implicit et explict
@@ -1404,13 +1404,13 @@ def _buildOwnData(t, Padding):
               kfludom = 5
             elif scheme == "ausmpred_pattern":  
                 kfludom = 7
-            elif scheme == "senseur_hyper"  : 
+            elif scheme == "senseur_hyper": 
                 kfludom = 8
                 islope  = 2
 
             else: print('Warning: Fast: scheme %s is invalid.'%scheme)
 
-            lale   = 0; size_ale =0
+            lale = 0; size_ale = 0
             if    motion == "none"       : lale = 0
             elif  motion == "rigid"      : lale = 1; size_ale = 11
             elif  motion == "deformation": lale = 2
@@ -1599,6 +1599,15 @@ def _buildOwnData(t, Padding):
             # options SA
             datap[126] = 0 # active Low Reynolds correction
             datap[127] = 0 # active Rotation correction
+            if d is not None:
+                a = Internal.getNodeFromName1(d, 'SA_add_LowRe')
+                if a is not None: 
+                    val = Internal.getValue(a)
+                    if val == 1 or val == 'active' or val == True: datap[126] = 1
+                a = Internal.getNodeFromName1(d, 'SA_add_RotCorr')
+                if a is not None: 
+                    val = Internal.getValue(a)
+                    if val == 1 or val == 'active' or val == True: datap[127] = 1
 
             i += 1
          
@@ -1642,7 +1651,7 @@ def _buildOwnData(t, Padding):
             datap[18]=  ratiom
             datap[22]=  temps
  
-            if lale ==1: 
+            if lale == 1: 
                 datap[23:31]=  rotation[0:8]
                 datap[29]   = datap[29]*2.  *math.pi
                 datap[30]   = datap[30]/180.*math.pi
