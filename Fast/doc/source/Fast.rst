@@ -177,6 +177,9 @@ Actions
         + "SA_comp" (SA with mixing layer compressible correction https://turbmodels.larc.nasa.gov/spalart.html)
         + default value is 'SA'
 
+        + "SA_add_LowRe": add low Reynolds correction to spalart model.
+        + "SA_add_RotCorr": add rotation correction to spalart model.
+
     - **'DES'**: possible values are
 
         + "none"    (SA computation)

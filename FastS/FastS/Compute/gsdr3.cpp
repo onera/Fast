@@ -157,9 +157,9 @@ E_Int K_FASTS::gsdr3(
        //
         //if(param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1 || lssiter_verif ==1 )
         //if( param_int[nd][ DTLOC ]== 1 || lssiter_verif ==1 )
-        if( lssiter_verif ==1 )
+        if( lssiter_verif == 1 )
           {
-           E_Int* ipt_nisdom_residu   =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter;                //nisdom_residu(nssiter)
+           //E_Int* ipt_nisdom_residu   =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter;                //nisdom_residu(nssiter)
            E_Int* ipt_it_bloc         =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter*2;    //it_bloc(nidom)
 
            //if(ipt_nisdom_residu[nitcfg-1] != 0) ipt_it_bloc[0] +=1;

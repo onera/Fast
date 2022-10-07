@@ -88,14 +88,14 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
             for (E_Int th = 1; th < __NUMTHREADS__ +1; th++)
             {
-              E_Int* ind_dm = ipt_omp + PtTask + 6 + __NUMTHREADS__ +6*(th-1) ;
+              E_Int* ind_dm = ipt_omp + PtTask + 6 + __NUMTHREADS__ +6*(th-1);
 
               E_Int Nbre_thread_actif_loc = __NUMTHREADS__;
               indice_boucle_lu_(nd, th, Nbre_thread_actif_loc , lmin, ipt_ind_dm_loc, ipt_topo, ind_dm);
 
               ipt_omp[PtTask + 1 + th  ] = th-1;
 
-              if( ind_dm[1] < ind_dm[1])
+              if( ind_dm[1] < ind_dm[0])
                {
                 ipt_omp[PtTask + 1 + th            ] = -2;
                 ipt_omp[PtTask + __NUMTHREADS__ +2 ] = 1; //zone trop petite: 1 seul thread actif

@@ -210,7 +210,7 @@ PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
     E_Int  PtrIterOmp = ipt_param_int[Ptomp ];   
     E_Int  PtZoneomp  = ipt_param_int[PtrIterOmp ];
 
-    E_Int Nbre_thread_actif_loc = ipt_param_int[ PtZoneomp  + Nbre_thread_actif ];
+    //E_Int Nbre_thread_actif_loc = ipt_param_int[ PtZoneomp  + Nbre_thread_actif ];
     E_Int ithread_loc           = ipt_param_int[ PtZoneomp  +  ithread -1       ] +1 ;
 
 

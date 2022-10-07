@@ -542,9 +542,9 @@ else
    for (E_Int nstep = nstep_deb; nstep < nstep_fin+1; ++nstep)
    {
      //printf("nstep= %d %d \n", nstep, omp_mode);
-     if (layer_mode ==1)
+     if (layer_mode == 1)
      {
-       E_Int nidom_loc = iptdtloc[nssiter+9+nstep-1];
+       //E_Int nidom_loc = iptdtloc[nssiter+9+nstep-1];
        E_Int init_exit =0;
        if( nitrun_loc%iptdtloc[1] == 0 )
        {
