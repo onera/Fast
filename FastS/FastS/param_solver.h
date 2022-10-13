@@ -36,6 +36,7 @@
 
 
 
+/*BOUNDARY CONDITIIONS*/
 #define BCDEGENERATELINE          0
 #define BCEXTRAPOLATE             0
 #define BCFARFIELD                1
@@ -59,6 +60,7 @@
 #define BCWALLMODEL              30
 #define BCWALLEXCHANGE           31
 
+/*CACHE VECTOR LENGTHS*/
 #if (CACHELINE == 64)
 #define VECLENGTH     8
 #elif (CACHELINE == 32)
@@ -67,13 +69,14 @@
 #define VECLENGTH     4
 #endif
 
-#define NBR_SOCKET    1
+#define NBR_SOCKET        1
 
-#define NIJK          0
-#define NIJK_MTR      5
-#define NIJK_XYZ     10
-#define NIJK_VENT    15
-#define IJKV         20
+/*PARAM INT*/
+#define NIJK          0 
+#define NIJK_MTR      5 
+#define NIJK_XYZ     10 
+#define NIJK_VENT    15 
+#define IJKV         20 
 #define EFF_LOOP     23   
 #define NDIMD_SDM    23
 #define MXSSDOM_LU   24
@@ -104,37 +107,38 @@
 #define SA_INT       47
                                                   
 #define RK	         52
-#define LEVEL	     53
-#define EXPLOC       54
-#define EXPLOCTYPE   55
-#define LEVELG	     56
-#define LEVELD	     57
-#define NSSITER	     58
-#define CACHEBLCKI   59
-#define CACHEBLCKJ   60
-#define CACHEBLCKK   61
-#define SFD          62
-#define SFD_INIT_IT  63
-#define SLOPE        64
-#define NIT_INFLOW   65
-#define SHIFTVAR     66
-#define EXTRACT_RES  67
-#define SA_DEBUG     68
-#define PT_OMP       69
-#define PT_BC	     70
-#define NB_RELAX     71
-#define NB_RESTART   72
-#define NB_KRYLOV    73
-#define IMPLICITSOLVER 74
-#define LU_MATCH     75
-#define IBC          76
-#define SRC          83
-#define MESHTYPE     84
-#define SENSORTYPE   85
+#define LEVEL	         53
+#define EXPLOC           54
+#define ITEXPLOC         55
+#define EXPLOCTYPE       55
+#define LEVELG	         56
+#define LEVELD	         57
+#define NSSITER	         58
+#define CACHEBLCKI       59
+#define CACHEBLCKJ       60
+#define CACHEBLCKK       61
+#define SFD              62
+#define SFD_INIT_IT      63
+#define SLOPE            64
+#define NIT_INFLOW       65
+#define SHIFTVAR         66
+#define EXTRACT_RES      67
+#define SA_DEBUG         68
+#define PT_OMP           69
+#define PT_BC	         70
+#define NB_RELAX         71
+#define NB_RESTART       72
+#define NB_KRYLOV        73
+#define IMPLICITSOLVER   74
+#define LU_MATCH         75
+#define IBC              76
+#define SRC              83
+#define MESHTYPE         84
+#define SENSORTYPE       85
 /*86 is defined below*/
-#define SCHEDULER    87
-#define WM_FUNCTION  88
-#define WM_SAMPLING  89
+#define SCHEDULER        87
+#define WM_FUNCTION      88
+#define WM_SAMPLING      89
 
 
 /*LBM*/
@@ -186,13 +190,17 @@
 
 /* SA options */
 #define SA_LOW_RE     126
-#define SA_ROT_CORR   127 
+#define SA_ROT_CORR   127
 
+/*BC types*/
 #define BC_TYPE	      0
 #define BC_IDIR       1
 #define BC_FEN        2
 #define BC_NBDATA     8
 
+ 
+
+/*PARAM REAL*/
 #define DTC          0
 #define STAREF       1
 #define GAMMA        1
@@ -217,6 +225,7 @@
 #define VZINF       21
 #define TEMPS       22
 #define ROTATION    23
+/*ROT_OMEGA goes from 23 to 25 and is the axis of rotation*/
 #define ROT_OMEGA   23
 #define ROT_CENTER  26
 #define ROT_FREQ    29
@@ -245,15 +254,23 @@
 #define LBM_gamma_precon        52
 #define LBM_zlim                53
 
+
 /*schema HYPERSONIC*/
-#define HYPER_COEF1  54  
-#define HYPER_COEF2  55  
+#define HYPER_COEF1    54  
+#define HYPER_COEF2    55
 
 /*IBM WL*/
 #define MAFZAL_MODE    56
 #define ALPHAGRADP     57
 #define NBPTS_LINELETS 58
 
+/*Wire Model - IBM*/
+#define DeltaVWire     59  
+#define KWire          60
+#define DiameterWire   61  
+#define CtWire         62
+
+/*CONSTANTS*/
 #define SA_CKARM    0.41 
 #define SA_CB1      0.1355
 #define SA_CB2      0.622
@@ -285,4 +302,3 @@
 #define METRIC_INDM  5   
 #define METRIC_ITLU  6   
 #define METRIC_DEGEN 7   
-
