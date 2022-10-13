@@ -18,6 +18,9 @@ using namespace std;
 //#define Conservatif
 
 
+#undef TimeShowAJ
+//#define TimeShowAJ
+
 #undef TimeShow
 //#define TimeShow
 
@@ -196,7 +199,7 @@ E_Int K_FASTS::gsdr3(
 //modif Guillaume??
 if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 
-
+ 
 /****************************************************
 ----- Debut zone // omp
 ****************************************************/
@@ -299,7 +302,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
             if(param_int[n][ KFLUDOM ]==8){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*4;}
           }
 #include "FastS/Compute/rhs.cpp"
-          }
+          } 
 
 #ifdef _WIN32
 #pragma omp barrier

@@ -152,14 +152,14 @@ def _reorder(t, tc=None, omp_mode=0):
 # IN: adim: etat de reference, on utilise uniquement cvInf pour la temperature.
 # IN: rmConsVars: if True, remove the conservative variables
 #==============================================================================
-def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False):
+def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False,isWireModel=False):
     """Create primitive vars from conservative vars."""
     tp = Internal.copyRef(t)
-    first_iter , vars_zones = _createPrimVars(tp, omp_mode, rmConsVars, Adjoint, gradP)
+    first_iter , vars_zones = _createPrimVars(tp, omp_mode, rmConsVars, Adjoint, gradP,isWireModel)
     return tp, first_iter, vars_zones
 
 #==============================================================================
-def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False):
+def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, isWireModel=False):
     """Create primitive vars from conservative vars."""
     vars_zones=[]
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
@@ -178,7 +178,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False):
                NG_indx  =  Internal.getNodeFromPath(z, 'NGonElements/FaceIndex')
                NG_pe    =  Internal.getNodeFromPath(z, 'NGonElements/ParentElements')
 
-            sa, lbmflag, neq_lbm, FIRST_IT  = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint,gradP)
+            sa, lbmflag, neq_lbm, FIRST_IT  = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint,gradP,isWireModel)
             
             if FA_intext is not None:
                Internal.getNodeFromPath(z, 'NFaceElements')[2] +=[FA_indx, FA_intext] 
@@ -270,6 +270,13 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False):
                 fields2compact.append('centers:'+'grady'+v)
                 fields2compact.append('centers:'+'gradz'+v)
               vars.append(fields2compact)
+
+            if isWireModel:
+              fields2compact = []
+              for v in vars_p:
+                fields2compact.append('centers:'+v+'_WM')
+              fields2compact.append('centers:DistWall2IP_WM')
+              vars.append(fields2compact)
     
             # on compacte les variables "visqueuse"
             loc            ='centers:'
@@ -280,7 +287,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False):
 
             fields2compact = []
             for field in fields: 
-               if C.isNamePresent(z, field) == 1: fields2compact.append(field)
+               if C.isNamePresent(z, field) == 1:fields2compact.append(field)
             if len(fields2compact) != 0: vars.append(fields2compact)
 
             # on compacte les variables SA debug
@@ -325,7 +332,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False):
 #==============================================================================
 # Init/create primitive Variable 
 #==============================================================================
-def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=False):
+def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=False,isWireModel=False):
     import timeit
     # Get model
     model = "Euler"
@@ -396,13 +403,28 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
        if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_P1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_P1')
 
        if (gradP and C.isNamePresent(zone, 'centers:gradxDensity') != 1):
-        C._initVars(zone, 'centers:gradxDensity', 1e-15)
-        C._initVars(zone, 'centers:gradyDensity', 1e-15)
-        C._initVars(zone, 'centers:gradzDensity', 1e-15)
+           C._initVars(zone, 'centers:gradxDensity', 1e-15)
+           C._initVars(zone, 'centers:gradyDensity', 1e-15)
+           C._initVars(zone, 'centers:gradzDensity', 1e-15)
 
-        C._initVars(zone, 'centers:gradxTemperature', 1e-15)
-        C._initVars(zone, 'centers:gradyTemperature', 1e-15)
-        C._initVars(zone, 'centers:gradzTemperature', 1e-15)
+           C._initVars(zone, 'centers:gradxTemperature', 1e-15)
+           C._initVars(zone, 'centers:gradyTemperature', 1e-15)
+           C._initVars(zone, 'centers:gradzTemperature', 1e-15)
+
+       if (isWireModel):
+           if (C.isNamePresent(zone, 'centers:DistWall2IP_WM') != 1):
+               mssg2print='ERROR:Wire Model is being used BUT there is no centers:DistWall2IP_WM'
+               _print2screen(mssg2print,0)
+               _print2screen('exiting',1)
+           if (C.isNamePresent(zone, 'centers:Density_WM') != 1):
+               C._initVars(zone, 'centers:Density_WM'    , 1e-15)
+               C._initVars(zone, 'centers:VelocityX_WM'  , 1e-15)
+               C._initVars(zone, 'centers:VelocityY_WM'  , 1e-15)
+               C._initVars(zone, 'centers:VelocityZ_WM'  , 1e-15)
+               C._initVars(zone, 'centers:Temperature_WM', 1e-15)
+               if (sa): C._initVars(zone, 'centers:TurbulentSANuTilde_WM', 1e-15)
+           
+
     else:
        neq_lbm = Internal.getNodeFromName2(zone, 'Parameter_int')[1][86]
 
@@ -874,7 +896,10 @@ def _buildOwnData(t, Padding):
     'lbm_ibm':0,
     'lbm_isforce':0,
     'lbm_zlim':1,
-    'lbm_ibm_connector':0       
+    'lbm_ibm_connector':0,
+    'KWire_p':1,
+    'DiameterWire_p':1,
+    'CtWire_p':1    
     }
 
     zones = Internal.getZones(t)
@@ -949,7 +974,7 @@ def _buildOwnData(t, Padding):
         size_omp =  1 + nssiter*(2 + size_task)
 
         dtdim = nssiter + 8
-        #datap = numpy.empty((dtdim+ size_omp), numpy.int32) 
+        #datap = numpy.empty((dtdim+ size_omp), numpy.int32)
         datap = numpy.zeros((dtdim+ size_omp), numpy.int32) 
         datap[0] = nssiter 
         datap[1] = modulo_verif
@@ -1113,6 +1138,11 @@ def _buildOwnData(t, Padding):
             lbm_forcex             = [0.,0.,0.]
             lbm_zlim               = 0.
 
+            
+            KWire_p=0.1 
+            DiameterWire_p=0.1 
+            CtWire_p=0.1
+
             a = Internal.getNodeFromName1(z, 'ZoneType')
             tmp = Internal.getValue(a)
             if tmp == 'Unstructured':
@@ -1239,6 +1269,13 @@ def _buildOwnData(t, Padding):
                 if a is not None: ratiom = Internal.getValue(a)  
                 a = Internal.getNodeFromName1(d, 'senseurType')
                 if a is not None: senseurtype = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'KWire_p')
+                if a is not None:KWire_p = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'DiameterWire_p')
+                if a is not None: DiameterWire_p = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'CtWire_p')
+                if a is not None: CtWire_p = Internal.getValue(a)
 
                 ##LBM                 
                 a = Internal.getNodeFromName1(d, 'lbm_neq')
@@ -1437,8 +1474,9 @@ def _buildOwnData(t, Padding):
             leveld=0
 
             
-            number_of_defines_param_int = 127                            # Number Param INT
-            size_int                    = number_of_defines_param_int +1 # number of defines + 1
+            number_of_defines_param_int = 127                           # Number Param INT
+            size_int                   = number_of_defines_param_int +1 # number of defines + 1
+
 
             datap      = numpy.empty(size_int, numpy.int32)
 
@@ -1480,7 +1518,6 @@ def _buildOwnData(t, Padding):
 
                #datap[7 ] = NG_0 + NG_1 + NG_2 + NF_BC0 + NF_BC1 # elements total (avec les element BC )
                datap[7 ] = NG_0 + NG_1 + NG_2 +NG_3           # elements total (avec les element BC et racc ) NELTS
-               print("shiftvar NGON=",shiftvar)
                datap[41] = NG_0 + NG_1 + NG_2 +NG_3 +shiftvar # elements total (avec les element BC et racc ) NDIMDX pour partage transfert Fast
                datap[8 ] = NG_0
                datap[9 ] = NG_1
@@ -1611,13 +1648,14 @@ def _buildOwnData(t, Padding):
                     val = Internal.getValue(a)
                     if val == 1 or val == 'active' or val == True: datap[127] = 1
 
+
             i += 1
          
             Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
             
             # creation noeud parametre real 
             #size_real = 23 +  size_ale   
-            number_of_defines_param_real = 59                                    # Number Param REAL
+            number_of_defines_param_real = 63                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
@@ -1677,7 +1715,13 @@ def _buildOwnData(t, Padding):
             datap[57] = AlphaGradP
             datap[58] = NbptsLinelets
 
-            # LBM
+            # Wire Model
+            datap[59] = numpy.sqrt(((0.25*KWire_p)**2+1))-0.25*KWire_p
+            datap[60] = KWire_p
+            datap[61] = DiameterWire_p
+            datap[62] = CtWire_p
+
+
             datap[v.LBM_c0]      = lbm_c0
             datap[v.LBM_taug]    = lbm_taug
             datap[v.LBM_difcoef] = lbm_dif_coef
@@ -1688,7 +1732,7 @@ def _buildOwnData(t, Padding):
             datap[v.LBM_chi_spongetypeII]    = lbm_chi_spongetypeII
             datap[v.LBM_HRR_sigma]           = lbm_hrr_sigma
             datap[v.LBM_gamma_precon]        = lbm_gamma_precon
-            datap[v.LBM_zlim]                = lbm_zlim
+            datap[v.LBM_zlim]                = lbm_zlim            
                        
             Internal.createUniqueChild(o, 'Parameter_real', 'DataArray_t', datap)
 
@@ -1915,7 +1959,6 @@ def tagBC(bcname):
 # echange M1 <- current, current <- P1, P1 <- M1
 #==============================================================================
 def switchPointers__(zones, case, order=3):
-    
     if order == 2: return None
     elif order == 1 or order == 3:
       for z in zones:
@@ -1938,6 +1981,7 @@ def switchPointers__(zones, case, order=3):
             elif case ==2:
                #sauvegarde P1   #P1 <- current    # current <- M1   # M1 <- temp 
                ta = caP1[1];    caP1[1] = ca[1];  ca[1] = caM1[1];  caM1[1] = ta
+    return None
 #==============================================================================
 # Compact vars in Container or defined in fields
 #==============================================================================
@@ -2836,9 +2880,10 @@ def save(t, fileName='restart', split='single', NP=0, cartesian=False):
     C._rmVars(t2, 'centers:Temperature_P1')
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
     Internal._rmNodesFromName(t2, 'Displacement#0')
-    
+
     zones = Internal.getZones(t2)
-    for z in zones: Internal._rmNodeByPath(z, '.Solver#ownData')
+    for z in zones:
+        Internal._rmNodeByPath(z, '.Solver#ownData')
     if cartesian: 
         import Compressor.PyTree as Compressor
         Compressor._compressCartesian(t2)
@@ -3289,7 +3334,7 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
 
 
-    bases  = Internal.getNodesFromType1(t2    , 'CGNSBase_t')       # noeud
+    bases = Internal.getNodesFromType1(t2    , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
     dtloc = None
     if own is not None: dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')[1] # numpy

@@ -47,7 +47,7 @@ def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
 # compute in place
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=None, gradP=False, TBLE=False):
+def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=None, gradP=False, TBLE=False, isWireModel=False):
     """Compute a given number of iterations."""
 
     bases  = Internal.getNodesFromType1(t , 'CGNSBase_t')       # noeud
@@ -85,7 +85,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
     rk     = param_int_firstZone[52]
     exploc = param_int_firstZone[54]
     #### a blinder...
-
     if nitrun == 1: print('Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode))
 
     tps_cp=  Time.time(); tps_cp=  tps_cp-tps_cp     
@@ -141,13 +140,13 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                # Ghostcell
                if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
                elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
-               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc)
+               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc,isWireModel=isWireModel)
 
                fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1)
 
                if nstep%2 == 0:
                    vars = ['Density']
-                   _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep,  ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc, num_passage= 2)
+                   _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep,  ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc, num_passage= 2,isWireModel=isWireModel)
 
                if   nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
                elif nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
@@ -161,11 +160,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
               tic=Time.time()
 
               if not tc2:
-                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP)
+                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP,isWireModel=isWireModel)
               else:
-                _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP)
-
+                _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP,isWireModel=isWireModel)
+                
               #print('t_fillGhost = ',  Time.time() - t0 ,'nstep =', nstep)
+
               # Add unsteady Chimera transfers here
               if ucData is not None:
                 (graphX, intersectionDict, dictOfADT,
@@ -198,7 +198,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
               tps_tr += Time.time()-tic
 
     else: ### layer C
-
+      if isWireModel:
+          print("FastS.PyTree.py DOES NOT SUPPORT WIRE MODEL YET...isWireModel=False only supported...exiting")
+          exit()
       nstep_deb = 1
       nstep_fin = nitmax
       layer_mode= 1
@@ -210,7 +212,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
       tic=Time.time()
       fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
       tps_cp +=Time.time()-tic 
-
     # switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None:
          if layer == 'Python': FastC.switchPointers__(zones, 1, 3)
@@ -219,7 +220,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
          case = NIT%3
          if case != 0 and itypcp < 2: FastC.switchPointers__(zones, case)
          if case != 0 and itypcp ==2: FastC.switchPointers__(zones, case, nitmax%2+2)
-
     # flag pour derivee temporelle 1er pas de temps implicit
     FastC.HOOK["FIRST_IT"]  = 1
     FastC.FIRST_IT          = 1
@@ -319,7 +319,7 @@ def _init_metric(t, metrics, omp_mode):
 # Initialisation parametre calcul: calcul metric + var primitive + compactage
 # + alignement + placement DRAM
 #==============================================================================
-def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0, Re=-1, Lref=1., gradP=False):
+def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0, Re=-1, Lref=1., gradP=False, isWireModel=False):
     """Perform necessary operations for the solver to run."""
 
     # compute info linelets
@@ -344,12 +344,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     # Reordone les zones pour garantir meme ordre entre t et tc
     FastC._reorder(t, tc, ompmode)
-    
     # Construction param_int et param_real des zones
     FastC._buildOwnData(t, Padding)
-
     t = Internal.rmNodesByName(t, 'NbptsLinelets')
-    
+     
     #init hook necessaire pour info omp
     tmp   = Internal.getNodeFromName1(t, '.Solver#ownData')
     dtloc = Internal.getNodeFromName1(tmp, '.Solver#dtloc')  # noeud
@@ -357,27 +355,21 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
-
     # allocation d espace dans param_int pour stockage info openmp  
     FastC._build_omp(t)
-    
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
     metrics = allocate_metric(t)
-    
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t)
-    
     # Contruction Conservative_int
     FastC._Fluxcompact(t) 
-
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     #print 'int(dtloc[0])= ', int(dtloc[0])
     for nstep in range(1, int(dtloc[0])+1):
         hook1       = FastC.HOOK.copy()
         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode, verbose) )   
-
 
     #init metric
     _init_metric(t, metrics, ompmode)
@@ -390,7 +382,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     adjoint = Adjoint
 
     
-    t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP)
+    t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP,isWireModel)
     FastC.HOOK['FIRST_IT'] = FastC.FIRST_IT
 
     #compactage des champs en fonction option de calcul
@@ -495,8 +487,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4])
-
-    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1)
+    
+    isWireModelPrep=isWireModel
+    
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1,isWireModelPrep=isWireModelPrep,isWireModel=isWireModel)
 
     if tc is not None: C._rmVars(tc, 'FlowSolution')
 
@@ -1225,14 +1219,12 @@ def _applyBC(t, metrics, hook1, nstep,omp_mode, var="Density"):
     return None
 
 #==============================================================================
-def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False):
-
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, isWireModelPrep=False,isWireModel=False):
    # timecount = numpy.zeros(4, dtype=numpy.float64)
-
+   
    varsGrad = []
    if hook1['lexit_lu'] ==0:
  
-
        #transfert
        if tc is not None:
            tc_compact = Internal.getNodeFromName1( tc, 'Parameter_real')
@@ -1270,9 +1262,26 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
                   XOD._setInterpTransfers(zones, zonesD, type_transfert=0, variables=variablesIBC, variablesIBC=[], compact=0)
                   XOD._setIBCTransfers4FULLTBLE(zones, zonesD, variablesIBC=variablesIBC)
 
-              type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
-              no_transfert   = 1  # dans la list des transfert point a point
-              Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
+              
+              if isWireModel:
+                  type_transfert  = 2                       # 0= ID uniquement, 1= IBC uniquement, 2= All
+                  no_transfert    = 1                       # dans la list des transfert point a point
+                  
+                  isWireModel_TMP = 0
+                  isWirePrepLocal = int(isWireModelPrep)    
+                  if isWirePrepLocal<1:isWirePrepLocal=2    # if isWireModelPrep=False --> isWirePrepLocal=2
+                                                            # if isWireModelPrep=True  --> isWirePrepLocal=1
+                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWirePrepLocal, int(isWireModel))#,timecount)
+
+                  type_transfert = 1  
+                  no_transfert   = 1  
+                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_TMP, int(isWireModel))#,timecount)
+              else:
+                  type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
+                  no_transfert   = 1  # dans la list des transfert point a point
+                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, int(isWireModelPrep), int(isWireModel))#,timecount)
+                  
+                  
 
        #apply BC
        #t0=timeit.default_timer()
@@ -1286,7 +1295,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 #==============================================================================
 # modified _fillGhostCells for two image points (tc + tc2) for gradP 
 #==============================================================================
-def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False):
+def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, isWireModelPrep=False,isWireModel=False):
 
    # timecount = numpy.zeros(4, dtype=numpy.float64)
 
@@ -1339,9 +1348,27 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
                   XOD._setIBCTransfers4FULLTBLE(zones, zonesD2, variablesIBC=variablesIBC)                  
                   XOD._setIBCTransfers4FULLTBLE2(zones, zonesD, variablesIBC=variablesIBC)                  
 
-              type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
-              no_transfert   = 1  # dans la list des transfert point a point
-              Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
+
+              if isWireModel:
+                  type_transfert  = 2                       # 0= ID uniquement, 1= IBC uniquement, 2= All
+                  no_transfert    = 1                       # dans la list des transfert point a point
+                  
+                  isWireModel_TMP = 0
+                  isWirePrepLocal = int(isWireModelPrep)    
+                  if isWirePrepLocal<1:isWirePrepLocal=2    # if isWireModelPrep=False --> isWirePrepLocal=2
+                                                            # if isWireModelPrep=True  --> isWirePrepLocal=1
+                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWirePrepLocal, int(isWireModel))#,timecount)
+
+                  type_transfert = 1  
+                  no_transfert   = 1  
+                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_TMP, int(isWireModel))#,timecount)
+              else:
+                  type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
+                  no_transfert   = 1  # dans la list des transfert point a point
+                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, int(isWireModelPrep), int(isWireModel))#,timecount)
+
+                  
+
 
        #apply BC
        #t0=timeit.default_timer()
@@ -4033,6 +4060,7 @@ def calc_global_convergence(t):
                 sh_local = numpy.shape(RSD_b)[0]
                 sh       = nrec    *sh_local//nrec
                 for i in range(sh):
+                    if RSD_b[i]==0:RSD_b[i]=-10e10
                     RSD_b[i]=max(RSD_b[i],RSD_[i])
 
             ##L2 per base (here only sum)
@@ -4066,13 +4094,24 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
     for z in Internal.getZones(t):
         listzones_rm=[]
         for z2 in Internal.getChildren(z):
-            if z2[0] != 'ZoneConvergenceHistory':
+            if z2[0] != 'ZoneConvergenceHistory' and z2[0] != 'ZoneType':
                 listzones_rm.append(z2)
         for z2 in listzones_rm:
             Internal._rmNode(z,z2)
        
     ##Check to see if I need to write the file or append    
     if t_conv_hist is None:
+        if it0>0:
+            shift_local    = it0
+            for z in Internal.getZones(t):
+                RSD       = Internal.getNodeByName(z,'IterationNumber')[1]
+                sh_local  = numpy.shape(RSD)[0]                
+                for i in range(sh_local):
+                    RSD[i]=RSD[i]+shift_local
+            RSD       = Internal.getNodeByName(Internal.getNodeByName(t,'GlobalConvergenceHistory'),'IterationNumber')[1]
+            sh_local  = numpy.shape(RSD)[0]                
+            for i in range(sh_local):
+                RSD[i]=RSD[i]+shift_local
         return t    
     else:
         for z in Internal.getZones(t_conv_hist):

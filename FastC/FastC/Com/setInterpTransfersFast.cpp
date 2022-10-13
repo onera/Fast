@@ -798,8 +798,9 @@ void K_FASTC::setInterpTransfersIntra(
                       }
                       // ibc
                       if (ibc == 1)
-                      {                                                                                
-                          K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread,
+			{
+			  E_Int isWireModelPrep=0;
+			  K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread,
                                                                  xPC    , xPC     +nbRcvPts, xPC     +nbRcvPts*2,
                                                                  xPW    , xPW     +nbRcvPts, xPW     +nbRcvPts*2,
                                                                  xPI    , xPI     +nbRcvPts, xPI     +nbRcvPts*2, 
@@ -807,7 +808,7 @@ void K_FASTC::setInterpTransfersIntra(
                                                                  ipt_tmp, size,
                                                                  param_real[ NoD ],
                                                                  //gamma, cv, muS, Cs, Ts, Pr,
-                                                                 vectOfDnrFields, vectOfRcvFields,
+                                                                 vectOfDnrFields, vectOfRcvFields,isWireModelPrep,
                                                                  nbptslinelets, linelets, indexlinelets);
                         
                       }//ibc
@@ -1337,19 +1338,19 @@ if (has_data_to_send) {
                   // ibc
                   if (ibc == 1)
                   {
+		    E_Int isWireModelPrep=0;
                     // tableau temporaire pour utiliser la routine commune K_CONNECTOR::setIBCTransfersCommon
                     for ( E_Int noind = pt_deb; noind < pt_fin; noind++ ) rcvPts[noind] = noind;
-
-                    K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread, 
-                                                             xPC, xPC + nbRcvPts, xPC + nbRcvPts * 2, 
-                                                             xPW, xPW + nbRcvPts, xPW + nbRcvPts * 2, 
-                                                             xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
-                                                             densPtr, 
-                                                             ipt_tmp, size,
-                                                             param_real[ NoD ],
-                                                             //gamma, cv, muS, Cs, Ts, Pr,
-                                                             vectOfDnrFields, vectOfRcvFields
-                                                             ,nbptslinelets, linelets, indexlinelets);
+		    K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread, 
+							   xPC, xPC + nbRcvPts, xPC + nbRcvPts * 2, 
+							   xPW, xPW + nbRcvPts, xPW + nbRcvPts * 2, 
+							   xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
+							   densPtr, 
+							   ipt_tmp, size,
+							   param_real[ NoD ],
+							   //gamma, cv, muS, Cs, Ts, Pr,
+							   vectOfDnrFields, vectOfRcvFields,isWireModelPrep,
+							   nbptslinelets, linelets, indexlinelets);
                   
                   }  // ibc
 	           E_Int PtlistDonor  = param_int_tc[shift_rac + nrac * 12 + 1];

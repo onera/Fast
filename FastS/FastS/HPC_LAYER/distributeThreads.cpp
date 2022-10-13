@@ -409,11 +409,11 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
    FldArrayI tab_dim_j(__NUMTHREADS__);   E_Int* dim_j  = tab_dim_j.begin();
    FldArrayI tab_dim_k(__NUMTHREADS__);   E_Int* dim_k  = tab_dim_k.begin();
 
-   FldArrayI tab_numa_socket(NBR_SOCKET);   E_Int* numa_socket  = tab_numa_socket.begin();
-
+   FldArrayI tab_numa_socket(NBR_SOCKET);   E_Int* numa_socket      = tab_numa_socket.begin();
+   FldArrayI thread_Ncells(__NUMTHREADS__); E_Int* sizeTotal_thread = thread_Ncells.begin();
    E_Int dependence[__NUMTHREADS__];
 
-   for (E_Int th = 0; th < __NUMTHREADS__ ; th++){ remaind[th] = cost; cells[th]=0; flu_i[th]=0;  flu_j[th]=0;  flu_k[th]=0; grain[th]=0; dependence[th]=-1;}
+   for (E_Int th = 0; th < __NUMTHREADS__ ; th++){ remaind[th] = cost; cells[th]=0; flu_i[th]=0;  flu_j[th]=0;  flu_k[th]=0; grain[th]=0; dependence[th]=-1;sizeTotal_thread[th]=0;}
 
 
    E_Int PtiterTask = ipt_omp[nssiter + nstep-1];
@@ -589,6 +589,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
 	   if ((display==1 && nitrun ==1 && nstep==1) || display ==2)
            {
+	     sizeTotal_thread[th_current]+=(ind_dm[1]-ind_dm[0]+1)*(ind_dm[3]-ind_dm[2]+1)*(ind_dm[5]-ind_dm[4]+1);
              printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d, cycle = %d \n", c, No_zone, Nthreads, nstep, param_int[No_zone][NSSITER]/param_int[No_zone][LEVEL] );
              printf("-- Thread= %d : fenetre=( %d, %d, %d, %d, %d, %d) \n", th_current, ind_dm[0],ind_dm[1],ind_dm[2],ind_dm[3],ind_dm[4],ind_dm[5]);
            }
@@ -1172,8 +1173,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                  {
                    //E_Int* ind_dm = param_int[No_zone] + PtZoneomp + __NUMTHREADS__ +4 + th*6;
                    E_Int* ind_dm = ipt_omp + PtTask + __NUMTHREADS__ +6 + th*6;
-
-
+		   sizeTotal_thread[th_current]+=(ind_dm[1]-ind_dm[0]+1)*(ind_dm[3]-ind_dm[2]+1)*(ind_dm[5]-ind_dm[4]+1);
                    printf("-- Thread= %d  %d : fenetre=( %d, %d, %d, %d, %d, %d) \n", th_current, th,
                                                  ind_dm[0],ind_dm[1],ind_dm[2],ind_dm[3],ind_dm[4],ind_dm[5]);
                  }
@@ -1256,10 +1256,11 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
             E_Float dj =  float(flu_j[th_current]-fluj_tg)/fluj_tg*100;
             E_Float dk =  float(flu_k[th_current]-fluk_tg)/fluk_tg*100;
             sum_c+= dc;sum_i+= di;sum_j+= dj;sum_k+= dk;
-            printf("desequilibre thread, %d, : %f percent. Nb flui= %f,   Nb fluj= %f,  Nb fluk= %f, Nb zones= %d  \n", th_current, (float(-remaind[th_current])/cells_tg_save)*100., di, dj, dk,grain[th_current] );
+
+            printf("desequilibre thread, %d, : %d cells %f percent. Nb flui= %f,   Nb fluj= %f,  Nb fluk= %f, Nb zones= %d  \n", th_current, sizeTotal_thread[th_current],(float(-remaind[th_current])/cells_tg_save)*100., di, dj, dk,grain[th_current] );
         }
         else
-        {  printf("desequilibre thread, %d, : %f percent. Nb flui= %f,   Nb fluj= %f,  Nb zones= %d \n", th_current, (float(-remaind[th_current])/cells_tg_save)*100., 
+	  {  printf("desequilibre thread, %d, : %d cells  %f percent. Nb flui= %f,   Nb fluj= %f,  Nb zones= %d \n", th_current, sizeTotal_thread[th_current],(float(-remaind[th_current])/cells_tg_save)*100., 
             float(flu_i[th_current]-flui_tg)/flui_tg*100, float(flu_j[th_current]-fluj_tg)/fluj_tg*100, grain[th_current] );
         }
      }
