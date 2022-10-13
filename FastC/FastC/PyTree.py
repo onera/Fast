@@ -101,7 +101,7 @@ def _reorder(t, tc=None, omp_mode=0):
              size_zone.append(ndimdx)
 
           #Tri les zone par taille decroissante
-          new_zones =[]
+          new_zones = []
           for z in range(len(size_zone)):
               vmax    = max( size_zone )
               pos_max = size_zone.index( vmax )
@@ -113,7 +113,7 @@ def _reorder(t, tc=None, omp_mode=0):
           orig = []
           for i in l:
               if i[3] != 'Zone_t': orig.append(i)
-          base_tc[2]=  orig+new_zones
+          base_tc[2] = orig+new_zones
 
        # reordone les zones de t pour garantir meme ordre entre t et tc
        bases    = Internal.getNodesFromType1(t, 'CGNSBase_t')
@@ -1677,7 +1677,7 @@ def _buildOwnData(t, Padding):
             datap[57] = AlphaGradP
             datap[58] = NbptsLinelets
 
-            ##LBM
+            # LBM
             datap[v.LBM_c0]      = lbm_c0
             datap[v.LBM_taug]    = lbm_taug
             datap[v.LBM_difcoef] = lbm_dif_coef
@@ -2301,7 +2301,7 @@ def _BCcompactNG(t):
         # zone ownData (generated)
         o = Internal.getNodeFromName1(z, '.Solver#ownData')
 
-        #on concatene les donnes BC dans param_int et param_real
+        # on concatene les donnes BC dans param_int et param_real
         param_int = Internal.getNodeFromName1( o, 'Parameter_int')
         size = numpy.shape(param_int[1])
         c = 1

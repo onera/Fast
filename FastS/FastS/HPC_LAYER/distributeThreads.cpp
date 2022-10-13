@@ -93,11 +93,11 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
               ipt_omp[PtTask + 1 + th  ] = th-1;
 
-              if( ind_dm[1] < ind_dm[0])
-               {
-                ipt_omp[PtTask + 1 + th            ] = -2;
-                ipt_omp[PtTask + __NUMTHREADS__ +2 ] = 1; //zone trop petite: 1 seul thread actif
-               }
+              //if( ind_dm[1] < ind_dm[0])
+              // {
+              //  ipt_omp[PtTask + 1 + th            ] = -2;
+              //  ipt_omp[PtTask + __NUMTHREADS__ +2 ] = 1; //zone trop petite: 1 seul thread actif
+              // }
               if ((display==1 && nitrun ==1 && nstep==1) || display ==2)
                {
                 if(th==1){printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d, cycle = %d \n", c, nd,ipt_omp[PtTask+ __NUMTHREADS__+2], nstep, param_int[nd][NSSITER]/param_int[nd][LEVEL] );}

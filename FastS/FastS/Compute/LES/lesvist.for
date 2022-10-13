@@ -21,7 +21,7 @@ c_V    steady/unsteady
 c
 c     INP
 c_I    tijk     : vecteur param_int( IO_THREAD)rmale aux facettes des mailles
-c_I    vent     : vitesses d'entrainement aux facettes preced.
+c_I    vent     : vitesses d entrainement aux facettes preced.
 c
 c     LOC
 c_L    flu      : flux convectifs dans une direction de maillage

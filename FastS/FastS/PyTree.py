@@ -3639,7 +3639,7 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
     
         C.addState2Node__(t, 'EquationDimension', dimPb)   
         t = Internal.addGhostCells(t, t, 2, adaptBCs=1, fillCorner=0)
-        if (dim == 2): 
+        if dim == 2: 
             t = T.addkplane(t)
             t = T.contract(t, (0,0,0), (1,0,0), (0,1,0),0.025)
             t = T.makeDirect(t)
