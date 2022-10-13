@@ -271,15 +271,14 @@ numz = {}
 numz["time_step"]          = 0.003
 numz["scheme"]             = "senseur"
 FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
-Cmpi.convertPyTree2File(t, 't.cgns')
-exit()
+
 #Initialisation parametre calcul: calcul metric + var primitive + compactage + alignement + placement DRAM
 (t, tc, metrics) = FastSmpi.warmup(t, tc, graph)
 
 C.convertPyTree2File(t, 't_'+str(rank)+'.cgns')
 C.convertPyTree2File(tc, 'tc_'+str(rank)+'.cgns')
 
-nit = 1000; time = 0.
+nit = 5000; time = 0.
 for it in range(nit):
     FastSmpi._compute(t, metrics, it, tc, graph)
     #FastSmpi._compute(t, metrics, it)
