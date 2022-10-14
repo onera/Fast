@@ -239,7 +239,7 @@ c**         Source term IBC a la funk ordre 0
         if(param_int(IBC).eq.1) then 
 
           call ibcsource(ndom,param_int,ind_rhs,
-     &                   rop, cellN_IBC, coe, drodm )
+     &                   rop, cellN_IBC, coe, drodm, param_real,x,y,z)
 
         endif
 
