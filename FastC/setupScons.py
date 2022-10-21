@@ -69,9 +69,10 @@ setup(
     name="FastC",
     version="3.5",
     description="FastC common part of fluid solvers.",
-    author="Onera",
-    package_dir={"":"."},
+    author="ONERA",
+    url="https://w3.onera.fr/FAST",
     packages=['FastC'],
+    package_dir={"":"."},
     ext_modules=listExtensions
     )
 

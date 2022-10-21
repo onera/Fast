@@ -78,9 +78,10 @@ setup(
     name="FastS",
     version="3.5",
     description="Fast for structured grids.",
-    author="Onera",
-    package_dir={"":"."},
+    author="ONERA",
+    url="https://w3.onera.fr/FAST",
     packages=['FastS'],
+    package_dir={"":"."},
     ext_modules=listExtensions
     )
 
