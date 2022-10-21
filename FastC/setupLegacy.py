@@ -21,43 +21,33 @@ Dist.writeSetupCfg()
 # Test if kcore exists =======================================================
 (kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
 
-# Test if xcore exists =======================================================
-(xcoreVersion, xcoreIncDir, xcoreLibDir) = Dist.checkXCore()
-
-# Test if connector exists =====================================================
-(connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
-
 from KCore.config import *
 
-# Test if libmpi exists ======================================================
-(mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
-
 # Compilation des fortrans ====================================================
+if f77compiler == "None":
+    print("Error: a fortran 77 compiler is required for compiling FastC.")
+args = Dist.getForArgs(); opt = ''
+for c, v in enumerate(args): opt += 'FOPT'+str(c)+'='+v+' '
+os.system("make -e FC="+f77compiler+" WDIR=FastC/Fortran "+opt)
 prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir]
-libraries = ["fastc", "kcore", "xcore", "connector"]
+libraryDirs = ["build/"+prod, kcoreLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir]
+libraries = ["FastC", "kcore"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 
-ADDITIONALCPPFLAGS=[]
-if mpi:
-    libraryDirs.append(mpiLibDir)
-    includeDirs.append(mpiIncDir)
-    ADDITIONALCPPFLAGS = ['-D_MPI']
-    libraries += mpiLibs
-    
 # Extensions ==================================================================
+import srcs
 listExtensions = []
 listExtensions.append(
     Extension('FastC.fastc',
-              sources=['FastC/fastc.cpp'],
-              include_dirs=[".","FastC"]+additionalIncludePaths+includeDirs,
+              sources=['FastC/fastc.cpp']+srcs.cpp_srcs,
+              include_dirs=["FastC"]+additionalIncludePaths+includeDirs,
               library_dirs=additionalLibPaths+libraryDirs,
               libraries=libraries+additionalLibs,
               extra_compile_args=Dist.getCppArgs(),
@@ -69,10 +59,9 @@ setup(
     name="FastC",
     version="3.5",
     description="FastC common part of fluid solvers.",
-    author="ONERA",
-    url="https://w3.onera.fr/FAST",
-    packages=['FastC'],
+    author="Onera",
     package_dir={"":"."},
+    packages=['FastC'],
     ext_modules=listExtensions
     )
 
