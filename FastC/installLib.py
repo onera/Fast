@@ -14,16 +14,18 @@ else:
 
 import KCore.installPath as K
 libPath = K.libPath
-installPathLocal = K.installPath
+prod = os.getenv("ELSAPROD")
+if prod is None: prod = 'xx'
+installPathLocal = 'build/'+prod
 
 # La librarie statique existe?
-a = os.access(installPathLocal+"/FastC/libfastc.a", os.F_OK)
+a = os.access(installPathLocal+"/libfastc.a", os.F_OK)
 if a:
-    shutil.copyfile(installPathLocal+"/FastC/libfastc.a", libPath+"/libfastc.a")
+    shutil.copyfile(installPathLocal+"/libfastc.a", libPath+"/libfastc.a")
 else: # Essai en dynamique
-    a = os.access(installPathLocal+"/FastC/fastc"+__EXTMODULE__, os.F_OK)
+    a = os.access(installPathLocal+"/fastc"+__EXTMODULE__, os.F_OK)
     if a:
-        shutil.copyfile(installPathLocal+"/FastC/fastc"+__EXTMODULE__,
+        shutil.copyfile(installPathLocal+"/fastc"+__EXTMODULE__,
                         libPath+"/libfastc"+__EXTSHARED__) 
     else:
         print("Error: fastc" +__EXTMODULE__+" can not be found.")

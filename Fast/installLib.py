@@ -14,16 +14,18 @@ else:
 
 import KCore.installPath as K
 libPath = K.libPath
-installPathLocal = K.installPath
+prod = os.getenv("ELSAPROD")
+if prod is None: prod = 'xx'
+installPathLocal = 'build/'+prod
 
 # La librarie statique existe?
-a = os.access(installPathLocal+"/Fast/libfast.a", os.F_OK)
+a = os.access(installPathLocal+"/libfast.a", os.F_OK)
 if a:
-    shutil.copyfile(installPathLocal+"/Fast/libfast.a", libPath+"/libfast.a")
+    shutil.copyfile(installPathLocal+"/libfast.a", libPath+"/libfast.a")
 else: # Essai en dynamique
-    a = os.access(installPathLocal+"/Fast/fast"+__EXTMODULE__, os.F_OK)
+    a = os.access(installPathLocal+"/fast"+__EXTMODULE__, os.F_OK)
     if a:
-        shutil.copyfile(installPathLocal+"/Fast/fast"+__EXTMODULE__,
+        shutil.copyfile(installPathLocal+"/fast"+__EXTMODULE__,
                         libPath+"/libfast"+__EXTSHARED__) 
     else:
         print("Error: fast"+__EXTMODULE__+" can not be found.")
