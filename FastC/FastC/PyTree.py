@@ -28,7 +28,7 @@ try:
     import RigidMotion.PyTree as R
     import math
 except:
-    raise ImportError("Fast.Internal: requires Converter and Post module.")
+    raise ImportError("FastC.PyTree: requires Converter and Post module.")
 
 try: range = xrange
 except: pass
