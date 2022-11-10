@@ -19,7 +19,7 @@
 #define K_ARRAY_UNIQUE_SYMBOL
 #include "fast.h"
 
-int __activation__;
+//int __activation__;
 
 // ============================================================================
 /* Dictionnary of all functions of the python module */

@@ -5,6 +5,7 @@ import Converter.PyTree as C
 import Converter.Internal as Internal
 import Initiator.PyTree as I
 import Fast.PyTree as Fast
+import FastS.PyTree as FastS
 import Transform.PyTree as T
 import KCore.Adim as Adim
 import KCore.test as test
@@ -44,7 +45,7 @@ nit = 23
 #nit=1
 for it in range(nit):
     Fast._compute(t, metrics, it, NIT=100)
-    #Fast._compute(t, metrics, it, NIT=1)
+    #FastS._compute(t, metrics, it, NIT=1)
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

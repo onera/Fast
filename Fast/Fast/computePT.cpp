@@ -19,7 +19,7 @@
 // Mettre a 1 pour un CPU timer
 #define TIMER 0
 
-# include "FastS/fastS.h"
+# include "FastC/fastc.h"
 # include "Fast/fast.h"
 
 # include "Fast/param_solver.h"
@@ -124,15 +124,13 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       else{ipt_linelets_real = NULL;}
   
     
-      if(lcfl ==1)
-	{
-	  iskipArray = PyDict_GetItemString(work,"skip_lu");
-	  K_NUMPY::getFromNumpyArray(iskipArray, iskip_lu, true); ipt_iskip_lu = iskip_lu->begin();
+      iskipArray = PyDict_GetItemString(work,"skip_lu");
+      K_NUMPY::getFromNumpyArray(iskipArray, iskip_lu, true); ipt_iskip_lu = iskip_lu->begin();
 
-	  PyObject* tmp1 = PyDict_GetItemString(work,"lssiter_loc"); 
-	  if (PyLong_Check(tmp1) == true) lssiter_loc = PyLong_AsLong(tmp1);
-	  else lssiter_loc = PyInt_AsLong(tmp1);
-	} 
+      PyObject* tmp1 = PyDict_GetItemString(work,"lssiter_loc"); 
+      if (PyLong_Check(tmp1) == true) lssiter_loc = PyLong_AsLong(tmp1);
+      else lssiter_loc = PyInt_AsLong(tmp1);
+
     }
   else
     {
@@ -627,31 +625,33 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
       for (E_Int nstep = nstep_deb; nstep < nstep_fin+1; ++nstep)
 	{
-	  if (layer_mode ==1)
-	   {
-            E_Int init_exit=0;
-            if( nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1 )
-              {
-               init_exit =1;
-               E_Int flag_res=1;
-               E_Int lssiter_tmp = lssiter_loc;
-               K_FASTS::souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_tmp, nidom,
-                                 nitrun_loc, nstep, flag_res,  lexit_lu, lssiter_verif);
-              }
+	 if (layer_mode ==1)
+	  {
 
-            E_Int nitrun_split = nitrun_loc - 1;
-            if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2) )  && (nitrun_split%iptdtloc[1] == 0 || nitrun_loc == 1) ) 
-              {
-                E_Int flag_res = 0;
-                K_FASTS::souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, 
-                                  nitrun_split, nstep, flag_res, lexit_lu, lssiter_verif);
-                if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
+           E_Int init_exit =0;
+           if( nitrun_loc%iptdtloc[1] == 0 )
+           {
+             init_exit =1;
+             E_Int flag_res=1; //init Nbe ssiter, pas de modif des souszone
+         
+             K_FASTC::souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom,
+                               nitrun_loc, nstep, flag_res,  lexit_lu, lssiter_verif);
+           }
 
-                E_Int display = 0;
-                K_FASTS::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom, iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
-              }
-            if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;}
-	   }
+           E_Int nitrun_split = nitrun_loc - 1;
+           if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2) )  && nitrun_split%iptdtloc[1] == 0 ) 
+           {
+             E_Int flag_res = 0;
+          
+             K_FASTC::souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom,
+                               nitrun_split, nstep, flag_res, lexit_lu, lssiter_verif);
+             if(init_exit  ==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
+             if(iptdtloc[1]==1){ lssiter_verif = 1; if (nstep == iptdtloc[0] && ipt_param_int[0][ITYPCP]!=2){ lexit_lu = 1;} }
+             E_Int display = 0;
+             K_FASTC::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
+           }
+           if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;}
+          }
 
 	  E_Int skip = 0;
 	  if ( lssiter_verif == 0 && nstep == nstep_fin && ipt_param_int[0][ ITYPCP ] ==1){skip = 1;}
@@ -801,7 +801,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       if (pyLinlets_int  != Py_None) { RELEASESHAREDN( pyLinlets_int , linelets_int ); }
       if (pyLinlets_real != Py_None) { RELEASESHAREDN( pyLinlets_real, linelets_real); }
 
-      if(lcfl ==1) RELEASESHAREDN( iskipArray, iskip_lu);
+      RELEASESHAREDN( iskipArray, iskip_lu);
     }
 
   RELEASEHOOK(hook)

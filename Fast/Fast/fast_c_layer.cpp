@@ -213,12 +213,12 @@ if(lexit_lu ==0 && layer_mode==1)
 			}
 		      else
 			{
-			  //                     E_Int ierr = K_FASTLBM::BCzone(nd, lrhs , nitcfg_stk, lcorner, param_int[nd], param_real[nd], npass,
-			  //                                                    ipt_ind_dm_loc, ipt_ind_dm_thread, 
-			  //                                                    ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
-			  //                                                    iptro_CL[nd] , ipti[nd]            , iptj[nd]    , iptk[nd]       ,
-			  //                                                    iptx[nd]     , ipty[nd]            , iptz[nd]    ,
-			  //                                                    iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd]); 
+			  //E_Int ierr = K_FASTLBM::BCzone(nd, lrhs , nitcfg_stk, lcorner, param_int[nd], param_real[nd], npass,
+			   //                              ipt_ind_dm_loc, ipt_ind_dm_thread, 
+			    //                             ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
+			     //                            iptro_CL[nd] , ipti[nd]            , iptj[nd]    , iptk[nd]       ,
+			     //                            iptx[nd]     , ipty[nd]            , iptz[nd]    ,
+			      //                           iptventi[nd] , iptventj[nd]        , iptventk[nd], iptro_CL[nd]); 
 			}
 		    }
 		  else

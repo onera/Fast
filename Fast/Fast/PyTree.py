@@ -2,6 +2,9 @@
 """
 import os
 import numpy
+
+import FastC.fastc
+
 from . import fast
 from . import Fast
 __version__ = Fast.__version__
@@ -121,7 +124,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
        for nstep in range(1, int(dtloc[0])+1):
            hook1       = FastC.HOOK.copy()
            distrib_omp = 1
-           hook1.update(FastS.fasts.souszones_list(zones_str, metrics_str, FastC.HOOK, 1, nstep, distrib_omp, verbose) )
+           hook1.update(FastC.fastc.souszones_list(zones_str, metrics_str, FastC.HOOK, 1, nstep, distrib_omp, verbose) )
     
     #init metric 
     FastS.fasts.init_metric(zones_str  , metrics_str  , ompmode)
@@ -425,7 +428,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
 
          hook1 = FastC.HOOK.copy()
-         hook1.update(  FastS.fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
+         hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
 
          #nidom_loc = hook1["nidom_tot"] + len(zones_unstr)
          nidom_loc = hook1["nidom_tot"]
