@@ -184,18 +184,19 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                Internal.getNodeFromPath(z, 'NFaceElements')[2] +=[FA_indx, FA_intext] 
                Internal.getNodeFromPath(z, 'NGonElements' )[2] +=[NG_pe, NG_indx, NG_intext] 
             
-            #HOOK['FIRST_IT']= FIRST_IT
+            #recuperation option de calcul
+            define = Internal.getNodeFromName1(z, '.Solver#define')
             source = 0
-            a = Internal.getNodeFromName2(z,'Density_src')
-            if a is not None: source = 1
+            a = Internal.getNodeFromName1(define,'source')
+            if a is not None: source = Internal.getValue(a)
             sfd = 0
-            a = Internal.getNodeFromName2(z, 'sfd')
+            a = Internal.getNodeFromName1(define, 'sfd')
             if a is not None: sfd = Internal.getValue(a)
             extract_res = 0
-            a = Internal.getNodeFromName2(z, 'extract_res')
+            a = Internal.getNodeFromName1(define, 'extract_res')
             if a is not None: extract_res = Internal.getValue(a)
             motion = None 
-            a = Internal.getNodeFromName2(z, 'motion')
+            a = Internal.getNodeFromName1(define, 'motion')
             if a is not None: motion = Internal.getValue(a)
 
             vars_p=['Density', 'VelocityX', 'VelocityY','VelocityZ', 'Temperature']
@@ -282,7 +283,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             loc            ='centers:'
             fields         = [loc+'ViscosityEddy',loc+'TurbulentDistance', loc+'zgris']
             for sufix in ['0','N']:
-               for i in range(1,7):
+               for i in range(1,len(vars_p)+1):
                   fields.append(loc+'drodm'+sufix+'_'+str(i))
 
             fields2compact = []
@@ -688,7 +689,8 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
 
     # init termes sources
     source = 0
-    a = Internal.getNodeFromName2(zone, 'source')
+    define = Internal.getNodeFromName1(zone, '.Solver#define')
+    a = Internal.getNodeFromName1(define,'source')
     if a is not None: source = Internal.getValue(a)
     if source == 1:
        if C.isNamePresent(zone, 'centers:Density_src')   != 1:   C._initVars(zone, 'centers:Density_src', 0.)

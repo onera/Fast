@@ -74,7 +74,7 @@ C Var loc
 
       IF (param_int(SRC).eq.1) THEN
         call update_src(ndom, nitcfg, param_int, ind_rhs,  drodm , 
-     &              ro_src)
+     &              rop, coe, vol, ro_src)
       ENDIF
 
       ! Si dtloc + ALE 

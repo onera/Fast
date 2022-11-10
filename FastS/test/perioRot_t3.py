@@ -77,9 +77,9 @@ C._initVars(t, '{centers:VelocityZ}= {centers:CoordinateZ}/{centers:Rayon}')
 C._initVars(t, '{centers:Temperature}=1.')
 
 # Numerics
-numb = {}
+numb = {}; numz = {}
 numb["temporal_scheme"]    = "explicit"
-FastC._setNum2Base(t, numb)
+FastC._setNum2Base(t, numb); FastC._setNum2Zones(t, numz)
 
 (t, tc, metrics) = FastS.warmup(t, tc, graph=None)
 

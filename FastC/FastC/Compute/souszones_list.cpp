@@ -17,9 +17,8 @@
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-# include "fastS.h"
 # include "FastC/fastc.h"
-# include "param_solver.h"
+# include "FastC/param_solver.h"
 # include <string.h>
 using namespace std;
 using namespace K_FLD;
@@ -29,7 +28,7 @@ using namespace K_FLD;
 // Souszonelist (C layer)
 // 
 // 
-void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom, PyObject* work,
+void K_FASTC::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom,
                                 E_Int* iptdtloc   , E_Int* ipt_iskip_lu, E_Int lssiter_loc       , E_Int nidom      , 
                                 E_Int nitrun      , E_Int nstep        , E_Int  flag_res         , E_Int& lexit_lu  , E_Int& lssiter_verif )
 {
@@ -94,7 +93,7 @@ void K_FASTS::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
 // Souszonelist (python layer)
 // 
 // -----------------------------------------------------------------------------------
-PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
+PyObject* K_FASTC::souszones_list(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* work;
   E_Int nitrun; E_Int nstep; E_Int distrib_omp; E_Int verbose;
@@ -168,7 +167,7 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
     //printf("1ere passe %d %d %d %d %d \n", nidom_loc, nstep, nitrun,nitrun%iptdtloc[1], iptdtloc[1] );
     init_exit      = 1;
     E_Int flag_res = 1;
-    souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, 
+    souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, 
                       nitrun, nstep, flag_res, lexit_lu, lssiter_verif);
   }
 
@@ -178,7 +177,7 @@ PyObject* K_FASTS::souszones_list(PyObject* self, PyObject* args)
   {
     //printf("2eme passe %d %d\n", nstep, nitrun);
     E_Int flag_res = 0;
-    souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, flag_res, lexit_lu, lssiter_verif);
+    souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, flag_res, lexit_lu, lssiter_verif);
     if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
     if (iptdtloc[1]==1) {lssiter_verif = 1; if (nstep == iptdtloc[0] && ipt_param_int[0][ITYPCP]!=2){ lexit_lu = 1;}  }
     E_Int display = 0;

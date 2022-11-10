@@ -4,7 +4,8 @@
 cpp_srcs = ['FastC/checkNumericsValue.cpp',
             'FastC/getRange.cpp',
             'FastC/ALE/motionlaw.cpp',
-            #'FastC/HPC_LAYER/distributeThreads.cpp',
+            'FastC/Compute/souszones_list.cpp',
+            'FastC/HPC_LAYER/distributeThreads.cpp',
             'FastC/Com/setInterpTransfersFast.cpp']
 
 #==============================================================================

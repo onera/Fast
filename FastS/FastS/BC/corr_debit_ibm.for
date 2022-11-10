@@ -4,8 +4,9 @@ c     $Revision: 59 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine corr_debit_ibm(ndom,idir, neq_mtr,ithread, nthread_max,
-     &                       param_int, size_fen, facelist,
-     &                       rop, tijk, vol, celln, flux)
+     &                       param_int, param_real,
+     &                       ipass,fam, nitcfg, amor,size_fen,
+     &                       facelist, rop, tijk, vol, celln, flux)
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       implicit none
 
@@ -13,22 +14,24 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
       INTEGER_E ndom,idir, ithread, nthread_max, size_fen, neq_mtr
       INTEGER_E param_int(0:*)
-      INTEGER_E facelist(*)
+      INTEGER_E facelist(*),fam, nitcfg, ipass
 
       REAL_E rop(param_int(NDIMDX), param_int(NEQ) )
       REAL_E celln(param_int(NDIMDX))
       REAL_E tijk( param_int(NDIMDX_MTR) , neq_mtr )
       REAL_E vol( param_int(NDIMDX_MTR) )
-      REAL_E flux(7)
+      REAL_E flux(7),amor(2), param_real(0:*)
 
 c  Var loc
       INTEGER_E f,l,l1,l2,lt,chunk, ideb,ifin,adr_flu,i,j,k,l0,
-     & inc,flag,ic,jc,kc,kc_vent,inci,incj,inck
-      REAL_E c4,c5,c6,c7,vcorr,vtg,qm1,qp1,vcorr0,vtg0,vmin,tcx,tcy,tcz,
+     & inc,flagi,flagj,flagk,ic,jc,kc,kc_vent,inci,incj,inck,var_tg,
+     & var_mtr
+      REAL_E c4,c5,c6,c7,vcorr,vtg,qm1,qp1,vcorr0,vtg0,tcx,tcy,tcz,
      & ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,u0,ut,vt,wt,qn,surf,s_1,u,v,w,
-     & sens
+     & sens,ec_old,ec0_old,cpinv,pold,pold0
 
 #include "FastS/formule_param.h"
+#include "FastS/formule_mtr_param.h"
 
       !if(idir.gt.3.and.ndom.eq.42) return
       !return
@@ -48,29 +51,53 @@ c  Var loc
       !ifin = size_fen
 
       if(idir.eq.1) then
-        inc = 1
-        sens= 1
-        flag= 1
+        inc     = 1
+        sens    = 1
+        flagi   = 1
+        flagj   = 0
+        flagk   = 0
+        var_tg  = 2
+        var_mtr = ic
       elseif(idir.eq.2) then
-        inc = -1
-        sens= -1
-        flag=  0
+        inc     = -1
+        sens    = -1
+        flagi   = 0
+        flagj   = 0
+        flagk   = 0
+        var_tg  = 2
+        var_mtr = ic
       elseif(idir.eq.3) then
-        inc = param_int(NIJK)
+        inc     = param_int(NIJK)
         sens= 1
-        flag= 1
+        flagi   = 0
+        flagj   = 1
+        flagk   = 0
+        var_tg  = 3
+        var_mtr = jc
       elseif(idir.eq.4) then
-        inc = -param_int(NIJK)
+        inc     = -param_int(NIJK)
         sens= -1
-        flag=  0
+        flagi   = 0
+        flagj   = 0
+        flagk   = 0
+        var_tg  = 3
+        var_mtr = jc
       elseif(idir.eq.5) then
-        inc = param_int(NIJK)*param_int(NIJK+1)
+        inc     = param_int(NIJK)*param_int(NIJK+1)
         sens= 1
-        flag= 1
+        flagi   = 0
+        flagj   = 0
+        flagk   = 1
+        var_tg  = 4
+        var_mtr = kc
       else
-        inc = -param_int(NIJK)*param_int(NIJK+1)
+        inc     = -param_int(NIJK)*param_int(NIJK+1)
         sens= -1
-        flag=  0
+        flagi   = 0
+        flagj   = 0
+        flagk   = 0
+        var_tg  = 4
+        var_mtr = kc
       endif
 
       inci =1
@@ -82,7 +109,10 @@ c  Var loc
       c6 = -1. / 6.
       c7 = (c4-c5)/c6
 
-      vmin = 1e-6
+      cpinv = 1./(param_real( GAMMA )*param_real( CVINF ))
+
+      !vtg      = (-c4*flux(2)    -  c6*flux(3))/c5/amor(1)
+      !vtg0     = (-c4*vtg*amor(1)-  c5*flux(2))/c6/amor(2)
 
       vtg      = (-c4*flux(2) -  c6*flux(3))/c5
       vtg0     = (-c4*vtg     -  c5*flux(2))/c6
@@ -90,166 +120,110 @@ c  Var loc
       vcorr    = (flux(1)-vtg )/flux(4)
       vcorr0   = (flux(7)-vtg0)/flux(4)
 
+      !if (nitcfg.gt.1) then
+      !   vcorr = vcorr  + amor(1)
+      !   vcorr0= vcorr0 + amor(2)
+      !endif
+
+
+      vcorr  = amor(1)
+      vcorr0 = amor(2)
+
+
+
+
+c      if(ithread.eq.1.and.fam.eq.0) write(*,*)"vcorr",vcorr,vcorr0,
+c     &   ndom,nitcfg,idir
+
       IF (param_int(ITYPZONE).eq.0) THEN
 
          do  f = ideb, ifin
 
             l     = facelist( f)
-            l1    = facelist( f) + inc
-            l2    = facelist( f) + inc*2
             l0    = facelist( f) - inc
-            lt    = l + inc*flag
-            
-            tcx  = tijk(lt,ic)*ci_mtr
-            tcy  = tijk(lt,jc)*cj_mtr
-            tcz  = tijk(lt,kc)*ck_mtr
 
-            !on calcule l'inverse de la surface de la facette
-            surf = sqrt(tcx*tcx + tcy*tcy +tcz*tcz)
-            surf = max(surf,1e-30)
-            s_1  = 1./surf
 
-            tcx = tcx*s_1
-            tcy = tcy*s_1
-            tcz = tcz*s_1
+            k = (l-1)/inck -1
+            j = (l-1-(k+1)*inck)/incj -1
+            i = (l-1-(k+1)*inck-(j+1)*incj) -1
 
-            !! Qn_L= 0 --> rop(l)  
-            u = c5*rop(l, 2) + c4*rop(l1,2) + c6*rop(l2,2)
-            v = c5*rop(l, 3) + c4*rop(l1,3) + c6*rop(l2,3)
-            w = c5*rop(l, 4) + c4*rop(l1,4) + c6*rop(l2,4)
+            lt    = indmtr(i+flagi,j+flagj,k+flagk)
 
-            qn = (u*tcx+v*tcy+w*tcz)
-            !qn = u*tcx
+            s_1 = 1./sqrt(tijk(lt,1)**2+tijk(lt,2)**2+tijk(lt,3)**2)
+           
+            !rop(l , var_tg)= rop(l , var_tg) - vcorr*sens
+            !rop(l0, var_tg)= rop(l0, var_tg) - vcorr0*sens
 
-            ut = u-qn*tcx
-            vt = v-qn*tcy
-            wt = w-qn*tcz
+            !write(*,*)"argh ", ndom, i,j,k,celln(l),celln(l0)
+c      if(ithread.eq.1.and.fam.eq.0.and.ndom.eq.0.and.f.eq.ideb
+c     & .and.idir.eq.2) then
+c       write(*,'(a,5f15.8,i3)')"update", rop(l,2),rop(l0, 2),
+c     &   vcorr*sens*tijk(lt,1)*s_1,rop(l,1),rop(l0,1),nitcfg
+c      endif
 
-            rop(l , 2)=(ut -c4*rop(l1,2) - c6*rop(l2,2))/c5
-            rop(l , 3)=(vt -c4*rop(l1,3) - c6*rop(l2,3))/c5
-            rop(l , 4)=(wt -c4*rop(l1,4) - c6*rop(l2,4))/c5
+            !rop(l,  1)= rop(l  , 1)+ vcorr
+            !rop(l0, 1)= rop(l0 , 1)+ vcorr0
+      
+            ec_old  = (rop(l,2)**2+rop(l,3)**2+rop(l,4)**2)
+            ec0_old = (rop(l0,2)**2+rop(l0,3)**2+rop(l0,4)**2)
 
-            !! Qn_R= 0 --> rop(l0)  
-            u = c4*rop(l, 2) + c5*rop(l1,2) + c6*rop(l0,2)
-            v = c4*rop(l, 3) + c5*rop(l1,3) + c6*rop(l0,3)
-            w = c4*rop(l, 4) + c5*rop(l1,4) + c6*rop(l0,4)
+            pold = rop(l,  1)*rop( l , 5)
+            pold0= rop(l0,  1)*rop(l0, 5)
 
-            qn = (u*tcx+v*tcy+w*tcz)
-            !qn = u*tcx
+c            rop(l,  2)= rop(l , 2)+ vcorr*sens*tijk(lt,1)*s_1
+c            rop(l,  3)= rop(l , 3)+ vcorr*sens*tijk(lt,2)*s_1
+c            rop(l,  4)= rop(l , 4)+ vcorr*sens*tijk(lt,3)*s_1
+c            rop(l0, 2)= rop(l0, 2)+ vcorr0*sens*tijk(lt,1)*s_1
+c            rop(l0, 3)= rop(l0, 3)+ vcorr0*sens*tijk(lt,2)*s_1
+c            rop(l0, 4)= rop(l0, 4)+ vcorr0*sens*tijk(lt,3)*s_1
 
-            ut = u-qn*tcx
-            vt = v-qn*tcy
-            wt = w-qn*tcz
+c            rop(l,  5)= rop(l, 5)+ 0.5*cpinv*(ec_old- ( rop(l,2)**2
+c     &                                                 +rop(l,3)**2
+c     &                                                 +rop(l,4)**2))
 
-            rop(l0 , 2)=(ut -c5*rop(l1,2) - c4*rop(l,2))/c6
-            rop(l0 , 3)=(vt -c5*rop(l1,3) - c4*rop(l,3))/c6
-            rop(l0 , 4)=(wt -c5*rop(l1,4) - c4*rop(l,4))/c6
+c            rop(l0,  5)= rop(l0, 5)+ 0.5*cpinv*(ec0_old- ( rop(l0,2)**2
+c     &                                                    +rop(l0,3)**2
+c     &                                                   +rop(l0,4)**2))
+ 
+           !rop(l,  1)  = pold/rop(l,  5)
+           !rop(l0,  1) = pold0/rop(l0,  5)
 
-            u0      = rop(l0, 2)*tcx + rop(l0, 3)*tcy + rop(l0, 4)*tcz
+           !rop(l,  3)= rop(l , 3)- vcorr*sens*tijk(lt,2)*s_1/rop(l,1)
+            !rop(l,  4)= rop(l , 4)- vcorr*sens*tijk(lt,3)*s_1/rop(l,1)
+            !rop(l0, 2)= rop(l0, 2)- vcorr0*sens*tijk(lt,1)*s_1/rop(l0,1)
+            !rop(l0, 3)= rop(l0, 3)- vcorr0*sens*tijk(lt,2)*s_1/rop(l0,1)
+            !rop(l0, 4)= rop(l0, 4)- vcorr0*sens*tijk(lt,3)*s_1/rop(l0,1)
+
+
+            flux(5) = flux(5) -  rop(l0 , var_tg)*tijk(lt,var_mtr)
          enddo
 
-      ELSEIF (param_int(ITYPZONE).eq.2) THEN
+      ELSEIF (param_int(ITYPZONE).ge.2) THEN !2dcart  et 3d cart)
 
          do  f = ideb, ifin
 
             l     = facelist( f)
+            l0    = facelist( f) - inc
             l1    = facelist( f) + inc
             l2    = facelist( f) + inc*2
-            l0    = facelist( f) - inc
+
             lt    = 1
             
-            tcx  = tijk(lt,ic)*ci_mtr
-            tcy  = tijk(lt,jc)*cj_mtr
-            tcz  = tijk(lt,kc)*ck_mtr
+            rop(l , var_tg)= rop(l , var_tg) - vcorr*sens/rop(l,1)
+            rop(l0, var_tg)= rop(l0, var_tg) - vcorr0*sens/rop(l0,1)
 
-            !on calcule l'inverse de la surface de la facette
-            surf = sqrt(tcx*tcx + tcy*tcy +tcz*tcz)
-            surf = max(surf,1e-30)
-            s_1  = 1./surf
+            !rop(l , var_tg)= rop(l , var_tg) - vcorr*sens
+            !rop(l0, var_tg)= rop(l0, var_tg) - vcorr0*sens
+            !rop(l , var_tg)= -rop(l1 , var_tg) 
+            !rop(l0, var_tg)= -rop(l2, var_tg) 
+            !rop(l , 2)= -rop(l1 , 2) 
+            !rop(l0, 2)= -rop(l2 , 2) 
+            !rop(l , 3)= -rop(l1 , 3) 
+            !rop(l0, 3)= -rop(l2 , 3) 
+            !rop(l , 4)= -rop(l1 , 4) 
+            !rop(l0, 4)= -rop(l2 , 4) 
 
-            tcx = tcx*s_1
-            tcy = tcy*s_1
-            tcz = tcz*s_1
-
-            !! Qn_L= 0 --> rop(l)  
-            u = c5*rop(l, 2) + c4*rop(l1,2) + c6*rop(l2,2)
-            v = c5*rop(l, 3) + c4*rop(l1,3) + c6*rop(l2,3)
-            w = c5*rop(l, 4) + c4*rop(l1,4) + c6*rop(l2,4)
-
-            qn = (u*tcx+v*tcy+w*tcz)
-
-            ut = u-qn*tcx
-            vt = v-qn*tcy
-            wt = w-qn*tcz
-
-            rop(l , 2)=(ut -c4*rop(l1,2) - c6*rop(l2,2))/c5
-            rop(l , 3)=(vt -c4*rop(l1,3) - c6*rop(l2,3))/c5
-            rop(l , 4)=(wt -c4*rop(l1,4) - c6*rop(l2,4))/c5
-
-            !! Qn_R= 0 --> rop(l0)  
-            u = c4*rop(l, 2) + c5*rop(l1,2) + c6*rop(l0,2)
-            v = c4*rop(l, 3) + c5*rop(l1,3) + c6*rop(l0,3)
-            w = c4*rop(l, 4) + c5*rop(l1,4) + c6*rop(l0,4)
-
-            qn = (u*tcx+v*tcy+w*tcz)
-
-            ut = u-qn*tcx
-            vt = v-qn*tcy
-            wt = w-qn*tcz
-
-            rop(l0 , 2)=(ut -c5*rop(l1,2) - c4*rop(l,2))/c6
-            rop(l0 , 3)=(vt -c5*rop(l1,3) - c4*rop(l,3))/c6
-            rop(l0 , 4)=(wt -c5*rop(l1,4) - c4*rop(l,4))/c6
-
-            u0      = rop(l0, 2)*tcx + rop(l0, 3)*tcy + rop(l0, 4)*tcz
-         enddo
-
-      ELSEIF (param_int(ITYPZONE).eq.3) THEN
-
-         do  f = ideb, ifin
-
-            l     = facelist( f)
-            l1    = facelist( f) + inc
-            l2    = facelist( f) + inc*2
-            l0    = facelist( f) - inc
-            lt    = 1
-            
-            tcx  = tijk(lt,ic)*ci_mtr
-            tcy  = tijk(lt,jc)*cj_mtr
-
-            !on calcule l'inverse de la surface de la facette
-            surf = sqrt(tcx*tcx + tcy*tcy)
-            surf = max(surf,1e-30)
-            s_1  = 1./surf
-
-            tcx = tcx*s_1
-            tcy = tcy*s_1
-
-            !! Qn_L= 0 --> rop(l)  
-            u = c5*rop(l, 2) + c4*rop(l1,2) + c6*rop(l2,2)
-            v = c5*rop(l, 3) + c4*rop(l1,3) + c6*rop(l2,3)
-
-            qn = (u*tcx+v*tcy)
-
-            ut = u-qn*tcx
-            vt = v-qn*tcy
-
-            rop(l , 2)=(ut -c4*rop(l1,2) - c6*rop(l2,2))/c5
-            rop(l , 3)=(vt -c4*rop(l1,3) - c6*rop(l2,3))/c5
-
-            !! Qn_R= 0 --> rop(l0)  
-            u = c4*rop(l, 2) + c5*rop(l1,2) + c6*rop(l0,2)
-            v = c4*rop(l, 3) + c5*rop(l1,3) + c6*rop(l0,3)
-
-            qn = (u*tcx+v*tcy)
-
-            ut = u-qn*tcx
-            vt = v-qn*tcy
-
-            rop(l0 , 2)=(ut -c5*rop(l1,2) - c4*rop(l,2))/c6
-            rop(l0 , 3)=(vt -c5*rop(l1,3) - c4*rop(l,3))/c6
-
-            u0      = rop(l0, 2)*tcx + rop(l0, 3)*tcy
+            flux(5) = flux(5) -  rop(l0 , var_tg)*tijk(lt,var_mtr)
          enddo
 
       ELSE !2Dcart

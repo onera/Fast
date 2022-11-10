@@ -26,6 +26,8 @@ static PyMethodDef Pyfastc [] =
 {
   {"_motionlaw"          , K_FASTC::_motionlaw          ,  METH_VARARGS},
   {"PygetRange"          , K_FASTC::PygetRange          ,  METH_VARARGS},
+  {"souszones_list"      , K_FASTC::souszones_list      ,  METH_VARARGS},
+  {"distributeThreads"   , K_FASTC::distributeThreads   ,  METH_VARARGS},
   {NULL, NULL}
 };
 

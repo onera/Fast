@@ -19,6 +19,7 @@
 // Mettre a 1 pour un CPU timer
 #define TIMER 0
 
+# include "FastC/fastc.h"
 # include "FastS/fastS.h"
 # include "FastS/param_solver.h"
 # include <string.h>
@@ -513,7 +514,7 @@ else
     for (E_Int i = 0;  i <  nidom*threadmax_sdm; i++){ ipt_cfl[ i*3 ] = 0;  ipt_cfl[ i*3 +1] = 100000000; ipt_cfl[ i*3 +2] = 0; }
   }
 
-
+  E_Float time_trans =0;
 // Iteration C level
   // 
   // 
@@ -551,7 +552,7 @@ else
          init_exit =1;
          E_Int flag_res=1; //init Nbe ssiter, pas de modif des souszone
          
-         souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom,
+         K_FASTC::souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom,
                            nitrun_loc, nstep, flag_res,  lexit_lu, lssiter_verif);
        }
 
@@ -560,12 +561,12 @@ else
        {
          E_Int flag_res = 0;
          
-         souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, work, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom,
+         K_FASTC::souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom,
                            nitrun_split, nstep, flag_res, lexit_lu, lssiter_verif);
          if(init_exit  ==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
          if(iptdtloc[1]==1){ lssiter_verif = 1; if (nstep == iptdtloc[0] && ipt_param_int[0][ITYPCP]!=2){ lexit_lu = 1;} }
          E_Int display = 0;
-         distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
+         K_FASTC::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
        }
        if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;}
        
@@ -585,7 +586,7 @@ else
             kimpli             , lssiter_verif    , lexit_lu          , omp_mode      , layer_mode, mpi,
             nisdom_lu_max      ,  mx_nidom        , ndimt_flt         , threadmax_sdm , mx_synchro,
             nb_pulse           ,                
-            temps              ,
+            temps              , time_trans       ,
             ipt_ijkv_sdm       , 
             ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, vartype, timer_omp,
             iptludic           , iptlumax         ,
@@ -699,7 +700,6 @@ else
 
   RELEASEHOOK(hook)
 
-
 #if TIMER == 1
   c_end = clock();
   timeout = omp_get_wtime();
@@ -707,6 +707,16 @@ else
   printf("nitrun =%d, temps =%g, cpu =%g  %g \n",nitrun,temps,duree, timeout-timein);
 #endif
 
-  Py_INCREF(Py_None);
-  return Py_None;
+
+  if(layer_mode==1)
+    {
+     PyObject* tmp = Py_BuildValue("d", time_trans);
+     return tmp;
+    }
+  else
+    {
+      Py_INCREF(Py_None);
+      return Py_None;
+    }
+ 
 }

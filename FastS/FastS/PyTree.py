@@ -2,6 +2,7 @@
 """
 import numpy
 import os
+import FastC.fastc
 from . import fasts
 from . import FastS
 __version__ = FastS.__version__
@@ -108,7 +109,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
-         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
+         hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
 
          skip = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
@@ -210,8 +211,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
           FastC.HOOK['param_int_tc']  = None
           FastC.HOOK['param_real_tc'] = None
       tic=Time.time()
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
-      tps_cp +=Time.time()-tic 
+      tps_tr =fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
+      tps_cp +=Time.time()-tic - tps_tr 
     # switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None:
          if layer == 'Python': FastC.switchPointers__(zones, 1, 3)
@@ -250,7 +251,7 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
     hook1       = FastC.HOOK.copy()
     distrib_omp = 0
     nitrun      = 0
-    hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
+    hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
 
     fasts._matvecPT(zones, metrics, nitrun, no_vect_test, ompmode, hook1)
 
@@ -267,8 +268,9 @@ def allocate_metric(t):
     nssiter      = int(dtloc_numpy[0])
 
     zones  = Internal.getZones(t)
-    metrics=[]; motion ='none'
+    metrics=[]
     for z in zones:
+        motion ='none'
         b = Internal.getNodeFromName2(z, 'motion')
         if b is not None: motion = Internal.getValue(b)
         num = Internal.getNodeFromName1(z, '.Solver#ownData')
@@ -334,7 +336,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     first = Internal.getNodeFromName1(t, 'NbptsLinelets')
     if first is None: Internal.createUniqueChild(t, 'NbptsLinelets', 'DataArray_t', value=nbpts_linelets)
-
+    
     # Get omp_mode
     ompmode = OMP_MODE
     node = Internal.getNodeFromName1(t, '.Solver#define')
@@ -366,15 +368,13 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     FastC._Fluxcompact(t) 
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
-    #print 'int(dtloc[0])= ', int(dtloc[0])
     for nstep in range(1, int(dtloc[0])+1):
         hook1       = FastC.HOOK.copy()
-        hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode, verbose) )   
+        hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode, verbose) )   
 
     #init metric
     _init_metric(t, metrics, ompmode)
 
-   
     ssors = allocate_ssor(t, metrics, hook1, ompmode)
 
     # compact + align + init numa
@@ -419,8 +419,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         teta = infos_ale[0]; tetap = infos_ale[1]
         FastC._motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
-    #print("souci souszone list: distrib non appelee");
-    #import sys; sys.exit()
+    
     #t1=timeit.default_timer()
     #print("cout mise a jour vitesse entr= ", t1-t0)
     #
@@ -1857,7 +1856,7 @@ def _postStats(tmy):
       pres = Internal.getNodeFromName1(flowsol,'Pressure')
       pres2= Internal.getNodeFromName1(flowsol,'Pressure^2')
       pres2[0]='Prms'
-      pres2[1]=numpy.sqrt( pres2[1]-pres[1]**2)
+      pres2[1]=numpy.sqrt( numpy.abs( pres2[1]-pres[1]**2))
       #calcul urms
       pres = Internal.getNodeFromName1(flowsol,'VelocityX')
       pres2= Internal.getNodeFromName1(flowsol,'rou^2')
@@ -2607,7 +2606,7 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
 
             distrib_omp = 0
             hook1 = FastC.HOOK.copy()
-            hook1.update(fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
+            hook1.update(FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
 
     else:  hook1  = FastC.HOOK
 
@@ -2900,7 +2899,8 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
  ztg=zNameCheck
 
  tmp = Internal.getNodeFromName(t, 'FlowEquationSet')
- DimPb = Internal.getNodeFromName(tmp, 'EquationDimension')[1][0]
+ #DimPb = Internal.getNodeFromName(tmp, 'EquationDimension')[1][0]
+ DimPb = 3
  for zc in Internal.getZones(tc):
    #zc = zone donneuse
    bcs = Internal.getNodesFromName(zc,"IBCD*")
@@ -2920,7 +2920,8 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
        if lprint: print ("zone=",zc[0], bc[0], FamName)
        #zone receveuse
        zR      = Internal.getNodeFromName(t, znameR)
-       cellN   = Internal.getNodeFromName(zR, "cellN#Init")[1]
+       #cellN   = Internal.getNodeFromName(zR, "cellN#Init")[1]
+       cellN   = Internal.getNodeFromName(zR, "cellN")[1]
        #on filtre les zones ou il n'y a pas de calcul NS; Sinon double  prise en compte CL
        if 1 in cellN:
          size    = numpy.size(cellN)
@@ -3004,7 +3005,8 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
       if lprint: print ("zone=",zc[0], "rac=", bc[0], 'fam=', FamName)
       #zone receveuse
       zR      = Internal.getNodeFromName(t, znameR)
-      cellN   = Internal.getNodeFromName(zR, "cellN#Init")[1]
+      #cellN   = Internal.getNodeFromName(zR, "cellN#Init")[1]
+      cellN   = Internal.getNodeFromName(zR, "cellN")[1]
       if CHECK: checKi  = Internal.getNodeFromName(zR, "cellI#conservatif")[1]
       if CHECK: checKj  = Internal.getNodeFromName(zR, "cellJ#conservatif")[1]
       if CHECK and DimPb == 3: checKk  = Internal.getNodeFromName(zR, "cellK#conservatif")[1]
@@ -3085,7 +3087,7 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
                c                  = Fkmin[ sz_kmin-1] 
                Fkmin[c]           = ptlistD[l]+1
                if CHECK: check_k[ ptlistD[l] ] += val*1000000
-               if c != sz_kmin-1: Fjmin[ sz_kmin-1] += 1
+               if c != sz_kmin-1: Fkmin[ sz_kmin-1] += 1
                if lprint: print("verif kmin", c, sz_kmin, Fkmin[ sz_kmin-1], Fkmin[c], ptlistD[l], l, 'celln=', celln[Fkmin[c]-1], celln[Fkmin[c]-1+sh[0]*sh[1]])
 
 #====================================================================================
@@ -3812,7 +3814,7 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
             nitrun =0; nstep =1
             hook1  = FastC.HOOK.copy()
             distrib_omp = 0
-            hook1.update(fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
+            hook1.update(FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
     else:   hook1  = FastC.HOOK
 
     fasts.compute_dpJ_dpW(zones, zones_eff, metrics, hook1, cosAoA, sinAoA, surfinv)
@@ -3857,7 +3859,7 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
 #    nstep=1
 #    hook1  = FastC.HOOK.copy()
-#    hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nit_adjoint, nstep, 0) )
+#    hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nit_adjoint, nstep, 0) )
 #    hook1  = FastC.HOOK
 
 

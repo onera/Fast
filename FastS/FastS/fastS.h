@@ -30,7 +30,7 @@ typedef typename CMP::PendingMsgContainer<CMP::SendBuffer> SendQueue;
 
 # include "connector.h"
 # include "kcore.h"
-# include "Fortran.h"
+# include "FastS/Fortran.h"
 //# include "Zone.h"
 using namespace K_FLD;
 
@@ -47,7 +47,6 @@ namespace K_FASTS
   PyObject* itt(                     PyObject* self, PyObject* args);
   PyObject* compute(                 PyObject* self, PyObject* args);
   PyObject* _computePT(              PyObject* self, PyObject* args);
-  //PyObject* _computePT_(             PyObject* self, PyObject* args);
   PyObject* _stretch(                PyObject* self, PyObject* args);
   PyObject* _interpfromzone(         PyObject* self, PyObject* args);
   PyObject* _computePT_mut(          PyObject* self, PyObject* args);
@@ -70,10 +69,8 @@ namespace K_FASTS
   PyObject* dtlocal2para_mpi(        PyObject* self, PyObject* args);
   PyObject* prep_cfl(                PyObject* self, PyObject* args);
   PyObject* decoupe_maillage(        PyObject* self, PyObject* args);
-  PyObject* souszones_list(          PyObject* self, PyObject* args);
   PyObject* souszones_list2(         PyObject* self, PyObject* args);
   PyObject* souszones_list3(         PyObject* self, PyObject* args);
-  PyObject* distributeThreads(       PyObject* self, PyObject* args);
   PyObject* computePT_enstrophy(     PyObject* self, PyObject* args);
   PyObject* computePT_variables(     PyObject* self, PyObject* args);
   PyObject* computePT_gradient(      PyObject* self, PyObject* args);
@@ -84,7 +81,6 @@ namespace K_FASTS
   PyObject* _movegrid(               PyObject* self, PyObject* args);
   //PyObject* _motionlaw(              PyObject* self, PyObject* args);
   PyObject* compute_dpJ_dpW(         PyObject* self, PyObject* args);
-  PyObject* work_thread_distribution(PyObject* self, PyObject* args);
  // PyObject* compute_RhsIterAdjoint(  PyObject* self, PyObject* args);
  // PyObject* compute_LhsIterAdjoint(  PyObject* self, PyObject* args);
 
@@ -125,13 +121,6 @@ namespace K_FASTS
   // - State -
   //==========
 
-  void souszones_list_c( E_Int**& ipt_param_int, E_Float**& ipt_param_real, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom, PyObject* work ,
-                         E_Int* dtloc          , E_Int* ipt_iskip_lu      , E_Int lssiter_loc       , E_Int nidom    , 
-                         E_Int nitrun          , E_Int nstep              , E_Int flag_res          , E_Int& lexit_lu, E_Int& lssiter_verif);
-
-  void distributeThreads_c( E_Int**& ipt_param_int,  E_Float**& ipt_param_real, E_Int**& ipt_ind_dm, E_Int& omp_mode,
-                            E_Int& nidom          ,  E_Int* ipt_dtloc         , E_Int& mx_sszone   , E_Int& nstep, E_Int& nitrun, E_Int& display);
-
   E_Int topo_test( E_Int* topo, E_Int* nijk, E_Int& cell_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k);
 
   //=============
@@ -145,7 +134,7 @@ namespace K_FASTS
     E_Int& nisdom_lu_max, E_Int& mx_nidom     , E_Int& ndimt_flt,
     E_Int& threadmax_sdm, E_Int& mx_synchro, 
     E_Int& nb_pulse     ,
-    E_Float& temps,
+    E_Float& temps,  E_Float& time_trans,
     E_Int* ipt_ijkv_sdm , 
     E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int& vartype, E_Float* timer_omp,
     E_Int* iptludic             , E_Int* iptlumax, 
@@ -244,8 +233,6 @@ namespace K_FASTS
 
   //===== Distrib OMP Test
   
-  E_Int topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k);
-
   //=======
   // - BC -
   //=======

@@ -517,7 +517,13 @@ extern "C"
  void cp_debit_ibm_(E_Int& nd, E_Int& idir, E_Int& neq_mtr, E_Int& ithread, E_Int& Nthread_max,  E_Int& nitcfg, E_Int* param_int , E_Float* param_real, 
                     E_Int& size_fen, E_Int* facelist,  E_Float* rop, E_Float* iptijk, E_Float* iptvol ,    E_Float* flux   );
 
- void corr_debit_ibm_(E_Int& nd, E_Int& idir, E_Int& neq_mtr, E_Int& ithread, E_Int& Nthread_max, E_Int* param_int , E_Int& size_fen, E_Int* facelist,  E_Float* rop,
-                    E_Float* iptijk, E_Float* iptvol ,  E_Float* celln,  E_Float* flux   );
+ void cp_corr_debit_ibm_(E_Int& nd, E_Int& idir, E_Int& neq_mtr, E_Int& ithread, E_Int& Nthread_max,  E_Int& nitcfg, E_Int* param_int , E_Float* param_real, 
+                    E_Int& size_fen, E_Int* facelist,  E_Float* rop, E_Float* iptijk, E_Float* coe ,  E_Float* drodm ,  E_Float* flux   );
+
+ void corr_debit_ibm_(E_Int& nd, E_Int& idir, E_Int& neq_mtr, E_Int& ithread, E_Int& Nthread_max, E_Int* param_int , E_Float* param_real, E_Int& ipass, E_Int& fam, E_Int& nstep, 
+                     E_Float* amor, E_Int& size_fen, E_Int* facelist,  E_Float* rop, E_Float* iptijk, E_Float* iptvol ,  E_Float* celln,  E_Float* flux   );
+
+ void corr_bilan_ibm_(E_Int& nd, E_Int& idir, E_Int& neq_mtr, E_Int& ithread, E_Int& Nthread_max, E_Int& nitcfg, E_Int* param_int , E_Float* param_real,
+                      E_Int& size_fen, E_Int* facelist,  E_Float* drodm, E_Float* iptijk, E_Float* iptcoe , E_Float* flux   );
 
   }

@@ -263,7 +263,10 @@ lhs_beg = omp_get_wtime();
 	   scal_prod_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, ipt_norm_kry[ithread-1]);
 
 #include "HPC_LAYER/OMP_MODE_END.h"
+
+#ifdef _OPENMP
 lhs_end = omp_get_wtime();
+#endif
 if (ithread==1) printf("scal_prod              %g \n", lhs_end-lhs_beg);
 //lhs_beg = omp_get_wtime();
 

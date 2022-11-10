@@ -5,7 +5,7 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine update_src(ndom, nitcfg, param_int,
      &                   ind_loop,
-     &                   drodm, ro_src)
+     &                   drodm, rop, coe, vol, ro_src)
 c***********************************************************************
 c_P                          O N E R A
 c
@@ -35,12 +35,16 @@ c***********************************************************************
 
       REAL_E drodm( param_int(NDIMDX) * param_int(NEQ) )
       REAL_E ro_src( param_int(NDIMDX) * param_int(NEQ) )
+      REAL_E rop( param_int(NDIMDX) * param_int(NEQ) )
+      REAL_E coe( param_int(NDIMDX) * param_int(NEQ_COE) )
+      REAL_E vol(param_int(NDIMDX_MTR))
  
 
 C Var loc
       INTEGER_E incmax, l, i,j,k,ne,lij,ltij,lt,b,ind, lvo
       INTEGER_E v1,v2,v3,v4,v5,v6
-      REAL_E ratio,coefH,xmut(1),rop(1) !!ajout pour feinter option de vecto 
+      !REAL_E ratio,coefH,xmut(1),rop(1) !!ajout pour feinter option de vecto 
+      REAL_E ratio,coefH,xmut(1), vol_dt
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -58,12 +62,34 @@ C Var loc
           do  j = ind_loop(3), ind_loop(4)
 #include    "FastS/Compute/loopI_begin.for"
 
-           drodm(l +v1)=  drodm(l +v1) + ro_src(l +v1)
-           drodm(l +v2)=  drodm(l +v2) + ro_src(l +v2)
-           drodm(l +v3)=  drodm(l +v3) + ro_src(l +v3)
-           drodm(l +v4)=  drodm(l +v4) + ro_src(l +v4)
-           drodm(l +v5)=  drodm(l +v5) + ro_src(l +v5)
-           drodm(l +v6)=  drodm(l +v6) + ro_src(l +v6)
+           !drodm(l +v1)=  drodm(l +v1) + ro_src(l +v1)
+           !drodm(l +v2)=  drodm(l +v2) + ro_src(l +v2)
+           !drodm(l +v3)=  drodm(l +v3) + ro_src(l +v3)
+           !drodm(l +v4)=  drodm(l +v4) + ro_src(l +v4)
+           !drodm(l +v5)=  drodm(l +v5) + ro_src(l +v5)
+           !drodm(l +v6)=  drodm(l +v6) + ro_src(l +v6)
+
+c           drodm(l +v4)=  drodm(l +v4) + ro_src(l +v4)*rop(l+v1)
+c     &                                  *(20.-rop(l+v4) )
+c     &                                   /max(coe(l + v1),1.e-15)
+           !vol_dt     = 1./max(coe(l+v1),1.e-15)
+           !vol_dt     = vol(lvo)
+           vol_dt     = 1.
+
+           drodm(l+v1)= drodm( l +v1) + ro_src( l +v1) *vol_dt
+           drodm(l+v2)= drodm( l +v2) + ro_src( l +v2) *vol_dt
+           drodm(l+v3)= drodm( l +v3) + ro_src( l +v3) *vol_dt
+           drodm(l+v4)= drodm( l +v4) + ro_src( l +v4) *vol_dt
+           drodm(l+v5)= drodm( l +v5) + ro_src( l +v5) *vol_dt
+           drodm(l+v6)= drodm( l +v6) + ro_src( l +v6) *vol_dt
+
+
+
+c           if(ndom.eq.1265.and.l-lij.eq.1.and.j.eq.6.and.k.eq.6) then
+c            write(*,*)'src', 
+c     &     drodm(l +v4),ro_src(l +v4),rop(l+v1),coe(l + v1),ind_loop(1)
+c           endif
+
         enddo
         enddo
         enddo

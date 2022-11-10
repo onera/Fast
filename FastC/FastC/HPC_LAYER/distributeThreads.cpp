@@ -17,8 +17,8 @@
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-# include "fastc.h"
-# include "param_solver.h"
+# include "FastC/fastc.h"
+# include "FastC/param_solver.h"
 # include <string.h>
 using namespace std;
 using namespace K_FLD;
@@ -28,7 +28,7 @@ using namespace K_FLD;
 // Souszonelist (C layer)
 // 
 // 
-void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_Int**& ipt_ind_dm,  E_Int& omp_mode,
+void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_Int**& ipt_ind_dm,  E_Int& omp_mode,
                                    E_Int& nidom  , E_Int* ipt_dtloc , E_Int& mx_omp_size_int  , E_Int& nstep, E_Int& nitrun, E_Int& display )
 {
 #ifdef NB_SOCKET
@@ -73,7 +73,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
           E_Int nb_subzone    = ipt_nidom_loc [nstep-1]; 
            
 
-#include "FastC/HPC_LAYER/SIZE_MIN.for"
+#include "FastC/HPC_LAYER/SIZE_MIN.cpp"
 
           for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
           {
@@ -632,8 +632,8 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
             //printf("cell_tg %d, rmax= %d , cell_thmin= %d, th_min= %d , Nthreads= %d , zone %d \n", cells_tg, rmax, cells_tg_min, th_min,Nthreads, c );
             //if(c==8) printf("cell_tg %d %d , th_min= %d \n", cells_tg, rmax, th_min);
-
-#include "FastC/HPC_LAYER/SIZE_MIN.for"
+          E_Int nd =No_zone;
+#include "FastC/HPC_LAYER/SIZE_MIN.cpp"
 
             //FldArrayI tab_dim_ijk(3*Nthreads);   
             //E_Int* dim_ijk  = tab_dim_ijk.begin();
@@ -1281,7 +1281,7 @@ void K_FASTS::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 // distributeThreads (python layer)
 // 
 // -----------------------------------------------------------------------------------
-PyObject* K_FASTS::distributeThreads(PyObject* self, PyObject* args)
+PyObject* K_FASTC::distributeThreads(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* dtloc;
   E_Int nssiter; E_Int nstep; E_Int nitrun; E_Int mx_omp_size_int; E_Int display; E_Int omp_mode;
@@ -1335,7 +1335,7 @@ PyObject* K_FASTS::distributeThreads(PyObject* self, PyObject* args)
 // optimisation topo thraed pour balancing
 // 
 // -----------------------------------------------------------------------------------
-E_Int K_FASTS::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k)
+E_Int K_FASTC::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k)
 {
   E_Int test =1;
    E_Int dim_loc, res;

@@ -5,21 +5,22 @@
     E_Int Nthread_max=1;
     E_Int nd_subzone = 0;
 
+    /*
     if(nd ==0)
      {
         for ( E_Int fam  = 0; fam <  Nfamily; fam++ )
         {
-          E_Int shift_fam = fam*7*Nthread_max;  E_Int shift_th = (ithread-1)*7;  E_Int shift = shift_fam + shift_th;
-          for ( E_Int i  = 0; i <  7; i++ ) {flux [shift +i]=0; }
+          E_Int shift_fam = fam*neqFlu*Nthread_max;  E_Int shift_th = (ithread-1)*neqFlu;  E_Int shift1 = shift_fam + shift_th;
+          for ( E_Int i  = 0; i <  neqFlu; i++ ) {flux [shift1 +i]=0; }
         }
      }
 
-    /*
     if (pt_flu != -1)
      {
       for ( E_Int fam  = 0; fam <  Nfamily; fam++ )
+      //for ( E_Int fam  = 0; fam <  1; fam++ )
        {
-        E_Float* iptflu = flux + (ithread-1)*7 + fam*Nthread_max*7;
+        E_Float* iptflu = flux + (ithread-1)*neqFlu + fam*Nthread_max*neqFlu;
         for ( E_Int idir = 1; idir<= 6; idir++ )
          {
           
@@ -31,6 +32,7 @@
                if      ( idir <= 2 ) { iptijk    = ipti[nd]; neq_mtr   = param_int[nd][NEQ_IJ]; ipventijk = iptventi[nd]; } 
                else if ( idir <= 4 ) { iptijk    = iptj[nd]; neq_mtr   = param_int[nd][NEQ_IJ]; ipventijk = iptventj[nd]; }
                else                  { iptijk    = iptk[nd]; neq_mtr   = param_int[nd][NEQ_K ]; ipventijk = iptventk[nd]; }
+               
                cp_debit_ibm_(nd, idir, neq_mtr, ithread, Nthread_max, nitcfg, param_int[nd],  param_real[nd],
                              size_fen, facelist, iptro_CL[nd], iptijk, iptvol[nd], iptflu);
 
@@ -39,7 +41,7 @@
          }//dir
        }//family
       }
-      */
+    */
 
      ///mise a jour moyenne plan Lund si necessaire
      E_Int pt_bcs = param_int[nd][PT_BC];

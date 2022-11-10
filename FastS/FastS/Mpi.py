@@ -2,13 +2,16 @@
 from . import PyTree
 from . import fasts
 
-from .PyTree import display_temporal_criteria, displayTemporalCriteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, distributeThreads, allocate_ssor, setIBCData_zero, display_cpu_efficiency, _postStats, _stretch, _computePhaseStats, create_add_t_converg_hist
+from .PyTree import display_temporal_criteria, displayTemporalCriteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, distributeThreads, allocate_ssor, setIBCData_zero, display_cpu_efficiency, _postStats, _stretch, _computePhaseStats, _ConservativeWallIbm, create_add_t_converg_hist
 import timeit
 import time as Time
 import numpy
 import sys
 
+import FastC.fastc
+
 try:
+    import KCore.test as Test
     import Converter.PyTree as C
     import Converter.Mpi    as Cmpi
     import Distributor2.PyTree as D2
@@ -87,7 +90,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
       hookTransfer = []
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
-         hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
+         hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
 
          skip = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
@@ -144,7 +147,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                        graphIBCD = graph[nitmax+nstep-1]['graphIBCD']
                    else: 
                        procDict=None; graphID=None; graphIBCD=None   
-                   _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc, 2,isWireModel=isWireModel)
+                   _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc, num_passage=2, isWireModel=isWireModel)
 
                if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
                elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
@@ -156,12 +159,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                vars = FastC.varsP
                if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
 
-               tic = Time.time()
+               tic=Time.time()
 
                if not tc2:
                 _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE,isWireModel=isWireModel)
                else:
-                _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE, graphInvIBCD=graphInvIBCD, graphIBCD2=graphIBCD2,isWireModel=isWireModel)
+                _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE, graphInvIBCD=graphInvIBCD, graphIBCD2=graphIBCD2, isWireModel=isWireModel)
 
                # add unsteady Chimera transfers (motion) here
                if ucData is not None:
@@ -187,26 +190,18 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                                     dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
                                     time=time, absFrame=True,
                                     procDict=procDict, cellNName='cellN#Motion', 
-                                    interpInDnrFrame=interpInDnrFrame, order=order, 
-                                    hook=hookTransfer)
-               tps_tr += Time.time()-tic  
+                                    interpInDnrFrame=interpInDnrFrame, order=order, hook=hookTransfer)
+               tps_tr +=Time.time()-tic  
 
-    else:
-      if isWireModel:
-          print("FastS.PyTree.py DOES NOT SUPPORT WIRE MODEL YET...isWireModel=False only supported...exiting")
-          exit()
+    else: 
       nstep_deb = 1
       nstep_fin = nitmax
       layer_mode= 1
       nit_c     = NIT
       FastC.HOOK["mpi"] = 1
-      tic = Time.time()
-      fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
-      tps_cp += Time.time()-tic  
-
-    #if vtune:
-    #   print('t_comp/trans=', tps_cp,tps_tr, ' rank et itTarget= ', Cmpi.rank, timelevel_target)
-    #   sys.stdout.flush
+      tic=Time.time()
+      tps_tr = fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
+      tps_cp +=Time.time()-tic - tps_tr  
 
     #switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None :
@@ -227,7 +222,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
       return tps_cp,tps_tr
 
 #==============================================================================
-def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, isWireModelPrep=False,isWireModel=False): 
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, isWireModelPrep=False, isWireModel=False): 
 
    rank=Cmpi.rank
 
@@ -264,19 +259,15 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
               #if rank == 0: print('fillGC: timeleveltarget= ', timelevel_target)
 
-              if isWireModel or isWireModelPrep:
-                  print("isWireModel or isWireModelPrep:: FastS.Mpi.py NOT READY...Exiting...")
-                  exit()
-              else:
-                  #recuperation Nb pas instationnaire dans tc
-                  type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-                  Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
-                                            nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict,
-                                            isWireModelPrep=isWireModelPrep,isWireModel=isWireModel)
-                  type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-                  Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
-                                            nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
-                                            isWireModelPrep=isWireModelPrep,isWireModel=isWireModel)
+              #recuperation Nb pas instationnaire dans tc
+              type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
+              Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
+                                        nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict,
+                                        isWireModelPrep=isWireModelPrep,isWireModel=isWireModel)
+              type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
+              Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
+                                        nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
+                                        isWireModelPrep=isWireModelPrep,isWireModel=isWireModel)
 
               #toc = Time.time() - tic
        # if rank == 0:
@@ -343,20 +334,16 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
                   #RCV ZONES -> tc when RCV ZONES are NOT on the same proc as IBCD ZONES
                   X._setIBCTransfers4GradP3(zones, zonesD, graphInvIBCD, graphIBCD, procDict, variablesIBC=varsGrad, alpha=Internal.getNodeFromName(zones, 'Parameter_real')[1][57])
                   varType = 21
-              if isWireModel:
-                  print("isWireModel:: FastS.Mpi.py NOT READY...Exiting...")
-                  exit()
-              else:
-                  # #recuperation Nb pas instationnaire dans tc
-                  type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-                  Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
-                                            nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1,
-                                            graph=graphIBCD, procDict=procDict,
-                                            isWireModelPrep=isWireModelPrep, isWireModel=isWireModel)
-                  type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-                  Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
-                                            nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
-                                            isWireModelPrep=isWireModelPrep, isWireModel=isWireModel)
+
+              # #recuperation Nb pas instationnaire dans tc
+              type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
+              Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
+                                        nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1,
+                                        graph=graphIBCD, procDict=procDict, isWireModelPrep=isWireModelPrep, isWireModel=isWireModel)
+              type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
+              Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
+                                        nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
+                                        isWireModelPrep=isWireModelPrep, isWireModel=isWireModel)
 
               #toc = Time.time() - tic
        # if rank == 0:
@@ -678,10 +665,8 @@ def _updateGradPInfo(t, tc, metrics, type='IBCD'):
   return None
 #==============================================================================
 
-def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0, Re=-1, Lref=1., gradP=False,isWireModel=False):
-    if isWireModel:
-        print("Wire Model is currently only supported for serial (non-mpi)...making it mpi is work in progress...exiting")
-        exit()
+def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0, Re=-1, Lref=1., gradP=False, isWireModel=False):
+    
     if isinstance(graph, list):
         #test pour savoir si graph est une liste de dictionnaires (explicite local)
         #ou juste un dictionnaire (explicite global, implicite)
@@ -769,12 +754,15 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t) 
+
+    # Contruction Conservative_int
+    FastC._Fluxcompact(t) 
  
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     for nstep in range(1, int(dtloc[0])+1):
         hook1 = FastC.HOOK.copy()
-        hook1.update(  fasts.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode, verbose) )
+        hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode, verbose) )
 
     _init_metric(t, metrics, ompmode)
 
@@ -784,7 +772,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     rmConsVars=True
     adjoint   =Adjoint
 
-    t, FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP,isWireModel)
+    t, FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP, isWireModel)
     FastC.HOOK['FIRST_IT']= FIRST_IT
 
     #compactage des champs en fonction option de calcul  
@@ -796,7 +784,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         varnames= data[1]
         for fields in varnames:
             _compact(zone, fields=fields, mode=count)
-
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     zones = Internal.getZones(t) # car create primvar rend zones caduc
@@ -874,10 +861,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     isWireModelPrep=isWireModel
 
-    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, ompmode, hook1,graphID, graphIBCD, procDict,isWireModelPrep=isWireModelPrep,isWireModel=isWireModel)
-
-
-    #sys.exit()    
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, ompmode, hook1,graphID, graphIBCD, procDict, isWireModelPrep=isWireModelPrep, isWireModel=isWireModel)
 
     #
     # initialisation Mut
@@ -894,8 +878,9 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
     """Compute efforts in teff.""" 
     ret = PyTree._computeStress(t, teff, metrics, xyz_ref)
     ret = numpy.array(ret, dtype=numpy.float64)
+    #ret1 = numpy.empty(ret.shape, dtype=numpy.float64)
     ret1 = numpy.zeros(ret.shape, dtype=numpy.float64)
-    #Cmpi.Allreduce(ret, ret1, Cmpi.SUM)
+    #Cmpi.Allreduce(ret, ret1, op=Cmpi.SUM)
     Cmpi.KCOMM.Allreduce(ret, ret1, op=Cmpi.SUM)
     return ret1.tolist()
 
@@ -917,13 +902,12 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       PyTree.display_cpu_efficiency(t, mask_cpu=mask_cpu, mask_cell=mask_cell, diag=diag, FILEOUT=fileout, FILEOUT1=fileout1, RECORD=RECORD)
       return None
 
-# For periodic unsteady chimera join, parameter must be updated periodicaly 
+# For periodic unsteady chimera join, parameter must be updated peridicaly 
 #==============================================================================
 def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single',root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False, layer='Python', Rotors=['Base02','Base04','Base06'], Stators=['Base01','Base03','Base05','Base07']):
-#def _UpdateUnsteadyJoinParam(t, tc, tc_skel, omega, timelevelInfos, split='single', root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False):
-    
+
     #on cree/initialise le dico infos graph
-    if graph =={}  or graph is None:
+    if graph =={} or graph is None:
        graph= {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
 
     #on cree les noeud infos insta pour chimere perio s'il n'existe pas 
@@ -960,8 +944,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
        rank = Cmpi.rank
        tmp  = No_period*timelevel_period
        root = timelevel_perfile + ( (timelevel_motion - tmp)//timelevel_perfile)*timelevel_perfile
-       ##[AJ] Rotor-Stator WARNING !!! this line needs to be commented !!!
-       if root > timelevel_period: root=timelevel_period ### Comme 8000 pas multiple de 60 on force le load de tc_8000
+       if root > timelevel_period : root=timelevel_period ### Comme 8000 pas multiple de 60 on force le load de tc_8000
     
        if split == 'single':
 
@@ -1034,12 +1017,6 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
            iteration_loc = timelevel_motion - No_period*timelevel_period 
 
            bases  = Internal.getNodesFromType1(tc_inst , 'CGNSBase_t')       # noeud
-           
-           #Rotors  = ['Base02', 'Base04', 'Base06']
-           #Stators = ['Base01', 'Base03', 'Base05', 'Base07']
-
-           #Rotors  = ['Base02']
-           #Stators = ['Base03']
 
            sign =-1
            if omega > 0: sign = 1

@@ -16,11 +16,6 @@ using namespace std;
 
 #undef Conservatif
 //#define Conservatif
-
-
-#undef TimeShowAJ
-//#define TimeShowAJ
-
 #undef TimeShow
 //#define TimeShow
 
@@ -48,7 +43,7 @@ E_Int K_FASTS::gsdr3(
   E_Int& nisdom_lu_max, E_Int& mx_nidom       , E_Int& ndimt_flt  ,
   E_Int& threadmax_sdm, E_Int& mx_synchro,
   E_Int& nb_pulse     , 
-  E_Float& temps,
+  E_Float& temps      , E_Float& time_trans,
   E_Int* ipt_ijkv_sdm  ,
   E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int& vartype, E_Float* timer_omp,
   E_Int*     iptludic  , E_Int*   iptlumax      ,
@@ -95,7 +90,6 @@ E_Int K_FASTS::gsdr3(
     
 #endif
 
-
       E_Int npass         = 0;
       E_Int ibord_ale     = 1;      // on autorise un calcul optimisee des vitesse entrainement en explicit
       E_Int nptpsi        = 1;
@@ -116,7 +110,6 @@ E_Int K_FASTS::gsdr3(
       //
       E_Float** iptro_ssiter;
       E_Float** iptro_CL; 
-
 
       if (param_int[0][EXPLOC]== 1 and param_int[0][ITYPCP]==2)   //explicit local instationnaire
 	   {
@@ -204,14 +197,20 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 ----- Debut zone // omp
 ****************************************************/
 
+#ifdef _OPENMP
   E_Int Nthread_max  = omp_get_max_threads();
+#else
+  E_Int Nthread_max  = 1;
+#endif
+
   E_Int iptflux      = param_int[0][IBC_PT_FLUX];
   E_Int Nfamily      = 0;
+  E_Int neqFlu       = 26;
   if(iptflux != -1) Nfamily  = param_int[0][iptflux];
 
   E_Float masse[3];
   E_Float debit[Nthread_max*2*6];
-  E_Float flux[Nthread_max*7*Nfamily];
+  E_Float flux[Nthread_max*neqFlu*Nfamily];
   E_Float ro_corr; E_Float varMasse;
 
 #pragma omp parallel default(shared)
@@ -303,6 +302,9 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
           }
 #include "FastS/Compute/rhs.cpp"
           } 
+#ifdef Conservatif
+#include   "FastS/Compute/cp_debitIBM.cpp"
+#endif
 
 #ifdef _WIN32
 #pragma omp barrier
@@ -332,9 +334,10 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 #include   "FastS/Compute/lhs.cpp"
 
 #ifdef Conservatif
-#include   "FastS/Compute/conservatif.cpp"
+//#include   "FastS/Compute/conservatif.cpp"
 #endif
           }
+
 
 
           //
@@ -358,6 +361,11 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 #endif 
 
 
+#ifdef _OPENMP  
+     E_Float     trans_deb = omp_get_wtime();
+#else  
+     E_Float     trans_deb = 0.;
+#endif
  
   //
   //
@@ -392,12 +400,37 @@ if(lexit_lu ==0 && layer_mode==1)
   }//loop zone
 } //lexit  
 
+#ifdef _OPENMP  
+    time_trans = time_trans + omp_get_wtime()-trans_deb;
+#else  
+    time_trans = 0.;
+#endif
+
 //calcul sequentiel flux IBM et data CLs (lund, wallmodel) a toutes les ssiter
 for (E_Int nd = 0; nd < nidom; nd++)
   {
      #include  "FastS/Compute/data_ibm_bc.cpp"
   }//loop zone
  
+//filtre domaine a traiter en IBM pour optimiser loop // for
+/*E_Int nd_ibc[nidom]; E_Int nidom_ibc =0;
+for (E_Int nd = 0; nd < nidom; nd++)
+  {
+   E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
+   E_Int  nb_subzone    = ipt_nidom_loc [nitcfg_stk-1];                                       //nbre sous-zone a la sousiter courante
+
+   //if (autorisation_bc[nd] == 1 && nb_subzone > 0)
+   // {
+      E_Int pt_flu = param_int[nd][IBC_PT_FLUX];
+      if (pt_flu != -1) { nd_ibc[nidom_ibc]=nd; nidom_ibc +=1; }
+   // }
+  }
+*/
+#ifdef _OPENMP  
+     trans_deb = omp_get_wtime();
+#else 
+     trans_deb = 0.;
+#endif
 
 E_Int lrhs=0; E_Int lcorner=0; 
 #pragma omp parallel default(shared)
@@ -426,50 +459,19 @@ E_Int lrhs=0; E_Int lcorner=0;
     #include   "FastS/Compute/bcs.cpp"
    }
 
-   #pragma omp for
-   for (E_Int nd = 0; nd < nidom; nd++)
-     {
-       E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
-       E_Int  nb_subzone    = ipt_nidom_loc [nitcfg_stk-1];                                       //nbre sous-zone a la sousiter courante
-
-       if (autorisation_bc[nd] == 1 && nb_subzone > 0)
-        {
-           E_Int pt_flu = param_int[nd][IBC_PT_FLUX];
-           E_Int shift =6*Nfamily +1 ;
-           if (pt_flu != -1)
-            {
-             E_Int ithread_local = 1; E_Int Nbre_thread_actif_local = 1;
-             for ( E_Int fam  = 0; fam <  Nfamily; fam++ )
-              {
-                E_Float* iptflu = flux + fam*7;
-                for ( E_Int idir = 1; idir<= 6; idir++ )
-                {
-                  E_Int size_fen =  param_int[nd][pt_flu+idir +fam*6];    
-                  if (size_fen != 0 )
-                   {
-                     E_Int* facelist = param_int[nd] + pt_flu  + shift;
-                     E_Float* iptijk; E_Float* ipventijk; E_Int neq_mtr;
-                     if      ( idir <= 2 ) { iptijk    = ipti[nd]; neq_mtr   = param_int[nd][NEQ_IJ]; ipventijk = iptventi[nd]; } 
-                     else if ( idir <= 4 ) { iptijk    = iptj[nd]; neq_mtr   = param_int[nd][NEQ_IJ]; ipventijk = iptventj[nd]; }
-                     else                  { iptijk    = iptk[nd]; neq_mtr   = param_int[nd][NEQ_K ]; ipventijk = iptventk[nd]; }
-
-                     corr_debit_ibm_(nd, idir, neq_mtr, ithread_local, Nbre_thread_actif_local,  param_int[nd],
-                                    size_fen, facelist, iptro_CL[nd], iptijk, iptvol[nd], iptCellN[nd], iptflu);
-
-                     shift += size_fen;
-                   }
-                }//dir
-               }//fam
-             }
-        }//autorisation
-     }//loop zone
  }//fin zone omp
+
+#ifdef _OPENMP  
+     time_trans = time_trans + omp_get_wtime()-trans_deb;
+#else 
+     time_trans = 0.;
+#endif
 
   nitcfg = nitcfg_stk;
 
-#ifdef Conservatif
-#include "FastS/Compute/postIBM.cpp"
-#endif
+//#ifdef Conservatif
+//#include "FastS/Compute/postIBM.cpp"
+//#endif
 
     //
     //omp "dynamic" balance

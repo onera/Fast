@@ -32,7 +32,7 @@ typedef typename CMP::PendingMsgContainer<CMP::SendBuffer> SendQueue;
 
 # include "connector.h"
 # include "kcore.h"
-# include "Fortran.h"
+# include "FastC/Fortran.h"
 
 using namespace K_FLD;
 
@@ -44,9 +44,17 @@ namespace K_FASTC
                            E_Int& retInt, E_Float& retFloat, char*& retChar);
 
 
-  PyObject* _motionlaw( PyObject* self, PyObject* args);
-  PyObject* PygetRange( PyObject* self, PyObject* args);
+  PyObject* _motionlaw(     PyObject* self, PyObject* args);
+  PyObject* PygetRange(     PyObject* self, PyObject* args);
+  PyObject* souszones_list( PyObject* self, PyObject* args);
+  PyObject* distributeThreads( PyObject* self, PyObject* args);
 
+  //===== Distrib OMP Test
+
+ void distributeThreads_c( E_Int**& ipt_param_int,  E_Float**& ipt_param_real, E_Int**& ipt_ind_dm, E_Int& omp_mode,
+                           E_Int& nidom          ,  E_Int* ipt_dtloc         , E_Int& mx_sszone   , E_Int& nstep, E_Int& nitrun, E_Int& display);
+
+ E_Int topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k);
 
   //=======
   // - BC -
@@ -55,6 +63,11 @@ namespace K_FASTC
 
   E_Int getRange( E_Int* ind_cgns,  E_Int* ind_fen, E_Int* param_int);
   E_Int getDir(E_Int* ijkv,  E_Int* ind_fen);
+
+
+  void souszones_list_c( E_Int**& ipt_param_int, E_Float**& ipt_param_real, E_Int**& ipt_ind_dm, E_Int**& ipt_it_lu_ssdom,
+                         E_Int* dtloc          , E_Int* ipt_iskip_lu      , E_Int lssiter_loc       , E_Int nidom    , 
+                         E_Int nitrun          , E_Int nstep              , E_Int flag_res          , E_Int& lexit_lu, E_Int& lssiter_verif);
 
   //==============================
   // - Transfer with CMP library -
