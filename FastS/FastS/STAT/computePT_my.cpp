@@ -120,7 +120,7 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
     t            = K_PYTREE::getNodeFromName1(sol_center, "MomentumX");
     PyObject* t2 = K_PYTREE::getNodeFromName1(sol_center, "Momentum_t");
     if (t2 != NULL && t != NULL) lcyl = 1; // cyl x
-    else if (t2 != NULL & t == NULL) lcyl = 2; // cylz
+    else if (t2 != NULL && t == NULL) lcyl = 2; // cylz
     else lcyl = 0;
 
     if (lcyl == 0) iptromoy[nd] = K_PYTREE::getValueAF(t, hook);

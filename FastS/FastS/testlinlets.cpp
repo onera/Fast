@@ -82,7 +82,7 @@ for (E_Int ir = 0; ir < nbptR; ++ir)
 
     E_Float b1;
     E_Float a1;
-    E_Float alphasbeta;
+    //E_Float alphasbeta;
 
     if(ipt_coordDf[nbptD-1] > ipt_coordDf[0])
     {

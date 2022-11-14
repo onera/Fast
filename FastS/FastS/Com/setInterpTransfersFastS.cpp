@@ -1329,7 +1329,7 @@ void K_FASTS::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*&
   while (not pt_rcv_queue.empty()) {
 
     RecvQueue::iterator it = pt_rcv_queue.get_first_complete_message();
-    if (it != pt_rcv_queue.end()) {  // ok, une réception de prête*/
+    if (it != pt_rcv_queue.end()) {  // ok, une reception de prete
 
       CMP::RecvBuffer& recv_buffer = (*it).get_message_buffer();
 #if defined(PROFILE_TRANSFERT)
