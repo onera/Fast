@@ -48,9 +48,18 @@ def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
 # compute in place
 # graph is a dummy argument to be compatible with mpi version
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=None, gradP=False, TBLE=False, isWireModel=False):
+def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=None):
     """Compute a given number of iterations."""
-
+    gradP      =False
+    TBLE       =False
+    isWireModel=False
+    if tc is not None:
+        base       = Internal.getBases(tc)[0]
+        solverIBC  = Internal.getNodeFromName(base ,'.Solver#IBCdefine')
+        if solverIBC is not None:
+            gradP      = eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isgradP')))
+            TBLE       = eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isTBLE')))
+            isWireModel= eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isWireModel')))
     bases  = Internal.getNodesFromType1(t , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
@@ -321,9 +330,22 @@ def _init_metric(t, metrics, omp_mode):
 # Initialisation parametre calcul: calcul metric + var primitive + compactage
 # + alignement + placement DRAM
 #==============================================================================
-def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0, Re=-1, Lref=1., gradP=False, isWireModel=False):
+def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0):
     """Perform necessary operations for the solver to run."""
+    Re  =-1
+    Lref= 1.
+    gradP      =False
+    isWireModel=False
+    if tc is not None:
+        base       = Internal.getBases(tc)[0]
+        solverIBC  = Internal.getNodeFromName(base ,'.Solver#IBCdefine')
+        if solverIBC is not None:
+            gradP      = eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isgradP')))
+            isWireModel= eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isWireModel')))
 
+            Re  = Internal.getValue(Internal.getNodeFromName(solverIBC, 'Reref'))
+            Lref= Internal.getValue(Internal.getNodeFromName(solverIBC, 'Lref'))
+            
     # compute info linelets
     nbpts_linelets = 0
     if tc is not None:

@@ -30,8 +30,18 @@ try: range = xrange
 except: pass
 
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=False, gradP=False, TBLE=False, isWireModel=False):
-
+def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=False):
+    gradP      =False
+    TBLE       =False
+    isWireModel=False
+    if tc is not None:
+        base       = Internal.getBases(tc)[0]
+        solverIBC  = Internal.getNodeFromName(base ,'.Solver#IBCdefine')
+        if solverIBC is not None:
+            gradP      = eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isgradP')))
+            TBLE       = eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isTBLE')))
+            isWireModel= eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isWireModel')))
+            
     if isinstance(graph, list):
         #test pour savoir si graph est une liste de dictionnaires (explicite local)
         #ou juste un dictionnaire (explicite global, implicite)
@@ -665,9 +675,21 @@ def _updateGradPInfo(t, tc, metrics, type='IBCD'):
 
   return None
 #==============================================================================
+def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0):
+    Re  =-1
+    Lref= 1.
+    gradP      =False
+    isWireModel=False
+    if tc is not None:
+        base       = Internal.getBases(tc)[0]
+        solverIBC  = Internal.getNodeFromName(base ,'.Solver#IBCdefine')
+        if solverIBC is not None:
+            gradP      = eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isgradP')))
+            isWireModel= eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isWireModel')))
 
-def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0, Re=-1, Lref=1., gradP=False, isWireModel=False):
-    
+            Re  = Internal.getValue(Internal.getNodeFromName(solverIBC, 'Reref'))
+            Lref= Internal.getValue(Internal.getNodeFromName(solverIBC, 'Lref'))
+            
     if isinstance(graph, list):
         #test pour savoir si graph est une liste de dictionnaires (explicite local)
         #ou juste un dictionnaire (explicite global, implicite)
