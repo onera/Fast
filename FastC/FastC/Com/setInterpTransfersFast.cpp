@@ -1056,7 +1056,7 @@ if (has_data_to_send) {
 
     send_buffer << count_rac;
 
-    count_rac = 0;
+    //count_rac = 0;
 
     for (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++)
     {
@@ -1096,7 +1096,7 @@ if (has_data_to_send) {
 
             //printf("size rac %d %d %d %d \n", nbRcvPts_loc*nvars_loc, count_rac, irac, pass_inst);
 
-	    count_rac += 1;
+	    //count_rac += 1;
 	 } // autorisation transfert
       } // irac
     } // pass_inst
@@ -1193,174 +1193,175 @@ if (has_data_to_send) {
                   E_Int NoD       = param_int_tc[shift_rac + nrac * 5 ];
                   E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 +1];  // neq fonction raccord rans/LES
 
+		  E_Int irac_auto = irac-irac_deb;
+
                   // on determine un envoi pipeau de taille 1*neq pour skipper remplissage inutile en implicit local
-		  if ( impli_local[NoD]==0)
+		  if ( impli_local[NoD]==0 and autorisation_transferts[pass_inst][irac_auto]==1)
                     {
                       //for (E_Int eq = 0; eq < nvars_loc; eq++) { frp[count_rac][eq] =0; }
                       count_rac += 1;
                     }
 
-		  E_Int irac_auto = irac-irac_deb;
-		  if (autorisation_transferts[pass_inst][irac_auto]==1 and impli_local[NoD]==1)
+                  if (autorisation_transferts[pass_inst][irac_auto]==1 and impli_local[NoD]==1)
 		   {
 
-                   E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
+                     E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
 
-                   E_Int ibc = 1;
-	           if (ibcType < 0) ibc = 0;
+                     E_Int ibc = 1;
+	             if (ibcType < 0) ibc = 0;
 
-                   //E_Int loc       = param_int_tc[shift_rac + nrac * 9  + 1];  //+1 a cause du nrac mpi
-                   E_Int nbRcvPts  = param_int_tc[shift_rac + nrac * 10 + 1];
-                   E_Int NoR       = param_int_tc[shift_rac + nrac * 11 + 1];
-                   E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
+                     //E_Int loc       = param_int_tc[shift_rac + nrac * 9  + 1];  //+1 a cause du nrac mpi
+                     E_Int nbRcvPts  = param_int_tc[shift_rac + nrac * 10 + 1];
+                     E_Int NoR       = param_int_tc[shift_rac + nrac * 11 + 1];
+                     E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
 
-                   E_Float Pr    = param_real[ NoD ][ PRANDT ];
-                   E_Float Ts    = param_real[ NoD ][ TEMP0 ];
-                   E_Float Cs    = param_real[ NoD ][ CS ];
-                   E_Float muS   = param_real[ NoD ][ XMUL0 ];
-                   E_Float cv    = param_real[ NoD ][ CVINF ];
-                   E_Float gamma = param_real[ NoD ][ GAMMA ];
+                     E_Float Pr    = param_real[ NoD ][ PRANDT ];
+                     E_Float Ts    = param_real[ NoD ][ TEMP0 ];
+                     E_Float Cs    = param_real[ NoD ][ CS ];
+                     E_Float muS   = param_real[ NoD ][ XMUL0 ];
+                     E_Float cv    = param_real[ NoD ][ CVINF ];
+                     E_Float gamma = param_real[ NoD ][ GAMMA ];
 
-                   E_Int meshtype = 1;  // ONLY FOR STRUCTURE ipt_ndimdxD[NoD + nidom*6];
-                   E_Int cnNfldD  = 0;
-                   E_Int* ptrcnd  = NULL;
+                     E_Int meshtype = 1;  // ONLY FOR STRUCTURE ipt_ndimdxD[NoD + nidom*6];
+                     E_Int cnNfldD  = 0;
+                     E_Int* ptrcnd  = NULL;
 
-                   // printf("navr_loc %d %d %d \n", nvars_loc, nvars, Rans);
-                   for (E_Int eq = 0; eq < nvars_loc; eq++) {
-                     vectOfRcvFields[eq] = frp[count_rac] + eq * nbRcvPts;
-                     vectOfDnrFields[eq] = ipt_ro[NoD]    + eq * param_int[ NoD ][ NDIMDX ];
-                   }
-
-                   imd = param_int[ NoD ][ NIJK   ];
-                   jmd = param_int[ NoD ][ NIJK+1 ];
-
-                   imdjmd = imd * jmd;
-                   ////
-                   //  Interpolation parallele
-                   ////
-                   ////
-                   E_Int pos;
-                   pos               = param_int_tc[shift_rac + nrac * 7];
-                   E_Int* ntype      = param_int_tc + pos;
-                   pos               = pos + 1 + ntype[0];
-                   E_Int* types      = param_int_tc + pos;
-                   pos               = param_int_tc[shift_rac + nrac * 6];
-                   E_Int* donorPts   = param_int_tc + pos;
-                   pos               = param_int_tc[shift_rac + nrac * 8];
-                   E_Float* ptrCoefs = param_real_tc + pos;
-                   // pos               = param_int_tc[shift_rac + nrac * 12 + 1];
-                   // E_Int* rcvPts     = param_int_tc +  pos;
-
-                   E_Int nbInterpD = param_int_tc[shift_rac + nrac];
-                   E_Float* xPC = NULL;
-                   E_Float* xPI = NULL;
-                   E_Float* xPW = NULL;
-                   E_Float* densPtr = NULL;
-                   E_Float* linelets   = NULL;
-                   E_Int* indexlinelets = NULL;
-                   E_Int nbptslinelets = 0;
-                   if (ibc == 1) {
-                     xPC = ptrCoefs + nbInterpD;
-                     xPI = ptrCoefs + nbInterpD + 3 * nbRcvPts;
-                     xPW = ptrCoefs + nbInterpD + 6 * nbRcvPts;
-                     densPtr = ptrCoefs + nbInterpD + 9 * nbRcvPts;
-
-                     if (linelets_int != NULL )
-                        {
-                        nbptslinelets= linelets_int[0];
-                        //E_Int addrlinelets   = linelets_int[count_racIBC + 3 ];
-                        //E_Float* linelets    = linelets_real + addrlinelets;
-                        //E_Int* indexlinelets = linelets_int + linelets_int[1]+1 + 3;
-                        count_racIBC = count_racIBC + 1;
-                        }
-                   }
-
-                   E_Int ideb = 0;
-                   E_Int ifin = 0;
-                   E_Int shiftCoef = 0;
-                   E_Int shiftDonor = 0;
-
-                   for (E_Int ndtyp = 0; ndtyp < ntype[0]; ndtyp++) {
-                     type = types[ifin];
-
-                     SIZECF(type, meshtype, sizecoefs);
-
-                     ifin = ifin + ntype[1 + ndtyp];
-
-                     E_Int pt_deb, pt_fin;
-
-                     /// oldschool
-                     // Calcul du nombre de champs a traiter par chaque thread
-                     E_Int size_bc = ifin - ideb;
-                     E_Int chunk = size_bc / Nbre_thread_actif;
-                     E_Int r = size_bc - chunk * Nbre_thread_actif;
-                     // pts traitees par thread
-                     if (ithread <= r) {
-                       pt_deb = ideb + (ithread - 1) * (chunk + 1);
-                       pt_fin = pt_deb + (chunk + 1);
-                     } else {
-                       pt_deb = ideb + (chunk + 1) * r + (ithread - r - 1) * chunk;
-                       pt_fin = pt_deb + chunk;
+                     // printf("navr_loc %d %d %d \n", nvars_loc, nvars, Rans);
+                     for (E_Int eq = 0; eq < nvars_loc; eq++) {
+                       vectOfRcvFields[eq] = frp[count_rac] + eq * nbRcvPts;
+                       vectOfDnrFields[eq] = ipt_ro[NoD]    + eq * param_int[ NoD ][ NDIMDX ];
                      }
 
-                     // Si type 0, calcul sequentiel
-                     if (type == 0) {
-                       if (ithread == 1) {
-                         pt_deb = ideb;
-                         pt_fin = ifin;
+                     imd = param_int[ NoD ][ NIJK   ];
+                     jmd = param_int[ NoD ][ NIJK+1 ];
+
+                     imdjmd = imd * jmd;
+                     ////
+                     //  Interpolation parallele
+                     ////
+                     ////
+                     E_Int pos;
+                     pos               = param_int_tc[shift_rac + nrac * 7];
+                     E_Int* ntype      = param_int_tc + pos;
+                     pos               = pos + 1 + ntype[0];
+                     E_Int* types      = param_int_tc + pos;
+                     pos               = param_int_tc[shift_rac + nrac * 6];
+                     E_Int* donorPts   = param_int_tc + pos;
+                     pos               = param_int_tc[shift_rac + nrac * 8];
+                     E_Float* ptrCoefs = param_real_tc + pos;
+                     // pos               = param_int_tc[shift_rac + nrac * 12 + 1];
+                     // E_Int* rcvPts     = param_int_tc +  pos;
+  
+                     E_Int nbInterpD = param_int_tc[shift_rac + nrac];
+                     E_Float* xPC = NULL;
+                     E_Float* xPI = NULL;
+                     E_Float* xPW = NULL;
+                     E_Float* densPtr = NULL;
+                     E_Float* linelets   = NULL;
+                     E_Int* indexlinelets = NULL;
+                     E_Int nbptslinelets = 0;
+                     if (ibc == 1) {
+                       xPC = ptrCoefs + nbInterpD;
+                       xPI = ptrCoefs + nbInterpD + 3 * nbRcvPts;
+                       xPW = ptrCoefs + nbInterpD + 6 * nbRcvPts;
+                       densPtr = ptrCoefs + nbInterpD + 9 * nbRcvPts;
+
+                       if (linelets_int != NULL )
+                          {
+                           nbptslinelets= linelets_int[0];
+                           //E_Int addrlinelets   = linelets_int[count_racIBC + 3 ];
+                            //E_Float* linelets    = linelets_real + addrlinelets;
+                           //E_Int* indexlinelets = linelets_int + linelets_int[1]+1 + 3;
+                           count_racIBC = count_racIBC + 1;
+                          }
+                     }
+
+                     E_Int ideb = 0;
+                     E_Int ifin = 0;
+                     E_Int shiftCoef = 0;
+                     E_Int shiftDonor = 0;
+
+                     for (E_Int ndtyp = 0; ndtyp < ntype[0]; ndtyp++) {
+                       type = types[ifin];
+
+                       SIZECF(type, meshtype, sizecoefs);
+
+                       ifin = ifin + ntype[1 + ndtyp];
+
+                       E_Int pt_deb, pt_fin;
+
+                       /// oldschool
+                       // Calcul du nombre de champs a traiter par chaque thread
+                       E_Int size_bc = ifin - ideb;
+                       E_Int chunk = size_bc / Nbre_thread_actif;
+                       E_Int r = size_bc - chunk * Nbre_thread_actif;
+                       // pts traitees par thread
+                       if (ithread <= r) {
+                         pt_deb = ideb + (ithread - 1) * (chunk + 1);
+                         pt_fin = pt_deb + (chunk + 1);
                        } else {
-                         pt_deb = ideb;
-                         pt_fin = ideb;
+                         pt_deb = ideb + (chunk + 1) * r + (ithread - r - 1) * chunk;
+                         pt_fin = pt_deb + chunk;
                        }
-                     }
 
+                       // Si type 0, calcul sequentiel
+                       if (type == 0) {
+                         if (ithread == 1) {
+                           pt_deb = ideb;
+                           pt_fin = ifin;
+                         } else {
+                           pt_deb = ideb;
+                           pt_fin = ideb;
+                         }
+                       }
+ 
 
-                  noi     = shiftDonor;  // compteur sur le tableau d indices donneur
-                  indCoef = ( pt_deb - ideb ) * sizecoefs + shiftCoef;
-                  //E_Int NoR = param_int_tc[shift_rac + nrac * 11 + 1];
-                  //if (param_int_tc[ech]==0) printf("No rac= %d , NoR= %d, NoD= %d, Ntype= %d, ptdeb= %d, ptfin= %d, NptD= %d, neq= %d, skip= %d, rank= %d, dest= %d,  thread= %d\n",
-                  //irac, NoR,NoD, ntype[ 1 + ndtyp],pt_deb,pt_fin , 
-                  //param_int_tc[ shift_rac + nrac*10+1  ], param_int_tc[ shift_rac + nrac*13+1  ], param_int_tc[ shift_rac + nrac*15+1  ], 
-                  //rank, param_int_tc[ ech  ], ithread );
-                  if ( nvars_loc == 5 ) {
+                      noi     = shiftDonor;  // compteur sur le tableau d indices donneur
+                      indCoef = ( pt_deb - ideb ) * sizecoefs + shiftCoef;
+                      //E_Int NoR = param_int_tc[shift_rac + nrac * 11 + 1];
+                      //if (param_int_tc[ech]==0) printf("No rac= %d , NoR= %d, NoD= %d, Ntype= %d, ptdeb= %d, ptfin= %d, NptD= %d, neq= %d, skip= %d, rank= %d, dest= %d,  thread= %d\n",
+                      //irac, NoR,NoD, ntype[ 1 + ndtyp],pt_deb,pt_fin , 
+                      //param_int_tc[ shift_rac + nrac*10+1  ], param_int_tc[ shift_rac + nrac*13+1  ], param_int_tc[ shift_rac + nrac*15+1  ], 
+                      //rank, param_int_tc[ ech  ], ithread );
+                      if ( nvars_loc == 5 ) {
 #include "commonInterpTransfersD_reorder_5eq.h"
                         } else if ( nvars_loc == 6 ) {
 #include "commonInterpTransfersD_reorder_6eq.h"
                         } else {
 		    //#include "LBM/commonInterpTransfersD_reorder_neq.h"
                         }
-                  // Prise en compte de la periodicite par rotation
-                  if ( rotation == 1 ) {
-                      E_Float* angle = ptrCoefs + nbInterpD;
+                      // Prise en compte de la periodicite par rotation
+                      if ( rotation == 1 ) {
+                          E_Float* angle = ptrCoefs + nbInterpD;
 #include "includeTransfersD_rotation.h"
-                        }
+                          }
 
-                  // ibc
-                  if (ibc == 1)
-                  {
-		    E_Int isWireModelPrep=0;
-                    // tableau temporaire pour utiliser la routine commune K_CONNECTOR::setIBCTransfersCommon
-                    for ( E_Int noind = pt_deb; noind < pt_fin; noind++ ) rcvPts[noind] = noind;
-		    K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread, 
-							   xPC, xPC + nbRcvPts, xPC + nbRcvPts * 2, 
-							   xPW, xPW + nbRcvPts, xPW + nbRcvPts * 2, 
-							   xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
-							   densPtr, 
-							   ipt_tmp, size,
-							   param_real[ NoD ],
-							   //gamma, cv, muS, Cs, Ts, Pr,
-							   vectOfDnrFields, vectOfRcvFields,isWireModelPrep,
-							   nbptslinelets, linelets, indexlinelets);
+                      // ibc
+                      if (ibc == 1)
+                      {
+		        E_Int isWireModelPrep=0;
+                        // tableau temporaire pour utiliser la routine commune K_CONNECTOR::setIBCTransfersCommon
+                        for ( E_Int noind = pt_deb; noind < pt_fin; noind++ ) rcvPts[noind] = noind;
+	  	        K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread, 
+			                                      xPC, xPC + nbRcvPts, xPC + nbRcvPts * 2, 
+							      xPW, xPW + nbRcvPts, xPW + nbRcvPts * 2, 
+							      xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
+							      densPtr, 
+							      ipt_tmp, size,
+							      param_real[ NoD ],
+							      //gamma, cv, muS, Cs, Ts, Pr,
+							      vectOfDnrFields, vectOfRcvFields,isWireModelPrep,
+							      nbptslinelets, linelets, indexlinelets);
                   
-                  }  // ibc
-	           E_Int PtlistDonor  = param_int_tc[shift_rac + nrac * 12 + 1];
-	           E_Int* ipt_listRcv = param_int_tc + PtlistDonor;
+                      }  // ibc
+	              E_Int PtlistDonor  = param_int_tc[shift_rac + nrac * 12 + 1];
+	              E_Int* ipt_listRcv = param_int_tc + PtlistDonor;
 
-                  //        } //chunk
-                  ideb        = ideb + ifin;
-                  shiftCoef   = shiftCoef + ntype[1 + ndtyp] * sizecoefs;  // shift coef   entre 2 types successif
-                  shiftDonor = shiftDonor + ntype[1 + ndtyp];            // shift donor entre 2 types successif
-                   }                                                        // type
+                      //        } //chunk
+                      ideb        = ideb + ifin;
+                      shiftCoef   = shiftCoef + ntype[1 + ndtyp] * sizecoefs;  // shift coef   entre 2 types successif
+                      shiftDonor = shiftDonor + ntype[1 + ndtyp];            // shift donor entre 2 types successif
+                     }                                                        // type
                    count_rac += 1;
 		  } // autorisation transfert
                 }  // irac
