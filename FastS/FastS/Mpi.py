@@ -81,8 +81,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
     #### a blinder...
 
     timelevel_target = int(dtloc[4])
-    tps_cp=  Time.time(); tps_cp=  tps_cp-tps_cp     
-    tps_tr=  Time.time(); tps_tr=  tps_tr-tps_tr     
+    tps_cp = Time.time(); tps_cp = tps_cp-tps_cp     
+    tps_tr = Time.time(); tps_tr = tps_tr-tps_tr     
     if layer == "Python": 
 
       if exploc==1 and tc is not None:
@@ -113,7 +113,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
             nstep_fin = nstep
             layer_mode= 0
             nit_c     = 1
-            tic=Time.time()
+            tic = Time.time()
             fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
             tps_cp +=Time.time()-tic  
 
@@ -202,7 +202,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                                     time=time, absFrame=True,
                                     procDict=procDict, cellNName='cellN#Motion', 
                                     interpInDnrFrame=interpInDnrFrame, order=order, hook=hookTransfer)
-               tps_tr +=Time.time()-tic  
+               tps_tr += Time.time()-tic  
 
     else: 
       nstep_deb = 1
@@ -210,7 +210,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
       layer_mode= 1
       nit_c     = NIT
       FastC.HOOK["mpi"] = 1
-      tic=Time.time()
+      tic = Time.time()
       tps_tr = fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
       tps_cp +=Time.time()-tic - tps_tr  
 

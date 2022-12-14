@@ -1977,13 +1977,14 @@ def switchPointers__(zones, case, order=3):
             caM1 = Internal.getNodeFromName1(sol, v+'_M1')
             caP1 = Internal.getNodeFromName1(sol, v+'_P1')
 
-            if case ==1:
+            if case == 1:
                #sauvegarde M1   #M1 <- current    # current <- P1   # P1 <- temp 
                ta = caM1[1];    caM1[1] = ca[1];  ca[1] = caP1[1];  caP1[1] = ta  
-            elif case ==2:
+            elif case == 2:
                #sauvegarde P1   #P1 <- current    # current <- M1   # M1 <- temp 
                ta = caP1[1];    caP1[1] = ca[1];  ca[1] = caM1[1];  caM1[1] = ta
     return None
+
 #==============================================================================
 # Compact vars in Container or defined in fields
 #==============================================================================
