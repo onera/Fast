@@ -3538,11 +3538,11 @@ def _addPair(idic, z1, z2):
         if z1 not in idic[z2]: idic[z2].append(z1)
     return None
 
-# Retourne le nob noz des zones donneuses et remplit le dicOfAdt
+# Retourne le nob noz des zones donneuses et remplit le dictOfAdt
 # center et axis servent dans le cas d'adt cylindrique
 # Filter = 'Base' or '*' or 'Base/*toto' or '*/cart*'
 def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT, 
-    cartFilter='CARTESIAN', cylFilter='CYLINDER', center=(0,0,0), axis=(0,0,1)):
+    cartFilter='CARTESIAN', cylFilter='CYLINDER*', center=(0,0,0), axis=(0,0,1), depth=2):
     """Fill dictOfAdt."""
     cartFilter = cartFilter.split('/')
     cartBaseFilter = cartFilter[0]
@@ -3550,6 +3550,7 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT,
     if len(cartFilter) > 1: cartZoneFilter = cartFilter[1]
     cylFilter = cylFilter.split('/')
     cylBaseFilter = cylFilter[0]
+    if cylBaseFilter[-1]=='*': cylBaseFilter=cylBaseFilter[0:-1] # WildCard
     cylZoneFilter = '*'
     if len(cylFilter) > 1: cylZoneFilter = cylFilter[1]
     
@@ -3561,19 +3562,20 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT,
     for nob in range(len(tc[2])):
         if Internal.getType(tc[2][nob]) == 'CGNSBase_t':
             baseName = Internal.getName(tc[2][nob])
+            baseNamePref = baseName[0:len(cylBaseFilter)]
             for nozc in range(len(tc[2][nob][2])):
                 zc = tc[2][nob][2][nozc]
                 if Internal.getType(zc) == 'Zone_t':
                     zdnrname = Internal.getName(zc)
-                    if zdnrname in dnrnames and zdnrname not in dictOfADT:
+                    if zdnrname in dnrnames and zdnrname not in dictOfADT:                            
                         if fnmatch.fnmatch(baseName, cartBaseFilter) and fnmatch.fnmatch(zdnrname, cartZoneFilter): 
-                            #print('Creating adt cart')
+                            print('Creating adt cart')
                             adt = None
-                        elif fnmatch.fnmatch(baseName, cylBaseFilter) and fnmatch.fnmatch(zdnrname, cylZoneFilter): 
-                            #print('Creating adt cyl')
-                            adt = C.createHookAdtCyl(zc, center, axis)
+                        elif fnmatch.fnmatch(baseNamePref, cylBaseFilter) and fnmatch.fnmatch(zdnrname, cylZoneFilter): 
+                            print('Creating adt cyl')
+                            adt = C.createHookAdtCyl(zc, center, axis, depth)
                         else:
-                            #print('Creating std adt') 
+                            print('Creating std adt') 
                             adt = C.createHook(zc, 'adt')
                         dictOfADT[zdnrname] = adt
                         dictOfNobOfDnrZones[zdnrname] = nob
