@@ -107,7 +107,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
 
          # calcul Navier Stokes + appli CL
-         if skip ==0:
+         if skip == 0:
             # Navier-Stokes
             nstep_deb = nstep
             nstep_fin = nstep
@@ -115,7 +115,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
             nit_c     = 1
             tic = Time.time()
             fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
-            tps_cp +=Time.time()-tic  
+            tps_cp += Time.time()-tic  
 
             # dtloc GJeanmasson
             if exploc==1 and tc is not None:

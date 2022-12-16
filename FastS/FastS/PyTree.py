@@ -77,9 +77,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
     d = Internal.getNodeFromName1(t, '.Solver#define')
     a = Internal.getNodeFromName1(d, 'temporal_scheme')
     if Internal.getValue(a) == 'explicit_local' and layer=="c":
-         print("ERROR(compute.py):: There is a bug with 'explicit_local' & 'c layer'")
-         print("ERROR(compute.py):: use 'python layer'...aborting.")
-         exit()
+        raise ValueError("compute: 'explicit_local' & 'c layer' is not implemented.")
 
     node = Internal.getNodeFromName1(t, '.Solver#define')
     omp_node = Internal.getNodeFromName1(node, 'omp_mode')
@@ -148,8 +146,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                FastC.switchPointers2__(zones,nitmax,nstep)
 
                # Ghostcell
-               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
-               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
+               if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
+               elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc,isWireModel=isWireModel)
 
                fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1)
@@ -194,7 +192,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                 C._cpVars(t, "centers:cellN", tc, "cellN")
 
                 if nstep == 0 or nstep == nitmax or nstep%tfreq == 0:
-                    #t0=Time.time()
                     Xmpi._transfer2(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
                                     dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                                     dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
@@ -209,8 +206,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
     else: ### layer C
       if isWireModel:
-          print("FastS.PyTree.py DOES NOT SUPPORT WIRE MODEL YET...isWireModel=False only supported...exiting")
-          exit()
+          raise ValueError("compute: FastS.PyTree.py doent support wire model.")
+
       nstep_deb = 1
       nstep_fin = nitmax
       layer_mode= 1
@@ -3745,10 +3742,7 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
 def set_dt_lts(t,running_cfl=None,dt=None):
     import Transform.PyTree as T
     if running_cfl is None and dt is None:
-        print("Error(set_dt_lts):: running_cfl and dt cannot be both None")
-        print("Error(set_dt_lts):: either running_cfl or dt for the most refined level must be provided")
-        print("Error(set_dt_lts):: ...aborting...")
-        exit()
+        raise ValueError("set_dts_lts: running_cfl and dt cannot be both None. Either running_cfl or dt for the most refined level must be provided.")
         
     dimPb = 3
     node  = Internal.getNodeFromName(t, 'EquationDimension')

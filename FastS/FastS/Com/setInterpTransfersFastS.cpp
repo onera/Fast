@@ -856,10 +856,7 @@ void K_FASTS::setInterpTransfersInter(
   E_Int count_rac = 0;
   E_Int nbRcvPts_mx = 0;
   E_Int ibcTypeMax  = 0;
-  E_Int debut_rac;
-  E_Int cycl;
-
-
+  
   for  (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++)
     {
         E_Int irac_deb = 0;
@@ -948,7 +945,7 @@ void K_FASTS::setInterpTransfersInter(
   cout << "proc =  " << rank << "  count_rac= " << count_rac << endl;
   //cout << has_data_to_send << endl;
 
-E_Float time_out;
+//E_Float time_out;
 if (has_data_to_send) {
 #ifdef TimeShow
  time_out = omp_get_wtime();
@@ -1120,12 +1117,12 @@ if (has_data_to_send) {
                    E_Int nvars_loc = ipt_param_int_tc[shift_rac + nrac * 13 + 1];  // neq fonction raccord rans/LES
                    E_Int rotation  = ipt_param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
 
-                   E_Float Pr    = param_real[ NoD ][ PRANDT ];
-                   E_Float Ts    = param_real[ NoD ][ TEMP0 ];
-                   E_Float Cs    = param_real[ NoD ][ CS ];
-                   E_Float muS   = param_real[ NoD ][ XMUL0 ];
-                   E_Float cv    = param_real[ NoD ][ CVINF ];
-                   E_Float gamma = param_real[ NoD ][ GAMMA ];
+                   //E_Float Pr    = param_real[ NoD ][ PRANDT ];
+                   //E_Float Ts    = param_real[ NoD ][ TEMP0 ];
+                   //E_Float Cs    = param_real[ NoD ][ CS ];
+                   //E_Float muS   = param_real[ NoD ][ XMUL0 ];
+                   //E_Float cv    = param_real[ NoD ][ CVINF ];
+                   //E_Float gamma = param_real[ NoD ][ GAMMA ];
 
                    E_Int meshtype = 1;  // ONLY FOR STRUCTURE ipt_ndimdxD[NoD + nidom*6];
                    E_Int cnNfldD  = 0;
@@ -1342,8 +1339,7 @@ void K_FASTS::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*&
       recv_nozone.resize(recv_nrac);
       recv_nvarloc.resize(recv_nrac);
       recv_listRc.resize(recv_nrac);
-      size_t sz;
-
+      
       for (E_Int irac = 0; irac < recv_nrac; ++irac) {
         recv_buffer >> recv_nozone[irac] >> recv_frp[irac] >> recv_listRc[irac];
 
@@ -1358,7 +1354,7 @@ void K_FASTS::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*&
 
           if (recv_nvarloc[irac] == 5) {
 #pragma omp for
-            for (int irecv = 0; irecv < sz; ++irecv) {
+            for (size_t irecv = 0; irecv < sz; ++irecv) {
 
               ilistrecv = recv_listRc[irac] [irecv];
 
@@ -1370,7 +1366,7 @@ void K_FASTS::getTransfersInter( E_Float**& ipt_roD, E_Int**& param_int, E_Int*&
             }  // end for (int irecv
           } else if (recv_nvarloc[irac] == 6) {
 #pragma omp for
-            for (int irecv = 0; irecv < sz; ++irecv) {
+            for (size_t irecv = 0; irecv < sz; ++irecv) {
 
               ilistrecv = recv_listRc[irac] [irecv];
 

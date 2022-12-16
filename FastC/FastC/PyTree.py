@@ -3569,13 +3569,13 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT,
                     zdnrname = Internal.getName(zc)
                     if zdnrname in dnrnames and zdnrname not in dictOfADT:                            
                         if fnmatch.fnmatch(baseName, cartBaseFilter) and fnmatch.fnmatch(zdnrname, cartZoneFilter): 
-                            print('Creating adt cart')
+                            print('INFO: Creating adt cart.')
                             adt = None
-                        elif fnmatch.fnmatch(baseNamePref, cylBaseFilter) and fnmatch.fnmatch(zdnrname, cylZoneFilter): 
-                            print('Creating adt cyl')
-                            adt = C.createHookAdtCyl(zc, center, axis, depth)
+                        elif fnmatch.fnmatch(baseName, cylBaseFilter) and fnmatch.fnmatch(zdnrname, cylZoneFilter): 
+                            print('INFO: Creating adt cyl.')
+                            adt = C.createHookAdtCyl(zc, center, axis)
                         else:
-                            print('Creating std adt') 
+                            print('INFO: Creating standard adt.') 
                             adt = C.createHook(zc, 'adt')
                         dictOfADT[zdnrname] = adt
                         dictOfNobOfDnrZones[zdnrname] = nob
