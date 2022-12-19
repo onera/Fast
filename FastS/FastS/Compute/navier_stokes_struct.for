@@ -46,6 +46,38 @@ c     I/O
 c_/    drodm    : increment de la solution
 c
 c***********************************************************************
+!     !Notes on index ranges::
+!     ! Array of 6    :: imin imax jmin jmax kmin kmax
+!     ! ind_dm_zone   :: whole domain (mpi domain) (e.g. imin = 1 imax= Nx_mpi)
+!     !
+!     ! ind_sdm       :: interior point for sub domain (1 to Nx, with Nx = number of cells in the sub zone)
+!     !
+!     ! IMPORTANT NOTE::THE SIZE NX IS DEPENDENT ON EITHER CACHE SUB ZONE OR THE FULL SUB ZONE (check if its cache blocking or not)
+!     !                                                                                         i.e. Nx can be Nx_cache or Nx_thread
+!     ! ind_coe     :: single threaded w/o cache blocking    :: -1 to Nx+2  
+!     !                single threaded w/  cache blocking    :: depends on cache sub domain number (see below)
+!     !                Multi threaded but w/o cache blocking :: -1 to Nx-2
+!     !                Multi threaded but w/  cache blocking :: depends on cache sub domain number (see below)
+!     ! ind_grad    :: single threaded w/o cache blocking    :: 0 to Nx+1
+!     !                single threaded w/  cache blocking    :: depends on cache sub domain number (see below)
+!     !                Multi threaded but w/o cache blocking :: 0 to Nx-1
+!     !                Multi threaded but w/  cache blocking :: depends on cache sub domain number (see below)
+
+!     ! Diagram for assuming multi threaded w/ cache blocking but only showing for one thread
+!     !          §  cache1   §  cache2   § cache3    § cache4    § cache5    §
+!     !      |_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|
+!     !      + * |           ^ * +       ^ * +       ^ * +       ^ * +   + * |
+!     !      + * |  coe1     ^ * +  coe2 ^ * +  coe3 ^ * +  coe4 ^ * +co5+ * |
+!     !        * |   grad1   ^ *    grad2^ *    grad3^ *    grad4^ * grad5 * |
+!     !          ^   sdm1    ^      sdm2 ^      sdm3 ^      sdm4 ^   sdm5    ^
+!     !Thread N-1|                 Thread N                                  |Thread  N+1
+!     ! Note: + is the sub zone boundary for coe
+!     !       * is the sub zone boundary for grad
+!     !       ^ is the sub zone boundary for sdm
+!     !       | is the sub zone boundary for the thread zone (interior cells)
+!     !       § is the sub zone boundary for the cache zone (interior cells)
+!     ! Note: if the thread and/or cache touches the right most domain (assuming 1D in x-axis) ind_coe will go up to nx+2 and ind_grad will go up to nx+1
+!     !
       implicit none
 #include "FastS/param_solver.h"
 
