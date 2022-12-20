@@ -711,7 +711,6 @@ void K_FASTS::setInterpTransfersIntra(
                       // ibc
                       if (ibc == 1)
                       {
-			E_Int isWireModelPrep=0;
 			K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread,
 							       xPC    , xPC     +nbRcvPts, xPC     +nbRcvPts*2,
 							       xPW    , xPW     +nbRcvPts, xPW     +nbRcvPts*2,
@@ -720,7 +719,7 @@ void K_FASTS::setInterpTransfersIntra(
 							       ipt_tmp, size,
 							       param_real[ NoD ],
 							       //gamma, cv, muS, Cs, Ts, Pr,
-							       vectOfDnrFields, vectOfRcvFields,isWireModelPrep,
+							       vectOfDnrFields, vectOfRcvFields,
 							       nbptslinelets, linelets, indexlinelets);
                       }//ibc
                       //*
@@ -1239,7 +1238,6 @@ if (has_data_to_send) {
                   // ibc
                   if (ibc == 1)
                   {
-		    E_Int isWireModelPrep=0;
                     // tableau temporaire pour utiliser la routine commune K_CONNECTOR::setIBCTransfersCommon
                     for ( E_Int noind = pt_deb; noind < pt_fin; noind++ ) rcvPts[noind] = noind;
 		    K_CONNECTOR::setIBCTransfersCommonVar2(ibcType, rcvPts, nbRcvPts, pt_deb, pt_fin, ithread, 
@@ -1250,7 +1248,7 @@ if (has_data_to_send) {
 							   ipt_tmp, size,
 							   param_real[ NoD ],
 							   //gamma, cv, muS, Cs, Ts, Pr,
-							   vectOfDnrFields, vectOfRcvFields,isWireModelPrep,
+							   vectOfDnrFields, vectOfRcvFields,
 							   nbptslinelets, linelets, indexlinelets);
                   }  // ibc
                   //        } //chunk

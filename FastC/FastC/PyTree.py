@@ -276,7 +276,6 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
               fields2compact = []
               for v in vars_p:
                 fields2compact.append('centers:'+v+'_WM')
-              fields2compact.append('centers:DistWall2IP_WM')
               vars.append(fields2compact)
     
             # on compacte les variables "visqueuse"
@@ -413,10 +412,6 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
            C._initVars(zone, 'centers:gradzTemperature', 1e-15)
 
        if (isWireModel):
-           if (C.isNamePresent(zone, 'centers:DistWall2IP_WM') != 1):
-               mssg2print='ERROR:Wire Model is being used BUT there is no centers:DistWall2IP_WM'
-               _print2screen(mssg2print,0)
-               _print2screen('exiting',1)
            if (C.isNamePresent(zone, 'centers:Density_WM') != 1):
                C._initVars(zone, 'centers:Density_WM'    , 1e-15)
                C._initVars(zone, 'centers:VelocityX_WM'  , 1e-15)

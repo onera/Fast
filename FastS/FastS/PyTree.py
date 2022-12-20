@@ -60,6 +60,11 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
             gradP      = eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isgradP')))
             TBLE       = eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isTBLE')))
             isWireModel= eval(Internal.getValue(Internal.getNodeFromName(solverIBC, 'isWireModel')))
+
+    if isWireModel and tc2 is not None:
+        print("Wire model does not currently support tc2 options...exiting...")
+        exit()
+        
     bases  = Internal.getNodesFromType1(t , 'CGNSBase_t')       # noeud
     own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
@@ -170,7 +175,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
               if not tc2:
                 _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP,isWireModel=isWireModel)
               else:
-                _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP,isWireModel=isWireModel)
+                _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP)
                 
               #print('t_fillGhost = ',  Time.time() - t0 ,'nstep =', nstep)
 
@@ -206,7 +211,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
     else: ### layer C
       if isWireModel:
-          raise ValueError("compute: FastS.PyTree.py doent support wire model.")
+          raise ValueError("compute: FastS.PyTree.py C layer doesn't currently support the wire mesh model.")
 
       nstep_deb = 1
       nstep_fin = nitmax
@@ -508,7 +513,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     
     isWireModelPrep=isWireModel
     
-    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1,isWireModelPrep=isWireModelPrep,isWireModel=isWireModel)
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1,isWireModel=isWireModel)
 
     if tc is not None: C._rmVars(tc, 'FlowSolution')
 
@@ -1237,7 +1242,7 @@ def _applyBC(t, metrics, hook1, nstep,omp_mode, var="Density"):
     return None
 
 #==============================================================================
-def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, isWireModelPrep=False,isWireModel=False):
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, isWireModel=False):
    # timecount = numpy.zeros(4, dtype=numpy.float64)
    
    varsGrad = []
@@ -1282,22 +1287,22 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
               
               if isWireModel:
-                  type_transfert  = 2                       # 0= ID uniquement, 1= IBC uniquement, 2= All
-                  no_transfert    = 1                       # dans la list des transfert point a point
-                  
-                  isWireModel_TMP = 0
-                  isWirePrepLocal = int(isWireModelPrep)    
-                  if isWirePrepLocal<1:isWirePrepLocal=2    # if isWireModelPrep=False --> isWirePrepLocal=2
-                                                            # if isWireModelPrep=True  --> isWirePrepLocal=1
-                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWirePrepLocal, int(isWireModel))#,timecount)
+                  type_transfert  = 1
+                  no_transfert    = 1
+                  isWireModel_int = 1
+                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_int)#,timecount)
+                  isWireModel_int = 2
+                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_int)#,timecount)
 
-                  type_transfert = 1  
-                  no_transfert   = 1  
-                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_TMP, int(isWireModel))#,timecount)
+                  type_transfert  = 2  
+                  no_transfert    = 1
+                  isWireModel_int = 0
+                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_int)#,timecount)
               else:
-                  type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
-                  no_transfert   = 1  # dans la list des transfert point a point
-                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, int(isWireModelPrep), int(isWireModel))#,timecount)
+                  type_transfert  = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
+                  no_transfert    = 1  # dans la list des transfert point a point
+                  isWireModel_int = 0
+                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_int)#,timecount)
                   
                   
 
@@ -1313,10 +1318,10 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 #==============================================================================
 # modified _fillGhostCells for two image points (tc + tc2) for gradP 
 #==============================================================================
-def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, isWireModelPrep=False,isWireModel=False):
+def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False):
 
    # timecount = numpy.zeros(4, dtype=numpy.float64)
-
+   isWireModel    = False
    if hook1['lexit_lu'] ==0:
 
        #transfert
@@ -1367,23 +1372,9 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
                   XOD._setIBCTransfers4FULLTBLE2(zones, zonesD, variablesIBC=variablesIBC)                  
 
 
-              if isWireModel:
-                  type_transfert  = 2                       # 0= ID uniquement, 1= IBC uniquement, 2= All
-                  no_transfert    = 1                       # dans la list des transfert point a point
-                  
-                  isWireModel_TMP = 0
-                  isWirePrepLocal = int(isWireModelPrep)    
-                  if isWirePrepLocal<1:isWirePrepLocal=2    # if isWireModelPrep=False --> isWirePrepLocal=2
-                                                            # if isWireModelPrep=True  --> isWirePrepLocal=1
-                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWirePrepLocal, int(isWireModel))#,timecount)
-
-                  type_transfert = 1  
-                  no_transfert   = 1  
-                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_TMP, int(isWireModel))#,timecount)
-              else:
-                  type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
-                  no_transfert   = 1  # dans la list des transfert point a point
-                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, int(isWireModelPrep), int(isWireModel))#,timecount)
+              type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
+              no_transfert   = 1  # dans la list des transfert point a point
+              Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, int(isWireModel))#,timecount)
 
                   
 
