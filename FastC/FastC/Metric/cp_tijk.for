@@ -229,7 +229,7 @@ c-----le nbr de metrique varie selon le type de domaine
         enddo
         endif
 
-      ELSEIF(param_int( ITYPZONE ).eq.1) THEN !Domaine 3D avec une direction homogene k: traitement facette i et j
+      ELSEIF(param_int(ITYPZONE).eq.1) THEN !Domaine 3D avec une direction homogene k: traitement facette i et j
 
         do k=ind_loop(5),ind_loop(6)
         do j=ind_loop(3),ind_loop(4)
@@ -339,7 +339,7 @@ c-----le nbr de metrique varie selon le type de domaine
         enddo
         endif
 
-      ELSEIF(param_int( ITYPZONE ).eq.2) THEN !Domaine 3D cartesien
+      ELSEIF(param_int(ITYPZONE).eq.2) THEN !Domaine 3D cartesien
 
         do k=ind_loop(5),ind_loop(6)
         do j=ind_loop(3),ind_loop(4)
@@ -540,16 +540,14 @@ c-----le nbr de metrique varie selon le type de domaine
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-       do 10 l = 1,param_int( NDIMDX_MTR ) 
+       do l = 1,param_int( NDIMDX_MTR ) 
 #else
-       do 10 k=ind_loop(5),ind_loop(6)+ inck
-       do 10 j=ind_loop(3),ind_loop(4)+ incj
-       do 10 i=ind_loop(1),ind_loop(2)+ inci
+       do k=ind_loop(5),ind_loop(6)+ inck
+       do j=ind_loop(3),ind_loop(4)+ incj
+       do i=ind_loop(1),ind_loop(2)+ inci
 
             l   = indmtr(i  ,j  ,k  )
 #endif
-
-
              ti0(l,1) = ti(l,1)
              ti0(l,2) = ti(l,2)
              ti0(l,3) = ti(l,3)
@@ -562,19 +560,24 @@ CVD$  NODEPCHK
              tk0(l,2) = tk(l,2)
              tk0(l,3) = tk(l,3)
 
- 10      continue
-
+#ifndef E_SCALAR_COMPUTER
+        enddo
+#else
+        enddo
+        enddo
+        enddo
+#endif
        elseif(param_int( ITYPZONE ).eq.1) then !Domaine 3D dir k homogene
 
 #ifndef E_SCALAR_COMPUTER
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-       do 20 l = 1,param_int( NDIMDX_MTR ) 
+       do l = 1,param_int( NDIMDX_MTR ) 
 #else
-       do 20 k=ind_loop(5),ind_loop(6)+ inck
-       do 20 j=ind_loop(3),ind_loop(4)+ incj
-       do 20 i=ind_loop(1),ind_loop(2)+ inci
+       do k=ind_loop(5),ind_loop(6)+ inck
+       do j=ind_loop(3),ind_loop(4)+ incj
+       do i=ind_loop(1),ind_loop(2)+ inci
 
             l   = indmtr(i  ,j  ,k  )
 #endif
@@ -587,7 +590,13 @@ CVD$  NODEPCHK
 
              tk0(l,1) = tk(l,1)
 
- 20      continue
+#ifndef E_SCALAR_COMPUTER
+        enddo
+#else
+        enddo
+        enddo
+        enddo
+#endif
 
        elseif(param_int( ITYPZONE ).eq.2) then !Domaine 3D cartesien
 
@@ -595,11 +604,11 @@ CVD$  NODEPCHK
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-       do 40 l = 1,param_int( NDIMDX_MTR ) 
+       do l = 1,param_int( NDIMDX_MTR ) 
 #else
-       do 40 k=ind_loop(5),ind_loop(6)+ inck
-       do 40 j=ind_loop(3),ind_loop(4)+ incj
-       do 40 i=ind_loop(1),ind_loop(2)+ inci
+       do k=ind_loop(5),ind_loop(6)+ inck
+       do j=ind_loop(3),ind_loop(4)+ incj
+       do i=ind_loop(1),ind_loop(2)+ inci
 
             l   = indmtr(i  ,j  ,k  )
 #endif
@@ -608,7 +617,13 @@ CVD$  NODEPCHK
              tj0(l,1) = tj(l,1)
              tk0(l,1) = tk(l,1)
 
- 40      continue
+#ifndef E_SCALAR_COMPUTER
+        enddo
+#else
+        enddo
+        enddo
+        enddo
+#endif
 
        else !Domaine 2D
 
@@ -616,11 +631,11 @@ CVD$  NODEPCHK
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-       do 30 l = 1,param_int( NDIMDX_MTR ) 
+       do l = 1,param_int( NDIMDX_MTR ) 
 #else
-       do 30 k=ind_loop(5),ind_loop(6)+ inck
-       do 30 j=ind_loop(3),ind_loop(4)+ incj
-       do 30 i=ind_loop(1),ind_loop(2)+ inci
+       do k=ind_loop(5),ind_loop(6)+ inck
+       do j=ind_loop(3),ind_loop(4)+ incj
+       do i=ind_loop(1),ind_loop(2)+ inci
  
            l   = indmtr(i  ,j  ,k  )
 #endif
@@ -630,7 +645,13 @@ CVD$  NODEPCHK
              tj0(l,1) = tj(l,1)
              tj0(l,2) = tj(l,2)
 
- 30      continue
+#ifndef E_SCALAR_COMPUTER
+        enddo
+#else
+        enddo
+        enddo
+        enddo
+#endif
        endif  !neq_k
 
       ENDIF !ALE

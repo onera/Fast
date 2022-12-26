@@ -634,12 +634,12 @@ void K_FASTC::setInterpTransfersIntra(
           E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 + 1];  // neq fonction raccord rans/LES
           E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
 
-          E_Float Pr    = param_real[ NoD ][ PRANDT ];
-          E_Float Ts    = param_real[ NoD ][ TEMP0 ];
-          E_Float Cs    = param_real[ NoD ][ CS ];
-          E_Float muS   = param_real[ NoD ][ XMUL0 ];
-          E_Float cv    = param_real[ NoD ][ CVINF ];
-          E_Float gamma = param_real[ NoD ][ GAMMA ];
+          //E_Float Pr    = param_real[ NoD ][ PRANDT ];
+          //E_Float Ts    = param_real[ NoD ][ TEMP0 ];
+          //E_Float Cs    = param_real[ NoD ][ CS ];
+          //E_Float muS   = param_real[ NoD ][ XMUL0 ];
+          //E_Float cv    = param_real[ NoD ][ CVINF ];
+          //E_Float gamma = param_real[ NoD ][ GAMMA ];
 
           E_Int meshtype = param_int[ NoD ][ MESHTYPE ] ;
 
@@ -1024,11 +1024,12 @@ void K_FASTC::setInterpTransfersInter(
 		}
 	    }
            // Sinon, on autorise les transferts  si la zone donneuse a ete modifiee a l'iteration nstep
-	   else {
-                   E_Int NoD      =  param_int_tc[ shift_rac + nrac*5     ];
-                   //if (impli_local[NoD]==1) autorisation_transferts[pass_inst][irac_auto]=1;
-                   autorisation_transferts[pass_inst][irac_auto]=1;
-                }
+	   else 
+        {
+            //E_Int NoD      =  param_int_tc[ shift_rac + nrac*5     ];
+            //if (impli_local[NoD]==1) autorisation_transferts[pass_inst][irac_auto]=1;
+            autorisation_transferts[pass_inst][irac_auto]=1;
+        }
 	  
 	  if (autorisation_transferts[pass_inst][irac_auto]==1)
 	   {
@@ -1214,12 +1215,12 @@ if (has_data_to_send) {
                      E_Int NoR       = param_int_tc[shift_rac + nrac * 11 + 1];
                      E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
 
-                     E_Float Pr    = param_real[ NoD ][ PRANDT ];
-                     E_Float Ts    = param_real[ NoD ][ TEMP0 ];
-                     E_Float Cs    = param_real[ NoD ][ CS ];
-                     E_Float muS   = param_real[ NoD ][ XMUL0 ];
-                     E_Float cv    = param_real[ NoD ][ CVINF ];
-                     E_Float gamma = param_real[ NoD ][ GAMMA ];
+                     //E_Float Pr    = param_real[ NoD ][ PRANDT ];
+                     //E_Float Ts    = param_real[ NoD ][ TEMP0 ];
+                     //E_Float Cs    = param_real[ NoD ][ CS ];
+                     //E_Float muS   = param_real[ NoD ][ XMUL0 ];
+                     //E_Float cv    = param_real[ NoD ][ CVINF ];
+                     //E_Float gamma = param_real[ NoD ][ GAMMA ];
 
                      E_Int meshtype = 1;  // ONLY FOR STRUCTURE ipt_ndimdxD[NoD + nidom*6];
                      E_Int cnNfldD  = 0;
