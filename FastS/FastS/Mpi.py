@@ -1050,11 +1050,17 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
           if os.access(FILE_Skeleton, os.F_OK): 
              tc_skel = C.convertFile2PyTree(FILE_Skeleton)
 
+          t1=timeit.default_timer()
+          cpu_skelS = t1 -t0
+          t0=t1
+
           FILE = dir_steady +'/'+ root_steady + str(rank) +'.cgns'
           if os.access(FILE, os.F_OK): 
              tc = C.convertFile2PyTree(FILE)
           t1=timeit.default_timer()
-          print( "cout steady= ", t1-t0, 'rank=', rank)
+          cpu_S = t1 -t0
+          t0=t1
+          #print( "cout steady= ", t1-t0, 'rank=', rank)
           sys.stdout.flush
 
           # unsteady part: toto_Nit_skeleton.cgns
@@ -1063,13 +1069,18 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
           if os.access(FILE_Skeleton, os.F_OK): 
              tc_inst_skel = C.convertFile2PyTree(FILE_Skeleton)
 
+          t1=timeit.default_timer()
+          cpu_skelU = t1 -t0
+          t0=t1
           # toto_Nit_proc.cgns
           FILE = dir_unsteady+'_'+str(root) +'/'+root_unsteady+str(root)+'_'+str(rank)+'.cgns'
           if os.access(FILE, os.F_OK): 
              tc_inst = C.convertFile2PyTree(FILE)
 
           t1=timeit.default_timer()
-          print( "cout unsteady= ", t1-t0, 'rank=', rank)
+          cpu_U = t1 -t0
+          t0=t1
+          #print( "cout unsteady= ", t1-t0, 'rank=', rank)
           sys.stdout.flush
 
        #mise a zero timelevel_target en fin de fichier ou fin de periode azymutale
@@ -1114,7 +1125,10 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
          for z in Internal.getZones(tmp):
             _sortByName(z)
 
-       t0=timeit.default_timer()
+       t1=timeit.default_timer()
+       cpu_merge = t1 -t0
+       t0=t1
+
        graph['procDict'] = D2.getProcDict(tc_skel)
        graph['procList'] = D2.getProcList(tc_skel, sort=True)
        graph['graphIBCD']= Cmpi.computeGraph(tc_skel, type='IBCD', reduction=False, procDict=graph['procDict'])
@@ -1124,6 +1138,9 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
        graph['graphID'] = Cmpi.mergeGraph( graph['graphID_Steady'], graph['graphID_Unsteady'][iteration_loc] )
 
        t1=timeit.default_timer()
+       cpu_graph = t1 -t0
+       t0=t1
+
        if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target,"itGraph=",iteration_loc,"cout Graph=", t1-t0)
 
        #print("steady",graph['graphID'] )
@@ -1149,7 +1166,10 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
           t0=timeit.default_timer()
           X.miseAPlatDonorTree__(zones, tc, graph=graph)
           t1=timeit.default_timer()
-          print("cout plat= ", t1-t0, 'rank=', rank)
+          cpu_plat = t1 -t0
+          t0=t1
+          
+          print("cout skelS=",cpu_skelS, 'skelU=', cpu_skelU, "S=",cpu_S, 'U=', cpu_U, 'merge', cpu_merge, 'graph', cpu_graph, 'plat', cpu_plat, 'rank=', rank)
           sys.stdout.flush
 
           FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int')[1]

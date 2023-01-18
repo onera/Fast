@@ -70,7 +70,8 @@ C var loc
      & nx, ny,nz,utau2,seuil,mobile_coef,ventx,venty,ventz,unorm1,
      & tcx,tcy,tcz,dist,utau,unorm,surf,aa,yplus,l1,l2,l3,f,tp,fp,tauw,
      & ut,vt,wt,Twall,uplus,pr,prtur,ratio,dt,pf,Tplus,qwall,cp,cond,
-     & wall_ut,wall_vt,wall_wt,wall_int,co,si,rot1,rot2,ra,un,vn,wn,umod
+     & wall_ut,wall_vt,wall_wt,wall_int,co,si,rot1,rot2,ra,un,vn,wn,
+     & umod, fv, fv5
  
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -156,9 +157,9 @@ C var loc
             ny = tcy/surf
             nz = tcz/surf
 
-            ventx      = ventijk(lven              )*c_ale
-            venty      = ventijk(lven +vven        )*c_ale
-            ventz      = ventijk(lven +vven*kc_vent)*ck_vent*c_ale
+            ventx= ventijk(lven              )*c_ale*mobile_coef
+            venty= ventijk(lven +vven        )*c_ale*mobile_coef
+            ventz= ventijk(lven +vven*kc_vent)*ck_vent*c_ale*mobile_coef
 
           qen =(  ventijk(lven              )*tcx
      &           +ventijk(lven +vven        )*tcy
@@ -188,8 +189,6 @@ C var loc
             wt = w-u_int*nz - wall_wt
 
             unorm = sqrt(ut*ut+vt*vt+wt*wt)
-c      if(ndom.eq.3.and.j.eq.1.and.i.eq.150.and.k.eq.30)
-c     & write(*,'(a,4f20.15)')'U',ut,u,u_int, wall_ut
 
             r     = 0.5*(rop(l+v1)+rop(iadrf+v1))
 
@@ -209,10 +208,6 @@ c     & write(*,'(a,4f20.15)')'U',ut,u,u_int, wall_ut
               utau=((unorm**7)*xmut(l)/(rop(m+v1)*dist)/(8.3**7))**0.125
             endif
 
-c      if(ndom.eq.3.and.j.eq.1.and.i.eq.150.and.k.eq.30)
-c     & write(*,'(a,6f20.15,i4)')'utau_init',r*utau**2,unorm,
-c     & rop(m+v1),rop(m+v2),dist,iter
-
             ! Newton method to determine utau using Musker's wall law
             iter = 0 
             !aa    = rop(m+v1)*dist/xmut(m)
@@ -222,8 +217,6 @@ c     & rop(m+v1),rop(m+v2),dist,iter
             l2    = yplus*(yplus-8.15) + 86
             l3    = (2*yplus-8.15)/16.7
             f = 5.424*atan(l3) + log10(l1/(l2*l2)) - unorm/utau - 3.52
-c      if(ndom.eq.3.and.j.eq.1.and.i.eq.150.and.k.eq.30)
-c     & write(*,'(a,4f20.15)')'f init',f,utau,yplus,- unorm/utau - 3.52
 
             do while (abs(f).gt.1e-6.and.iter.le.50)
  
@@ -255,92 +248,30 @@ c     & write(*,'(a,4f20.15)')'f init',f,utau,yplus,- unorm/utau - 3.52
 
             end do
 
-            !if(iter.eq.51)write(*,*)'Newton musker', iter,ndom
-
-             !if(ndom.eq.3.and.j.eq.1.and.i.eq.150.and.k.eq.30)
-c             if(ndom.eq.0.and.j.eq.1.and.i.eq.10.and.k.eq.30)
-c     &       write(*,'(a,5f20.15,2i4)')'utau_finale',r*utau**2,unorm,
-c     &       f,rop(m+v2),dist,iter,k
-
-
             utau2 = utau**2
             tauw = r*utau2
-
-c      if(k.eq.10.and.j.le.15.and.idir.eq.1)
-c     & write(*,'(a,f20.10,i5)')'verI', sqrt(utau2),j
-c      if(k.eq.10.and.i.le.5.and.idir.eq.3)
-c     & write(*,'(a,f20.10,i5)')'verJ', sqrt(utau2),i
-
-            !unorm = sqrt(rop(l0+v2)**2+rop(l0+v3)**2+rop(l0+v4)**2)
-            !unorm = max(1.,unorm)
 
             u     = 0.5*(rop(l+v2)+rop(iadrf+v2))
             v     = 0.5*(rop(l+v3)+rop(iadrf+v3))
             w     = 0.5*(rop(l+v4)+rop(iadrf+v4))
 
-c          lx =indcg(i, j, k)
-c
-c          ra  = sqrt( y(lx)*y(lx) + z(lx)*z(lx))
-c          ra  = max(ra, 0.00000001)
-c          co = z(lx)/ra
-c          si = y(lx)/ra
-c          rot1 = (-venty*co+ventz*si)
-c          rot2 = (-v*co+w*si)
-c          if(idir.eq.3) write(*,'(4f20.12,2i4)')
-c     &   rot1, rot2, ra*3.1415*11543./30.,ra,j,k
-c          if(idir.eq.3) write(*,'(a,3f20.12,2i4)')'JJ',
-c     &   u_int/surf, (tcx*u +tcy*v +tcz*w)/surf, qen/surf,i,k
-c          if(idir.eq.1) write(*,'(a,3f20.12,2i4)')'II',
-c     &   u_int/surf, (tcx*u +tcy*v +tcz*w)/surf, qen/surf,j,k
-
-
             !determination vitesse normale interface
             u_int= tcx*u +tcy*v +tcz*w -qen 
 
-
-c     & - (tauw*ut/unorm)*surf*sens,tauw,ut/unorm,surf,dist
-
-            !flu1= 0.
-            !flu2= tcx*p   - (tauw*ut/unorm)*surf*sens
-            !flu3= tcy*p   - (tauw*vt/unorm)*surf*sens
-            !flu4= tcz*p   - (tauw*wt/unorm)*surf*sens
-            !flu5= 0.
             qwall = 0.
             flu1= 0.
-            flu2= tcx*p  + u_int*u*r - (tauw*ut/unorm)*surf*sens
-            flu3= tcy*p  + u_int*v*r - (tauw*vt/unorm)*surf*sens
-            flu4= tcz*p  + u_int*w*r - (tauw*wt/unorm)*surf*sens
-            flu5= p*qen              - qwall*surf*sens
+            fv  = - (tauw*ut/unorm)*surf*sens
+            flu2= tcx*p  + u_int*u*r + fv
+            fv5 = fv*u
 
-c        if(k.eq.10.and.i.eq.100) then
-c         write(*,'(a,6f20.13)')'wall', flu1,flu2,flu3,flu4,flu5,u_int
-c        endif  
+            fv  = - (tauw*vt/unorm)*surf*sens
+            flu3= tcy*p  + u_int*v*r + fv
+            fv5 = fv5 + fv*v
 
-            yplus = rop(l+v1)*utau*xmut(l+v2)/xmut(l)
-            umod = utau*(5.424*atan((2.*yplus - 8.15)/16.7)
-     &            + log10((yplus + 10.6)**9.6
-     &            /(yplus**2 - 8.15*yplus + 86.)**2) - 3.52)
-
-            umod = abs(umod)
-            lr   = l + incijk
-
-cc            if(nitcfg.eq.1) then
-c             rop(l+v1) = rop(lr+v1)
-c             rop(l+v5) = rop(lr+v5)
-cc            endif
-c            rop(l+v2) = umod*ut/unorm + xmut(l+v2)/xmut(m+v2)*un
-c            rop(l+v3) = umod*vt/unorm + xmut(l+v2)/xmut(m+v2)*vn
-c            rop(l+v4) = umod*wt/unorm + xmut(l+v2)/xmut(m+v2)*wn
-
-
-c           rop(l+v2)     = tauw*ut/unorm*xmut(l+v2)/xmut(l)
-c           rop(iadrf+v2) = -rop(l+v2)
-
-c      if(ndom.eq.1.and.j.eq.1.and.i.eq.130.and.k.eq.30)
-c     & write(*,'(a,6f20.15,i6)')'wall',
-c     & flu2,rop(l+v2),-tauw*ut/unorm,rop(m+v2),
-c     & rop(l+v2),tauw,xmut(l),xmut(l+v2) ,rop(m+v2), 
-c     & rop(l+v4)
+            fv  = - (tauw*wt/unorm)*surf*sens
+            flu4= tcz*p  + u_int*w*r + fv
+            fv5 = fv5 + fv*w
+            flu5= p*qen  + fv5  - qwall*surf*sens
 
 #include  "FastS/Compute/assemble_drodm_corr.for"
            enddo
@@ -417,12 +348,6 @@ c     & rop(l+v4)
             !u+=8.3 (y+)**1/7  sinon  utau =( Unorm**7/8.3**7 * mu/density/dist)**1/8
     
             seuil = 8.3**(7./3.)*xmut(m)/(rop(m+v1)*dist)
-
-c             if(ndom.eq.4.and.idir.eq.1)
-c     &   write(*,'(a,3f15.10,6i7)')'seuil',unorm,xmut(m),
-c     &     rop(m+v1), dist,i,j,k,lven,vven
-c     &   write(*,'(a,5f15.10,4i4)')'seuil',seuil,unorm,xmut(m),
-c     &     rop(m+v1), dist,i,j,k,ndom
 
             if(unorm.le.seuil) then
               utau2 = xmut(m)/rop(m+v1)*unorm/dist

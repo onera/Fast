@@ -2620,7 +2620,7 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
 
     else:  hook1  = FastC.HOOK
 
-    effort  = numpy.empty( 8, numpy.float64)
+    effort  = numpy.zeros(11, numpy.float64)
     pos_eff = numpy.empty( 3, numpy.float64)
     pos_eff[0] = xyz_ref[0]; pos_eff[1] = xyz_ref[1]; pos_eff[2] = xyz_ref[2]
 

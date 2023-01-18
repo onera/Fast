@@ -170,6 +170,21 @@ c     & , param_int(LEVEL)
      &                        venti, ventj, ventk,
      &                        ti,tj,tk,vol, xmut)
 
+
+        elseif(param_int(KFLUDOM).eq.8.and.( param_int(EXPLOC).eq.0
+     &                                .or.(    param_int(EXPLOC).ne.0
+     &                                     .and.mod(nitcfg,cycl).eq.1
+     &                                    )
+     &                                     ) 
+     &        ) then
+
+          call corr_flushyper_select(ndom, ithread, idir, iflow,
+     &                        param_int, param_real,
+     &                        ind_CL,
+     &                        rop, drodm  , wig,
+     &                        venti, ventj, ventk,
+     &                        ti,tj,tk,vol, xmut)
+
         else
            call error('wallmodel_flu$',70,1)
         endif

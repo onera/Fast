@@ -254,9 +254,6 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
        } // fin loop zone
   } // Fin zone // omp
 
-
-  ipteff[0] = 0.; ipteff[1] = 0.; ipteff[2] = 0.; ipteff[3] = 0.; ipteff[4] = 0.; ipteff[5] = 0.; ipteff[6] = 0.; ipteff[7] = 0.;
-
   if(nidom_eff > 0)
     {
       for (E_Int ithread = 0; ithread < Nbre_thread_max ; ithread++) 
@@ -272,6 +269,9 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
                        ipteff[5]  = ipteff[5]  + effort_omp[5];
                        ipteff[6]  = ipteff[6]  + effort_omp[6];
                        ipteff[7]  = ipteff[7]  + effort_omp[7];
+                       ipteff[8]  = ipteff[8]  + effort_omp[8];
+                       ipteff[9]  = ipteff[9]  + effort_omp[9];
+                       ipteff[10] = ipteff[10] + effort_omp[10];
                     }
     }
 
