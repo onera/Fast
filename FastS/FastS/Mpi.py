@@ -198,7 +198,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                    for v in VARS: C._cpVars(t, 'centers:'+v, tc, v)
                    C._cpVars(t, "centers:cellN", tc, "cellN")
 
-                   if nstep == 0 or nstep == nitmax or nstep%tfreq == 0:
+                   if nstep == nitmax or nstep%tfreq == 0:
                     Xmpi._transfer2(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
                                     dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                                     dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
@@ -1022,12 +1022,12 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
           # steady part
           FILE = dir_steady +'/'+ root_steady + '.cgns'
           if os.access(FILE, os.F_OK): 
-             t0=timeit.default_timer()
+             t0 = timeit.default_timer()
              tc = Cmpi.convertFile2SkeletonTree(FILE)
              tc_skel= Internal.copyRef(tc)
              tc = Cmpi.readZones(tc, FILE, rank=rank)
              tc = Cmpi.convert2PartialTree(tc, rank=rank)
-             t1=timeit.default_timer()
+             t1 = timeit.default_timer()
              print( "cout steady= ", t1-t0, 'rank=', rank)
              sys.stdout.flush
           # unsteady part

@@ -252,7 +252,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 #==============================================================================
 # alloue retourne la metrique
 #==============================================================================
-def allocate_metric(t,nghost):
+def allocate_metric(t, nghost):
     zones        = Internal.getZones(t)
     dtloc        = Internal.getNodeFromName2(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
@@ -451,16 +451,16 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
             if exploc==1 and tc is not None:
                FastS.fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
 
-               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
-               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
+               if    (nstep%2 == 0) and itypcp == 2: vars = ['Density'  ] 
+               elif  (nstep%2 == 1) and itypcp == 2: vars = ['Density_P1'] 
                _applyBC(infos_zones, hook1, nstep, ompmode, var=vars[0])    
 
                FastC.switchPointers2__(zones, nitmax, nstep)
                 
                # Ghostcell
                if nitmax%3 != 0: # Tous les schemas sauf constantinescu RK3
-                   if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
-                   elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
+                   if    (nstep%2 == 0) and itypcp == 2: vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
+                   elif  (nstep%2 == 1) and itypcp == 2: vars = ['Density_P1']
                    timelevel_target = int(dtloc[4])
                    _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmode, hook1, nitmax, rk, exploc)
             
@@ -471,8 +471,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                    vars = ['Density']
                    _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep, nitmax, hook1, nitmax, rk, exploc, 2)
 
-               if    nstep%2 == 0 and itypcp == 2 : vars = ['Density'  ] 
-               elif  nstep%2 == 1 and itypcp == 2 : vars = ['Density_P1'] 
+               if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
+               elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
                _applyBC(infos_zones, hook1, nstep, ompmode,  var=vars[0])
 
 

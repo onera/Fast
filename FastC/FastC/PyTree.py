@@ -2878,6 +2878,7 @@ def save(t, fileName='restart', split='single', NP=0, cartesian=False):
     C._rmVars(t2, 'centers:Temperature_P1')
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
     Internal._rmNodesFromName(t2, 'Displacement#0')
+    Internal._rmNodesFromName(t2, 'Motion')
 
     zones = Internal.getZones(t2)
     for z in zones:

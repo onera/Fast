@@ -196,7 +196,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                 for v in VARS: C._cpVars(t, 'centers:'+v, tc, v)
                 C._cpVars(t, "centers:cellN", tc, "cellN")
 
-                if nstep == 0 or nstep == nitmax or nstep%tfreq == 0:
+                if nstep == nitmax or nstep%tfreq == 0:
                     Xmpi._transfer2(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
                                     dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                                     dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
