@@ -192,7 +192,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                    if nstep%2 == 0 and itypcp == 2: 
                        VARS = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
                        if varType == 1: VARS += ['TurbulentSANuTilde']
-                   else: 
+                   else:
                        VARS = ['Density_P1', 'VelocityX_P1', 'VelocityY_P1', 'VelocityZ_P1', 'Temperature_P1']
                        if varType == 1: VARS += ['TurbulentSANuTilde_P1']
                    for v in VARS: C._cpVars(t, 'centers:'+v, tc, v)
@@ -205,7 +205,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                                     dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
                                     time=time, absFrame=True,
                                     procDict=procDict, cellNName='cellN#Motion', 
-                                    interpInDnrFrame=interpInDnrFrame, order=order, hook=hookTransfer)
+                                    interpInDnrFrame=interpInDnrFrame, order=order, 
+                                    hook=hookTransfer, verbose=3)
                tps_tr += Time.time()-tic  
 
     else: 
@@ -216,10 +217,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
       FastC.HOOK["mpi"] = 1
       tic = Time.time()
       tps_tr = fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
-      tps_cp +=Time.time()-tic - tps_tr  
+      tps_cp += Time.time()-tic - tps_tr  
 
     #switch pointer a la fin du pas de temps
-    if exploc==1 and tc is not None :
+    if exploc==1 and tc is not None:
          if layer == 'Python': FastC.switchPointers__(zones, 1, 3)
          else: FastC.switchPointers3__(zones,nitmax)
     else:
