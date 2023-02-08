@@ -115,7 +115,15 @@ C Var loc
 
       REAL_E rhs_begin,rhs_end
 
-
+!     !Note
+!     ! Q^(n+1) = Q^n + Dt/vol * Sum_Nface(F_euler - F_viscous)*n +  S
+!     !           (iii) (ii)     |_____(iv)_____________________|  (iii)
+!     ! (i)   Laminar & Turbulent viscosity
+!     ! (ii)  Timestep/vol computation
+!     ! (iii) RHS init & source term S (Q^n + S)
+!     ! (iv)  euler and viscous fluxes computation and balance
+!     ! (v)   solve/solution udpate
+      
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 
@@ -172,7 +180,7 @@ c       endif
          !!! utilisee pour savoir si on est a la premiere ss-ite des zones !!!
          cycl=param_int(NSSITER)/param_int(LEVEL) 
 
- 
+!     STEP I & II : Laminar/turbulent viscosity (i) & Timestep/vol computation (ii)   
          IF (param_int(EXPLOC) .eq. 0) then !!! explicit global ou implicit
 
 
@@ -207,9 +215,9 @@ c       endif
                    neq_rot = 3
                    depth   = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
                    call lesvist(ndo, param_int,param_real,neq_rot,depth,
-     &                          ithread, nitrun,
-     &                          ind_grad, ind_coe, ind_dm_zone,
-     &                          xmut, rop_ssiter, ti,tj,tk, vol, rot)
+     &                  ithread, nitrun,
+     &                  ind_grad, ind_coe, ind_dm_zone,
+     &                  xmut, rop_ssiter, ti,tj,tk, vol, rot)
                  endif
 
               elseif(param_int(IFLOW).eq.3) then
@@ -315,11 +323,11 @@ c       endif
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
                flag_wait = 1
            ENDIF
+!     STEP I & II: END
 
 
 
-
-
+!     STEP III: RHS init + source term S
            ! - Ajout d'un eventuel terme source au second membre
            ! - initialisation drodm
            call src_term(ndo, nitcfg, nb_pulse, param_int, param_real,
@@ -333,9 +341,9 @@ c       endif
 #include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
            ENDIF
 
-
+!     STEP III: END
            !print*, param_int(KFLUDOM)
-
+!     STEP IV: euler and viscous fluxes computation and balance
            ! -----assemblage drodm euler+visqueux
               if(param_int(KFLUDOM).eq.1) then
 
@@ -487,7 +495,9 @@ c       endif
      &                  ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
      &                  venti, ventj, ventk, xmut)
            endif
+!     STEP IV: END
 
+!     STEP V: SOLUTION UPDATE           
            !Extraction tableau residu
            if(param_int(EXTRACT_RES).eq.1) then
               call extract_res(ndo, param_int, param_real,

@@ -4058,9 +4058,16 @@ def calc_global_convergence(t):
         for var in var_list:
             tmp = numpy.zeros((nrec*neq), numpy.float64)
             Internal.createChild(c, var ,'DataArray_t', tmp)                    
-        
+
+        total_Ncells = 0
         for z in Internal.getZones(b):
+            #if z[0]=='GlobalConvergentHistory': continue
+            
             zone_cong_history     =Internal.getNodeByName(z,'ZoneConvergenceHistory')
+            nx = Internal.getValue(z)[0][0]
+            ny = Internal.getValue(z)[1][0]
+            nz = Internal.getValue(z)[2][0]
+            total_Ncells += nx*ny*nz
 
             ##Loo per base
             for var_local in var_list_Loo:
@@ -4079,12 +4086,12 @@ def calc_global_convergence(t):
                 sh_local = numpy.shape(RSD_b)[0]
                 sh       = nrec    *sh_local//nrec
                 for i in range(sh):
-                    RSD_b[i]+=RSD_[i]
+                    RSD_b[i]+=RSD_[i]*nx*ny*nz
 
         ##Average L2 per base            
         for var_local in var_list_L2:
                 RSD_b    = Internal.getNodeByName(c,var_local)[1]
-                RSD_b[:] = RSD_b[:]/nzones            
+                RSD_b[:] = RSD_b[:]/total_Ncells #nzones            
     return t
 
 
