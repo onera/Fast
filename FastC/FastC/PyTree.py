@@ -3538,7 +3538,7 @@ def _addPair(idic, z1, z2):
 # center et axis servent dans le cas d'adt cylindrique
 # Filter = 'Base' or '*' or 'Base/*toto' or '*/cart*'
 def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT, 
-    cartFilter='CARTESIAN', cylFilter='CYLINDER*', center=(0,0,0), axis=(0,0,1), depth=2):
+                              cartFilter='CARTESIAN', cylFilter='CYLINDER*', center=(0,0,0), axis=(0,0,1), depth=2, thetaShift=0.):
     """Fill dictOfAdt."""
     cartFilter = cartFilter.split('/')
     cartBaseFilter = cartFilter[0]
@@ -3546,7 +3546,7 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT,
     if len(cartFilter) > 1: cartZoneFilter = cartFilter[1]
     cylFilter = cylFilter.split('/')
     cylBaseFilter = cylFilter[0]
-    if cylBaseFilter[-1]=='*': cylBaseFilter=cylBaseFilter[0:-1] # WildCard
+    #if cylBaseFilter[-1]=='*': cylBaseFilter=cylBaseFilter[0:-1] # WildCard
     cylZoneFilter = '*'
     if len(cylFilter) > 1: cylZoneFilter = cylFilter[1]
     
@@ -3563,13 +3563,13 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT,
                 zc = tc[2][nob][2][nozc]
                 if Internal.getType(zc) == 'Zone_t':
                     zdnrname = Internal.getName(zc)
-                    if zdnrname in dnrnames and zdnrname not in dictOfADT:                            
+                    if zdnrname in dnrnames and zdnrname not in dictOfADT:              
                         if fnmatch.fnmatch(baseName, cartBaseFilter) and fnmatch.fnmatch(zdnrname, cartZoneFilter): 
                             print('INFO: Creating adt cart for %s.'%zdnrname)
                             adt = None
                         elif fnmatch.fnmatch(baseName, cylBaseFilter) and fnmatch.fnmatch(zdnrname, cylZoneFilter): 
                             print('INFO: Creating adt cyl for %s.'%zdnrname)
-                            adt = C.createHookAdtCyl(zc, center, axis)
+                            adt = C.createHookAdtCyl(zc, center, axis, depth=depth, thetaShift=thetaShift)
                         else:
                             print('INFO: Creating standard adt for %s.'%zdnrname) 
                             adt = C.createHook(zc, 'adt')
