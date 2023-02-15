@@ -34,8 +34,7 @@ using namespace K_FLD;
 PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
 {
     PyObject* zones; PyObject* metrics; PyObject* work;
-    E_Int omp_mode;
-    E_Int it;
+    E_Int omp_mode; E_Int it;
 #if defined E_DOUBLEINT
   if (!PyArg_ParseTuple(args, "OOOll", &zones , &metrics, &work, &omp_mode, &it)) return NULL; 
 #else 

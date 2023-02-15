@@ -40,8 +40,8 @@ except: pass
 #==============================================================================
 # generation maillage pour tble
 #==============================================================================
-def _stretch(coord,nbp,x1,x2,dx1,dx2,ityp):
-    fasts._stretch(coord,nbp,x1,x2,dx1,dx2,ityp)
+def _stretch(coord, nbp, x1, x2, dx1, dx2, ityp):
+    fasts._stretch(coord, nbp, x1, x2, dx1, dx2, ityp)
     return None
 
 #==============================================================================
@@ -381,7 +381,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
-    # allocation d espace dans param_int pour stockage info openmp  
+    # allocation d'espace dans param_int pour stockage info openmp  
     FastC._build_omp(t)
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
@@ -499,7 +499,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         varmy = []
         for v in var: varmy.append('centers:'+v[0])
         _compact(tmy, fields=varmy)
-
 
     #
     # remplissage ghostcells
@@ -1321,17 +1320,16 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp_mode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False):
 
    # timecount = numpy.zeros(4, dtype=numpy.float64)
-   isWireModel    = False
    if hook1['lexit_lu'] ==0:
 
        #transfert
-       if tc is not None :
-           tc_compact = Internal.getNodeFromName1( tc, 'Parameter_real')
+       if tc is not None:
+           tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
            #Si param_real n'existe pas, alors pas de raccord dans tc
-           if tc_compact is not  None:
+           if tc_compact is not None:
 
               param_real= tc_compact[1]
-              param_int = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
+              param_int = Internal.getNodeFromName1(tc, 'Parameter_int')[1]
               zonesD    = Internal.getZones(tc)
               zonesD2   = Internal.getZones(tc2)
 
@@ -1363,8 +1361,7 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
                   'gradxVelocityX','gradyVelocityX','gradzVelocityX',
                   'gradxVelocityY','gradyVelocityY','gradzVelocityY',
                   'gradxVelocityZ','gradyVelocityZ','gradzVelocityZ',
-                  'VelocityX','VelocityY','VelocityZ',
-                  ]
+                  'VelocityX','VelocityY','VelocityZ']
                   for v in variablesIBC: C._cpVars(zones, 'centers:'+v, zonesD, v)
                   XOD._setInterpTransfers(zones, zonesD,  type_transfert=0, variables=variablesIBC, variablesIBC=[], compact=0)
                   for v in variablesIBC: C._cpVars(zones, 'centers:'+v, zonesD2, v)
@@ -1374,19 +1371,16 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
 
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
-              Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, int(isWireModel))#,timecount)
-
-                  
+              Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, 0)#,timecount)
 
 
        #apply BC
        #t0=timeit.default_timer()
-       if(exploc != 1):
-       #if(rk != 3 and exploc != 2):
+       if exploc != 1:
+       #if rk != 3 and exploc != 2:
           _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        #t1=timeit.default_timer()
-       #print "Time BC",(t1-t0)
-
+       #print("Time BC",(t1-t0))
 
    return None
 
@@ -4017,9 +4011,9 @@ def add2previous(var_list,zone_save,zone_current,it0):
         local_val = numpy.zeros(sh+sh_tmp)
     
         shift_local=0
-        if var_local=='IterationNumber':shift_local    = it0
-        for i in range(sh):local_val[i]=RSD_sv[i]
-        for i in range(sh_tmp):local_val[i+sh]=RSD_tmp[i]+shift_local    
+        if var_local == 'IterationNumber': shift_local = it0
+        for i in range(sh): local_val[i]=RSD_sv[i]
+        for i in range(sh_tmp): local_val[i+sh]=RSD_tmp[i]+shift_local    
         Internal.createUniqueChild(zone_save,var_local,'DataArray_t',value=local_val)
     Internal.setValue(zone_save,new_value_node)
     return None
@@ -4027,7 +4021,6 @@ def add2previous(var_list,zone_save,zone_current,it0):
 
 ##POPULATE GLOBAL CONVERGENCE FOR EACH BASE
 def calc_global_convergence(t):
-
     var_list    =['RSD_oo','RSD_L2','RSD_oo_diff','RSD_L2_diff']
     var_list_L2 =['RSD_L2','RSD_L2_diff']
     var_list_Loo=['RSD_oo','RSD_oo_diff']

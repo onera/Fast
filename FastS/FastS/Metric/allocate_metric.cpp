@@ -264,8 +264,12 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
      //
      PyObject* ipti;
 
-     E_Int neq_mtr = 2*neq_ij+ neq_k + 1; // ti+ tj+ tk+ vol
-     ipti  = K_NUMPY::buildNumpyArray( ndimdx_mtr, neq_mtr, 0, 1);  
+     E_Int neq_vol = 1;
+     if (lale == 3) neq_vol = 2; // 2 volumes pour la GCL
+     E_Int neq_mtr = 2*neq_ij+ neq_k + neq_vol; // ti+ tj+ tk+ vol
+     
+
+     ipti  = K_NUMPY::buildNumpyArray(ndimdx_mtr, neq_mtr, 0, 1);  
      //
      //* Declare memoire pour metric instant initial si zone ale: normales + volume)
      //
@@ -278,7 +282,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
        if      (ipt_param_int[ ITYPVENT ] == 2) neq_vent = ipt_param_int[ NEQ_VENT ];
        else if (ipt_param_int[ ITYPVENT ] == 3) neq_vent = ipt_param_int[ NEQ_VENT ]*2;
                      
-       ipti0    = K_NUMPY::buildNumpyArray( ipt_param_int[ NDIMDX_MTR  ], neq_mtr-1 , 0, 1);  
+       ipti0    = K_NUMPY::buildNumpyArray( ipt_param_int[ NDIMDX_MTR  ], neq_mtr-neq_vol , 0, 1);  
        iptventi = K_NUMPY::buildNumpyArray( ipt_param_int[ NDIMDX_VENT ], neq_vent  , 0, 1); 
      }
      //
@@ -304,16 +308,8 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
 
      //E_Float* venti = K_NUMPY::getNumpyPtrF(iptventi);
      //E_Float* ventj = venti + ipt_param_int[ NDIMDX_VENT]*ipt_param_int[ NEQ_VENT ];
-     //E_Float* ventk = ventj + ipt_param_int[ NDIMDX_VENT]*ipt_param_int[ NEQ_VENT ];
+     //E_Float* ventk = ventj + ipt_param_int[ NDIMDX_VENT]*ipt_param_int[ NEQ_VENT ]; 
 
-     //* tableau pour calculer dimension metric DF du domaine *//
-     FldArrayF  iptmpi(   ipt_param_int[ NDIMDX_XYZ ]);
-     FldArrayF  iptmpj(   ipt_param_int[ NDIMDX_XYZ ]);
-     FldArrayF  iptmpk(   ipt_param_int[ NDIMDX_XYZ ]);
-     FldArrayF  iptmpi2(   ipt_param_int[ NDIMDX_XYZ ]);
-     FldArrayF  iptmpj2(   ipt_param_int[ NDIMDX_XYZ ]);
-     FldArrayF  iptmpk2(   ipt_param_int[ NDIMDX_XYZ ]);
-     FldArrayF  iptmtr( 9*ipt_param_int[ NDIMDX_XYZ ]);
 #pragma omp parallel default(shared) 
      {
 	//* variable declaree dans zone parallele = private *//

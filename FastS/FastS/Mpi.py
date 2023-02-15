@@ -131,16 +131,16 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                
                fasts.dtlocal2para_mpi(zones,zonesD,param_int_tc,param_real_tc,hook1,0,nstep,ompmode,no_transfert,process)
 
-               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ] 
-               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1'] 
+               if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
+               elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
 
                _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])    
 
                FastC.switchPointers2__(zones,nitmax,nstep)
                # Ghostcell
 
-               if    (nstep%2 == 0)  and itypcp == 2 : vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
-               elif  (nstep%2 == 1)  and itypcp == 2 : vars = ['Density_P1']
+               if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
+               elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
 
                if graph is not None and grapheliste == True:
                        procDict  = graph[nstep-1]['procDict']
@@ -148,14 +148,14 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                        graphIBCD = graph[nstep-1]['graphIBCD']
                else: 
                        procDict=None; graphID=None; graphIBCD=None          
-               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc,isWireModel=isWireModel)
+               _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc, isWireModel=isWireModel)
 
                no_transfert = 1#comm_P2P      
 
                fasts.recup3para_mpi(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
 
                if nstep%2 == 0:
-                   vars = ['Density'  ]
+                   vars = ['Density']
                    if graph is not None and grapheliste == True:
                        procDict  = graph[nitmax+nstep-1]['procDict']
                        graphID   = graph[nitmax+nstep-1]['graphID']
@@ -177,7 +177,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                tic=Time.time()
 
                if not tc2:
-                _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE,isWireModel=isWireModel,graphInvIBCD_WM=graphInvIBCD_WM)
+                _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE, isWireModel=isWireModel, graphInvIBCD_WM=graphInvIBCD_WM)
                else:
                 _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE, graphInvIBCD=graphInvIBCD, graphIBCD2=graphIBCD2)
 
@@ -222,7 +222,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
     #switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None:
          if layer == 'Python': FastC.switchPointers__(zones, 1, 3)
-         else: FastC.switchPointers3__(zones,nitmax)
+         else: FastC.switchPointers3__(zones, nitmax)
     else:
          case = NIT%3
          if case != 0 and itypcp < 2: FastC.switchPointers__(zones, case)
@@ -238,9 +238,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
       return tps_cp,tps_tr
 
 #==============================================================================
-def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, isWireModel=False, graphInvIBCD_WM=None): 
-
-   rank=Cmpi.rank
+def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, isWireModel=False, graphInvIBCD_WM=None):
 
    #timecount = numpy.zeros(4, dtype=numpy.float64)
    timecount = []
@@ -273,7 +271,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
                                           nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict)
                     varType = 21
 
-              #if rank == 0: print('fillGC: timeleveltarget= ', timelevel_target)
+              #if Cmpi.rank == 0: print('fillGC: timeleveltarget= ', timelevel_target)
               if isWireModel:                  
                   ##The approach is the following
                   ##1) interpolate the values at the additional points for WM
@@ -285,56 +283,55 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
                   C._cpVars(zones, 'centers:Density_WM', zonesD, 'Density_WM')
                   nvars_local     = hook1['neq_max']
                   type_transfert  = 1  
-                  isWireModel_int = 1
                  
-                  Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
+                  Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                             nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict,
-                                            isWireModel_int=isWireModel_int)
+                                            isWireModel_int=1)
                   
-                  Xmpi.__setInterpTransfers_WireModel(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,
+                  Xmpi.__setInterpTransfers_WireModel(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,
                                                       nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict,
-                                                      graphIBCD=graphIBCD, graphInvIBCD_WM=graphInvIBCD_WM,nvars=nvars_local)
+                                                      graphIBCD=graphIBCD, graphInvIBCD_WM=graphInvIBCD_WM, nvars=nvars_local)
                   C._rmVars(zonesD, 'Density_WM')
                   
                   ##ORIG MPI FILLGHOSTCELLS
                   isWireModel_int = -1  # is a local flag for Xmpi.__setInterpTransfers
                   type_transfert  =  1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-                  Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
+                  Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                             nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
                                             isWireModel_int=isWireModel_int)
                   
 
                   isWireModel_int = 0
                   type_transfert  = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-                  Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
+                  Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                             nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
                                             isWireModel_int=isWireModel_int)
               else:
                   #recuperation Nb pas instationnaire dans tc
                   type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-                  Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
+                  Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                             nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict,
                                             isWireModel_int=int(isWireModel))
                   type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
-                  Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
+                  Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                             nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
                                             isWireModel_int=int(isWireModel))
 
               #toc = Time.time() - tic
-       # if rank == 0:
-       #     print "Time in MPI send_buffer, irecv ","%.6f"%timecount[0]
-       #     print "Time InterpTransfert (Inter)  ","%.6f"%timecount[1]
-       #     print "Time InterpTransfert (Intra)  ","%.6f"%timecount[2]
-       #     print "Time in getTransfersInter ","%.6f"%timecount[3]
-       # if rank == 0: t0=timeit.default_timer()
+       # if Cmpi.rank == 0:
+       #     print("Time in MPI send_buffer, irecv ","%.6f"%timecount[0])
+       #     print("Time InterpTransfert (Inter)  ","%.6f"%timecount[1])
+       #     print("Time InterpTransfert (Intra)  ","%.6f"%timecount[2])
+       #     print("Time in getTransfersInter ","%.6f"%timecount[3])
+       # if Cmpi.rank == 0: t0=timeit.default_timer()
        #apply BC
        #tic = Time.time()
        if exploc != 1:
            _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        #toc = Time.time() - tic
-       # if rank == 0:
+       # if Cmpi.rank == 0:
        #     t1=timeit.default_timer()
-       #     print "time/it (s) BC only (=t_RK X 1.0): ",(t1-t0)
+       #     print("time/it (s) BC only (=t_RK X 1.0): ",(t1-t0))
    #return toc
    return None
 
@@ -342,9 +339,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 # modified _fillGhostCells for two image points (tc + tc2) for gradP 
 #==============================================================================
 def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, graphInvIBCD=None, graphIBCD2=None): 
-   isWireModel=False
-   rank=Cmpi.rank
-
+   
    #timecount = numpy.zeros(4, dtype=numpy.float64)
    timecount = []
 
@@ -357,7 +352,7 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
               param_real= tc_compact[1]              
               param_int = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
               zonesD    = Internal.getZones(tc)
-              zonesD2    = Internal.getZones(tc2)
+              zonesD2   = Internal.getZones(tc2)
 
               if hook1['neq_max'] == 5: varType = 2
               else                    : varType = 21
@@ -390,27 +385,27 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
               type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
               Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                         nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1,
-                                        graph=graphIBCD, procDict=procDict, isWireModel=isWireModel)
+                                        graph=graphIBCD, procDict=procDict, isWireModel=False)
               type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
               Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                         nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
-                                        isWireModel=isWireModel)
+                                        isWireModel=False)
 
               #toc = Time.time() - tic
-       # if rank == 0:
-       #     print "Time in MPI send_buffer, irecv ","%.6f"%timecount[0]
-       #     print "Time InterpTransfert (Inter)  ","%.6f"%timecount[1]
-       #     print "Time InterpTransfert (Intra)  ","%.6f"%timecount[2]
-       #     print "Time in getTransfersInter ","%.6f"%timecount[3]
-       # if (rank == 0 ): t0=timeit.default_timer()
+       # if Cmpi.rank == 0:
+       #     print("Time in MPI send_buffer, irecv ","%.6f"%timecount[0])
+       #     print("Time InterpTransfert (Inter)  ","%.6f"%timecount[1])
+       #     print("Time InterpTransfert (Intra)  ","%.6f"%timecount[2])
+       #     print("Time in getTransfersInter ","%.6f"%timecount[3])
+       # if Cmpi.rank == 0: t0=timeit.default_timer()
        #apply BC
        #tic = Time.time()
-       if(exploc != 1):
+       if exploc != 1:
            _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
        #toc = Time.time() - tic
-       # if (rank == 0 ):
+       # if Cmpi.rank == 0:
        #     t1=timeit.default_timer()
-       #     print "time/it (s) BC only (=t_RK X 1.0): ",(t1-t0)
+       #     print("time/it (s) BC only (=t_RK X 1.0): ",(t1-t0))
    #return toc
    return None
 
@@ -540,7 +535,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                         print('Warning: createTBLESA: non consistent with the version of IBM preprocessing.')
                      else:
                        if zsrname[1] == '16':
-                        print('Using MuskerSA2 wall model')
+                        print('Info: using MuskerSA2 wall model')
                         pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
                         addrIBC.append(size_IBC)
@@ -549,7 +544,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                         u_ODE = Internal.getNodeFromName1(s, 'VelocityT_ODE')
                         if u_ODE is not None: isODEDataPresent = 1
                        elif zsrname[1] == '17':
-                        print('Using FULL_TBLE_SA wall model')
+                        print('Info: using FULL_TBLE_SA wall model')
                         pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
                         addrIBC.append(size_IBC)
@@ -558,7 +553,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                         u_ODE = Internal.getNodeFromName1(s, 'VelocityT_ODE')
                         if u_ODE is not None: isODEDataPresent = 1
                        elif zsrname[1] == '18':
-                        print('Using FULL_TBLE_Prandtl wall model')
+                        print('Info: using FULL_TBLE_Prandtl wall model')
                         pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
                         addrIBC.append(size_IBC)
@@ -567,7 +562,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                         u_ODE = Internal.getNodeFromName1(s, 'VelocityT_ODE')
                         if u_ODE is not None: isODEDataPresent = 1
                        elif zsrname[1] == '19':
-                        print('Using MafzalSA wall model')
+                        print('Info: using MafzalSA wall model')
                         pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
                         addrIBC.append(size_IBC)
@@ -630,7 +625,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
 
                          if Nbpts_D > 1:
 
-                             for noind in range(0,Nbpts_D):
+                             for noind in range(0, Nbpts_D):
 
                                  b0 = valxI[noind]-valxW[noind]
                                  b1 = valyI[noind]-valyW[noind]
@@ -649,8 +644,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                                  b2 = valzI-valzW
                                  normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
 
-                                 if hn < 0:
-                                   hn = 0.6*normb
+                                 if hn < 0: hn = 0.6*normb
 
                                  # _stretch(linelets[shift : shift + nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
                                  _stretch(linelets[shift : shift + nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
@@ -747,9 +741,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         procDict  = graph[0]['procDict']
         graphID   = graph[0]['graphID']
         graphIBCD = graph[0]['graphIBCD']
-        if isWireModel: graphInvIBCD_WM  = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
+        if isWireModel: graphInvIBCD_WM = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
     else: 
-        procDict=None; graphID=None; graphIBCD=None; graphInvIBCD_WM = None
+        procDict=None; graphID=None; graphIBCD=None; graphInvIBCD_WM=None
         
     if isWireModel and graphInvIBCD_WM is None:
         print("Wire Model REQUIRES graphInvIBCD...exiting")
@@ -803,7 +797,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         procDict  = graph['procDict']
         graphID   = graph['graphID']
         graphIBCD = graph['graphIBCD']
-        if isWireModel: graphInvIBCD_WM  = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
+        if isWireModel: graphInvIBCD_WM = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
     elif graph is not None and grapheliste==True:  ### Dans warmup tous les transferts doivent etre faits
         procDict  = graph[nssiter-2]['procDict']   ### On va chercher le graphe a nssiter-2 car a cette ssite tous les transferts
         graphID   = graph[nssiter-2]['graphID']    ### sont faits pour le schema a pas de temps local
@@ -931,9 +925,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4])
 
-    isWireModelPrep=isWireModel
-
-    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, ompmode, hook1,graphID, graphIBCD, procDict, isWireModel=isWireModel,graphInvIBCD_WM=graphInvIBCD_WM)
+    _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep, ompmode, hook1,graphID, graphIBCD, procDict, isWireModel=isWireModel, graphInvIBCD_WM=graphInvIBCD_WM)
 
     #
     # initialisation Mut

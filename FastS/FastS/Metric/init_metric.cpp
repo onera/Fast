@@ -217,7 +217,10 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                  }
                 }
                }
-              }
+
+
+               }
+
        	      #pragma omp barrier
               // loop extrapolation
               for (E_Int nd = 0; nd < nidom; nd++)
@@ -263,6 +266,25 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                                ipt_ind_dm_loc,
                                ipt_degen[nd] ,
                                ipti[nd]      , iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd]); 
+
+                 // recopie vol dans vol2 pour ALE
+                 #pragma omp barrier
+                 if (param_int[nd][ LALE ] == 3)
+                 {
+                   E_Float* iptvol2 = iptvol[nd]+param_int[nd][NDIMDX_MTR];
+
+                   for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
+                    for (E_Int j = ind_mtr[2]; j <= ind_mtr[3]; j++){ 
+                     for (E_Int i = ind_mtr[0]; i <= ind_mtr[1]; i++){ 
+
+                      E_Int l =  (i+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR]
+                               + (j+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR+1]
+                               + (k+ param_int[nd][NIJK_MTR+4]-1)*param_int[nd][NIJK_MTR+2];
+                      iptvol2[l] = iptvol[nd][l];
+                    }
+                   }
+                  }
+                 }
 
                  if(param_int[nd][ IFLOW ] ==3)
                    { ipt_ind_dm_loc[1]= param_int[nd][ IJKV ]; ipt_ind_dm_loc[3]= param_int[nd][ IJKV+1 ]; ipt_ind_dm_loc[5]= param_int[nd][IJKV+2];
@@ -314,7 +336,8 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 
                  skmtr_( nd, param_int[nd], param_real[nd],
 	                iptx[nd], ipty[nd], iptz[nd], ipt_degen[nd], iptdist[nd],
-                        ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], iptventi[nd], iptventj[nd], iptventk[nd],
+                        ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], 
+                        iptventi[nd], iptventj[nd], iptventk[nd],
                         ipt_ijkv_sdm_thread,
                         ipt_ind_sdm_thread , ipt_ind_coe_thread, ipt_ind_grad_thread    , 
                         ipt_ind_dm_loc     , ipt_ind_dm_socket , ipt_ind_dm_omp_thread  ,
@@ -326,8 +349,16 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                  #pragma omp for
                  for (E_Int i = 0; i < param_int[nd][NDIMDX_MTR]; i++) { iptvol[nd][i] = K_FUNC::E_max(iptvol[nd][i], 1.e-30);}
 
-	         if( param_int[nd][KFLUDOM] == 3)
-	         {
+                 // recopie vol dans vol2 pour GCL
+                 if (param_int[nd][LALE] == 3)
+                 {
+                    E_Float* iptvol2 = iptvol[nd] + param_int[nd][NDIMDX_MTR];
+                    #pragma omp for
+                    for (E_Int i = 0; i < param_int[nd][NDIMDX_MTR]; i++) { iptvol2[i] = iptvol[nd][i]; }
+                 }
+
+             if( param_int[nd][KFLUDOM] == 3)
+             {
 
        	          #pragma omp single
      	          {

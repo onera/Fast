@@ -1472,7 +1472,7 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
             {
               //#pragma omp for nowait
               #pragma omp for
-              for (size_t irecv = 0; irecv < sz; ++irecv) 
+              for (E_Int irecv = 0; irecv < sz; ++irecv) 
                {
 
                 ilistrecv = recv_listRc[irac] [irecv];

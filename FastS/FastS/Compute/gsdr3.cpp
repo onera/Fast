@@ -277,7 +277,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
         E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int shift_mu=0; E_Int nd_current=0;
-	E_Float rhs_end=0; E_Int ncells=0;
+        E_Float rhs_end=0; E_Int ncells=0;
 
         if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1) { ipt_norm_kry[ithread-1]=0.; }
 
