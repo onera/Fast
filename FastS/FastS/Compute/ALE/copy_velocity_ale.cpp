@@ -56,15 +56,19 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
   //printf("nombre de zone a traiter= %d\n",nidom);
 
   E_Float** iptventi; E_Float** iptventj; E_Float** iptventk; E_Float** iptvent_vertex;
+  E_Float** iptx; E_Float** ipty; E_Float** iptz;
   E_Float** ipt_param_real; 
   E_Int** ipt_param_int;
 
-  ipt_param_real    = new  E_Float*[nidom*5];
+  ipt_param_real    = new  E_Float*[nidom*8];
   iptventi          = ipt_param_real + nidom;
   iptventj          = iptventi       + nidom;
   iptventk          = iptventj       + nidom;
-  iptvent_vertex    = iptventk       + nidom; 
- 
+  iptvent_vertex    = iptventk       + nidom;
+  iptx              = iptvent_vertex + nidom;
+  ipty              = iptx           + nidom;
+  iptz              = ipty           + nidom;
+  
   ipt_param_int     = new  E_Int*[nidom];
 
   vector<PyArrayObject*> hook;
@@ -86,6 +90,9 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
     PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
 
     GET_VENT( METRIC_VENT, metric, ipt_param_int[nd], iptventi[nd], iptventj[nd], iptventk[nd] )
+
+    if(ipt_param_int[nd][ LALE ]== 0 || ipt_param_int[nd][ LALE ]== 2 ){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
+    else                                                               { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
 
     if( ipt_param_int[nd][ NDIMDX ] > ndimdx ){ ndimdx = ipt_param_int[nd][ NDIMDX ]; } 
 
@@ -137,7 +144,7 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
 
 
             if( (ipt_param_int[nd][ ITYPVENT ]== 1 && ipt_param_int[nd][ ITYPZONE ] == 1) || ipt_param_int[nd][ ITYPZONE ] == 3)
-            {  ipt_ind_dm_loc[5] =1; }//champ de vitesse 2D
+            {  ipt_ind_dm_loc[5] =1; } //champ de vitesse 2D
 
             E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
             //E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
@@ -154,7 +161,8 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
 
              if (ipt_param_int[nd][ LALE ] == 2)
              {
-               copy_ventijk_( nd, ithread, ipt_param_int[nd], ipt_param_real[nd],
+               copy_ventijk_(nd, ithread, ipt_param_int[nd], ipt_param_real[nd],
+                            iptx[nd], ipty[nd], iptz[nd],
                             ipt_ind_dm_loc, ipt_ind_dm_socket,
                             iptventi[nd], iptventj[nd], iptventk[nd], iptvent_vertex[nd] );
              }

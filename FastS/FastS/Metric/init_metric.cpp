@@ -97,9 +97,9 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                        t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
     param_real[nd]    = K_PYTREE::getValueAF(t, hook);
 
-    /*-------------------------------------*/
-    /* Extraction (x,y,z): pour forcage spatia */
-    /*-------------------------------------*/
+    /*------------------------------------------*/
+    /* Extraction (x,y,z): pour forcage spatial */
+    /*------------------------------------------*/
     if(param_int[nd][ LALE ]== 0 || param_int[nd][ LALE ]== 2 ){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
     else                                                       { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
     //GET_XYZ( "GridCoordinates", zone, iptx[nd], ipty[nd], iptz[nd]) 
@@ -268,9 +268,9 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                                ipti[nd]      , iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd]); 
 
                  // recopie vol dans vol2 pour ALE
-                 #pragma omp barrier
                  if (param_int[nd][ LALE ] == 3)
                  {
+                   #pragma omp barrier
                    E_Float* iptvol2 = iptvol[nd]+param_int[nd][NDIMDX_MTR];
 
                    for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 

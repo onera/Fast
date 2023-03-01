@@ -151,6 +151,7 @@ extern "C"
                       E_Float* iptx             , E_Float* ipty         , E_Float* iptz    );
 
   void copy_ventijk_( E_Int& ndo                , E_Int& ithread      , E_Int* ipt_param_int, E_Float* ipt_param_real , 
+                      E_Float* iptx             , E_Float* ipty       , E_Float* iptz,
                       E_Int* ipt_ind_dm         , E_Int* ipt_inddm_omp,
                       E_Float* iptventi         , E_Float* iptventj   , E_Float* iptventk   ,  E_Float* iptvent_vertex);
 

@@ -445,7 +445,7 @@ c-----le nbr de metrique varie selon le type de domaine
         do i=ind_loop(1),ind_loop(2)
 
           l = indmtr(i  ,j  ,k  )
-          l0= indcg(i  ,j  ,k  )   ! x(i  , j  , k  )
+          l0= indcg(i   ,j  ,k  )   ! x(i  , j  , k  )
 
           l1= l0 + incj               ! x(i  , j+1, k  )
           l2= l0 + inck               ! x(i  , j  , k+1)
@@ -482,7 +482,7 @@ c-----le nbr de metrique varie selon le type de domaine
          DO i = ind_loop(2)+1 , ind_loop(2) + 1
 
           l = indmtr(i  ,j  ,k  )
-          l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
+          l0= indcg(i   ,j  ,k  ) ! x(i  , j  , k  )
           l1= l0 + incj               ! x(i  , j+1, k  )
           l2= l0 + inck               ! x(i  , j  , k+1)
           l3= l1 + inck               ! x(i  , j+1, k+1)
