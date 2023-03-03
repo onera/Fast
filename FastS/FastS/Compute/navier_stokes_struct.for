@@ -26,8 +26,8 @@ c***********************************************************************
 
 c***********************************************************************
 c_U   USER : TERRACOL
-c
 c     ACT
+c
 c_A    Appel du calcul des flux explicites
 c
 c     VAL
@@ -104,13 +104,13 @@ c
 c      REAL_E drodmstk(20000,param_int(NEQ)), rostk(20000,param_int(NEQ))
 
 C Var loc
-#include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
+#include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
 
 
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
      & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2,
-     & flag_wait,cells, it_dtloc
+     & flag_wait,cells, it_dtloc, flag_NSLBM
 
 
       REAL_E rhs_begin,rhs_end
@@ -131,10 +131,10 @@ C Var loc
 
        rhs_begin = OMP_GET_WTIME()
 
-#include "FastS/HPC_LAYER/SIZE_MIN.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
-#include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
-#include "FastS/HPC_LAYER/INDICE_RANGE.for"
+#include "../FastC/FastC/HPC_LAYER/SIZE_MIN.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/INDICE_RANGE.for"
 
           flag_wait = 0
 
@@ -231,7 +231,7 @@ c       endif
 
               !!sinon cfl foireux
               IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
-#include       "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+#include       "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
                 flag_wait = 1
               ENDIF
 
@@ -274,7 +274,7 @@ c       endif
                      endif
                   !LES selective mixed scale model
                   else
-#include            "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+#include            "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
                      flag_wait = 1
 
                      neq_rot = 3
@@ -296,7 +296,7 @@ c       endif
 
                !!sinon cfl foireux
                IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
-#include        "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+#include        "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
                  flag_wait = 1
                ENDIF
 
@@ -320,7 +320,7 @@ c       endif
      &          .or.param_int(IBC).eq.1
      &         )
      &                             .and.flag_wait.eq.0) then
-#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
                flag_wait = 1
            ENDIF
 !     STEP I & II: END
@@ -338,7 +338,7 @@ c       endif
 
 
            IF(flag_wait.eq.0) then
-#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
            ENDIF
 
 !     STEP III: END
@@ -474,7 +474,7 @@ c       endif
                  endif
              endif
 
-#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_GO.for"
 
            !correction flux roe au CL si pas de mvt ALE,....
            nb_bc = param_int( param_int(PT_BC) )
@@ -603,8 +603,8 @@ c       endif
               endif
           end if
 
-#include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_END.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
 
 

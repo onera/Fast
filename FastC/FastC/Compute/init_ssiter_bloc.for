@@ -3,7 +3,7 @@ c     $Date: 2010-07-16 17:20:59 +0200 (Fri, 16 Jul 2010) $
 c     $Revision: 59 $
 c     $Author: MarcTerracol $
 c***********************************************************************
-      subroutine init_ssiter_bloc(nd , nitcfg, nssiter,
+      subroutine init_ssiter_bloc(nd , nitcfg, nssiter, nitrun,
      &     lssiter_loc, itypcp, flag_res,
      &     ijkv, ijkv_lu, ijk_lu, size_ssdom,
      &     mx_ssdom_lu, iskip_lu, 
@@ -23,7 +23,7 @@ c***********************************************************************
 
 #include "FastC/param_solver.h"
 
-      INTEGER_E nd , nitcfg, nssiter,itypcp,
+      INTEGER_E nd , nitcfg, nssiter, nitrun, itypcp,
      &     lssiter_loc, mx_ssdom_lu,flag_res,
      &     ijkv(3), ijkv_lu(3), ijk_lu(3,mx_ssdom_lu),
      &     size_ssdom(3), iskip_lu(nssiter,2) 
@@ -43,7 +43,6 @@ c     Var loc
       
 !     initialisation compteur ssiter par domain
       if (nitcfg.eq.1.and.flag_res.eq.1) then
-      !if (nitcfg.eq.1) then
 
          it_bloc                     = 0
          it_lu_ssdom(1:mx_ssdom_lu)  = 0  
@@ -56,15 +55,14 @@ c     Var loc
       !!  si on declenche le calcul residu, on ne modifie pas les souszones 
       if (flag_res.eq.1) return
 
-!     on evalue les domaine a zapper a cette iteration du newton
+      !on evalue les domaine a zapper a cette iteration du newton
       ndfin   = 0
-      cycl    = param_int(NSSITER)/param_int(LEVEL)      
 
       IF(lssiter_loc.eq.1 ) then
 
          ndo      = nd
 
-!     on estime le nbr de sous-iteration necessaire en fonction du CFL
+         !on estime le nbr de sous-iteration necessaire en fonction du CFL
          nitmin    = 3          !nombre minimal de ss-iteration
          if(nitcfg.ne.nssiter) then
             iseuil      = iskip_lu( nitcfg, 2) + nitmin
@@ -72,21 +70,20 @@ c     Var loc
             iseuil      = iskip_lu( nitcfg, 1) + nitmin
          endif
          
-!     write(*,*)'iseuil',iseuil, nitcfg
+         !write(*,*)'iseuil',iseuil, nitcfg
 
-!     on cherche les sous-domain ou it_lu_ssdom(,ndo) <= iseuil
+         !on cherche les sous-domain ou it_lu_ssdom(,ndo) <= iseuil
          call ssdom_lu_ijk(nd, ndfin, nssiter, mx_ssdom_lu, nitcfg,
      &        iseuil,
      &        size_ssdom, ijkv, ijkv_lu, it_target_ssdom,
      &        no_lu, nisdom_residu,
      &        ind_dm, ijk_lu )
 
-      ELSE IF (param_int(EXPLOC).eq.1) THEN ! Explicite local instationnaire d'ordre 3 
+      !ELSE IF (param_int(EXPLOC).eq.1) THEN 
+      ELSE IF (lssiter_loc.eq.2.and.param_int(EXPLOC).eq.1) THEN ! Explicite local instationnaire d'ordre 3 
 
          
-      !ELSE IF (param_int(EXPLOC).eq.2.and.param_int(ITYPCP)==2.and.
-     &! param_int(RK).eq.3 ) THEN ! Explicite local instationnaire d'ordre 3 
-
+         cycl    = param_int(NSSITER)/param_int(LEVEL)      
       
          IF (MOD(nitcfg,cycl)==1.OR.MOD(nitcfg,cycl)==cycl/2.OR.
      & MOD(nitcfg,cycl)==cycl-1) THEN
@@ -107,7 +104,29 @@ c     Var loc
          END IF               
 
        
+      ELSE IF (lssiter_loc.eq.3.and.param_int(IFLOW).eq.4) THEN ! Explicite local LBM
    
+         cycl = mod(nitrun, 2**(param_int(LEVEL)-1) )      
+      
+         !write(*,*)'init_ssiter_bloc', nitrun,cycl,nd, param_int(LEVEL)
+
+         If (cycl.eq.0) Then
+
+         ndfin = ndfin + 1
+
+         !write(*,*)'ndfin, nitcfg', ndfin, nitcfg
+
+         ind_dm(1, ndfin, nitcfg)   = 1
+         ind_dm(3, ndfin, nitcfg)   = 1
+         ind_dm(5, ndfin, nitcfg)   = 1
+         ind_dm(2, ndfin, nitcfg)   = ijkv(1)
+         ind_dm(4, ndfin, nitcfg)   = ijkv(2)
+         ind_dm(6, ndfin, nitcfg)   = ijkv(3)
+         
+         nisdom_residu( nitcfg)     = 1
+
+         End if  
+
 
       ELSE                      !explict global ou implicit ss-iter constant 
      

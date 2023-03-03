@@ -544,7 +544,12 @@ E_Int K_FASTS::BCzone(
                                          iptijk, iptrop, ipt_data1, ipt_data2, ipt_data3, ipt_data4, ipt_data5,
                                          ipt_data6, iptsize_data[0], inc_bc, size_work );
 
-                } 
+                } else if ( bc_type == 24) {
+
+                     //cout << "Je pase dans la BC de dim" << endl;
+                     bvbs_dim_from_lbm_( idir, lrhs_loc, param_int, param_real, ipt_ind_CL119, iptrop);
+                }
+
             }  // if skip_loc
 
 	    if (lrhs == 2)

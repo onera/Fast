@@ -40,8 +40,8 @@ void K_FASTC::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
 
   E_Int nssiter   = iptdtloc[0];
   E_Int nidom_loc = iptdtloc[nssiter+9+nstep-1];
-  //calcul dimension et nombre souszone
-  if(nitrun % iptdtloc[1] == 0 || nidom_loc == -1)   //iptdtloc[1] = kmod
+  //calcul dimension et nombre souszone si: modulo_verif, init ou lbm
+  if(nitrun % iptdtloc[1] == 0 || nidom_loc == -1 || lssiter_loc==3 )   //iptdtloc[1] = kmod 
   {
      E_Int itypcp;
      for (E_Int nd = 0; nd < nidom; nd++)
@@ -67,7 +67,7 @@ void K_FASTC::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
        {  
            FldArrayI ijk_lu(param_int[nd][ MXSSDOM_LU ]*3); E_Int* ipt_ijk_lu  = ijk_lu.begin();
  
-           init_ssiter_bloc_( nd                        , nstep                    ,  iptdtloc[0] ,
+           init_ssiter_bloc_( nd                        , nstep                    ,  iptdtloc[0]  , nitrun,
                              lssiter_loc                , param_int[nd][ ITYPCP ]  , flag_res      , 
                              param_int[nd] + IJKV       , ijkv_lu                  , ipt_ijk_lu    , param_int[nd] + SIZE_SSDOM ,
                              param_int[nd][ MXSSDOM_LU ], ipt_iskip_lu         ,
@@ -173,7 +173,10 @@ PyObject* K_FASTC::souszones_list(PyObject* self, PyObject* args)
 
   //calcul distri si implicit ou explicit local + modulo verif et maillage structure 
   E_Int nitrun_loc = nitrun - 1;
-  if( nidom_loc==-1 || ((lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2))  && nitrun_loc%iptdtloc[1] == 0 ) && ipt_param_int[0][ITYPZONE] !=4 ) 
+  if (lssiter_loc >=2)nitrun_loc=nitrun;
+
+  //if( nidom_loc==-1 || ((lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2))  && nitrun_loc%iptdtloc[1] == 0 ) && ipt_param_int[0][ITYPZONE] !=4 ) 
+  if( (nidom_loc==-1 || lssiter_loc >=1 ) && ipt_param_int[0][ITYPZONE] !=4 ) 
   {
     //printf("2eme passe %d %d\n", nstep, nitrun);
     E_Int flag_res = 0;
@@ -183,6 +186,7 @@ PyObject* K_FASTC::souszones_list(PyObject* self, PyObject* args)
     E_Int display = 0;
     if (nstep==1 and  nidom_loc==-1) display = 1;
     if (verbose == 0) display = 0;
+    //display = 2;
     distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, distrib_omp, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun, display );
   }
 

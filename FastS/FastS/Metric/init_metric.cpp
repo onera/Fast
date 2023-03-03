@@ -97,9 +97,9 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                        t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
     param_real[nd]    = K_PYTREE::getValueAF(t, hook);
 
-    /*------------------------------------------*/
-    /* Extraction (x,y,z): pour forcage spatial */
-    /*------------------------------------------*/
+    /*-------------------------------------*/
+    /* Extraction (x,y,z): pour forcage spatia */
+    /*-------------------------------------*/
     if(param_int[nd][ LALE ]== 0 || param_int[nd][ LALE ]== 2 ){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
     else                                                       { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
     //GET_XYZ( "GridCoordinates", zone, iptx[nd], ipty[nd], iptz[nd]) 
@@ -199,6 +199,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 #              include "Metric/indice_omp1.h" 
                cp_tijk_( param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], ind_mtr);
               }
+
        	      #pragma omp barrier
               // loop calcul volume
               for (E_Int nd = 0; nd < nidom; nd++)
@@ -217,7 +218,6 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                  }
                 }
                }
-
 
                }
 
@@ -267,10 +267,21 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                                ipt_degen[nd] ,
                                ipti[nd]      , iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd]); 
 
-                 // recopie vol dans vol2 pour ALE
+                 if(param_int[nd][ IFLOW ] ==3)
+                   { ipt_ind_dm_loc[1]= param_int[nd][ IJKV ]; ipt_ind_dm_loc[3]= param_int[nd][ IJKV+1 ]; ipt_ind_dm_loc[5]= param_int[nd][IJKV+2];
+
+                     dist_extrap_( param_int[nd][ NDIMDX ], param_int[nd][ NDIMDX_XYZ ] , ipt_nijk, ipt_nijk_xyz,
+                                    ipt_ind_dm_loc, ipt_degen[nd] , iptdist[nd]);
+                   }
+                }
+              }
+              #pragma omp barrier
+              // recopie vol dans vol2 pour ALE
+              for (E_Int nd = 0; nd < nidom; nd++)
+              {
+#              include "Metric/indice_omp1.h"
                  if (param_int[nd][ LALE ] == 3)
                  {
-                   #pragma omp barrier
                    E_Float* iptvol2 = iptvol[nd]+param_int[nd][NDIMDX_MTR];
 
                    for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
@@ -285,14 +296,6 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
                    }
                   }
                  }
-
-                 if(param_int[nd][ IFLOW ] ==3)
-                   { ipt_ind_dm_loc[1]= param_int[nd][ IJKV ]; ipt_ind_dm_loc[3]= param_int[nd][ IJKV+1 ]; ipt_ind_dm_loc[5]= param_int[nd][IJKV+2];
-
-                     dist_extrap_( param_int[nd][ NDIMDX ], param_int[nd][ NDIMDX_XYZ ] , ipt_nijk, ipt_nijk_xyz,
-                                    ipt_ind_dm_loc, ipt_degen[nd] , iptdist[nd]);
-                   }
-                }
               }
             }
         else

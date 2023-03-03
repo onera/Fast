@@ -7,7 +7,6 @@ from . import fasts
 from . import FastS
 __version__ = FastS.__version__
 
-OMP_MODE = 0
 
 try:
     import Converter.PyTree as C
@@ -86,7 +85,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
     node = Internal.getNodeFromName1(t, '.Solver#define')
     omp_node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode  = OMP_MODE
+    ompmode  = FastC.OMP_MODE
     if omp_node is not None: ompmode = Internal.getValue(omp_node)
 
     dtloc   = Internal.getValue(dtloc) # tab numpy
@@ -146,7 +145,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                
                if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
                elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
-               _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])
+               _applyBC(zones,metrics, hook1, nstep, var=vars[0])
                
                FastC.switchPointers2__(zones,nitmax,nstep)
 
@@ -163,7 +162,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
                if   nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
                elif nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
-               _applyBC(zones, metrics, hook1, nstep, ompmode, var=vars[0])
+               _applyBC(zones, metrics, hook1, nstep, var=vars[0])
                
             else:
               #Ghostcell
@@ -254,7 +253,7 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
 
     node = Internal.getNodeFromName1(t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode = OMP_MODE
+    ompmode = FastC.OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
 
     nstep = 1
@@ -362,7 +361,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if first is None: Internal.createUniqueChild(t, 'NbptsLinelets', 'DataArray_t', value=nbpts_linelets)
     
     # Get omp_mode
-    ompmode = OMP_MODE
+    ompmode = FastC.OMP_MODE
     node = Internal.getNodeFromName1(t, '.Solver#define')
     if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
@@ -405,7 +404,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     rmConsVars = True
     adjoint = Adjoint
 
-    
     t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP,isWireModel)
     FastC.HOOK['FIRST_IT'] = FastC.FIRST_IT
 
@@ -490,7 +488,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     else:
         FastC.HOOK['ssors'] = None
 
-
     # Compactage arbre moyennes stat
     #
     if tmy is not None:
@@ -509,8 +506,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4])
-    
-    isWireModelPrep=isWireModel
     
     _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1,isWireModel=isWireModel)
 
@@ -1176,7 +1171,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_
        tc = Internal.merge( [tc, tc_inst] )
 
        # Get omp_mode
-       ompmode = OMP_MODE
+       ompmode = FastC.OMP_MODE
        node = Internal.getNodeFromName1(t, '.Solver#define')
        if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
@@ -1234,10 +1229,10 @@ def itt(var):
     return None
 
 #==============================================================================
-def _applyBC(t, metrics, hook1, nstep,omp_mode, var="Density"):
+def _applyBC(t, metrics, hook1, nstep, var="Density"):
     zones = Internal.getZones(t)
 
-    fasts._applyBC(zones, metrics, hook1, nstep, omp_mode, var)
+    fasts._applyBC(zones, metrics, hook1, nstep, var)
     return None
 
 #==============================================================================
@@ -1293,22 +1288,19 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
                   isWireModel_int = 2
                   Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_int)#,timecount)
 
-                  type_transfert  = 2  
-                  no_transfert    = 1
-                  isWireModel_int = 0
-                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_int)#,timecount)
-              else:
-                  type_transfert  = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
-                  no_transfert    = 1  # dans la list des transfert point a point
-                  isWireModel_int = 0
-                  Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_int)#,timecount)
+              type_transfert  = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
+              no_transfert    = 1  # dans la list des transfert point a point
+              isWireModel_int = 0
+              Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_int)#,timecount)
                   
+              #test.testT(zones , 16)
+              #test.testT(zonesD , 17)
                   
 
        #apply BC
        #t0=timeit.default_timer()
        if exploc != 1:
-          _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
+          _applyBC(zones, metrics, hook1, nstep, var=vars[0])
        #t1=timeit.default_timer()
        #print("Time BC",(t1-t0))
 
@@ -1378,7 +1370,7 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
        #t0=timeit.default_timer()
        if exploc != 1:
        #if rk != 3 and exploc != 2:
-          _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
+          _applyBC(zones, metrics, hook1, nstep, var=vars[0])
        #t1=timeit.default_timer()
        #print("Time BC",(t1-t0))
 
@@ -1813,7 +1805,7 @@ def _computeStats(t, tmy, metrics):
 
     node = Internal.getNodeFromName1(t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode = OMP_MODE
+    ompmode = FastC.OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
 
     fasts.computePT_my(zones, zones_my, metrics, ompmode)
@@ -2200,7 +2192,7 @@ def _computeVelocityAle(t, metrics):
 
     node = Internal.getNodeFromName1(t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode = OMP_MODE
+    ompmode = FastC.OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
 
     fasts.computePT_velocity_ale(zones,  metrics, FastC.HOOK, ompmode)
@@ -2222,7 +2214,7 @@ def copy_velocity_ale(t, metrics, it=0):
 
     node = Internal.getNodeFromName1(t   , '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode = OMP_MODE
+    ompmode = FastC.OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
 
     #on filtre les zones non deformables
@@ -2755,7 +2747,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
 
  node = Internal.getNodeFromName1(t, '.Solver#define')
  node = Internal.getNodeFromName1(node, 'omp_mode')
- ompmode = OMP_MODE
+ ompmode = FastC.OMP_MODE
  if  node is not None: ompmode = Internal.getValue(node)
 
  dtloc = Internal.getValue(dtloc) # tab numpy
@@ -3838,7 +3830,7 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
     node = Internal.getNodeFromName1(   t, '.Solver#define')
     node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode = OMP_MODE
+    ompmode = FastC.OMP_MODE
     if  node is not None: ompmode = Internal.getValue(node)
 
     dtloc = Internal.getValue(dtloc) # tab numpy

@@ -232,8 +232,7 @@ extern "C"
                               E_Float* krylov           , E_Float& norm_kry,
                               E_Float* ipt_cfl        ,
                               E_Float* iptx             , E_Float* ipty        , E_Float* iptz           , E_Float* iptCellN       , E_Float* iptCellN_IBC  ,
-                              E_Float* iptro            , E_Float* iptro_m1    , E_Float* iptrotmp       , E_Float* iptro_ssiter   ,
-                              E_Float* iptmut           ,
+                              E_Float* iptro            , E_Float* iptro_m1    , E_Float* iptrotmp       , E_Float* iptro_ssiter   , E_Float* iptmut        ,
                               E_Float* ipti             , E_Float* iptj        , E_Float* iptk           , E_Float* iptvol         , 
                               E_Float* ipti_df          , E_Float* iptj_df     , E_Float* iptk_df        , E_Float* iptvol_df      , 
                               E_Float* iptventi         , E_Float* iptventj    , E_Float* iptventk       ,  
@@ -312,6 +311,8 @@ extern "C"
                                    E_Float* iptventi  , E_Float* iptijk  , E_Float* iptro);
    void     bvbs_wall_inviscid_d_( E_Int& idir        , E_Int& lrhs      ,  E_Int& neq_mtr, E_Float& mobile_coef, E_Int* param_int ,E_Int* ind_loop  ,
                                    E_Float* iptventi  , E_Float* iptijk  , E_Float* iptro, E_Float* iptrod);
+
+   void     bvbs_dim_from_lbm_( E_Int& idir  , E_Int& lrhs  , E_Int* param_int, E_Float* param_real, E_Int* ind_loop, E_Float* iptro);
 
    void     bvbs_wallmodel_(   E_Int& idir      , E_Int& lrhs      , E_Int& neq_mtr, E_Float& mobile_coef, E_Float& c4   , E_Float& c5, E_Float& c6, 
                                E_Int* param_int , E_Int* ind_loop  ,

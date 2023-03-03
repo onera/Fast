@@ -32,11 +32,11 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
 {
-  PyObject *zones; PyObject *metrics; PyObject *work; char* var; E_Int nstep; E_Int omp_mode;  
+  PyObject *zones; PyObject *metrics; PyObject *work; char* var; E_Int nstep; 
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOlls", &zones, &metrics, &work, &nstep, &omp_mode, &var )) return NULL;
+  if (!PyArg_ParseTuple(args, "OOOls", &zones, &metrics, &work, &nstep, &var )) return NULL;
 #else 
-  if (!PyArg_ParseTuple(args, "OOOiis", &zones, &metrics, &work, &nstep, &omp_mode, &var )) return NULL;
+  if (!PyArg_ParseTuple(args, "OOOis", &zones, &metrics, &work, &nstep, &var )) return NULL;
 #endif
 
   //* tableau pour stocker dimension sous-domaine omp *//

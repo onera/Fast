@@ -40,6 +40,14 @@ namespace K_FAST
   // Fonctions
   // =========
   PyObject* _computePT(              PyObject* self, PyObject* args);
+  PyObject* interplbmns_(            PyObject* self, PyObject* args);
+  PyObject* recuplbmns_(             PyObject* self, PyObject* args);
+  PyObject* filtering_(              PyObject* self, PyObject* args);
+
+void compute_sij( E_Float**& ipt_ro      , E_Float**& iptS     , E_Float**& ipt_vol   ,E_Int*& param_int_tc,
+                  E_Float*& param_real_tc, E_Int**& param_int  , E_Float**& param_real, E_Int*& ipt_omp,
+                  E_Int& TypeTransfert   , E_Int& it_target    , E_Int& nidom         , E_Int& NoTransfert, E_Int& bidim, 
+                  E_Int& nstep           , E_Int& nssiter      , E_Int& rk            , E_Int& exploc, E_Int& num_passage);
 
   E_Int gsdr3( 
 	      E_Int**& ipt_param_int     , E_Float**& ipt_param_real   , E_Int& nidom               , E_Int& nitrun               ,
@@ -55,8 +63,8 @@ namespace K_FAST
 	      E_Float** ipt_ssortmp      , E_Int* ipt_ssor_size        , E_Float* ipt_drodmd        , E_Float* ipt_Hessenberg     ,
 	      E_Float** iptkrylov        , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry      , E_Float** ipt_gmrestmp      ,
 	      E_Float* ipt_givens        , E_Float*   ipt_cfl          , E_Float**  iptx            , E_Float**  ipty             ,
-	      E_Float** iptz             , E_Float**  iptCellN         , E_Float**  iptCellN_IBC    , E_Int**  iptdegen           ,
-	      E_Float**& iptro           , E_Float**& iptro_m1         , E_Float**&  iptrotmp       , E_Float**& iptro_sfd        ,
+	      E_Float** iptz             , E_Float**  iptCellN         , E_Float**  iptCellN_IBC    , E_Float** iptFltrN          ,  E_Int**  iptdegen   ,
+	      E_Float**& iptro           , E_Float**& iptro_m1         , E_Float**&  iptrotmp       , E_Float**& iptro_sfd        ,  E_Float**& iptS     ,  E_Float**& iptPsiG,
 	      E_Float**  iptmut          , E_Float*  ipt_mutd          , E_Float**  ipti            , E_Float**  iptj             ,
 	      E_Float** iptk             , E_Float** iptvol            , E_Float**  ipti0           , E_Float**  iptj0            ,
 	      E_Float** iptk0            , E_Float**  ipti_df          , E_Float**  iptj_df         , E_Float** iptk_df           ,
@@ -66,8 +74,7 @@ namespace K_FAST
 	      E_Float*  iptcoe           , E_Float* iptmules           , E_Float**& iptdelta        , E_Float**& iptro_res        ,
 	      E_Float**& iptdrodm_trans  , E_Int*&  ipt_param_int_tc   , E_Float*& ipt_param_real_tc, E_Int*& ipt_linelets_int    ,
 	      E_Float*& ipt_linelets_real, E_Int& taille_tabs          , E_Float*& stock            , E_Float*& drodmstock        ,
-	      E_Float*& constk           , E_Float**  iptsrc           , E_Float*   feq             , E_Float**& feq_transfer     ,
-	      E_Float**&  iptSpongeCoef  , E_Float**& iptmacro_m1      , E_Float**& iptdist2ibc     , E_Float**& iptQeq           ,
-	      E_Float**&  iptQneq        , E_Float**& iptcellN_IBC_LBM );
+	      E_Float*& constk           , E_Float**  iptsrc           , E_Float* f_horseq          , E_Float* a1_pr          ,
+              E_Float* a1_fd              , E_Float* a1_hrr             , E_Float* aneq_o3            , E_Float* psi_corr       ,  E_Int& flag_NSLBM);
 }
 #endif

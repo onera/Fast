@@ -144,17 +144,17 @@
 #define SRC            83
 #define MESHTYPE       84
 #define SENSORTYPE     85
-/*86 is defined below*/
-#define SCHEDULER      87
-#define WM_FUNCTION    88
-#define WM_SAMPLING    89
+#define SCHEDULER      86
+#define WM_FUNCTION    87
+#define WM_SAMPLING    88
 
 
 /*LBM*/
-#define NEQ_LBM             86
+#define NEQ_LBM             89
 #define PT_LBM_Cs           90  
 #define PT_LBM_Ws           91 
 #define LBM_COL_OP          92 
+#define LBM_COLL_MODEL      92 
 #define PT_LBM_Cminus       93 
 #define PT_LBM_BC           94 
 #define LBM_NQ_BC           95 
@@ -193,13 +193,17 @@
 #define LBM_spng_ymax         122 
 #define LBM_spng_zmin         123
 #define LBM_spng_zmax         124
+#define LBM_CORR_TERM         125
+#define LBM_OVERSET           126
+#define LBM_HLBM              127
+#define LBM_NS                128
 
 /*IBM*/ 
-#define IBC_PT_FLUX           125
+#define IBC_PT_FLUX           129
 
 /* SA options */
-#define SA_LOW_RE     126
-#define SA_ROT_CORR   127
+#define SA_LOW_RE     130
+#define SA_ROT_CORR   131
 
 /*BC types*/
 #define BC_TYPE	      0
@@ -254,30 +258,33 @@
 /*LBM*/
 #define LBM_c0                  42
 #define LBM_taug                43
+#define LBM_TAUG                43
 #define LBM_difcoef             44
 #define LBM_filter_sigma        45
 #define LBM_forcex              46
 #define LBM_adaptive_filter_chi 49
 #define LBM_chi_spongetypeII    50
 #define LBM_HRR_sigma           51
+#define LBM_HRR_SIG             51
 #define LBM_gamma_precon        52
 #define LBM_zlim                53
+#define LBM_DX                  54
 
 
 /*schema HYPERSONIC*/
-#define HYPER_COEF1  54  
-#define HYPER_COEF2  55
+#define HYPER_COEF1  55  
+#define HYPER_COEF2  56
 
 /*IBM WL*/
-#define MAFZAL_MODE    56
-#define ALPHAGRADP     57
-#define NBPTS_LINELETS 58
+#define MAFZAL_MODE    57
+#define ALPHAGRADP     58
+#define NBPTS_LINELETS 59
 
 /*Wire Model - IBM*/
-#define DeltaVWire   59  
-#define KWire        60
-#define DiameterWire 61  
-#define CtWire       62
+#define DeltaVWire   60  
+#define KWire        61
+#define DiameterWire 62  
+#define CtWire       63
 
 /*CONSTANTS*/
 #define SA_CKARM    0.41 

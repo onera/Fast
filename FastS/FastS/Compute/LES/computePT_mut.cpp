@@ -145,7 +145,7 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-# include "HPC_LAYER/INFO_SOCKET.h"
+# include "FastC/HPC_LAYER/INFO_SOCKET.h"
 
       //
       //---------------------------------------------------------------------
@@ -204,9 +204,8 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
                      ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_topo_omp, ipt_inddm_omp,
                      ipt_topology_socket, ipt_lok_thread ,
                      iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptmut[nd], iptdist[nd], iptrot);
-
         }// boucle zone 
-# include "HPC_LAYER/INIT_LOCK.h"
+# include "FastC/HPC_LAYER/INIT_LOCK.h"
   }  // zone OMP
 
 

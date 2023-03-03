@@ -71,7 +71,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
     node = Internal.getNodeFromName1(t, '.Solver#define')
     omp_node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode  = PyTree.OMP_MODE
+    ompmode  = FastC.OMP_MODE
     if  omp_node is not None: ompmode = Internal.getValue(omp_node)
 
     dtloc   = Internal.getValue(dtloc) # tab numpy
@@ -134,7 +134,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
                elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
 
-               _applyBC(zones,metrics, hook1, nstep, ompmode, var=vars[0])    
+               _applyBC(zones,metrics, hook1, nstep, var=vars[0])    
 
                FastC.switchPointers2__(zones,nitmax,nstep)
                # Ghostcell
@@ -166,7 +166,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
                if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
                elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
-               _applyBC(zones,metrics, hook1, nstep, ompmode,  var=vars[0])
+               _applyBC(zones,metrics, hook1, nstep, var=vars[0])
 
 
             else: ### Autres schemas
@@ -300,7 +300,6 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
                                             nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
                                             isWireModel_int=isWireModel_int)
                   
-
                   isWireModel_int = 0
                   type_transfert  = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
                   Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
@@ -327,7 +326,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
        #apply BC
        #tic = Time.time()
        if exploc != 1:
-           _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
+           _applyBC(zones, metrics, hook1, nstep, var=vars[0])
        #toc = Time.time() - tic
        # if Cmpi.rank == 0:
        #     t1=timeit.default_timer()
@@ -401,7 +400,7 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
        #apply BC
        #tic = Time.time()
        if exploc != 1:
-           _applyBC(zones, metrics, hook1, nstep, omp_mode, var=vars[0])
+           _applyBC(zones, metrics, hook1, nstep, var=vars[0])
        #toc = Time.time() - tic
        # if Cmpi.rank == 0:
        #     t1=timeit.default_timer()
@@ -764,7 +763,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if first is None: Internal.createUniqueChild(t, 'NbptsLinelets', 'DataArray_t', value=nbpts_linelets)
 
     # Get omp_mode
-    ompmode = PyTree.OMP_MODE
+    ompmode = FastC.OMP_MODE
     node = Internal.getNodeFromName1(t, '.Solver#define')
     if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')
@@ -1141,7 +1140,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
        #Compactage tc
        # 
        # Get omp_mode
-       ompmode = PyTree.OMP_MODE
+       ompmode = FastC.OMP_MODE
        node = Internal.getNodeFromName1(t, '.Solver#define')
        if node is not None:
         node = Internal.getNodeFromName1(node, 'omp_mode')

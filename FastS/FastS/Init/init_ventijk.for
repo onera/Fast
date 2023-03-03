@@ -49,7 +49,7 @@ c***********************************************************************
       REAL_E param_real(0:*)
 C Var loc 
       INTEGER_E nitrun,nitcfg
-#include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
+#include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
       REAL_E c1,c2
 
@@ -66,11 +66,11 @@ C Var loc
 
         nitrun   = -2
         nitcfg   = 1
-#include "FastS/HPC_LAYER/SIZE_MIN.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
-#include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
-#include "FastS/HPC_LAYER/INDICE_RANGE.for"
-#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+#include "../FastC/FastC/HPC_LAYER/SIZE_MIN.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/INDICE_RANGE.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
 
                 call mjr_ale(ndo,nitcfg, ithread,
      &                        param_int, param_real,
@@ -82,9 +82,9 @@ C Var loc
      &                        x,y,z,ti,ti_df,tj,tj_df,tk,tk_df,vol,
      &                        venti, ventj, ventk)
 
-#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
-#include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_GO.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_END.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
       endif
 

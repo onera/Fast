@@ -21,6 +21,8 @@
 
 # include "FastC/fastc.h"
 # include "Fast/fast.h"
+# include "FastASLBM/fastLBM.h"
+
 
 # include "Fast/param_solver.h"
 # include <string.h>
@@ -47,12 +49,12 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* work; 
 
-  E_Int nitrun, nstep_deb, nstep_fin, layer_mode, nit_c; 
+  E_Int nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, flag_NSLBM; 
   
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOlllllO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &nit_c, &work)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOllllllO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &nit_c, &flag_NSLBM, &work)) return NULL;
 #else 
-  if (!PyArg_ParseTuple(args, "OOiiiiiO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &nit_c, &work)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOiiiiiiO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &nit_c, &flag_NSLBM, &work)) return NULL;
 #endif
 
 #if TIMER == 1
@@ -65,10 +67,10 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   E_Int threadmax_sdm  = __NUMTHREADS__;
 
   PyObject* tmp = PyDict_GetItemString(work,"MX_SSZONE");      E_Int mx_sszone       = PyLong_AsLong(tmp);  
-  tmp = PyDict_GetItemString(work,"MX_SYNCHRO");     E_Int mx_synchro      = PyLong_AsLong(tmp);  
-  tmp = PyDict_GetItemString(work,"MX_OMP_SIZE_INT");E_Int mx_omp_size_int  = PyLong_AsLong(tmp);  
-  tmp = PyDict_GetItemString(work,"FIRST_IT");       E_Int first_it        = PyLong_AsLong(tmp);
-  tmp = PyDict_GetItemString(work,"mpi");            E_Int mpi             = PyLong_AsLong(tmp);
+            tmp = PyDict_GetItemString(work,"MX_SYNCHRO");     E_Int mx_synchro      = PyLong_AsLong(tmp);  
+            tmp = PyDict_GetItemString(work,"MX_OMP_SIZE_INT");E_Int mx_omp_size_int = PyLong_AsLong(tmp);  
+            tmp = PyDict_GetItemString(work,"FIRST_IT");       E_Int first_it        = PyLong_AsLong(tmp);
+            tmp = PyDict_GetItemString(work,"mpi");            E_Int mpi             = PyLong_AsLong(tmp);
 
 
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
@@ -99,8 +101,6 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   lssiter_verif = 0; // par defaut, pas de calcul cfl , ni residu Newton
   if(nitrun % iptdtloc[1] == 0 || nitrun == 1) lcfl =1;
 
-  if( layer_mode ==1)
-    {
       pyParam_int_tc = PyDict_GetItemString(work,"param_int_tc");
       pyParam_real_tc= PyDict_GetItemString(work,"param_real_tc"); 
 
@@ -112,6 +112,8 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 	{ K_NUMPY::getFromNumpyArray(pyParam_real_tc, param_real_tc, true); ipt_param_real_tc= param_real_tc-> begin(); }
       else{ ipt_param_real_tc = NULL; }
 
+  if( layer_mode ==1)
+    {
 
       pyLinlets_int = PyDict_GetItemString(work,"linelets_int");
       if (pyLinlets_int != Py_None)
@@ -135,11 +137,11 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   else
     {
       PyObject* tmp = PyDict_GetItemString(work,"lexit_lu");      lexit_lu      = PyLong_AsLong(tmp);
-      tmp = PyDict_GetItemString(work,"lssiter_verif"); lssiter_verif = PyLong_AsLong(tmp);
+                tmp = PyDict_GetItemString(work,"lssiter_verif"); lssiter_verif = PyLong_AsLong(tmp);
       ipt_linelets_int  = NULL;
       ipt_linelets_real = NULL; 
-      ipt_param_int_tc  = NULL;
-      ipt_param_real_tc = NULL;
+      //ipt_param_int_tc  = NULL;
+      //ipt_param_real_tc = NULL;
     }
   // Fin partie code specifique au Transfer Data
 
@@ -161,13 +163,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   E_Float** iptCellN  ;    E_Float** iptCellN_IBC; E_Float** ipt_cfl_zones;
   E_Float** iptssor;       E_Float** iptssortmp;
   E_Float** ipt_gmrestmp;  E_Float** iptdrodm_transfer;
-
-  E_Float** iptQeq;
-  E_Float** iptQneq;
-  E_Float** iptSpongeCoef;
-  E_Float** iptmacro_m1;
-  E_Float** iptcellN_IBC_LBM;
-  E_Float** iptdist2ibc;
+  E_Float** iptS; E_Float** iptFltrN; E_Float** iptPsiG;
 
   ipt_param_int     = new E_Int*[nidom*7];
   ipt_ind_dm        = ipt_param_int   + nidom;
@@ -177,11 +173,19 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   ipt_nfconn        = ipt_ng_pe       + nidom;
   ipt_nfindex       = ipt_nfconn      + nidom;
 
-  iptx              = new E_Float*[nidom*42];      
+  iptx              = new E_Float*[nidom*44];      
   ipty              = iptx               + nidom;  
   iptz              = ipty               + nidom;  
-  iptro             = iptz               + nidom;  
-  iptro_sfd         = iptro              + nidom;  
+  //
+  // Do not change order of 4 following pointers: order needed by transfert C layer
+  //
+  iptro             = iptz               + nidom;
+  iptroQ_p1         = iptro              + nidom;
+  iptS              = iptroQ_p1          + nidom;
+  iptPsiG           = iptS               + nidom;
+  //
+  //
+  iptro_sfd         = iptPsiG            + nidom;  
   iptdelta          = iptro_sfd          + nidom;  
   iptro_res         = iptdelta           + nidom;  
   iptmut            = iptro_res          + nidom;  
@@ -211,15 +215,8 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   iptdrodm_transfer = ipt_cfl_zones      + nidom;  
   iptCellN_IBC      = iptdrodm_transfer  + nidom;  
   iptsrc            = iptCellN_IBC       + nidom;  
-  iptroQ_p1         = iptsrc             + nidom;
-  iptroQ_m1         = iptroQ_p1          + nidom;  
-  iptQeq            = iptroQ_m1          + nidom;
-  iptQneq           = iptQeq             + nidom;
-  iptSpongeCoef     = iptQneq            + nidom;
-  iptmacro_m1       = iptSpongeCoef      + nidom;
-  iptcellN_IBC_LBM  = iptmacro_m1        + nidom;
-  iptdist2ibc       = iptcellN_IBC_LBM   + nidom;
-
+  iptroQ_m1         = iptsrc             + nidom;
+  iptFltrN          = iptroQ_m1          + nidom;
     
   vector<PyArrayObject*> hook;
   PyObject* ssorArray = PyDict_GetItemString(work,"ssors");
@@ -286,29 +283,14 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
       if ( ipt_param_int[nd][ IFLOW ]== 4) 
 	{
-	  t              = K_PYTREE::getNodeFromName1(sol_center, "Q_1");
-	  iptroQ_p1[nd]  = K_PYTREE::getValueAF(t, hook);
-	  t              = K_PYTREE::getNodeFromName1(sol_center, "Qstar_1");
-	  iptroQ_m1[nd]  = K_PYTREE::getValueAF(t, hook);
-
-	  t          = K_PYTREE::getNodeFromName1(sol_center, "Qeq_1");
-	  iptQeq[nd] = K_PYTREE::getValueAF(t, hook);
-
-	  t           = K_PYTREE::getNodeFromName1(sol_center, "Qneq_1");
-	  iptQneq[nd] = K_PYTREE::getValueAF(t, hook);
-  
-	  t                = K_PYTREE::getNodeFromName1(sol_center, "SpongeCoef");
-	  iptSpongeCoef[nd]= K_PYTREE::getValueAF(t, hook);
-
-	  t                = K_PYTREE::getNodeFromName1(sol_center, "Density_M1");
-	  iptmacro_m1[nd]  = K_PYTREE::getValueAF(t, hook);
-
-	  t                    = K_PYTREE::getNodeFromName1(sol_center, "cellN_IBC_LBM_1");
-	  iptcellN_IBC_LBM[nd] = K_PYTREE::getValueAF(t, hook);
-
-	  t            = K_PYTREE::getNodeFromName1(sol_center, "TurbulentDistance");
-	  if (t == NULL) iptdist2ibc[nd] = NULL;
-	  else iptdist2ibc[nd] = K_PYTREE::getValueAF(t, hook);
+          t             = K_PYTREE::getNodeFromName1(sol_center, "Q1");
+          iptroQ_p1[nd] = K_PYTREE::getValueAF(t, hook);
+          t             = K_PYTREE::getNodeFromName1(sol_center, "Q1_M1");
+          iptroQ_m1[nd] = K_PYTREE::getValueAF(t, hook);
+          t             = K_PYTREE::getNodeFromName1(sol_center, "Sxx");
+          iptS[nd]      = K_PYTREE::getValueAF(t, hook);
+          t            = K_PYTREE::getNodeFromName1(sol_center, "corr_xx");
+          iptPsiG[nd]  = K_PYTREE::getValueAF(t, hook);
 	}
       else
 	{
@@ -316,13 +298,13 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 	  iptroQ_m1[nd] = K_PYTREE::getValueAF(t, hook);
 	  t             = K_PYTREE::getNodeFromName1(sol_center, "Density_P1");
 	  iptroQ_p1[nd] = K_PYTREE::getValueAF(t, hook);
-
-	  iptQeq[nd]           = NULL;
-	  iptQneq[nd]          = NULL;
-	  iptSpongeCoef[nd]    = NULL;
-	  iptmacro_m1[nd]      = NULL;
-	  iptcellN_IBC_LBM[nd] = NULL;
-	  iptdist2ibc[nd]      = NULL;
+          iptS[nd]     = NULL;
+          iptPsiG[nd]  = NULL;
+          if (flag_NSLBM == 1)
+          {
+            t          = K_PYTREE::getNodeFromName1(sol_center, "Sxx");
+            iptS[nd]   = K_PYTREE::getValueAF(t, hook);
+          }
 	}
 
       t = K_PYTREE::getNodeFromName1(sol_center, "cellN");
@@ -334,6 +316,11 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
       if(ipt_param_int[nd][ IBC ]== 1){t=K_PYTREE::getNodeFromName1(sol_center, "cellN_IBC"); iptCellN_IBC[nd] = K_PYTREE::getValueAF(t, hook); } 
       else { iptCellN_IBC[nd] = NULL;}
+
+      //Pointeur sur patch de filtrage
+      t            = K_PYTREE::getNodeFromName1(sol_center, "FilterN");
+      if (t == NULL) iptFltrN[nd] = NULL;
+      else iptFltrN[nd]   = K_PYTREE::getValueAF(t, hook);
 
       //Pointeur Vect Krylov
       iptkrylov[nd] = NULL;
@@ -391,12 +378,12 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       if (ngon == NULL) // maillage structure
 	{
 	  GET_TI(METRIC_TI  , metric, ipt_param_int[nd], ipti [nd]  , iptj [nd]  , iptk [nd]  , iptvol[nd]   )
-	    GET_TI(METRIC_TI0 , metric, ipt_param_int[nd], ipti0[nd]  , iptj0[nd]  , iptk0[nd]  , dummy )
-	    GET_TI(METRIC_TIDF, metric, ipt_param_int[nd], ipti_df[nd], iptj_df[nd], iptk_df[nd], iptvol_df[nd])
+	  GET_TI(METRIC_TI0 , metric, ipt_param_int[nd], ipti0[nd]  , iptj0[nd]  , iptk0[nd]  , dummy )
+	  GET_TI(METRIC_TIDF, metric, ipt_param_int[nd], ipti_df[nd], iptj_df[nd], iptk_df[nd], iptvol_df[nd])
 
-	    GET_VENT( METRIC_VENT, metric, ipt_param_int[nd], iptventi[nd], iptventj[nd], iptventk[nd] )
+	  GET_VENT( METRIC_VENT, metric, ipt_param_int[nd], iptventi[nd], iptventj[nd], iptventk[nd] )
 
-	    iptrdm[ nd ]          =  K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, METRIC_RDM ) );
+	  iptrdm[ nd ]          =  K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, METRIC_RDM ) );
 	  ipt_ind_dm[ nd ]      =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
 	  ipt_it_lu_ssdom[ nd ] =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_ITLU) );
 
@@ -405,11 +392,11 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 	}
       else{
 	GET_TI_NG(METRIC_TI_NG  , metric, ipt_param_int[nd], ipti [nd]  , dummy, dummy, iptvol[nd]   )
-	  GET_TI_NG(METRIC_TI0_NG , metric, ipt_param_int[nd], ipti0[nd]  , dummy, dummy, dummy)
+	GET_TI_NG(METRIC_TI0_NG , metric, ipt_param_int[nd], ipti0[nd]  , dummy, dummy, dummy)
 
-	  GET_VENT_NG( METRIC_VENT_NG, metric, ipt_param_int[nd], iptventi[nd], dummy , dummy)
+	GET_VENT_NG( METRIC_VENT_NG, metric, ipt_param_int[nd], iptventi[nd], dummy , dummy)
 
-	  iptrdm[ nd ]          =  K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, METRIC_RDM_NG ) );
+	iptrdm[ nd ]          =  K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, METRIC_RDM_NG ) );
 	ipt_ind_dm[ nd ]      =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM_NG) );
 	ipt_it_lu_ssdom[ nd ] =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_ITLU_NG) );
       }
@@ -526,6 +513,28 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
   iptdrodm_transfer[0]= iptdrodm;
   for (E_Int nd = 1; nd < nidom; nd++){ iptdrodm_transfer[nd]= iptdrodm_transfer[nd-1] + ipt_param_int[nd-1][NEQ]*ipt_param_int[nd-1][NDIMDX];}
+
+
+  // LBM : tableau de stockage pour la distribution hors equilibre
+  PyObject* drodm2Array = PyDict_GetItemString(work,"hors_eq"); FldArrayF* drodm2;
+  K_NUMPY::getFromNumpyArray(drodm2Array, drodm2, true); E_Float* f_horseq = drodm2->begin();
+
+  // Tableaux de travail pour HRR O2
+  PyObject* tab_a1prArray = PyDict_GetItemString(work,"a1_pr"); FldArrayF* tab_a1pr;
+  K_NUMPY::getFromNumpyArray(tab_a1prArray, tab_a1pr, true); E_Float* a1_pr = tab_a1pr->begin();
+
+  PyObject* tab_a1fdArray = PyDict_GetItemString(work,"a1_fd"); FldArrayF* tab_a1fd;
+  K_NUMPY::getFromNumpyArray(tab_a1fdArray, tab_a1fd, true); E_Float* a1_fd = tab_a1fd->begin();
+
+  PyObject* tab_a1hrArray = PyDict_GetItemString(work,"a1_hr"); FldArrayF* tab_a1hr;
+  K_NUMPY::getFromNumpyArray(tab_a1hrArray, tab_a1hr, true); E_Float* a1_hrr = tab_a1hr->begin();
+
+  // Tableau de travail pour HRR O3
+  PyObject* tab_a3Array = PyDict_GetItemString(work,"aneq_3"); FldArrayF* tab_a3;
+  K_NUMPY::getFromNumpyArray(tab_a3Array, tab_a3, true); E_Float* aneq_o3 = tab_a3->begin();
+
+  PyObject* tab_psiArray  = PyDict_GetItemString(work,"psi_corr"); FldArrayF* tab_psi;
+  K_NUMPY::getFromNumpyArray(tab_psiArray, tab_psi, true); E_Float* psi_corr = tab_psi->begin();
 
   
   // Tableau de travail coe   ( dt/vol et diags LU)
@@ -658,12 +667,13 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 	  //calcul Navier Stokes + appli CL
 
 	  if (skip ==0){
+
 	      gsdr3(ipt_param_int      , ipt_param_real    , nidom              , nitrun_loc        ,
 		    nstep              , nstep_fin         , nssiter            , it_target         ,
 		    first_it           , kimpli            , lssiter_verif      , lexit_lu          ,
 		    omp_mode           , layer_mode        , mpi                , nisdom_lu_max     ,
 		    mx_nidom           , ndimt_flt         , threadmax_sdm      , mx_synchro        ,
-		    nb_pulse           , temps             , ipt_ijkv_sdm       , ipt_ind_dm_omp    , ipt_omp           ,
+		    nb_pulse           , temps             , ipt_ijkv_sdm       , ipt_ind_dm_omp    , ipt_omp  ,
 		    ipt_topology       , ipt_ind_CL        , ipt_lok            , verrou_lhs        ,
 		    vartype            , timer_omp         , iptludic           , iptlumax          ,
 		    ipt_ind_dm         , ipt_it_lu_ssdom   , ipt_ng_pe          , ipt_nfconn        ,
@@ -671,8 +681,8 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 		    iptssortmp         , ipt_ssor_size     , ipt_drodmd         , ipt_Hessenberg    ,
 		    iptkrylov          , iptkrylov_transfer, ipt_norm_kry       , ipt_gmrestmp      ,
 		    ipt_givens         , ipt_cfl           , iptx               , ipty              ,
-		    iptz               , iptCellN          , iptCellN_IBC       , ipt_degen         ,
-		    iptro              , iptroQ_m1         , iptroQ_p1          , iptro_sfd         ,
+		    iptz               , iptCellN          , iptCellN_IBC       , iptFltrN          , ipt_degen,
+		    iptro              , iptroQ_m1         , iptroQ_p1          , iptro_sfd         , iptS     , iptPsiG,
 		    iptmut             , ipt_xmutd         , ipti               , iptj              ,
 		    iptk               , iptvol            , ipti0              , iptj0             ,
 		    iptk0              , ipti_df           , iptj_df            , iptk_df           ,
@@ -682,10 +692,9 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 		    iptcoe             , iptrot            , iptdelta           , iptro_res         ,
 		    iptdrodm_transfer  , ipt_param_int_tc  , ipt_param_real_tc  , ipt_linelets_int  ,
 		    ipt_linelets_real  , taille_tabs       , iptstk             , iptdrodmstk       ,
-		    iptcstk            , iptsrc            , iptdrodm           , iptdrodm_transfer ,
-		    iptSpongeCoef      , iptmacro_m1       , iptdist2ibc        , iptQeq            ,
-		    iptQneq            , iptcellN_IBC_LBM  );
-
+		    iptcstk            , iptsrc            , 
+                    f_horseq           , a1_pr             , a1_fd              , a1_hrr      , 
+                    aneq_o3            , psi_corr          , flag_NSLBM);
 	      if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
 		{
 
@@ -755,7 +764,8 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 	}//loop nstep
 
       //data update for unsteady joins
-      if(layer_mode==1){ iptdtloc[3] +=1;  //time_level_motion 
+      if(layer_mode==1)
+      { iptdtloc[3] +=1;  //time_level_motion 
 	iptdtloc[4] +=1;  //time_level_target 
       }
 
@@ -791,13 +801,20 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   RELEASESHAREDN( timer_omp_Array, tab_timer_omp);
   RELEASESHAREDN( dtlocArray     , dtloc);
  
+  RELEASESHAREDN( drodm2Array    , drodm2);
+  RELEASESHAREDN( tab_a1prArray  , tab_a1pr);
+  RELEASESHAREDN( tab_a1fdArray  , tab_a1fd);
+  RELEASESHAREDN( tab_a1hrArray  , tab_a1hr);
+  RELEASESHAREDN( tab_a3Array    , tab_a3);
+  RELEASESHAREDN( tab_psiArray   ,tab_psi);
+
   if(flag_dtloc==1) { RELEASESHAREDN( dtloc_stk     , stk);}
 
-  if(layer_mode==1)
-    {
       if(pyParam_int_tc  != Py_None ) { RELEASESHAREDN( pyParam_int_tc, param_int_tc);  }
       if(pyParam_real_tc != Py_None ) { RELEASESHAREDN( pyParam_real_tc, param_real_tc);}
 
+  if(layer_mode==1)
+    {
       if (pyLinlets_int  != Py_None) { RELEASESHAREDN( pyLinlets_int , linelets_int ); }
       if (pyLinlets_real != Py_None) { RELEASESHAREDN( pyLinlets_real, linelets_real); }
 

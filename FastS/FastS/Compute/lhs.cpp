@@ -14,8 +14,8 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
     #pragma omp barrier
   }
 
-    E_Int nbtask = ipt_omp[nitcfg-1]; 
-    E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+    //E_Int nbtask = ipt_omp[nitcfg-1]; 
+    //E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
 
     E_Float* ipt_ssor_shift; E_Float* ipt_ssortmp_shift; E_Int ssor_size;
     //calcul residu si necessaire
@@ -74,7 +74,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
 
 
             //sortie de la carte residu du Newton
-#include    "Compute/residus_navier.h"
+#include    "FastS/Compute/residus_navier.h"
            }// test lbm/unstructured
         }// loop task residu
       }// test residu
@@ -176,7 +176,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
 
                  if(lexit_lu == 0 )
                   { 
-#include "Compute/LU/prep_lussor.h"
+#include "FastS/Compute/LU/prep_lussor.h"
 
                     E_Float* iptdrodm_out = iptdrodm + shift_zone;
                     if(param_int[nd][LU_MATCH]==1 || param_int[nd][NB_RELAX]>1) iptdrodm_out = ipt_ssortmp_shift;

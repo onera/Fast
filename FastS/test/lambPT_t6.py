@@ -24,7 +24,7 @@ numz["time_step"]          = 0.01
 numz["scheme"]             = "senseur_hyper"
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
-(t, tc, metrics) = FastS.warmup(t, None)
+(t, tc, metrics) = FastS.warmup(t, None, verbose=1)
 
 nit = 1000 ; time = 0.
 timeStep = numz['time_step']

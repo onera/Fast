@@ -13,10 +13,18 @@ lbm_one_216    = 1./216.;
 
 NIJK                        = 0
 IJKV                        =20 
-NEQ_LBM                     =86
+IFLOW                       =27 
+ITYPCP                      =29
+KFLUDOM                     =33 
+NEQ                         =36 
+NDIMDX                      =41 
+SHIFTVAR                    =66
+
+NEQ_LBM                     =89
 PT_LBM_Cs                   =90  
 PT_LBM_Ws                   =91 
 LBM_COL_OP                  =92 
+LBM_COLL_MODEL              =92 
 PT_LBM_Cminus               =93 
 PT_LBM_BC                   =94 
 LBM_NQ_BC                   =95 
@@ -36,6 +44,7 @@ flag_collision              =108
 LBM_isforce                 =109
 LBM_BConQstar               =110
 flag_BConQstar_switch       =111
+
 LBM_IBC                     =112
 LBM_IBC_NUM                 =113
 PT_LBM_IBC_LIST             =114
@@ -49,16 +58,25 @@ LBM_spng_ymin               =121
 LBM_spng_ymax               =122 
 LBM_spng_zmin               =123
 LBM_spng_zmax               =124
+LBM_CORR_TERM               =125
+LBM_OVERSET                 =126
+LBM_HLBM                    =127
+LBM_NS                      =128
 
-IBC_PT_FLUX                 =125
+IBC_PT_FLUX                 =129
+SA_LOW_RE                   =130
+SA_ROT_CORR                 =131
 
 LBM_c0                      =42
 LBM_taug                    =43
+LBM_TAUG                    =43
 LBM_difcoef                 =44
 LBM_filter_sigma            =45
 LBM_forcex                  =46
 LBM_adaptive_filter_chi     =49
 LBM_chi_spongetypeII        =50
 LBM_HRR_sigma               =51
+LBM_HRR_SIG                 =51
 LBM_gamma_precon            =52
 LBM_zlim                    =53
+LBM_DX                      =54

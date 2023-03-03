@@ -441,12 +441,11 @@ void K_FASTC::setInterpTransfersIntra(
 
   // E_Int NoTransfert   = 1; // ONLY INTRA
   E_Int nvars;
-  if (varType <= 3 && varType >= 1)
-    nvars = 5;
-  else if (varType == 4)
-    nvars = param_int[0][NEQ_LBM];
-  else
-    nvars = 6;
+  if      (varType <= 3 && varType >= 1) nvars = 5;
+  else if (varType == 4)  nvars = param_int[0][NEQ_LBM] +5;     // LBM transfer, 19 or 27 Qs and 5 macros (32 max in total)
+  else if (varType == 41) nvars = param_int[0][NEQ_LBM] +5 + 12;
+  else if (varType == 5 ) nvars = param_int[0][NEQ_LBM] +5 +  6; // LBM Overset ou hybride : 19 or 27 Q, 5 macro and 6 gradients
+  else                    nvars = 6;
 
   E_Int* ipt_cnd = NULL;  // ONLY FOR STRUCTURED
   
@@ -634,25 +633,88 @@ void K_FASTC::setInterpTransfersIntra(
           E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 + 1];  // neq fonction raccord rans/LES
           E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
 
-          //E_Float Pr    = param_real[ NoD ][ PRANDT ];
-          //E_Float Ts    = param_real[ NoD ][ TEMP0 ];
-          //E_Float Cs    = param_real[ NoD ][ CS ];
-          //E_Float muS   = param_real[ NoD ][ XMUL0 ];
-          //E_Float cv    = param_real[ NoD ][ CVINF ];
-          //E_Float gamma = param_real[ NoD ][ GAMMA ];
+          // COUPLAGE NS LBM - Recupere les solveurs des zones R et D
+          E_Int solver_D=2; E_Int solver_R=2;
+          if (nvars_loc == 11) {solver_R =4;}
+          if (nvars_loc == -5) {solver_D =4; nvars_loc = 5;}
+          if (nvars_loc == 19) {solver_D =4; solver_R=4;}
+
+          E_Int overset  =  param_int[NoD][LBM_OVERSET];        //flag pour overset en LBM
+          if      (nvars_loc== param_int[NoD][NEQ_LBM] && overset==0) nvars_loc = nvars_loc + 5;
+          else if (nvars_loc== param_int[NoD][NEQ_LBM] && overset==1) nvars_loc = nvars_loc + 5 + 6 + 6;
+ 
+          //printf("nvar loc %d , solver_RD= %d %d \n", nvars_loc, solver_R, solver_R);
 
           E_Int meshtype = param_int[ NoD ][ MESHTYPE ] ;
 
           E_Int cnNfldD = 0;
           E_Int* ptrcnd = NULL;
 
-
-          
-
-          for (E_Int eq = 0; eq < nvars_loc; eq++) {
-            vectOfRcvFields[eq] = ipt_ro[NoR] + eq * param_int[NoR][ NDIMDX];
-            vectOfDnrFields[eq] = ipt_ro[NoD] + eq * param_int[NoD][ NDIMDX];
+          if (nvars_loc == 5 || nvars_loc == 6) // Transferts NS classiques ou LBM -> NS
+          {
+           for (E_Int eq = 0; eq < nvars_loc; eq++)
+           {
+             vectOfRcvFields[eq] = ipt_ro[NoR] + eq * param_int[NoR][ NDIMDX];
+             vectOfDnrFields[eq] = ipt_ro[NoD] + eq * param_int[NoD][ NDIMDX];
+           }
           }
+          else if (nvars_loc == param_int[NoD][NEQ_LBM] + 5) // Transferts LBM classiques
+          {
+            // On commence par copier les 5 variables macros
+            for (E_Int eq = 0; eq < 5; eq++)
+            {
+              vectOfRcvFields[eq] = ipt_ro[NoR] + eq * param_int[NoR][ NDIMDX];
+              vectOfDnrFields[eq] = ipt_ro[NoD] + eq * param_int[NoD][ NDIMDX];
+            }
+            // Puis on copie les fonctions de distribution
+            for (E_Int eq = 5; eq < nvars_loc; eq++)
+            {
+              vectOfRcvFields[eq] = ipt_ro[NoR + nidom] + (eq-5) * param_int[NoR][ NDIMDX];
+              vectOfDnrFields[eq] = ipt_ro[NoD + nidom] + (eq-5) * param_int[NoD][ NDIMDX];
+            }
+          }
+          else if (nvars_loc == 11 ) // //Transfert NS -> LBM    
+          {
+            // On commence par copier les 5 variables macros
+            for (E_Int eq = 0; eq < 5; eq++)
+            {
+              vectOfRcvFields[eq] = ipt_ro[NoR] + eq * param_int[NoR][ NDIMDX];
+              vectOfDnrFields[eq] = ipt_ro[NoD] + eq * param_int[NoD][ NDIMDX];
+            }
+            // Puis on copie les gradients
+            for (E_Int eq = 5; eq < nvars_loc; eq++)
+            {
+              vectOfRcvFields[eq] = ipt_ro[NoR + nidom] + (eq-5) * param_int[NoR][ NDIMDX];
+              vectOfDnrFields[eq] = ipt_ro[NoD + nidom] + (eq-5) * param_int[NoD][ NDIMDX];
+            }
+          }
+          else if (nvars_loc == param_int[NoD][NEQ_LBM] + 17 ) // //Transfert LBM  overset   
+          {
+            // On commence par copier les 5 variables macros
+            for (E_Int eq = 0; eq < 5; eq++)
+            {
+              vectOfRcvFields[eq] = ipt_ro[NoR] + eq * param_int[NoR][ NDIMDX];
+              vectOfDnrFields[eq] = ipt_ro[NoD] + eq * param_int[NoD][ NDIMDX];
+            }
+            // Puis on copie les gradients
+            for (E_Int eq = 5; eq < 11; eq++) //S
+            {
+              vectOfRcvFields[eq] = ipt_ro[NoR + nidom*2] + (eq-5) * param_int[NoR][ NDIMDX];
+              vectOfDnrFields[eq] = ipt_ro[NoD + nidom*2] + (eq-5) * param_int[NoD][ NDIMDX];
+            }
+            for (E_Int eq =11; eq < 17; eq++) //psiG
+            {
+              vectOfRcvFields[eq] = ipt_ro[NoR + nidom*3] + (eq-11) * param_int[NoR][ NDIMDX];
+              vectOfDnrFields[eq] = ipt_ro[NoD + nidom*3] + (eq-11) * param_int[NoD][ NDIMDX];
+            }
+            for (E_Int eq =17; eq < nvars_loc; eq++) //Q
+            {
+              vectOfRcvFields[eq] = ipt_ro[NoR + nidom] + (eq-17) * param_int[NoR][ NDIMDX];
+              vectOfDnrFields[eq] = ipt_ro[NoD + nidom] + (eq-17) * param_int[NoD][ NDIMDX];
+            }
+          }
+
+
           imd = param_int[ NoD ][NIJK  ];
           jmd = param_int[ NoD ][NIJK+1];
           // }
@@ -777,6 +839,7 @@ void K_FASTC::setInterpTransfersIntra(
 
                       noi       = shiftDonor;                             // compteur sur le tableau d indices donneur
                       indCoef   = (pt_deb-ideb)*sizecoefs +  shiftCoef;
+                      E_Int shiftv =0;
                       if     (nvars_loc==5)
                       {
             #           include "commonInterpTransfers_reorder_5eq.h"
@@ -787,8 +850,21 @@ void K_FASTC::setInterpTransfersIntra(
                       }
                       else
                       {
-			//            #           include "LBM/commonInterpTransfers_reorder_neq.h"
+	    #           include "commonInterpTransfers_reorder_neq.h"
                       }
+
+                      // COUPLAGE NS-LBM: changement d'unite
+                      if (solver_D==4 && solver_R<4)
+                      {
+                         // Transfert LBM vers NS: repasse dans unites SI
+#                        include "FastC/Com/includeTransfers_dimLBMtoNS.h"
+                      }
+                      else if (solver_D<4 && solver_R==4)
+                      {
+                         // Transfert NS vers LBM : adimensionnement
+#                        include "FastC/Com/includeTransfers_dimNStoLBM.h"
+                      }
+
 
                       // Prise en compte de la periodicite par rotation
                       if (rotation == 1)
@@ -806,7 +882,6 @@ void K_FASTC::setInterpTransfersIntra(
                                                                  densPtr, 
                                                                  ipt_tmp, size,
                                                                  param_real[ NoD ],
-                                                                 //gamma, cv, muS, Cs, Ts, Pr,
                                                                  vectOfDnrFields, vectOfRcvFields,
                                                                  nbptslinelets, linelets, indexlinelets);
                         
@@ -875,13 +950,11 @@ void K_FASTC::setInterpTransfersInter(
   }  // ALL
 
   E_Int nvars;
-
-  if (varType <= 3 && varType >= 1)
-    nvars = 5;
-  else if (varType == 4)
-    nvars = param_int[0][NEQ_LBM];
-  else
-    nvars = 6;
+  if      (varType <= 3 && varType >= 1) nvars = 5;
+  else if (varType == 4)  nvars = param_int[0][NEQ_LBM] +5;     // LBM transfer, 19 or 27 Qs and 5 macros (32 max in total)
+  else if (varType == 41) nvars = param_int[0][NEQ_LBM] +5 +12; // LBM Overset ou hybride : 19 or 27 Q, 5 macro and 6 gradients
+  else if (varType == 5 ) nvars = param_int[0][NEQ_LBM] +5 + 6; // LBM Overset ou hybride : 19 or 27 Q, 5 macro and 6 gradients
+  else                    nvars = 6;
 
   E_Int sizecomIBC = param_int_tc[2];
   E_Int sizecomID  = param_int_tc[3+sizecomIBC];
@@ -1084,6 +1157,16 @@ if (has_data_to_send) {
             E_Int nbRcvPts_loc = nbRcvPts;
             if (impli_local[NoD] == 0) {Nozone_loc = -999; nbRcvPts_loc=1;}
 
+            // COUPLAGE NS LBM - Recupere les solveurs des zones R et D
+            E_Int solver_D=2; E_Int solver_R=2;
+            if (nvars_loc == 11) {solver_R =4;}
+            if (nvars_loc == -5) {solver_D =4; nvars_loc = 5;}
+            if (nvars_loc == 19) {solver_D =4; solver_R=4;}
+
+            E_Int overset  =  param_int[NoD][LBM_OVERSET];        //flag pour overset en LBM
+            if      (nvars_loc== param_int[NoD][NEQ_LBM] && overset==0) nvars_loc = nvars_loc + 5;
+            else if (nvars_loc== param_int[NoD][NEQ_LBM] && overset==1) nvars_loc = nvars_loc + 5 + 6 + 6;
+
             //if(Nozone==5 and count_rac==0 ) { printf("Nozone_loc %d \n", Nozone_loc);}
 
 	    send_buffer << Nozone_loc;  
@@ -1193,6 +1276,7 @@ if (has_data_to_send) {
                   E_Int NoD       = param_int_tc[shift_rac + nrac * 5 ];
                   E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 +1];  // neq fonction raccord rans/LES
 
+
 		  E_Int irac_auto = irac-irac_deb;
 
                   // on determine un envoi pipeau de taille 1*neq pour skipper remplissage inutile en implicit local
@@ -1215,22 +1299,55 @@ if (has_data_to_send) {
                      E_Int NoR       = param_int_tc[shift_rac + nrac * 11 + 1];
                      E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
 
-                     //E_Float Pr    = param_real[ NoD ][ PRANDT ];
-                     //E_Float Ts    = param_real[ NoD ][ TEMP0 ];
-                     //E_Float Cs    = param_real[ NoD ][ CS ];
-                     //E_Float muS   = param_real[ NoD ][ XMUL0 ];
-                     //E_Float cv    = param_real[ NoD ][ CVINF ];
-                     //E_Float gamma = param_real[ NoD ][ GAMMA ];
+                     // COUPLAGE NS LBM - Recupere les solveurs des zones R et D
+                     E_Int solver_D=2; E_Int solver_R=2;
+                     if (nvars_loc == 11) {solver_R =4;}
+                     if (nvars_loc == -5) {solver_D =4; nvars_loc = 5;}
+                     if (nvars_loc == 19) {solver_D =4; solver_R=4;}
+
+                     E_Int overset  =  param_int[NoD][LBM_OVERSET];        //flag pour overset en LBM
+                     if      (nvars_loc== param_int[NoD][NEQ_LBM] && overset==0) nvars_loc = nvars_loc + 5;
+                     else if (nvars_loc== param_int[NoD][NEQ_LBM] && overset==1) nvars_loc = nvars_loc + 5 + 6 + 6;
 
                      E_Int meshtype = 1;  // ONLY FOR STRUCTURE ipt_ndimdxD[NoD + nidom*6];
                      E_Int cnNfldD  = 0;
                      E_Int* ptrcnd  = NULL;
 
+
                      // printf("navr_loc %d %d %d \n", nvars_loc, nvars, Rans);
-                     for (E_Int eq = 0; eq < nvars_loc; eq++) {
-                       vectOfRcvFields[eq] = frp[count_rac] + eq * nbRcvPts;
-                       vectOfDnrFields[eq] = ipt_ro[NoD]    + eq * param_int[ NoD ][ NDIMDX ];
+
+                     if (nvars_loc == 5 || nvars_loc == 6) // Transferts NS classiques ou LBM -> NS
+                     {
+                      for (E_Int eq = 0; eq < nvars_loc; eq++) { vectOfDnrFields[eq] = ipt_ro[NoD]    + eq * param_int[NoD][ NDIMDX]; }
                      }
+                     else if (nvars_loc == param_int[NoD][NEQ_LBM] + 5) // Transferts LBM classiques
+                     {
+                       // On commence par copier les 5 variables macros
+                       for (E_Int eq = 0; eq < 5; eq++)         { vectOfDnrFields[eq] = ipt_ro[NoD]         +     eq * param_int[NoD][ NDIMDX]; }
+                       // Puis on copie les fonctions de distribution
+                       for (E_Int eq = 5; eq < nvars_loc; eq++) { vectOfDnrFields[eq] = ipt_ro[NoD + nidom] + (eq-5) * param_int[NoD][ NDIMDX]; }
+                     }
+                     else if (nvars_loc == 11 ) // //Transfert NS -> LBM    
+                     {
+                       // On commence par copier les 5 variables macros
+                       for (E_Int eq = 0; eq < 5; eq++)         { vectOfDnrFields[eq] = ipt_ro[NoD        ] +     eq * param_int[NoD][ NDIMDX]; }
+                       // Puis on copie les gradients
+                       for (E_Int eq = 5; eq < nvars_loc; eq++) { vectOfDnrFields[eq] = ipt_ro[NoD + nidom] + (eq-5) * param_int[NoD][ NDIMDX]; }
+                     }
+                     else if (nvars_loc == param_int[NoD][NEQ_LBM] + 17 ) // //Transfert LBM  overset   
+                     {
+                       // On commence par copier les 5 variables macros
+                       for (E_Int eq = 0; eq < 5; eq++) { vectOfDnrFields[eq] = ipt_ro[NoD] + eq * param_int[NoD][ NDIMDX]; }
+                       // Puis on copie les gradients
+                       for (E_Int eq = 5; eq < 11; eq++) //S
+                       { vectOfDnrFields[eq] = ipt_ro[NoD + nidom*2] +  (eq-5) * param_int[NoD][ NDIMDX]; }
+                       for (E_Int eq =11; eq < 17; eq++) //psiG
+                       { vectOfDnrFields[eq] = ipt_ro[NoD + nidom*3] + (eq-11) * param_int[NoD][ NDIMDX]; }
+                       for (E_Int eq =17; eq < nvars_loc; eq++) //Q
+                       { vectOfDnrFields[eq] = ipt_ro[NoD + nidom  ] + (eq-17) * param_int[NoD][ NDIMDX]; }
+                     }
+
+                     for (E_Int eq = 0; eq < nvars_loc; eq++) { vectOfRcvFields[eq] = frp[count_rac] + eq * nbRcvPts; }
 
                      imd = param_int[ NoD ][ NIJK   ];
                      jmd = param_int[ NoD ][ NIJK+1 ];
@@ -1328,8 +1445,21 @@ if (has_data_to_send) {
                         } else if ( nvars_loc == 6 ) {
 #include "commonInterpTransfersD_reorder_6eq.h"
                         } else {
-		    //#include "LBM/commonInterpTransfersD_reorder_neq.h"
+#include "commonInterpTransfersD_reorder_neq.h"
                         }
+
+                      // COUPLAGE NS-LBM: changement d'unite
+                      if (solver_D==4 && solver_R<4)
+                      {
+                         // Transfert LBM vers NS: repasse dans unites SI
+#                        include "FastC/Com/includeTransfers_dimLBMtoNS.h"
+                      }
+                      else if (solver_D<4 && solver_R==4)
+                      {
+                         // Transfert NS vers LBM : adimensionnement
+#                        include "FastC/Com/includeTransfers_dimNStoLBM.h"
+                      }
+
                       // Prise en compte de la periodicite par rotation
                       if ( rotation == 1 ) {
                           E_Float* angle = ptrCoefs + nbInterpD;

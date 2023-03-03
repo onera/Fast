@@ -47,7 +47,7 @@ c***********************************************************************
 
 C Var loc 
       INTEGER_E nitrun
-#include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
+#include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
       REAL_E c1,c2,val
 
 #include "FastS/param_solver.h"
@@ -66,17 +66,17 @@ C Var loc
 
       nitrun   = -2
 
-#include "FastS/HPC_LAYER/SIZE_MIN.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
-#include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
-#include "FastS/HPC_LAYER/INDICE_RANGE.for"
+#include "../FastC/FastC/HPC_LAYER/SIZE_MIN.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/INDICE_RANGE.for"
 
            !Initilalisation systematique de grad
            val =0.
            call init_tab(ndo, val, param_int, param_int(NDIMDX),
      &                   neq_grad*3, ind_grad, grad )
 
-#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
 
             call cp_gradu(ndo, ithread, neq_grad,
      &                    param_int, c1,c2,
@@ -93,9 +93,9 @@ C Var loc
      &                    rop  , grad, 
      &                    tke  , enst , compteur,vol )
 
-#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
-#include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_GO.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_END.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
       end
 

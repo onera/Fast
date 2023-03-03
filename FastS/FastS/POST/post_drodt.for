@@ -46,7 +46,7 @@ c***********************************************************************
 
 C Var loc 
       INTEGER_E nitrun,l,j,k,lij
-#include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
+#include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
       REAL_E c1,c2,c3, dtinv
 
@@ -62,10 +62,10 @@ C Var loc
 
       nitrun = -2
 
-#include "FastS/HPC_LAYER/SIZE_MIN.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
-#include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
-#include "FastS/HPC_LAYER/INDICE_RANGE.for"
+#include "../FastC/FastC/HPC_LAYER/SIZE_MIN.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/INDICE_RANGE.for"
 
 #ifndef E_SCALAR_COMPUTER
           incmax=param_int(NIJK)*param_int(NIJK+1)*param_int(NIJK+4)
@@ -84,7 +84,7 @@ CDIR$ IVDEP
 
   100 continue
 
-#include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_END.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
       end

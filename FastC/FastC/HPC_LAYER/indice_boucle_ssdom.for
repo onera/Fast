@@ -6,17 +6,18 @@ c***********************************************************************
       subroutine indice_boucle_ssdom(ndo, extended_range,
      &                              ith,jth,kth, ic,jc,kc,kfludom,
      &                               topo_th, ithread, thread_pos,
-     &                               size_cache, 
-     &                               synchro_receive_sock, 
+     &                               size_cache,
+     &                               synchro_receive_sock,
      &                               synchro_receive_th,
-     &                               synchro_send_sock, 
+     &                               synchro_send_sock,
      &                               synchro_send_th,
      &                               nijk, ijkv,
      &                               ind_dm_zone, ind_dm_sock,
      &                               ind_dm_thread,ijkv_sdm,
      &                               ind_sdm, ind_coe,
-     &                               ind_grad, ind_rhs, 
-     &                               ind_mjr, ind_ssa)
+     &                               ind_grad, ind_rhs,
+     &                               ind_mjr, ind_ssa,
+     &                               ind_hrr, ind_gcb)
 c***********************************************************************
 c_U   USER : TERRACOL
 c
@@ -29,7 +30,7 @@ c      nsdm: No interne sous-domaine
 c
 c     I/O
 c_/    IN:  ndom, ndsdm, ndo
-c_/    OUT: ind_sdm,ind_coe,ind_grad,....,ind_flt 
+c_/    OUT: ind_sdm,ind_coe,ind_grad,....,ind_flt
 c***********************************************************************
       implicit none
 
@@ -40,15 +41,15 @@ c***********************************************************************
      & nijk(5), ind_dm_zone(6), ind_dm_sock(6),ind_dm_thread(6),
      & ijkv_sdm(3),ind_sdm(6),ind_ssa(6),
      & ind_coe(6),ind_grad(6), ind_rhs(6), ind_mjr(6),
-     & kfludom 
+     & ind_hrr(6), ind_gcb(6), kfludom
 
 c Var loc
       INTEGER_E inck, shift_coe,shift_grad, shift_rhs,c1,c2,i,j,k,
      & ideb,ifin,l,inc,ific,
      & shift_coe2, shift_gra2,shift_rhs2,shift_mjr2, shift_flt2,
      & shift_coe1, shift_gra1,shift_rhs1,shift_mjr1, shift_flt1,
-     & shift_ssa1, shift_ssa2,
-     & delta
+     & shift_ssa1, shift_ssa2, shift_hrr1, shift_hrr2,
+     & shift_gcb1, shift_gcb2, delta
 
       inck = 1
       if(nijk(5).eq.0) inck = 0
@@ -64,7 +65,7 @@ c Var loc
       if(jc.eq.ijkv_sdm(2)) ind_sdm(4) = ind_dm_thread(4)
       if(kc.eq.ijkv_sdm(3)) ind_sdm(6) = ind_dm_thread(6)
 
-  
+
 c      if(ithread.eq.2) then
 c       write(*,*)'sockS', synchro_send_sock
 c       write(*,*)'sockR', synchro_receive_sock
@@ -104,7 +105,7 @@ c      endif
             inc  = inck
            endif
 
-           !1er bloc cache
+           !1er bloc cache que l'on rencontre dans la direction i=I,J,K
            If(l.eq.1) Then
 
              shift_coe1  =-ific
@@ -115,12 +116,23 @@ c      endif
              shift_mjr2  =-inc
              shift_ssa1  =-inc
              shift_ssa2  = 0
+             shift_hrr1  = inc
+             shift_hrr2  =-inc
+             shift_gcb1  = 0
+             shift_gcb2  = 0
 
              !test pour eventuel optim  du init RHS
              !(suppression debordement a gauche au bord)
              c1 =-inc
-             if(ind_dm_thread(ideb).eq.ind_dm_sock(ideb)) 
-     &           c1 =  -synchro_send_sock(i)*inc
+             if(ind_dm_thread(ideb).eq.ind_dm_sock(ideb)) then
+
+               c1 =  -synchro_send_sock(i)*inc
+
+               shift_hrr1  = 0
+               shift_hrr2  =-inc
+               shift_gcb1  =-inc
+
+             endif
 
              shift_rhs1  = c1
              shift_rhs2  = 0
@@ -130,18 +142,25 @@ c      endif
 
                !Si  bloc cache recoit des donnee du bloc a droite
                if(    (synchro_receive_sock(i).eq.1)
-     &            .or.(topo_th(i).ne.thread_pos(i))   )  then 
+     &            .or.(topo_th(i).ne.thread_pos(i))   )  then
                  shift_coe2  =-ific
                  shift_gra2  =-inc
                  shift_rhs2  =-inc
                  shift_mjr2  = 0
                  shift_ssa2  =-inc
-               !Sinon: 
-               !  init rhs sur derniere cellule reelle en laminaire et calcul coe 
-               !  init rhs sur 1er ghostcell en SA +calcul coe(6) 
+                 shift_hrr1  =-inc
+                 shift_hrr2  = inc
+                 !shift_gcb1  = 0
+               !Sinon:
+               !  init rhs sur derniere cellule reelle en laminaire et calcul coe
+               !  init rhs sur 1er ghostcell en SA +calcul coe(6)
                else
                  shift_mjr2=0
                  shift_ssa2=inc
+                 shift_hrr1=-inc
+                 shift_hrr2=0
+                 shift_gcb1=-inc
+                 shift_gcb2=inc
                endif
 
                !if(topo_th(i).eq.1) then
@@ -153,7 +172,7 @@ c      endif
 
            !Si dernier bloc cache
            Elseif(l.eq.ijkv_sdm(i)) then
- 
+
              shift_coe1  = ific
              shift_coe2  = ific
              shift_gra1  = inc
@@ -164,16 +183,26 @@ c      endif
              shift_mjr2  =   0
              shift_ssa1  =   0
              shift_ssa2  =   0
-            
+             shift_hrr1  =-inc
+             shift_hrr2  = inc
+             shift_gcb1  = 0
+             shift_gcb2  = 0
+
+             ! Si on attend des donnes
              if(   (synchro_receive_sock(i).eq.1)
-     &         .or.(topo_th(i).ne.thread_pos(i) )     )  then 
+     &         .or.(topo_th(i).ne.thread_pos(i) )     )  then
                  shift_coe2  =-ific
                  shift_gra2  =-inc
                  shift_rhs2  =-inc
                  shift_ssa2  =-inc
+                 shift_hrr1  =-inc
+                 shift_hrr2  = inc
              else
+               !Dans ce cas non
                  shift_mjr2 = 0
                  shift_ssa2 = inc
+                 shift_gcb2 = inc
+
              endif
              !if(topo_th(i).eq.1) then
              !     shift_mjr2 = 0
@@ -191,9 +220,13 @@ c      endif
              shift_mjr2  =-inc
              shift_ssa1  =   0
              shift_ssa2  =   0
+             shift_hrr1  =-inc
+             shift_hrr2  =-inc
+             shift_gcb1  = 0
+             shift_gcb2  = 0
 
              if(   (synchro_receive_sock(i).eq.1)
-     &         .or.(topo_th(i).ne.thread_pos(i) )     )  then 
+     &         .or.(topo_th(i).ne.thread_pos(i) )     )  then
 
                  delta       = ind_dm_thread(ifin) - ind_sdm(ifin)
                  if(delta.lt.4) shift_coe2  = delta - ific
@@ -208,18 +241,28 @@ c      endif
            ind_rhs(ideb)  = ind_sdm(ideb) + shift_rhs1
            ind_mjr(ideb)  = ind_sdm(ideb) + shift_mjr1
            ind_ssa(ideb)  = ind_sdm(ideb) + shift_ssa1
+           ind_hrr(ideb)  = ind_sdm(ideb) + shift_hrr1
+           ind_gcb(ideb)  = ind_sdm(ideb) + shift_gcb1
            ind_coe(ifin)  = ind_sdm(ifin) + shift_coe2
            ind_grad(ifin) = ind_sdm(ifin) + shift_gra2
            ind_rhs(ifin)  = ind_sdm(ifin) + shift_rhs2
            ind_mjr(ifin)  = ind_sdm(ifin) + shift_mjr2
            ind_ssa(ifin)  = ind_sdm(ifin) + shift_ssa2
+           ind_hrr(ifin)  = ind_sdm(ifin) + shift_hrr2
+           ind_gcb(ifin)  = ind_sdm(ifin) + shift_gcb2
 
+           ind_hrr(ideb)  = max(1,ind_hrr(ideb))
+           !print*, i, shift_hrr1, shift_hrr2
         enddo !! boucle dir I,J,K
 
+        if(ind_hrr(2).gt.ind_dm_zone(2))ind_hrr(2)=ind_dm_zone(2)
+        if(ind_hrr(4).gt.ind_dm_zone(4))ind_hrr(4)=ind_dm_zone(4)
+        if(ind_hrr(6).gt.ind_dm_zone(6))ind_hrr(6)=ind_dm_zone(6)
+
          if(kfludom.eq.7)then
-         if(jc.eq.1)          ind_mjr(3)=ind_sdm(3)   
+         if(jc.eq.1)          ind_mjr(3)=ind_sdm(3)
          if(jc.eq.ijkv_sdm(2))ind_mjr(4)=ind_sdm(4)
-         if(kc.eq.1)          ind_mjr(5)=ind_sdm(5)   
+         if(kc.eq.1)          ind_mjr(5)=ind_sdm(5)
          if(kc.eq.ijkv_sdm(3))ind_mjr(6)=ind_sdm(6)
          endif
 

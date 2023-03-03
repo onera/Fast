@@ -158,6 +158,8 @@ FastC._setNum2Base(t, numb)
 #C.convertPyTree2File(tc, "tc.cgns")
 #C.convertPyTree2File(t ,"mesh.cgns")
 
+Internal._rmNodesByName(t,"FlowSolution")
+
 (t, tc, metrics) = FastS.warmup(t, tc)
 
 t1= Internal.copyRef(t)

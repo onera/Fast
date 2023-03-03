@@ -47,7 +47,7 @@ c***********************************************************************
       REAL_E param_real(0:*)
 C Var loc 
       INTEGER_E nitrun,V1,V2,V3, l,lij,j,k,ind_loop(6),ltij,lt,lvo
-#include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
+#include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
       REAL_E c1,c2,volinv, val
 
@@ -71,18 +71,18 @@ C Var loc
       V2 =   param_int(NDIMDX)
       V3 = 2*param_int(NDIMDX)
 
-#include "FastS/HPC_LAYER/SIZE_MIN.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/SIZE_MIN.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
       if(c1.eq.1.) extended_range = 1
-#include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
-#include "FastS/HPC_LAYER/INDICE_RANGE.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/INDICE_RANGE.for"
 
            !Initilalisation systematique de grad
            val =0.
            call init_tab(ndo, val, param_int, param_int(NDIMDX),
      &                   neq_grad, ind_rhs, grad )
 
-#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
 
             if(param_int(ITYPZONE).eq.0) then
 
@@ -171,8 +171,8 @@ C Var loc
             if(param_int(ITYPZONE).ne.3) 
      &      call extrap(ndo,param_int,c1,ind_sdm,ind_dm_zone,grad(1+V3))
                
-#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
-#include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_GO.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_END.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
       end

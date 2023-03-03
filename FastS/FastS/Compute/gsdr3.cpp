@@ -44,11 +44,11 @@ E_Int K_FASTS::gsdr3(
   E_Int& threadmax_sdm, E_Int& mx_synchro,
   E_Int& nb_pulse     , 
   E_Float& temps      , E_Float& time_trans,
-  E_Int* ipt_ijkv_sdm  ,
+  E_Int* ipt_ijkv_sdm ,
   E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int& vartype, E_Float* timer_omp,
   E_Int*     iptludic  , E_Int*   iptlumax      ,
-  E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom  , E_Int* ipt_omp, 
-  E_Float* ipt_VectG      , E_Float* ipt_VectY   , E_Float** iptssor       , E_Float** iptssortmp    , E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
+  E_Int** ipt_ind_dm   , E_Int** ipt_it_lu_ssdom, E_Int* ipt_omp, 
+  E_Float* ipt_VectG   , E_Float* ipt_VectY     , E_Float** iptssor    , E_Float** iptssortmp    , E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
   E_Float* ipt_Hessenberg, E_Float** iptkrylov      , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
   E_Float*   ipt_cfl,
   E_Float**  iptx            , E_Float**  ipty            , E_Float**    iptz      ,
@@ -102,6 +102,7 @@ E_Int K_FASTS::gsdr3(
       FldArrayI tot( 6*threadmax_sdm); E_Int* ipt_tot  =  tot.begin();
 
 
+
       //
       // choix du tableau de travail en fonction du schema et sous-iteration
       //
@@ -137,57 +138,8 @@ E_Int K_FASTS::gsdr3(
       E_Int nbtask = ipt_omp[nitcfg-1]; 
       E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
 
-      for (E_Int ntask = 0; ntask < nbtask; ntask++)
-      {
-#ifdef _OPENMP
-	    E_Int  Nbre_thread_actif = __NUMTHREADS__;
-#else
-	    E_Int Nbre_thread_actif = 1;
-#endif
-        E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
-        E_Int nd         = ipt_omp[ pttask ];
-        E_Int nd_subzone = ipt_omp[ pttask + 1 ];
-
-       //
-       //mise a jour Nombre sous_iter pour implicit (simplification gestion OMP)
-       //
-        //if(param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1 || lssiter_verif ==1 )
-        //if( param_int[nd][ DTLOC ]== 1 || lssiter_verif ==1 )
-        if( lssiter_verif == 1 )
-          {
-           //E_Int* ipt_nisdom_residu   =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter;                //nisdom_residu(nssiter)
-           E_Int* ipt_it_bloc         =  ipt_ind_dm[nd]      + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter*2;    //it_bloc(nidom)
-
-           //if(ipt_nisdom_residu[nitcfg-1] != 0) ipt_it_bloc[0] +=1;
-           if(nd_subzone== 0) ipt_it_bloc[0] +=1;
-           //printf("itbloc %d %d %d %d \n",ipt_it_bloc[0], nd, nitcfg, nitrun );
-          }
-
-        //
-        //Calcul taille tableau ssor par thread 
-        //
-	if (param_int[ nd ][ NB_RELAX ] > 1 || param_int[ nd ][ LU_MATCH ]==1)
-	  {
-	    E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;   //nidom_loc(nssiter)
-
-            E_Int* ipt_inddm_omp;
-            E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
-            for (E_Int i = 0; i < Nbre_thread_actif; i++)
-            {
-              E_Int ithread_loc           = ipt_omp[ pttask + 2 + i] +1 ;
-              ipt_inddm_omp         = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
-
-              E_Int indice = nd * mx_sszone * Nbre_thread_actif + nd_subzone * Nbre_thread_actif + i;
-              if (ithread_loc != -1)
-                { ipt_ssor_size[indice]=(ipt_inddm_omp[1] - ipt_inddm_omp[0] +1 +2*param_int[nd][ NIJK +3 ])*
-                                        (ipt_inddm_omp[3] - ipt_inddm_omp[2] +1 +2*param_int[nd][ NIJK +3 ])*
-                                        (ipt_inddm_omp[5] - ipt_inddm_omp[4] +1 +2*param_int[nd][ NIJK +4 ]);
-                }
-              else { ipt_ssor_size[indice]=0; }
-            } // loop threads
-	  } // if relax
-      } // loop zone
-
+      //mise a jour it_bloc implicit local et  pointeur ssor
+#include   "FastS/Compute/ssor.cpp"
 
 //modif Guillaume??
 if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
@@ -292,14 +244,14 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
              E_Int lmin = 10;
              if (param_int[nd][ITYPCP] == 2) lmin = 4;
 
-          shift_zone=0; shift_wig=0; shift_coe=0;
-          for (E_Int n = 0; n < nd; n++)
-          {
-            shift_zone = shift_zone + param_int[n][ NDIMDX ]*param_int[n][ NEQ ];
-            shift_coe  = shift_coe  + param_int[n][ NDIMDX ]*param_int[n][ NEQ_COE ];
-            if(param_int[n][ KFLUDOM ]==2){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*3;}
-            if(param_int[n][ KFLUDOM ]==8){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*4;}
-          }
+             shift_zone=0; shift_wig=0; shift_coe=0;
+             for (E_Int n = 0; n < nd; n++)
+             {
+              shift_zone = shift_zone + param_int[n][ NDIMDX ]*param_int[n][ NEQ ];
+              shift_coe  = shift_coe  + param_int[n][ NDIMDX ]*param_int[n][ NEQ_COE ];
+              if(param_int[n][ KFLUDOM ]==2){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*3;}
+              if(param_int[n][ KFLUDOM ]==8){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*4;}
+             }
 #include "FastS/Compute/rhs.cpp"
           } 
 #ifdef Conservatif
@@ -325,7 +277,6 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 	  {
 #include   "FastS/Compute/Linear_solver/lhs.cpp"
           }
-
 
 
           // LUSGS

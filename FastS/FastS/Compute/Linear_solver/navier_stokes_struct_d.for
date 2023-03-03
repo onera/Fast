@@ -55,7 +55,7 @@ c
 
 
 C Var loc
-#include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
+#include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
      & ind_loop(6),neq_rot,depth,nb_bc
@@ -64,11 +64,11 @@ C Var loc
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
        
-#include "FastS/HPC_LAYER/SIZE_MIN.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/SIZE_MIN.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
         return
-#include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
-#include "FastS/HPC_LAYER/INDICE_RANGE.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/INDICE_RANGE.for"
 
 
          if(param_int(IFLOW).eq.3) then
@@ -95,7 +95,7 @@ c     &                     rop_ssiter, rop_ssiterd, xmut, drodm, drodmd,
 c     &                     coe, x,y,z,
 c     &                     ti,tj,tk,vol, delta)
 
-c#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+c#include "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
 
           ! -----assemblage drodm euler+visqueux
           if(param_int(KFLUDOM).eq.1) then
@@ -134,7 +134,7 @@ c     &                        venti, ventj, ventk, xmut, xmutd)
               write(*, *) 'Unknown flux', param_int(KFLUDOM)
           endif
 
-c#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
+c#include "../FastC/FastC/HPC_LAYER/SYNCHRO_GO.for"
 
           !correction flux roe au CL si pas de mvt ALE,....
           nb_bc = param_int( param_int(PT_BC) )
@@ -174,7 +174,7 @@ cc     &                                rop_ssiter, rop, rop_m1,drodm,coe)
           !vecteur unique: rop = rop + drodm et non rop_1 =rop +drodm
           !call id_vect(param_int,ind_mjr,drodmd, rop_ssiterd,krylov_in)
 
-#include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_END.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
       END

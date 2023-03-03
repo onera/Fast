@@ -50,7 +50,7 @@ c***********************************************************************
 
 C Var loc 
       INTEGER_E nitrun, depth, ind_flt(6), ind_extrap(6)
-#include "FastS/HPC_LAYER/LOC_VAR_DECLARATION.for"
+#include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
 #include "FastS/param_solver.h"
 #include "FastS/formule_param.h"
@@ -61,11 +61,11 @@ C Var loc
       nitrun   = 0
 
       
-#include "FastS/HPC_LAYER/SIZE_MIN.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
-#include "FastS/HPC_LAYER/LOOP_CACHE_BEGIN.for"
-#include "FastS/HPC_LAYER/INDICE_RANGE.for"
-#include "FastS/HPC_LAYER/SYNCHRO_WAIT.for"
+#include "../FastC/FastC/HPC_LAYER/SIZE_MIN.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
+#include "../FastC/FastC/HPC_LAYER/INDICE_RANGE.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
 
       !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
       if(param_int(IFLOW).eq.2) then
@@ -93,9 +93,9 @@ C Var loc
      &                   xmut,rop)
       endif
                
-#include "FastS/HPC_LAYER/SYNCHRO_GO.for"
-#include "FastS/HPC_LAYER/LOOP_CACHE_END.for"
-#include "FastS/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+#include "../FastC/FastC/HPC_LAYER/SYNCHRO_GO.for"
+#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_END.for"
+#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
 
       end

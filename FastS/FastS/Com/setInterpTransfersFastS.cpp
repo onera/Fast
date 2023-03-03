@@ -689,6 +689,7 @@ void K_FASTS::setInterpTransfersIntra(
 
                       noi       = shiftDonor;                             // compteur sur le tableau d indices donneur
                       indCoef   = (pt_deb-ideb)*sizecoefs +  shiftCoef;
+                      E_Int shiftv=0;
                       if     (nvars_loc==5)
                       {
             #           include "commonInterpTransfers_reorder_5eq.h"

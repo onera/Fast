@@ -16,9 +16,9 @@
      & size_target(3), cache(3)
 
       INTEGER_E ind_coe(6),ind_grad(6),ind_sdm(6),ind_rhs(6),ind_mjr(6),
-     & ind_ssa(6)
+     & ind_ssa(6), ind_hrr(6), ind_gcb(6)
 
 #if CHECK_SPLIT > 1
-      INTEGER_E   inc1,inc2,inc11,inc22    
-#endif 
+      INTEGER_E   inc1,inc2,inc11,inc22
+#endif
 

@@ -4,6 +4,7 @@ import os
 import numpy
 
 import FastC.fastc
+import FastS.fasts
 
 from . import fast
 from . import Fast
@@ -24,8 +25,9 @@ try:
     import Converter.Internal as Internal
     import FastS.PyTree as FastS  
     #import FastP.PyTree as FastP
-    import FastLBM.PyTree as FastLBM
+    import FastASLBM.PyTree as FastLBM
     import Connector.PyTree as X
+    from . import  variables_share_pytree as VSHARE
 except:
     raise ImportError("Fast.PyTree: requires Converter and FastS/P modules.")
 
@@ -72,7 +74,8 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     FastC._buildOwnData(t, Padding)
 
     #init hook necessaire pour info omp
-    dtloc = Internal.getNodeFromName2(t, '.Solver#dtloc')  # noeud
+    tmp   = Internal.getNodeFromName1(t, '.Solver#ownData')
+    dtloc = Internal.getNodeFromName1(tmp, '.Solver#dtloc')  # noeud
     dtloc = Internal.getValue(dtloc)                       # tab numpy
     nssiter = int(dtloc[0])
 
@@ -89,7 +92,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
        if ztype == 'Structured':
          zones_str.append(z)
          param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
-         if param_int[27] == 4:   #IFLOW=4
+         if param_int[VSHARE.IFLOW] == 4:   #IFLOW=4
             zones_lbm.append(z)
          else:
             zones_ns.append(z)
@@ -106,7 +109,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
        if ztype == 'Structured':
          metrics_str.append(metrics[c])
          param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
-         if param_int[27] == 4:   #IFLOW=4
+         if param_int[VSHARE.IFLOW] == 4:   #IFLOW=4
             metrics_lbm.append(z)
          else:
             metrics_ns.append(z)
@@ -123,8 +126,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     if len(zones_str) != 0: 
        for nstep in range(1, int(dtloc[0])+1):
            hook1       = FastC.HOOK.copy()
-           distrib_omp = 1
-           hook1.update(FastC.fastc.souszones_list(zones_str, metrics_str, FastC.HOOK, 1, nstep, distrib_omp, verbose) )
+           hook1.update(FastC.fastc.souszones_list(zones_str, metrics_str, FastC.HOOK, 1, nstep, ompmode, verbose) )
     
     #init metric 
     FastS.fasts.init_metric(zones_str  , metrics_str  , ompmode)
@@ -137,7 +139,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint)
     FastC.HOOK['FIRST_IT']= FastC.FIRST_IT
 
-    if len(zones_str) == 0: hook1 = FastC.HOOK.copy(); hook1.update( {'nidom_tot':len(zones), 'lexit_lu':0, 'lssiter_verif':0})
+    if len(zones_str) == 0: hook1 = FastC.HOOK.copy(); hook1.update( {'lexit_lu':0, 'lssiter_verif':0})
 
     #compactage des champs en fonction option de calcul  
     count = -1
@@ -156,8 +158,8 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     #zones_str, zones_unstr, metrics_str, metrics_unstr = tri_zones( zones, metrics)
     infos_zones = tri_zones( zones, metrics)  #info-zone: dico 4 item contenant la list [ zones, metrics] pour Struct, unstruc, LBM, NS
     # init Q variables from macro variable if lbm
-    flag_initprecise = 0
-    FastLBM._init_Q(infos_zones["LBM"][0],flag_initprecise)
+    flag_initprecise = 1
+    FastLBM._init_Q(infos_zones["LBM"][0],FastC.HOOK, flag_initprecise)
 
     #allocate tab ssor en structure
     zones_str   = infos_zones["struct"][0]
@@ -200,7 +202,8 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 
        # Add linelets arrays in the FastC.HOOK for ODE-based WallModel (IBC)
        nbpts_linelets = 45
-       FastS._createTBLESA(tc,nbpts_linelets)
+       #FastS._createTBLESA(tc,nbpts_linelets)
+       FastS._createTBLESA(tc, h0=0.01, hn=-1, nbpts_linelets=nbpts_linelets)
     else:
         FastC.HOOK['param_real_tc'] = None
         FastC.HOOK['param_int_tc']  = None  
@@ -223,20 +226,38 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     #
     # remplissage ghostcells
     #
-    hook1["lexit_lu"]= 0
-    nstep            = 1
-    nitrun           = 0
-
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     timelevel_target = int(dtloc[4]) 
 
-    if   len(infos_zones["LBM"][0]) == 0:  vars=FastC.varsN + FastC.varsMLBM
-    elif len(infos_zones["NS"][0]) == 0 and len(infos_zones["unstruct"][0]) == 0: vars=FastC.varsMLBM + FastC.varsN
+    #Determine variables a trasferer
+    if len( infos_zones["LBM"][0]) ==0:
+        # CALCUL FULL NS ==> on ne transfere que les variables macros
+        vars=FastC.varsN
+    elif len( infos_zones["NS"][0]) ==0 and len( infos_zones["unstruct"][0]) ==0:
+        #CALCUL FULL LBM ==> on transfere les macros et les distributions
+        vars=FastC.varsN + FastC.varsMLBM
     else:
-      print("echange NS-LBM a coder")
-      import sys; sys.exit()
+        #Couplage NSLBM : on transfere les macro, les distributions et les gradients
+        print("\n#------------Simulation couplee NS-LBM------------#")
+        print('Nombre de zones LBM:',len(infos_zones['LBM'][0]))
+        print('Nombre de zones NS:',len(infos_zones['NS'][0]))
+        print('')
+        vars = FastC.varsN + FastC.varsMLBM + FastC.varsS
+
+    nstep            = 0
+    nitrun           = 0
+    # data pour interp temporel couplage NS/LBM
+    prepare_interpolation(t,tc)
+    hook1 = FastC.HOOK.copy(); hook1.update( {'lexit_lu':0, 'lssiter_verif':0})
+
+    #overset A basculer dans l'arbre pour eviter test systematique donnee statique
+    overset = 0
+    for z in zones:
+       param_int = Internal.getNodeFromName(z, 'Parameter_int')[1]
+       overset = max(overset,param_int[VSHARE.LBM_OVERSET])
+
     
-    _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep,  ompmode, hook1) 
+    _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep,  ompmode, hook1, overset=overset) 
     if tc is not None: C._rmVars(tc, 'FlowSolution')
 
     #
@@ -244,8 +265,6 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     #
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     FastS.fasts._computePT_mut(infos_zones['struct'][0], infos_zones['struct'][1], hook1)
-    #FastP.fastp._computePT_mut(infos_zones['unstruct'][0], infos_zones['unstruct'][1], hook1)
-    #print("decommenter _computePT_mut dans warmup Fast pour zone non structure.")
        
     return (t, tc, metrics)
 
@@ -277,7 +296,7 @@ def allocate_metric(t, nghost):
            param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
 
            if param_int[27] == 4:   #IFLOW=4
-              metrics.append(FastLBM.fastlbm.allocate_metric(z, nssiter,nghost))
+              metrics.append(FastLBM.fastaslbm.allocate_metric(z, nssiter))
            else:
               metrics.append(FastS.fasts.allocate_metric(z, nssiter))
         #else: metrics.append(FastP.fastp.allocate_metric(z, nssiter))
@@ -351,7 +370,11 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
     return None
 
 #==============================================================================
-def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1): 
+def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmode, hook1, nitmax=1, rk=1, exploc=0, num_passage=1, overset=0): 
+
+   import KCore.test as test
+   #test.testT(zones,  10)
+   #test.testT(tc,  11)
 
    if hook1['lexit_lu'] ==0:
 
@@ -361,22 +384,66 @@ def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmo
            #Si param_real n'existe pas, alors pas de raccord dans tc
            if tc_compact is not  None:
 
-              param_real= tc_compact[1]
-              param_int = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
-              zonesD    = Internal.getZones(tc)
+              couplageNSLBM = 0
+              param_real    = tc_compact[1]
+              param_int     = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
+              zonesD        = Internal.getZones(tc)
 
-              if hook1["neq_max"] == 5: varType =  2
-              else                    : varType = 21
-              if vars[0] == 'Q1_M1'   : varType =  4
-              #for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
-              C._cpVars(zones, 'centers:'+vars[0], zonesD, vars[0])
+              #-----------------------------------------------------------------
+              #Definition de varType pour la fonction qui realise les transfert
+              # = Cas Navier-Stokes
+              if infos_zones["LBM"]==[[],[]]:
+                 if hook1["neq_max"] == 5: varType =  2
+                 else                    : varType = 21
+              # = Cas LBM
+              elif infos_zones["NS"]==[[],[]]:
+                 if   hook1["neq_max"] == 19 and overset==0 : varType = 4 #LBM
+                 elif hook1["neq_max"] == 19 and overset==1 :
+                      varType = 41 #LBM avec Overset
+                      #if FastC.varsMLBM[0] in vars: vars = FastC.varsN +FastC.varsS +FastC.varsPSI +FastC.varsMLBM
+                      #else:                         vars = FastC.varsN +FastC.varsS +FastC.varsPSI +FastC.varsPLBM
+              # = Cas COUPLAGE NS LBM
+              else: varType = 5; couplageNSLBM = 1 #Couplage NSLBM
+
+              dtloc = hook1['dtloc']
+
+              #-----------------------------------------------------------------
+              #Copie dans le tc
+              for v in vars:
+                  if v in ['Q1','Q1_M1','corr_xx']: #Distributions => seules les zones LBM en ont
+                      for l,z in enumerate(zones):
+                          #print("cpvars",z[0])
+                          if (z in infos_zones["LBM"][0]): 
+                             #print("addvars",z[0], v)
+                             C._cpVars(z,'centers:'+v,zonesD[l],v)
+                  else: C._cpVars(zones,'centers:'+v,zonesD,v)
 
               type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert   = 1  # dans la list des transfert point a point
-              X.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage)#,timecount)
+              isWireModel_int= 0
+              #print("var", vars, varType)
+
+              #t3 = C.newPyTree(['Base', zones])
+              #t2 = Internal.copyTree(t3)
+              #test.testT(t2, 200+nstep)
+
+              nstep_loc = nstep
+              if nstep==0: nstep_loc=1
+              X.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep_loc, nitmax, rk, exploc, num_passage, isWireModel_int)
+
+              if couplageNSLBM==1 and nstep !=0 : fast.recuplbmns_(zones, zonesD, param_int, param_real, hook1, nitmax, 0, nstep_loc, ompmode, 1, 0)
+
+              #t3 = C.newPyTree(['Base', zones])
+              #t2 = Internal.copyTree(t3)
+              #test.testT(t2, 700+nstep)
+
        #apply BC
        if exploc != 1:
-          _applyBC(infos_zones, hook1, nstep, ompmode, var= vars)    
+          _applyBC(infos_zones, hook1, nstep, nitmax, var= vars)    
+
+       #t3 = C.newPyTree(['Base', zones])
+       #t2 = Internal.copyTree(t3)
+       #test.testT(t2, 800+nstep)
 
    return None
 #==============================================================================
@@ -385,6 +452,8 @@ def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmo
 #==============================================================================
 def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     """Compute a given number of iterations."""
+
+    import KCore.test as test
 
     own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
@@ -400,10 +469,20 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     zones       = Internal.getZones(t)
     infos_zones = tri_zones( zones, metrics)
 
+    #overset A basculer dans l'arbre pour eviter test systematique donnee statique
+    overset = 0
+    for z in zones:
+       param_int = Internal.getNodeFromName(z, 'Parameter_int')[1]
+       overset = max(overset,param_int[VSHARE.LBM_OVERSET])
+ 
+    #if (model == 'CouplageNSLBM') and (len(infos_zones["LBM"][0])!=0) and (len(infos_zones["NS"][0])!=0):
+    if len(infos_zones["LBM"][0])!=0 and len(infos_zones["NS"][0])!=0: flag_NSLBM = 1
+    else: flag_NSLBM = 0
+
     #### a blinder...
     param_int_firstZone = Internal.getNodeFromName2( zones[0], 'Parameter_int' )[1]
-    iflow  = param_int_firstZone[27]
-    itypcp = param_int_firstZone[29]
+    iflow  = param_int_firstZone[VSHARE.IFLOW]
+    itypcp = param_int_firstZone[VSHARE.ITYPCP]
     rk     = param_int_firstZone[52]
     exploc = param_int_firstZone[54]
     #### a blinder...
@@ -412,7 +491,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
     if layer == "Python": 
         
-      if exploc==1 and tc is not None:
+      if (exploc==1 or flag_NSLBM==1) and tc is not None:
          tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
          if tc_compact is not None:
                 param_real_tc= tc_compact[1]
@@ -424,69 +503,68 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
                 comm_P2P    = param_int_tc[0]
                 pt_ech      = param_int_tc[comm_P2P + shift_graph]
                 dest        = param_int_tc[pt_ech] 
-       
+      
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
 
          hook1 = FastC.HOOK.copy()
          hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
 
-         #nidom_loc = hook1["nidom_tot"] + len(zones_unstr)
-         nidom_loc = hook1["nidom_tot"]
-         #print("nidom_loc=", nidom_loc)
-        
          skip      = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
 
          # calcul Navier_stokes + appli CL
-         if nidom_loc > 0 and skip == 0:
+         if skip == 0:
             nstep_deb = nstep
             nstep_fin = nstep
             layer_mode= 0
             nit_c     = 1
+
+            if nstep==1 and flag_NSLBM==1:
+               fast.interplbmns_(zones,zones_tc,param_int_tc,param_real_tc,hook1,nitmax,nitrun,0,ompmode,1,dest)
+
+            #t3 = C.newPyTree(['Base', zones])
+            #t2 = Internal.copyTree(t3)
+            #test.testT(t2, 1100+nstep)
+
             #t0=Time.time()
-            fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
-            #print('t_compute = %f'%(Time.time() - t0))
+            fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, flag_NSLBM, hook1)
 
-            # dtloc GJeanmasson
-            if exploc==1 and tc is not None:
-               FastS.fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
-
-               if    (nstep%2 == 0) and itypcp == 2: vars = ['Density'  ] 
-               elif  (nstep%2 == 1) and itypcp == 2: vars = ['Density_P1'] 
-               _applyBC(infos_zones, hook1, nstep, ompmode, var=vars[0])    
-
-               FastC.switchPointers2__(zones, nitmax, nstep)
-                
-               # Ghostcell
-               if nitmax%3 != 0: # Tous les schemas sauf constantinescu RK3
-                   if    (nstep%2 == 0) and itypcp == 2: vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
-                   elif  (nstep%2 == 1) and itypcp == 2: vars = ['Density_P1']
-                   timelevel_target = int(dtloc[4])
-                   _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmode, hook1, nitmax, rk, exploc)
-            
-               FastS.fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
-
-               if nstep%2 == 0:
-                   timelevel_target = int(dtloc[4])
-                   vars = ['Density']
-                   _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep, nitmax, hook1, nitmax, rk, exploc, 2)
-
-               if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
-               elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
-               _applyBC(infos_zones, hook1, nstep, ompmode,  var=vars[0])
+            #t3 = C.newPyTree(['Base', zones])
+            #t2 = Internal.copyTree(t3)
+            #test.testT(t2, 1200+nstep)
+            #if nstep==1: C.convertPyTree2File(t2,'verif.cgns')
+            #import sys; sys.exit()
 
 
-            else:
-              #Ghostcell
-              varsNS = FastC.varsP 
-              if nstep%2 == 0 and itypcp == 2 : varsNS = FastC.varsN  # Choix du tableau pour application transfer et BC
-              vars = varsNS + FastC.varsMLBM
-              if iflow == 4: vars= FastC.varsMLBM + varsNS
-              timelevel_target = int(dtloc[4])
-              _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep, ompmode, hook1)
+            if flag_NSLBM==1: fast.interplbmns_(zones,zones_tc,param_int_tc,param_real_tc,hook1,nitmax,nitrun,nstep,ompmode,1,dest)
+
+            varsNS = FastC.varsP 
+            if nstep%2 == 0 and itypcp == 2 : varsNS = FastC.varsN  # Choix du tableau pour application transfer et BC
+
+            #Definition de vars pour la fonction qui realise les transfert
+            if   len(infos_zones['LBM'][0])==0: vars = varsNS                         # full NS
+            elif len(infos_zones['NS'][0] )==0:                                        # full LBM
+                 vars = FastC.varsN + FastC.varsPLBM                                   # LBM match
+                 if hook1["neq_max"] == 19 and overset==1 :                            # LBM avec Overset
+                    vars = FastC.varsN + FastC.varsPLBM + FastC.varsS + FastC.varsPSI
+            else: 
+                 vars = varsNS + FastC.varsPLBM + FastC.varsS
+
+            timelevel_target = int(dtloc[4])
+
+            #t3 = C.newPyTree(['Base', zones])
+            #t2 = Internal.copyTree(t3)
+            #test.testT(t2, 1300+nstep)
+
+            _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep, ompmode, hook1, overset=overset, nitmax=nitmax)
+
+            #t3 = C.newPyTree(['Base', zones])
+            #t2 = Internal.copyTree(t3)
+            #test.testT(t2, 1400+nstep)
 
       dtloc[3] +=1    #time_level_motion
       dtloc[4] +=1    #time_level_target
+
     else: 
       nstep_deb = 1
       nstep_fin = nitmax
@@ -497,7 +575,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
           FastC.HOOK['param_int_tc']  = None
           FastC.HOOK['param_real_tc'] = None
 
-      fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c , FastC.HOOK)
+      fast._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c , flag_NSLBM,  FastC.HOOK)
 
     zones_ns    = infos_zones["NS"][0]
     metrics_ns  = infos_zones["NS"][1]
@@ -514,8 +592,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
          if case != 0 and itypcp < 2: FastC.switchPointers__(zones_ns, case)
          if case != 0 and itypcp ==2: FastC.switchPointers__(zones_ns, case, nitmax%2+2)
 
-    #if  NIT%2 != 0:
-    #  FastC.switchPointersLBM__(zones_lbm, FastLBM.NQ)
+    if  NIT%2 != 0:
+      FastC.switchPointersLBM__(zones_lbm, FastLBM.NQ)
 
     # flag pour derivee temporelle 1er pas de temps implicit
     FastC.HOOK["FIRST_IT"]  = 1
@@ -526,18 +604,38 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 #==============================================================================
 # applyBC
 #==============================================================================
-def _applyBC(infos_zones, hook1, nstep, ompmode, var=["Density","Q1"]):
+def _applyBC(infos_zones, hook1, nstep, nitmax, var=["Density","Q1"]):
 
-    if 'Q' in var[0]: 
-         varlbm =  var[0]
-         varns  =  var[1]
-    else: 
-         varlbm =  var[1]
-         varns  =  var[0]
-    varType=4
-    FastS.fasts._applyBC(infos_zones["struct"][0]  , infos_zones["struct"][1]    , hook1, nstep, ompmode, varns  )
-    FastLBM.fastlbm._applyBC(infos_zones["LBM"][0] , infos_zones["LBM"][1]       , hook1, nstep, ompmode, varType,varlbm )
-    #FastP.fastp._applyBC(infos_zones["unstruct"][0], infos_zones["unstruct"][1]  , hook1, nstep, ompmode, varns  )
+    if nstep==0: nstep_NS = 1; nstep_LBM = 1
+    else       : nstep_NS = nstep; nstep_LBM = nstep
+
+    nstep_bc = 0
+    if nitmax==3: nstep_bc = 3
+    elif nitmax > 3: nstep_bc = nitmax-1
+
+    #print("applybc", nstep, nstep_bc, nitmax)
+
+    #Variables on which the BCs are applied
+    varns = var[0]; varlbm = "Q1_M1"
+    if len(var)>=2: varlbm = var[1]
+    if len(var)==4: varlbm = var[-1]
+
+    #print("fast: varBC NS-LBM", varns, varlbm)
+    #On applique les BC selon les domaines en presence
+    #Navier Stokes structure : FastS
+    if len(infos_zones['NS_str'][0]) != 0:
+       FastS.fasts._applyBC(infos_zones["NS_str"][0]  , infos_zones["NS_str"][1]  , hook1, nstep_NS,  varns  )
+       #print('FastS BC applied')
+    #LBM : FastLBM
+    if len(infos_zones['LBM'][0]) != 0 and (nstep==0 or nstep==nstep_bc):
+        FastLBM.fastaslbm._applyBC(infos_zones["LBM"][0] , infos_zones["LBM"][1]  , hook1, nstep_LBM, varlbm )
+        #if nstep==0: print('FastLBM BC applied 1')
+        #else: print('FastLBM BC applied 2')
+
+    #Navier Stokes non structure : FastP
+    #if len(infos_zones['NS_ustr'][0]) != 0:
+    #   FastP.fastp._applyBC(infos_zones["unstruct"][0], infos_zones["unstruct"][1]  , hook1, nstep_NS, ompmode, varns  )
+
     
     return None
 
@@ -547,34 +645,41 @@ def _applyBC(infos_zones, hook1, nstep, ompmode, var=["Density","Q1"]):
 def tri_zones(zones, metrics):
 
     infos_zones = {}
-    zones_unstr =[]; zones_str = []; zones_ns = []; zones_lbm = []
-    metrics_unstr =[]; metrics_str = []; metrics_ns = []; metrics_lbm = []
+    zones_unstr =[]; zones_str =[]; zones_ns =[]; zones_lbm =[]; zones_ns_str =[]
+    metrics_unstr =[]; metrics_str =[]; metrics_ns =[]; metrics_lbm =[]; metrics_ns_str = []
+    ind_LBM = []
 
     c=0
     for z in zones:
        ztype = Internal.getValue(  Internal.getNodeFromName(z, 'ZoneType') )
-       if ztype == 'Structured':
+       if ztype=='Structured':
          zones_str.append(z)
          metrics_str.append( metrics[c])
          param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
          if param_int[27] == 4:   #IFLOW=4
             zones_lbm.append(z)
-            metrics_lbm.append(metrics[c])
+            metrics_lbm.append( metrics[c] )
+            ind_LBM.append(c)
          else:
             zones_ns.append(z)
-            metrics_ns.append(metrics[c])
+            zones_ns_str.append(z)
+            metrics_ns.append( metrics[c] )
+            metrics_ns_str.append( metrics[c])
        else:
          zones_unstr.append(z)
-         metrics_unstr.append(metrics[c])
+         metrics_unstr.append( metrics[c])
          zones_ns.append(z)
-         metrics_ns.append(metrics[c])
-       c += 1
+         metrics_ns.append( metrics[c] )
+       c+=1
+
     infos_zones['struct'  ]=[zones_str, metrics_str]
     infos_zones['unstruct']=[zones_unstr, metrics_unstr]
     infos_zones['LBM'     ]=[zones_lbm, metrics_lbm]
     infos_zones['NS'      ]=[zones_ns , metrics_ns]
+    infos_zones['NS_str'  ]=[zones_ns_str, metrics_ns_str]
+    infos_zones['NS_ustr' ]=[zones_unstr, metrics_unstr]
+    infos_zones['iLBM'    ]=ind_LBM
     return infos_zones
-
 #==============================================================================
 # Display
 #==============================================================================
@@ -609,3 +714,156 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None,verbos
 
     if gmres is None: return None
     else: return residu
+
+
+#==============================================================================
+# Initialisation parametres interpolation LBM --> NS : passage en revue des
+# raccord LBM -> NS, mise en place stockage et donnees pour l'interp
+#==============================================================================
+def prepare_interpolation(t,tc):
+   zones         = Internal.getZones(t)
+   zones_tc      = Internal.getZones(tc)
+   nzones        = len(zones)
+
+   neq = 5 #ou 6 pour RANS ?
+   timelevels = 3
+   nb_gc = 2
+
+   # 0 : nb_rac, 1 : taille_rac_max, 2-37 : range_save, 38-73 : gc_fill
+   dim_interp = 6*6 + 6*6 + 1 + 1
+
+   rac_insta = {}
+   size = 0
+   print('===================Prepare interpolation=================')
+   for z in zones:
+      #print("Zone =",z[0])
+      dim = Internal.getZoneDim(z); #print(dim)
+      model="NSLaminar"
+      a = Internal.getNodeFromName2(z,'GoverningEquations')
+      if a is not None : model = Internal.getValue(a)
+      nb_interp = 0
+
+      if model  == 'LBMLaminar':
+         rac_insta[z[0]] = []
+         rac_insta[z[0]].append(nb_interp)
+         rac_insta[z[0]].append(nb_interp)
+         for bc in Internal.getNodesFromType2(z,'BC_t'):
+            v = Internal.getValue(bc); #print(v)
+            if v=='BCReconsLBM':
+               nb_interp += 1
+               node = Internal.getNodeFromName(bc,'PointRange')
+               node = sum(Internal.getValue(node).tolist(),[])
+               pt_to_save, gc_to_fill = get_InterpDataFromNode(node,dim,nb_gc,'BCReconsLBM')
+               rac_insta[z[0]].append(pt_to_save); rac_insta[z[0]].append(gc_to_fill)
+               taille_rac = (pt_to_save[1]-pt_to_save[0]+1)*(pt_to_save[3]-pt_to_save[2]+1)*(pt_to_save[5]-pt_to_save[4]+1)
+               #print(taille_rac)
+               size = max(size,taille_rac)
+            # elif v=='BCadimcoins':
+            #    nb_interp += 1
+            #    node = Internal.getNodeFromName(bc,'PointRange')
+            #    node = sum(Internal.getValue(node).tolist(),[])
+            #    pt_to_save, gc_to_fill = get_InterpDataFromNode(node,dim,nb_gc,'BCadimcoins')
+            #    rac_insta[z[0]].append(pt_to_save); rac_insta[z[0]].append(gc_to_fill)
+            #    taille_rac = (pt_to_save[1]-pt_to_save[0]+1)*(pt_to_save[3]-pt_to_save[2]+1)*(pt_to_save[5]-pt_to_save[4]+1)
+            #    size = max(size,taille_rac)
+         rac_insta[z[0]][0] = nb_interp; #print(nb_interp)
+   for z in zones:
+      if z[0] in rac_insta.keys():
+         rac_insta[z[0]][1] = size
+   print(rac_insta)
+
+   nb_rac_tot = 0
+   size_max = size
+   for key in rac_insta:
+      info_rac = rac_insta[key]
+      nb_rac_tot += info_rac[0]
+      interp_info = numpy.zeros(dim_interp,dtype=numpy.int32)
+      interp_info[0] = info_rac[0] #Nombre de raccors LBM -> NS pour la zone
+      interp_info[1] = size_max*neq*timelevels
+      for i in range(info_rac[0]):
+         shift_pt_rac = 2 + i*2
+         shift_gc_rac = 2 + i*2 + 1
+         shift_pt_tab = 2 + i*6
+         shift_gc_tab = 2 + 6*6 + i*6
+         for j in range(6):
+            interp_info[shift_pt_tab+j] = info_rac[shift_pt_rac][j]
+            interp_info[shift_gc_tab+j] = info_rac[shift_gc_rac][j]
+      #print(interp_info)
+      z = Internal.getNodeFromName(t,key)
+      o = Internal.createUniqueChild(z,'.Solver#ownData','UserDefinedData_t')
+      Internal.createUniqueChild(o,'Interp_data','DataArray_t',interp_info)
+
+   # Tableau de stockage pour interpolation LBM->NS
+   dim_tabinterp = 5*3*nb_rac_tot*size_max
+   print('Dim Tab interp NS/LBM temporel:',dim_tabinterp)
+   tab_interp = numpy.empty(dim_tabinterp, dtype=numpy.float64)
+   FastC.HOOK['tab_interp'] = tab_interp
+
+   return None
+
+#==============================================================================
+def get_InterpDataFromNode(node,dim,nb_gc,bc_name):
+   #On calcule les range des frontieres de la zone
+   imin = [     1,      1,      1, dim[2],      1, dim[3]]
+   imax = [dim[1], dim[1],      1, dim[2],      1, dim[3]]
+   jmin = [     1, dim[1],      1,      1,      1, dim[3]]
+   jmax = [     1, dim[1], dim[2], dim[2],      1, dim[3]]
+   kmin = [     1, dim[1],      1, dim[2],      1,      1]
+   kmax = [     1, dim[1],      1, dim[2], dim[3], dim[3]]
+   #print(node)
+   #print(imin, imax, jmin, jmax, kmin, kmax)
+   if node == imin and bc_name=='BCReconsLBM':
+      pt_to_save = [1,1+(nb_gc-1),1,(dim[2]-1)-2*nb_gc,1,(dim[3]-1)-2*nb_gc]
+      gc_to_fill = [pt_to_save[0]-nb_gc,pt_to_save[1]-nb_gc,pt_to_save[2]-nb_gc,pt_to_save[3]+nb_gc,pt_to_save[4]-nb_gc,pt_to_save[5]+nb_gc]
+      #print(pt_to_save, gc_to_fill)
+   elif node == imin and bc_name=='BCadimcoins':
+      #print("Node = imin")
+      pt_to_save = [0,0,0,0,0,0]
+      gc_to_fill = [-1,0,-1,0,1-nb_gc,(dim[3]-1)-nb_gc]
+      #print(gc_to_fill)
+   elif node == imax and bc_name=='BCReconsLBM':
+      pt_to_save = [(dim[1]-1)-2*nb_gc-1,(dim[1]-1)-2*nb_gc,1,(dim[2]-1)-2*nb_gc,1,(dim[3]-1)-2*nb_gc]
+      gc_to_fill = [pt_to_save[0]+nb_gc,pt_to_save[1]+nb_gc,pt_to_save[2]-nb_gc,pt_to_save[3]+nb_gc,pt_to_save[4]-nb_gc,pt_to_save[5]+nb_gc]
+      #print(pt_to_save,gc_to_fill)
+   elif node == imax and bc_name=='BCadimcoins':
+      #print("Node = imax")
+      pt_to_save = [0,0,0,0,0,0]
+      gc_to_fill = [(dim[1]-1)-nb_gc-1,(dim[1]-1)-nb_gc,(dim[2]-1)-nb_gc-1,(dim[2]-1)-nb_gc,1-nb_gc,(dim[3]-1)-nb_gc]
+   elif node == jmin and bc_name=='BCReconsLBM':
+      pt_to_save = [1,(dim[1]-1)-2*nb_gc,1,1+(nb_gc-1),1,(dim[3]-1)-2*nb_gc]
+      gc_to_fill = [pt_to_save[0]-nb_gc,pt_to_save[1]+nb_gc,pt_to_save[2]-nb_gc,pt_to_save[3]-nb_gc,pt_to_save[4]-nb_gc,pt_to_save[5]+nb_gc]
+      #print(pt_to_save,gc_to_fill)
+   elif node == jmin and bc_name=='BCadimcoins':
+      #print("Node = jmin")
+      pt_to_save = [0,0,0,0,0,0]
+      gc_to_fill = [(dim[1]-1)-nb_gc-1,(dim[1]-1)-nb_gc,-1,0,1-nb_gc,(dim[3]-1)-nb_gc]
+      #print(gc_to_fill)
+   elif node == jmax and bc_name=='BCReconsLBM':
+      pt_to_save = [1,(dim[1]-1)-2*nb_gc,(dim[2]-1)-2*nb_gc-1,(dim[2]-1)-2*nb_gc,1,(dim[3]-1)-2*nb_gc]
+      gc_to_fill = [pt_to_save[0]-nb_gc,pt_to_save[1]+nb_gc,pt_to_save[2]+nb_gc,pt_to_save[3]+nb_gc,pt_to_save[4]-nb_gc,pt_to_save[5]+nb_gc]
+      #print(pt_to_save,gc_to_fill)
+   elif node == jmax and bc_name=='BCadimcoins':
+      #print("Node = jmax")
+      pt_to_save = [0,0,0,0,0,0]
+      gc_to_fill = [-1,0,(dim[2]-1)-nb_gc-1,(dim[2]-1)-nb_gc,1-nb_gc,(dim[3]-1)-nb_gc]
+      #print(gc_to_fill)
+   elif node == kmin and bc_name=='BCReconsLBM':
+      pt_to_save = [1,(dim[1]-1)-2*nb_gc,1,(dim[2]-1)-2*nb_gc,1,1+(nb_gc-1)]
+      gc_to_fill = [pt_to_save[0]-nb_gc,pt_to_save[1]+nb_gc,pt_to_save[2]-nb_gc,pt_to_save[3]+nb_gc,pt_to_save[4]-nb_gc,pt_to_save[5]-nb_gc]
+   elif node == kmax and bc_name=='BCReconsLBM':
+      pt_to_save = [1,(dim[1]-1)-2*nb_gc,1,(dim[2]-1)-2*nb_gc,(dim[3]-1)-2*nb_gc-1,(dim[3]-1)-2*nb_gc]
+      gc_to_fill = [pt_to_save[0]-nb_gc,pt_to_save[1]+nb_gc,pt_to_save[2]-nb_gc,pt_to_save[3]-nb_gc,pt_to_save[4]+nb_gc,pt_to_save[5]+nb_gc]
+   else:
+      print('Unknown boundary for interpolation')
+
+   return pt_to_save, gc_to_fill
+
+#==============================================================================
+def recup_fgc(zones):
+    for z in zones:
+        paramint = Internal.getNodeFromName2(z, 'Parameter_int')[1]
+        if paramint[27]==4:
+            C._initVars(z,'{centers:Density}={centers:Density_P1}')
+            C._initVars(z,'{centers:VelocityX}={centers:VelocityX_P1}')
+            C._initVars(z,'{centers:VelocityY}={centers:VelocityY_P1}')
+            C._initVars(z,'{centers:VelocityZ}={centers:VelocityZ_P1}')

@@ -6,6 +6,7 @@ import Converter.Internal as Internal
 import Initiator.PyTree as I
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
+import FastC.PyTree as FastC
 import Transform.PyTree as T
 import KCore.Adim as Adim
 import KCore.test as test
@@ -34,17 +35,21 @@ C._addState(t, MInf=MInf)
 
 numb = {'temporal_scheme':'explicit', 'ss_iteration':20} 
 numz = {'time_step':0.0007*2., 'scheme':'ausmpred'}
-Fast._setNum2Base(t, numb)
-Fast._setNum2Zones(t, numz);
+FastC._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz);
 #C.convertPyTree2File(t,'test.cgns')
 #(t, tc, metrics) = FastS.warmup(t, None)
 (t, tc, metrics) = Fast.warmup(t, None)
+
+#import sys; sys.exit()
 
 #nit = 2300
 nit = 23
 #nit=1
 for it in range(nit):
     Fast._compute(t, metrics, it, NIT=100)
+    #FastS._compute(t, metrics, it, NIT=1, layer='Python')
+    #FastS._compute(t, metrics, it, NIT=100)
     #FastS._compute(t, metrics, it, NIT=1)
 
 Internal._rmNodesByName(t, '.Solver#Param')

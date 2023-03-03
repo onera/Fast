@@ -159,7 +159,7 @@ else
   E_Float** iptro_sfd;     E_Float** iptdelta;     E_Float** iptfd; E_Float** iptro_zgris; E_Float** iptro_res;
   E_Float** iptCellN  ;    E_Float** iptCellN_IBC; E_Float** ipt_cfl_zones;
   E_Float** iptssor;       E_Float** iptssortmp;
-  E_Float** ipt_gmrestmp;  E_Float** iptdrodm_transfer;
+  E_Float** ipt_gmrestmp;  E_Float** iptdrodm_transfer; 
 
   ipt_param_int     = new E_Int*[nidom*4];
   ipt_ind_dm        = ipt_param_int   + nidom;
@@ -270,6 +270,7 @@ else
     t            = K_PYTREE::getNodeFromName1(sol_center, "Density_src");
     if (t == NULL) iptsrc[nd] = NULL;
     else iptsrc[nd]   = K_PYTREE::getValueAF(t, hook);
+    t            = K_PYTREE::getNodeFromName1(sol_center, "Sxx");
 
     if(ipt_param_int[nd][ IBC ]== 1){t=K_PYTREE::getNodeFromName1(sol_center, "cellN_IBC"); iptCellN_IBC[nd] = K_PYTREE::getValueAF(t, hook); } 
     else { iptCellN_IBC[nd] = NULL;}

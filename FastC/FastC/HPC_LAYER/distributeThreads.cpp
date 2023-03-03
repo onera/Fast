@@ -134,7 +134,6 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
  //
  //
  E_Int level_max;
- //if (param_int[0][EXPLOC]==0){ level_max = 1; } // Tous les schemas sauf dtlocal instationnaire
  if (param_int[0][EXPLOC]==0){ level_max = 0; } // Tous les schemas sauf dtlocal instationnaire
  else { E_Int denominateur_max = param_int[0][NSSITER]/4; level_max = log(denominateur_max)/log(2); } // dtlocal instationnaire
 
@@ -151,10 +150,13 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
    // calcul  nombre souszone pour le niveau en temps lev
    E_Int zones_dtloc[nidom];
    E_Int nb_zones_dtloc =0;
-   for (E_Int nd = 0; nd < nidom; nd ++)
-    {
-      if(param_int[nd][LEVEL] == pow(2,lev) ) { zones_dtloc[ nb_zones_dtloc ] = nd; nb_zones_dtloc+= 1; }
-    }
+   if (param_int[0][EXPLOC]==0)
+     {  for (E_Int nd = 0; nd < nidom; nd ++) { zones_dtloc[ nb_zones_dtloc ] = nd; nb_zones_dtloc+= 1;} }
+   else
+     {
+      for (E_Int nd = 0; nd < nidom; nd ++)
+        { if(param_int[nd][LEVEL] == pow(2,lev) ) { zones_dtloc[ nb_zones_dtloc ] = nd; nb_zones_dtloc+= 1; } }
+     }
 
    E_Int mxzone=0;
    for (E_Int i = 0; i < nb_zones_dtloc; i++)

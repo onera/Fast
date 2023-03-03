@@ -27,6 +27,9 @@
 static PyMethodDef Pyfast [] =
 {
   {"_computePT"          , K_FAST::_computePT          ,  METH_VARARGS},
+  {"interplbmns_"        , K_FAST::interplbmns_        ,  METH_VARARGS},
+  {"recuplbmns_"         , K_FAST::recuplbmns_         ,  METH_VARARGS},
+  {"filtering_"          , K_FAST::filtering_          ,  METH_VARARGS},
   {NULL, NULL}
 };
 
