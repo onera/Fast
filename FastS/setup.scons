@@ -131,7 +131,7 @@ if f77compiler == 'ifort':
    f77Args = '-r8 -i4 -g -fno-alias -fno-fnalias -ip'
    cacheLine = Dist.getCacheLine()
 
-   simd      = Dist.getSimd()
+   simd = Dist.getSimd()
    if cacheLine != 1: f77Args += ' -align array%dbyte '%cacheLine
 
    if version[0] >= 17:

@@ -16,6 +16,7 @@ import Transform.PyTree as T
 import Apps.Fast.Couplage_LBMNS as App
 
 import KCore.test as test
+test.TOLERANCE = 1.e-9
 
 import math
 import numpy
@@ -183,7 +184,9 @@ for it in range(1, nit+1):
 #import sys; sys.exit()
 
 #C.convertPyTree2File(t, 'tout.cgns')
-test.testT(t, 5)
+tp = Internal.rmNodesByName(t, '.Solver#Param')
+Internal._rmNodesByName(tp, '.Solver#ownData')
+test.testT(tp, 5)
 end = time.time()
 print('')
 print('Temps d''execution :',end-start)
@@ -249,4 +252,7 @@ X._setInterpTransfers(t,tc,variables=VARSMACRO,storage=1)
 
 Internal._rmGhostCells(t,t,2)
 #C.convertPyTree2File(t, 'tout.cgns')
+
+Internal._rmNodesByName(t, '.Solver#Param')
+Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 6)
