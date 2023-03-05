@@ -51,7 +51,7 @@ installPath = Dist.getInstallPath(prefix)
 from KCore.config import *
 
 # Setting libraryDirs and libraries ===========================================
-libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastaslbmLibDir ]
+libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir, fastsLibDir, fastaslbmLibDir ]
 includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, pythonIncDir, fastcIncDir, fastsIncDir, fastaslbmIncDir ]
 libraries = ["fastc", "fasts", "fastaslbm", "connector", "xcore", "kcore"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
@@ -85,8 +85,8 @@ def addSourceScannerToTargets(target, source, env):
    return (target, source)
 
 PP = Dist.getPP() # preprocessing des fortrans
-#f77CppArgs = '-D_NOOPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'
-f77CppArgs = '-D_OPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'+" -I'"+fastcIncDir+" '"
+f77CppArgs = '-D_NOOPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'+" -I'"+fastcIncDir+"'"
+#f77CppArgs = '-D_OPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'+" -I'"+fastcIncDir+"'"
 cacheLine = Dist.getCacheLine()
 if cacheLine == 1: f77CppArgs += ' -DCACHELINE=16'
 else: f77CppArgs += ' -DCACHELINE=%d'%cacheLine
@@ -138,11 +138,11 @@ if f77compiler == 'ifort':
    f77Args = '-r8 -i4 -g -fno-alias -fno-fnalias -ip'
    cacheLine = Dist.getCacheLine()
 
-   simd      = Dist.getSimd()
+   simd = Dist.getSimd()
    if cacheLine != 1: f77Args += ' -align array%dbyte '%cacheLine
 
    if version[0] >= 17:
-      env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'   -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
+      env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
    else:
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -unroll0 -c -o $TARGET $SOURCE')
 
@@ -165,7 +165,6 @@ for f in for_srcs1:
 #ppf = Dist.createFortranFiles(env, srcs)
 
 #==============================================================================
-#myMod1 = env.StaticLibrary('fast1', srcs.cpp_srcs+ppf1)
 
 myMod = env.StaticLibrary('fast', srcs.cpp_srcs+ppf1)
 modDir = installPath+'/Fast/'
