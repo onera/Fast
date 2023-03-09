@@ -62,9 +62,9 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
        if(param_int(NEQ).eq.5) then
 
-          do 100 k = ind_loop(5), ind_loop(6)
-          do 100 j = ind_loop(3), ind_loop(4)
-          do 100 i = ind_loop(1), ind_loop(2)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
+          do i = ind_loop(1), ind_loop(2)
 
             l    = inddm(  i             , j,  k ) 
             ldnm = inddm(  ind_loop(2)+1 , j,  k )
@@ -73,13 +73,16 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
 
 #include     "FastS/BC/BCWallModel.for"
-100    continue
+
+          enddo
+          enddo
+          enddo
 
        else
 
-          do 110 k = ind_loop(5), ind_loop(6)
-          do 110 j = ind_loop(3), ind_loop(4)
-          do 110 i = ind_loop(1), ind_loop(2)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
+          do i = ind_loop(1), ind_loop(2)
 
             l    = inddm(  i             , j,  k ) 
             ldnm = inddm(  ind_loop(2)+1 , j,  k )
@@ -88,7 +91,10 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
 #include     "FastS/BC/BCWallModel.for"
               rop(l,6) =rop(ldnm,6)
-110       continue
+
+          enddo
+          enddo
+          enddo
         endif !param_int(NEQ)
 
       ELSEIF (idir.eq.2) THEN
@@ -97,9 +103,9 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
        if(param_int(NEQ).eq.5) then
 
-          do 120 k = ind_loop(5), ind_loop(6)
-          do 120 j = ind_loop(3), ind_loop(4)
-          do 120 i = ind_loop(1), ind_loop(2)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
+          do i = ind_loop(1), ind_loop(2)
 
               l    = inddm(  i           , j, k ) 
               ldnm = inddm(  ind_loop(1)-1 , j,  k )
@@ -108,20 +114,25 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
 #include     "FastS/BC/BCWallModel.for"
 
-120    continue
+          enddo
+          enddo
+          enddo
        else
 
-          do 130 k = ind_loop(5), ind_loop(6)
-          do 130 j = ind_loop(3), ind_loop(4)
-          do 130 i = ind_loop(1), ind_loop(2)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
+          do i = ind_loop(1), ind_loop(2)
 
               l    = inddm(  i           , j, k ) 
               ldnm = inddm(  ind_loop(1)-1 , j,  k )
               ldl  = inddm(  ind_loop(1)-2 , j,  k )
               ldnp = inddm(  ind_loop(1)-3 , j,  k )
 #include     "FastS/BC/BCWallModel.for"
-              rop(l,6) =rop(ldnm,6)
-130       continue
+              rop(l,6) = rop(ldnm,6)
+
+          enddo
+          enddo
+          enddo
         endif !param_int(NEQ)
 
 
@@ -132,9 +143,9 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
        if(param_int(NEQ).eq.5) then
 
-          do 200 k = ind_loop(5), ind_loop(6)
-          do 200 j = ind_loop(3), ind_loop(4)
-          do 200 i = ind_loop(1), ind_loop(2)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
+          do i = ind_loop(1), ind_loop(2)
 
             l    = inddm( i , j            ,  k ) 
             ldnm = inddm( i , ind_loop(4)+1,  k )
@@ -143,22 +154,26 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
 #include     "FastS/BC/BCWallModel.for"
 
-200    continue
+          enddo
+          enddo
+          enddo
        else
 
-          do 210 k = ind_loop(5), ind_loop(6)
-          do 210 j = ind_loop(3), ind_loop(4)
-          do 210 i = ind_loop(1), ind_loop(2)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
+          do i = ind_loop(1), ind_loop(2)
 
             l    = inddm( i , j            ,  k ) 
             ldnm = inddm( i , ind_loop(4)+1,  k )
             ldl  = inddm( i , ind_loop(4)+2,  k )
             ldnp = inddm( i , ind_loop(4)+3,  k )
 
-
 #include     "FastS/BC/BCWallModel.for"
-              rop(l,6) =rop(ldnm,6)
-210       continue
+              rop(l,6) = rop(ldnm,6)
+
+          enddo
+          enddo
+          enddo
         endif !param_int(NEQ)
 
       ELSEIF (idir.eq.4) THEN
@@ -168,10 +183,10 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
        if(param_int(NEQ).eq.5) then
 
 
-          do 220 k = ind_loop(5), ind_loop(6)
-          do 220 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
 !DEC$ IVDEP
-            do 220 i = ind_loop(1), ind_loop(2)
+            do i = ind_loop(1), ind_loop(2)
 
               l    = inddm( i , j            ,  k ) 
               ldnm = inddm( i , ind_loop(3)-1,  k )
@@ -180,20 +195,26 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
 #include     "FastS/BC/BCWallModel.for"
 
-220    continue
+            enddo
+          enddo
+          enddo
        else
 
-          do 230 k = ind_loop(5), ind_loop(6)
-          do 230 j = ind_loop(3), ind_loop(4)
-          do 230 i = ind_loop(1), ind_loop(2)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
+          do i = ind_loop(1), ind_loop(2)
 
               l    = inddm( i , j            ,  k ) 
               ldnm = inddm( i , ind_loop(3)-1,  k )
               ldl  = inddm( i , ind_loop(3)-2,  k )
               ldnp = inddm( i , ind_loop(3)-3,  k )
 #include     "FastS/BC/BCWallModel.for"
-              rop(l,6) =rop(ldnm,6)
-230       continue
+              rop(l,6) = rop(ldnm,6)
+
+          enddo
+          enddo
+          enddo
+
         endif !param_int(NEQ)
 
 
@@ -203,30 +224,36 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
        if(param_int(NEQ).eq.5) then
 
-          do 300 k = ind_loop(5), ind_loop(6)
-          do 300 j = ind_loop(3), ind_loop(4)
-          do 300 i = ind_loop(1), ind_loop(2)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
+          do i = ind_loop(1), ind_loop(2)
 
             l    = inddm( i , j,  k            ) 
             ldnm = inddm( i , j, ind_loop(6)+1 )
             ldl  = inddm( i , j, ind_loop(6)+2 )
             ldnp = inddm( i , j, ind_loop(6)+3 )
 #include     "FastS/BC/BCWallModel.for"
-300    continue
+
+          enddo
+          enddo
+          enddo
        else
-          do 310 k = ind_loop(5), ind_loop(6)
-          do 310 j = ind_loop(3), ind_loop(4)
-          do 310 i = ind_loop(1), ind_loop(2)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
+          do i = ind_loop(1), ind_loop(2)
 
             l    = inddm( i , j,  k             ) 
             ldnm = inddm( i , j, ind_loop(6)+1 )
             ldl  = inddm( i , j, ind_loop(6)+2 )
             ldnp = inddm( i , j, ind_loop(6)+3 )
 #include    "FastS/BC/BCWallModel.for"
-            rop(l,6) =rop(ldnm,6)
-310       continue
-        endif !param_int(NEQ)
+            rop(l,6) = rop(ldnm,6)
 
+          enddo
+          enddo
+          enddo
+
+        endif !param_int(NEQ)
 
       ELSE 
 
@@ -235,34 +262,37 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
        if(param_int(NEQ).eq.5) then
 
 
-          do 320 k = ind_loop(5), ind_loop(6)
-          do 320 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
 !DEC$ IVDEP
-            do 320 i = ind_loop(1), ind_loop(2)
+            do i = ind_loop(1), ind_loop(2)
 
               l    = inddm( i , j,  k            ) 
               ldnm = inddm( i , j, ind_loop(5)-1 )
               ldl  = inddm( i , j, ind_loop(5)-2 )
               ldnp = inddm( i , j, ind_loop(5)-3 )
 #include     "FastS/BC/BCWallModel.for"
-320    continue
+            enddo
+           enddo
+           enddo
        else
 
-          do 330 k = ind_loop(5), ind_loop(6)
-          do 330 j = ind_loop(3), ind_loop(4)
-          do 330 i = ind_loop(1), ind_loop(2)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
+          do i = ind_loop(1), ind_loop(2)
 
               l    = inddm( i , j,  k            ) 
               ldnm = inddm( i , j, ind_loop(5)-1 )
               ldl  = inddm( i , j, ind_loop(5)-2 )
               ldnp = inddm( i , j, ind_loop(5)-3 )
 #include     "FastS/BC/BCWallModel.for"
-              rop(l,6) =rop(ldnm,6)
-330       continue
+              rop(l,6) = rop(ldnm,6)
+
+          enddo
+          enddo
+          enddo
         endif !param_int(NEQ)
 
       ENDIF !idir
-
-
 
       END

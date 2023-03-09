@@ -23,7 +23,7 @@ c_V    steady/unsteady
 c
 c     INP
 c_I    tijk     : vecteur param_int( IO_THREAD)rmale aux facettes des mailles
-c_I    vent     : vitesses d'entrainement aux facettes preced.
+c_I    vent     : vitesses d entrainement aux facettes preced.
 c
 c     LOC
 c_L    flu      : flux convectifs dans une direction de maillage
@@ -72,17 +72,23 @@ C Var loc
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-          do 100 l=1,param_int(NDIMDX)
+        do l=1,param_int(NDIMDX)
 #else
-        do 100 k = ind_coe(5), ind_coe(6)
-        do 100 j = ind_coe(3), ind_coe(4)
+        do k = ind_coe(5), ind_coe(6)
+        do j = ind_coe(3), ind_coe(4)
            lij  = inddm(ind_coe(1) , j, k)
 CDIR$ IVDEP
-        do 100 l = lij, lij +  ind_coe(2) - ind_coe(1)
+        do l = lij, lij +  ind_coe(2) - ind_coe(1)
 #endif
             drodt(l)= c1*rop(l) + c2*rop_n(l)+ c3*rop_n1(l)
 
-  100 continue
+#ifndef E_SCALAR_COMPUTER
+        enddo
+#else
+        enddo
+        enddo
+        enddo
+#endif
 
 #include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_END.for"
 #include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"

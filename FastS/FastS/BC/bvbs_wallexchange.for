@@ -96,8 +96,8 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
        if(param_int(NEQ).eq.5) then
 
-          do 100 k = ind_loop(5), ind_loop(6)
-          do 100 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
 
              i = ind_loop(2)
 
@@ -119,16 +119,16 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 #include          "FastS/BC/BC_nextrank.for"
              enddo
 
-100    continue
-
+          enddo
+          enddo
        else
         ! a faire
        endif !param_int(NEQ)
 
       ELSEIF (idir.eq.2) THEN
 
-          do 120 k = ind_loop(5), ind_loop(6)
-          do 120 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
 
               i      = ind_loop(1)
               l      = inddm(  i         , j, k ) 
@@ -149,7 +149,9 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 #include        "FastS/BC/BC_nextrank.for"
                enddo
 
-120    continue
+          enddo
+          enddo
+
 
 
       ELSEIF (idir.eq.3) THEN
