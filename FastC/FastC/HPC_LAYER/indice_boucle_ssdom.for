@@ -51,8 +51,12 @@ c Var loc
      & shift_ssa1, shift_ssa2, shift_hrr1, shift_hrr2,
      & shift_gcb1, shift_gcb2, delta
 
+C     CB: initialisation des shifts
+      shift_gcb1 = 0
+      shift_gcb2 = 0
+      
       inck = 1
-      if(nijk(5).eq.0) inck = 0
+      if(nijk(5).eq.0) inck = 0      
 
       ind_sdm(1)= ind_dm_thread(1)+ (ic-1)*size_cache(1)
       ind_sdm(2)= ind_dm_thread(1)+     ic*size_cache(1)-1

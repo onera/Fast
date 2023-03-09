@@ -2031,7 +2031,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     if   (rk==4 and exploc==0): size_drodm = 4*ndimt
     elif (rk==5 and exploc==0): size_drodm = 5*ndimt
     else                      : size_drodm =   ndimt
-    print('taille tab drodm=%d'%ndimt)
+    #print('taille tab drodm=%d'%ndimt)
     drodm     = numpy.empty(ndimt   , dtype=numpy.float64)        
     tab_dtloc = numpy.empty(ndimface, dtype=numpy.float64)
 
@@ -4334,7 +4334,7 @@ def _pointwise2D2Fast(t):
                 Internal.addChild(zgrid, coordz, pos=-1)
     return None
 
-# cassiopee2Pointwise [CB:WL]
+# cassiopee2Pointwise
 def cassiopee2Pointwise(fileName):
     t = C.convertFile2PyTree(fileName)
     t = C.rmBCOfType(t, 'BC*')         
