@@ -18,7 +18,7 @@ a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5))
 b = T.rotate(a, (0.,0.,0.), (0.,1.,0.), 90.); b[0] = 'cart'
 t = C.newPyTree(['Base',b])
 C._addState(t, 'GoverningEquations', 'NSLaminar')
-C._addState(t, MInf=0.1, ReInf=1600, adim='adim2funk')
+C._addState(t, MInf=0.1, ReInf=1600., adim='adim2funk')
 
 # Get dim
 dim = 3

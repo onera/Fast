@@ -7,19 +7,13 @@ import Converter as Co
 import Generator.PyTree as G
 import Initiator.PyTree as I
 import CPlot.PyTree as CPlot
-import Fast.PyTree as Fast_
 import FastC.PyTree as internal
 import FastS.PyTree as FastS
 import Post.PyTree as P
 import Fast.Utils
 import Connector.PyTree as X
 import Transform.PyTree as T
-import sys
 import Converter.Internal as Internal
-import numpy
-import math
-import timeit
-import pickle
 import KCore.test as test
 
 ##Note: (1)Current non-regression test case is for explicit local
@@ -72,7 +66,7 @@ else:
 ### Conditions initiales ####
 t = C.addState(t, 'GoverningEquations', 'Euler')
 t = C.addState(t, 'EquationDimension', 2)
-t = C.addState(t, MInf=0.2, ReInf=100)
+t = C.addState(t, MInf=0.2, ReInf=100.)
 t = I.initLamb(t, position=(0.,0.), Gamma=2., MInf=0.2, loc='centers')
 
 ### Raccords ####
@@ -104,7 +98,7 @@ dt = 0.02
 if explicit_select == 'explicit_local':
     dt = 2*dt
 tend= 80
-NIT = 1500#int(tend/dt)
+NIT = 1000 #int(tend/dt)
 
 numb = {}
 numz = {}

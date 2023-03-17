@@ -20,18 +20,18 @@ import time
 
 explicit_select = 'explicit_local'
 isPrintAnalysis = False
-T0    = 294
+T0    = 294.
 rho0  = 1.2
 M     = 0.1
-U0    = 34
-Re    = 1600
+U0    = 34.
+Re    = 1600.
 L0    = 7e-04
 KA    = rho0*U0*U0/16.
-R     = 287.053;
+R     = 287.053
 Mus   = (rho0*U0*L0)/Re
 P0    = rho0*R*T0
-tfinal = 14*L0/U0/2
-dt     = 2*0.0006*L0/U0
+tfinal = 14.*L0/U0/2.
+dt     = 2.*0.0006*L0/U0
 
 if explicit_select == 'explicit_local':
     dt     = 2*dt   
@@ -75,8 +75,8 @@ else:
 #-------------------------
 t = C.addState(t, 'GoverningEquations', 'NSLaminar')
 t = C.addState(t, 'EquationDimension' , 3)
-t = C.addState(t, adim='dim4',UInf=U0, TInf=T0, PInf=P0, LInf=L0,Mus=Mus)
-state      = Adim.dim4(UInf=U0, TInf=T0, PInf=P0,LInf=L0,Mus=Mus)
+t = C.addState(t, adim='dim4',UInf=U0, TInf=T0, PInf=P0, LInf=L0, Mus=Mus)
+state      = Adim.dim4(UInf=U0, TInf=T0, PInf=P0, LInf=L0, Mus=Mus)
 
 print("Checking state...start")
 list_state = ["RoInf", "RouInf", "RovInf", "RowInf", "RoEInf", "PInf", "TInf", "cvInf", "MInf", "ReInf", "Cs", "Gamma", "RokInf", "RoomegaInf", "RonutildeInf", "Mus", "Cs", "Ts, Pr"]

@@ -99,7 +99,7 @@ for i,z in enumerate(Internal.getZones(t)):
         I._initWissocq(z, position=(x_0,y_0), Gamma=0.07, MInf=0.1, loc='centers')
 
 C._addState(t, MInf=mach)
-C._addState(t, adim='dim3',UInf=mach*c0,PInf=101320,RoInf=1.1765,LInf=1.)
+C._addState(t, adim='dim3', UInf=mach*c0, PInf=101320., RoInf=1.1765, LInf=1.)
 
 VARSMACRO = ['Density','VelocityX','VelocityY','VelocityZ','Temperature']
 

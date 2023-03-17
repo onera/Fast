@@ -53,6 +53,8 @@ C Var loc
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_vent_param.h"
 
+#define FORMULA 0
+
       ind_loop = ind_loop1
       O13 = 1.D0/3.D0
 
@@ -110,57 +112,58 @@ C Var loc
      &                             +vent_vertex(lx1 +v3in)  )
 
             !formule de pechier
-C            tkx10=(y(lx1)-y(l111))*(z(lx3)-z(l111))
-C     &           -(z(lx1)-z(l111))*(y(lx3)-y(l111))
-C            tky10=(z(lx1)-z(l111))*(x(lx3)-x(l111))
-C     &           -(x(lx1)-x(l111))*(z(lx3)-z(l111))
-C            tkz10=(x(lx1)-x(l111))*(y(lx3)-y(l111))
-C     &           -(y(lx1)-y(l111))*(x(lx3)-x(l111))
-C
-C            tkx11=(y(lx3)-y(l111))*(z(lx2)-z(l111))
-C     &           -(z(lx3)-z(l111))*(y(lx2)-y(l111))
-C            tky11=(z(lx3)-z(l111))*(x(lx2)-x(l111))
-C     &           -(x(lx3)-x(l111))*(z(lx2)-z(l111))
-C            tkz11=(x(lx3)-x(l111))*(y(lx2)-y(l111))
-C     &           -(y(lx3)-y(l111))*(x(lx2)-x(l111))
-C
-C            Sx = 0.5*(tkx11 + tkx10)
-C            Sy = 0.5*(tky11 + tky10)
-C            Sz = 0.5*(tkz11 + tkz10)
-C
-C            vx10 = O13 *(vent_vertex(l111)
-C     &                  +vent_vertex(lx1)
-C     &                  +vent_vertex(lx3))
-C            vy10 = O13 *(vent_vertex(l111+v2in)
-C     &                  +vent_vertex(lx1+v2in)
-C     &                  +vent_vertex(lx3+v2in))
-C            vz10 = O13 *(vent_vertex(l111+v3in)
-C     &                  +vent_vertex(lx1+v3in)
-C     &                  +vent_vertex(lx3+v3in))
-C            
-C            vx11 = O13 *(vent_vertex(l111)
-C     &                  +vent_vertex(lx2)
-C     &                  +vent_vertex(lx3))
-C            vy11 = O13 *(vent_vertex(l111+v2in)
-C     &                  +vent_vertex(lx2+v2in)
-C     &                  +vent_vertex(lx3+v2in))
-C            vz11 = O13 *(vent_vertex(l111+v3in)
-C     &                  +vent_vertex(lx2+v3in)
-C     &                  +vent_vertex(lx3+v3in))
-C
+#if FORMULA == 1
+            tkx10=(y(lx1)-y(l111))*(z(lx3)-z(l111))
+     &           -(z(lx1)-z(l111))*(y(lx3)-y(l111))
+            tky10=(z(lx1)-z(l111))*(x(lx3)-x(l111))
+     &           -(x(lx1)-x(l111))*(z(lx3)-z(l111))
+            tkz10=(x(lx1)-x(l111))*(y(lx3)-y(l111))
+     &           -(y(lx1)-y(l111))*(x(lx3)-x(l111))
+
+            tkx11=(y(lx3)-y(l111))*(z(lx2)-z(l111))
+     &           -(z(lx3)-z(l111))*(y(lx2)-y(l111))
+            tky11=(z(lx3)-z(l111))*(x(lx2)-x(l111))
+     &           -(x(lx3)-x(l111))*(z(lx2)-z(l111))
+            tkz11=(x(lx3)-x(l111))*(y(lx2)-y(l111))
+     &           -(y(lx3)-y(l111))*(x(lx2)-x(l111))
+
+            Sx = 0.5*(tkx11 + tkx10)
+            Sy = 0.5*(tky11 + tky10)
+            Sz = 0.5*(tkz11 + tkz10)
+
+            vx10 = O13 *(vent_vertex(l111)
+     &                  +vent_vertex(lx1)
+     &                  +vent_vertex(lx3))
+            vy10 = O13 *(vent_vertex(l111+v2in)
+     &                  +vent_vertex(lx1+v2in)
+     &                  +vent_vertex(lx3+v2in))
+            vz10 = O13 *(vent_vertex(l111+v3in)
+     &                  +vent_vertex(lx1+v3in)
+     &                  +vent_vertex(lx3+v3in))
+            
+            vx11 = O13 *(vent_vertex(l111)
+     &                  +vent_vertex(lx2)
+     &                  +vent_vertex(lx3))
+            vy11 = O13 *(vent_vertex(l111+v2in)
+     &                  +vent_vertex(lx2+v2in)
+     &                  +vent_vertex(lx3+v2in))
+            vz11 = O13 *(vent_vertex(l111+v3in)
+     &                  +vent_vertex(lx2+v3in)
+     &                  +vent_vertex(lx3+v3in))
+
 C            WRITE(*,*) 'kS', Sz
 C            WRITE(*,*) 'kref', ventk(l+v3ven)
-C            IF (ABS(Sx) .GT. 1.e-13) THEN
-C                ventk(l) = 0.5*(tkx11*vx11 + tkx10*vx10) /Sx
-C            ENDIF
-C            IF (ABS(Sy) .GT. 1.e-13) THEN
-C                ventk(l+v2ven) = 0.5*(tky11*vy11 + tky10*vy10) /Sy
-C            ENDIF
-C            IF (ABS(Sz) .GT. 1.e-13) THEN
-C                ventk(l+v3ven) = 0.5*(tkz11*vz11 + tkz10*vz10) /Sz
-C            ENDIF
+            IF (ABS(Sx) .GT. 1.e-13) THEN
+                ventk(l) = 0.5*(tkx11*vx11 + tkx10*vx10) /Sx
+            ENDIF
+            IF (ABS(Sy) .GT. 1.e-13) THEN
+                ventk(l+v2ven) = 0.5*(tky11*vy11 + tky10*vy10) /Sy
+            ENDIF
+            IF (ABS(Sz) .GT. 1.e-13) THEN
+                ventk(l+v3ven) = 0.5*(tkz11*vz11 + tkz10*vz10) /Sz
+            ENDIF
 C            WRITE(*,*) 'kmod', ventk(l+v3ven)
-
+#endif
             !Face j
             inci = 1
             inck = param_int( NIJK_XYZ )*param_int( NIJK_XYZ+1 )
@@ -185,56 +188,58 @@ C            WRITE(*,*) 'kmod', ventk(l+v3ven)
      &                             +vent_vertex(lx1 +v3in)  )
 
             !formule de pechier
-C            tkx10=(y(lx1)-y(l111))*(z(lx3)-z(l111))
-C     &           -(z(lx1)-z(l111))*(y(lx3)-y(l111))
-C            tky10=(z(lx1)-z(l111))*(x(lx3)-x(l111))
-C     &           -(x(lx1)-x(l111))*(z(lx3)-z(l111))
-C            tkz10=(x(lx1)-x(l111))*(y(lx3)-y(l111))
-C     &           -(y(lx1)-y(l111))*(x(lx3)-x(l111))
-C
-C            tkx11=(y(lx3)-y(l111))*(z(lx2)-z(l111))
-C     &           -(z(lx3)-z(l111))*(y(lx2)-y(l111))
-C            tky11=(z(lx3)-z(l111))*(x(lx2)-x(l111))
-C     &           -(x(lx3)-x(l111))*(z(lx2)-z(l111))
-C            tkz11=(x(lx3)-x(l111))*(y(lx2)-y(l111))
-C     &           -(y(lx3)-y(l111))*(x(lx2)-x(l111))
-C
-C            Sx = 0.5*(tkx11 + tkx10)
-C            Sy = 0.5*(tky11 + tky10)
-C            Sz = 0.5*(tkz11 + tkz10)
-C
-C            vx10 = O13 *(vent_vertex(l111)
-C     &                  +vent_vertex(lx1)
-C     &                  +vent_vertex(lx3))
-C            vy10 = O13 *(vent_vertex(l111+v2in)
-C     &                  +vent_vertex(lx1+v2in)
-C     &                  +vent_vertex(lx3+v2in))
-C            vz10 = 013 *(vent_vertex(l111+v3in)
-C     &                  +vent_vertex(lx1+v3in)
-C     &                  +vent_vertex(lx3+v3in))
-C            
-C            vx11 = O13 *(vent_vertex(l111)
-C     &                  +vent_vertex(lx2)
-C     &                  +vent_vertex(lx3))
-C            vy11 = O13 *(vent_vertex(l111+v2in)
-C     &                  +vent_vertex(lx2+v2in)
-C     &                  +vent_vertex(lx3+v2in))
-C            vz11 = O13 *(vent_vertex(l111+v3in)
-C     &                  +vent_vertex(lx2+v3in)
-C     &                  +vent_vertex(lx3+v3in))
-C            
+#if FORMULA == 1
+            tkx10=(y(lx1)-y(l111))*(z(lx3)-z(l111))
+     &           -(z(lx1)-z(l111))*(y(lx3)-y(l111))
+            tky10=(z(lx1)-z(l111))*(x(lx3)-x(l111))
+     &           -(x(lx1)-x(l111))*(z(lx3)-z(l111))
+            tkz10=(x(lx1)-x(l111))*(y(lx3)-y(l111))
+     &           -(y(lx1)-y(l111))*(x(lx3)-x(l111))
+
+            tkx11=(y(lx3)-y(l111))*(z(lx2)-z(l111))
+     &           -(z(lx3)-z(l111))*(y(lx2)-y(l111))
+            tky11=(z(lx3)-z(l111))*(x(lx2)-x(l111))
+     &           -(x(lx3)-x(l111))*(z(lx2)-z(l111))
+            tkz11=(x(lx3)-x(l111))*(y(lx2)-y(l111))
+     &           -(y(lx3)-y(l111))*(x(lx2)-x(l111))
+
+            Sx = 0.5*(tkx11 + tkx10)
+            Sy = 0.5*(tky11 + tky10)
+            Sz = 0.5*(tkz11 + tkz10)
+
+            vx10 = O13 *(vent_vertex(l111)
+     &                  +vent_vertex(lx1)
+     &                  +vent_vertex(lx3))
+            vy10 = O13 *(vent_vertex(l111+v2in)
+     &                  +vent_vertex(lx1+v2in)
+     &                  +vent_vertex(lx3+v2in))
+            vz10 = 013 *(vent_vertex(l111+v3in)
+     &                  +vent_vertex(lx1+v3in)
+     &                  +vent_vertex(lx3+v3in))
+            
+            vx11 = O13 *(vent_vertex(l111)
+     &                  +vent_vertex(lx2)
+     &                  +vent_vertex(lx3))
+            vy11 = O13 *(vent_vertex(l111+v2in)
+     &                  +vent_vertex(lx2+v2in)
+     &                  +vent_vertex(lx3+v2in))
+            vz11 = O13 *(vent_vertex(l111+v3in)
+     &                  +vent_vertex(lx2+v3in)
+     &                  +vent_vertex(lx3+v3in))
+            
 C            WRITE(*,*) 'jS', Sx, Sy
 C            WRITE(*,*) 'jref', ventj(l), ventj(l+v2ven)
-C            IF (ABS(Sx) .GT. 1.e-13) THEN      
-C                ventj(l) = 0.5*(tkx11*vx11 + tkx10*vx10) /Sx
-C            ENDIF
-C            IF (ABS(Sy) .GT. 1.e-13) THEN      
-C                ventj(l+v2ven) = 0.5*(tky11*vy11 + tky10*vy10) /Sy
-C            ENDIF
-C            IF (ABS(Sz) .GT. 1.e-13) THEN      
-C                ventj(l+v3ven) = 0.5*(tkz11*vz11 + tkz10*vz10) /Sz
-C            ENDIF
+            IF (ABS(Sx) .GT. 1.e-13) THEN      
+                ventj(l) = 0.5*(tkx11*vx11 + tkx10*vx10) /Sx
+            ENDIF
+            IF (ABS(Sy) .GT. 1.e-13) THEN      
+                ventj(l+v2ven) = 0.5*(tky11*vy11 + tky10*vy10) /Sy
+            ENDIF
+            IF (ABS(Sz) .GT. 1.e-13) THEN      
+                ventj(l+v3ven) = 0.5*(tkz11*vz11 + tkz10*vz10) /Sz
+            ENDIF
 C            WRITE(*,*) 'jmod', ventj(l), ventj(l+v2ven)
+#endif
 
             !Face i
             incj = param_int( NIJK_XYZ )
@@ -260,57 +265,59 @@ C            WRITE(*,*) 'jmod', ventj(l), ventj(l+v2ven)
      &                             +vent_vertex(lx1 +v3in)  )
 
             !formule de pechier
-C            tkx10=(y(lx1)-y(l111))*(z(lx3)-z(l111))
-C     &           -(z(lx1)-z(l111))*(y(lx3)-y(l111))
-C            tky10=(z(lx1)-z(l111))*(x(lx3)-x(l111))
-C     &           -(x(lx1)-x(l111))*(z(lx3)-z(l111))
-C            tkz10=(x(lx1)-x(l111))*(y(lx3)-y(l111))
-C     &           -(y(lx1)-y(l111))*(x(lx3)-x(l111))
-C
-C            tkx11=(y(lx3)-y(l111))*(z(lx2)-z(l111))
-C     &           -(z(lx3)-z(l111))*(y(lx2)-y(l111))
-C            tky11=(z(lx3)-z(l111))*(x(lx2)-x(l111))
-C     &           -(x(lx3)-x(l111))*(z(lx2)-z(l111))
-C            tkz11=(x(lx3)-x(l111))*(y(lx2)-y(l111))
-C     &           -(y(lx3)-y(l111))*(x(lx2)-x(l111))
-C
-C            Sx = 0.5*(tkx11 + tkx10)
-C            Sy = 0.5*(tky11 + tky10)
-C            Sz = 0.5*(tkz11 + tkz10)            
-C
-C            vx10 = O13 *(vent_vertex(l111)
-C     &                  +vent_vertex(lx1)
-C     &                  +vent_vertex(lx3))
-C            vy10 = O13 *(vent_vertex(l111+v2in)
-C     &                  +vent_vertex(lx1+v2in)
-C     &                  +vent_vertex(lx3+v2in))
-C            vz10 = O13 *(vent_vertex(l111+v3in)
-C     &                  +vent_vertex(lx1+v3in)
-C     &                  +vent_vertex(lx3+v3in))
-C            
-C            vx11 = O13 *(vent_vertex(l111)
-C     &                  +vent_vertex(lx2)
-C     &                  +vent_vertex(lx3))
-C            vy11 = O13 *(vent_vertex(l111+v2in)
-C     &                  +vent_vertex(lx2+v2in)
-C     &                  +vent_vertex(lx3+v2in))
-C            vz11 = O13 *(vent_vertex(l111+v3in)
-C     &                  +vent_vertex(lx2+v3in)
-C     &                  +vent_vertex(lx3+v3in))
-C            
+#if FORMULA == 1
+            tkx10=(y(lx1)-y(l111))*(z(lx3)-z(l111))
+     &           -(z(lx1)-z(l111))*(y(lx3)-y(l111))
+            tky10=(z(lx1)-z(l111))*(x(lx3)-x(l111))
+     &           -(x(lx1)-x(l111))*(z(lx3)-z(l111))
+            tkz10=(x(lx1)-x(l111))*(y(lx3)-y(l111))
+     &           -(y(lx1)-y(l111))*(x(lx3)-x(l111))
+
+            tkx11=(y(lx3)-y(l111))*(z(lx2)-z(l111))
+     &           -(z(lx3)-z(l111))*(y(lx2)-y(l111))
+            tky11=(z(lx3)-z(l111))*(x(lx2)-x(l111))
+     &           -(x(lx3)-x(l111))*(z(lx2)-z(l111))
+            tkz11=(x(lx3)-x(l111))*(y(lx2)-y(l111))
+     &           -(y(lx3)-y(l111))*(x(lx2)-x(l111))
+
+            Sx = 0.5*(tkx11 + tkx10)
+            Sy = 0.5*(tky11 + tky10)
+            Sz = 0.5*(tkz11 + tkz10)            
+
+            vx10 = O13 *(vent_vertex(l111)
+     &                  +vent_vertex(lx1)
+     &                  +vent_vertex(lx3))
+            vy10 = O13 *(vent_vertex(l111+v2in)
+     &                  +vent_vertex(lx1+v2in)
+     &                  +vent_vertex(lx3+v2in))
+            vz10 = O13 *(vent_vertex(l111+v3in)
+     &                  +vent_vertex(lx1+v3in)
+     &                  +vent_vertex(lx3+v3in))
+            
+            vx11 = O13 *(vent_vertex(l111)
+     &                  +vent_vertex(lx2)
+     &                  +vent_vertex(lx3))
+            vy11 = O13 *(vent_vertex(l111+v2in)
+     &                  +vent_vertex(lx2+v2in)
+     &                  +vent_vertex(lx3+v2in))
+            vz11 = O13 *(vent_vertex(l111+v3in)
+     &                  +vent_vertex(lx2+v3in)
+     &                  +vent_vertex(lx3+v3in))
+            
 C            WRITE(*,*) 'iS', Sx, Sy
 C            WRITE(*,*) 'iref', venti(l), venti(l+v2ven)
-C            IF (ABS(Sx) .GT. 1.e-13) THEN      
-C                venti(l) = 0.5*(tkx11*vx11 + tkx10*vx10) /Sx
-C            ENDIF
-C            IF (ABS(Sy) .GT. 1.e-13) THEN      
-C                venti(l+v2ven) = 0.5*(tky11*vy11 + tky10*vy10) /Sy
-C            ENDIF
-C            IF (ABS(Sz) .GT. 1.e-13) THEN      
-C                venti(l+v3ven) = 0.5*(tkz11*vz11 + tkz10*vz10) /Sz
-C            ENDIF
+            IF (ABS(Sx) .GT. 1.e-13) THEN      
+                venti(l) = 0.5*(tkx11*vx11 + tkx10*vx10) /Sx
+            ENDIF
+            IF (ABS(Sy) .GT. 1.e-13) THEN      
+                venti(l+v2ven) = 0.5*(tky11*vy11 + tky10*vy10) /Sy
+            ENDIF
+            IF (ABS(Sz) .GT. 1.e-13) THEN      
+                venti(l+v3ven) = 0.5*(tkz11*vz11 + tkz10*vz10) /Sz
+            ENDIF
 C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
-            
+#endif
+
             enddo
            enddo
           enddo

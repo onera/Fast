@@ -12,7 +12,7 @@ angle = 45.
 a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5)) 
 t = C.newPyTree(['Base',a])
 C._addState(t, 'GoverningEquations', 'NSLaminar')
-C._addState(t, MInf=0.1, ReInf=1600, adim='adim2funk')
+C._addState(t, MInf=0.1, ReInf=1600., adim='adim2funk')
 
 # Get dim
 dim = 3

@@ -16,6 +16,7 @@ import Transform.PyTree as T
 import Apps.Fast.Couplage_LBMNS as App
 
 import KCore.test as test
+test.TOLERANCE = 1.e-9
 
 import math
 import numpy
@@ -98,7 +99,7 @@ for i,z in enumerate(Internal.getZones(t)):
         I._initWissocq(z, position=(x_0,y_0), Gamma=0.07, MInf=0.1, loc='centers')
 
 C._addState(t, MInf=mach)
-C._addState(t, adim='dim3',UInf=mach*c0,PInf=101320,RoInf=1.1765,LInf=1.)
+C._addState(t, adim='dim3', UInf=mach*c0, PInf=101320., RoInf=1.1765, LInf=1.)
 
 VARSMACRO = ['Density','VelocityX','VelocityY','VelocityZ','Temperature']
 
@@ -139,7 +140,6 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 #import sys;
 #sys.exit()
 
-print('avt warmup')
 (t, tc, metrics) = Fast.warmup(t, tc, verbose=1)
 
 '''
@@ -154,8 +154,12 @@ for met in metrics:
 #C.convertPyTree2File(tc, 'tc.cgns')
 #import sys; sys.exit()
 t2 = Internal.copyTree(t)
+Internal._rmNodesByName(t2, '.Solver#Param')
+Internal._rmNodesByName(t2, '.Solver#ownData')
 test.testT(t2, 3)
 t2 = Internal.copyTree(tc)
+Internal._rmNodesByName(t2, '.Solver#Param')
+Internal._rmNodesByName(t2, '.Solver#ownData')
 test.testT(t2, 4)
 
 #==========================================
@@ -172,7 +176,10 @@ for it in range(1, nit+1):
 
 #import sys; sys.exit()
 
-test.testT(t, 5)
+t2 = Internal.copyTree(t)
+Internal._rmNodesByName(t2, '.Solver#Param')
+Internal._rmNodesByName(t2, '.Solver#ownData')
+test.testT(t2, 5)
 end = time.time()
 print('')
 print('Temps d''execution :',end-start)
@@ -237,6 +244,8 @@ for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
 X._setInterpTransfers(t,tc,variables=VARSMACRO,storage=1)
 
 Internal._rmGhostCells(t,t,2)
+Internal._rmNodesByName(t, '.Solver#Param')
+Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 6)
 
 #C.convertPyTree2File(t, 'tout.cgns')

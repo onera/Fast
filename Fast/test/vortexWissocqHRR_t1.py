@@ -93,7 +93,7 @@ C._initVars(t,'{centers:Syy} = {centers:Syy}*%20.16g'%dt)
 C._rmVars(t,['centers:r2'])
 
 C._addState(t, MInf=mach)
-C._addState(t, adim='dim3',UInf=mach*c0,PInf=101320,RoInf=1.1765,LInf=1.)
+C._addState(t, adim='dim3', UInf=mach*c0, PInf=101320., RoInf=1.1765, LInf=1.)
 VARSMACRO = ['Density','VelocityX','VelocityY','VelocityZ','Temperature','Sxx','Sxy','Sxz','Syy','Syz','Szz']
 for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
 X._setInterpTransfers(t,tc,variables=VARSMACRO)

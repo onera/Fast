@@ -40,7 +40,7 @@ t = C.newPyTree(['Base']) ; t[2][1][2] += [a1,a2,a3]
 ### Conditions initiales ####
 t = C.addState(t, 'GoverningEquations', 'Euler')
 t = C.addState(t, 'EquationDimension', 2)
-t = C.addState(t, MInf=0.4, ReInf=100)
+t = C.addState(t, MInf=0.4, ReInf=100.)
 t = I.initLamb(t, position=(15,10.), Gamma=2., MInf=0.7, loc='centers')
 
 ### Raccords ####
