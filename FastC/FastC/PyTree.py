@@ -3062,7 +3062,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
 # single: write restart.cgns (full)
 # multiple: write restart/restart_1.cgns, ... (partial trees)
 #==============================================================================
-def save(t, fileName='restart', split='single', NP=0, cartesian=False):
+def save(t, fileName='restart', split='single', NP=0, compress=0):
     """Save tree and connectivity tree."""
     # Rip file ext if any
     import os.path
@@ -3091,10 +3091,10 @@ def save(t, fileName='restart', split='single', NP=0, cartesian=False):
     zones = Internal.getZones(t2)
     for z in zones:
         Internal._rmNodeByPath(z, '.Solver#ownData')
-    if cartesian: 
+    if compress > 0: 
         import Compressor.PyTree as Compressor
-        Compressor._compressCartesian(t2)
-        #Compressor._compressCellN(t2)
+        if compress >= 1: Compressor._compressCartesian(t2)
+        if compress >= 2: Compressor._compressAll(t2)
 
     flowsol = Internal.getNodeFromName1(zones[0], 'FlowSolution#Centers')
     if flowsol is not None:
@@ -3244,8 +3244,8 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                           t.append(Cmpi.convertFile2SkeletonTree(FILE))
                        no += 1
                     if t != []:
-                        t        = Internal.merge(t)
-                        list_graph=[]
+                        t = Internal.merge(t)
+                        list_graph = []
                         graphN = prepGraphs(t, exploc=exploc)
 
             FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
@@ -3363,7 +3363,7 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
 # the communication graph for IBM transfers
 #==============================================================================
 def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0, 
-    mpirun=False, cartesian=False):
+    mpirun=False, compress=0):
     """Save tree in file."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -3379,10 +3379,10 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
     zones = Internal.getZones(t2)
     for z in zones: Internal._rmNodeByPath(z, '.Solver#ownData')
-    if cartesian:
+    if compress > 0:
         import Compressor.PyTree as Compressor
-        Compressor._compressCartesian(t2)
-        #Compressor._compressCellN(t2)
+        if compress >= 1: Compressor._compressCartesian(t2)
+        if compress >= 2: Compressor._compressAll(t2)
 
     for z in zones:
         node = Internal.getNodeFromName1(z, '.Solver#define')
