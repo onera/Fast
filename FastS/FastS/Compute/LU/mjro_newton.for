@@ -58,11 +58,11 @@ C var loc
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-      do 100 l=incmax+1,ndimdx-incmax
+      do l=incmax+1,ndimdx-incmax
 #else
-      do 100 j = jmin, jmax
+      do j = jmin, jmax
         lij  = inddm(imin, j, 1)
-        do 100 l = lij, lij + imax - imin
+        do l = lij, lij + imax - imin
 CC attention rop et rop_1 identique sauf si nitcfg =1
 #endif
         ro_old    = rop(l,1)
@@ -92,7 +92,12 @@ CC attention rop et rop_1 identique sauf si nitcfg =1
         t_old  = (ro_old*nu_old + drodm(l,6))*r_1
 
         rop_1(l,6) = t_old
-100   continue
+#ifndef E_SCALAR_COMPUTER
+        enddo
+#else
+        enddo
+        enddo
+#endif
 
        else
 #ifndef E_SCALAR_COMPUTER
@@ -100,12 +105,12 @@ CC attention rop et rop_1 identique sauf si nitcfg =1
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-      do 101 l=incmax+1,ndimdx-incmax
+      do l=incmax+1,ndimdx-incmax
 #else
-      do 101 k = kmin, kmax
-      do 101 j = jmin, jmax
+      do k = kmin, kmax
+      do j = jmin, jmax
         lij  = inddm(imin , j, k)
-        do 101 l = lij, lij +  imax - imin
+        do l = lij, lij +  imax - imin
 CC attention rop et rop_1 identique sauf si nitcfg =1
 #endif
         ro_old     = rop(l,1)
@@ -138,7 +143,13 @@ CC attention rop et rop_1 identique sauf si nitcfg =1
 
         rop_1(l,6) = t_old
 
-101   continue
+#ifndef E_SCALAR_COMPUTER
+        enddo
+#else
+        enddo
+        enddo
+        enddo
+#endif
        endif!2d/3d
 
       ELSE
@@ -151,12 +162,12 @@ CC attention rop et rop_1 identique sauf si nitcfg =1
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-      do 200 l=incmax+1,ndimdx-incmax
+      do l=incmax+1,ndimdx-incmax
 #else
-      do 200 j = jmin, jmax
+      do j = jmin, jmax
         lij  = inddm(imin, j, 1)
 CDIR$ NOVEC
-        do 200 l = lij, lij + imax - imin
+        do l = lij, lij + imax - imin
 CC attention rop et rop_1 identique sauf si nitcfg =1
 #endif
         ro_old    = rop(l,1)
@@ -177,8 +188,12 @@ CC attention rop et rop_1 identique sauf si nitcfg =1
         rop_1(l,5)     = ( roe_old + drodm(l,5) )*r_1*cvinv
      &                  - cvinv2*( rop_1(l,2)*rop_1(l,2)
      &                            +rop_1(l,3)*rop_1(l,3))
-200   continue
-
+#ifndef E_SCALAR_COMPUTER
+      enddo
+#else
+      enddo
+      enddo
+#endif
 
        else
 
@@ -187,12 +202,12 @@ CC attention rop et rop_1 identique sauf si nitcfg =1
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-      do 201  l=incmax+1,ndimdx-incmax
+      do l=incmax+1,ndimdx-incmax
 #else
-      do 201  k = kmin, kmax
-      do 201  j = jmin, jmax
+      do k = kmin, kmax
+      do j = jmin, jmax
         lij  = inddm(imin , j, k)
-        do 201 l = lij, lij +  imax - imin
+        do l = lij, lij +  imax - imin
 CC attention rop et rop_1 identique sauf si nitcfg =1
 #endif
         ro_old     = rop(l,1)
@@ -216,8 +231,13 @@ CC attention rop et rop_1 identique sauf si nitcfg =1
      &                  - cvinv2*( rop_1(l,2)*rop_1(l,2)
      &                            +rop_1(l,3)*rop_1(l,3)
      &                            +rop_1(l,4)*rop_1(l,4))
-201   continue
-
+#ifndef E_SCALAR_COMPUTER
+       enddo
+#else
+        enddo
+        enddo
+        enddo
+#endif
        endif!2d/3d
        ENDIF!neq=5 ou 6 
 

@@ -55,11 +55,11 @@ C var loc
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-      do 11 l = 1,ndimt_xyz
+      do l = 1,ndimt_xyz
 #else
-      do 11 k=ind_loop(5),ind_loop(6)
-        do 11 j=ind_loop(3),ind_loop(4)
-          do 11 i=ind_loop(1),ind_loop(2)
+      do k=ind_loop(5),ind_loop(6)
+        do j=ind_loop(3),ind_loop(4)
+          do i=ind_loop(1),ind_loop(2)
 
           l= indcg(i  ,j  ,k     ) ! (i  , j  , k  )
 #endif
@@ -77,8 +77,14 @@ CVD$  NODEPCHK
      &                    + rot(3,1)*(xinit(l)-param_real(ROT_CENTER  ))
      &                    + rot(3,2)*(yinit(l)-param_real(ROT_CENTER+1))
      &                    + rot(3,3)*(zinit(l)-param_real(ROT_CENTER+2))
- 11   continue
-
+ 
+#ifndef E_SCALAR_COMPUTER
+      enddo
+#else
+        enddo
+        enddo
+        enddo
+#endif
 
  10   continue
 

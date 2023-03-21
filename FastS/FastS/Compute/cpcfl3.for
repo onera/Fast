@@ -11,7 +11,7 @@ c***********************************************************************
 c_U   USER :  PECHIER
 c
 c     ACT
-c_A    Calcul du CFL local max par domaine lors d'un calcul 
+c_A    Calcul du CFL local max par domaine lors d un calcul 
 c_A    instationnaire.
 c
 c     VAL
@@ -190,11 +190,11 @@ c******* NS unsteady *****
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
 
-          do 102 j = ind_loop(3), ind_loop(4)
+          do j = ind_loop(3), ind_loop(4)
              lij  =         inddm( ind_loop(1) , j, k)
              lvij =  lij-  indven( ind_loop(1) , j, k)
              lt   = 1
-             do 102 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               lv = l - lvij
  
@@ -226,8 +226,8 @@ c******* NS unsteady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-102   continue
-
+             enddo
+          enddo
        else
 
 #include   "FastS/Compute/loop_ale_begin.for"
@@ -376,12 +376,12 @@ c******* NS steady *****
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
 
-          do 202 k = ind_loop(5), ind_loop(6)
-          do 202 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
              lij  =        inddm( ind_loop(1) , j, k)
              lt   = 1
              lvo  = 1
-             do 202 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               u = rop(l,2)
               v = rop(l,3)
@@ -404,7 +404,9 @@ c******* NS steady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-202   continue
+             enddo
+          enddo
+          enddo
 
        else
 
@@ -563,11 +565,11 @@ c******* Euler unsteady *****
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
 
-          do 302 k = ind_loop(5), ind_loop(6)
-          do 302 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
              lij  =        inddm( ind_loop(1) , j, k)
              lt   = 1
-             do 302 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               u = rop(l,2)
               v = rop(l,3)
@@ -594,8 +596,9 @@ c******* Euler unsteady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-302   continue
-
+             enddo
+          enddo
+          enddo
        else
 
 #include   "FastS/Compute/loop_ale_begin.for"
@@ -729,12 +732,12 @@ c******* Euler steady *****
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
 
-          do 402 k = ind_loop(5), ind_loop(6)
-          do 402 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
              lij  = inddm( ind_loop(1) , j, k)
              lt   = 1
              lvo  = 1
-             do 402 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               u = rop(l,2)
               v = rop(l,3)
@@ -754,7 +757,10 @@ c******* Euler steady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-402   continue
+
+             enddo
+          enddo
+          enddo
 
        else
 

@@ -125,23 +125,29 @@ c      write(*,'(a,2f18.9)')'cn,cm',cn*c3,cnm
 
 !   Initialisation par la moyenne des n-1 echantillons
 #ifndef E_PERMUT
-      do 10 ne=1,neq_my
-        do 10 k= ind_loop(5), ind_loop(6)
-        do 10 j= ind_loop(3), ind_loop(4)
+      do ne=1,neq_my
+        do k= ind_loop(5), ind_loop(6)
+        do j= ind_loop(3), ind_loop(4)
 !DEC$ IVDEP
-        do 10 i= ind_loop(1), ind_loop(2)
+        do i= ind_loop(1), ind_loop(2)
          l =indmy( i, j, k)
          moy(l, ne) =   cnm*moy(l, ne)
- 10   continue 
+        enddo
+        enddo
+        enddo
+      enddo
 #else
-      do 10 k= ind_loop(5), ind_loop(6)
-      do 10 j= ind_loop(3), ind_loop(4)
-      do 10 i= ind_loop(1), ind_loop(2)
+      do k= ind_loop(5), ind_loop(6)
+      do j= ind_loop(3), ind_loop(4)
+      do i= ind_loop(1), ind_loop(2)
          l =indmy( i, j, k)
 !DEC$ IVDEP
-        do 10 ne=1,neq_my
+        do ne=1,neq_my
          moy(l, ne) =   cnm*moy(l, ne)
- 10   continue 
+        enddo
+      enddo
+      enddo
+      enddo
 #endif
 
 

@@ -16,7 +16,7 @@ c
 c_U   USER : DARRACQ 
 c
 c     ACT
-c_A    Construction et inversion d'une matrice inferieure tetradiagonale par blocs
+c_A    Construction et inversion d une matrice inferieure tetradiagonale par blocs
 c      par une methode vectorisable.
 c     VAL
 c_V    Steady

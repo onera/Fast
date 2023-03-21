@@ -72,11 +72,10 @@ c      write(*,*)'loop vis=', ind_loop, inc_bc
 c      if (int( param_wmles(3) ) .eq.1) then
 c       vmoy_bc = 0
 c      else
-       vmoy_bc= param_wmles(4)
+       vmoy_bc = param_wmles(4)
 c      endif
 
       !write(*,*)'vmoy_bc',vcut
-
 
       c0   = 1./c6
       c1   =-(c4 + c5)*c0

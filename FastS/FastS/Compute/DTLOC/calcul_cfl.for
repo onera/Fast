@@ -12,7 +12,7 @@ c***********************************************************************
 c_U   USER :  PECHIER
 c
 c     ACT
-c_A    Calcul du CFL local max par domaine lors d'un calcul 
+c_A    Calcul du CFL local max par domaine lors d un calcul 
 c_A    instationnaire.
 c
 c     VAL
@@ -162,11 +162,11 @@ c******* NS unsteady *****
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
 
-          do 102 j = ind_loop(3), ind_loop(4)
+          do j = ind_loop(3), ind_loop(4)
              lij  =         inddm( ind_loop(1) , j, k)
              lvij =  lij-  indven( ind_loop(1) , j, k)
              lt   = 1
-             do 102 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               lv = l - lvij
  
@@ -187,7 +187,8 @@ c******* NS unsteady *****
               sp  = sqrt(ur2)
  
 #include "FastS/Compute/DTLOC/calc_visc_conv.for"             
-102   continue
+             enddo
+          enddo
 
        else
 
@@ -300,19 +301,17 @@ c******* NS steady *****
 
        elseif(param_int(ITYPZONE).eq.2) then
 
-
-
           ddi = 2.*sqrt( ti(1,1)*ti(1,1) )
           ddj = 2.*sqrt( tj(1,1)*tj(1,1) )
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
 
-          do 202 k = ind_loop(5), ind_loop(6)
-          do 202 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
              lij  =        inddm( ind_loop(1) , j, k)
              lt   = 1
              lvo  = 1
-             do 202 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               u = rop(l,2)
               v = rop(l,3)
@@ -325,11 +324,11 @@ c******* NS steady *****
  
 #include "FastS/Compute/DTLOC/calc_visc_conv.for"             
               
-202   continue
+             enddo
+          enddo
+          enddo
 
        else
-
- 
 
 #include   "FastS/Compute/loop_begin.for"
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
@@ -461,11 +460,11 @@ c******* Euler unsteady *****
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
 
-          do 302 k = ind_loop(5), ind_loop(6)
-          do 302 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
              lij  =        inddm( ind_loop(1) , j, k)
              lt   = 1
-             do 302 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               u = rop(l,2)
               v = rop(l,3)
@@ -485,7 +484,9 @@ c******* Euler unsteady *****
  
 #include "FastS/Compute/DTLOC/calc_visc_conv.for"             
               
-302   continue
+             enddo
+          enddo
+          enddo
 
        else
 
@@ -522,8 +523,6 @@ c******* Euler unsteady *****
 c******* Euler steady *****
 
       Elseif (param_int(LALE).eq.0.and.param_int(IFLOW).lt.2) Then
-
-          !print*, "coucou"
 
         if(param_int(ITYPZONE).eq.0) then
 
@@ -597,12 +596,12 @@ c******* Euler steady *****
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
 
-          do 402 k = ind_loop(5), ind_loop(6)
-          do 402 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
              lij  = inddm( ind_loop(1) , j, k)
              lt   = 1
              lvo  = 1
-             do 402 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               u = rop(l,2)
               v = rop(l,3)
@@ -615,7 +614,9 @@ c******* Euler steady *****
  
 #include "FastS/Compute/DTLOC/calc_visc_conv.for"             
               
-402   continue
+             enddo
+          enddo
+          enddo
 
        else
 

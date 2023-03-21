@@ -587,14 +587,14 @@ CDIR$ VECTOR NONTEMPORAL (coe)
            detj = max(vol(lvo),cut0x)
  
 CDIR$ VECTOR NONTEMPORAL (coe)
-           do 202 k = ind_loop(5), ind_loop(6)
-           do 202 j = ind_loop(3), ind_loop(4)
+           do k = ind_loop(5), ind_loop(6)
+           do j = ind_loop(3), ind_loop(4)
 
             lij   =       inddm(ind_loop(1) , j, k)
             lvij  = lij - indven(ind_loop(1) , j, k)
 
 CDIR$ IVDEP
-            do 202 l = lij,  lij + ind_loop(2) - ind_loop(1)
+            do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
                lv = l-lvij
 
@@ -642,8 +642,10 @@ CDIR$ IVDEP
                !Evaluation de la diagonale princi_mtrpale scalaire (5*5) pour la cellule l
                !Id+Partie convective precedente+Partie visqueuse
                coe(l,5)=xid+ coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
-202    continue
 
+              enddo
+            enddo
+            enddo
 
          else !maillage mobile, 2d
 
