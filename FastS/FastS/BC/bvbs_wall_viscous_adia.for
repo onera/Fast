@@ -36,14 +36,12 @@ C Var local
 #include "FastS/formule_param.h"
 #include "FastS/formule_vent_param.h"
 
-
-
 c      write(*,*)'idir=', idir,nijk(4),nijk(5),ndimdx
 c      write(*,*)'nijk=', nijk
 c      write(*,*)'loop vis=', ind_loop
 
 
-c......determine la forme des tableuz metrique en fonction de la nature du domaine
+c......determine la forme des tableau metrique en fonction de la nature du domaine
       !Seule la valeur de k_vent et ck_vent a un sens dans cet appel
       call shape_tab_mtr(neq_mtr, param_int, idir,
      &                   ic,jc,kc,kc_vent,
@@ -51,8 +49,8 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
 
       c_ale = c_ale*mobile_coef
       if(lrhs.eq.1) c_ale = 0.
-
-      IF (idir.eq.1) THEN
+      
+      IF (idir.eq.1) THEN 
 
        iref = 2*ind_loop(2) + 1
 

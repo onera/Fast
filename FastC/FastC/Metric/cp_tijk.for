@@ -25,7 +25,7 @@ c***********************************************************************
 
 #include "FastC/param_solver.h"
 
-      INTEGER_E ind_loop(6),param_int(0:*)
+      INTEGER_E ind_loop(6),param_int(0:*) 
 
       REAL_E x(param_int( NDIMDX_XYZ )),y(param_int( NDIMDX_XYZ )),
      &       z(param_int( NDIMDX_XYZ ))    

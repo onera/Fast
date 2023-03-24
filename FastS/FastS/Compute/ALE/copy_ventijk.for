@@ -46,6 +46,8 @@ C Var loc
       REAL_E vx10, vx11, vy10, vy11, vz10, vz11
       REAL_E Sx, Sy, Sz, O13
       
+      INTEGER_E lj0,ljp,li0,lip
+      REAL_E bilanx, bilany
 
 #include "FastS/param_solver.h"
 #include "FastS/formule_param.h"
@@ -81,6 +83,9 @@ C 0: 1/4 node velocity, 1: ponderated by triangles
       if(ind_loop1(6).eq.ind_dm(6)) 
      &  ind_loop(6)=ind_loop1(6)+param_int(NIJK_VENT+4)
 
+      inci = 1
+      incj = param_int( NIJK_XYZ )
+      inck = param_int( NIJK_XYZ )*param_int( NIJK_XYZ+1 )
 
       IF(param_int(ITYPVENT).eq.0) THEN
 
@@ -90,9 +95,6 @@ C 0: 1/4 node velocity, 1: ponderated by triangles
 #include    "FastS/Compute/ALE/loopIvent_begin.for"
 
             !Face k
-            inci = 1
-            incj = param_int( NIJK_XYZ )
-
             lx1 = l111 + incj
             lx2 = l111 + inci
             lx3 = lx1  + inci
@@ -152,8 +154,6 @@ C 0: 1/4 node velocity, 1: ponderated by triangles
      &                  +vent_vertex(lx2+v3in)
      &                  +vent_vertex(lx3+v3in))
 
-C            WRITE(*,*) 'kS', Sz
-C            WRITE(*,*) 'kref', ventk(l+v3ven)
             IF (ABS(Sx) .GT. 1.e-13) THEN
                 ventk(l) = 0.5*(tkx11*vx11 + tkx10*vx10) /Sx
             ENDIF
@@ -163,12 +163,8 @@ C            WRITE(*,*) 'kref', ventk(l+v3ven)
             IF (ABS(Sz) .GT. 1.e-13) THEN
                 ventk(l+v3ven) = 0.5*(tkz11*vz11 + tkz10*vz10) /Sz
             ENDIF
-C            WRITE(*,*) 'kmod', ventk(l+v3ven)
 #endif
             !Face j
-            inci = 1
-            inck = param_int( NIJK_XYZ )*param_int( NIJK_XYZ+1 )
-
             lx1 = l111 + inck
             lx2 = l111 + inci
             lx3 = lx1  + inci
@@ -228,8 +224,6 @@ C            WRITE(*,*) 'kmod', ventk(l+v3ven)
      &                  +vent_vertex(lx2+v3in)
      &                  +vent_vertex(lx3+v3in))
             
-C            WRITE(*,*) 'jS', Sx, Sy
-C            WRITE(*,*) 'jref', ventj(l), ventj(l+v2ven)
             IF (ABS(Sx) .GT. 1.e-13) THEN      
                 ventj(l) = 0.5*(tkx11*vx11 + tkx10*vx10) /Sx
             ENDIF
@@ -239,13 +233,9 @@ C            WRITE(*,*) 'jref', ventj(l), ventj(l+v2ven)
             IF (ABS(Sz) .GT. 1.e-13) THEN      
                 ventj(l+v3ven) = 0.5*(tkz11*vz11 + tkz10*vz10) /Sz
             ENDIF
-C            WRITE(*,*) 'jmod', ventj(l), ventj(l+v2ven)
 #endif
 
             !Face i
-            incj = param_int( NIJK_XYZ )
-            inck = param_int( NIJK_XYZ )*param_int( NIJK_XYZ+1 )
-
             lx1 = l111 + inck
             lx2 = l111 + incj
             lx3 = lx1  + incj
@@ -305,8 +295,6 @@ C            WRITE(*,*) 'jmod', ventj(l), ventj(l+v2ven)
      &                  +vent_vertex(lx2+v3in)
      &                  +vent_vertex(lx3+v3in))
             
-C            WRITE(*,*) 'iS', Sx, Sy
-C            WRITE(*,*) 'iref', venti(l), venti(l+v2ven)
             IF (ABS(Sx) .GT. 1.e-13) THEN      
                 venti(l) = 0.5*(tkx11*vx11 + tkx10*vx10) /Sx
             ENDIF
@@ -316,7 +304,6 @@ C            WRITE(*,*) 'iref', venti(l), venti(l+v2ven)
             IF (ABS(Sz) .GT. 1.e-13) THEN      
                 venti(l+v3ven) = 0.5*(tkz11*vz11 + tkz10*vz10) /Sz
             ENDIF
-C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
 #endif
 
             enddo
@@ -331,9 +318,6 @@ C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
 #include    "FastS/Compute/ALE/loopIvent_begin.for"
 
             !Face k
-            inci = 1
-            incj = param_int( NIJK_XYZ )
-
             lx1 = l111 + incj
             lx2 = l111 + inci
             lx3 = lx1  + inci
@@ -386,9 +370,6 @@ C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
 #endif
 
             !Face j
-            inci = 1
-            inck = param_int( NIJK_XYZ )*param_int( NIJK_XYZ+1 )
-
             lx1 = l111 + inck
             lx2 = l111 + inci
             lx3 = lx1  + inci
@@ -440,9 +421,6 @@ C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
 #endif
 
             !Face i
-            incj = param_int( NIJK_XYZ )
-            inck = param_int( NIJK_XYZ )*param_int( NIJK_XYZ+1 )
-
             lx1 = l111 + inck
             lx2 = l111 + incj
             lx3 = lx1  + incj
@@ -498,7 +476,7 @@ C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
           enddo
 
 
-      ELSEIF(param_int( ITYPVENT ).eq.3) THEN !2d
+      ELSEIF(param_int(ITYPVENT).eq.3) THEN !2d
 
        do k = ind_loop(5), ind_loop(6)
        do j = ind_loop(3), ind_loop(4)
@@ -506,9 +484,6 @@ C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
 #include    "FastS/Compute/ALE/loopIvent_begin.for"
 
             !Face j
-            inci = 1
-            inck = param_int( NIJK_XYZ )*param_int( NIJK_XYZ+1 )
-
             lx1 = l111 + inck
             lx2 = l111 + inci
             lx3 = lx1  + inci
@@ -535,8 +510,37 @@ C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
             tky11=(z(lx3)-z(l111))*(x(lx2)-x(l111))
      &           -(x(lx3)-x(l111))*(z(lx2)-z(l111))
 
+            ! formule tij courant
+C            tkx10=(y(lx2)-y(l111))*(z(lx3)-z(l111))
+C     &           -(z(lx2)-z(l111))*(y(lx3)-y(l111))
+C            tky10=(z(lx2)-z(l111))*(x(lx3)-x(l111))
+C     &           -(x(lx2)-x(l111))*(z(lx3)-z(l111))
+C            tkx11=(y(lx1)-y(lx3))*(z(l111)-z(lx1))
+C     &           -(z(lx1)-z(lx3))*(y(l111)-y(lx1))
+C            tky11=(z(lx1)-z(lx3))*(x(l111)-x(lx1))
+C     &           -(x(lx1)-x(lx3))*(z(l111)-z(lx1))
+
+            ! formule tij face j
+C            tkx10=(y(l111)-y(lx2))*(z(lx1)-z(l111))
+C     &           -(z(l111)-z(lx2))*(y(lx1)-y(l111))
+C            tky10=(z(l111)-z(lx2))*(x(lx1)-x(l111))
+C     &           -(x(l111)-x(lx2))*(z(lx1)-z(l111))
+C            tkx11=(y(lx3)-y(lx1))*(z(lx2)-z(lx3))
+C     &           -(z(lx3)-z(lx1))*(y(lx2)-y(lx3))
+C            tky11=(z(lx3)-z(lx1))*(x(lx2)-x(lx3))
+C     &           -(x(lx3)-x(lx1))*(z(lx2)-z(lx3))            
+
+
             Sx = 0.5*(tkx10 + tkx11)
             Sy = 0.5*(tky10 + tky11)
+
+            !if (l.EQ.411) THEN
+            !    WRITE(*,*) 'sx',Sx,Sy
+            !    WRITE(*,*) l111, lx1,lx2,lx3
+            !    WRITE(*,*) 'x',x(l111), y(lx1), y(lx2), y(lx3)
+            !    WRITE(*,*) 'y',y(l111), y(lx1), y(lx2), y(lx3)
+            !    WRITE(*,*) 'z',z(l111), y(lx1), y(lx2), y(lx3)
+            !endif
 
             vx10 = O13 *(vent_vertex(l111)
      &                  +vent_vertex(lx1)
@@ -558,25 +562,30 @@ C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
             IF (ABS(Sy) .GT. 1.e-13) THEN
                 ventj(l+v2ven) = 0.5*(tky10*vy10 + tky11*vy11) /Sy
             ENDIF
+
+            ! DBX
+            !ventj(l) = Sx
+            !ventj(l+v2ven) = Sy
+            !ventj(l) = 0.5*(tkx10*vx10 + tkx11*vx11)
+            !ventj(l+v2ven) = 0.5*(tky10*vy10 + tky11*vy11)
+            ! ENDDBX
+
 #endif
 
             !Face i
-            incj = param_int( NIJK_XYZ )
-            inck = param_int( NIJK_XYZ )*param_int( NIJK_XYZ+1 )
-
             lx1 = l111 + inck
             lx2 = l111 + incj
             lx3 = lx1  + incj
 
-             venti(l)       = .25*( vent_vertex(l111) 
+            venti(l)       = .25*( vent_vertex(l111) 
      &                             +vent_vertex(lx2) 
      &                             +vent_vertex(lx3) 
-     &                             +vent_vertex(lx1)  )
+     &                             +vent_vertex(lx1) )
 
              venti(l+v2ven) = .25*( vent_vertex(l111+v2in) 
      &                             +vent_vertex(lx2 +v2in) 
      &                             +vent_vertex(lx3 +v2in) 
-     &                             +vent_vertex(lx1 +v2in)  )
+     &                             +vent_vertex(lx1 +v2in) )
 
             ! formule de pechier
 #if FORMULA == 1
@@ -589,6 +598,17 @@ C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
      &           -(z(lx3)-z(l111))*(y(lx2)-y(l111))
             tky11=(z(lx3)-z(l111))*(x(lx2)-x(l111))
      &           -(x(lx3)-x(l111))*(z(lx2)-z(l111))
+
+
+C            tkx10=(y(lx2)-y(l111))*(z(lx3)-z(l111))
+C     &           -(z(lx2)-z(l111))*(y(lx3)-y(l111))
+C            tky10=(z(lx2)-z(l111))*(x(lx3)-x(l111))
+C     &           -(x(lx2)-x(l111))*(z(lx3)-z(l111))
+C            tkx11=(y(lx1)-y(lx3))*(z(l111)-z(lx1))
+C     &           -(z(lx1)-z(lx3))*(y(l111)-y(lx1))
+C            tky11=(z(lx1)-z(lx3))*(x(l111)-x(lx1))
+C     &           -(x(lx1)-x(lx3))*(z(l111)-z(lx1))
+
 
             Sx = 0.5*(tkx10 + tkx11)
             Sy = 0.5*(tky10 + tky11)
@@ -613,11 +633,41 @@ C            WRITE(*,*) 'imod', venti(l), venti(l+v2ven)
             IF (ABS(Sy) .GT. 1.e-13) THEN      
                 venti(l+v2ven) = 0.5*(tky10*vy10 + tky11*vy11) /Sy
             ENDIF
+
+            ! DBX
+            !venti(l) = Sx
+            !venti(l+v2ven) = Sy
+            !venti(l) = 0.5*(tkx10*vx10 + tkx11*vx11)
+            !venti(l+v2ven) = 0.5*(tky10*vy10 + tky11*vy11)
+            ! ENDDBX
 #endif
             enddo
            enddo
           enddo
 
       ENDIF
+
+      ! check le bilan
+      ! i = -1, 0 (ghostcells)
+      !i = 1
+      !j = 1
+      !k = 1
+      !lj0 = indven(i,j,k)
+      !ljp = indven(i,j+1,k)
+      !li0 = indven(i,j,k)
+      !lip = indven(i+1,j,k)
+      !WRITE(*,*) 'adrr ljp', ljp, indmtr(i,j+1,k)
+      !WRITE(*,*) 'adrr lj0', lj0, indmtr(i,j,k)
+      !WRITE(*,*) 'neqvent', param_int(NEQ_VENT)
+      !bilanx = venti(lip) - venti(li0) + ventj(ljp) - ventj(lj0)
+      !bilany = venti(lip+v2ven) - venti(li0+v2ven)
+      !&         + ventj(ljp+v2ven) - ventj(lj0+v2ven)
+      
+      !WRITE(*,*) 'vent li0', venti(li0), venti(li0+v2ven)
+      !WRITE(*,*) 'vent lip', venti(lip), venti(lip+v2ven)
+      !WRITE(*,*) 'vent lj0', ventj(lj0), ventj(lj0+v2ven)
+      !WRITE(*,*) 'vent ljp', ventj(ljp), ventj(ljp+v2ven)
+      
+      !WRITE(*,*) 'bilan des surfaces', bilanx, bilany
 
       end

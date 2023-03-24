@@ -6,7 +6,6 @@
       v  = v + r*svar3*roinv
       w  = w + r*svar4*roinv
 
-
       rop(ir,1) =  svar1
       rop(ir,2) =  u 
       rop(ir,3) =  v 

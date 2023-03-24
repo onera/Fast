@@ -49,7 +49,7 @@ C Var local
 c......determine la forme des tableuz metrique en fonction de la nature du domaine
       !Seule la valeur de k_vent et ck_vent a un sens dans cet appel
       call shape_tab_mtr(neq_mtr, param_int, idir,
-     &                   ic,jc,kc,kc_vent,
+     &                   ic,jc,kc,kc_vent, 
      &                   ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale)
 
 c      write(*,*)'idir=', idir,nijk(4),nijk(5),param_int(NDIMDX)
@@ -59,8 +59,7 @@ c      write(*,*)'loop=', ind_loop
       !if(idir.eq.1.or.idir.eq.2) return
       !if(idir.ne.1) return
       !write(*,*)'neq_vent=', param_int(NEQ_VENT), param_int(NDIMDX_VENT)
-
-
+      
       snorm =-1.
       if(mod(idir,2).eq.0) snorm = 1.
 
@@ -118,14 +117,13 @@ c      write(*,*)'loop=', ind_loop
                lmtr = indmtr(ind_loop(2)+1  , j,  k )
                ldp  = indven(ind_loop(2)+1  , j,  k )
                l1   = l  + 1
-
 #include       "FastS/BC/BCFarfield_firstrank_SA.for"
 
-               l0   = l
+               l0   = l 
                l2   = l + 2
                do  i = ind_loop(1), ind_loop(2)-1
  
-                 l    = inddm( i , j,  k ) 
+                l    = inddm( i , j,  k )
 #include        "FastS/BC/BC_nextrank_SA.for"
                enddo   
              enddo

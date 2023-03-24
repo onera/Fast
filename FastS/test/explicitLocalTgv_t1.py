@@ -35,7 +35,7 @@ dt     = 2.*0.0006*L0/U0
 
 if explicit_select == 'explicit_local':
     dt     = 2*dt   
-nit    = 100#int(tfinal/dt)
+nit    = 100 #int(tfinal/dt)
 
 N      = 66 #Chosen to be a multiple of 3 for the three domains
 dx     = 2*math.pi*L0/N

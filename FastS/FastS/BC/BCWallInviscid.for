@@ -17,7 +17,7 @@
 
             u  =  rop(ldjr,2) - ventx*c_ale
             v  =  rop(ldjr,3) - venty*c_ale
-            w  =  rop(ldjr,4) - ventz*c_ale 
+            w  =  rop(ldjr,4) - ventz*c_ale
 
             qn = (u*tcx+v*tcy+w*tcz)
 
