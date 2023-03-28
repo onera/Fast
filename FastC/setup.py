@@ -67,7 +67,7 @@ listExtensions.append(
 # setup ======================================================================
 setup(
     name="FastC",
-    version="3.6",
+    version="3.7",
     description="FastC common part of fluid solvers.",
     author="ONERA",
     url="https://w3.onera.fr/FAST",

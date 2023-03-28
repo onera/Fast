@@ -1,5 +1,6 @@
 # - compute (pyTree) -
 # - Lamb vortex [Euler/explicit] -
+# - senseur hyper -
 import Generator.PyTree as G
 import Converter.PyTree as C
 import Initiator.PyTree as I
@@ -24,7 +25,7 @@ numz["time_step"]          = 0.01
 numz["scheme"]             = "senseur_hyper"
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
-(t, tc, metrics) = FastS.warmup(t, None, verbose=1)
+(t, tc, metrics) = FastS.warmup(t, None)
 
 nit = 1000 ; time = 0.
 timeStep = numz['time_step']

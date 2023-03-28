@@ -76,7 +76,7 @@ listExtensions.append(
 # setup ======================================================================
 setup(
     name="FastS",
-    version="3.6",
+    version="3.7",
     description="Fast for structured grids.",
     author="ONERA",
     url="https://w3.onera.fr/FAST",

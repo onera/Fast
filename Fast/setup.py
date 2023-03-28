@@ -83,7 +83,7 @@ listExtensions.append(
 # setup ======================================================================
 setup(
     name="Fast",
-    version="3.6",
+    version="3.7",
     description="Fast NS and LBM solvers.",
     author="ONERA",
     url="https://w3.onera.fr/FAST",
