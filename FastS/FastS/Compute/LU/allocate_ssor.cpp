@@ -25,13 +25,9 @@
 #endif
 using namespace std;
 using namespace K_FLD;
-#include "stub.h"
-extern int __activation__;
 
 PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 {
-  if (__activation__ == 0) { PyErr_SetString(PyExc_NotImplementedError, STUBMSG); return NULL; }
-
   PyObject *zones; PyObject *metrics; PyObject* work;
   E_Int nssiter; E_Int ompmode;
 

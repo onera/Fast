@@ -212,7 +212,8 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
   delete [] ipt_param_real;
   delete [] ipt_param_int;
 
-  RELEASESHAREDN( lokArray    , lok  );
+  RELEASESHAREDN(lokArray    , lok);
+  RELEASESHAREDN(dtlocArray  , dtloc);
   RELEASEHOOK(hook)
 
   Py_INCREF(Py_None);

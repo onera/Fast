@@ -25,8 +25,6 @@
 #endif
 using namespace std;
 using namespace K_FLD;
-#include "stub.h"
-extern int __activation__;
 
 //=============================================================================
 // La metrique
@@ -35,8 +33,6 @@ extern int __activation__;
 //=============================================================================
 PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
 {
-  if (__activation__ == 0) { PyErr_SetString(PyExc_NotImplementedError, STUBMSG); return NULL; }
-
   PyObject* zones;  PyObject* metrics; E_Int omp_mode;
 #if defined E_DOUBLEINT
   if (!PyArg_ParseTuple(args, "OOl", &zones, &metrics, &omp_mode)) return NULL; 
