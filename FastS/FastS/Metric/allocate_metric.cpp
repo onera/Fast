@@ -271,7 +271,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
      //
      PyObject* ipti0; PyObject* iptventi;
      E_Int neq_vent;
-     if     (lale == 0) { ipti0 = ipti; iptventi= ro; neq_vent = 0; }
+     if   (lale == 0) { ipti0 = ipti; iptventi= ro; neq_vent = 0; }
      else // ale=1 ou 2
      {
        neq_vent = ipt_param_int[ NEQ_VENT ]*3;

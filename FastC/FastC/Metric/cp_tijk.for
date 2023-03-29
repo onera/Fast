@@ -55,7 +55,7 @@ c Var loc
 #include "FastC/formule_xyz_param.h"
 
 
-      !DBX CB
+      !DBX CB - uncomment this in debug mode
       !do l = 1,param_int( NDIMDX_MTR )
       !   ti(l,1) = -999.
       !   ti(l,2) = -999.

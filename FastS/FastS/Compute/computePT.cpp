@@ -78,7 +78,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   E_Int lcfl= 0;
  // 
  // 
- // 
+ //
  // partie code specifique au Transfer Data
  // 
  // 

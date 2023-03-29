@@ -19,6 +19,7 @@ try:
     import math
     import time as Time
     import Connector.Mpi as Xmpi
+    import RigidMotion.PyTree as R
 
     #import timeit
     #import KCore.Dist as Dist
@@ -420,7 +421,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     zones = Internal.getZones(t) # car create primvar rend zones caduc
     c   = 0
-    ale = False
+    ale = 0
     for z in zones:
         motion = 'none'
         b = Internal.getNodeFromName2(z, 'motion')
@@ -429,19 +430,27 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
             sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
             ro = Internal.getNodeFromName1(sol, 'Density')
             metrics[c][2] = ro[1]
-        else: ale = True
+        elif motion == 'deformation': ale = 2; break
+        else: ale = 1; break
         c += 1
 
     #
     # mise a jour vitesse entrainememnt
     #
     #t0=timeit.default_timer()
-    if ale and infos_ale is not None:
+    if ale == 1 and infos_ale is not None:
         print("ale actif. Teta et tetap=", infos_ale)
         teta = infos_ale[0]; tetap = infos_ale[1]
         FastC._motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
-    
+    elif ale == 2:
+        first = Internal.getNodeFromName1(t, 'Time')
+        if first is not None: time = Internal.getValue(first)
+        else: time = 0.
+        R._evalPosition(t, time)
+        R._evalGridSpeed(t, time)
+        copy_velocity_ale(t, metrics)
+
     #t1=timeit.default_timer()
     #print("cout mise a jour vitesse entr= ", t1-t0)
     #
@@ -661,7 +670,7 @@ def _createTBLESA(tc, h0, hn, nbpts_linelets=45):
          # field  = numpy.zeros(nbptD,dtype=numpy.float64)
 
 
-         shift        = 0
+         shift = 0
          for z in zones_tc:
                        subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
                        if subRegions is not None:
@@ -676,7 +685,6 @@ def _createTBLESA(tc, h0, hn, nbpts_linelets=45):
                                    if zsrname[1] == '6' or zsrname[1] == '15':
                                      pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
                                      Nbpts_D       = numpy.shape(pointlistD[1])[0]
-
 
                                      zI = Internal.getNodeFromName1(s,'CoordinateZ_PI')
                                      valzI = Internal.getValue(zI)
@@ -693,7 +701,7 @@ def _createTBLESA(tc, h0, hn, nbpts_linelets=45):
 
                                      if Nbpts_D > 1:
 
-                                         for noind in range(0,Nbpts_D):
+                                         for noind in range(0, Nbpts_D):
 
                                              b0 = valxI[noind]-valxW[noind]
                                              b1 = valyI[noind]-valyW[noind]
@@ -1182,7 +1190,7 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_
 
        # Compactage arbre transfert
        g = None; l = None
-       zones=Internal.getZones(t)
+       zones = Internal.getZones(t)
 
        X.miseAPlatDonorTree__(zones, tc, graph=g, list_graph=l)
 
@@ -1195,9 +1203,9 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_
 
     own  = Internal.getNodeFromName1(t, '.Solver#ownData')
     if own is not None: 
-       dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')[1]
-       dtloc[3]=timelevel_motion
-       dtloc[4]=timelevel_target
+       dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')[1]
+       dtloc[3] = timelevel_motion
+       dtloc[4] = timelevel_target
 
     return tc, graph
 
