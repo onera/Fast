@@ -12,7 +12,6 @@ import sys
 import FastC.fastc
 
 try:
-    import KCore.test as Test
     import Converter.PyTree as C
     import Converter.Mpi    as Cmpi
     import Distributor2.PyTree as D2
@@ -21,6 +20,7 @@ try:
     import Connector.PyTree as X
     import Connector
     import FastC.PyTree as FastC
+    import RigidMotion.PyTree as R
     import os
     import math
 except:
@@ -748,7 +748,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         print("Wire Model REQUIRES graphInvIBCD...exiting")
         exit()
 
-
     # compute info linelets
     nbpts_linelets = 0
     if tc is not None:
@@ -816,7 +815,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     # init         : ssiter_loc
     metrics = allocate_metric(t)
 
-
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t) 
 
@@ -853,7 +851,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     zones = Internal.getZones(t) # car create primvar rend zones caduc
     c   = 0
-    ale = False
+    ale = 0
     for z in zones:
         motion = 'none'
         b = Internal.getNodeFromName2(z, 'motion')
@@ -862,17 +860,25 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
             sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
             ro = Internal.getNodeFromName1(sol, 'Density')
             metrics[c][2] = ro[1]
-        else: ale =True
+        elif motion == 'deformation': ale = 2
+        else: ale = 1
         c += 1
 
     #
     # mise a jour vitesse entrainememnt
     #
-    if ale == True and infos_ale is not None:
+    if ale == 1 and infos_ale is not None:
         print("ale actif. Teta et tetap=", infos_ale)
         teta = infos_ale[0];  tetap = infos_ale[1]
         FastC._motionlaw(t, teta, tetap)
         _computeVelocityAle(t,metrics)
+    elif ale == 2:
+        first = Internal.getNodeFromName1(t, 'Time')
+        if first is not None: time = Internal.getValue(first)
+        else: time = 0.
+        R._evalPosition(t, time)
+        R._evalGridSpeed(t, time)
+        copy_velocity_ale(t, metrics)
     #
     # Compactage arbre transfert
     #

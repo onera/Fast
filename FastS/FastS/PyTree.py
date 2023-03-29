@@ -434,7 +434,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         else: ale = 1
         c += 1
 
-    #
     # mise a jour vitesse entrainememnt
     #
     #t0=timeit.default_timer()
@@ -447,7 +446,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         first = Internal.getNodeFromName1(t, 'Time')
         if first is not None: time = Internal.getValue(first)
         else: time = 0.
-        print("IN ALE", flush=True)
         R._evalPosition(t, time)
         R._evalGridSpeed(t, time)
         copy_velocity_ale(t, metrics)

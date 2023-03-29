@@ -54,29 +54,64 @@ c Var loc
 #include "FastC/formule_mtr_param.h"
 #include "FastC/formule_xyz_param.h"
 
-
-      !DBX CB - uncomment this in debug mode
-      !do l = 1,param_int( NDIMDX_MTR )
-      !   ti(l,1) = -999.
-      !   ti(l,2) = -999.
-      !   ti(l,3) = -999.
-      !   tj(l,1) = -999.
-      !   tj(l,2) = -999.
-      !   tj(l,3) = -999.
-      !   tk(l,1) = -999.
-      !   tk(l,2) = -999.
-      !   tk(l,3) = -999.
-      !   ti0(l,1) = -999.
-      !   ti0(l,2) = -999.
-      !   ti0(l,3) = -999.
-      !   tj0(l,1) = -999.
-      !   tj0(l,2) = -999.
-      !   tj0(l,3) = -999.
-      !   tk0(l,1) = -999.
-      !   tk0(l,2) = -999.
-      !   tk0(l,3) = -999.
-      !enddo
-      !END DBX CB
+#ifdef __DEBUG__
+      !DBX CB - init metric in debug mode
+      if (param_int(ITYPZONE).eq.1) then
+        do l = 1,param_int( NDIMDX_MTR )
+         ti(l,1) = -999.
+         ti(l,2) = -999.
+         ti(l,3) = -999.
+         tj(l,1) = -999.
+         tj(l,2) = -999.
+         tj(l,3) = -999.
+         tk(l,1) = -999.
+         tk(l,2) = -999.
+         tk(l,3) = -999.
+         ti0(l,1) = -999.
+         ti0(l,2) = -999.
+         ti0(l,3) = -999.
+         tj0(l,1) = -999.
+         tj0(l,2) = -999.
+         tj0(l,3) = -999.
+         tk0(l,1) = -999.
+         tk0(l,2) = -999.
+         tk0(l,3) = -999.
+        enddo
+      else if (param_int(ITYPZONE).eq.1) then
+        do l = 1,param_int( NDIMDX_MTR )
+         ti(l,1) = -999.
+         ti(l,2) = -999.
+         tj(l,1) = -999.
+         tj(l,2) = -999.
+         tk(l,1) = -999.
+         ti0(l,1) = -999.
+         ti0(l,2) = -999.
+         tj0(l,1) = -999.
+         tj0(l,2) = -999.
+         tk0(l,1) = -999.
+        enddo
+      else if (param_int(ITYPZONE).eq.2) then
+        do l = 1,param_int( NDIMDX_MTR )
+         ti(l,1) = -999.
+         tj(l,1) = -999.
+         tk(l,1) = -999.
+         ti0(l,1) = -999.
+         tj0(l,1) = -999.
+         tk0(l,1) = -999.
+        enddo
+      else 
+        do l = 1,param_int( NDIMDX_MTR )
+         ti(l,1) = -999.
+         ti(l,2) = -999.
+         tj(l,1) = -999.
+         tj(l,2) = -999.
+         ti0(l,1) = -999.
+         ti0(l,2) = -999.
+         tj0(l,1) = -999.
+         tj0(l,2) = -999.
+        enddo
+      endif
+#endif
       
       inci = 1
       incj = param_int( NIJK_XYZ ) 
@@ -524,7 +559,7 @@ c-----le nbr de metrique varie selon le type de domaine
 
       ENDIF!neq_k
 
-      !on sauvegarde les metrique de l'instant initial en ale
+      !on sauvegarde les metriques de l'instant initial en ale
       If(param_int( LALE ).eq.1) THEN
 
        inck = 0 

@@ -81,6 +81,8 @@ nbsocket = Dist.getNbSocket()
 if nbsocket == 1: f77CppArgs += ' -DNB_SOCKET=1'
 else: f77CppArgs += ' -DNB_SOCKET=%d'%nbsocket
 
+if Dist.DEBUG: f77CppArgs += ' -D__DEBUG__'
+
 corePerSock = Dist.getCorePerSocket()
 if  corePerSock== 1: f77CppArgs += ' -DCORE_PER_SOCK=1'
 else: f77CppArgs += ' -DCORE_PER_SOCK=%d'%corePerSock
