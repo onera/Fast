@@ -67,7 +67,7 @@ C_LOCAL
      & lmtri,lmtr0i,lmtrk,lmtr0k,li,lj,lk,ind1,ind2,ind3,no,
      & jmax,kmax,imax,translation_pur,lmin
       REAL_E ix,iy,iz,eps
-      INTEGER_E shift_vol;
+      INTEGER_E shift_vol
 
 #include "FastC/formule_mtr_param.h"
 #include "FastC/formule_xyz_param.h"
@@ -161,8 +161,8 @@ C_LOCAL
      &                    degener,
      &                    ti,tj,tk, ti0,tj0,tk0, vol)
 
-        eps =1e-11 
-        if(param_int( ITYPZONE ).eq.0) then
+        eps = 1e-11 
+        if(param_int( ITYPZONE ).eq.0) then ! 3D general
 
           do k= ind_dm_zone(5), ind_dm_zone(6)
           do j= ind_dm_zone(3), ind_dm_zone(4)
@@ -183,7 +183,7 @@ C_LOCAL
           enddo 
           enddo
 
-        elseif(param_int( ITYPZONE ).eq.1) then
+        elseif(param_int( ITYPZONE ).eq.1) then ! 3D homogene
 
           do k= ind_dm_zone(5), ind_dm_zone(6)
           do j= ind_dm_zone(3), ind_dm_zone(4)
@@ -205,7 +205,7 @@ C_LOCAL
           enddo 
           enddo
 
-       elseif(param_int( ITYPZONE ).eq.3) then
+        elseif(param_int( ITYPZONE ).eq.3) then ! 2D
 
           do k= ind_dm_zone(5), ind_dm_zone(6)
           do j= ind_dm_zone(3), ind_dm_zone(4)
@@ -218,9 +218,9 @@ C_LOCAL
 
             ix =(ti(l,1)-ti(li,1))+(tj(l,1)-tj(lj,1))
             iy =(ti(l,2)-ti(li,2))+(tj(l,2)-tj(lj,2))
-          
+            
             if(abs(ix).ge.eps.or.abs(iy).ge.eps) 
-     &        write(*,'(a,3f25.20,4i5)')'cons',ix,iy,iz,i,j,k,ndom
+     &        write(*,'(a,2f25.20,4i5)')'cons',ix,iy,i,j,k,ndom
           enddo 
           enddo 
           enddo
@@ -236,16 +236,16 @@ C_LOCAL
             lj= indmtr(i  ,j+1,k)
             lk= indmtr(i  ,j  ,k+1)
 
-            if(param_int( ITYPZONE ).eq.0) then
+            if(param_int( ITYPZONE ).eq.0) then ! 3D general
             ix =(ti(l,1)-ti(li,1))+(tj(l,1)-tj(lj,1))+(tk(l,1)-tk(lk,1))
             iy =(ti(l,2)-ti(li,2))+(tj(l,2)-tj(lj,2))+(tk(l,2)-tk(lk,2))
             iz =(ti(l,3)-ti(li,3))+(tj(l,3)-tj(lj,3))+(tk(l,3)-tk(lk,3))
-            elseif(param_int( ITYPZONE ).eq.1) then
+            elseif(param_int( ITYPZONE ).eq.1) then ! 3D homo
             ix =(ti(l,1)-ti(li,1))+(tj(l,1)-tj(lj,1))
             iy =(ti(l,2)-ti(li,2))+(tj(l,2)-tj(lj,2))
             iz =(tk(l,1)-tk(lk,1))
 
-            elseif(param_int( ITYPZONE ).eq.3) then
+            elseif(param_int( ITYPZONE ).eq.3) then ! 2D
             ix =(ti(l,1)-ti(li,1))+(tj(l,1)-tj(lj,1))
             iy =(ti(l,2)-ti(li,2))+(tj(l,2)-tj(lj,2))
             iz =0.
@@ -316,7 +316,7 @@ C_LOCAL
         enddo 
         enddo
 
-        !extap distance paroi
+        !extrap distance paroi
         if(param_int(IFLOW).eq.3) then
 
             ind_dm_zone(2) = param_int(IJKV  )
@@ -324,7 +324,7 @@ C_LOCAL
             ind_dm_zone(6) = param_int(IJKV+2)
             call dist_extrap( param_int(NDIMDX), param_int(NDIMDX_XYZ),
      &                        param_int(NIJK), param_int( NIJK_XYZ ),
-     &                        ind_dm_zone, degener , dist)
+     &                        ind_dm_zone, degener, dist)
         endif
 
 

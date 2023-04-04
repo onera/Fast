@@ -55,8 +55,9 @@ c Var loc
 #include "FastC/formule_xyz_param.h"
 
 #ifdef __DEBUG__
+!$OMP SINGLE
       !DBX CB - init metric in debug mode
-      if (param_int(ITYPZONE).eq.1) then
+      if (param_int(ITYPZONE).eq.0) then ! 3D general
         do l = 1,param_int( NDIMDX_MTR )
          ti(l,1) = -999.
          ti(l,2) = -999.
@@ -77,7 +78,7 @@ c Var loc
          tk0(l,2) = -999.
          tk0(l,3) = -999.
         enddo
-      else if (param_int(ITYPZONE).eq.1) then
+      else if (param_int(ITYPZONE).eq.1) then ! 3D homogene
         do l = 1,param_int( NDIMDX_MTR )
          ti(l,1) = -999.
          ti(l,2) = -999.
@@ -90,7 +91,7 @@ c Var loc
          tj0(l,2) = -999.
          tk0(l,1) = -999.
         enddo
-      else if (param_int(ITYPZONE).eq.2) then
+      else if (param_int(ITYPZONE).eq.2) then ! 3D cart
         do l = 1,param_int( NDIMDX_MTR )
          ti(l,1) = -999.
          tj(l,1) = -999.
@@ -99,7 +100,7 @@ c Var loc
          tj0(l,1) = -999.
          tk0(l,1) = -999.
         enddo
-      else 
+      else ! 2D
         do l = 1,param_int( NDIMDX_MTR )
          ti(l,1) = -999.
          ti(l,2) = -999.
@@ -111,6 +112,8 @@ c Var loc
          tj0(l,2) = -999.
         enddo
       endif
+!$OMP END SINGLE
+!$OMP BARRIER
 #endif
       
       inci = 1
