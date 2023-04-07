@@ -22,6 +22,7 @@
           stild = rot + (anutild*f2)/(SA_CKARM*SA_CKARM*dist*dist)
 
           !!correction SA-R
+          St = 0.
           stild = stild + SWITCH_SA_ROT_CORR 
      &      *SA_CROT*min(0.00000000000000000001,St-rot)
 

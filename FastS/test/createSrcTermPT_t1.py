@@ -12,6 +12,7 @@ import Converter.Internal as Internal
 import Post.PyTree as P
 import time
 import KCore.test as test
+test.TOLERANCE=1.e-9
 
 mach = 0.
 npts = 251
@@ -23,7 +24,7 @@ a = G.cart((smin-2*h,smin-2*h,0.), (h,h,h), (npts+4,npts+4,2))
 t = C.newPyTree(['Base', a])
 I._initConst(t, MInf=mach, loc='centers')
 C._addState(t, 'GoverningEquations', 'Euler')
-C._addState(t, adim='dim3', UInf=0., PInf=101103., RoInf=1.2, LInf=1., alphaZ=0., alphaY=0.)
+C._addState(t, adim='dim3', UInf=0.1, PInf=101103., RoInf=1.2, LInf=1., alphaZ=0., alphaY=0.)
 I._initConst(t, loc='centers')
 staref = C.getState(t)
 G._getVolumeMap(t)

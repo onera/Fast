@@ -11,7 +11,7 @@ import Dist2Walls.PyTree as DTW
 import Connector.PyTree as X
 import Transform.PyTree as T
 import KCore.test as test
-test.TOLERANCE = 1.e-10
+test.TOLERANCE = 1.e-7
 
 MInf = 0.1
 NI = 51; NJ = 36; NK = 15

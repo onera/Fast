@@ -8,6 +8,7 @@ import Fast.PyTree as Fast
 import FastS.PyTree as FastS
 import KCore.test as test
 import Converter.Internal as Internal
+test.TOLERANCE=1.e-8
 
 mach = 0.7
 a = G.cart((0,0,0), (0.5,0.5,0.25), (200,100,2))

@@ -45,7 +45,6 @@
                !dwdx
                dwdx = (u3 - u1)*tix
 
-               roty    =  roty - dudx
                !dwdy
                dwdy = (u2 - u4)*tjy 
 

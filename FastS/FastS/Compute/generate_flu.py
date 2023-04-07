@@ -172,7 +172,7 @@ for ale in TypeMotion:
 
                                 feulero   = open(feulerout,"w")                  # ouvrir le fichier de sortie
 
-				###include flux face 5 eq
+                                ###include flux face 5 eq
 
                                 if typezone == '2d':
                                         for i in range( len(lines_euler) ):
@@ -243,7 +243,7 @@ for ale in TypeMotion:
                         for l in lines_srcs:
                               if target in l: include = False
                         srcs_out=[]
-                        if include == True: srcs_out.append("            'FastS/Compute/"+fout+"',\n")
+                        if include: srcs_out.append("            'FastS/Compute/"+fout+"',\n")
 
                         lines_srcs_beg = lines_srcs_beg +   srcs_out
 
@@ -279,10 +279,10 @@ for ale in TypeMotion:
 c       =0
 c_index =0
 for i in range( len(lines_select_beg) ):
-    lines_select_beg[i]=lines_select_beg[i].replace("template_flu_select"                ,flux+'_select' )
+    lines_select_beg[i]=lines_select_beg[i].replace("template_flu_select", flux+'_select')
     if 'ELSEIF ' in lines_select_beg[i] and c_index ==0:
         c_index = c
-    c+=1
+    c += 1
 lines_select_beg[c_index]=lines_select_beg[c_index].replace("ELSEIF"                ,'IF ' )
 
 #write of srcs.py file for makefile
@@ -291,7 +291,7 @@ include = True
 c = 0
 for l in lines_srcs:
     if target in l: include = False
-if include == True: lines_srcs_beg.append("            'FastS/Compute/"+target+"\n")
+if include: lines_srcs_beg.append("            'FastS/Compute/"+target+"\n")
 
 for l in lines_srcs_beg: srcs.write(l)
 for l in lines_srcs_end: srcs.write(l)

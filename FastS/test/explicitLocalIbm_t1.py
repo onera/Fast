@@ -12,7 +12,6 @@ import Initiator.Adim as Adim
 import Post.PyTree as P
 import Transform.PyTree as T
 import numpy
-import sys
 import os
 import tarfile
 import shutil
