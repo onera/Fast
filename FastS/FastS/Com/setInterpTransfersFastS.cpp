@@ -89,8 +89,6 @@ void K_FASTS::setInterpTransfersFastS(
 {
   E_Int rank = 0;
   E_Int dest = 0;
-  E_Int count= 0;
-
 
 #ifdef _MPI
   if(mpi) { MPI_Comm_rank (MPI_COMM_WORLD, &rank); }
@@ -126,7 +124,6 @@ void K_FASTS::setInterpTransfersFastS(
       {
         pt_deb         = param_int_tc[1+nstep+(numpassage-1)*nitmax] + 2;
         nbcomIBC_nstep = param_int_tc[ pt_deb ];
-
       }
     else
       { pt_deb         = 1;
@@ -150,20 +147,23 @@ void K_FASTS::setInterpTransfersFastS(
       pt_rcv_queue_IBC = pair_of_queue_IBC->first;
 
       if (pt_rcv_queue_IBC->size() == 0)
+      {
         for (E_Int ircv = 1; ircv < nbcomIBC_nstep +1; ++ircv)
           {
             pt_rcv_queue_IBC->emplace_back(param_int_tc[pt_deb + ircv], 404);
             CMP::RecvBuffer& recv_buffer = pt_rcv_queue_IBC->back_message_buffer();
             recv_buffer.irecv();
           }
-      else{
+      }
+      else
+      {
          assert(pt_rcv_queue_IBC->size() == nbcomIBC_nstep );
          for ( auto iterBuf = pt_rcv_queue_IBC->begin(); iterBuf != pt_rcv_queue_IBC->end(); ++iterBuf )
            {
             CMP::RecvBuffer& recv_buffer = iterBuf->get_message_buffer();
             recv_buffer.irecv();
            }
-          }
+      }
 
       //cout << "proc : " << rank << "  nbcom : " << nbcomIBC_nstep << endl;
 
@@ -200,7 +200,7 @@ void K_FASTS::setInterpTransfersFastS(
       dest       = param_int_tc[ech];
       if (dest == rank)  // Intra Process
       { TypeTransfert = 1;
-	K_FASTS::setInterpTransfersIntra(iptro_tmp    , vartype    , param_int_tc, param_real_tc,
+        K_FASTS::setInterpTransfersIntra(iptro_tmp    , vartype    , param_int_tc, param_real_tc,
                                          param_int    , param_real , linelets_int, linelets_real, TypeTransfert, it_target, nidom, ip2p,
                                          ipt_timecount, nstep      , nitmax      , rk           , exploc       , numpassage);
       }
@@ -215,24 +215,20 @@ void K_FASTS::setInterpTransfersFastS(
     {
 
       if (nbcomIBC_nstep != 0)
+      {
 
-	{
+	      //comm multi processus: wait + remplissage
+        K_FASTS::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
 
-	  //comm multi processus: wait + remplissage
-	  K_FASTS::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
+        #ifdef TimeShow
+        time_out = omp_get_wtime();
+        ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
+        time_in= omp_get_wtime();
+        #endif
+      }
 
-          #ifdef TimeShow
-	  time_out = omp_get_wtime();
-	  ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
-	  time_in= omp_get_wtime();
-          #endif
-
-	}
-
-
-
-      //if (rk ==3 and exploc==2 and mpi)
-      if (exploc==1 and mpi)
+      //if (rk ==3 && exploc==2 && mpi)
+      if (exploc==1 && mpi)
       {
        pt_deb         = param_int_tc[2+nbcomIBC+nstep+(numpassage-1)*nitmax] + 2 +nbcomIBC+1;
        nbcomID_nstep  = param_int_tc[ pt_deb ];
@@ -243,17 +239,17 @@ void K_FASTS::setInterpTransfersFastS(
         nbcomID_nstep = nbcomID;
       }
 
-
-
-
       if (pt_rcv_queue->size() == 0 )
-	for (E_Int ircv = 1; ircv < nbcomID_nstep +1; ++ircv)
-	  {
-	    pt_rcv_queue->emplace_back( param_int_tc[ pt_deb + ircv], 404);
-	    CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
-	    recv_buffer.irecv();
-	  }
-      else {
+      {
+        for (E_Int ircv = 1; ircv < nbcomID_nstep +1; ++ircv)
+        {
+          pt_rcv_queue->emplace_back( param_int_tc[ pt_deb + ircv], 404);
+          CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
+          recv_buffer.irecv();
+        }
+      }
+      else 
+      {
         assert(pt_rcv_queue->size() == nbcomID_nstep );
         for ( auto iterBuf = pt_rcv_queue->begin(); iterBuf != pt_rcv_queue->end(); ++iterBuf )
         {
@@ -267,7 +263,7 @@ void K_FASTS::setInterpTransfersFastS(
        ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;
       #endif
 
-      int cpt_send_buffer = 0;
+      E_Int cpt_send_buffer = 0;
       for (E_Int ip2p = 1; ip2p < param_int_tc[0]+1; ++ip2p)
         {
          E_Int ech  = param_int_tc[ip2p+shift_graph];
@@ -280,8 +276,8 @@ void K_FASTS::setInterpTransfersFastS(
             TypeTransfert = 0;
             cpt_send_buffer += 1;
             K_FASTS::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
-  	        	                     param_int    , param_real   , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p,
-                                             pair_of_queue, ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, cpt_send_buffer);
+            	                              param_int    , param_real   , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p,
+                                            pair_of_queue, ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, cpt_send_buffer);
           }
         }//loop ip2p
     } // Endif MPI
@@ -309,13 +305,10 @@ void K_FASTS::setInterpTransfersFastS(
     {
 
       if (nbcomID_nstep != 0)
-
-	{
+      {
 
        //comm multi processus: wait + remplissage
        K_FASTS::getTransfersInter(iptro_tmp, param_int, param_int_tc , pair_of_queue);
-
-
 
        #ifdef TimeShow
         time_out         = omp_get_wtime();
@@ -332,7 +325,7 @@ void K_FASTS::setInterpTransfersFastS(
         time_in = omp_get_wtime();
        #endif
 
-	}
+      }
 
     } // MPI Second part (InterCOM ID)
     #endif
@@ -426,12 +419,11 @@ void K_FASTS::setInterpTransfersIntra(
 	  if (levelD > levelR and num_passage == 1)
 	    {
 
-	      if (nstep%cyclD==cyclD-1 or nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1)
-		{
-		  autorisation_transferts[pass_inst][irac_auto]=1;
-		  if (ipt_param_int_tc[shift_rac + nrac * 10 + 1] > nbRcvPts_mx){ nbRcvPts_mx = ipt_param_int_tc[shift_rac + nrac * 10 + 1];}
-		}
-
+	      if (nstep%cyclD==cyclD-1 || nstep%cyclD==cyclD/2 && (nstep/cyclD)%2==1)
+		  {
+		    autorisation_transferts[pass_inst][irac_auto]=1;
+		    if (ipt_param_int_tc[shift_rac + nrac * 10 + 1] > nbRcvPts_mx){ nbRcvPts_mx = ipt_param_int_tc[shift_rac + nrac * 10 + 1];}
+		  }
 	    }
 	  // Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
 	  else if (levelD < levelR and num_passage == 1)

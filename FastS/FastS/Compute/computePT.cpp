@@ -95,9 +95,9 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
 
 
  lssiter_verif = 0; // par defaut, pas de calcul cfl , ni residu Newton
- if(nitrun % iptdtloc[1] == 0 || nitrun == 1) lcfl =1;
+ if (nitrun % iptdtloc[1] == 0 || nitrun == 1) lcfl =1;
 
- if( layer_mode ==1)
+ if (layer_mode == 1)
  {
     pyParam_int_tc = PyDict_GetItemString(work,"param_int_tc");
     pyParam_real_tc= PyDict_GetItemString(work,"param_real_tc"); 
@@ -109,7 +109,6 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
     if (pyParam_real_tc != Py_None)
     { K_NUMPY::getFromNumpyArray(pyParam_real_tc, param_real_tc, true); ipt_param_real_tc= param_real_tc-> begin(); }
     else{ ipt_param_real_tc = NULL; }
-
 
     pyLinlets_int = PyDict_GetItemString(work,"linelets_int");
     if (pyLinlets_int != Py_None)
@@ -149,7 +148,7 @@ else
 
   E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_it_lu_ssdom; E_Int** ipt_degen;
   
-  E_Float** ipt_param_real  ;
+  E_Float** ipt_param_real;
   E_Float** iptx;          E_Float** ipty;         E_Float** iptz;    E_Float** iptro; E_Float** iptro_m1; E_Float** iptro_p1; E_Float** iptmut;
   E_Float** ipti;          E_Float** iptj;         E_Float** iptk;    E_Float** iptvol;
   E_Float** ipti0;         E_Float** iptj0;        E_Float** iptk0;   E_Float** iptsrc;

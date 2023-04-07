@@ -176,7 +176,7 @@ PyObject* K_FASTC::souszones_list(PyObject* self, PyObject* args)
   if (lssiter_loc >=2)nitrun_loc=nitrun;
 
   //if( nidom_loc==-1 || ((lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2))  && nitrun_loc%iptdtloc[1] == 0 ) && ipt_param_int[0][ITYPZONE] !=4 ) 
-  if( (nidom_loc==-1 || lssiter_loc >=1 ) && ipt_param_int[0][ITYPZONE] !=4 ) 
+  if ( (nidom_loc==-1 || lssiter_loc >=1) && ipt_param_int[0][ITYPZONE] !=4 ) 
   {
     //printf("2eme passe %d %d\n", nstep, nitrun);
     E_Int flag_res = 0;

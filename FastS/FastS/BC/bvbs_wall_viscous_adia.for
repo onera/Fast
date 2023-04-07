@@ -27,7 +27,7 @@ c***********************************************************************
       REAL_E ventijk(param_int(NDIMDX_VENT), param_int(NEQ_VENT) )
       REAL_E tijk   (param_int(NDIMDX_MTR ), neq_mtr             )
       REAL_E mobile_coef
-C Var local
+C Var local 
       INTEGER_E  inc2,inc3,li1,li2,l,iref,jref,kref,lij,lr,lp,
      & njf,nkf,ldjr,ic,jc,kc,i,j,k,li3,ldp,kc_vent
       REAL_E ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,tcx,tcy,tcz,
@@ -73,7 +73,7 @@ c......determine la forme des tableau metrique en fonction de la nature du domai
 
        else
 
-          do k = ind_loop(5), ind_loop(6)
+          do k = ind_loop(5), ind_loop(6) 
           do j = ind_loop(3), ind_loop(4)
           do i = ind_loop(1), ind_loop(2)
 
