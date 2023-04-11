@@ -248,7 +248,7 @@ c Var loc
         enddo
         enddo
 
- 10   continue ! sous_dom a resoudre
+ 10   continue
 
       !Protection recouvrement
       !On recherche eventuels recouvrement entre sous-domiane. Si oui: MERGE
@@ -306,7 +306,7 @@ c Var loc
             count    = count + 1
             l        = i + (j-1)*ijkv_lu(1) +(k-1)*ijkv_lu(1)*ijkv_lu(2)
 
-            ldone(l)         =.false.
+            ldone(l)     =.false.
             no_lu(count) = l
         enddo
         enddo
@@ -324,20 +324,13 @@ c Var loc
         ind_dm(6,ndfin,nitcfg) =     ind_lu(6,nd)*size_ssdom(3)
         if(ind_lu(6,nd).eq.ijkv_lu(3)) ind_dm(6,ndfin,nitcfg) =ijkv(3)
 
-!$      if(iverbs.ge.5.and.(nd.ge.0)) 
-!$   &    write(*,'(a16,12i4)')'loop sousdom LU ',
-!$   &    ndo,ind_dm(1,ndfin,nitcfg),ind_dm(2,ndfin,nitcfg),
-!$   &        ind_dm(3,ndfin,nitcfg),ind_dm(4,ndfin,nitcfg),
-!$   &        ind_dm(5,ndfin,nitcfg),ind_dm(6,ndfin,nitcfg),
-!$   &        ndfin,nitcfg,size_ssdom
-
       enddo
 
       if(count.lt.  nisdom_residu(nitcfg) ) then
-!$ OMP SINGLE
+!$OMP SINGLE
        write(*,'(a,4i6)')'WARNING MERGE ssdom_Lu',nd,nitcfg,
      &            nisdom_residu(nitcfg),count
-!$ OMP END SINGLE
+!$OMP END SINGLE
       endif
 
        do k=1,ijkv_lu(3)
@@ -347,9 +340,9 @@ c Var loc
            l= i + (j-1)*ijkv_lu(1) +(k-1)*ijkv_lu(1)*ijkv_lu(2)
 
           if (it_target_ssdom(no_sdm).ge.iseuil.and.ldone(l)) then
-!$ OMP SINGLE
+!$OMP SINGLE
             write(*,'(a,5i6)')'WARNING MERGE ssdom_Lu',nd,nitcfg,i,j,k
-!$ OMP END SINGLE
+!$OMP END SINGLE
           endif
 
        enddo

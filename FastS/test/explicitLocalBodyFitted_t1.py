@@ -9,12 +9,11 @@ import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import KCore.test as test
 import Transform.PyTree as T
-import math
 import numpy
-import sys
 import os
 import tarfile
 import shutil
+test.TOLERANCE=1.e-10
 
 LOCAL = test.getLocal()
 

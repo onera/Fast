@@ -67,7 +67,7 @@ for ale in TypeMotion:
    if ale =='': ale1='_'
 
    for eq in Model:
-      for slope in TypeSlope:
+        for slope in TypeSlope:
          for typezone in TypeMesh:
 
                         option =  1000*opt_ale[ ale]  +  100*opt_slp[slope] +  10*opt_mod[eq] + opt_mesh[ typezone]
