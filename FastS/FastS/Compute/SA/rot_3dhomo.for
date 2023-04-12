@@ -22,12 +22,12 @@
                !dudy
                rotz =-(   u3*tiy1 - u1*tiy
      &                  + u2*tjy1 - u4*tjy ) 
-
+               dudy = rotz
                auijuij = auijuij + rotz*rotz
 
                !dudz
                roty = (u5 - u6)*tkz
-
+               dudz = roty
                auijuij = auijuij + roty*roty
 
 
@@ -38,23 +38,23 @@
                u5 = (rop(l,3)+rop(l5,3))
                u6 = (rop(l,3)+rop(l6,3))
                !dvdx
-               dudx = (   u3*tix1 - u1*tix
+               dvdx = (   u3*tix1 - u1*tix
      &                  + u2*tjx1 - u4*tjx ) 
 
-               rotz    = (rotz + dudx)*xvol
-               auijuij = auijuij + dudx*dudx
+               rotz    = (rotz + dvdx)*xvol
+               auijuij = auijuij + dvdx*dvdx
 
                !dvdy
-               dudx = (   u3*tiy1 - u1*tiy
+               dvdy = (   u3*tiy1 - u1*tiy
      &                  + u2*tjy1 - u4*tjy ) 
 
-               auijuij = auijuij + dudx*dudx
+               auijuij = auijuij + dvdy*dvdy
 
                !dvdzadding a source term to the momentum equation
-               dudx = (u5 - u6)*tkz
+               dvdz = (u5 - u6)*tkz
 
-               rotx    =-dudx 
-               auijuij =  auijuij + dudx*dudx
+               rotx    =-dvdz 
+               auijuij =  auijuij + dvdz*dvdz
 
                u1 = (rop(l,4)+rop(l2,4))
                u2 = (rop(l,4)+rop(l3,4))
@@ -63,27 +63,34 @@
                u5 = (rop(l,4)+rop(l5,4))
                u6 = (rop(l,4)+rop(l6,4))
                !dwdx
-               dudx = (   u3*tix1 - u1*tix
+               dwdx = (   u3*tix1 - u1*tix
      &                  + u2*tjx1 - u4*tjx )
 
-               roty    =  (roty - dudx)*xvol
-               auijuij =  auijuij + dudx*dudx
+               roty    =  (roty - dwdx)*xvol
+               auijuij =  auijuij + dwdx*dwdx
                !dwdy
-               dudx = (   u3*tiy1 - u1*tiy
+               dwdy = (   u3*tiy1 - u1*tiy
      &                  + u2*tjy1 - u4*tjy  ) 
 
-               rotx    = (rotx + dudx)*xvol
-               auijuij = auijuij + dudx*dudx
+               rotx    = (rotx + dwdy)*xvol
+               auijuij = auijuij + dwdy*dwdy
 
                !dwdz
-               dudx = (u5 - u6)*tkz
+               dwdz = (u5 - u6)*tkz
 
-               auijuij =  auijuij + dudx*dudx
+               auijuij =  auijuij + dwdz*dwdz
 
                !! mise a jour  auijuij par le volume
                rot     = sqrt(rotx*rotx+roty*roty+rotz*rotz)
 
-
+               S11   = dudx
+               S22   = dvdy
+               S33   = dwdz
+               S12   = 0.5*(dudy + dvdx)
+               S13   = 0.5*(dudz + dwdx)
+               S23   = 0.5*(dvdz + dwdy)
+               St    = S11**2+S22**2+S33**2+2*S12**2+2*S13**2+2*S23**2
+               St    = sqrt(2*St) * xvol
 
                auijuij   = auijuij*xvol*xvol
                auijuij   = max( auijuij, 1.e-27)

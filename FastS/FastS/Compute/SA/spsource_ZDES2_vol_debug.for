@@ -67,7 +67,8 @@ c Var loc
      & auijuij,adcut,variable2,fa,testfa,ra,c1,cw1,
      & tjx,tjy,tjz,tjx1,tjy1,tjz1,si,sj,sk,
      & tix,tiy,tiz,tix1,tiy1,tiz1,
-     & tkx,tky,tkz,tkx1,tky1,tkz1,u1,u2,u3,u4,u5,u6,xvol,dudx,dudy,dudz,
+     & tkx,tky,tkz,tkx1,tky1,tkz1,u1,u2,u3,u4,u5,u6,xvol,
+     & dudx,dudy,dudz,dvdx,dvdy,dvdz,dwdx,dwdy,dwdz,
      & dx,dy,dz,tn,dn,tx,ty,tz,nx,ny,nz,
      & SA_CW2_LRE,S11,S22,S33,S12,S13,S23,St,r5,
      & SWITCH_SA_LOW_RE,SWITCH_SA_ROT_CORR

@@ -18,12 +18,12 @@
 
                !dudy
                rotz =-(  u2 - u4)*tjy 
-
+               dudy = rotz
                auijuij = auijuij + rotz*rotz
 
                !dudz
                roty = ( u5 - u6)*tkz 
-
+               dudz = roty
                auijuij = auijuij + roty*roty
 
 
@@ -34,15 +34,15 @@
                u5 = (rop(l,3)+rop(l5,3))
                u6 = (rop(l,3)+rop(l6,3))
                !dvdx
-               dudx = (   u3 - u1)*tix
+               dvdx = (   u3 - u1)*tix
 
-               rotz    = (rotz + dudx)*xvol
-               auijuij = auijuij + dudx*dudx
+               rotz    = (rotz + dvdx)*xvol
+               auijuij = auijuij + dvdx*dvdx
 
                !dvdy
-               dudx = (   u2 - u4)*tjy 
+               dvdy = (   u2 - u4)*tjy 
 
-               auijuij = auijuij + dudx*dudx
+               auijuij = auijuij + dvdy*dvdy
 
                !dvdz
                dudx = (  u5 - u6)*tkz 
@@ -57,23 +57,32 @@
                u5 = (rop(l,4)+rop(l5,4))
                u6 = (rop(l,4)+rop(l6,4))
                !dwdx
-               dudx = (   u3 - u1)*tix
+               dwdx = (   u3 - u1)*tix
 
-               roty    =  (roty - dudx)*xvol
-               auijuij =  auijuij + dudx*dudx
+               roty    =  (roty - dwdx)*xvol
+               auijuij =  auijuij + dwdx*dudx
                !dwdy
-               dudx = (  u2 - u4)*tjy 
+               dwdy = (  u2 - u4)*tjy 
 
-               rotx    = (rotx + dudx)*xvol
-               auijuij = auijuij + dudx*dudx
+               rotx    = (rotx + dwdy)*xvol
+               auijuij = auijuij + dwdy*dwdy
 
                !dwdz
-               dudx = ( u5 - u6)*tkz 
+               dwdz = ( u5 - u6)*tkz 
 
-               auijuij =  auijuij + dudx*dudx
+               auijuij =  auijuij + dwdz*dwdz
 
                !! mise a jour rot et auijuij par le volume
                rot     = sqrt(rotx*rotx+roty*roty+rotz*rotz)
+
+               S11   = dudx
+               S22   = dvdy
+               S33   = dwdz
+               S12   = 0.5*(dudy + dvdx)
+               S13   = 0.5*(dudz + dwdx)
+               S23   = 0.5*(dvdz + dwdy)
+               St    = S11**2+S22**2+S33**2+2*S12**2+2*S13**2+2*S23**2
+               St    = sqrt(2*St) * xvol
 
                auijuij   = auijuij*xvol*xvol
                auijuij   = max( auijuij, 1.e-27)

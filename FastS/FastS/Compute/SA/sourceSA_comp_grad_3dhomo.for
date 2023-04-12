@@ -42,13 +42,13 @@
                u6 = (rop(l,3)+rop(l6,3))
 
                !dvdx
-               dvdx = (  u3*tix1 - u1*tix + u2*tjx1 - u4*tjx )
+               dvdx = ( u3*tix1 - u1*tix + u2*tjx1 - u4*tjx )
 
                !dvdy
-               dvdy = (  u3*tiy1 - u1*tiy + u2*tjy1 - u4*tjy )
+               dvdy = ( u3*tiy1 - u1*tiy + u2*tjy1 - u4*tjy )
 
                !dvdz
-               dvdz = (  u5 - u6)*tkz 
+               dvdz = ( u5 - u6)*tkz 
 
                u1 = (rop(l,4)+rop(l2,4))
                u2 = (rop(l,4)+rop(l3,4))
