@@ -45,10 +45,10 @@
                auijuij = auijuij + dvdy*dvdy
 
                !dvdz
-               dudx = (  u5 - u6)*tkz 
+               dvdz = (  u5 - u6)*tkz 
 
-               rotx    =-dudx 
-               auijuij =  auijuij + dudx*dudx
+               rotx    =-dvdz 
+               auijuij =  auijuij + dvdz*dvdz
 
                u1 = (rop(l,4)+rop(l2,4))
                u2 = (rop(l,4)+rop(l3,4))

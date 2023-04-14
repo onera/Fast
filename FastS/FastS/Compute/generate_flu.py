@@ -78,7 +78,7 @@ for ale in TypeMotion:
 
 
                         fout = rep+'/'+typezone+'/'+flux+ale1+eq+'_'+slope+'_'+typezone+'.for'
-                        fo = open(fout,"w")                  # ouvrir le fichier de sortie
+                        fo = open(fout, "w")                  # ouvrir le fichier de sortie
                         print (rep,' Scheme: file',fout, 'generated')
 
                         for i in range( len(lines) ):

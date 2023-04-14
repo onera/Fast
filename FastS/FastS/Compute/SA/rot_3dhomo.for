@@ -90,7 +90,7 @@
                S13   = 0.5*(dudz + dwdx)
                S23   = 0.5*(dvdz + dwdy)
                St    = S11**2+S22**2+S33**2+2*S12**2+2*S13**2+2*S23**2
-               St    = sqrt(2*St) * xvol
+               St    = sqrt(2.*St) * xvol
 
                auijuij   = auijuij*xvol*xvol
                auijuij   = max( auijuij, 1.e-27)

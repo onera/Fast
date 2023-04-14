@@ -67,7 +67,7 @@ CCCC!$OMP simd aligned(ti,tj,tk,ti0,tj0,tk0: CACHELINE)
 #endif
           do  i=ind_loop(1),ind_loop(2)+li
 
-          l1 = indmtr(i  ,j  ,k     ) ! (i  , j  , k  )
+          l1 = indmtr(i  ,j  ,k ) ! (i  , j  , k  )
           l2 = l1 +  v2mtr
           l3 = l1 +  v3mtr
 

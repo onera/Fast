@@ -35,7 +35,7 @@
 
                !dvdy
                dvdy = (   u3*tiy1 - u1*tiy
-     &                  + u2*tjy1 - u4*tjy ) 
+     &                  + u2*tjy1 - u4*tjy )
 
                auijuij = auijuij + dvdy*dvdy
 

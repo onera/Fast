@@ -62,7 +62,7 @@
      &                  + u5*tkz1 - u6*tkz  ) 
 
                rotx    =-dvdz 
-               auijuij =  auijuij + dudx*dudx
+               auijuij =  auijuij + dvdz*dvdz
 
                u1 = (rop(l,4)+rop(l2,4))
                u2 = (rop(l,4)+rop(l3,4))

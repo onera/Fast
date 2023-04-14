@@ -46,6 +46,10 @@ C Var local
       elseif(data_per(1).eq.0. .and. data_per(2).eq.0.) then
          angle   = data_per(3)
          dir_axe = 3
+      else
+         WRITE(*,*) 'Warning: BC periodic: bad axis definition.'
+         angle = 0.
+         dir_axe = 1
       endif
      
       !correction angle

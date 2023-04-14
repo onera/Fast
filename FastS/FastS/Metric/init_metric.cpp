@@ -184,7 +184,7 @@ PyObject* K_FASTS::init_metric(PyObject* self, PyObject* args)
         E_Int* ipt_ind_dm_socket     = ipt_ind_dm_omp  + (ithread-1)*12;
         E_Int* ipt_ind_dm_omp_thread = ipt_ind_dm_socket  + 6;
 
-        E_Int* ipt_topology_socket_thread =  ipt_topology_socket + (ithread-1)*3;
+        E_Int* ipt_topology_socket_thread = ipt_topology_socket + (ithread-1)*3;
 
         E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp; E_Int ithread_loc; E_Int Nbre_thread_actif_loc;
         if (omp_mode == 1)
