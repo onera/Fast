@@ -12,10 +12,10 @@ fi
 #python generate_flu.py SENSORHYPER
 
 python generate_correction.py ROE
-#python generate_correction.py AUSM
-#python generate_correction.py SENSOR
-#python generate_correction.py SENSOR_INIT
-#python generate_correction.py SENSORHYPER
+python generate_correction.py AUSM
+python generate_correction.py SENSOR
+python generate_correction.py SENSOR_INIT
+python generate_correction.py SENSORHYPER
 
 #python generate_effort.py ROE
 #python generate_effort.py AUSM
