@@ -45,7 +45,7 @@ C._randomizeVar(t,'centers:MomentumX',0.01,0.01)
 
 # distance a la paroi
 tb = C.newPyTree(['Body']); tb[2][1][2].append(G.cylinder((0,0,0), 0.5, 25., 360., 0., 0.5, (NI,1,2)))
-DTW._distance2Walls(t,tb,loc='centers',type='ortho')
+DTW._distance2Walls(t, tb, loc='centers', type='ortho')
 #
 # Numerics
 numb = {}

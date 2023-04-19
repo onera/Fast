@@ -4,7 +4,7 @@ import sys
 #  python generate_flu.py  repertoire_flux
 n = len(sys.argv)
 if n != 2:
-    print('Flux name folder is required as argument: python generate_flu.py  fluxFolder')
+    print('Error: Flux name folder is required as argument: python generate_flu.py  fluxFolder')
     sys.exit()
 
 dico= {}
@@ -43,8 +43,8 @@ srcs.close()
 srcs= open('../../srcs.py','w')
 c = 0
 for l in lines_srcs:
-   if 'FastS/Compute/src_term.for' in l: c_index = c
-   c+=1
+    if 'FastS/Compute/src_term.for' in l: c_index = c
+    c += 1
 c_index +=1
 lines_srcs_beg = lines_srcs[0:c_index]
 lines_srcs_end = lines_srcs[c_index:]
@@ -53,8 +53,8 @@ lines_srcs_end = lines_srcs[c_index:]
 
 c = 0
 for l in lines_select:
-   if 'ELSE' in l: c_index = c
-   c+=1
+    if 'ELSE' in l: c_index = c
+    c += 1
 
 lines_select_beg = lines_select[0:c_index]
 lines_select_end = lines_select[c_index:c_index+8]
@@ -257,7 +257,7 @@ for ale in TypeMotion:
                               c+=1
 
                         select_out=[]
-                        if include == True:
+                        if include:
                            select_out.append('       ELSEIF (option.eq.'+str(option)+') THEN\n')
                            select_out.append('                                               \n')
                            select_out.append('           call '+ name_routine+'(ndom, ithread,\n')

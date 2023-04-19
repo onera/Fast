@@ -1,16 +1,21 @@
 #! /bin/sh
+# if specific python exe name
+if [ "$PYTHONEXE" != "" ]; then
+    alias python=$PYTHONEXE
+fi
+
 # Generate all
-python generate_flu.py ROE
+#python generate_flu.py ROE
 #python generate_flu.py AUSM
 #python generate_flu.py SENSOR
 #python generate_flu.py SENSOR_INIT
 
-python generate_correction.py ROE
+#python generate_correction.py ROE
 #python generate_correction.py AUSM
 #python generate_correction.py SENSOR
 #python generate_correction.py SENSOR_INIT
 
 python generate_effort.py ROE
-#python generate_effort.py AUSM
-#python generate_effort.py SENSOR
+python generate_effort.py AUSM
+python generate_effort.py SENSOR
 #python generate_effort.py SENSOR_INIT

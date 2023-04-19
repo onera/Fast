@@ -111,6 +111,9 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       if(ind_loop(3).gt.ind_loop(4)) return 
       if(ind_loop(5).gt.ind_loop(6)) return
 
+      gradT_nx = 0.
+      gradT_ny = 0.
+      gradT_nz = 0.
 
       inci = 1
       incj = param_int(NIJK)
