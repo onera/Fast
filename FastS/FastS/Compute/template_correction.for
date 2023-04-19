@@ -161,6 +161,7 @@ c      c7     = c4/c5
       wig_i = v1
       wig_j = v2
       wig_k = v3
+      wigd = v4
 
       qen = 0.  !pour blinder Roe 6eme variable   
 

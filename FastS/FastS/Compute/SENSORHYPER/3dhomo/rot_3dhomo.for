@@ -67,7 +67,6 @@
      &                  + u2*tjy1 - u4*tjy  ) 
 
                rotx    = (rotx + dudx)*xvol
-               auijuij = auijuij + dudx*dudx
 
                !dwdz
                dudx = (u5 - u6)*tkz

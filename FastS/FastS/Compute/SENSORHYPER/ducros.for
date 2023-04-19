@@ -45,8 +45,8 @@ c Var loc
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
-      gam =param_real(GAMMA)
-      rgp    = param_real( CVINF  )*(gam-1.)
+      gam = param_real(GAMMA)
+      rgp = param_real( CVINF  )*(gam-1.)
       incmax=param_int(NIJK)*param_int(NIJK+1)*param_int(NIJK+4)
 
       inci = 1
