@@ -84,12 +84,12 @@ if(lexit_lu == 0 )
    //mise a jour nouvelle solution
     if (param_int[0][NB_RELAX] == 0)
       {
-#include "HPC_LAYER/OMP_MODE_BEGIN.h"
+#include "FastC/HPC_LAYER/OMP_MODE_BEGIN.h"
 	    E_Float* increment = iptdrodm + shift_zone;
 	    if (param_int[nd][NB_RELAX] > 1) increment = iptssortmp[nd];
 
             mjr_prim_from_cons_(param_int[nd], param_real[nd], param_real[nd]+VISCO, param_real[nd]+SA_REAL, ipt_ind_dm_thread, iptro_CL[nd], iptro_ssiter[nd], increment);
-#include "HPC_LAYER/OMP_MODE_END.h"
+#include "FastC/HPC_LAYER/OMP_MODE_END.h"
       }
  }//if lexit_lu
 

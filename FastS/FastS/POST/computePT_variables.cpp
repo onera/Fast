@@ -1,20 +1,20 @@
 /*    
-    Copyright 2013-2023 Onera.
+Copyright 2013-2023 Onera.
 
-    This file is part of Cassiopee.
+This file is part of Cassiopee.
 
-    Cassiopee is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Cassiopee is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Cassiopee is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+Cassiopee is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License
+along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 # include "fastS.h"
@@ -31,121 +31,123 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
 {
-  PyObject* zones; PyObject* metrics; PyObject* work;
-  E_Int flag, order;
+PyObject* zones; PyObject* metrics; PyObject* work;
+E_Int flag, order;
 
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOll", &zones , &metrics, &work, &flag ,&order)) return NULL;
+if (!PyArg_ParseTuple(args, "OOOll", &zones , &metrics, &work, &flag ,&order)) return NULL;
 #else 
-  if (!PyArg_ParseTuple(args, "OOOii", &zones , &metrics, &work, &flag, &order)) return NULL;
+if (!PyArg_ParseTuple(args, "OOOii", &zones , &metrics, &work, &flag, &order)) return NULL;
 #endif
 
-  /* tableau pour stocker dimension sous-domaine omp */
-  E_Int threadmax_sdm = 1;
+/* tableau pour stocker dimension sous-domaine omp */
+E_Int threadmax_sdm = 1;
 #ifdef _OPENMP
-  threadmax_sdm  = omp_get_max_threads();
+threadmax_sdm  = omp_get_max_threads();
 #endif
 
-  PyObject* tmp = PyDict_GetItemString(work, "MX_SYNCHRO"); E_Int mx_synchro    = PyLong_AsLong(tmp); 
+PyObject* tmp = PyDict_GetItemString(work, "MX_SYNCHRO"); E_Int mx_synchro    = PyLong_AsLong(tmp); 
 
-  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
-  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
-  E_Int nssiter = iptdtloc[0];
-  E_Int ompmode  = iptdtloc[8+nssiter];
-  E_Int* ipt_omp = iptdtloc +9 + nssiter;
+PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+E_Int nssiter = iptdtloc[0];
+E_Int ompmode  = iptdtloc[8];
+E_Int shift_omp= iptdtloc[11];
+E_Int* ipt_omp = iptdtloc + shift_omp;
 
-  E_Int nidom        = PyList_Size(zones);
-  E_Int ndimdx       = 0;
+E_Int nidom        = PyList_Size(zones);
+E_Int ndimdx       = 0;
 
-  //printf("nombre de zone a traiter= %d\n",nidom);
+//printf("nombre de zone a traiter= %d\n",nidom);
 
-  E_Float** iptro; E_Float** iptQ; E_Float** iptvort;  E_Float** iptenst;
-  E_Float** ipti;  E_Float** iptj;  E_Float** iptk; E_Float** iptvol;
-  E_Float** iptro_m1; E_Float** iptro_p1; E_Float** iptdrodt;
-  E_Float** ipti_df; E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
-  E_Float** ipt_param_real;
+E_Float** iptro; E_Float** iptQ; E_Float** iptvort;  E_Float** iptenst;
+E_Float** ipti;  E_Float** iptj;  E_Float** iptk; E_Float** iptvol;
+E_Float** iptro_m1; E_Float** iptro_p1; E_Float** iptdrodt;
+E_Float** ipti_df; E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
+E_Float** ipt_param_real; E_Float** iptdudt;
 
-  E_Int**   ipt_param_int;
+E_Int**   ipt_param_int;
 
-  ipt_param_real    = new  E_Float*[nidom*16];
-  iptro             = ipt_param_real + nidom;
-  iptQ              = iptro          + nidom;
-  ipti              = iptQ           + nidom;
-  iptj              = ipti           + nidom;
-  iptk              = iptj           + nidom;
-  iptvol            = iptk           + nidom;
-  ipti_df           = iptvol         + nidom;
-  iptj_df           = ipti_df        + nidom;
-  iptk_df           = iptj_df        + nidom;
-  iptvol_df         = iptk_df        + nidom;
-  iptvort           = iptvol_df      + nidom;
-  iptenst           = iptvort        + nidom;
-  iptro_m1          = iptenst        + nidom;
-  iptro_p1          = iptro_m1       + nidom;
-  iptdrodt          = iptro_p1       + nidom;
+ipt_param_real    = new  E_Float*[nidom*17];
+iptro             = ipt_param_real + nidom;
+iptQ              = iptro          + nidom;
+ipti              = iptQ           + nidom;
+iptj              = ipti           + nidom;
+iptk              = iptj           + nidom;
+iptvol            = iptk           + nidom;
+ipti_df           = iptvol         + nidom;
+iptj_df           = ipti_df        + nidom;
+iptk_df           = iptj_df        + nidom;
+iptvol_df         = iptk_df        + nidom;
+iptvort           = iptvol_df      + nidom;
+iptenst           = iptvort        + nidom;
+iptro_m1          = iptenst        + nidom;
+iptro_p1          = iptro_m1       + nidom;
+iptdrodt          = iptro_p1       + nidom;
+iptdudt           = iptdrodt       + nidom;
 
-  ipt_param_int     = new  E_Int*[nidom];
+ipt_param_int     = new  E_Int*[nidom];
 
-  vector<PyArrayObject*> hook;
+vector<PyArrayObject*> hook;
 
-  for (E_Int nd = 0; nd < nidom; nd++)
-  { 
-    // check zone
-    PyObject* zone    = PyList_GetItem(zones   , nd); // domaine i
+for (E_Int nd = 0; nd < nidom; nd++)
+{ 
+// check zone
+PyObject* zone    = PyList_GetItem(zones   , nd); // domaine i
 
-    /* Get numerics from zone */
-    PyObject*   numerics  = K_PYTREE::getNodeFromName1(zone    , ".Solver#ownData");
-    PyObject*          t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"); 
-    ipt_param_int[nd]     = K_PYTREE::getValueAI(t, hook);
-                       t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
-    ipt_param_real[nd]    = K_PYTREE::getValueAF(t, hook);
+/* Get numerics from zone */
+PyObject*   numerics  = K_PYTREE::getNodeFromName1(zone    , ".Solver#ownData");
+PyObject*          t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"); 
+ipt_param_int[nd]     = K_PYTREE::getValueAI(t, hook);
+	       t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
+ipt_param_real[nd]    = K_PYTREE::getValueAF(t, hook);
 
-    PyObject* sol_center;
-    sol_center   = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
-    t            = K_PYTREE::getNodeFromName1(sol_center, "Density");
-    iptro[nd]    = K_PYTREE::getValueAF(t, hook);
+PyObject* sol_center;
+sol_center   = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
+t            = K_PYTREE::getNodeFromName1(sol_center, "Density");
+iptro[nd]    = K_PYTREE::getValueAF(t, hook);
 
-    if( flag == 1)
-      {  t           = K_PYTREE::getNodeFromName1(sol_center, "QCriterion");
-         iptQ[nd]    = K_PYTREE::getValueAF(t, hook);
-         iptenst[nd] = iptro[nd];
-         iptvort[nd] = iptro[nd];
-      }
-    else if( flag == 2 )
-      {  t           = K_PYTREE::getNodeFromName1(sol_center, "QpCriterion");
-         iptQ[nd]    = K_PYTREE::getValueAF(t, hook);
-         t           = K_PYTREE::getNodeFromName1(sol_center, "Density_M1");
-         iptro_m1[nd]= K_PYTREE::getValueAF(t, hook);
-         iptenst[nd] = iptro[nd];
-         iptvort[nd] = iptro[nd];
-      }
-    else if( flag == 10)
-      {  t           = K_PYTREE::getNodeFromName1(sol_center, "Enstrophy");
-         iptenst[nd] = K_PYTREE::getValueAF(t, hook);
-         iptvort[nd] = iptro[nd];
-         iptQ[nd]    = iptro[nd];
-      }
-    else if( flag == 11)
-      { 
-         t           = K_PYTREE::getNodeFromName1(sol_center, "Enstrophy");
-         iptenst[nd] = K_PYTREE::getValueAF(t, hook);
-         t           = K_PYTREE::getNodeFromName1(sol_center, "QCriterion");
-         iptQ[nd]    = K_PYTREE::getValueAF(t, hook);
-         iptvort[nd] = iptro[nd];
-      }
-    else if( flag == 102 )
-      {  t           = K_PYTREE::getNodeFromName1(sol_center, "QpCriterion");
-         iptQ[nd]    = K_PYTREE::getValueAF(t, hook);
-         t           = K_PYTREE::getNodeFromName1(sol_center, "Density_M1");
-         iptro_m1[nd]= K_PYTREE::getValueAF(t, hook);
-         t           = K_PYTREE::getNodeFromName1(sol_center, "RotX");
-         iptvort[nd] = K_PYTREE::getValueAF(t, hook);
-         iptenst[nd] = iptro[nd];
-      }
+if( flag == 1)
+{  t           = K_PYTREE::getNodeFromName1(sol_center, "QCriterion");
+ iptQ[nd]    = K_PYTREE::getValueAF(t, hook);
+ iptenst[nd] = iptro[nd];
+ iptvort[nd] = iptro[nd];
+}
+else if( flag == 2 )
+{  t           = K_PYTREE::getNodeFromName1(sol_center, "QpCriterion");
+ iptQ[nd]    = K_PYTREE::getValueAF(t, hook);
+ t           = K_PYTREE::getNodeFromName1(sol_center, "Density_M1");
+ iptro_m1[nd]= K_PYTREE::getValueAF(t, hook);
+ iptenst[nd] = iptro[nd];
+ iptvort[nd] = iptro[nd];
+}
+else if( flag == 10)
+{  t           = K_PYTREE::getNodeFromName1(sol_center, "Enstrophy");
+ iptenst[nd] = K_PYTREE::getValueAF(t, hook);
+ iptvort[nd] = iptro[nd];
+ iptQ[nd]    = iptro[nd];
+}
+else if( flag == 11)
+{ 
+ t           = K_PYTREE::getNodeFromName1(sol_center, "Enstrophy");
+ iptenst[nd] = K_PYTREE::getValueAF(t, hook);
+ t           = K_PYTREE::getNodeFromName1(sol_center, "QCriterion");
+ iptQ[nd]    = K_PYTREE::getValueAF(t, hook);
+ iptvort[nd] = iptro[nd];
+}
+else if( flag == 102 )
+{  t           = K_PYTREE::getNodeFromName1(sol_center, "QpCriterion");
+ iptQ[nd]    = K_PYTREE::getValueAF(t, hook);
+ t           = K_PYTREE::getNodeFromName1(sol_center, "Density_M1");
+ iptro_m1[nd]= K_PYTREE::getValueAF(t, hook);
+ t           = K_PYTREE::getNodeFromName1(sol_center, "RotX");
+ iptvort[nd] = K_PYTREE::getValueAF(t, hook);
+ iptenst[nd] = iptro[nd];
+}
 
 
 
-    if( flag <10000 && flag >= 1000)
+if( flag <10000 && flag >= 1000)
       {     t            = K_PYTREE::getNodeFromName1(sol_center, "Density_M1");
             iptro_m1[nd] = K_PYTREE::getValueAF(t, hook);
             t            = K_PYTREE::getNodeFromName1(sol_center, "Density_P1");
@@ -193,7 +195,7 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-# include "HPC_LAYER/INFO_SOCKET.h"
+# include "FastC/HPC_LAYER/INFO_SOCKET.h"
       //
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
@@ -317,7 +319,7 @@ PyObject* K_FASTS::computePT_variables(PyObject* self, PyObject* args)
              //else{ printf("flag inconnu %d \n", flag);}
           }// boucle zone 
 
-# include "HPC_LAYER/INIT_LOCK.h"
+# include "FastC/HPC_LAYER/INIT_LOCK.h"
 
   }  // zone OMP
 

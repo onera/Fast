@@ -16,8 +16,8 @@ import sys
 MInf = 0.5; alpha = 0.
 
 # Solver settings
-numb = {'temporal_scheme':'explicit', 'ss_iteration':20} 
-numz = {'time_step':0.01, 'scheme':'ausmpred'}
+numb = {'temporal_scheme':'implicit', 'ss_iteration':5, 'modulo_verif':7} 
+numz = {'time_step':0.01, 'scheme':'senseur', 'extract_res':2}
 
 # Grille cartesienne
 NI = 501; dh = 40./(NI-1)
@@ -74,7 +74,7 @@ tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse',
 tc = C.rmVars(tc, 'cellN') # tres important pour l'instant
 
 # Init
-t = C.addState(t, 'GoverningEquations', 'Euler')
+t = C.addState(t, 'GoverningEquations', 'NSLaminar')
 t = C.addState(t, MInf=MInf, alphaZ=alpha)
 t = I.initConst(t, MInf=MInf, alphaZ=alpha, loc='centers')
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
@@ -82,12 +82,16 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 (t, tc, metrics) = FastS.warmup(t, tc)
 
 #sys.exit()
-#nit = 250
-nit = 1
+nit = 585
+#nit = 1
 
 for it in range(nit):
     print('it=' ,it)
     FastS._compute(t, metrics, it, tc)
+    if it%14==0:
+       FastS.displayTemporalCriteria(t, metrics, it)
+
+C.convertPyTree2File(t,'verif.cgns')
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

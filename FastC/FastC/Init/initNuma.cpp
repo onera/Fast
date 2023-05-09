@@ -22,10 +22,10 @@
 //# include <numa.h>
 //# include </usr/src/kernels/2.6.32-573.12.1.el6.x86_64/include/linux/numa.h>
 
-# include "FastS/fastS.h"
+# include "FastC/fastc.h"
 //# include "converter.h"
 # include "kcore.h"
-# include "FastS/param_solver.h"
+# include "FastC/param_solver.h"
 
 using namespace std;
 using namespace K_FLD;
@@ -37,20 +37,18 @@ extern "C"
 //=============================================================================
 /* Init data in parallel openmp to improve data placement on numa machine */
 //=============================================================================
-PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
+PyObject* K_FASTC::initNuma(PyObject* self, PyObject* args)
 {
-  PyObject* sourceArray;  PyObject* targetArray;  PyObject* param_int; E_Int ivar;  E_Int thread_numa;
+  PyObject* sourceArray;  PyObject* targetArray;  PyObject* param_int; PyObject* dtloc; E_Int ivar;  E_Int thread_numa; 
 
 #ifdef E_DOUBLEINT 
-  if (!PyArg_ParseTuple(args, "OOOll", &sourceArray, &targetArray, &param_int, &ivar, &thread_numa ))
+  if (!PyArg_ParseTuple(args, "OOOOll", &sourceArray, &targetArray, &param_int, &dtloc, &ivar, &thread_numa ))
 #else
-  if (!PyArg_ParseTuple(args, "OOOii", &sourceArray, &targetArray, &param_int, &ivar, &thread_numa ))
+  if (!PyArg_ParseTuple(args, "OOOOii", &sourceArray, &targetArray, &param_int, &dtloc, &ivar, &thread_numa ))
 #endif
   {
     return NULL;
   }
-
-
 
   FldArrayF* source; FldArrayF* target;
   K_NUMPY::getFromNumpyArray(sourceArray, source, true); E_Float* iptsource = source->begin();
@@ -59,6 +57,12 @@ PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
 
   vector<PyArrayObject*> hook;
   E_Int* ipt_param_int  = K_PYTREE::getValueAI(param_int, hook);
+  E_Int* iptdtloc       = K_PYTREE::getValueAI(dtloc, hook);
+  E_Int nssiter = iptdtloc[0];
+  E_Int omp_mode = iptdtloc[8];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
+
 
   E_Int ndo    =1;
   E_Int max_thread = 1;
@@ -206,15 +210,25 @@ PyObject* K_FASTS::initNuma(PyObject* self, PyObject* args)
 
     FldArrayI ind_dm(6); E_Int* inddm  = ind_dm.begin();
 
-    E_Int       Ptomp = ipt_param_int[PT_OMP];
-    E_Int  PtrIterOmp = ipt_param_int[Ptomp ];   
-    E_Int  PtZoneomp  = ipt_param_int[PtrIterOmp ];
+    E_Int nitcfg = 1;
+    E_Int nbtask = ipt_omp[nitcfg-1]; 
+    E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+    E_Int   ndom = ipt_param_int[ NONZ];
 
-    //E_Int Nbre_thread_actif_loc = ipt_param_int[ PtZoneomp  + Nbre_thread_actif ];
-    E_Int ithread_loc           = ipt_param_int[ PtZoneomp  +  ithread -1       ] +1 ;
+    // recuperation nO tache en fonction No de zone
+    E_Int pttask; E_Int nd=-999; 
+    for (E_Int ntask = 0; ntask < nbtask; ntask++)
+        {
+         pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+         nd   = ipt_omp[ pttask ];
+        
+         if (nd ==ndom) break;
+       }
+ 
+    //printf("nd, ndom= %d %d \n", nd, ndom);
 
-
-    E_Int* inddm_omp = ipt_param_int + PtZoneomp +  Nbre_thread_actif + 4 + (ithread_loc-1)*6;
+    E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+    E_Int*    inddm_omp         = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
 
     inddm[0] = inddm_omp[0];
     inddm[1] = inddm_omp[1];

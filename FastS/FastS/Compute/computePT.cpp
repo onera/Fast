@@ -72,8 +72,8 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
-  E_Int omp_mode = iptdtloc[ 8 + nssiter];
-  E_Int* ipt_omp = iptdtloc +9 + nssiter;
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
 
   E_Int lcfl= 0;
  // 
@@ -545,7 +545,6 @@ else
      //printf("nstep= %d %d \n", nstep, omp_mode);
      if (layer_mode == 1)
      {
-       //E_Int nidom_loc = iptdtloc[nssiter+9+nstep-1];
        E_Int init_exit =0;
        if( nitrun_loc%iptdtloc[1] == 0 )
        {
@@ -566,7 +565,7 @@ else
          if(init_exit  ==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
          if(iptdtloc[1]==1){ lssiter_verif = 1; if (nstep == iptdtloc[0] && ipt_param_int[0][ITYPCP]!=2){ lexit_lu = 1;} }
          E_Int display = 0;
-         K_FASTC::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
+         K_FASTC::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
        }
        if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;}
        
@@ -583,14 +582,14 @@ else
       gsdr3( 
             ipt_param_int, ipt_param_real   ,
             nidom              , nitrun_loc       , nstep             , nstep_fin     , nssiter       , it_target, first_it,
-            kimpli             , lssiter_verif    , lexit_lu          , omp_mode      , layer_mode, mpi,
+            kimpli             , lssiter_verif    , lexit_lu          , layer_mode    , mpi,
             nisdom_lu_max      ,  mx_nidom        , ndimt_flt         , threadmax_sdm , mx_synchro,
             nb_pulse           ,                
             temps              , time_trans       ,
             ipt_ijkv_sdm       , 
             ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, vartype, timer_omp,
             iptludic           , iptlumax         ,
-            ipt_ind_dm         , ipt_it_lu_ssdom  , ipt_omp           ,
+            ipt_ind_dm         , ipt_it_lu_ssdom  , iptdtloc          ,
             ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size , ipt_drodmd,
             ipt_Hessenberg     , iptkrylov        , iptkrylov_transfer, ipt_norm_kry  , ipt_gmrestmp  , ipt_givens,
             ipt_cfl            ,

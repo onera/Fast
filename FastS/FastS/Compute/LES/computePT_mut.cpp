@@ -50,8 +50,8 @@ PyObject* K_FASTS::_computePT_mut(PyObject* self, PyObject* args)
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
-  //E_Int ompmode  = iptdtloc[8+nssiter];
-  E_Int* ipt_omp = iptdtloc +9 + nssiter;
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
 
   E_Int nidom        = PyList_Size(zones);
   E_Int ndimdx_max   = 0;

@@ -58,7 +58,8 @@ void K_FAST::compute_sij(
         E_Int nbtask = ipt_omp[nstep-1]; 
         E_Int ptiter = ipt_omp[nssiter+ nstep-1];
 
-        for (E_Int nd = 0; nd < nidom; nd++) {impli_local[nd]=0;}
+        for (E_Int nd = 0; nd < nidom; nd++) {impli_local[nd]=1;}
+
         for (E_Int ntask = 0; ntask < nbtask; ntask++)
         {
           E_Int pttask = ptiter + ntask*(6+threadmax_sdm*7);

@@ -40,9 +40,9 @@ E_Float time_init;
 E_Int K_FAST::gsdr3(E_Int**& param_int          , E_Float**& param_real       , E_Int& nidom                , E_Int& nitrun           ,
 		    E_Int&  nitcfg              , E_Int&  nitcfg_last         , E_Int&  nssiter             , E_Int& it_target        ,
 		    E_Int&  first_it            , E_Int& kimpli               , E_Int& lssiter_verif        , E_Int& lexit_lu         ,
-		    E_Int& omp_mode             , E_Int& layer_mode           , E_Int& mpi                  , E_Int& nisdom_lu_max    ,
+		    E_Int& layer_mode           , E_Int& mpi                  , E_Int& nisdom_lu_max        ,
 		    E_Int& mx_nidom             , E_Int& ndimt_flt            , E_Int& threadmax_sdm        , E_Int& mx_synchro       ,
-		    E_Int& nb_pulse             , E_Float& temps              , E_Int* ipt_ijkv_sdm         , E_Int* ipt_ind_dm_omp   ,  E_Int* ipt_omp     ,
+		    E_Int& nb_pulse             , E_Float& temps              , E_Int* ipt_ijkv_sdm         , E_Int* ipt_ind_dm_omp   ,  E_Int* iptdtloc    ,
 		    E_Int* ipt_topology         , E_Int* ipt_ind_CL           , E_Int* ipt_lok              , E_Int* verrou_lhs       ,
 		    E_Int& vartype              , E_Float* timer_omp          , E_Int*     iptludic         , E_Int*   iptlumax       ,
 		    E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom     , E_Int** ipt_ng_pe           , E_Int** ipt_nfconn      ,
@@ -88,6 +88,10 @@ E_Int rank =0;
   time_init = omp_get_wtime();
 #endif
 #endif
+
+  E_Int omp_mode = iptdtloc[8];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
 
 
   E_Int npass         = 0;
@@ -308,6 +312,65 @@ E_Int rank =0;
   } // Fin zone // omp
 
 
+#pragma omp parallel default(shared) 
+  {
+#ifdef _OPENMP
+    E_Int  ithread           = omp_get_thread_num() +1;
+    E_Int  Nbre_thread_actif = omp_get_num_threads();
+    E_Float rhs_begin        = omp_get_wtime();
+#else
+    E_Int ithread = 1;
+    E_Int Nbre_thread_actif = 1;
+    E_Float rhs_begin       = 0;
+#endif
+   //E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
+  E_Int Nbre_socket   = 1;                       // nombre de proc (socket) sur le noeud a memoire partagee
+  if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
+
+  E_Int Nbre_thread_actif_loc, ithread_loc;
+  if( omp_mode == 1) { Nbre_thread_actif_loc = 1; ithread_loc = 1;}
+  else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
+
+  E_Int thread_parsock  =  Nbre_thread_actif/Nbre_socket;
+  E_Int socket          = (ithread-1)/thread_parsock +1;
+  E_Int  ithread_sock   = ithread-(socket-1)*thread_parsock;
+
+  E_Float rhs_end=0;
+
+  E_Int nitcfg_loc= 1;
+
+  E_Int nbtask = ipt_omp[nitcfg_loc-1]; 
+  E_Int ptiter = ipt_omp[nssiter+ nitcfg_loc-1];
+
+  //calcul du sous domaine a traiter par le thread
+  for (E_Int ntask = 0; ntask < nbtask; ntask++)
+     {
+        E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+        E_Int nd = ipt_omp[ pttask ];
+
+#include "FastASLBM/INTERP/stck.cpp"
+     }
+  } // Fin zone // omp
+/*
+*/
+
+
+
+for (E_Int nd = 0; nd < nidom; nd++)
+  {  if( param_int[nd][LEVEL] == 1  and nitcfg==3)
+      {
+         E_Int pt_interp = param_int[nd][PT_INTERP];
+         E_Int nrac = param_int[nd][pt_interp];
+         for (E_Int rac=0; rac < nrac; rac++) // Boucle sur les differents raccords
+          {
+            E_Int pt_racInt = param_int[nd][ pt_interp + rac +1];
+            E_Int pos_p1 = param_int[nd][pt_racInt +1];
+            pos_p1+=1; if(pos_p1==3){pos_p1=0;}
+            param_int[nd][pt_racInt+1] = pos_p1;
+        //printf("cght pos %d %d %d %d %d \n", pos_p1, nd, rac,pt_interp, PT_INTERP );
+          }
+       }
+  }
 
 
 #ifdef TimeShow
@@ -333,6 +396,7 @@ for (E_Int nd = 0; nd < nidom; nd++) { autorisation_bc[nd]=1;}
 //calcul Sij sur zone NS pour couplage NS_LBM
 if(flag_NSLBM==1)
   {
+    E_Int nitcfg_loc= 1;
     for (E_Int ip2p = 1; ip2p < param_int_tc[1]+1; ++ip2p)
        {
          E_Int sizecomIBC = param_int_tc[2];
@@ -350,7 +414,7 @@ if(flag_NSLBM==1)
            E_Int TypeTransfert1 =0; // uniquement ID
 
            K_FAST::compute_sij(iptro_CL, iptS, iptvol, param_int_tc, param_real_tc , param_int, param_real, ipt_omp,
-                               TypeTransfert1, it_target, nidom, ip2p, bidim, nitcfg, nssiter, rk1, exploc1, numpassage1);
+                               TypeTransfert1, it_target, nidom, ip2p, bidim, nitcfg_loc, nssiter, rk1, exploc1, numpassage1);
          }
        } //loop ip2p
   }
@@ -381,6 +445,7 @@ if(lexit_lu ==0 && layer_mode==1)
      else {autorisation_bc[nd] = 1;}
   }//loop zone
 } //lexit  
+
 
 
 //calcul sequentiel flux IBM et data CLs (lund, wallmodel) a toutes les ssiter

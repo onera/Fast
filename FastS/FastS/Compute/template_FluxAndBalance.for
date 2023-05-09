@@ -85,8 +85,7 @@ C Var loc
      & gradU_nx,gradU_ny,gradU_nz, gradV_nx,gradV_ny,gradV_nz,ventz,
      & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
-     & qn,r,v,w,h,q,r_1,psiroe,avmin, xktvol, xmulam, xmutur, xmutot,
-     & qmm1,qmm2,qmm3,qmm4,qmm5,qmm6,qmp1,qmp2,qmp3,qmp4,qmp5,qmp6
+     & qn,r,v,w,h,q,r_1,psiroe,avmin, xktvol, xmulam, xmutur, xmutot
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"

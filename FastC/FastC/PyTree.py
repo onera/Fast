@@ -28,7 +28,7 @@ try:
     import Converter.PyTree as C
     import Converter.Internal as Internal
     import Post.PyTree as P
-    import Fast.variables_share_pytree as v
+    import Fast.variables_share_pytree as VSHARE
     import Post.ExtraVariables2 as PE
     import RigidMotion.PyTree as R
     import math
@@ -48,7 +48,8 @@ import Distributor2.PyTree as D2
 
 MX_SYNCHRO = 1000
 MX_SSZONE  = 10
-MX_OMP_SIZE_INT = 250*OMP_NUM_THREADS
+MX_OMP_SIZE_INT = 25*OMP_NUM_THREADS
+
 
 #==============================================================================
 # Met un dictionnaire de numerics dans une/des zones
@@ -157,14 +158,14 @@ def _reorder(t, tc=None, omp_mode=0):
 # IN: adim: etat de reference, on utilise uniquement cvInf pour la temperature.
 # IN: rmConsVars: if True, remove the conservative variables
 #==============================================================================
-def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False,isWireModel=False):
+def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False,isWireModel=False,lbmAJ=True):
     """Create primitive vars from conservative vars."""
     tp = Internal.copyRef(t)
-    first_iter , vars_zones = _createPrimVars(tp, omp_mode, rmConsVars, Adjoint, gradP=gradP,isWireModel=isWireModel)
+    first_iter , vars_zones = _createPrimVars(tp, omp_mode, rmConsVars, Adjoint, gradP=gradP,isWireModel=isWireModel, lbmAJ=lbmAJ)
     return tp, first_iter, vars_zones
 
 #==============================================================================
-def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, isWireModel=False):
+def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, isWireModel=False, lbmAJ=True):
     """Create primitive vars from conservative vars."""
     vars_zones=[]
     flag_NSLBM = 0
@@ -190,7 +191,11 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                NG_indx  =  Internal.getNodeFromPath(z, 'NGonElements/FaceIndex')
                NG_pe    =  Internal.getNodeFromPath(z, 'NGonElements/ParentElements')
 
-            sa, lbmflag, neq_lbm, FIRST_IT  = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint,gradP=gradP,isWireModel=isWireModel, flag_coupNSLBM= flag_NSLBM)
+            model_loc ='Nada'
+            a = Internal.getNodeFromName2(z, 'GoverningEquations')
+            if a is not None: model_loc = Internal.getValue(a)
+
+            sa, lbmflag, neq_lbm, FIRST_IT  = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint,gradP=gradP,isWireModel=isWireModel, flag_coupNSLBM=flag_NSLBM, lbmAJ=lbmAJ)
             
             if FA_intext is not None:
                Internal.getNodeFromPath(z, 'NFaceElements')[2] +=[FA_indx, FA_intext] 
@@ -225,7 +230,6 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                vars_c.append('TurbulentSANuTildeDensity')
 
             vars=[]
-            timelevel    = ['', '_M1', '_P1']
             if lbmflag == True :
                 fields2compact =[]
                 for i in range(1,neq_lbm+1):
@@ -242,32 +246,14 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                 for i in range(len(vars_psi)):
                    fields2compact.append('centers:corr_'+str(vars_psi[i])) #Gradients PSI pour HRR
                 vars.append(fields2compact)
-                if flag_NSLBM == 1:
-                  timelevel = ['','_M1','_P1','_NM1','_NP1']
-                else:
-                  timelevel = ['']
 
-                '''
+            if lbmAJ:
                 fields2compact =[]
-                for i in range(1,neq_lbm+1):
+                for i in range(1,3+1):
                   fields2compact.append('centers:cellN_IBC_LBM_'+str(i))
                 vars.append(fields2compact)
-                fields2compact =[]
-                for i in range(1,neq_lbm+1):
-                  fields2compact.append('centers:Qstar_'+str(i))
-                vars.append(fields2compact)
 
-
-                fields2compact =[]
-                for i in range(1,neq_lbm+1):
-                  fields2compact.append('centers:Qeq_'+str(i))
-                vars.append(fields2compact)
-                fields2compact =[]
-                for i in range(1,neq_lbm+1):
-                  fields2compact.append('centers:Qneq_'+str(i))
-                vars.append(fields2compact)
-                '''
-                vars.append('centers:SpongeCoef')
+                vars.append(['centers:SpongeCoef'])
 
             #Compacatage des variables dans le cas du couplage
             if flag_NSLBM == 1:
@@ -276,8 +262,11 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                   fields2compact.append('centers:S'+str(vars_s[i]))
                vars.append(fields2compact)
 
-
-            timelevel = ['', '_M1','_P1']
+            if model_loc== 'Nada' or model_loc== 'Euler' or model_loc=='NSTurbulent' or model_loc=='NSTurbulent':
+              timelevel = ['', '_M1','_P1']
+            elif model_loc == 'LBMLaminar':
+              if lbmAJ:  timelevel = ['', '_M1']
+              else: timelevel = ['']
                 
             for level in timelevel:  #champs primitives
                fields2compact =[]
@@ -378,7 +367,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
 #==============================================================================
 # Init/create primitive Variable 
 #==============================================================================
-def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=False,isWireModel=False, flag_coupNSLBM=0):
+def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=False,isWireModel=False, flag_coupNSLBM=0, lbmAJ=True):
     import timeit
     # Get model
     model = "Euler"
@@ -479,7 +468,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     #===========================================================================
            
     else:
-       neq_lbm = Internal.getNodeFromName2(zone, 'Parameter_int')[1][v.NEQ_LBM]
+       neq_lbm = Internal.getNodeFromName2(zone, 'Parameter_int')[1][VSHARE.NEQ_LBM]
 
        #print('Internal fast: neq_LBM=', neq_lbm)
        for i in range(1,neq_lbm+1):
@@ -502,44 +491,18 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
        for comppsi in COMPOSANTES_PSI:
            if C.isNamePresent(zone, 'centers:corr_'+str(comppsi)) != 1: C._initVars(zone, 'centers:corr_'+str(comppsi), 0.)
 
-       #Pour le couplage NS-LBM on prepare les tableaux pour l'interpolation
-       if flag_coupNSLBM:
-           #Tablaux _P1 necessaires pour les echanges NS
-          if (C.isNamePresent(zone, 'centers:Density_P1')     != 1): C._cpVars(zone,'centers:Density',zone,'centers:Density_P1')
-          if (C.isNamePresent(zone, 'centers:VelocityX_P1')   != 1): C._cpVars(zone,'centers:VelocityX',zone,'centers:VelocityX_P1')
-          if (C.isNamePresent(zone, 'centers:VelocityY_P1')   != 1): C._cpVars(zone,'centers:VelocityY',zone,'centers:VelocityY_P1')
-          if (C.isNamePresent(zone, 'centers:VelocityZ_P1')   != 1): C._cpVars(zone,'centers:VelocityZ',zone,'centers:VelocityZ_P1')
-          if (C.isNamePresent(zone, 'centers:Temperature_P1') != 1): C._cpVars(zone,'centers:Temperature',zone,'centers:Temperature_P1')
-          #Stockage temps precedent
-          if (C.isNamePresent(zone, 'centers:Density_M1')     != 1): C._cpVars(zone,'centers:Density',zone,'centers:Density_M1'); FIRST_IT=0
-          if (C.isNamePresent(zone, 'centers:VelocityX_M1')   != 1): C._cpVars(zone,'centers:VelocityX',zone,'centers:VelocityX_M1'); FIRST_IT=0
-          if (C.isNamePresent(zone, 'centers:VelocityY_M1')   != 1): C._cpVars(zone,'centers:VelocityY',zone,'centers:VelocityY_M1'); FIRST_IT=0
-          if (C.isNamePresent(zone, 'centers:VelocityZ_M1')   != 1): C._cpVars(zone,'centers:VelocityZ',zone,'centers:VelocityZ_M1'); FIRST_IT=0
-          if (C.isNamePresent(zone, 'centers:Temperature_M1') != 1): C._cpVars(zone,'centers:Temperature',zone,'centers:Temperature_M1'); FIRST_IT=0
-          #Stockage tn+1
-          if (C.isNamePresent(zone, 'centers:Density_NP1')     != 1): C._cpVars(zone,'centers:Density',zone,'centers:Density_NP1')
-          if (C.isNamePresent(zone, 'centers:VelocityX_NP1')   != 1): C._cpVars(zone,'centers:VelocityX',zone,'centers:VelocityX_NP1')
-          if (C.isNamePresent(zone, 'centers:VelocityY_NP1')   != 1): C._cpVars(zone,'centers:VelocityY',zone,'centers:VelocityY_NP1')
-          if (C.isNamePresent(zone, 'centers:VelocityZ_NP1')   != 1): C._cpVars(zone,'centers:VelocityZ',zone,'centers:VelocityZ_NP1')
-          if (C.isNamePresent(zone, 'centers:Temperature_NP1') != 1): C._cpVars(zone,'centers:Temperature',zone,'centers:Temperature_NP1')
-          #Stockage tn-1
-          if (C.isNamePresent(zone, 'centers:Density_NM1')     != 1): C._cpVars(zone,'centers:Density',zone,'centers:Density_NM1')
-          if (C.isNamePresent(zone, 'centers:VelocityX_NM1')   != 1): C._cpVars(zone,'centers:VelocityX',zone,'centers:VelocityX_NM1')
-          if (C.isNamePresent(zone, 'centers:VelocityY_NM1')   != 1): C._cpVars(zone,'centers:VelocityY',zone,'centers:VelocityY_NM1')
-          if (C.isNamePresent(zone, 'centers:VelocityZ_NM1')   != 1): C._cpVars(zone,'centers:VelocityZ',zone,'centers:VelocityZ_NM1')
-          if (C.isNamePresent(zone, 'centers:Temperature_NM1') != 1): C._cpVars(zone,'centers:Temperature',zone,'centers:Temperature_NM1')
-
        #var AJ
-       for i in range(1,3+1):
-           if C.isNamePresent(zone, 'centers:cellN_IBC_LBM'    +str(i)      ) != 1: C._initVars(zone, 'centers:cellN_IBC_LBM_'    +str(i)      , 0.)
+       if lbmAJ:
+         for i in range(1,3+1):
+             if C.isNamePresent(zone, 'centers:cellN_IBC_LBM'    +str(i)      ) != 1: C._initVars(zone, 'centers:cellN_IBC_LBM_'    +str(i)      , 0.)
            
-       if C.isNamePresent(zone, 'centers:SpongeCoef')    != 1: C._initVars(zone, 'centers:SpongeCoef'    , 0.)
+         if C.isNamePresent(zone, 'centers:SpongeCoef')    != 1: C._initVars(zone, 'centers:SpongeCoef'    , 0.)
 
-       if C.isNamePresent(zone, 'centers:Density_M1'    ) != 1: C._cpVars(zone, 'centers:Density'    , zone, 'centers:Density_M1'    ); FIRST_IT=0
-       if C.isNamePresent(zone, 'centers:VelocityX_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityX'  , zone, 'centers:VelocityX_M1'  ); FIRST_IT=0
-       if C.isNamePresent(zone, 'centers:VelocityY_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityY'  , zone, 'centers:VelocityY_M1'  ); FIRST_IT=0
-       if C.isNamePresent(zone, 'centers:VelocityZ_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityZ'  , zone, 'centers:VelocityZ_M1'  ); FIRST_IT=0
-       if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
+         if C.isNamePresent(zone, 'centers:Density_M1'    ) != 1: C._cpVars(zone, 'centers:Density'    , zone, 'centers:Density_M1'    ); FIRST_IT=0
+         if C.isNamePresent(zone, 'centers:VelocityX_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityX'  , zone, 'centers:VelocityX_M1'  ); FIRST_IT=0
+         if C.isNamePresent(zone, 'centers:VelocityY_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityY'  , zone, 'centers:VelocityY_M1'  ); FIRST_IT=0
+         if C.isNamePresent(zone, 'centers:VelocityZ_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityZ'  , zone, 'centers:VelocityZ_M1'  ); FIRST_IT=0
+         if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
        '''
        '''
     # fin du if zone LBM ------------------------------------
@@ -807,7 +770,7 @@ def _build_omp(t):
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
 
     #dimensionnememnt tableau
-    size_int       = HOOK['MX_OMP_SIZE_INT']
+    size_int       = 0
     for b in bases:
         zones = Internal.getZones(b)
         for z in zones:
@@ -863,6 +826,7 @@ def _build_omp(t):
 #==============================================================================
 def _buildOwnData(t, Padding):
 
+    global  MX_OMP_SIZE_INT
     # Data for each Base
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
 
@@ -1024,103 +988,117 @@ def _buildOwnData(t, Padding):
     maxlevel = max(veclevel)
 
 
+    #determine les parametre globaux valable pour toue les zones et bases
+    d = Internal.getNodeFromName1(t, '.Solver#define')
 
+    # - defaults -
+    temporal_scheme = "implicit"
+    ss_iteration    = 30
+    rk              = 3
+    modulo_verif    = 200
+    restart_fields  = 1
+    exploc          = 0
+    t_init_ale      = temps
+    timelevel_prfile= 0
+    exploctype      = 0
+    ompmode         = 0
 
-    for b in bases[0]:
-        # Base define data
-        #d = Internal.getNodeFromName1(b, '.Solver#define')
-        d = Internal.getNodeFromName1(t, '.Solver#define')
-
-        # - defaults -
-        temporal_scheme = "implicit"
-        ss_iteration    = 30
-        rk              = 3
-        modulo_verif    = 200
-        restart_fields  = 1
-        exploc          = 0
-        t_init_ale      = temps
-        timelevel_prfile= 0
-        exploctype      = 0
-        ompmode         = 0
-
-        if d is not None:
-            checkKeys(d, keys4Base)
-            a = Internal.getNodeFromName1(d, 'omp_mode')
-            if a is not None: ompmode = Internal.getValue(a)
-            ompmode = max(ompmode, 0); ompmode = min(ompmode, 1)
+    if d is not None:
+        checkKeys(d, keys4Base)
+        a = Internal.getNodeFromName1(d, 'omp_mode')
+        if a is not None: ompmode = Internal.getValue(a)
+        ompmode = max(ompmode, 0); ompmode = min(ompmode, 1)
             
-            a = Internal.getNodeFromName1(d, 'temporal_scheme')
-            if a is not None: temporal_scheme = Internal.getValue(a)
-            a = Internal.getNodeFromName1(d, 'ss_iteration')
-            if a is not None: ss_iteration = Internal.getValue(a)
-            if temporal_scheme == "implicit_local": modulo_verif = 7
-            a = Internal.getNodeFromName1(d, 'modulo_verif')
-            if a is not None: modulo_verif = Internal.getValue(a)
-            a = Internal.getNodeFromName1(d, 'restart_fields')
-            if a is not None: restart_fields = Internal.getValue(a)
-            a = Internal.getNodeFromName1(d, 'rk')
-            if a is not None: rk = Internal.getValue(a)
-            if temporal_scheme == "implicit" or temporal_scheme =="implicit_local": rk=3
-            a = Internal.getNodeFromName1(d, 'exp_local')
-            if a is not None: exploc = Internal.getValue(a)
-            if temporal_scheme == "implicit" or temporal_scheme =="implicit_local": exploc=0
-            a = Internal.getNodeFromName1(d, 'explicit_local_type')         
-            if a is not None: exploctype = Internal.getValue(a)
-            a = Internal.getNodeFromName1(d, 'time_begin_ale')
-            if a is not None: t_init_ale = Internal.getValue(a)
+        a = Internal.getNodeFromName1(d, 'temporal_scheme')
+        if a is not None: temporal_scheme = Internal.getValue(a)
+        a = Internal.getNodeFromName1(d, 'ss_iteration')
+        if a is not None: ss_iteration = Internal.getValue(a)
+        if temporal_scheme == "implicit_local": modulo_verif = 7
+        a = Internal.getNodeFromName1(d, 'modulo_verif')
+        if a is not None: modulo_verif = Internal.getValue(a)
+        a = Internal.getNodeFromName1(d, 'restart_fields')
+        if a is not None: restart_fields = Internal.getValue(a)
+        a = Internal.getNodeFromName1(d, 'rk')
+        if a is not None: rk = Internal.getValue(a)
+        if temporal_scheme == "implicit" or temporal_scheme =="implicit_local": rk=3
+        a = Internal.getNodeFromName1(d, 'exp_local')
+        if a is not None: exploc = Internal.getValue(a)
+        if temporal_scheme == "implicit" or temporal_scheme =="implicit_local": exploc=0
+        a = Internal.getNodeFromName1(d, 'explicit_local_type')         
+        if a is not None: exploctype = Internal.getValue(a)
+        a = Internal.getNodeFromName1(d, 'time_begin_ale')
+        if a is not None: t_init_ale = Internal.getValue(a)
 
            
-        # Base ownData (generated)
-        #o = Internal.createUniqueChild(b, '.Solver#ownData', 'UserDefinedData_t')
-        o = Internal.createUniqueChild(t, '.Solver#ownData', 'UserDefinedData_t')
+    # Base ownData (generated)
+    #o = Internal.createUniqueChild(b, '.Solver#ownData', 'UserDefinedData_t')
+    o = Internal.createUniqueChild(t, '.Solver#ownData', 'UserDefinedData_t')
 
-        if temporal_scheme == "explicit": nssiter = 3
-        elif temporal_scheme == "explicit_lbm": nssiter = 1
-        elif temporal_scheme == "implicit": nssiter = ss_iteration+1
-        elif temporal_scheme == "implicit_local": nssiter = ss_iteration+1
-        elif temporal_scheme == "explicit_local": #explicit local instationnaire ordre 3
-            nssiter = 4*maxlevel 
-            rk = 3
-            exploc = 1
-        else: print('Warning: FastS: invalid value %s for key temporal_scheme.'%temporal_scheme)
-        try: ss_iteration = int(ss_iteration)
-        except: print('Warning: Fast: invalid value %s for key ss_iteration.'%ss_iteration)
-        try: modulo_verif = int(modulo_verif)
-        except: print('Warning: Fast: invalid value %s for key modulo_verif.'%modulo_verif)
-        if rk == 1 and exploc==0 and temporal_scheme == "explicit": nssiter = 1 # explicit global
-        if rk == 2 and exploc==0 and temporal_scheme == "explicit": nssiter = 2 # explicit global
-        if rk == 3 and exploc==0 and temporal_scheme == "explicit": nssiter = 3 # explicit global
+    if temporal_scheme == "explicit": nssiter = 3
+    elif temporal_scheme == "explicit_lbm": nssiter = 1
+    elif temporal_scheme == "implicit": nssiter = ss_iteration+1
+    elif temporal_scheme == "implicit_local": nssiter = ss_iteration+1
+    elif temporal_scheme == "explicit_local": #explicit local instationnaire ordre 3
+        nssiter = 4*maxlevel 
+        rk = 3
+        exploc = 1
+    else: print('Warning: FastS: invalid value %s for key temporal_scheme.'%temporal_scheme)
+    try: ss_iteration = int(ss_iteration)
+    except: print('Warning: Fast: invalid value %s for key ss_iteration.'%ss_iteration)
+    try: modulo_verif = int(modulo_verif)
+    except: print('Warning: Fast: invalid value %s for key modulo_verif.'%modulo_verif)
+    if rk == 1 and exploc==0 and temporal_scheme == "explicit": nssiter = 1 # explicit global
+    if rk == 2 and exploc==0 and temporal_scheme == "explicit": nssiter = 2 # explicit global
+    if rk == 3 and exploc==0 and temporal_scheme == "explicit": nssiter = 3 # explicit global
 
-        ntask =len(zones)*4  # 4 sous-zone max par zone en moyenne 
-        size_task=  (7 + 7*OMP_NUM_THREADS)*ntask
-        size_omp =  1 + nssiter*(2 + size_task)
+    if MX_OMP_SIZE_INT == 25*OMP_NUM_THREADS:
+       print("resize MX_OMP_SIZE_INT dans buildOwndata")
+       ntask =len(zones)*2  # 4 sous-zone max par zone en moyenne 
+       size_task=  (6 + 7*OMP_NUM_THREADS)*ntask
+       size_omp =  1 + nssiter*(2 + size_task)
+       MX_OMP_SIZE_INT = size_omp
 
-        dtdim = nssiter + 8
-        #datap = numpy.empty((dtdim+ size_omp), numpy.int32)
-        datap = numpy.zeros((dtdim+ size_omp), numpy.int32) 
-        datap[0] = nssiter 
-        datap[1] = modulo_verif
-        datap[2] = restart_fields-1
-        datap[3] = timelevel_motion
-        datap[4] = timelevel_target 
-        datap[5] = timelevel_prfile
-        datap[6:dtdim-2] = 1
-        datap[dtdim-2] = rk
-        datap[dtdim-1] = it0
-        datap[dtdim  ] = ompmode
-        for it in range(nssiter):
-          datap[dtdim + 1 + it  ] = -1   #on initialise a -1 le nbre de "zone" a traiter pour forcer l'init dans warmup
-        Internal.createUniqueChild(o, '.Solver#dtloc', 'DataArray_t', datap)
+    nitCyclLBM = 2**(maxlevel-1)
+    dtdim = 12 + nitCyclLBM
+    #print('ncycl_LBM', nitCyclLBM, maxlevel)
 
-        dtloc = Internal.getNodeFromName1(o, '.Solver#dtloc')[1]
+    datap = numpy.zeros((dtdim+ size_omp), numpy.int32) 
+    datap[0] = nssiter 
+    datap[1] = modulo_verif
+    datap[2] = restart_fields-1
+    datap[3] = timelevel_motion
+    datap[4] = timelevel_target 
+    datap[5] = timelevel_prfile
+    datap[6] = rk
+    datap[7] = it0
+    datap[8] = ompmode
+    datap[9] = maxlevel
+    datap[10]= 0   # No it du cycle integration temporelle LBM
+    datap[11]= dtdim   # shift pour acceder au info OMP
 
-        #partage memoire entre dtloc et Noeud timeMotion,....
-        first = Internal.getNodeFromName1(t, 'Iteration')
-        if first is not None: first[1]=dtloc[dtdim-1:dtdim]
-        first = Internal.getNodeFromName1(t, 'TimeLevelMotion')
-        if first is not None: first[1]=dtloc[3:4]
-        first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
-        if first is not None: first[1]=dtloc[4:5]
+    # level max pour chaque it du cycle LBM
+    for it in range(nitCyclLBM):
+      for level in range(maxlevel,0,-1):
+         it_tg = 2**(level-1) 
+         if it%it_tg==0: 
+             datap[12+it]=level
+             print('Nblevel',datap[12+it],'itCycl=',it )
+             break
+       
+    for it in range(nssiter):
+      datap[dtdim  + it  ] = -1   #on initialise a -1 le nbre de "zone" a traiter pour forcer l'init dans warmup
+    Internal.createUniqueChild(o, '.Solver#dtloc', 'DataArray_t', datap)
+
+    dtloc = Internal.getNodeFromName1(o, '.Solver#dtloc')[1]
+    #partage memoire entre dtloc et Noeud timeMotion,....
+    first = Internal.getNodeFromName1(t, 'TimeLevelMotion')
+    if first is not None: first[1]=dtloc[3:4]
+    first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
+    if first is not None: first[1]=dtloc[4:5]
+    first = Internal.getNodeFromName1(t, 'Iteration')
+    if first is not None: first[1]=dtloc[7:8]
+
+
 
     # Data for each zone
     #==== Check if padding file exists (potential cache associativity issue)
@@ -1147,10 +1125,13 @@ def _buildOwnData(t, Padding):
     bases = Internal.getNodesFromType2(t, 'CGNSBase_t')
     
     i=0
+    ndom=0
     for b in bases:
         zones = Internal.getNodesFromType2(b, 'Zone_t')
         nzones=len(zones)
+        #print("Bases", b[0], nzones)
         for z in zones:
+            #print("ZONES", b[0], z[0])
             shiftvar   = 0
             #=== check for a padding file  (cache associativity issue)
             dims = Internal.getZoneDim(z)
@@ -1639,7 +1620,7 @@ def _buildOwnData(t, Padding):
             # creation noeud parametre integer
 
             
-            number_of_defines_param_int = 131                           # Number Param INT
+            number_of_defines_param_int = 133                           # Number Param INT
             size_int                   = number_of_defines_param_int +1 # number of defines + 1
 
 
@@ -1760,68 +1741,72 @@ def _buildOwnData(t, Padding):
             datap[88]   = wallmodel_sample
 
             ## LBM
-            datap[v.NEQ_LBM]        = lbm_neq
-            #datap[v.LBM_COL_OP]     = lbm_collision_operator
-            datap[v.LBM_COL_OP]     = kcolldom
-            datap[v.LBM_FILTER]     = lbm_selective_filter
-            datap[v.LBM_FILTER_SZ]  = lbm_selective_filter_size
-            datap[v.LBM_SPONGE_SIZE]= lbm_sponge_size
-            datap[v.LBM_SPONGE_PREP]= lbm_sponge_prep
+            datap[VSHARE.NEQ_LBM]        = lbm_neq
+            #datap[VSHARE.LBM_COL_OP]     = lbm_collision_operator
+            datap[VSHARE.LBM_COL_OP]     = kcolldom
+            datap[VSHARE.LBM_FILTER]     = lbm_selective_filter
+            datap[VSHARE.LBM_FILTER_SZ]  = lbm_selective_filter_size
+            datap[VSHARE.LBM_SPONGE]     = 0
+            datap[VSHARE.LBM_SPONGE_SIZE]= lbm_sponge_size
+            datap[VSHARE.LBM_SPONGE_PREP]= lbm_sponge_prep
 
-            datap[v.flag_streaming]           = 1
-            datap[v.flag_macro]               = 1
-            datap[v.flag_collision_operator]  = 1
-            datap[v.flag_collision]           = 1
-            datap[v.LBM_isforce]              = lbm_isforce
-            datap[v.flag_BConQstar_switch]    = 0
+            datap[VSHARE.flag_streaming]           = 1
+            datap[VSHARE.flag_macro]               = 1
+            datap[VSHARE.flag_collision_operator]  = 1
+            datap[VSHARE.flag_collision]           = 1
+            datap[VSHARE.LBM_isforce]              = lbm_isforce
+            datap[VSHARE.flag_BConQstar_switch]    = 0
 
-            datap[v.LBM_CORR_TERM]     = kcorrterm
-            datap[v.LBM_OVERSET]       = klbmoverset
-            datap[v.LBM_HLBM]          = klbm_hlbm
-            datap[v.LBM_NS]            = flag_nslbm
+            datap[VSHARE.LBM_CORR_TERM]     = kcorrterm
+            datap[VSHARE.LBM_OVERSET]       = klbmoverset
+            datap[VSHARE.LBM_HLBM]          = klbm_hlbm
+            datap[VSHARE.LBM_NS]            = flag_nslbm
 
-            datap[v.LBM_IBC]          = lbm_ibm
-            datap[v.LBM_IBC_NUM]      = 0 
-            datap[v.LBM_IBC_PREP]     = 0
-            datap[v.LBM_IBC_CONNECTOR]= lbm_ibm_connector
+            datap[VSHARE.LBM_IBC]          = lbm_ibm
+            datap[VSHARE.LBM_IBC_NUM]      = 0 
+            datap[VSHARE.LBM_IBC_PREP]     = 0
+            datap[VSHARE.LBM_IBC_CONNECTOR]= lbm_ibm_connector
 
-            datap[v.LBM_spng_xmin] = lbm_spng_xmin
-            datap[v.LBM_spng_xmax] = lbm_spng_xmax
-            datap[v.LBM_spng_ymin] = lbm_spng_ymin
-            datap[v.LBM_spng_ymax] = lbm_spng_ymax
-            datap[v.LBM_spng_zmin] = lbm_spng_zmin
-            datap[v.LBM_spng_zmax] = lbm_spng_zmax
+            datap[VSHARE.LBM_spng_xmin] = lbm_spng_xmin
+            datap[VSHARE.LBM_spng_xmax] = lbm_spng_xmax
+            datap[VSHARE.LBM_spng_ymin] = lbm_spng_ymin
+            datap[VSHARE.LBM_spng_ymax] = lbm_spng_ymax
+            datap[VSHARE.LBM_spng_zmin] = lbm_spng_zmin
+            datap[VSHARE.LBM_spng_zmax] = lbm_spng_zmax
 
             ##Setting pointers to 0 for non-regression tests
-            datap[v.PT_LBM_Cs]          =0
-            datap[v.PT_LBM_Ws]          =0
-            datap[v.PT_LBM_Cminus]      =0
-            datap[v.PT_LBM_BC]          =0
-            datap[v.PT_LBM_H2H3]        =0
-            datap[v.PT_LBM_SPEC]        =0
-            datap[v.PT_LBM_FILTER_WGHT] =0
-            datap[v.PT_LBM_FILTER_STNCL]=0
-            datap[v.PT_LBM_IBC_LIST]    =0
-            datap[v.PT_LBM_IBC_DIST]    =0
-            datap[v.PT_LBM_IBC_DIR]     =0
+            datap[VSHARE.LBM_NQ_BC]          =0
+            datap[VSHARE.LBM_BConQstar]      =0
+            datap[VSHARE.PT_LBM_Cs]          =0
+            datap[VSHARE.PT_LBM_Ws]          =0
+            datap[VSHARE.PT_LBM_Cminus]      =0
+            datap[VSHARE.PT_LBM_BC]          =0
+            datap[VSHARE.PT_LBM_H2H3]        =0
+            datap[VSHARE.PT_LBM_SPEC]        =0
+            datap[VSHARE.PT_LBM_FILTER_WGHT] =0
+            datap[VSHARE.PT_LBM_FILTER_STNCL]=0
+            datap[VSHARE.PT_LBM_IBC_LIST]    =0
+            datap[VSHARE.PT_LBM_IBC_DIST]    =0
+            datap[VSHARE.PT_LBM_IBC_DIR]     =0
 
             #correction flux paroi ibm
-            datap[v.IBC_PT_FLUX]   = -1
+            datap[VSHARE.IBC_PT_FLUX]   = -1
 
             # options SA
-            datap[v.SA_LOW_RE] = 0 # active Low Reynolds correction
-            datap[v.SA_ROT_CORR] = 0 # active Rotation correction
+            datap[VSHARE.SA_LOW_RE] = 0 # active Low Reynolds correction
+            datap[VSHARE.SA_ROT_CORR] = 0 # active Rotation correction
             if d is not None:
                 a = Internal.getNodeFromName1(d, 'SA_add_LowRe')
                 if a is not None: 
                     val = Internal.getValue(a)
-                    if val == 1 or val == 'active' or val == True: datap[v.SA_LOW_RE] = 1
+                    if val == 1 or val == 'active' or val == True: datap[VSHARE.SA_LOW_RE] = 1
                 a = Internal.getNodeFromName1(d, 'SA_add_RotCorr')
                 if a is not None: 
                     val = Internal.getValue(a)
-                    if val == 1 or val == 'active' or val == True: datap[v.SA_ROT_CORR] = 1
+                    if val == 1 or val == 'active' or val == True: datap[VSHARE.SA_ROT_CORR] = 1
 
 
+            datap[VSHARE.NONZ] = ndom
             i += 1
          
             Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
@@ -1895,18 +1880,18 @@ def _buildOwnData(t, Padding):
             datap[63] = CtWire_p
 
 
-            datap[v.LBM_c0]      = lbm_c0
-            datap[v.LBM_taug]    = lbm_taug
-            datap[v.LBM_difcoef] = lbm_dif_coef
+            datap[VSHARE.LBM_c0]      = lbm_c0
+            datap[VSHARE.LBM_taug]    = lbm_taug
+            datap[VSHARE.LBM_difcoef] = lbm_dif_coef
             
-            datap[v.LBM_filter_sigma]        = lbm_selective_filter_sigma
-            datap[v.LBM_forcex:v.LBM_forcex+3] = lbm_forcex[0:3]
-            datap[v.LBM_adaptive_filter_chi] = lbm_adaptive_filter_chi
-            datap[v.LBM_chi_spongetypeII]    = lbm_chi_spongetypeII
-            datap[v.LBM_HRR_sigma]           = lbm_hrr_sigma
-            datap[v.LBM_gamma_precon]        = lbm_gamma_precon
-            datap[v.LBM_zlim]                = lbm_zlim            
-            datap[v.LBM_DX]                  = lbm_dx
+            datap[VSHARE.LBM_filter_sigma]        = lbm_selective_filter_sigma
+            datap[VSHARE.LBM_forcex:VSHARE.LBM_forcex+3] = lbm_forcex[0:3]
+            datap[VSHARE.LBM_adaptive_filter_chi] = lbm_adaptive_filter_chi
+            datap[VSHARE.LBM_chi_spongetypeII]    = lbm_chi_spongetypeII
+            datap[VSHARE.LBM_HRR_sigma]           = lbm_hrr_sigma
+            datap[VSHARE.LBM_gamma_precon]        = lbm_gamma_precon
+            datap[VSHARE.LBM_zlim]                = lbm_zlim            
+            datap[VSHARE.LBM_DX]                  = lbm_dx
                        
             Internal.createUniqueChild(o, 'Parameter_real', 'DataArray_t', datap)
 
@@ -1917,6 +1902,9 @@ def _buildOwnData(t, Padding):
             Internal.createUniqueChild(o, 'temporal_scheme', 'DataArray_t', temporal_scheme)
             Internal.createUniqueChild(o, 'exp_local', 'DataArray_t', exploc)
             Internal.createUniqueChild(o, 'rk', 'DataArray_t', rk)
+
+
+            ndom+=1
 
     return None
 
@@ -1953,15 +1941,15 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         if model == 'nsspalart' or model =='NSTurbulent': neq = 6
         param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
         if model == 'LBMLaminar' :
-           neq = param_int[v.NEQ_LBM]
+           neq = param_int[VSHARE.NEQ_LBM]
            flaglbm = True
         if scheme == 'implicit' or scheme == 'implicit_local':   neq_coe = neq     
         else:                                                    neq_coe = 1    # explicit
 
         neq_max = max(neq, neq_max)
-        shiftvar = param_int[v.SHIFTVAR]
+        shiftvar = param_int[VSHARE.SHIFTVAR]
         if param_int is not None:
-           shiftvar  = param_int[v.SHIFTVAR]
+           shiftvar  = param_int[VSHARE.SHIFTVAR]
         else:
            shiftvar = 100
            print('shiftVar=%d'%shiftvar)
@@ -1990,12 +1978,12 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         ndimt   +=     neq*nijk       # surdimensionne ici
         ndimcoe += neq_coe*nijk       # surdimensionne ici
        
-        if param_int[v.KFLUDOM]==2:   #schema senseur
+        if param_int[VSHARE.KFLUDOM]==2:   #schema senseur
            ndimwig +=   3*nijk 
-        elif param_int[v.KFLUDOM]==8: #schema senseur hyper
+        elif param_int[VSHARE.KFLUDOM]==8: #schema senseur hyper
            ndimwig +=   4*nijk 
 
-        if param_int[v.IFLOW]==4:   #schema LBM
+        if param_int[VSHARE.IFLOW]==4:   #schema LBM
            print("workarray: affiner taille tableau lbm")
            ndima1  +=       9*nijk
            ndima3  +=       6*nijk
@@ -2095,6 +2083,53 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['psi_corr']       = tab_psi
 
     return hook
+
+
+#==============================================================================
+# compactage tableau + init Numa
+#==============================================================================
+def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolutionCenters__], dtloc=None, fields=None, mode=None, init=True):
+    if  mode is not None:
+      if mode == -1: thread_numa = 0
+      else: thread_numa = 1
+    else: thread_numa = 0
+
+    if dtloc is None:
+       own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
+       dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+
+    #print("compact dtloc=", dtloc)
+
+    zones = Internal.getZones(t)
+    for z in zones:
+        ars = getFields2Compact__(z, containers, fields)
+        sh = None ; size = None
+        val = [] # valid fields
+        for a in ars:
+            a1 = a[1]
+            if sh is None: sh = a1.shape; size = a1.size; val.append(a)
+            elif a1.shape == sh: val.append(a)
+        nfields = len(val)
+        if nfields > 0:
+            #print('ZONEEEE', z[0])
+            param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
+            # Create an equivalent contiguous numpy [flat]
+            eq = numpy.empty(nfields*(size+ param_int[1][66]), dtype=numpy.float64) # add a shift  between prim. variables (param_int[1][SHIFTVAR])
+            c = 0
+            if param_int is None:
+                raise ValueError("_compact: Parameter_int is missing for zone %s."%z[0])
+            for a in val:
+                a1 = a[1]
+                # Copy elements
+                ptr = a1.reshape((size), order='F') # no copy I hope
+
+                if init: fastc.initNuma( ptr, eq, param_int, dtloc, c, thread_numa)
+                # Replace numpys with slice
+                a[1] = eq[c*(size)+c*param_int[1][66]:(c+1)*(size)+c*param_int[1][66]]
+                a[1] = a[1].reshape(sh, order='F')
+
+                c += 1
+    return None
 
 #==============================================================================
 # loi horaire (ALE) 
@@ -2504,22 +2539,36 @@ def switchPointers3__(zones,nitmax):
 #==============================================================================
 # echange M1 <- current, current <- P1, P1 <- M1
 #==============================================================================
-def switchPointersLBM__(zones, neq_lbm):
-    
+def switchPointersLBM__(zones, neq_lbm, dtloc):
+ 
      for z in zones:
-        sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
-        for i in range(1,neq_lbm+1):
-            caM1 = Internal.getNodeFromName1(sol, 'Q'+str(i)+'_M1')
-            ca   = Internal.getNodeFromName1(sol, 'Q'+str(i))
+        param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]  # noeud
+        level = param_int[VSHARE.LEVEL]
+        maxlevel    = dtloc[ 9]
+        it_cycl_lbm = dtloc[10]
+        level_tg = dtloc[12 +it_cycl_lbm]
 
-            # sauvegarde M1
-            ta = caM1[1]
+        max_it        = 2**( maxlevel-1)
 
-            # M1 <- current
-            caM1[1] = ca[1]
+        level_next_it =  maxlevel;
+        if it_cycl_lbm != max_it -1 : level_next_it = dtloc[12 +it_cycl_lbm +1]
+    
+        #if level==1 or (level >=2 and level <= level_next_it) :
+        if level <= level_next_it :
+           #print("switch Pt", z[0])
+           sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+           for i in range(1,neq_lbm+1):
+              caM1 = Internal.getNodeFromName1(sol, 'Q'+str(i)+'_M1')
+              ca   = Internal.getNodeFromName1(sol, 'Q'+str(i))
 
-            # current <- P1
-            ca[1] = ta
+              # sauvegarde M1
+              ta = caM1[1]
+
+              # M1 <- current
+              caM1[1] = ca[1]
+
+              # current <- P1
+              ca[1] = ta
 
 #==============================================================================
 # Construit les donnees compactees pour traiter les BC
@@ -2821,6 +2870,172 @@ def _BCcompact(t):
 
     return None
 
+
+#==============================================================================
+# Construit les donnees compactees pour traiter les interpolation temporelles LBM
+#==============================================================================
+def _InterpTemporelcompact(t,tc):
+    
+    #dimensionnememnt tableau
+    sizeRac={}
+    zones_tc = Internal.getZones(tc)
+    for z in zones_tc:
+
+        matchs  = Internal.getNodesFromType1(z,'ZoneSubRegion_t')
+        #print "ZNAME",z[0]
+        for match in matchs:
+           zrname     = Internal.getValue(match)
+           zR         = Internal.getNodeFromName(t,zrname)
+           zD         = Internal.getNodeFromName(t,z[0])
+           param_intR =  Internal.getNodeFromName(zR,'Parameter_int')[1]
+           param_intD =  Internal.getNodeFromName(zD,'Parameter_int')[1]
+           nslbm      = Internal.getNodeFromName(match,'NSLBM')
+           rac_nslbm= False
+           if nslbm is not None and param_intD[VSHARE.IFLOW]==4: rac_nslbm= True # on retient uniquement les raccod nslbm si zD ==lbm
+           #recherche raccord entre zone de pas de temps different ou lbmns
+           if (param_intD[VSHARE.LEVEL] >   param_intR[VSHARE.LEVEL]) or rac_nslbm:
+              print ( 'stockage actif:', match[0], 'zD=', zD[0], 'zR=',  zR[0], 'levelDR=', param_intD[VSHARE.LEVEL],param_intR[VSHARE.LEVEL],'nslbm=',rac_nslbm  )
+              ptlist    = Internal.getNodeFromName1(match,'PointList')[1]
+              interptyp = Internal.getNodeFromName1(match,'InterpolantsType')[1]
+              imin=10000;imax=-5
+              jmin=10000;jmax=-5
+              kmin=10000;kmax=-5
+              dims = Internal.getZoneDim(zD)
+              imd = dims[1]-1; imdjmd =imd*(dims[2]-1)
+              #print('dims',dims)
+              #print('imd',imd,dims[2]-1, imdjmd )
+              for l in range(numpy.size(ptlist)):
+                 typ = interptyp[l]
+
+                 k   = ptlist[l]//imdjmd;
+                 j   = (ptlist[l]-k*imdjmd)//imd;
+                 i   = (ptlist[l]-j*imd-k*imdjmd);
+                 if i < imin: imin =i
+                 if j < jmin: jmin =j
+                 if k < kmin: kmin =k
+                 molecule = typ -1 
+                 if   typ == 22 or type ==0:
+                    print("ERROR: interpolation leastsquare ou 2d pas prise en compte pour lbm multi dt")
+                    import sys; sys.exit()
+                 if i+molecule > imax: imax =i+molecule
+                 if j+molecule > jmax: jmax =j+molecule
+                 if k+molecule > kmax: kmax =k+molecule
+             
+                 #print("min",imin,imax, i,j,k,ptlist[l] ,l)
+
+              sizeWindow = (imax-imin+1)*(jmax-jmin+1)*(kmax-kmin+1)
+
+              if   param_intR[VSHARE.IFLOW]==4 and param_intD[VSHARE.IFLOW]==4: typRac =0 #LBM-LBM
+              elif param_intR[VSHARE.IFLOW]==4 and param_intD[VSHARE.IFLOW]<=3: typRac= 1 #LBM-NS
+              elif param_intR[VSHARE.IFLOW]<=3 and param_intD[VSHARE.IFLOW]==4: typRac= 1 #LBM-NS
+              else : typRac= 2                                                  # NS-NS
+
+              if zD[0] in sizeRac:
+                 nrac = sizeRac[ zD[0]][0]; nrac +=1
+                 #Swin = sizeRac[ zD[0]][1]; Swin = Swin +  [sizeWindow, imin,imax, jmin,jmax,kmin,kmax]
+                 Swin = sizeRac[ zD[0]][1]; Swin.append( [sizeWindow, imin,imax, jmin,jmax,kmin,kmax] )
+                 typR = sizeRac[ zD[0]][2]; typR = typR + [typRac]
+                 sizeRac[zD[0]]= [nrac , Swin ,  typR ]
+              else:
+                 sizeRac[zD[0]]= [1 , [[sizeWindow, imin,imax, jmin,jmax,kmin,kmax]] , [typRac]] 
+     
+    #print (sizeRac)
+
+
+    ## allocation new param_int/real
+    for z in Internal.getZones(t):
+        # zone ownData (generated)
+        o = Internal.getNodeFromName1(z, '.Solver#ownData')
+
+        #on concatene les donnes BC dans param_int et param_real
+        param_int = Internal.getNodeFromName1(o, 'Parameter_int')
+        size = numpy.shape(param_int[1])
+
+        if z[0] in sizeRac:
+           nrac    = sizeRac[z[0]][0]
+           windows = sizeRac[z[0]][1]
+           typRac  = sizeRac[z[0]][2]
+        else:
+           nrac    = 0
+           windows =[]
+           typRac  = 0
+
+        size_int  = 1 +  nrac*(6+1+1+1+2) # 6:range, 1:type raccord, 1: niveau temps, 1:neq, 2: pointers dans param-real et param_int du  rac
+        size_real = 0
+        l= 0
+        for win in windows:
+          if typRac[l] ==0:
+             nvars_additional=5
+             if param_int[1][VSHARE.LBM_OVERSET]==1: nvars_additional +=12
+             size_real +=3*win[0]*(param_int[1][VSHARE.NEQ_LBM]+nvars_additional) # LBM-LBM
+          else:                                                              #3 niveau temporel stockes
+             size_real +=3*win[0]*(param_int[1][VSHARE.NEQ])                      # couplage NS/NS ou NS/LBM
+          l+=1
+
+        c = 1
+        for s in size: c=c*s
+        size_param_int=c
+
+        datap = numpy.zeros(size_int+c, numpy.int32)
+        datap[0:c]   = param_int[1][0:c]
+        param_int[1] = datap
+
+        param_real = Internal.getNodeFromName1(o, 'Parameter_real')
+        size = numpy.shape(param_real[1])
+        c = 1
+        for s in size: c=c*s
+        size_param_real=c
+        if size_real != 0:
+            datap = numpy.zeros(size_real+c, numpy.float64)
+            datap[0:c]    = param_real[1][0:c]
+            param_real[1] = datap
+
+        ## init new param_int/real
+        param_int  = param_int[1]
+        param_real = param_real[1]
+
+        pt_bcs_int   =  size_param_int
+        param_int[VSHARE.PT_INTERP]=  pt_bcs_int
+
+        pt_bcs_real=  size_param_real 
+        param_int[ pt_bcs_int ] = nrac
+
+        i         = 1
+        size_int  = 1 + 2*nrac  # shift pour nrac et pointeur BC_int et BC_real
+        size_real = 0
+        for i in range(1,nrac+1):
+            #print('rac=', i)
+            param_int[ pt_bcs_int +i      ] = size_int  + pt_bcs_int
+            param_int[ pt_bcs_int +i +nrac] = size_real + pt_bcs_real
+
+            pt_bc                           =  param_int[ pt_bcs_int +i ] 
+
+            param_int[pt_bc  ] = typRac[i-1]
+            param_int[pt_bc+1] = 0 # position stockage niveau tn+1
+
+            #nbre variable a copier
+            if typRac[i-1] ==0:
+               neq = param_int[VSHARE.NEQ_LBM] + 5
+               if param_int[VSHARE.LBM_OVERSET]==1: neq +=12 # LBM-LBM
+            else: neq=param_int[VSHARE.NEQ]                  # couplage NS/NS ou NS/LBM
+            param_int[pt_bc+2] = neq 
+
+            #pointRange  au sens fortran :  i=1  1ere cellule calculee
+            ific = param_int[VSHARE.NIJK+3]
+            kfic = param_int[VSHARE.NIJK+4]
+            param_int[pt_bc+3] = windows[i-1][1]-ific+1
+            param_int[pt_bc+4] = windows[i-1][2]-ific+1
+            param_int[pt_bc+5] = windows[i-1][3]-ific+1
+            param_int[pt_bc+6] = windows[i-1][4]-ific+1
+            param_int[pt_bc+7] = windows[i-1][5]-kfic+1
+            param_int[pt_bc+8] = windows[i-1][6]-kfic+1
+
+            size_real +=3*windows[i-1][0]*neq
+            size_int  +=9
+
+            
+    return None
+
 #==============================================================================
 # Construit les donnees compactees pour traiter des flux conservatif en IBM
 #==============================================================================
@@ -2871,10 +3086,10 @@ def _Fluxcompact(t):
                datap = numpy.zeros(size_int + c , numpy.int32)
 
                datap[0:c] = param_int[1][0:c]
-               datap[v.IBC_PT_FLUX] = c                   # debut tableau flux dans param_int
+               datap[VSHARE.IBC_PT_FLUX] = c                   # debut tableau flux dans param_int
                param_int[1] = datap
 
-               deb = param_int[1][v.IBC_PT_FLUX]
+               deb = param_int[1][VSHARE.IBC_PT_FLUX]
                param_int[1][ deb ]= Nfamille
                #on reordone les familles pour a	voir toujour l'ordre de families
                ordre = []
@@ -2889,14 +3104,14 @@ def _Fluxcompact(t):
 
                #on concatene les donnes flux dans param_int
                #for family in tmp1:
-               deb1 = param_int[1][v.IBC_PT_FLUX] + 1 + Nfamille*6
+               deb1 = param_int[1][VSHARE.IBC_PT_FLUX] + 1 + Nfamille*6
                for l in sorted(ordre):
 
                   family = tmp1[ count[l] ]
                   #if len(tmp1) !=1: print("verif1 family",family[0],l)
 
                   i = families.index(family[0])
-                  deb = param_int[1][v.IBC_PT_FLUX] + 1 + i*6
+                  deb = param_int[1][VSHARE.IBC_PT_FLUX] + 1 + i*6
                   faces= Internal.getNodesFromType1( family, 'DataArray_t')
                   for f in faces:
                     size = numpy.size(f[1])

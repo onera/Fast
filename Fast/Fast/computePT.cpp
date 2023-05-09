@@ -76,8 +76,8 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
-  E_Int omp_mode = iptdtloc[ 8 + nssiter];
-  E_Int* ipt_omp = iptdtloc +9 + nssiter;
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
 
   E_Int lcfl= 0;
   // 
@@ -558,24 +558,25 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   K_NUMPY::getFromNumpyArray(timer_omp_Array, tab_timer_omp, true); E_Float* timer_omp = tab_timer_omp->begin();
 
 
-  /// Recuperation du tableau de stockage dtloc
+ /// Recuperation du tableau de stockage dtloc
   PyObject* dtloc_stk;
   FldArrayF* stk; E_Float* iptstk=NULL; E_Float* iptdrodmstk=NULL; E_Float* iptcstk=NULL;
   E_Int stk_size=1; E_Int taille_tabs=1; E_Int flag_dtloc=0;
-  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==2 and ipt_param_int[0][RK]==3 and layer_mode ==1)
-    {
-      dtloc_stk = PyDict_GetItemString(work,"tab_dtloc"); 
-      K_NUMPY::getFromNumpyArray(dtloc_stk, stk, true);  iptstk = stk->begin();
 
-      stk_size    = stk[0].getSize();
-      taille_tabs = stk_size/5;
-      flag_dtloc  = 1;
-      //printf("dtloc size= %d %d \n", taille_tabs,  stk_size);
+  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==1 and layer_mode ==1)  
+  //if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==2 and ipt_param_int[0][RK]==3 and layer_mode ==1)
+  {
+    dtloc_stk = PyDict_GetItemString(work,"tab_dtloc"); 
+    K_NUMPY::getFromNumpyArray(dtloc_stk, stk, true);  iptstk = stk->begin();
 
-      iptdrodmstk = iptstk+ taille_tabs*3;
-      iptcstk     = iptstk+ taille_tabs*4;
-    }
+    stk_size    = stk[0].getSize();
+    taille_tabs = stk_size/5;
+    flag_dtloc  = 1;
+    //printf("dtloc size= %d %d \n", taille_tabs,  stk_size);
 
+    iptdrodmstk = iptstk+ taille_tabs*3;
+    iptcstk     = iptstk+ taille_tabs*4;
+  }
 
   //
   // On recupere ipt_param_int[nd][ ILES ] infos memoire  pour vectorisation du LU (inutile et pas present dans la base en scalaire)
@@ -657,7 +658,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
              if(init_exit  ==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
              if(iptdtloc[1]==1){ lssiter_verif = 1; if (nstep == iptdtloc[0] && ipt_param_int[0][ITYPCP]!=2){ lexit_lu = 1;} }
              E_Int display = 0;
-             K_FASTC::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
+             K_FASTC::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
            }
            if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;}
           }
@@ -671,9 +672,9 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 	      gsdr3(ipt_param_int      , ipt_param_real    , nidom              , nitrun_loc        ,
 		    nstep              , nstep_fin         , nssiter            , it_target         ,
 		    first_it           , kimpli            , lssiter_verif      , lexit_lu          ,
-		    omp_mode           , layer_mode        , mpi                , nisdom_lu_max     ,
+		    layer_mode         , mpi               , nisdom_lu_max     ,
 		    mx_nidom           , ndimt_flt         , threadmax_sdm      , mx_synchro        ,
-		    nb_pulse           , temps             , ipt_ijkv_sdm       , ipt_ind_dm_omp    , ipt_omp  ,
+		    nb_pulse           , temps             , ipt_ijkv_sdm       , ipt_ind_dm_omp    , iptdtloc ,
 		    ipt_topology       , ipt_ind_CL        , ipt_lok            , verrou_lhs        ,
 		    vartype            , timer_omp         , iptludic           , iptlumax          ,
 		    ipt_ind_dm         , ipt_it_lu_ssdom   , ipt_ng_pe          , ipt_nfconn        ,
@@ -695,53 +696,38 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 		    iptcstk            , iptsrc            , 
                     f_horseq           , a1_pr             , a1_fd              , a1_hrr      , 
                     aneq_o3            , psi_corr          , flag_NSLBM);
-	      if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
-		{
 
-		  for (E_Int nd = 0; nd < nidom ; nd++) 
-		    {
-		      ipt_cfl_zones[nd][0] =  ipt_cfl[0 +nd*3*threadmax_sdm];
-		      ipt_cfl_zones[nd][1] =  ipt_cfl[1 +nd*3*threadmax_sdm];
-		      ipt_cfl_zones[nd][2] =  ipt_cfl[2 +nd*3*threadmax_sdm];
-		      E_Int size_dom ;
-		      if(ipt_param_int[nd][ ITYPZONE] != 4)
-			{ size_dom   = ipt_param_int[nd][ IJKV ]*ipt_param_int[nd][ IJKV +1]*ipt_param_int[nd][ IJKV +2]; }
-		      else { size_dom   = ipt_param_int[nd][NELTS_0];}
+              if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
+              {
+                E_Int nbtask = ipt_omp[nstep-1]; 
+                E_Int ptiter = ipt_omp[nssiter+ nstep-1];
 
-		      E_Float scale    = size_dom;
+                for (E_Int ntask = 0; ntask < nbtask; ntask++)
+                 {
+                   E_Int pttask = ptiter + ntask*(6+threadmax_sdm*7);
+                   E_Int nd = ipt_omp[ pttask ];
 
+                   ipt_cfl_zones[nd][0] =  ipt_cfl[0 +nd*3*threadmax_sdm];
+                   ipt_cfl_zones[nd][1] =  ipt_cfl[1 +nd*3*threadmax_sdm];
+                   ipt_cfl_zones[nd][2] =  ipt_cfl[2 +nd*3*threadmax_sdm];
+                   E_Int size_dom   = ipt_param_int[nd][ IJKV ]*ipt_param_int[nd][ IJKV +1]*ipt_param_int[nd][ IJKV +2];
+                   E_Float scale    = size_dom;
 
-		      E_Int Nbre_thread_actif_loc = threadmax_sdm;
-		      if(omp_mode == 1) 
-			{ E_Int  Ptomp     = ipt_param_int[nd][PT_OMP];
-			  E_Int PtrIterOmp = ipt_param_int[nd][Ptomp];
-			  E_Int PtZoneomp  = ipt_param_int[nd][PtrIterOmp];
+                   E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + threadmax_sdm ];
 
-			  Nbre_thread_actif_loc  = ipt_param_int[nd][ PtZoneomp  +  threadmax_sdm];
-			}
+                   for (E_Int ithread = 1; ithread < Nbre_thread_actif_loc ; ithread++) 
+                     {
+                      E_Float* ipt_cfl_thread  = ipt_cfl + ithread*3+ nd*3*threadmax_sdm;
 
-		      for (E_Int ithread = 1; ithread < Nbre_thread_actif_loc ; ithread++) 
+                      ipt_cfl_zones[nd][0] = max( ipt_cfl_zones[nd][0], ipt_cfl_thread[0]);
+                      ipt_cfl_zones[nd][1] = min( ipt_cfl_zones[nd][1], ipt_cfl_thread[1]);
+                      ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]+ ipt_cfl_thread[2];
+                     }
+                   ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]/scale;
+                   //printf("cpPT cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[nd][0],ipt_cfl_zones[nd][1],ipt_cfl_zones[nd][2]);
+                 }
+              }//test mise a jour cfl
 
-			{
-
-			  E_Int ithread_loc = ithread;
-			  if(omp_mode == 1) 
-			    { E_Int  Ptomp     = ipt_param_int[nd][PT_OMP];
-			      E_Int PtrIterOmp = ipt_param_int[nd][Ptomp];
-			      E_Int PtZoneomp  = ipt_param_int[nd][PtrIterOmp];
-			      ithread_loc  = ipt_param_int[nd][ PtZoneomp  +  ithread ];
-			    }
-
-			  E_Float* ipt_cfl_thread  = ipt_cfl + ithread_loc*3+ nd*3*threadmax_sdm;
-
-			  ipt_cfl_zones[nd][0] = max( ipt_cfl_zones[nd][0], ipt_cfl_thread[0]);
-			  ipt_cfl_zones[nd][1] = min( ipt_cfl_zones[nd][1], ipt_cfl_thread[1]);
-			  ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]+ ipt_cfl_thread[2];
-			}
-		      ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]/scale;
-		      //printf("cpPT cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[nd][0],ipt_cfl_zones[nd][1],ipt_cfl_zones[nd][2]);
-		    }
-		}//test mise a jour cfl
 
 	      if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]!= 0) // mise a jour du temps par zone en explicite local
 		{

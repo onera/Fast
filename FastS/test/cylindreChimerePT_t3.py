@@ -178,4 +178,3 @@ Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData') 
 
 test.testT(t, 1)
-C.convertPyTree2File(t, 'out.cgns')

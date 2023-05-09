@@ -18,6 +18,8 @@ ITYPCP                      =29
 KFLUDOM                     =33 
 NEQ                         =36 
 NDIMDX                      =41 
+LEVEL	                    =53
+LEVELG	                    =56
 SHIFTVAR                    =66
 
 NEQ_LBM                     =89
@@ -66,6 +68,8 @@ LBM_NS                      =128
 IBC_PT_FLUX                 =129
 SA_LOW_RE                   =130
 SA_ROT_CORR                 =131
+PT_INTERP                   =132
+NONZ                      =133
 
 LBM_c0                      =42
 LBM_taug                    =43

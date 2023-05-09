@@ -6,7 +6,7 @@ c***********************************************************************
       subroutine init_ssiter_bloc(nd , nitcfg, nssiter, nitrun,
      &     lssiter_loc, itypcp, flag_res,
      &     ijkv, ijkv_lu, ijk_lu, size_ssdom,
-     &     mx_ssdom_lu, iskip_lu, 
+     &     mx_ssdom_lu, iskip_lu, dtloc,
      &     ind_dm, nidom_loc, it_bloc, nisdom_residu,
      &     it_lu_ssdom,  it_target_ssdom, it_target_old, no_lu,
      &     param_int)
@@ -26,20 +26,20 @@ c***********************************************************************
       INTEGER_E nd , nitcfg, nssiter, nitrun, itypcp,
      &     lssiter_loc, mx_ssdom_lu,flag_res,
      &     ijkv(3), ijkv_lu(3), ijk_lu(3,mx_ssdom_lu),
-     &     size_ssdom(3), iskip_lu(nssiter,2) 
+     &     size_ssdom(3), iskip_lu(nssiter,2), dtloc(0:*) 
 
       INTEGER_E ind_dm(6,mx_ssdom_lu,nssiter), 
      &     nidom_loc(nssiter), nisdom_residu(nssiter),
      &     it_lu_ssdom(mx_ssdom_lu),it_target_ssdom(mx_ssdom_lu),
      &     it_target_old(mx_ssdom_lu), no_lu(mx_ssdom_lu), it_bloc,
-     &     param_int(0:*)
+     &     param_int(0:*), it_cycl_lbm,level_tg
 
 
 c     Var loc
       INTEGER_E i,j,k,ndo, icp,nitmin,iseuil,ndfin,b,cycl,count,no_sdm
 
-      
       !print*,'mx_ssdom_lu= ' , mx_ssdom_lu
+      !write(*,*)'lssiter_loc',lssiter_loc,param_int(IFLOW),nd
       
 !     initialisation compteur ssiter par domain
       if (nitcfg.eq.1.and.flag_res.eq.1) then
@@ -106,24 +106,25 @@ c     Var loc
        
       ELSE IF (lssiter_loc.eq.3.and.param_int(IFLOW).eq.4) THEN ! Explicite local LBM
    
-         cycl = mod(nitrun, 2**(param_int(LEVEL)-1) )      
-      
-         !write(*,*)'init_ssiter_bloc', nitrun,cycl,nd, param_int(LEVEL)
+         it_cycl_lbm = dtloc(10)
+         level_tg = dtloc(12 +it_cycl_lbm)
 
-         If (cycl.eq.0) Then
+         !write(*,*)'it_cycl_lbm', it_cycl_lbm,'level_tg', level_tg
 
-         ndfin = ndfin + 1
+         If (param_int(LEVEL).le.level_tg) Then
 
-         !write(*,*)'ndfin, nitcfg', ndfin, nitcfg
+           ndfin = ndfin + 1
 
-         ind_dm(1, ndfin, nitcfg)   = 1
-         ind_dm(3, ndfin, nitcfg)   = 1
-         ind_dm(5, ndfin, nitcfg)   = 1
-         ind_dm(2, ndfin, nitcfg)   = ijkv(1)
-         ind_dm(4, ndfin, nitcfg)   = ijkv(2)
-         ind_dm(6, ndfin, nitcfg)   = ijkv(3)
+      !write(*,*)'init_ssiter_bloc: ndfin, nitcfg,ndom', ndfin, nitcfg,nd
+
+           ind_dm(1, ndfin, nitcfg)   = 1
+           ind_dm(3, ndfin, nitcfg)   = 1
+           ind_dm(5, ndfin, nitcfg)   = 1
+           ind_dm(2, ndfin, nitcfg)   = ijkv(1)
+           ind_dm(4, ndfin, nitcfg)   = ijkv(2)
+           ind_dm(6, ndfin, nitcfg)   = ijkv(3)
          
-         nisdom_residu( nitcfg)     = 1
+           nisdom_residu( nitcfg)     = 1
 
          End if  
 

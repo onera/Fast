@@ -49,9 +49,17 @@ namespace K_FASTC
   PyObject* souszones_list( PyObject* self, PyObject* args);
   PyObject* distributeThreads( PyObject* self, PyObject* args);
 
+  PyObject*     init_metric(PyObject* self, PyObject* args);
+
+  //===========
+  // - init Numa (optimisation placement memoire sur DRAM)
+  //===========
+  PyObject* initNuma(PyObject* self, PyObject* args);
+
+
   //===== Distrib OMP Test
 
- void distributeThreads_c( E_Int**& ipt_param_int,  E_Float**& ipt_param_real, E_Int**& ipt_ind_dm, E_Int& omp_mode,
+ void distributeThreads_c( E_Int**& ipt_param_int,  E_Float**& ipt_param_real, E_Int**& ipt_ind_dm,
                            E_Int& nidom          ,  E_Int* ipt_dtloc         , E_Int& mx_sszone   , E_Int& nstep, E_Int& nitrun, E_Int& display);
 
  E_Int topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k);

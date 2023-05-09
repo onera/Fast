@@ -60,7 +60,7 @@ extern "C"
   void init_ssiter_bloc_(E_Int& nd               , E_Int& nitcfg     , E_Int& nssiter , E_Int& nitrun ,
                          E_Int&  lssiter_loc     , E_Int& itypcp     , E_Int& flag_res,
                          E_Int* ijkv             , E_Int*  ijkv_lu   , E_Int*  ijk_lu , E_Int*  size_ssdom,
-                         E_Int& mx_ssdom_lu      , E_Int* iskip_lu   , 
+                         E_Int& mx_ssdom_lu      , E_Int* iskip_lu   , E_Int* iptdtloc,
                          E_Int*   ipt_ind_dm     , E_Int*   ipt_nidom_loc      , E_Int& it_bloc             , E_Int*   ipt_nisdom_residu,
                          E_Int*   ipt_it_lu_ssdom, E_Int*   ipt_it_target_ssdom, E_Int*   ipt_it_target_old , E_Int*   ipt_no_lu, E_Int*   param_int );
 

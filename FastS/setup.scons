@@ -110,7 +110,7 @@ env.Replace(CPPPATH=[".","FastS"]+additionalIncludePaths+includeDirs)
 ELSAPROD = os.environ.get('ELSAPROD', 'x86_r8')
 env.SConsignFile('build/'+ELSAPROD+'/.sconsign.dblite')
 #env.Replace(CPPSUFFIXES=env.get('CPPSUFFIXES')+['.for'])
-env = Dist.createFortranScanner(env)
+#env = Dist.createFortranScanner(env)
 
 # Pre processing du C
 cppArgs = Dist.getCppArgs()+['-g']+["-DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN"]+["-I'"+fastcIncDir+"'"]

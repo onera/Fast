@@ -156,7 +156,7 @@ if( param_int_tc != NULL)
     E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
     E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
     E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
-#include  "HPC_LAYER/OMP_MODE_BEGIN.h"
+#include  "FastC/HPC_LAYER/OMP_MODE_BEGIN.h"
 
            E_Int ierr = BCzone_d(nd, lrhs , nitcfg, lcorner, param_int[nd], param_real[nd], npass,
 	           		 ipt_ind_dm_loc, ipt_ind_dm_thread, 
@@ -169,7 +169,7 @@ if( param_int_tc != NULL)
 
             correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptkrylov_transfer[nd]);
 
-#include    "HPC_LAYER/OMP_MODE_END.h"
+#include    "FastC/HPC_LAYER/OMP_MODE_END.h"
 
 
 #pragma omp barrier
@@ -186,7 +186,7 @@ if( param_int_tc != NULL)
     E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
     E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
 
-#include  "HPC_LAYER/OMP_MODE_BEGIN.h"
+#include  "FastC/HPC_LAYER/OMP_MODE_BEGIN.h"
 
        E_Float* krylov_in    = NULL;
        E_Float* rop_ssiter_d = iptkrylov[nd] +  no_vect_test    * param_int[nd][NEQ] * param_int[nd][NDIMDX]; //matvec_x
@@ -200,7 +200,7 @@ if( param_int_tc != NULL)
 	// Warning a blinder
 	// Warning
 	//shift_zone = 0;
-#include    "HPC_LAYER/OMP_MODE_END.h"
+#include    "FastC/HPC_LAYER/OMP_MODE_END.h"
 
   }// omp
 

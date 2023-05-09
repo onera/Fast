@@ -107,8 +107,9 @@ VARSMACRO = ['Density','VelocityX','VelocityY','VelocityZ','Temperature']
 # Preparation du calcul
 #==========================================
 ncyc = 0.5
-#nit = int(ncyc*n/(1./numpy.sqrt(3.,dtype=numpy.float64)*mach))
+###nit = int(ncyc*n/(1./numpy.sqrt(3.,dtype=numpy.float64)*mach))
 nit = 200
+#nit = 10
 print(nit)
 
 # Numerics
@@ -130,6 +131,7 @@ numz["LBM_taug"]        = 0.5#+nu_d/(c0[0]*c0[0]*numz["time_step"])
 numz["LBM_collision"]   = "HRR"
 numz["LBM_HRR_sigma"]   = 0.995
 numz["LBM_NS"]          = 1
+#numz["niveaux_temps"]           = 1
 
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
@@ -151,7 +153,7 @@ for met in metrics:
   c+=1
 '''
 #import sys; sys.exit()
-#C.convertPyTree2File(tc, 'tc.cgns')
+C.convertPyTree2File(t, 't.cgns')
 #import sys; sys.exit()
 t2 = Internal.copyTree(t)
 Internal._rmNodesByName(t2, '.Solver#Param')
@@ -170,16 +172,19 @@ start = time.time()
 tab_cons_NS = []
 tab_cons_LBM = []
 
+#C.convertPyTree2File(t, 'tin.cgns')
 for it in range(1, nit+1):
    print('--------- iteration %d ---------'%it)
    Fast._compute(t, metrics, it, tc, layer='Python')
 
+#C.convertPyTree2File(t, 'tout.cgns')
 #import sys; sys.exit()
 
 t2 = Internal.copyTree(t)
 Internal._rmNodesByName(t2, '.Solver#Param')
 Internal._rmNodesByName(t2, '.Solver#ownData')
 test.testT(t2, 5)
+import sys; sys.exit()
 end = time.time()
 print('')
 print('Temps d''execution :',end-start)
@@ -225,8 +230,9 @@ VARSMACRO = ['Density','VelocityX','VelocityY','VelocityZ','Temperature']
 for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
 X._setInterpTransfers(t,tc,variables=VARSMACRO,storage=1)
 
-t = P.computeGrad2(t,'centers:VelocityX')
-t = P.computeGrad2(t,'centers:VelocityY')
+FastS._computeGrad(t, metrics, ['VelocityX','VelocityY'])
+#t = P.computeGrad2(t,'centers:VelocityX')
+#t = P.computeGrad2(t,'centers:VelocityY')
 
 VARSMACRO = ['gradxVelocityY','gradyVelocityX','gradxVelocityX','gradyVelocityY']
 for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
@@ -243,9 +249,10 @@ VARSMACRO = ['Vorticity','DivV']
 for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
 X._setInterpTransfers(t,tc,variables=VARSMACRO,storage=1)
 
+C.convertPyTree2File(t, 'tout.cgns')
+
 Internal._rmGhostCells(t,t,2)
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 6)
 
-#C.convertPyTree2File(t, 'tout.cgns')

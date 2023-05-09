@@ -21,11 +21,11 @@ for (E_Int nd = 0; nd < nidom; nd++)
     E_Float* krylov_in = iptdrodm + shift_zone;
     E_Float* krylov_out= ipt_tmpverif + shift_zone;
     iptkrylov_transfer[nd] = krylov_out;
-#include "HPC_LAYER/OMP_MODE_BEGIN.h"
+#include "FastC/HPC_LAYER/OMP_MODE_BEGIN.h"
 
     dp_dw_vect_(param_int[nd], param_real[nd],ipt_ind_dm_thread , iptro_ssiter[nd], krylov_in,  krylov_out);
 
-#include "HPC_LAYER/OMP_MODE_END.h"
+#include "FastC/HPC_LAYER/OMP_MODE_END.h"
     shift_zone  = shift_zone  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
   }//loop zone
 
@@ -44,7 +44,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
        E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
        E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
        E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
-#include  "HPC_LAYER/OMP_MODE_BEGIN.h"
+#include  "FastC/HPC_LAYER/OMP_MODE_BEGIN.h"
 
        E_Int ierr = BCzone_d(nd, lrhs , nitcfg, lcorner, param_int[nd], param_real[nd], npass,
 			     ipt_ind_dm_loc, ipt_ind_dm_thread,
@@ -58,7 +58,7 @@ for (E_Int nd = 0; nd < nidom; nd++)
        //correct_coins_(nd,  param_int[nd], ipt_ind_dm_thread , iptkrylov_transfer[nd]);
 
             nd_current +=1;
-#include    "HPC_LAYER/OMP_MODE_END.h"
+#include    "FastC/HPC_LAYER/OMP_MODE_END.h"
 	    shift_zone  = shift_zone  + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
       }//loop zone
 
@@ -91,10 +91,10 @@ for (E_Int nd = 0; nd < nidom; nd++)
       {
         E_Float* krylov_in = iptdrodm + shift_zone;
         E_Float* krylov_out= ipt_tmpverif + shift_zone;
-#include "HPC_LAYER/OMP_MODE_BEGIN.h"
+#include "FastC/HPC_LAYER/OMP_MODE_BEGIN.h"
              id_vect_(param_int[nd], ipt_ind_dm_thread, ipt_drodmd + shift_zone, krylov_out, krylov_in);
              nd_current +=1;
-#include "HPC_LAYER/OMP_MODE_END.h"
+#include "FastC/HPC_LAYER/OMP_MODE_END.h"
 
         shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
       }
@@ -108,13 +108,13 @@ for (E_Int nd = 0; nd < nidom; nd++)
     E_Float* krylov_i   = iptkrylov[nd];
     E_Float* krylov_krp1= ipt_tmpverif + shift_zone;
 
-#include "HPC_LAYER/OMP_MODE_BEGIN.h"
+#include "FastC/HPC_LAYER/OMP_MODE_BEGIN.h"
     scal_prod_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_krp1, normL2);
 
     vect_rvect_(param_int[nd], ipt_ind_dm_thread, krylov_krp1, krylov_i, save, normL2_sum);
 
     nd_current +=1;
-#include "HPC_LAYER/OMP_MODE_END.h"
+#include "FastC/HPC_LAYER/OMP_MODE_END.h"
     shift_zone = shift_zone + param_int[nd][ NDIMDX ]*param_int[nd][ NEQ ];
   }
 

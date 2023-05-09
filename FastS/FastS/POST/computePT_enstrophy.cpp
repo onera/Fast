@@ -46,8 +46,9 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
-  E_Int ompmode  = iptdtloc[8+nssiter];
-  E_Int* ipt_omp = iptdtloc +9 + nssiter;
+  E_Int ompmode  = iptdtloc[8];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
 
   E_Int nidom        = PyList_Size(zones);
   E_Int ndimdx       = 0;
@@ -152,7 +153,7 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-# include "HPC_LAYER/INFO_SOCKET.h"
+# include "FastC/HPC_LAYER/INFO_SOCKET.h"
       //
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
@@ -203,7 +204,7 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
                  iptro[nd] , ipti[nd] , iptj[nd] , iptk[nd] , iptvol[nd]  , iptgrad);
 
         }// boucle zone 
-# include "HPC_LAYER/INIT_LOCK.h"
+# include "FastC/HPC_LAYER/INIT_LOCK.h"
   }  // zone OMP
 
   for (E_Int nd = 1; nd < __NUMTHREADS__ ; nd++) {

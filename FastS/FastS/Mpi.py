@@ -2,7 +2,7 @@
 from . import PyTree
 from . import fasts
 
-from .PyTree import display_temporal_criteria, displayTemporalCriteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _compact, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, distributeThreads, allocate_ssor, setIBCData_zero, display_cpu_efficiency, _postStats, _stretch, _computePhaseStats, _ConservativeWallIbm, create_add_t_converg_hist, calc_global_convergence
+from .PyTree import display_temporal_criteria, displayTemporalCriteria, createConvergenceHistory, extractConvergenceHistory, createStressNodes, createStatNodes, _computeStats, initStats, _computeEnstrophy, _computeVariables, _computeGrad, _applyBC, _init_metric, allocate_metric, _movegrid, _computeVelocityAle, copy_velocity_ale,  checkBalance, itt, allocate_ssor, setIBCData_zero, display_cpu_efficiency, _postStats, _stretch, _computePhaseStats, _ConservativeWallIbm, create_add_t_converg_hist, calc_global_convergence
 
 import timeit
 import time as Time
@@ -105,7 +105,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
       hookTransfer = []
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
-         hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
+         hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, 0) )
 
          skip = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
@@ -780,8 +780,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
 
     tmp   = Internal.getNodeFromName1(t  , '.Solver#ownData')
-    dtloc = Internal.getNodeFromName1(tmp, '.Solver#dtloc')  # noeud
-    dtloc = Internal.getValue(dtloc)# tab numpy
+    dtlocPy = Internal.getNodeFromName1(tmp, '.Solver#dtloc')  # noeud
+    dtloc   = Internal.getValue(dtlocPy)# tab numpy
     nssiter = dtloc[0]   
 
     if isinstance(graph, list):
@@ -825,9 +825,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     for nstep in range(1, int(dtloc[0])+1):
         hook1 = FastC.HOOK.copy()
-        hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode, verbose) )
+        hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, verbose) )
 
-    _init_metric(t, metrics, ompmode)
+    _init_metric(t, metrics, hook1)
 
     ssors = allocate_ssor(t, metrics, hook1, ompmode)
 
@@ -846,7 +846,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         zone    = data[0]
         varnames= data[1]
         for fields in varnames:
-            _compact(zone, fields=fields, mode=count)
+            FastC._compact(zone, fields=fields, mode=count, dtloc=dtlocPy)
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     zones = Internal.getZones(t) # car create primvar rend zones caduc
@@ -919,7 +919,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         var = Internal.getNodesFromType1(sol[0] , 'DataArray_t')
         varmy=[]
         for v in var: varmy.append('centers:'+v[0])
-        _compact(tmy, fields=varmy)
+        FastC._compact(tmy, fields=varmy)
 
     #
     # remplissage ghostcells

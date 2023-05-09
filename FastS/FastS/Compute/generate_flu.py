@@ -90,13 +90,13 @@ for ale in TypeMotion:
                 # suppression fluk en 2d et metrique k (pour que mode debug soit OK)
                 if typezone == '2d':
                     c = 0
-                        for l in lines:
-                            if '3D only' in l: lines = lines[:c] + lines[c+1:]; c-=1
-                            c += 1
+                    for l in lines:
+                        if '3D only' in l: lines = lines[:c] + lines[c+1:]; c-=1
+                        c += 1
 
-                        #lines = lines[:189] + lines[198:250]  + lines[270:]
-                        for i in range( len(lines) ):
-                            lines[i]=lines[i].replace("tcz = tk(lt)","").replace("sk      = abs (tcz)","")
+                    #lines = lines[:189] + lines[198:250]  + lines[270:]
+                    for i in range( len(lines) ):
+                        lines[i]=lines[i].replace("tcz = tk(lt)","").replace("sk      = abs (tcz)","")
 
                 # suppression minmod
                 if slope != 'minmod':
@@ -194,7 +194,7 @@ for ale in TypeMotion:
                         lines_euler[i]=lines_euler[i].replace("!3D only"          , '')
 
                     for l in lines_euler: feulero.write(l)
-                        feulero.close()                          # fermer le fichier output Euler
+                    feulero.close()                          # fermer le fichier output Euler
 
                     #viscous flux 5 eq (prandtl turbulent)
                     if eq not in ['euler','lamin']:
@@ -208,7 +208,7 @@ for ale in TypeMotion:
                             lines_rans[i]=lines_rans[i].replace("mut_interface.for","mut_prandtltb_interface.for")
 
                         for l in lines_rans: franso.write(l)
-                            franso.close()
+                        franso.close()
 
                     #Include generation for RANS
                     if eq not in ['euler','lamin']:
@@ -226,7 +226,7 @@ for ale in TypeMotion:
                             lines_rans[i]=lines_rans[i].replace("qn_3dfull_i"       , 'qn'+ale1+typezone+'_'+dir)
 
                         for l in lines_rans: franso.write(l)
-                            franso.close()                               # fermer le fichier output rans
+                        franso.close()                               # fermer le fichier output rans
 
 
                 for l in lines: fo.write(l)

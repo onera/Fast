@@ -38,8 +38,9 @@ void K_FASTC::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
 
   vector<PyArrayObject*> hook;
 
-  E_Int nssiter   = iptdtloc[0];
-  E_Int nidom_loc = iptdtloc[nssiter+9+nstep-1];
+  E_Int nssiter  = iptdtloc[0];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int nidom_loc= iptdtloc[shift_omp + nstep-1];
   //calcul dimension et nombre souszone si: modulo_verif, init ou lbm
   if(nitrun % iptdtloc[1] == 0 || nidom_loc == -1 || lssiter_loc==3 )   //iptdtloc[1] = kmod 
   {
@@ -67,10 +68,10 @@ void K_FASTC::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
        {  
            FldArrayI ijk_lu(param_int[nd][ MXSSDOM_LU ]*3); E_Int* ipt_ijk_lu  = ijk_lu.begin();
  
-           init_ssiter_bloc_( nd                        , nstep                    ,  iptdtloc[0]  , nitrun,
+           init_ssiter_bloc_( nd                        , nstep                    ,  nssiter      , nitrun,
                              lssiter_loc                , param_int[nd][ ITYPCP ]  , flag_res      , 
                              param_int[nd] + IJKV       , ijkv_lu                  , ipt_ijk_lu    , param_int[nd] + SIZE_SSDOM ,
-                             param_int[nd][ MXSSDOM_LU ], ipt_iskip_lu         ,
+                             param_int[nd][ MXSSDOM_LU ], ipt_iskip_lu         , iptdtloc          ,
                              ipt_ind_dm[nd]             , ipt_nidom_loc        , ipt_it_bloc[0]    , ipt_nisdom_residu,
                              ipt_it_lu_ssdom_loc        , ipt_it_target_ssdom  , ipt_it_target_old , ipt_no_lu, param_int[nd]);
        }
@@ -96,11 +97,11 @@ void K_FASTC::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
 PyObject* K_FASTC::souszones_list(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* work;
-  E_Int nitrun; E_Int nstep; E_Int distrib_omp; E_Int verbose;
+  E_Int nitrun; E_Int nstep;  E_Int verbose;
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOllll", &zones , &metrics, &work, &nitrun, &nstep, &distrib_omp, &verbose)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOlll", &zones , &metrics, &work, &nitrun, &nstep,  &verbose)) return NULL; 
 #else 
-  if (!PyArg_ParseTuple(args, "OOOiiii", &zones , &metrics, &work, &nitrun, &nstep, &distrib_omp, &verbose)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOiii", &zones , &metrics, &work, &nitrun, &nstep,  &verbose)) return NULL; 
 #endif
   
   E_Int lexit_lu, lssiter_verif;
@@ -158,7 +159,8 @@ PyObject* K_FASTC::souszones_list(PyObject* self, PyObject* args)
   }
 
   E_Int nssiter   = iptdtloc[0];
-  E_Int nidom_loc =  iptdtloc[nssiter+9+nstep-1];
+  E_Int shift_omp = iptdtloc[11];
+  E_Int nidom_loc = iptdtloc[shift_omp +nstep-1];
 
   //declenchememnt calcul residu
   E_Int init_exit =0;
@@ -187,7 +189,7 @@ PyObject* K_FASTC::souszones_list(PyObject* self, PyObject* args)
     if (nstep==1 and  nidom_loc==-1) display = 1;
     if (verbose == 0) display = 0;
     //display = 2;
-    distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, distrib_omp, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun, display );
+    distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun, display );
   }
 
   if (init_exit==0) {lexit_lu= 0;lssiter_verif = 0;}

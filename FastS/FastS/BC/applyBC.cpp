@@ -39,6 +39,7 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "OOOis", &zones, &metrics, &work, &nstep, &var )) return NULL;
 #endif
 
+
   //* tableau pour stocker dimension sous-domaine omp *//
   E_Int threadmax_sdm  = __NUMTHREADS__;
 
@@ -47,7 +48,8 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
-  E_Int* ipt_omp = iptdtloc +9 + nssiter;
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
 
 
   E_Int nidom    = PyList_Size(zones);
@@ -61,6 +63,7 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
 
   ipt_param_int     = new E_Int*[nidom*2];
   ipt_ind_dm        = ipt_param_int   + nidom;
+  
 
   iptx              = new E_Float*[nidom*13];
   ipty              = iptx            + nidom;
@@ -87,11 +90,11 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
   E_Int cycl;
   E_Int nstep_stk = nstep;
 
+
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
     // check zone
     PyObject* zone = PyList_GetItem(zones, nd); // domaine i
-
 
     /* Get numerics from zone */
     PyObject* numerics    = K_PYTREE::getNodeFromName1(zone, ".Solver#ownData");
@@ -135,6 +138,7 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
     rk = ipt_param_int[0][RK];
     exploc = ipt_param_int[0][EXPLOC];
 
+
     if (exploc == 1)   // Explicit local instationnaire : on met a jour les BC en fonction du niveau en tps de la zone    
     //if (rk == 3 and exploc == 2) 
       {
@@ -164,7 +168,6 @@ PyObject* K_FASTS::_applyBC(PyObject* self, PyObject* args)
       } 
     else {autorisation_bc[nd] = 1;}
 
-	    
   } // boucle zone
 
 

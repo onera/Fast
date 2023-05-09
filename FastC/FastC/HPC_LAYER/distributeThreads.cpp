@@ -28,7 +28,7 @@ using namespace K_FLD;
 // Souszonelist (C layer)
 // 
 // 
-void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_Int**& ipt_ind_dm,  E_Int& omp_mode,
+void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_Int**& ipt_ind_dm,
                                    E_Int& nidom  , E_Int* ipt_dtloc , E_Int& mx_omp_size_int  , E_Int& nstep, E_Int& nitrun, E_Int& display )
 {
 #ifdef NB_SOCKET
@@ -42,9 +42,10 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
   E_Int core_per_socket=__NUMTHREADS__;
 #endif
 
-  E_Int nssiter = ipt_dtloc[0];
-  //E_Int omp_mode= ipt_dtloc[8 +  nssiter];
-  E_Int* ipt_omp = ipt_dtloc + 9 +  nssiter;
+  E_Int nssiter  = ipt_dtloc[0];
+  E_Int omp_mode = ipt_dtloc[8];
+  E_Int shift_omp= ipt_dtloc[11];
+  E_Int* ipt_omp = ipt_dtloc + shift_omp;
 
   E_Int lmin;
 
@@ -110,7 +111,28 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
           } //loop sszones
        } //loop zones
 
-   if(nstep != nssiter) { ipt_omp[ nssiter +nstep  ]= ipt_omp[ nssiter +nstep-1  ] + mxzone*(6+7*__NUMTHREADS__);}
+   if(nstep != nssiter) 
+      { 
+       ipt_omp[ nssiter +nstep  ]= ipt_omp[ nssiter +nstep-1  ] + mxzone*(6+7*__NUMTHREADS__);
+
+        E_Int check_size = ipt_omp[ nssiter +nstep  ] - shift_omp;
+        if(check_size > mx_omp_size_int)
+               {
+                printf("------\n");
+                printf("Error msg\n");
+                printf("------\n");
+                printf("resize MX_OMP_SIZE_INT. Present value= %d \n ", mx_omp_size_int);
+                printf("Value must be at least larger than : %d \n ", check_size);
+                printf("Just after the modules import of userscript.py, add the following python command:\n");
+                printf("#\n");
+                printf("#\n");
+                printf("Fast.FastC.MX_OMP_SIZE_INT= %d\n ", check_size+20);
+                printf("------\n");
+                printf("End error msg\n");
+                printf("------\n");
+                exit(0);
+               }
+      }
 
    return;
   }//omp_mode0
@@ -175,7 +197,6 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
    FldArrayI tab_nozone(mxzone);   E_Int* ipt_nozone  = tab_nozone.begin();
    FldArrayI tab_nosszone(mxzone); E_Int* ipt_nosszone= tab_nosszone.begin();
 
-   FldArrayI tab_size_subzone(nidom);   E_Int*  size_subzone = tab_size_subzone.begin();
    //FldArrayI tab_size_task(mxzone);     E_Int*  size_task    = tab_size_task.begin();
 
    FldArrayI newtab_nijk(mxzone*3*2); E_Int* ipt_nijk_new    = newtab_nijk.begin();
@@ -196,10 +217,6 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
        E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
        E_Int nb_subzone     = ipt_nidom_loc [nstep-1];   
        //cout << "zone " << nd << " " << nb_subzone << endl; 
-       size_subzone[nd] = 0;
-
-       //Initialisation pointer iteration si zone skipper
-       if(nb_subzone==0){ E_Int Ptomp =  param_int[nd][PT_OMP]; param_int[nd][Ptomp +nstep ] =  param_int[nd][Ptomp +nstep -1];}
 
        for (E_Int nd_subzone = 0; nd_subzone < nb_subzone; nd_subzone++)
          {  
@@ -244,47 +261,8 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
     //ptitertask pointe sur l'iter precedente
     ipt_omp[ nssiter +nstep  ]= ipt_omp[ nssiter +nstep-1  ];
     
-    // attention pour init blindage: Nbzones peut etre nulle
-    for (E_Int c = 0; c < Nbzones; c++)
-      {  
-        /*E_Int* nozone_new   = ipt_nozone_new   +   c;
-        E_Int* nosszone_new = ipt_nosszone_new +   c;
-
-        E_Int  No_zone      = nozone_new[0];
-        E_Int  No_sszone    = nosszone_new[0];*/
-        E_Int* nozone   = ipt_nozone   +   c;
-        E_Int* nosszone = ipt_nosszone +   c;
-
-        E_Int  No_zone      = nozone[0];
-        E_Int  No_sszone    = nosszone[0];
-
-        E_Int* ipt_nidom_loc = ipt_ind_dm[No_zone] + param_int[No_zone][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
-        E_Int nb_subzone     = ipt_nidom_loc [nstep-1];   
-
-        E_Int Ptomp =  param_int[No_zone][PT_OMP];
-
-        //initilatisation pointer 1ere iter (les suivantes sont initilisees a lfin de cette routine)
-        if(nstep==1) {                                      // shift pointer iter | shift numa
-                        param_int[No_zone][Ptomp] =  Ptomp +       nssiter          + 1;
-                     } 
-        //pointer pour iteration =nstep
-        E_Int  PtrIterOmp    = param_int[No_zone][Ptomp +nstep -1];   
-
-        //pointer pour la subzone courante a iteration =nstep
-        E_Int  PtZoneomp    = PtrIterOmp + nb_subzone + size_subzone[No_zone];
-
-        E_Int check = PtZoneomp - param_int[No_zone][PT_OMP  ];
-        if(check > mx_omp_size_int && boom ==0) {boom =1; check_size =check;}
-       
-        param_int[No_zone][PtrIterOmp + No_sszone] = PtZoneomp;
-
-
-        for (E_Int th = 0; th < __NUMTHREADS__; th++) { param_int[No_zone][ PtZoneomp + th ] = -2;} //Thread inactif
-     }
     continue; //on skip ce level
    }
-
-     //ipt_omp[ nssiter +nstep  ]= ipt_omp[ nssiter +nstep-1  ] + Nbzones*(6+7*__NUMTHREADS__) ;
 
    //Tri par taille decroissante des zone
    E_Float cout= 0.;
@@ -441,30 +419,19 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
         //printf("c Nozone %d %d %d %d %d %d %d %d %d \n", c, No_zone, ind_dm[0], ind_dm[1], ind_dm[2], ind_dm[3], ind_dm[4], ind_dm[5], ndimdx[0] );
 
         E_Int PtTask = PtiterTask +c*(6+ __NUMTHREADS__*7);
+
+        E_Int  PtTaskomp    = PtTask + 6+ __NUMTHREADS__*7 ;
+
+        //printf("Ptomp= %d , ptiter= %d , pt_subzone= %d , nstep= %d \n ",Ptomp, PtrIterOmp, PtZoneomp ,   nstep);
+        E_Int check = PtTaskomp - shift_omp;
+        if(check > mx_omp_size_int && boom ==0) {boom =1; check_size =check;}
+
         ipt_omp[PtTask  ] = No_zone;
         ipt_omp[PtTask+1] = No_sszone;
 
-        E_Int Ptomp =  param_int[No_zone][PT_OMP];
-
-        if(nstep==1) 
-        { //initilatisation pointer 1ere iter (les suivantes sont initilisees a lfin de cette routine)
-                                          //    shift pointer iter | shift numa
-          param_int[No_zone][Ptomp] =  Ptomp +       nssiter          + 1;
-          //initilisation compteur Numa
-           for (E_Int socket = 0; socket < NBR_SOCKET; socket++) { numa_socket[socket] = 0;} 
-        } 
-        //pointer pour iteration =nstep
-        E_Int  PtrIterOmp    = param_int[No_zone][Ptomp +nstep -1];   
-
-        //pointer pour la subzone courante a iteration =nstep
-        E_Int  PtZoneomp    = PtrIterOmp + nb_subzone + size_subzone[No_zone];
-
-        //printf("Ptomp= %d , ptiter= %d , pt_subzone= %d , nstep= %d \n ",Ptomp, PtrIterOmp, PtZoneomp ,   nstep);
-        E_Int check = PtZoneomp - param_int[No_zone][PT_OMP  ];
-        if(check > mx_omp_size_int && boom ==0) {boom =1; check_size =check;}
-       
-        param_int[No_zone][PtrIterOmp + No_sszone] = PtZoneomp;
-
+        //initilisation compteur Numa
+        if(nstep==1) { for (E_Int socket = 0; socket < NBR_SOCKET; socket++) { numa_socket[socket] = 0;} }
+ 
         poids = cupsmoy/hpc_cups[0];
         //poids = cupsmoy/ipt_HPC_CUPS[c];
         //poids = cupsmoy/ipt_HPC_CUPS[No_zone];
@@ -555,41 +522,25 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
             grain[th_current] +=1;
              
             //Carte threads actifs       
-            for (E_Int th = 0; th < __NUMTHREADS__; th++)
-              { param_int[No_zone][ PtZoneomp + th ] = -2;
-                ipt_omp[PtTask + 2 + th] = -2;
-              } //Thread inactif
+            for (E_Int th = 0; th < __NUMTHREADS__; th++) { ipt_omp[PtTask + 2 + th] = -2; } //Thread inactif
 
-            param_int[No_zone][ PtZoneomp + th_current                 ] =  0; //le Thread "0" (pas au sens omp: indirection entre omp_numthread et ithread)) prend le job
+            //le Thread "0" (pas au sens omp: indirection entre omp_numthread et ithread)) prend le job
             ipt_omp[PtTask+ 2 + th_current] = 0;
             //Nb threads actifs 
             Nthreads = 1;
-            param_int[No_zone][ PtZoneomp + __NUMTHREADS__   ] =  Nthreads;
             ipt_omp[PtTask + __NUMTHREADS__ +2 ] = Nthreads ;
             //topology omp
-            param_int[No_zone][ PtZoneomp + __NUMTHREADS__ +1] =  1;
-            param_int[No_zone][ PtZoneomp + __NUMTHREADS__ +2] =  1;
-            param_int[No_zone][ PtZoneomp + __NUMTHREADS__ +3] =  1;
             ipt_omp[PtTask + __NUMTHREADS__ +3 ] = 1 ;
             ipt_omp[PtTask + __NUMTHREADS__ +4 ] = 1 ;
             ipt_omp[PtTask + __NUMTHREADS__ +5 ] = 1 ;
             //indice sous-domaine omp
 
-            param_int[No_zone][ PtZoneomp + __NUMTHREADS__ +4 ] =  ind_dm[0];
-            param_int[No_zone][ PtZoneomp + __NUMTHREADS__ +5 ] =  ind_dm[1];
-            param_int[No_zone][ PtZoneomp + __NUMTHREADS__ +6 ] =  ind_dm[2];
-            param_int[No_zone][ PtZoneomp + __NUMTHREADS__ +7 ] =  ind_dm[3];
-            param_int[No_zone][ PtZoneomp + __NUMTHREADS__ +8 ] =  ind_dm[4];
-            param_int[No_zone][ PtZoneomp + __NUMTHREADS__ +9 ] =  ind_dm[5];
             ipt_omp[PtTask + __NUMTHREADS__ +6 ] =  ind_dm[0];
             ipt_omp[PtTask + __NUMTHREADS__ +7 ] =  ind_dm[1];
             ipt_omp[PtTask + __NUMTHREADS__ +8 ] =  ind_dm[2];
             ipt_omp[PtTask + __NUMTHREADS__ +9 ] =  ind_dm[3];
             ipt_omp[PtTask + __NUMTHREADS__ +10] =  ind_dm[4];
             ipt_omp[PtTask + __NUMTHREADS__ +11] =  ind_dm[5];
-
-            E_Int check = PtZoneomp + __NUMTHREADS__ +9 - param_int[No_zone][PT_OMP  ];
-            if(check > mx_omp_size_int  && boom ==0) {boom =1; check_size =check;}
 
 	   if ((display==1 && nitrun ==1 && nstep==1) || display ==2)
            {
@@ -637,10 +588,6 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
           E_Int nd =No_zone;
 #include "FastC/HPC_LAYER/SIZE_MIN.cpp"
 
-            //FldArrayI tab_dim_ijk(3*Nthreads);   
-            //E_Int* dim_ijk  = tab_dim_ijk.begin();
-            //FldArrayI tab_res_ijk(3*Nthreads);   
-            //E_Int* res_ijk  = tab_res_ijk.begin();
 
             E_Int search      = 1;
             E_Int search_topo = 0;
@@ -944,7 +891,7 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
             E_Int   thread_list[__NUMTHREADS__];
             //Carte threads actifs       
             for (E_Int th = 0; th < __NUMTHREADS__; th++)
-              { param_int[No_zone][ PtZoneomp + th ] = -2; list_affected[th]=-1; 
+              { list_affected[th]=-1; 
                 ipt_omp[PtTask + 2 + th] = -2;} //Thread inactif
 
             //poids = cupsmoy/ipt_HPC_CUPS[No_zone];
@@ -1026,7 +973,7 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
                   grain[th_current] +=1;
 
-                  param_int[No_zone][ PtZoneomp + th_current ] = th;                                    //Thread actif
+                  //Thread actif
                   ipt_omp[PtTask + 2 + th_current] = th;  
                   thread_list[th] = th_current;
 
@@ -1043,8 +990,6 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                        dim_i[0]   = size;
                        thcurrent_save = thread_list[th-i];
                        th_current = thread_list[th];
-                       param_int[No_zone][ PtZoneomp + thcurrent_save ] = th;
-                       param_int[No_zone][ PtZoneomp + th_current ]     = th-i;
                        ipt_omp[PtTask + 2 + thcurrent_save] = th;  
                        ipt_omp[PtTask + 2 + th_current] = th-i;  
 		       thread_list[th-i] = th_current;
@@ -1056,8 +1001,6 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                        dim_j[0]= size;
                        thcurrent_save = thread_list[th-j];
                        th_current = thread_list[th];
-                       param_int[No_zone][ PtZoneomp + thcurrent_save ] = th;
-                       param_int[No_zone][ PtZoneomp + th_current ]     = th-j;
                        ipt_omp[PtTask + 2 + thcurrent_save] = th;  
                        ipt_omp[PtTask + 2 + th_current] = th-j;  
 		       thread_list[th-j] = th_current;
@@ -1070,8 +1013,6 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                        dim_k[0]= size;
                        thcurrent_save = thread_list[th-k];
                        th_current = thread_list[th];
-                       param_int[No_zone][ PtZoneomp + thcurrent_save ] = th;
-                       param_int[No_zone][ PtZoneomp + th_current ]     = th-k;
                        ipt_omp[PtTask + 2 + thcurrent_save] = th;  
                        ipt_omp[PtTask + 2 + th_current] = th-k;  
 		       thread_list[th-k] = th_current;
@@ -1096,17 +1037,13 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
             if(nstep ==1)
             {E_Int numa_max=0; E_Int sock_tg =0;
              for (E_Int socket = 0; socket < NBR_SOCKET; socket++) { if( numa_socket[socket] > numa_max) { numa_max= numa_socket[socket]; sock_tg= socket;} } 
-             param_int[No_zone][Ptomp + nssiter]= sock_tg;
+             //Ivan param_int[No_zone][Ptomp + nssiter]= sock_tg;
             }
 
             
             //Nb threads actifs
-            param_int[No_zone][ PtZoneomp +  __NUMTHREADS__   ] =  topo_lu[0]*topo_lu[1]*topo_lu[2];
             ipt_omp[PtTask + __NUMTHREADS__ +2 ] =  topo_lu[0]*topo_lu[1]*topo_lu[2];
             //topology omp
-            param_int[No_zone][ PtZoneomp +  __NUMTHREADS__ +1] =  topo_lu[0];
-            param_int[No_zone][ PtZoneomp +  __NUMTHREADS__ +2] =  topo_lu[1];
-            param_int[No_zone][ PtZoneomp +  __NUMTHREADS__ +3] =  topo_lu[2];
             ipt_omp[PtTask + __NUMTHREADS__ +3 ] =  topo_lu[0];
             ipt_omp[PtTask + __NUMTHREADS__ +4 ] =  topo_lu[1];
             ipt_omp[PtTask + __NUMTHREADS__ +5 ] =  topo_lu[2];
@@ -1129,14 +1066,6 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                     ind_dm_th[0] = istart;
                     ind_dm_th[1] = istart + dim_i[i] - 1;
                     istart       = ind_dm_th[1] + 1;
-
-
-                    param_int[No_zone][PtZoneomp + __NUMTHREADS__ +4 + th*6] = ind_dm_th[0];
-                    param_int[No_zone][PtZoneomp + __NUMTHREADS__ +5 + th*6] = ind_dm_th[1];
-                    param_int[No_zone][PtZoneomp + __NUMTHREADS__ +6 + th*6] = ind_dm_th[2];
-                    param_int[No_zone][PtZoneomp + __NUMTHREADS__ +7 + th*6] = ind_dm_th[3];
-                    param_int[No_zone][PtZoneomp + __NUMTHREADS__ +8 + th*6] = ind_dm_th[4];
-                    param_int[No_zone][PtZoneomp + __NUMTHREADS__ +9 + th*6] = ind_dm_th[5];
                     
                     ipt_omp[PtTask + __NUMTHREADS__ +6 + th*6] =  ind_dm_th[0];
                     ipt_omp[PtTask + __NUMTHREADS__ +7 + th*6] =  ind_dm_th[1];
@@ -1153,28 +1082,25 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
              kstart  = ind_dm_th[5] + 1;
             }//loop k
 
-            E_Int check = PtZoneomp + __NUMTHREADS__ +9 +th*6 - param_int[No_zone][PT_OMP  ];
-            if(check > mx_omp_size_int && boom ==0 ) {boom =1; check_size =check;}
+            E_Int  PtTaskomp  = PtTask + 6+ __NUMTHREADS__*7 ;
+            E_Int check       = PtTaskomp - shift_omp;
+            if(check > mx_omp_size_int && boom ==0) {boom =1; check_size =check;}
 
            if ((display==1 && nitrun ==1 ) || display==2)
            { 
-             E_Int Nthreads = param_int[No_zone][ PtZoneomp + __NUMTHREADS__ ];
+             E_Int Nthreads = ipt_omp[PtTask + __NUMTHREADS__ +2 ];
 
              printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d, cycle=%d \n", c, No_zone, Nthreads, nstep, param_int[No_zone][NSSITER]/param_int[No_zone][LEVEL]);
              //printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d, cycle=%d %d  \n", c, No_zone, Nthreads, nstep, PtTask,PtiterTask );
 	     
              for (E_Int th_current = 0; th_current < __NUMTHREADS__; th_current++){
 
-                 //E_Int th=param_int[No_zone][ PtZoneomp + th_current ];
-
                  E_Int th = ipt_omp[PtTask + 2 + th_current] ; //Thread inactif
 		 //printf("No_zone,  PtZoneomp + th_current, th = %d %d %d \n",No_zone, PtZoneomp + th_current, th); 
 
 		 if( th != -2)
                  {
-                   //E_Int* ind_dm = param_int[No_zone] + PtZoneomp + __NUMTHREADS__ +4 + th*6;
                    E_Int* ind_dm = ipt_omp + PtTask + __NUMTHREADS__ +6 + th*6;
-
 
                    printf("-- Thread= %d  %d : fenetre=( %d, %d, %d, %d, %d, %d) \n", th_current, th,
                                                  ind_dm[0],ind_dm[1],ind_dm[2],ind_dm[3],ind_dm[4],ind_dm[5]);
@@ -1183,8 +1109,6 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
            }//if display
 
         }// if mono ou subzone
-
-        size_subzone[No_zone] += 4 + __NUMTHREADS__ + 6*Nthreads;
 
        if(boom == 1 )
                {
@@ -1220,10 +1144,8 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
         E_Int nb_subzone     = ipt_nidom_loc [nstep-1];
 
 
-        E_Int Ptomp =  param_int[No_zone][PT_OMP];
-        param_int[No_zone][Ptomp +nstep ] =  param_int[No_zone][Ptomp +nstep -1] + nb_subzone + size_subzone[No_zone];
-
-        E_Int check_size = param_int[No_zone][Ptomp +nstep ] - param_int[No_zone][PT_OMP  ];
+        E_Int  PtTaskomp  = ipt_omp[ nssiter +nstep  ];
+        E_Int check_size  = PtTaskomp - shift_omp;
         if(check_size > mx_omp_size_int)
                {
                 printf("------\n");
@@ -1286,11 +1208,11 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 PyObject* K_FASTC::distributeThreads(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* dtloc;
-  E_Int nssiter; E_Int nstep; E_Int nitrun; E_Int mx_omp_size_int; E_Int display; E_Int omp_mode;
+  E_Int nssiter; E_Int nstep; E_Int nitrun; E_Int mx_omp_size_int; E_Int display;
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOllllll", &zones , &metrics, &dtloc, &nstep,  &nitrun, &mx_omp_size_int, &omp_mode, &display)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOlllll", &zones , &metrics, &dtloc, &nstep,  &nitrun, &mx_omp_size_int,  &display)) return NULL; 
 #else 
-  if (!PyArg_ParseTuple(args, "OOOiiiiii", &zones , &metrics, &dtloc, &nstep,  &nitrun, &mx_omp_size_int, &omp_mode, &display)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOiiiii", &zones , &metrics, &dtloc, &nstep,  &nitrun, &mx_omp_size_int,  &display)) return NULL; 
 #endif
   
   E_Int nidom = PyList_Size(zones);
@@ -1321,7 +1243,7 @@ PyObject* K_FASTC::distributeThreads(PyObject* self, PyObject* args)
     ipt_ind_dm[nd]       = K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
   }
 
-  distributeThreads_c( ipt_param_int ,  ipt_param_real, ipt_ind_dm, omp_mode, nidom, ipt_dtloc, mx_omp_size_int, nstep, nitrun, display );
+  distributeThreads_c( ipt_param_int ,  ipt_param_real, ipt_ind_dm, nidom, ipt_dtloc, mx_omp_size_int, nstep, nitrun, display );
 
   delete [] ipt_param_int;
   delete [] ipt_param_real;

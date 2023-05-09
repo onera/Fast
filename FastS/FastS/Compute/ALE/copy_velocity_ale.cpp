@@ -122,7 +122,7 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-# include "HPC_LAYER/INFO_SOCKET.h"
+# include "FastC/HPC_LAYER/INFO_SOCKET.h"
 
       //
       //---------------------------------------------------------------------

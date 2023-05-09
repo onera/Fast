@@ -1,12 +1,8 @@
-                E_Int      Ptomp = param_int[nd][PT_OMP];
-                E_Int  PtIteromp = param_int[nd][Ptomp];   
-                E_Int  PtZoneomp = param_int[nd][PtIteromp];
+                ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+                Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+                ipt_topo_omp          = ipt_omp + pttask + 3 + Nbre_thread_actif ;
+                ipt_inddm_omp         = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
 
-
-                Nbre_thread_actif_loc = param_int[nd][ PtZoneomp  + Nbre_thread_actif ];
-                ithread_loc           = param_int[nd][ PtZoneomp  + ithread -1        ] +1 ;
-                ipt_topo_omp          = param_int[nd] + PtZoneomp + Nbre_thread_actif + 1;
-                ipt_inddm_omp         = param_int[nd] + PtZoneomp + Nbre_thread_actif + 4 + (ithread_loc-1)*6;
                 if (ithread_loc == -1) {continue;}
 
                 E_Int* ind_mtr  = ipt_ind_sdm     + (ithread-1)*6;

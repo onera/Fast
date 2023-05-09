@@ -69,8 +69,6 @@ namespace K_FASTS
   PyObject* dtlocal2para_mpi(        PyObject* self, PyObject* args);
   PyObject* prep_cfl(                PyObject* self, PyObject* args);
   PyObject* decoupe_maillage(        PyObject* self, PyObject* args);
-  PyObject* souszones_list2(         PyObject* self, PyObject* args);
-  PyObject* souszones_list3(         PyObject* self, PyObject* args);
   PyObject* computePT_enstrophy(     PyObject* self, PyObject* args);
   PyObject* computePT_variables(     PyObject* self, PyObject* args);
   PyObject* computePT_gradient(      PyObject* self, PyObject* args);
@@ -88,7 +86,6 @@ namespace K_FASTS
   // - Metric -
   //===========
   PyObject* allocate_metric(PyObject* self, PyObject* args);
-  PyObject*     init_metric(PyObject* self, PyObject* args);
 
   //===========
   // - SSOR -
@@ -108,11 +105,6 @@ namespace K_FASTS
   PyObject* cartMesh(PyObject* self, PyObject* args);
 
   //===========
-  // - init Numa (optimisation placement memoire sur DRAM)
-  //===========
-  PyObject* initNuma(PyObject* self, PyObject* args);
-
-  //===========
   // - init var
   //===========
   PyObject* initVars(PyObject* self, PyObject* args);
@@ -130,7 +122,7 @@ namespace K_FASTS
   E_Int gsdr3( 
     E_Int**& ipt_param_int , E_Float**& ipt_param_real, 
     E_Int& nidom        , E_Int& nitrun       , E_Int& nstep    , E_Int& nstep_last, E_Int& nssiter , E_Int& it_target , E_Int& first_it,
-    E_Int& kimpli       , E_Int& lssiter_verif, E_Int& lexit_lu , E_Int& omp_mode  , E_Int& layer_mode, E_Int& mpi,
+    E_Int& kimpli       , E_Int& lssiter_verif, E_Int& lexit_lu , E_Int& layer_mode, E_Int& mpi,
     E_Int& nisdom_lu_max, E_Int& mx_nidom     , E_Int& ndimt_flt,
     E_Int& threadmax_sdm, E_Int& mx_synchro, 
     E_Int& nb_pulse     ,
@@ -138,7 +130,7 @@ namespace K_FASTS
     E_Int* ipt_ijkv_sdm , 
     E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int& vartype, E_Float* timer_omp,
     E_Int* iptludic             , E_Int* iptlumax, 
-    E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom, E_Int* ipt_omp              ,
+    E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom, E_Int* ipt_dtloc            ,
     E_Float* ipt_VectG          , E_Float* ipt_VectY     , E_Float** ipt_ssor          , E_Float** ipt_ssortmp, E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
     E_Float* ipt_Hessenberg     , E_Float** iptkrylov    , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry, E_Float** ipt_gmrestmp, E_Float* ipt_givens,
     E_Float*   ipt_cfl          ,

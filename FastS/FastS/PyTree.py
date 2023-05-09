@@ -121,7 +121,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
          hook1 = FastC.HOOK.copy()
-         hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, ompmode, 0) )
+         hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, 0) )
 
          skip = 0
          if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
@@ -260,9 +260,8 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
     nstep = 1
 
     hook1       = FastC.HOOK.copy()
-    distrib_omp = 0
     nitrun      = 0
-    hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
+    hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, 0) )
 
     fasts._matvecPT(zones, metrics, nitrun, no_vect_test, ompmode, hook1)
 
@@ -314,10 +313,10 @@ def allocate_ssor(t, metrics, hook, ompmode):
 #==============================================================================
 # alloue retourne la metrique
 #==============================================================================
-def _init_metric(t, metrics, omp_mode):
+def _init_metric(t, metrics, hook):
     zones        = Internal.getZones(t)
 
-    fasts.init_metric(zones, metrics, omp_mode)
+    FastC.fastc.init_metric(zones, metrics, hook)
 
     c=0
     for metric in metrics:
@@ -375,9 +374,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     t = Internal.rmNodesByName(t, 'NbptsLinelets')
      
     #init hook necessaire pour info omp
-    tmp   = Internal.getNodeFromName1(t, '.Solver#ownData')
-    dtloc = Internal.getNodeFromName1(tmp, '.Solver#dtloc')  # noeud
-    dtloc = Internal.getValue(dtloc)                       # tab numpy
+    tmp     = Internal.getNodeFromName1(t, '.Solver#ownData')
+    dtlocPy = Internal.getNodeFromName1(tmp, '.Solver#dtloc')  # noeud
+    dtloc = Internal.getValue(dtlocPy)                       # tab numpy
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
@@ -394,10 +393,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
     for nstep in range(1, int(dtloc[0])+1):
         hook1       = FastC.HOOK.copy()
-        hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, ompmode, verbose) )   
+        hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, 1, nstep, verbose) )   
 
     #init metric
-    _init_metric(t, metrics, ompmode)
+    _init_metric(t, metrics, hook1)
 
     ssors = allocate_ssor(t, metrics, hook1, ompmode)
 
@@ -408,6 +407,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     t, FastC.FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP,isWireModel)
     FastC.HOOK['FIRST_IT'] = FastC.FIRST_IT
 
+    zones = Internal.getZones(t)
+
     #compactage des champs en fonction option de calcul
     count = -1
     if ompmode == 1: count = 0
@@ -416,10 +417,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         zone    = data[0]
         varnames= data[1]
         for fields in varnames:
-            _compact(zone, fields=fields, mode=count)
+            FastC._compact(zone, fields=fields, mode=count, dtloc=dtlocPy)
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
-    zones = Internal.getZones(t) # car create primvar rend zones caduc
     c   = 0
     ale = 0
     for z in zones:
@@ -433,6 +433,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         elif motion == 'deformation': ale = 2
         else: ale = 1
         c += 1
+
 
     # mise a jour vitesse entrainememnt
     #
@@ -503,7 +504,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         var = Internal.getNodesFromType1(sol[0], 'DataArray_t')
         varmy = []
         for v in var: varmy.append('centers:'+v[0])
-        _compact(tmy, fields=varmy)
+        FastC._compact(tmy, fields=varmy)
 
     #
     # remplissage ghostcells
@@ -518,7 +519,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     _fillGhostcells(zones, tc, metrics, timelevel_target, ['Density'], nstep,  ompmode, hook1,isWireModel=isWireModel)
 
     if tc is not None: C._rmVars(tc, 'FlowSolution')
-
     #
     # initialisation Mut
     #
@@ -526,58 +526,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     fasts._computePT_mut(zones, metrics, hook1)
 
     return (t, tc, metrics)
-
-#==============================================================================
-def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolutionCenters__], fields=None, mode=None, init=True):
-    #global  CACHELINE
-    if  mode is not None:
-      if mode == -1: thread_numa = 0
-      else: thread_numa = 1
-    else: thread_numa = 0
-
-    zones = Internal.getZones(t)
-    for z in zones:
-        ars = FastC.getFields2Compact__(z, containers, fields)
-        sh = None ; size = None
-        val = [] # valid fields
-        for a in ars:
-            a1 = a[1]
-            if sh is None: sh = a1.shape; size = a1.size; val.append(a)
-            elif a1.shape == sh: val.append(a)
-        nfields = len(val)
-        if nfields > 0:
-            param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
-            # Create an equivalent contiguous numpy [flat]
-    	    #eq = KCore.empty(size*nfields, CACHELINE)
-            eq = numpy.empty(nfields*(size+ param_int[1][66]), dtype=numpy.float64) # add a shift  between prim. variables (param_int[1][SHIFTVAR])
-            c = 0
-            if param_int is None:
-                raise ValueError("_compact: Parameter_int is missing for zone %s."%z[0])
-            for a in val:
-                #a[1] = a[1].reshape((size), order='F')
-                a1 = a[1]
-                ## marc a1 = a[1]
-                #print 'a0',a[0],a[1].shape
-                # Copy elements
-                ptr = a1.reshape((size), order='F') # no copy I hope
-                if init: fasts.initNuma( ptr, eq, param_int, c, thread_numa )
-                #fasts.initNuma( ptr, eq, param_int, c )
-                ## marc ptr = a1.reshape((size), order='F') # no copy I hope
-                ## marc fasts.initNuma( ptr, eq, param_int, c )
-                #fasts.initNuma( a[1], eq, param_int, c )
-                #fasts.initNuma( ptr , eq, param_int, c )
-                #eq[c*size:(c+1)*size] = ptr[:]
-                # Replace numpys with slice
-                a[1] = eq[c*(size)+c*param_int[1][66]:(c+1)*(size)+c*param_int[1][66]]
-                a[1] = a[1].reshape(sh, order='F')
-                ## marc a[1] = eq[c*size:(c+1)*size]
-                ## marc a[1] = a[1].reshape(sh, order='F')
-                #print 'a1',a[0],a[1].shape
-                ##a[1] = a[1].reshape( (size), order='F')
-                #print 'a',a[0],a[1].shape
-
-                c += 1
-    return None
 
 #==============================================================================
 # Prepare IBC ODE (TBLE + Spalart 1D)
@@ -1300,10 +1248,6 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
               isWireModel_int = 0
               Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_int)#,timecount)
                   
-              #test.testT(zones , 16)
-              #test.testT(zonesD , 17)
-                  
-
        #apply BC
        #t0=timeit.default_timer()
        if exploc != 1:
@@ -1438,6 +1382,11 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
     for b0 in Internal.getNodesFromType1(t,'CGNSBase_t'):
         if b0[0] != PostBaseName:
             zones += Internal.getZones(b0)
+
+    own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+
+    tmy[2].append(own)
 
     if dir == '0':
         for z in zones:
@@ -1798,7 +1747,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
     Internal._rmNodesByType(b,'ZoneBC_t')
     Internal._rmNodesByType(b,'ZoneGridConnectivity_t')
 
-    _compact(tmy, fields=varmy)
+    FastC._compact(tmy, fields=varmy)
 
     return tmy
 
@@ -1829,7 +1778,7 @@ def initStats(filename):
 
     varmy=[]
     for v in var: varmy.append('centers:'+v[0])
-    _compact(tmy, fields=varmy)
+    FastC._compact(tmy, fields=varmy)
 
     return tmy
 
@@ -1941,7 +1890,7 @@ def _compactStats(ts):
     var = Internal.getNodesFromType1(sol[0], 'DataArray_t')
     varmy = []
     for v in var: varmy.append('centers:'+v[0])
-    FastS._compact(ts, fields=varmy)
+    FastC._compact(ts, fields=varmy)
     return None
 
 # Return phase number
@@ -2019,6 +1968,9 @@ def _computeVariables(t, metrics, varlist, order=2):
     lcompact_drodt= False
     lcompact_Rotx = False
 
+    own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+
     flag = 0
     var_loc = []
 
@@ -2054,15 +2006,15 @@ def _computeVariables(t, metrics, varlist, order=2):
                  if var=='QCriterion' or var=='QpCriterion': lcompact_Q     = True
                  if var=='RotX'                            : lcompact_Rotx  = True
                  if var=='Enstrophy'                       : lcompact_Enst  = True
-                 if var=='dDensity/dt'                     : lcompact_drodt = True
+                 if var=='dDensitydt'                      : lcompact_drodt = True
                  tmp = numpy.ones( (dim[1]-1,dim[2]-1,dim[3]-1) , dtype=numpy.float64)
                  Internal.createChild(solution, var, 'DataArray_t', tmp)
 
     if var_loc != []:
-       if lcompact_Q:    _compact(zones, fields=['centers:QCriterion'])
-       if lcompact_Enst: _compact(zones, fields=['centers:Enstrophy' ])
-       if lcompact_Rotx: _compact(zones, fields=['centers:RotX' ])
-       if lcompact_drodt: _compact(zones, fields=['centers:dDensitydt' ])
+       if lcompact_Q:     FastC._compact(zones, fields=['centers:QCriterion'], dtloc=dtloc)
+       if lcompact_Enst:  FastC._compact(zones, fields=['centers:Enstrophy' ], dtloc=dtloc)
+       if lcompact_Rotx:  FastC._compact(zones, fields=['centers:RotX'      ], dtloc=dtloc)
+       if lcompact_drodt: FastC._compact(zones, fields=['centers:dDensitydt'], dtloc=dtloc)
 
        own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
        dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
@@ -2083,6 +2035,9 @@ def _computeGrad(t, metrics, varlist, order=2):
     if isinstance(varlist, str): vars = [varlist]
     elif isinstance(varlist, list): vars = varlist
     else: raise ValueError("_computeGrad: last argument must be a string or list of strings.")
+
+    own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
 
     var_zones = []
     vargrad   = []
@@ -2118,7 +2073,7 @@ def _computeGrad(t, metrics, varlist, order=2):
                       Internal.createChild(solution, grad, 'DataArray_t', tmp)
                       lcompact = True
 
-               if lcompact: _compact(z, fields=['centers:'+vargrad[cgrad],'centers:'+vargrad[cgrad+1],'centers:'+vargrad[cgrad+2]])
+               if lcompact: FastC._compact(z, fields=['centers:'+vargrad[cgrad],'centers:'+vargrad[cgrad+1],'centers:'+vargrad[cgrad+2]], dtloc=dtloc)
                cgrad+=3
 
         var_zones.append(var_loc)
@@ -2355,6 +2310,11 @@ def createStressNodes(t, BC=None, windows=None):
 
     familyBCDict = C.getFamilyBCNamesDict(t)
 
+    own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+
+    teff[2].append(own)
+
     zones = []
     no_z = 0
     for b0 in Internal.getNodesFromType1(t, 'CGNSBase_t'):
@@ -2559,7 +2519,7 @@ def createStressNodes(t, BC=None, windows=None):
                         #print('dim1=',imin,imax,jmin,jmax,kmin,kmax)
                         #print('idir=',idir+1)
 
-                        _compact(zp, fields=varc, init=False) #allocation compact uniquememnt; init dans er calcul effort
+                        FastC._compact(zp, fields=varc, init=False, dtloc=dtloc) #allocation compact uniquememnt; init dans er calcul effort
 
                         b[2].append(zp)
 
@@ -2607,9 +2567,8 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
             FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
             nitrun =0; nstep =1
 
-            distrib_omp = 0
             hook1 = FastC.HOOK.copy()
-            hook1.update(FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
+            hook1.update(FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, 0) )
 
     else:  hook1  = FastC.HOOK
 
@@ -2620,21 +2579,6 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
     fasts.compute_effort(zones, zones_eff, metrics, hook1, effort, pos_eff)
 
     return effort
-
-#==============================================================================
-#
-# Calcul distribution threads
-#
-#==============================================================================
-def distributeThreads(t, metrics, work, nstep, nssiter, nitrun, verbose=0):
-
-  zones          = Internal.getZones(t)
-  mx_omp_size_int= work["MX_OMP_SIZE_INT"]
-  
-  own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
-  dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
-  fasts.distributeThreads(zones , metrics, dtloc, nstep,  nitrun, mx_omp_size_int, verbose)
-  return None
 
 #==============================================================================
 #
@@ -3813,14 +3757,14 @@ def _compute_dpJ_dpW(t, teff, metrics, cosAoA, sinAoA, surfinv):
             FastC.HOOK   = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
             nitrun =0; nstep =1
             hook1  = FastC.HOOK.copy()
-            distrib_omp = 0
-            hook1.update(FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, distrib_omp, 0) )
+            hook1.update(FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, 0) )
     else:   hook1  = FastC.HOOK
 
     fasts.compute_dpJ_dpW(zones, zones_eff, metrics, hook1, cosAoA, sinAoA, surfinv)
     return None
 
 
+'''
 #==============================================================================
 # computeAdjoint in place
 # graph is a dummy argument to be compatible with mpi version
@@ -3842,7 +3786,6 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
 
     dtloc = Internal.getValue(dtloc) # tab numpy
     nitmax = int(dtloc[0])
-    orderRk = int(dtloc[len(dtloc)-1])
 
 
     if tc is not None:
@@ -3857,93 +3800,9 @@ def _computeAdjoint(t, metrics, nit_adjoint, indFunc, tc=None, graph=None):
                     tmp = Internal.getNodesFromType1(f, 'Zone_t')
                     zonesD += tmp
 
-#    nstep=1
-#    hook1  = FastC.HOOK.copy()
-#    hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nit_adjoint, nstep, 0) )
-#    hook1  = FastC.HOOK
 
+    return None
 
-   #--------------------------------------------------------------------------
-   #  0  peut-on faire ici un test pour verifier que dpJdpW a bien ete prealablement
-   #   calcule (ordre correct des appelants) (boolean isdpJpWComputed ... ?) IVAN
-   # champ adjoint et increment adjoint initialise a 0 (?) a verifier
-   #--------------------------------------------------------------------------------
-
-  # if nit_adjoint == 1 :
-       # if indFunc == 1 :
-       #      vars = ['dpCLp_dpDensity']
-       #      Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, type_transfert, no_transfert)
-
-       # if indFunc == 2 :
-       #      vars = ['dpCDp_dpDensity']
-       #      Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType,  type_transfert, no_transfert)
-
-       # if vars is not None:
-            # compute_dpJ_dpW = True       #dpJ_dpW is already computed
-            # print "dpJ_dpW is already computed"
-       # else:
-            # print "dpJ_dpW is missing"   #dpJ_dpW is not computed
-            # return None                  #This is equivalent to exit(), because dpJ_dpW has not been computed, so we can not compute RhsIter_Adjoint.
-
-   #--------------------------------------------------------------------------------
-   #  1 raccord sur l'adjoint via les ghost cells
-   #-----------------------------------
-
-#    if indFunc == 1:
-#        vars = ['AdjCLp_RDensity']     # should work for the five variables of incAdj (?)
-#
-#    if indFunc == 2:
-#        vars = ['AdjCDp_RDensity']     # should work for the five variables of incAdj (?)
-#
-#    # apply transfers
-#    if tc is not None and hook1[12] ==0:
-#       if   hook1[10] == 5: varType = 2
-#       else               : varType = 21
-
-#    #print 'transfert', nstep, skip,hook1[13], hook1[12]
-#    if tc_compact is not None:
-#       for v in vars: C._cpVars(t, 'centers:'+v, tc, v)
-#       type_transfert = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
-#       no_transfert   = 1  # dans la list des transfert point a point
-
-#    Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, type_transfert, no_transfert)
-
-
-#    #-----------------------------------------------------------------
-#    #  2 calcul membres de droite et de gauche de l'algo iteratif pour l'adjoint
-#    #--------------------------------------------
-
-#    fasts.compute_RhsIterAdjoint(zones, metrics, nit_adjoint, nstep, indFunc, omp_mode, hook1)
-
-#    return None
-
-
-    #-----------------------------------------------------------------
-    #  3 calcul membres de droite de l'algo iteratif pour l'adjoint
-    #--------------------------------------------
-
-'''
-     vars = ['IncAdj']
-
-     do i=1,6
-
-       fasts.compute_LorUAdjoint(zones, metrics, nitrun, nstep, indFunc, omp_mode, hook1)
-
-       Connector.connector.___setInterpTransfers(zones, zonesD, vars, param_int, param_real, varType, type_transfert, no_transfert)
-       enddo
-    #-----------------------------------------------------------------
-    #  4 update
-    #------------------------------------------------------
-
-    if indFunc == 1:
-        # adjCLp = adjCLp + incAdj
-    if indFunc == 2:
-        # adjCDp = adjCDp + incAdj
-'''
-
-   # return None
-
-'''
 #==============================================================================
 # computedJdX in place
 # graph is a dummy argument to be compatible with mpi version
@@ -3966,7 +3825,6 @@ def _computedJdX(t, metrics, nitrun, tc=None, graph=None, indFunc):
 
     dtloc = Internal.getValue(dtloc) # tab numpy
     nitmax = int(dtloc[0])
-    orderRk = int(dtloc[len(dtloc)-1])
 
 
     if tc is not None:

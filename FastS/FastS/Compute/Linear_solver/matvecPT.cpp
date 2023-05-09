@@ -60,8 +60,10 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
   PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
   K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
   E_Int nssiter = iptdtloc[0];
-  E_Int omp_mode = iptdtloc[ 8 + nssiter];
-  E_Int* ipt_omp = iptdtloc +9 + nssiter;
+  E_Int omp_mode = iptdtloc[8];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
+
 
   E_Int lcfl= 0;
  // 
@@ -451,7 +453,7 @@ PyObject* K_FASTS::_matvecPT(PyObject* self, PyObject* args)
    //calcul distri si implicit ou explicit local + modulo verif
    if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC]== 1 && ipt_param_int[0][ITYPCP]==2))  && (nitrun_loc%iptdtloc[1] == 0 || nitrun_loc == 1) )
        {
-         K_FASTC::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, omp_mode, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_loc, display );
+         K_FASTC::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_loc, display );
        }
 
    E_Int layer_mode=1;

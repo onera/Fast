@@ -36,18 +36,23 @@ PyObject* K_FAST::interplbmns_(PyObject* self, PyObject* args)
   PyObject *work;
   PyObject *pyParam_int, *pyParam_real;
   E_Int loc, nstep, nitrun, nitmax;
-  E_Int omp_mode, NoTransfert, process;
+  E_Int NoTransfert, process;
 
   if (!PYPARSETUPLE(args,
-                    "OOOOOllllll", "OOOOOiiiiii",
-                    "OOOOOllllll", "OOOOOiiiiii",
-                    &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work, &nitmax, &nitrun, &nstep, &omp_mode,  &NoTransfert, &process))
+                    "OOOOOlllll", "OOOOOiiiii",
+                    "OOOOOlllll", "OOOOOiiiii",
+                    &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work, &nitmax, &nitrun, &nstep,  &NoTransfert, &process))
   {
       return NULL;
   }
 
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+  E_Int omp_mode = iptdtloc[8];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
 
-  vector<PyArrayObject*> hook;
 
   //Nombre de zones doneuses et receveuses
   E_Int nidomR   = PyList_Size(zonesR);
@@ -55,72 +60,35 @@ PyObject* K_FAST::interplbmns_(PyObject* self, PyObject* args)
 
   //// Recuperation du tableau param_int de l'arbre t et des veceurs rop et roptmp
   // Transferts se font sur Density et Density_P1
-  E_Int** param_intt    = new E_Int*[nidomR];
-  E_Float** param_realt = new E_Float*[nidomR];
-  E_Int** interp_data   = new E_Int*[nidomR];
-  E_Float** iptro_p1    = new E_Float*[nidomR];
-  E_Float** iptro       = new E_Float*[nidomR];
+  E_Int** param_int    = new E_Int*[nidomR];
+  E_Float** param_real = new E_Float*[nidomR*3];
+  E_Float** iptrom_CL  = param_real + nidomR; 
+  E_Float** iptrom     = iptrom_CL  + nidomR;
 
+  vector<PyArrayObject*> hook;
   // On parcourt les zones R et on recupere les tableaux/vecteurs
   for (E_Int nd = 0; nd < nidomR; nd++)
      {
        PyObject* zone = PyList_GetItem(zonesR, nd);
 
-       PyObject* numerics = K_PYTREE::getNodeFromName1(zone    , ".Solver#ownData");
-       PyObject*       o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"  );
-       param_intt[nd]     = K_PYTREE::getValueAI(o, hook);
+       PyObject* numerics= K_PYTREE::getNodeFromName1(zone    , ".Solver#ownData");
+       PyObject*      o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"  );
+       param_int[nd]     = K_PYTREE::getValueAI(o, hook);
 
-	                     o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real" );
-       param_realt[nd]    = K_PYTREE::getValueAF(o, hook);
+	              o = K_PYTREE::getNodeFromName1(numerics, "Parameter_real" );
+       param_real[nd]   = K_PYTREE::getValueAF(o, hook);
 
-                       o  = K_PYTREE::getNodeFromName1(numerics, "Interp_data"    );
-       if (o != NULL)
-       {  interp_data[nd] = K_PYTREE::getValueAI(o, hook);}
+                      o = K_PYTREE::getNodeFromName1(zone     , "FlowSolution#Centers");
 
-                       o = K_PYTREE::getNodeFromName1(zone     , "FlowSolution#Centers");
-       PyObject*      t  = K_PYTREE::getNodeFromName1( o       , "Density_P1"          );
-       iptro_p1[nd]      = K_PYTREE::getValueAF(t, hook);
+       PyObject*      t = K_PYTREE::getNodeFromName1( o       , "Density"     );
+       iptrom[nd]       = K_PYTREE::getValueAF(t, hook);
 
-                       o = K_PYTREE::getNodeFromName1(zone    , "FlowSolution#Centers");
-       PyObject*     t1  = K_PYTREE::getNodeFromName1( o      , "Density"             );
-       iptro[nd]         = K_PYTREE::getValueAF(t1, hook);
+       if( (param_int[nd][ITYPCP]<=1) || (param_int[nd][ITYPCP]==2 && nstep!=2) )
+         {  PyObject*      t = K_PYTREE::getNodeFromName1( o       , "Density_P1"     );
+            iptrom_CL[nd]    = K_PYTREE::getValueAF(t, hook);
+         }
+       else {  iptrom_CL[nd]    = iptrom[nd]; }
      }
-
-  /// Recuperation du tableau de stockage des valeurs pour interpolation
-  PyObject* interpArray = PyDict_GetItemString(work,"tab_interp"); FldArrayF* stk;
-  K_NUMPY::getFromNumpyArray(interpArray, stk, true); E_Float* iptstk = stk->begin();
-
-  E_Int stk_size    = stk[0].getSize();
-  //cout << "taille tab stockage " << stk_size << endl;
-  E_Int taille_tabs = stk_size/5;
-
-  /*--------------------------------------*/
-  /* Extraction tableau int et real de tc */
-  /*--------------------------------------*/
-  FldArrayI* param_int;
-  E_Int res_donor = K_NUMPY::getFromNumpyArray(pyParam_int, param_int, true);
-  E_Int* ipt_param_int = param_int->begin();
-  FldArrayF* param_real;
-  res_donor = K_NUMPY::getFromNumpyArray(pyParam_real, param_real, true);
-  E_Float* ipt_param_real = param_real->begin();
-
-  //cout << vartype << nvars << endl;
-  //cout << "ipt_param_int[0]= " << ipt_param_int[0] << endl;
-
-  ///// Les shifts pour les zones /////
-  E_Int nbcomIBC = ipt_param_int[1];
-  E_Int nbcomID  = ipt_param_int[2+nbcomIBC];
-
-  E_Int shift_graph = nbcomIBC + nbcomID + 2;
-
-  //E_Int threadmax_sdm  = __NUMTHREADS__;
-  E_Int ech            = ipt_param_int[ NoTransfert +shift_graph];
-
-
-  E_Int nrac = ipt_param_int[ ech +1 ];
-  //cout << nrac << endl;
-
-  //E_Int shift_dom = 0;
 
 //#pragma omp parallel default(shared) num_threads(1)//private(cycle)
 #pragma omp parallel default(shared)
@@ -139,240 +107,110 @@ PyObject* K_FAST::interplbmns_(PyObject* self, PyObject* args)
     if( omp_mode == 1) { Nbre_thread_actif_loc = 1;                 ithread_loc = 1;}
     else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
 
-    E_Int topology[3];
-    topology[0]=0;
-    topology[1]=0;
-    topology[2]=0;
+  E_Int thread_parsock  =  Nbre_thread_actif/Nbre_socket;
+  E_Int socket          = (ithread-1)/thread_parsock +1;
+  E_Int  ithread_sock   = ithread-(socket-1)*thread_parsock;
 
-    E_Int shift_dom = 0;
+  E_Float rhs_end=0;
 
-    E_Int flag_implicit = 0;
+  E_Int nitcfg_loc= 2;
 
-    for  (E_Int nd=0; nd < nidomR; nd++) // Boucle sur les differents domaines
-      {
-         //cout << "Domaine = " << nd << endl;
+  E_Int nbtask = ipt_omp[nitcfg_loc-1]; 
+  E_Int ptiter = ipt_omp[nssiter+ nitcfg_loc-1];
 
-         // A partir du moment ou il y une zone implicite : tout NS implicite
-         if (param_intt[nd][ ITYPCP ] == 1) flag_implicit = 1;
+  //calcul du sous domaine a traiter par le thread
+  for (E_Int ntask = 0; ntask < nbtask; ntask++)
+     {
+       E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+       E_Int nd = ipt_omp[ pttask ];
 
-         if (param_intt[nd][IFLOW] == 4)
-           {
-              //cout << "Coucou domaine LBM" << endl;
+       E_Int ndo   = nd;
 
-              E_Int nb_rac_zone = interp_data[nd][0];
-              //cout << "Nombre de raccords NS LBM pour la zone " << nb_rac_zone << endl;
-              E_Int taille_rac_max = interp_data[nd][1];
+       E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
 
-              for (E_Int irac_lbmns=0; irac_lbmns < nb_rac_zone; irac_lbmns++)
-                {
-                   //cout << "Raccord NS LBM pour la zone " << irac_lbmns << endl;
-                   E_Int shift_donorPts = irac_lbmns*6 + 1;
+       ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+       E_Int nd_subzone      = ipt_omp[ pttask + 1 ];
+       Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+       ipt_topo_omp          = ipt_omp + pttask + 3 + Nbre_thread_actif ;
+       ipt_inddm_omp         = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
 
-                   //Points du raccord au complet
-                   E_Int donorPts_[6];
-                   donorPts_[0] = interp_data[nd][ shift_donorPts + 1 ];
-                   donorPts_[1] = interp_data[nd][ shift_donorPts + 2 ];
-                   donorPts_[2] = interp_data[nd][ shift_donorPts + 3 ];
-                   donorPts_[3] = interp_data[nd][ shift_donorPts + 4 ];
-                   donorPts_[4] = interp_data[nd][ shift_donorPts + 5 ];
-                   donorPts_[5] = interp_data[nd][ shift_donorPts + 6 ];
-                   //printf("donor_ %d %d %d %d %d %d ith= %d \n", donorPts_[0],donorPts_[1],donorPts_[2],donorPts_[3],donorPts_[4],donorPts_[5], ithread );
+       if (ithread_loc == -1) {continue;}
 
-                   E_Int taillefenetre;
-                   taillefenetre = (donorPts_[1] - donorPts_[0] + 1)*(donorPts_[3] - donorPts_[2] + 1)*(donorPts_[5] - donorPts_[4] + 1);
-                   taillefenetre = taillefenetre*5*3;
-                   //printf("taille fen %d  ith= %d \n", taillefenetre , ithread );
+       if (param_int[nd][ ITYPCP ] <= 1) {continue;} //pas d'interp/stck a gerer si NS implicit
 
-                   E_Int ipt_ind_dm_omp_thread[6];
+       E_Int pt_interp = param_int[nd][PT_INTERP];
+       E_Int nrac = param_int[nd][pt_interp];
+       for (E_Int rac=0; rac < nrac; rac++) // Boucle sur les differents raccords
+         {
+            E_Int pt_racInt = param_int[nd][ pt_interp + rac +1        ]; //pointer vers info Int du raccord (type, range)
+            E_Int pt_racReal= param_int[nd][ pt_interp + rac +1 +nrac  ]; //pointer vers stockage float
+             
+            E_Int typ_rac =  param_int[nd][pt_racInt];
+            if(typ_rac == 1)
+             {
+               E_Int* range  =  param_int[nd] + pt_racInt + 3;
+               E_Int  size   =  (range[1]-range[0]+1)* (range[3]-range[2]+1)* (range[5]-range[4]+1);
+             
+               E_Int range_th[6];
 
- 	                 indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, param_intt[nd][ ITYPCP ],
-                                                           donorPts_, topology, ipt_ind_dm_omp_thread);
+               range_th[0]= 1; range_th[1]= 0; range_th[2]= 1;range_th[3]= 0;range_th[4]= 1;range_th[5]= 0;
 
-                   //Points sur lequels le thread va agir
-                   E_Int donorPts[6];
-                   donorPts[0] = ipt_ind_dm_omp_thread[0];
-                   donorPts[1] = ipt_ind_dm_omp_thread[1];
-                   donorPts[2] = ipt_ind_dm_omp_thread[2];
-                   donorPts[3] = ipt_ind_dm_omp_thread[3];
-                   donorPts[4] = ipt_ind_dm_omp_thread[4];
-                   donorPts[5] = ipt_ind_dm_omp_thread[5];
-                   //printf("DONOR %d %d %d %d %d %d ith= %d \n", donorPts[0],donorPts[1],donorPts[2],donorPts[3],donorPts[4],donorPts[5], ithread );
+               //intersection entre plage thread et fenetre stockage
+               if(   ipt_inddm_omp[0]<= range[1] &&  ipt_inddm_omp[1] >= range[0] 
+                  && ipt_inddm_omp[2]<= range[3] &&  ipt_inddm_omp[3] >= range[2] 
+                  && ipt_inddm_omp[4]<= range[5] &&  ipt_inddm_omp[5] >= range[4] )
+                 {
+                   range_th[0]=max( range[0] , ipt_inddm_omp[0]);
+                   range_th[1]=min( range[1] , ipt_inddm_omp[1]);
+                   range_th[2]=max( range[2] , ipt_inddm_omp[2]);
+                   range_th[3]=min( range[3] , ipt_inddm_omp[3]);
+                   range_th[4]=max( range[4] , ipt_inddm_omp[4]);
+                   range_th[5]=min( range[5] , ipt_inddm_omp[5]);
+                 }
 
-                   E_Float* tab1;
-                   E_Float* tab2;
-                   E_Float* tab3;
-                   E_Int ind;
-                   E_Int sol;
+                 if(nd==1) for (E_Int i=0; i < 6; i++) { printf("rg %d %d %d  th= %d , idir= %d \n", range_th[i], range[i] , ipt_inddm_omp[i], ithread_loc, i+1);}
 
-                   if (nstep==0) /// La 1ere sous-iteration et juste avant compute
-                     {
+               E_Float* iptS = NULL; E_Float* iptPsiG = NULL; E_Float* iptro_CL = NULL;
+               if(nstep <=2)
+                 {
+                  E_Int sens=0; //(ro --> stk)
+                  E_Int pos_p1 = param_int[nd][pt_racInt +1];
+                  E_Int   neq  = param_int[nd][pt_racInt +2];
+                  pos_p1+=1; if(pos_p1==3){pos_p1=0;}
 
-                       /// stockage de la sol u_n en position 0 dans le tableau de stockage du raccord
+                  E_Float* stk  = param_real[nd]+  pt_racReal + pos_p1*neq*size;
 
-                       ind = 1; //stockage
-                       sol = 0; //stockage en position 0
-                       tab1 = iptro[nd]; // La solution u_n du domaine LBM se trouve dans Density
-                       tab2 = iptstk + shift_dom + irac_lbmns*taille_rac_max;
-                       //cout << "shift stk = " << shift_dom + irac_lbmns*taille_rac_max << endl;
-                       copy_valuespara_( param_intt[nd], donorPts, donorPts_, tab1, tab2, ind, sol, taillefenetre);
+                  printf("COPY: %d rac= %d , nd= %d %d , pos= %d , th= %d , nstep= %d \n ",  pt_racReal + pos_p1*neq*size, rac, nd, neq, pos_p1, ithread_loc, nstep);
+                  //sauvegarde de macro (instant N) dans stk 
+                  //                                                              macro,         distribution,   Sij,   , autre terme...
+                  if(nstep==1){copy_values_( nd, neq, param_int[nd], range, range_th, size,  stk, iptrom[nd], iptro_CL,  iptS, iptPsiG, sens, typ_rac);}
 
-                       /* DEBUG UTILTY*/
-                       //E_Int nistk = (donorPts_[1]-donorPts_[0]) + 1;
-                       //E_Int nistk2 = (donorPts_[3]-donorPts_[2]) + 1;
-                       //E_Int nistk3 = (donorPts_[5]-donorPts_[4]) + 1;
-                       //cout << nistk << " " << nistk2 << " " << nistk3 << endl;
-                       //cout << nistk*nistk2*nistk3 << endl;
-                       //E_Int ldeb = donorPts[0]+1-donorPts_[0] + nistk*(donorPts[2]-donorPts_[2]) + nistk*nistk2*(donorPts[4]-donorPts_[4]);
-                       //cout << "ldeb = " << ldeb << endl;
+                  stk  = param_real[nd]+  pt_racReal;
+                  //                                                             macro,         distribution,   Sij,   , autre terme...
+                  interp_lbm_dtloc_( neq, param_int[nd], range, range_th, size,  stk, iptrom_CL[nd], iptro_CL,  iptS, iptPsiG, pos_p1, typ_rac, nstep);
+                 }
+                else
+                 {
+                  E_Int sens=1; //(stk--> ro_p1)
+                  E_Int pos_p1 = param_int[nd][pt_racInt +1] + 1;
+                  if(pos_p1==3){pos_p1=0;}
 
-#pragma omp barrier
+                  E_Int   neq  = param_int[nd][pt_racInt +2];
+           
+                  printf("Recup: %d rac= %d , nd= %d %d , pos= %d , th= %d , nstep= %d \n ",  pt_racReal + pos_p1*neq*size, rac, nd, neq, pos_p1, ithread_loc, nstep);
+                  E_Float* stk  = param_real[nd]+  pt_racReal + pos_p1*neq*size;
+     
+                  //                                                             macro,         distribution,   Sij,   , autre terme...
+                  copy_values_( nd, neq, param_int[nd], range, range_th, size,  stk, iptrom[nd], iptro_CL,  iptS, iptPsiG, sens, typ_rac);
+                 }
 
-                     }
+             }//typ_rac
+         }//loop rac
 
-                   if (nstep==1) /// La 1ere sous-iteration apres compute
-                     {
 
-                       //cout << "Je passe nstep==1 interplbmns" << endl;
-                       /// stockage de la sol un+1 en position 1 dans le tableau de stockage du raccord
+     }//loop task
+  }//omp fin
 
-                       ind = 1; //stockage
-                       sol = 1; //stockage en position 1
-                       tab1 = iptro[nd]; // La solution u_n+1 du domaine LBM se trouve dans Density
-                       tab2 = iptstk + shift_dom + irac_lbmns*taille_rac_max;
-
-                       copy_valuespara_( param_intt[nd], donorPts , donorPts_, tab1, tab2, ind, sol, taillefenetre);
-
-                       // Si NS explicite (RK3) alors on fait les interp
-                       if (flag_implicit==0)
-                          {
-                            //cout << "Hello je passe dans interp" << endl;
-                            /// interpolation de la sol pour sous-pas RK3 (1 -> 2)
-
-                            tab1 = iptro_p1[nd]; //Pour les transferts, valeur d'interp dans Density_P1
-                            //tab1 = iptro[NoD];
-                            //cout << nitrun << endl;
-
-                            interp_rk3para_( param_intt[nd], donorPts, donorPts_, tab1, tab2, nstep, nitrun, taillefenetre);
-                          }
-                       // Si NS implicite (Gear) on met u_n+1 dans Density_P1
-                       else
-                          {
-                            //cout << "Hello je passe dans implicite" << endl;
-                            /// Recuperation de la solution un+1 dans Density_P1 pour transfert
-                            ind = 2; //Recuperation
-                            sol = 1; //Recupere la sol en position 1
-                            tab1 = iptro_p1[nd]; //Pour les transferts, valeur d'interp dans Density_P1
-                            tab2 = iptstk + shift_dom + irac_lbmns*taille_rac_max;
-                            //cout << shift_dom + irac_lbmns*taille_rac_max << endl;
-
-                            copy_valuespara_( param_intt[nd], donorPts, donorPts_, tab1, tab2, ind, sol, taillefenetre);
-                          }
-
-#pragma omp barrier
-
-                     }
-
-                   if (nstep==2)
-                     {
-
-                       /// Pas de stockage de la zone LBM car deja en n+1
-                       if (flag_implicit==0)
-                          {
-                            /// interpolation de la sol pour sous-pas RK3 (2 -> 3)
-                            tab1 = iptro[nd]; //Pour les transferts, valeur d'interp dans Density
-                            tab2 = iptstk + shift_dom + irac_lbmns*taille_rac_max;
-                            //cout << nitrun << endl;
-                            interp_rk3para_( param_intt[nd], donorPts, donorPts_, tab1, tab2, nstep, nitrun, taillefenetre);
-                          }
-                       // Si NS implicite (Gear) on met u_n+1 dans Density_P1
-                       else
-                          {
-                            //cout << "Hello je passe dans implicite" << endl;
-                            /// Recuperation de la solution un+1 dans Density_P1 pour transfert
-                            ind = 2; //Recuperation
-                            sol = 1; //Recupere la sol en position 1
-                            tab1 = iptro_p1[nd]; //Pour les transferts, valeur d'interp dans Density_P1
-                            tab2 = iptstk + shift_dom + irac_lbmns*taille_rac_max;
-                            //cout << shift_dom + irac_lbmns*taille_rac_max << endl;
-
-                            copy_valuespara_( param_intt[nd], donorPts, donorPts_, tab1, tab2, ind, sol, taillefenetre);
-                          }
-
-#pragma omp barrier
-
-                     }
-
-                   if (nstep==3)
-                     {
-
-                       if (flag_implicit==0)
-                          {
-
-                            /// Recuperation de la solution un+1 dans Density_P1 pour transfert
-                            ind = 2; //Recuperation
-                            sol = 1; //Recupere la sol en position 1
-                            tab1 = iptro_p1[nd]; //Pour les transferts, valeur d'interp dans Density_P1
-                            tab2 = iptstk + shift_dom + irac_lbmns*taille_rac_max;
-                            //cout << shift_dom + irac_lbmns*taille_rac_max << endl;
-
-                            copy_valuespara_( param_intt[nd], donorPts, donorPts_, tab1, tab2, ind, sol, taillefenetre);
-
-                            /// Recuperation de la solution un+1 dans Density
-                            tab1 = iptro[nd];
-
-                            copy_valuespara_( param_intt[nd], donorPts, donorPts_, tab1, tab2, ind, sol, taillefenetre);
-
-                            /// Stockage de la sol un-1 (en fait on passe un dans un-1)
-                            tab2 = iptstk + shift_dom + irac_lbmns*taille_rac_max;
-                            E_Int sol_i = 0; //La solution en position 0
-                            E_Int sol_d = 2; //passe en position 2 dans stk
-
-                            shiftstk_para_( param_intt[nd], donorPts, donorPts_, tab2, sol_i, sol_d, taillefenetre);
-
-                          }
-                       // Si NS implicite (Gear) on met u_n+1 dans Density_P1
-                       else
-                          {
-                            //cout << "Hello je passe dans implicite" << endl;
-                            /// Recuperation de la solution un+1 dans Density_P1 pour transfert
-                            ind = 2; //Recuperation
-                            sol = 1; //Recupere la sol en position 1
-                            tab1 = iptro_p1[nd]; //Pour les transferts, valeur d'interp dans Density_P1
-                            tab2 = iptstk + shift_dom + irac_lbmns*taille_rac_max;
-                            //cout << shift_dom + irac_lbmns*taille_rac_max << endl;
-
-                            copy_valuespara_( param_intt[nd], donorPts, donorPts_, tab1, tab2, ind, sol, taillefenetre);
-                          }
-
-#pragma omp barrier
-
-                     }
-
-                   if(nstep>3 and flag_implicit==1)
-                     {
-                       /// Recuperation de la solution un+1 dans Density_P1 pour transfert
-                       ind = 2; //Recuperation
-                       sol = 1; //Recupere la sol en position 1
-                       tab1 = iptro_p1[nd]; //Pour les transferts, valeur d'interp dans Density_P1
-                       tab2 = iptstk + shift_dom + irac_lbmns*taille_rac_max;
-                       //cout << shift_dom + irac_lbmns*taille_rac_max << endl;
-
-                       copy_valuespara_( param_intt[nd], donorPts, donorPts_, tab1, tab2, ind, sol, taillefenetre);
-
-#pragma omp barrier
-
-                     }
-
-                } //fin boulce raccords
-
-              shift_dom = shift_dom + nb_rac_zone*taille_rac_max;
-
-         } //fin if LBM
-
-       } // boucle raccords
-  } // fin zone omp
-
- RELEASESHAREDN( interpArray  , stk );
  RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL);
  RELEASESHAREDN(pyParam_int    , param_int    );
  RELEASESHAREDN(pyParam_real   , param_real   );

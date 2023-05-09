@@ -132,19 +132,6 @@ C_LOCAL
         !calcul volume(DF et VF pour volume) from x,y,z
         call cp_vol(param_int, x,y,z,ti,tj,tk,ti0,tj0,tk0, vol, ind_mtr)
 
-      if (param_int(LALE) .eq. 3) then
-        shift_vol = param_int( NDIMDX_MTR)
-
-        do k = ind_mtr(5), ind_mtr(6)
-        do j = ind_mtr(3), ind_mtr(4)
-        do i = ind_mtr(1), ind_mtr(2)
-            l = indmtr(i  ,j  ,k  )
-            vol(l+shift_vol) = vol(l)
-        enddo
-        enddo
-        enddo
-      endif
-
 !$OMP BARRIER
 !! Barrier car besoin normale et volume OK pour extrapol
 
@@ -326,12 +313,23 @@ C_LOCAL
      &                        param_int(NIJK), param_int( NIJK_XYZ ),
      &                        ind_dm_zone, degener, dist)
         endif
-
-
-
 !$OMP END SINGLE
 
       endif !extrap typezone
+
+      if (param_int(LALE) .eq. 3) then
+        shift_vol = param_int( NDIMDX_MTR)
+
+        do k = ind_mtr(5), ind_mtr(6)
+        do j = ind_mtr(3), ind_mtr(4)
+        do i = ind_mtr(1), ind_mtr(2)
+            l = indmtr(i  ,j  ,k  )
+            vol(l+shift_vol) = vol(l)
+        enddo
+        enddo
+        enddo
+      endif
+!$OMP BARRIER
 
         l_initmtr=.true.
       ENDIF
