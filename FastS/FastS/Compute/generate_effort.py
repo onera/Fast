@@ -153,7 +153,7 @@ for ale in TypeMotion:
                         lines[i]=lines[i].replace("fluVisc","SA/fluVisc").replace("assemble","SA/assemble").replace("flu_send","SA/flu_send")
                     eq2 = eq+'_'
 
-			    # creation subroutine fortran du flux
+                # creation subroutine fortran du flux
                 name_routine = 'eff_'+flux+ale1+eq+'_'+slope+'_'+typezone
                 name_fluEuler= 'fluFaceEuler' +ale1 +slope+ '_'+typezone
                 name_fluRans = 'fluFace'  +eq +'_'+slope

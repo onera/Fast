@@ -87,7 +87,7 @@ for ale in TypeMotion:
                             for i in range( 60 ):
                                 lines[i]=lines[i].replace("wig( param_int(NDIMDX)     * 3                  )", "wig( param_int(NDIMDX)     * 4                  )")
 
-			# suppression fluk en 2d et metrique k (pour que mode debug soit OK)
+                        # suppression fluk en 2d et metrique k (pour que mode debug soit OK)
                         if typezone == '2d': 
                                 c = 0
                                 for l in lines:
@@ -98,7 +98,7 @@ for ale in TypeMotion:
                                 for i in range( len(lines) ):
                                       lines[i]=lines[i].replace("tcz = tk(lt)","").replace("sk      = abs (tcz)","")
 
-			# suppression minmod
+                        # suppression minmod
                         if slope != 'minmod': 
                                 c = 0
                                 for l in lines:
