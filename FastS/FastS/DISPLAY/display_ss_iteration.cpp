@@ -29,12 +29,12 @@ using namespace K_FLD;
 PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* cvg_numpy;
-  E_Int nitrun; E_Int lft; E_Int nssiter;  E_Int iverb; E_Int is_save_first;
+  E_Int nitrun; E_Int lft; E_Int nssiter;  E_Int iverb;
 
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOlllll", &zones, &metrics, &cvg_numpy, &nitrun, &nssiter, &lft, &iverb, &is_save_first)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOllll", &zones, &metrics, &cvg_numpy, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
 #else 
-  if (!PyArg_ParseTuple(args, "OOOiiiii", &zones, &metrics, &cvg_numpy, &nitrun, &nssiter, &lft, &iverb, &is_save_first)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOOiiii", &zones, &metrics, &cvg_numpy, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
 #endif
   
   // tableau residu Newton de la zone
@@ -118,11 +118,11 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
 		        E_Float rmoy= 0.;
 		        E_Int no_rdm;
             
-		        for (E_Int k_lu= 0; k_lu < ijkv_lu[2] ; k_lu++) 
+		        for (E_Int k_lu= 0; k_lu < ijkv_lu[2]; k_lu++) 
             {
-			        for (E_Int j_lu= 0; j_lu < ijkv_lu[1] ; j_lu++) 
+			        for (E_Int j_lu= 0; j_lu < ijkv_lu[1]; j_lu++) 
               {
-			          for (E_Int i_lu= 0; i_lu < ijkv_lu[0] ; i_lu++) 
+			          for (E_Int i_lu= 0; i_lu < ijkv_lu[0]; i_lu++) 
                 {
 			            no_rdm = i_lu + j_lu*ijkv_lu[0] + k_lu*ijkv_lu[0]*ijkv_lu[1];
 

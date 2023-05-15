@@ -149,11 +149,10 @@ c= 0
 for met in metrics:
   for me in met:
      print 'c=',c, me
-
   c+=1
 '''
 #import sys; sys.exit()
-C.convertPyTree2File(t, 't.cgns')
+#C.convertPyTree2File(t, 't.cgns')
 #import sys; sys.exit()
 t2 = Internal.copyTree(t)
 Internal._rmNodesByName(t2, '.Solver#Param')

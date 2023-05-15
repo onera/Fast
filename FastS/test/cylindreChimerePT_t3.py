@@ -171,6 +171,9 @@ for it in range(100):
     
     FastS._compute(t, metrics, it, tc, None, layer="Python", ucData=ucData)
 
+    if it%numb["modulo_verif"] == 0: 
+        FastS.displayTemporalCriteria(t, metrics, it)
+    
 for adt in dictOfADT.values():
     if adt is not None: C.freeHook(adt)
 C._rmVars(t, 'centers:cellN#Motion')

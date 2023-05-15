@@ -284,10 +284,10 @@ else
 
     iptssor[nd] = NULL; iptssortmp[nd] = NULL;
     if (ipt_param_int[nd][ NB_RELAX ] > 1 || ipt_param_int[nd][ LU_MATCH ] ==1) // 1 = LUSSOR
-      {
-	iptssor[nd]    = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd));
-	iptssortmp[nd] = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd + 1));
-      }
+    {
+      iptssor[nd]    = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd));
+      iptssortmp[nd] = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd + 1));
+    }
   
     //Pointeur sfd
     if (ipt_param_int[nd][ SFD ] == 1)
@@ -346,13 +346,13 @@ else
        if (t2 != NULL) { ipt_cfl_zones[nd] = K_PYTREE::getValueAF(t2, hook);}
     }
 
-    if( ipt_param_int[ nd ][ MXSSDOM_LU ] > nisdom_lu_max) nisdom_lu_max = ipt_param_int[ nd ][ MXSSDOM_LU ];
+    if (ipt_param_int[ nd ][ MXSSDOM_LU ] > nisdom_lu_max) nisdom_lu_max = ipt_param_int[ nd ][ MXSSDOM_LU ];
 
     ndimt      += ipt_param_int[nd][ NDIMDX ];
     ndim_drodm += ipt_param_int[nd][ NDIMDX ]*ipt_param_int[nd][ NEQ ];
 
-    if (ipt_param_int[nd][ ITYPCP ]      <= 1     ) kimpli     = 1;
-    if (ipt_param_int[nd][ IFLAGFLT ]    == 1     ) kfiltering = 1;
+    if (ipt_param_int[nd][ ITYPCP ]      <= 1) kimpli     = 1;
+    if (ipt_param_int[nd][ IFLAGFLT ]    == 1) kfiltering = 1;
     if (ipt_param_int[nd][ IFLOW ] >= 2 &&  ipt_param_int[nd][ ILES ] == 1 && ipt_param_int[nd][ IJKV+ 2] > 1) kles = 1;
 
      //Recherche domaine a filtrer
@@ -422,11 +422,11 @@ else
       size_hessenb = num_max_vect*(num_max_vect-1);
       if (ipt_param_int[0][IFLOW   ] == 3) ndim_xmutd = ndimt;
       if (ipt_param_int[0][NB_RELAX] != 0)
-      	{
-      	  ipt_gmrestmp[0] = iptgmrestmp;
-      	  for (E_Int nd = 1; nd < nidom; nd++)
-      	    ipt_gmrestmp[nd] = ipt_gmrestmp[nd - 1] + ipt_param_int[nd - 1][NDIMDX] * ipt_param_int[nd - 1][NEQ];
-      	}
+      {
+        ipt_gmrestmp[0] = iptgmrestmp;
+        for (E_Int nd = 1; nd < nidom; nd++)
+          ipt_gmrestmp[nd] = ipt_gmrestmp[nd - 1] + ipt_param_int[nd - 1][NDIMDX] * ipt_param_int[nd - 1][NEQ];
+      }
     }
   else{ndim_drodm =1; }
 
@@ -505,17 +505,17 @@ else
   FldArrayI ind_CL(          24*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
   FldArrayI ind_dm_omp(      12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
-  FldArrayI tab_verrou_lhs(2*mx_nidom*threadmax_sdm); E_Int* verrou_lhs =  tab_verrou_lhs.begin();
+  FldArrayI tab_verrou_lhs(2*mx_nidom*threadmax_sdm); E_Int* verrou_lhs = tab_verrou_lhs.begin();
 
-  FldArrayF cfl( nidom*3*threadmax_sdm); E_Float* ipt_cfl = cfl.begin();
+  FldArrayF cfl(nidom*3*threadmax_sdm); E_Float* ipt_cfl = cfl.begin();
 
-  if(lcfl ==1 && nstep_deb == 1)
+  if (lcfl ==1 && nstep_deb == 1)
   { 
     for (E_Int i = 0;  i <  nidom*threadmax_sdm; i++){ ipt_cfl[ i*3 ] = 0;  ipt_cfl[ i*3 +1] = 100000000; ipt_cfl[ i*3 +2] = 0; }
   }
 
   E_Float time_trans =0;
-// Iteration C level
+  // Iteration C level
   // 
   // 
   // 
@@ -567,7 +567,7 @@ else
          E_Int display = 0;
          K_FASTC::distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun_split, display );
        }
-       if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;}
+       if (init_exit==0) {lexit_lu= 0;lssiter_verif = 0;}
        
      }
 
@@ -605,7 +605,7 @@ else
             iptrdm             ,
             iptroflt           , iptroflt2        , iptwig            , iptstat_wig   ,
             iptdrodm           , iptcoe           , iptrot            , iptdelta         , iptro_res, iptdrodm_transfer  ,
-            ipt_param_int_tc   , ipt_param_real_tc, ipt_linelets_int, ipt_linelets_real,
+            ipt_param_int_tc   , ipt_param_real_tc, ipt_linelets_int,   ipt_linelets_real,
             taille_tabs        , iptstk           , iptdrodmstk       , iptcstk          , iptsrc);
 
 
@@ -627,36 +627,36 @@ else
 
             E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + threadmax_sdm ];
 
-            for (E_Int ithread = 1; ithread < Nbre_thread_actif_loc ; ithread++) 
-              {
-               E_Float* ipt_cfl_thread  = ipt_cfl + ithread*3+ nd*3*threadmax_sdm;
+            for (E_Int ithread = 1; ithread < Nbre_thread_actif_loc; ithread++) 
+            {
+              E_Float* ipt_cfl_thread  = ipt_cfl + ithread*3+ nd*3*threadmax_sdm;
 
-               ipt_cfl_zones[nd][0] = max( ipt_cfl_zones[nd][0], ipt_cfl_thread[0]);
-               ipt_cfl_zones[nd][1] = min( ipt_cfl_zones[nd][1], ipt_cfl_thread[1]);
-               ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]+ ipt_cfl_thread[2];
-              }
+              ipt_cfl_zones[nd][0] = max( ipt_cfl_zones[nd][0], ipt_cfl_thread[0]);
+              ipt_cfl_zones[nd][1] = min( ipt_cfl_zones[nd][1], ipt_cfl_thread[1]);
+              ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]+ ipt_cfl_thread[2];
+            }
             ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]/scale;
-            //printf("cpPT cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[nd][0],ipt_cfl_zones[nd][1],ipt_cfl_zones[nd][2]);
+            printf("cpPT cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[nd][0],ipt_cfl_zones[nd][1],ipt_cfl_zones[nd][2]);
           }
        }//test mise a jour cfl
 
        
        if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]!= 0) // mise a jour du temps par zone en explicite local
-	 {
-	   for (E_Int nd = 0; nd < nidom ; nd++) 
-	     {
-	       E_Int cycl = ipt_param_int[nd][NSSITER]/ipt_param_int[nd][LEVEL];
-	       if (nstep%cycl == 0)
-		 {
-		   ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]/float(ipt_param_int[nd][LEVEL]);
-		 }
-	     }
-	 }
+       {
+        for (E_Int nd = 0; nd < nidom ; nd++) 
+        {
+          E_Int cycl = ipt_param_int[nd][NSSITER]/ipt_param_int[nd][LEVEL];
+          if (nstep%cycl == 0)
+          {
+            ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]/float(ipt_param_int[nd][LEVEL]);
+          }
+        }
+      }
 
-       else if((ipt_param_int[0][EXPLOC] == 0 && nstep == nssiter && lssiter_verif==1) || (ipt_param_int[0][EXPLOC] == 0 && nstep == nssiter-1 && lssiter_verif==0))  // mise a jour  du temps courant pour les schemas autres que l'explicite local
-     {
+      else if((ipt_param_int[0][EXPLOC] == 0 && nstep == nssiter && lssiter_verif==1) || (ipt_param_int[0][EXPLOC] == 0 && nstep == nssiter-1 && lssiter_verif==0))  // mise a jour  du temps courant pour les schemas autres que l'explicite local
+      {
         for (E_Int nd = 0; nd < nidom ; nd++) { ipt_param_real[nd][TEMPS]= ipt_param_real[nd][TEMPS]+ ipt_param_real[nd][DTC]; }
-     }
+      }
        
      }//test calcul NS
 
@@ -666,10 +666,10 @@ else
    //switch pointer
    //E_Float** ptsav = roM1; roM1 = roN; roN = roP1; roP1 = ptsav;
    for (E_Int nd = 0; nd < nidom ; nd++)
-      { E_Float* ptsave  = iptro_m1[nd]; 
-	iptro_m1[nd]= iptro[nd]; 
-        iptro[nd]   = iptro_p1[nd];
-        iptro_p1[nd]= ptsave;}
+   { E_Float* ptsave  = iptro_m1[nd]; 
+     iptro_m1[nd]= iptro[nd]; 
+     iptro[nd]   = iptro_p1[nd];
+     iptro_p1[nd]= ptsave; }
 
   }//loop nit_c
 

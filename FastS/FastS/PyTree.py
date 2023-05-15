@@ -2091,11 +2091,11 @@ def _computeGrad(t, metrics, varlist, order=2):
 #==============================================================================
 # Display
 #==============================================================================
-def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', isSaveFirst=True, stopAtNan=True):
+def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', stopAtNan=True):
     """Display CFL and convergence information."""
-    return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose, isSaveFirst, stopAtNan)
+    return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose, stopAtNan)
 
-def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', isSaveFirst=True, stopAtNan=True):
+def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', stopAtNan=True):
     own          = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc        = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc_numpy  = Internal.getValue(dtloc)
@@ -2125,13 +2125,12 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbo
 
     iverb = 0
     if verbose != 'firstlast': iverb=2
-    residu = fasts.display_ss_iteration(zones, metrics, cvg_numpy, nitrun, nssiter, lft, iverb, int(isSaveFirst))
+    residu = fasts.display_ss_iteration(zones, metrics, cvg_numpy, nitrun, nssiter, lft, iverb)
 
     if stopAtNan:
-        ret = Cmpi.isFinite(t, var='centers:Density')
-        if ret:
-            import sys
-            sys.exit()
+        finite = Cmpi.isFinite(t, var='centers:Density')
+        if not finite:
+            import sys; sys.exit(1) # return 1 to shell
 
     if gmres is None: return None
     else: return residu
