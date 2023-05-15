@@ -163,10 +163,11 @@ for it in range(500):
     C._initVars(t, "{centers:cellN}=minimum(2,{centers:cellN#Motion})")
 
     ucData = (graphX, intersectionDict, dictOfADT, 
-            dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-            dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-            dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
-            time, procDict, True, 0, 1, 2)
+              dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+              dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+              dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
+              time, procDict, True, 0,
+              1, 2, 1) # freq, order, verbose
     
     FastS._compute(t, metrics, it, tc, None, layer="Python", ucData=ucData)
 

@@ -10,6 +10,7 @@ __version__ = FastS.__version__
 
 try:
     import Converter.PyTree as C
+    import Converter.Mpi as Cmpi
     import Converter.Internal as Internal
     import Connector
     import Connector.PyTree as X
@@ -185,7 +186,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                 dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                 dictOfNobOfDnrZones, dictOfNozOfDnrZones,
                 dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
-                time, procDict, interpInDnrFrame, varType, tfreq, order) = ucData
+                time, procDict, interpInDnrFrame, varType, tfreq, order, verbose) = ucData
                 
                 if nstep%2 == 0 and itypcp == 2: 
                     VARS = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
@@ -204,7 +205,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                                     time=time, absFrame=True,
                                     procDict=procDict, cellNName='cellN#Motion', 
                                     interpInDnrFrame=interpInDnrFrame, order=order, 
-                                    hook=hookTransfer)
+                                    hook=hookTransfer, verbose=verbose)
                     #print('t_transfert = ',  Time.time() - t0 ,'nstep =', nstep)
               #print('t_transferts = %f'%(Time.time() - t0)
               tps_tr += Time.time()-tic
@@ -2090,11 +2091,11 @@ def _computeGrad(t, metrics, varlist, order=2):
 #==============================================================================
 # Display
 #==============================================================================
-def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', isSaveFirst=True):
+def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', isSaveFirst=True, stopAtNan=True):
     """Display CFL and convergence information."""
-    return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose, isSaveFirst)
+    return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose, isSaveFirst, stopAtNan)
 
-def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', isSaveFirst=True):
+def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', isSaveFirst=True, stopAtNan=True):
     own          = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc        = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc_numpy  = Internal.getValue(dtloc)
@@ -2124,7 +2125,13 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbo
 
     iverb = 0
     if verbose != 'firstlast': iverb=2
-    residu = fasts.display_ss_iteration( zones, metrics, cvg_numpy, nitrun, nssiter, lft, iverb, int(isSaveFirst))
+    residu = fasts.display_ss_iteration(zones, metrics, cvg_numpy, nitrun, nssiter, lft, iverb, int(isSaveFirst))
+
+    if stopAtNan:
+        ret = Cmpi.isFinite(t, var='centers:Density')
+        if ret:
+            import sys
+            sys.exit()
 
     if gmres is None: return None
     else: return residu

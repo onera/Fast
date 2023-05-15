@@ -187,7 +187,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                    dictOfNobOfRcvZones, dictOfNozOfRcvZones,
                    dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
                    dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
-                   time, procDict, interpInDnrFrame, varType, tfreq, order) = ucData
+                   time, procDict, interpInDnrFrame, varType, tfreq, order, verbose) = ucData
 
                    if nstep%2 == 0 and itypcp == 2: 
                        VARS = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
@@ -206,7 +206,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                                     time=time, absFrame=True,
                                     procDict=procDict, cellNName='cellN#Motion', 
                                     interpInDnrFrame=interpInDnrFrame, order=order, 
-                                    hook=hookTransfer, verbose=3)
+                                    hook=hookTransfer, verbose=verbose)
                tps_tr += Time.time()-tic  
 
     else: 

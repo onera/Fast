@@ -1051,11 +1051,12 @@ def _buildOwnData(t, Padding):
     if rk == 2 and exploc==0 and temporal_scheme == "explicit": nssiter = 2 # explicit global
     if rk == 3 and exploc==0 and temporal_scheme == "explicit": nssiter = 3 # explicit global
 
+    size_omp = MX_OMP_SIZE_INT
     if MX_OMP_SIZE_INT == 25*OMP_NUM_THREADS:
-       print("resize MX_OMP_SIZE_INT dans buildOwndata")
-       ntask =len(zones)*2  # 4 sous-zone max par zone en moyenne 
-       size_task=  (6 + 7*OMP_NUM_THREADS)*ntask
-       size_omp =  1 + nssiter*(2 + size_task)
+       #print("resize MX_OMP_SIZE_INT dans buildOwndata")
+       ntask = len(zones)*2  # 4 sous-zones max par zone en moyenne 
+       size_task =  (6 + 7*OMP_NUM_THREADS)*ntask
+       size_omp  =  1 + nssiter*(2 + size_task)
        MX_OMP_SIZE_INT = size_omp
 
     nitCyclLBM = 2**(maxlevel-1)
@@ -1080,9 +1081,9 @@ def _buildOwnData(t, Padding):
     for it in range(nitCyclLBM):
       for level in range(maxlevel,0,-1):
          it_tg = 2**(level-1) 
-         if it%it_tg==0: 
+         if it%it_tg == 0: 
              datap[12+it]=level
-             print('Nblevel',datap[12+it],'itCycl=',it )
+             #print('Nblevel',datap[12+it],'itCycl=',it )
              break
        
     for it in range(nssiter):
@@ -3274,6 +3275,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
 # IN: NP: 0 (seq run), >0 (mpi run, distributed), <0 (seq, save multiple)
 # IN: split: 'single', 'multiple'
 # IN: fileName: name of output file or dir
+# IN: compress=1 (cartesian), =2 (all)
 # single: write restart.cgns (full)
 # multiple: write restart/restart_1.cgns, ... (partial trees)
 #==============================================================================

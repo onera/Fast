@@ -340,8 +340,8 @@ else
     if(ipt_param_int[nd][ LALE ] == 2){ ipt_degen[ nd ] = K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_DEGEN) );}
     else{ ipt_degen[ nd ] =  NULL;}
  
-    if(lcfl  == 1 && nstep_deb ==1 ) 
-    { 
+    if (lcfl == 1 && nstep_deb == 1) 
+    {
        PyObject* t2 = K_PYTREE::getNodeFromName1(numerics, "CFL_minmaxmoy");
        if (t2 != NULL) { ipt_cfl_zones[nd] = K_PYTREE::getValueAF(t2, hook);}
     }

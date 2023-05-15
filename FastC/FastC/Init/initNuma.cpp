@@ -64,7 +64,7 @@ PyObject* K_FASTC::initNuma(PyObject* self, PyObject* args)
   E_Int* ipt_omp = iptdtloc + shift_omp;
 
 
-  E_Int ndo    =1;
+  E_Int ndo = 1;
   E_Int max_thread = 1;
 #ifdef _OPENMP
   max_thread = omp_get_max_threads(); // !nombre de thread maximal dans le calcul
@@ -111,7 +111,7 @@ PyObject* K_FASTC::initNuma(PyObject* self, PyObject* args)
  
      E_Int shiftvar = ivar* (ipt_param_int[NIJK]*ipt_param_int[NIJK+1]*ipt_param_int[NIJK+2] + ipt_param_int[SHIFTVAR]) ;
 
-  if(thread_numa == 0)
+  if (thread_numa == 0)
   { 
      E_Int* ipt_thread_topology   = thread_topology.begin()   + 3*(ithread-1);
      E_Int* ipt_ind_dm_socket     = ind_dm_socket.begin()     + 6*(ithread-1);
@@ -216,7 +216,7 @@ PyObject* K_FASTC::initNuma(PyObject* self, PyObject* args)
     E_Int   ndom = ipt_param_int[ NONZ];
 
     // recuperation nO tache en fonction No de zone
-    E_Int pttask; E_Int nd=-999; 
+    E_Int pttask = ptiter; E_Int nd=-999; 
     for (E_Int ntask = 0; ntask < nbtask; ntask++)
         {
          pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
@@ -227,8 +227,8 @@ PyObject* K_FASTC::initNuma(PyObject* self, PyObject* args)
  
     //printf("nd, ndom= %d %d \n", nd, ndom);
 
-    E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
-    E_Int*    inddm_omp         = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
+    E_Int ithread_loc     = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+    E_Int*    inddm_omp   = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
 
     inddm[0] = inddm_omp[0];
     inddm[1] = inddm_omp[1];
