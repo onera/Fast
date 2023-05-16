@@ -166,23 +166,24 @@ PyObject* K_FASTC::souszones_list(PyObject* self, PyObject* args)
   E_Int init_exit =0;
   if( ( nidom_loc==-1 || nitrun%iptdtloc[1] == 0 ) && ipt_param_int[0][ITYPZONE] !=4)
   {
-    //printf("1ere passe %d %d %d %d %d \n", nidom_loc, nstep, nitrun,nitrun%iptdtloc[1], iptdtloc[1] );
     init_exit      = 1;
     E_Int flag_res = 1;
     souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, 
                       nitrun, nstep, flag_res, lexit_lu, lssiter_verif);
+
+    //printf("1ere passe %d %d %d %d %d , lssiter_verif: %d \n", nidom_loc, nstep, nitrun,nitrun%iptdtloc[1], iptdtloc[1],lssiter_verif  );
   }
 
   //calcul distri si implicit ou explicit local + modulo verif et maillage structure 
   E_Int nitrun_loc = nitrun - 1;
   if (lssiter_loc >=2)nitrun_loc=nitrun;
 
-  //if( nidom_loc==-1 || ((lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2))  && nitrun_loc%iptdtloc[1] == 0 ) && ipt_param_int[0][ITYPZONE] !=4 ) 
-  if ( (nidom_loc==-1 || lssiter_loc >=1) && ipt_param_int[0][ITYPZONE] !=4 ) 
+  if( nidom_loc==-1 || (  (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2)  )  && nitrun_loc%iptdtloc[1] == 0 ) && ipt_param_int[0][ITYPZONE] !=4 ) 
+  //if ( (nidom_loc==-1 || (lssiter_loc >=1 && nitrun_loc%iptdtloc[1] == 0 ) ) && ipt_param_int[0][ITYPZONE] !=4 ) 
   {
-    //printf("2eme passe %d %d\n", nstep, nitrun);
     E_Int flag_res = 0;
     souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom, nitrun_loc, nstep, flag_res, lexit_lu, lssiter_verif);
+    //printf("2eme passe nstep, nitrun  %d %d , lssiter_verif= %d %d \n", nstep, nitrun,lssiter_verif, init_exit );
     if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
     if (iptdtloc[1]==1) {lssiter_verif = 1; if (nstep == iptdtloc[0] && ipt_param_int[0][ITYPCP]!=2){ lexit_lu = 1;}  }
     E_Int display = 0;

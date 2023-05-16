@@ -103,33 +103,7 @@ c     Var loc
 
          END IF               
 
-       
-      ELSE IF (lssiter_loc.eq.3.and.param_int(IFLOW).eq.4) THEN ! Explicite local LBM
-   
-         it_cycl_lbm = dtloc(10)
-         level_tg = dtloc(12 +it_cycl_lbm)
-
-         !write(*,*)'it_cycl_lbm', it_cycl_lbm,'level_tg', level_tg
-
-         If (param_int(LEVEL).le.level_tg) Then
-
-           ndfin = ndfin + 1
-
-      !write(*,*)'init_ssiter_bloc: ndfin, nitcfg,ndom', ndfin, nitcfg,nd
-
-           ind_dm(1, ndfin, nitcfg)   = 1
-           ind_dm(3, ndfin, nitcfg)   = 1
-           ind_dm(5, ndfin, nitcfg)   = 1
-           ind_dm(2, ndfin, nitcfg)   = ijkv(1)
-           ind_dm(4, ndfin, nitcfg)   = ijkv(2)
-           ind_dm(6, ndfin, nitcfg)   = ijkv(3)
-         
-           nisdom_residu( nitcfg)     = 1
-
-         End if  
-
-
-      ELSE                      !explict global ou implicit ss-iter constant 
+      ELSE                      !explict global, LBM  ou implicit ss-iter constant 
      
          ndfin = ndfin + 1
 

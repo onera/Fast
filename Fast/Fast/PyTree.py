@@ -129,7 +129,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
        for nstep in range(1, int(dtloc[0])+1):
            hook1       = FastC.HOOK.copy()
            hook1.update(FastC.fastc.souszones_list(zones_str, metrics_str, FastC.HOOK, 1, nstep, verbose) )
-    
+ 
     #init metric 
     FastC.fastc.init_metric(zones_str  , metrics_str  , hook1)
     #FastP.fastp.init_metric(zones_unstr, metrics_unstr, FastC.HOOK)
@@ -254,10 +254,9 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     nstep            = 0
     nitrun           = 0
 
-    # creation data dans param_int/real  pour interp temporelle LBM/NS et LBM/LBM
-    FastC._InterpTemporelcompact(t,tc)
-    # init pour interp temporell
-    FastLBM.fastaslbm.interp_temporel(zones, 1,1,-10)
+    # creation/init data dans param_int/real  pour interp temporelle LBM/NS et LBM/LBM
+    init_interp = FastC._InterpTemporelcompact(t,tc)
+    if not init_interp: FastLBM.fastaslbm.interp_temporel(zones, 1,1,-10)
 
     # data pour interp temporel couplage NS/LBM
     hook1 = FastC.HOOK.copy(); hook1.update( {'lexit_lu':0, 'lssiter_verif':0})
@@ -624,8 +623,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     if  NIT%2 != 0:
       FastC.switchPointersLBM__(zones_lbm, FastLBM.NQ, dtloc)
 
+    maxlevel   = dtloc[9]
+    nitCyclLBM = 2**(maxlevel-1)
     dtloc[10]+=1    #itCycl_lbm
-    if dtloc[10] == dtloc[9]+1: dtloc[10]=0
+    if dtloc[10] == nitCyclLBM: dtloc[10]=0
 
 
     # flag pour derivee temporelle 1er pas de temps implicit

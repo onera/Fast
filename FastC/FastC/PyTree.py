@@ -828,30 +828,6 @@ def _buildOwnData(t, Padding):
 
     global  MX_OMP_SIZE_INT
     # Data for each Base
-    bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
-
-    #init time et No iteration
-    it0 =0; temps=0.; timelevel_motion= 0; timelevel_target= 0
-    first = Internal.getNodeFromName1(t, 'Iteration')
-    if first is not None: it0 = Internal.getValue(first)
-    first = Internal.getNodeFromName1(t, 'Time')
-    if first is not None: temps = Internal.getValue(first)
-    first = Internal.getNodeFromName1(t, 'TimeLevelMotion')
-    if first is not None: timelevel_motion = Internal.getValue(first)
-    first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
-    if first is not None: timelevel_target = Internal.getValue(first)
-
-    MafzalMode = 3
-    first = Internal.getNodeFromName1(t, 'MafzalMode')
-    if first is not None: MafzalMode = Internal.getValue(first)
-
-    AlphaGradP = 1
-    first = Internal.getNodeFromName1(t, 'AlphaGradP')
-    if first is not None: AlphaGradP = Internal.getValue(first)
-
-    NbptsLinelets = 0
-    first = Internal.getNodeFromName1(t, 'NbptsLinelets')
-    if first is not None: NbptsLinelets = Internal.getValue(first)
 
     # Available keys for bases and zones
     # 0: requires an int, 1: requires a float, 2: requires any string, 
@@ -949,6 +925,58 @@ def _buildOwnData(t, Padding):
     'DiameterWire_p':1,
     'CtWire_p':1    
     }
+
+    bases = Internal.getNodesFromType1(t, 'CGNSBase_t')  # noeud
+
+    flaglbm=False
+    for base in bases:
+      model    = 'NSLaminar'
+      a        = Internal.getNodeFromName2(base, 'GoverningEquations')
+      if a is not None: model = Internal.getValue(a)
+
+      if model == 'LBMLaminar': 
+          flaglbm=True
+          break
+      zones= Internal.getZones(base)
+      for z in zones:
+
+        model_z = None
+        a = Internal.getNodeFromName2(z, 'GoverningEquations')
+        if a is not None: model_z = Internal.getValue(a)
+
+        if model_z == 'LBMLaminar': 
+            flaglbm=True
+            break
+
+    #init time et No iteration
+    it0 =0; temps=0.; timelevel_motion= 0; timelevel_target= 0;LBMCycleIteration=0
+    first = Internal.getNodeFromName1(t, 'Iteration')
+    if first is not None: it0 = Internal.getValue(first)
+    first = Internal.getNodeFromName1(t, 'Time')
+    if first is not None: temps = Internal.getValue(first)
+    first = Internal.getNodeFromName1(t, 'TimeLevelMotion')
+    if first is not None: timelevel_motion = Internal.getValue(first)
+    first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
+    if first is not None: timelevel_target = Internal.getValue(first)
+    first = Internal.getNodeFromName1(t, 'LBMCycleIteration')
+    if first is not None: LBMCycleIteration = Internal.getValue(first)
+    else:
+       if flaglbm: Internal.createUniqueChild(t, 'LBMCycleIteration', 'DataArray_t', value=0)
+
+
+    MafzalMode = 3
+    first = Internal.getNodeFromName1(t, 'MafzalMode')
+    if first is not None: MafzalMode = Internal.getValue(first)
+
+    AlphaGradP = 1
+    first = Internal.getNodeFromName1(t, 'AlphaGradP')
+    if first is not None: AlphaGradP = Internal.getValue(first)
+
+    NbptsLinelets = 0
+    first = Internal.getNodeFromName1(t, 'NbptsLinelets')
+    if first is not None: NbptsLinelets = Internal.getValue(first)
+
+
 
     zones = Internal.getZones(t)
 
@@ -1074,8 +1102,8 @@ def _buildOwnData(t, Padding):
     datap[7] = it0
     datap[8] = ompmode
     datap[9] = maxlevel
-    datap[10]= 0   # No it du cycle integration temporelle LBM
-    datap[11]= dtdim   # shift pour acceder au info OMP
+    datap[10]= LBMCycleIteration # No it du cycle integration temporelle LBM
+    datap[11]= dtdim             # shift pour acceder au info OMP
 
     # level max pour chaque it du cycle LBM
     for it in range(nitCyclLBM):
@@ -1098,6 +1126,8 @@ def _buildOwnData(t, Padding):
     if first is not None: first[1]=dtloc[4:5]
     first = Internal.getNodeFromName1(t, 'Iteration')
     if first is not None: first[1]=dtloc[7:8]
+    first = Internal.getNodeFromName1(t, 'LBMCycleIteration')
+    if first is not None: first[1]=dtloc[10:11]
 
 
 
@@ -1152,8 +1182,7 @@ def _buildOwnData(t, Padding):
                        shiftvar =  shiftvars[l]
 
             # zone ownData (generated)
-            o = Internal.createUniqueChild(z, '.Solver#ownData', 
-                                           'UserDefinedData_t')
+            o = Internal.createUniqueChild(z, '.Solver#ownData', 'UserDefinedData_t')
 
             # - defaults -
             model    = "Euler"
@@ -1933,7 +1962,6 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     if exploc == 1:                 lssiter_loc = 2  # dtloc G Jeanmasson   
 
     neq_max =0
-    flaglbm=False
     for z in zones:
         model = "Euler"
         a = Internal.getNodeFromName2(z, 'model')
@@ -1943,7 +1971,6 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
         if model == 'LBMLaminar' :
            neq = param_int[VSHARE.NEQ_LBM]
-           flaglbm = True
         if scheme == 'implicit' or scheme == 'implicit_local':   neq_coe = neq     
         else:                                                    neq_coe = 1    # explicit
 
@@ -1992,10 +2019,6 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 
         c       += 1
      
-     # dtloc LBM: a generalise pour melange dt loc lbm + NS implicit_local   
-    if flaglbm == True: lssiter_loc = 3  
-
-
     #           3 depth     6 faces  5 tableau
     ndimface= neq*3*ndimplan*6*5*len(zones)
     ndimface = min(ndimface, 2000000000)
@@ -2877,6 +2900,91 @@ def _BCcompact(t):
 #==============================================================================
 def _InterpTemporelcompact(t,tc):
     
+    #Test si existance data interp dans l'arbre initial
+    lout = False
+    zones = Internal.getZones(t)
+    for z in zones:
+        o = Internal.getNodeFromName1(z, 'Temporal_Interpolation')
+        if o is not None:
+          lout =True
+          break
+
+    if lout: 
+       for z in zones:
+           # zone ownData (generated)
+           o = Internal.getNodeFromName1(z, 'Temporal_Interpolation')
+           if o is not None:
+             adresse       = Internal.getNodeFromName1(o, 'adresse')[1]
+             temporal_int  = Internal.getNodeFromName1(o, 'data_int')
+             size = numpy.shape(temporal_int[1])
+             size_temporal_int = 1
+             for s in size: size_temporal_int *=s
+
+             temporal_real = Internal.getNodeFromName1(o, 'data_real')
+             size = numpy.shape(temporal_real[1])
+             size_temporal_real=1
+             for s in size: size_temporal_real *=s
+
+
+             #on concatene les donnes interp dans param_int et param_real
+             own = Internal.getNodeFromName1(z, '.Solver#ownData')
+             param_int = Internal.getNodeFromName1(own, 'Parameter_int')
+             size = numpy.shape(param_int[1])
+             size_param_int=1
+             for s in size: size_param_int *=s
+
+             param_real = Internal.getNodeFromName1(own, 'Parameter_real')
+             size = numpy.shape(param_real[1])
+             size_param_real=1
+             for s in size: size_param_real *=s
+
+             if size_temporal_real != 0:
+
+                 #traitement real
+                 new_size = size_temporal_real+size_param_real
+                 datap = numpy.empty(new_size, numpy.float64)
+                 datap[0:size_param_real]        =    param_real[1][0:size_param_real]
+                 datap[size_param_real:new_size] = temporal_real[1][0:size_temporal_real]
+                 param_real[1]    = datap
+                 temporal_real[1] = datap[size_param_real:new_size]
+
+                 #traitement int
+                 new_size = size_temporal_int +size_param_int
+                 datap = numpy.empty(new_size, numpy.int32)
+                 datap[0:size_param_int]        =    param_int[1][0:size_param_int]
+                 datap[VSHARE.PT_INTERP]        =    size_param_int
+   
+                 #actualisation pointeur des raccord au cas ou les tailles du param_int/real soit different a la reprise
+                 nrac = temporal_int[1][0]
+                 for i in range(1,nrac+1):
+                   temporal_int[1][ i      ] = temporal_int[1][ i      ] - adresse[ 0 ] + size_param_int 
+                   temporal_int[1][ i +nrac] = temporal_int[1][ i +nrac] - adresse[ 1 ] + size_param_real
+   
+                 adresse[0] = size_param_int
+                 adresse[1] = size_param_real
+
+                 datap[size_param_int:new_size] = temporal_int[1][0:size_temporal_int]
+                 param_int[1]    = datap
+                 temporal_int[1] = datap[size_param_int:new_size]
+   
+           else: #zone sans interp
+
+             own = Internal.getNodeFromName1(z, '.Solver#ownData')
+             param_int = Internal.getNodeFromName1(own, 'Parameter_int')
+             size = numpy.shape(param_int[1])
+             size_param_int=1
+             for s in size: size_param_int *=s
+
+             new_size = 1 +size_param_int
+             datap = numpy.empty(new_size, numpy.int32)
+             datap[0:size_param_int]        =    param_int[1][0:size_param_int]
+             datap[VSHARE.PT_INTERP]        =    size_param_int
+             datap[size_param_int]          =    0  #pas de raccord
+             param_int[1]                   = datap
+
+       return lout
+
+
     #dimensionnememnt tableau
     sizeRac={}
     zones_tc = Internal.getZones(tc)
@@ -2951,11 +3059,14 @@ def _InterpTemporelcompact(t,tc):
         #on concatene les donnes BC dans param_int et param_real
         param_int = Internal.getNodeFromName1(o, 'Parameter_int')
         size = numpy.shape(param_int[1])
-
+        size_param_int=1
+        for s in size: size_param_int *=s
+        
         if z[0] in sizeRac:
            nrac    = sizeRac[z[0]][0]
            windows = sizeRac[z[0]][1]
            typRac  = sizeRac[z[0]][2]
+           Internal.createUniqueChild(z, 'Temporal_Interpolation', 'UserDefinedData_t')
         else:
            nrac    = 0
            windows =[]
@@ -2969,27 +3080,38 @@ def _InterpTemporelcompact(t,tc):
              nvars_additional=5
              if param_int[1][VSHARE.LBM_OVERSET]==1: nvars_additional +=12
              size_real +=3*win[0]*(param_int[1][VSHARE.NEQ_LBM]+nvars_additional) # LBM-LBM
-          else:                                                              #3 niveau temporel stockes
+          else:                                                                   #3 niveau temporel stockes
              size_real +=3*win[0]*(param_int[1][VSHARE.NEQ])                      # couplage NS/NS ou NS/LBM
           l+=1
 
-        c = 1
-        for s in size: c=c*s
-        size_param_int=c
 
-        datap = numpy.zeros(size_int+c, numpy.int32)
-        datap[0:c]   = param_int[1][0:c]
+        datap = numpy.zeros(size_int+size_param_int, numpy.int32)
+        datap[0:size_param_int]   = param_int[1][0:size_param_int]
         param_int[1] = datap
 
         param_real = Internal.getNodeFromName1(o, 'Parameter_real')
         size = numpy.shape(param_real[1])
-        c = 1
-        for s in size: c=c*s
-        size_param_real=c
+        size_param_real=1
+        for s in size: size_param_real *=s
+
         if size_real != 0:
-            datap = numpy.zeros(size_real+c, numpy.float64)
-            datap[0:c]    = param_real[1][0:c]
+            datap = numpy.zeros(size_real+size_param_real, numpy.float64)
+            datap[0:size_param_real]  = param_real[1][0:size_param_real]
             param_real[1] = datap
+
+            interp = Internal.getNodeFromName1(z,'Temporal_Interpolation')
+            data_real = numpy.empty(size_real, numpy.float64)
+            Internal.createUniqueChild(interp, 'data_real', 'DataArray_t', data_real)
+            data_int  = numpy.empty(size_int, numpy.int32)
+            Internal.createUniqueChild(interp, 'data_int', 'DataArray_t', data_int)
+            adresse   = numpy.empty(2, numpy.int32)
+            adresse[0]= size_param_int
+            adresse[1]= size_param_real
+            Internal.createUniqueChild(interp, 'adresse', 'DataArray_t', adresse)
+            #slice pour partage avec param_real
+            data_real     = Internal.getNodeFromName1(interp,'data_real')
+            data_real[1]  = datap[size_param_real:size_param_real+size_real]
+            data_int      = Internal.getNodeFromName1(interp,'data_int')
 
         ## init new param_int/real
         param_int  = param_int[1]
@@ -3001,7 +3123,6 @@ def _InterpTemporelcompact(t,tc):
         pt_bcs_real=  size_param_real 
         param_int[ pt_bcs_int ] = nrac
 
-        i         = 1
         size_int  = 1 + 2*nrac  # shift pour nrac et pointeur BC_int et BC_real
         size_real = 0
         for i in range(1,nrac+1):
@@ -3034,8 +3155,11 @@ def _InterpTemporelcompact(t,tc):
             size_real +=3*windows[i-1][0]*neq
             size_int  +=9
 
+        #slice pour partage avec param_int
+        if size_real != 0:
+           data_int[1]  = param_int[size_param_int:size_param_int+size_int]
             
-    return None
+    return lout
 
 #==============================================================================
 # Construit les donnees compactees pour traiter des flux conservatif en IBM
