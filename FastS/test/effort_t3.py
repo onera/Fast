@@ -27,26 +27,26 @@ t = C.newPyTree(["Base",a1,a2,a3])
 t = X.connectMatch(t)
 Internal._addGhostCells(t,t,2,adaptBCs=0)
 C._rmBCOfType(t, 'BCMatch')
-C._addBC2Zone(t,'overlap','BCOverlap','imin')
-C._addBC2Zone(t,'overlap','BCOverlap','imax')
-C._addBC2Zone(t,'wall','BCWall','jmin')
+C._addBC2Zone(t, 'overlap', 'BCOverlap', 'imin')
+C._addBC2Zone(t, 'overlap', 'BCOverlap', 'imax')
+C._addBC2Zone(t, 'wall', 'BCWall', 'jmin')
 C._fillEmptyBCWith(t, 'far', 'BCFarfield', dim=3)
 
 adim = Adim.adim1(MInf=MInf, ReInf=40000., MutSMuInf=15)
 X._applyBCOverlaps(t, depth=2)
 tc = C.node2Center(t)
-tc = X.setInterpData(t,tc,nature=1,loc='centers',storage='inverse',sameName=1)
+tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse', sameName=1)
 Internal._rmNodesByName(tc,'GridCoordinates')
 Internal._rmNodesByName(tc,'FlowSolution')
 C._addState(t, MInf=MInf, alphaZ=0.)
 C._addState(t, 'GoverningEquations', 'NSTurbulent')
 I._initConst(t, MInf=MInf, loc='centers')
-C._randomizeVar(t,'centers:Density',0.1,0.1)
-C._randomizeVar(t,'centers:MomentumX',0.01,0.01)
+C._randomizeVar(t,'centers:Density', 0.1, 0.1)
+C._randomizeVar(t,'centers:MomentumX', 0.01, 0.01)
 
 # distance a la paroi
 tb = C.newPyTree(['Body']); tb[2][1][2].append(G.cylinder((0,0,0), 0.5, 25., 360., 0., 0.5, (NI,1,2)))
-DTW._distance2Walls(t,tb,loc='centers',type='ortho')
+DTW._distance2Walls(t, tb, loc='centers', type='ortho')
 #
 # Numerics
 numb = {}
@@ -73,14 +73,15 @@ for z in Internal.getZones(t):
 
 teff = FastS.createStressNodes(t, BC=['BCWall'])
 
-for it in range(1,100):
+for it in range(1, 100):
    FastS._compute(t, metrics, it, tc)
 
 effort = FastS._computeStress(t, teff, metrics)
 #on supprime ghost de l'arbre effort car valeur non initialisee
-Internal._rmGhostCells(teff,teff,2,2)
+Internal._rmGhostCells(teff, teff, 2, 2)
 Internal._rmNodesByName(teff, '.Solver#Param')
 Internal._rmNodesByName(teff, '.Solver#ownData')
+C.convertPyTree2File(teff, 'out.cgns')
 test.testT(teff, 1)
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

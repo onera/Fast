@@ -636,6 +636,7 @@ else
               ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]+ ipt_cfl_thread[2];
             }
             ipt_cfl_zones[nd][2] = ipt_cfl_zones[nd][2]/scale;
+            //printf("cpPT cflmax =%f, cflmin =%f, cflmoy =%f \n",ipt_cfl_zones[nd][0],ipt_cfl_zones[nd][1],ipt_cfl_zones[nd][2]);
           }
        }//test mise a jour cfl
 

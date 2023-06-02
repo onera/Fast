@@ -56,10 +56,6 @@ graph1 ={'graphID':graph, 'graphIBCD':None, 'procDict':procDict}
 #(t, tc, metrics) = FastS.warmup(t, tc, graph=graph)
 (t, tc, metrics) = FastS.warmup(t, tc, graph=None)
 
-if rank==0:
-  print('graph', graph['graphID'],  graph['graphIBCD'])
-  print('dict ', procDict)
-
 nit = 1000; time = 0.
 for it in range(nit):
     FastS._compute(t, metrics, it, tc)

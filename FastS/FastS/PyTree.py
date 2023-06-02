@@ -2308,7 +2308,7 @@ def createStressNodes(t, BC=None, windows=None):
     try: import Transform.PyTree as T
     except: raise ImportError("createStressNodes: requires transform module.")
 
-    vars0 = ['CoordinateX','CoordinateY','CoordinateZ']
+    vars0 = ['CoordinateX','CoordinateY','CoordinateZ','centers:cellN']
     var   = ['Density','MomentumX','MomentumY','MomentumZ','EnergyStagnationDensity']
 
     bases = Internal.getBases(t)
@@ -2316,8 +2316,8 @@ def createStressNodes(t, BC=None, windows=None):
 
     familyBCDict = C.getFamilyBCNamesDict(t)
 
-    own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
-    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+    own   = Internal.getNodeFromName1(t,   '.Solver#ownData')  # noeud
+    dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')    # noeud
 
     teff[2].append(own)
 

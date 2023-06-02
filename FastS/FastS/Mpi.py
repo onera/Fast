@@ -53,7 +53,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
     else:
         grapheliste=False
     
-    if graph is not None and grapheliste==False:
+    if graph is not None and not grapheliste:
         procDict  = graph['procDict']
         graphID   = graph['graphID']
         graphIBCD = graph['graphIBCD']
@@ -62,7 +62,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
           graphInvIBCD = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
         graphInvIBCD_WM  = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
     else: 
-        procDict=None; graphID=None; graphIBCD=None; graphInvIBCD_WM = None
+        procDict=None; graphID=None; graphIBCD=None; graphInvIBCD_WM=None
 
     own  = Internal.getNodeFromName1(t, '.Solver#ownData')  
     dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')
@@ -731,12 +731,12 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     else:
         grapheliste=False
     
-    if graph is not None and grapheliste==False:
+    if graph is not None and not grapheliste:
         procDict  = graph['procDict']
         graphID   = graph['graphID']
         graphIBCD = graph['graphIBCD']
         if isWireModel: graphInvIBCD_WM  = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
-    elif graph is not None and grapheliste==True:
+    elif graph is not None and grapheliste:
         procDict  = graph[0]['procDict']
         graphID   = graph[0]['graphID']
         graphIBCD = graph[0]['graphIBCD']
@@ -791,12 +791,12 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     else:
         grapheliste=False
     
-    if graph is not None and grapheliste==False:
+    if graph is not None and not grapheliste:
         procDict  = graph['procDict']
         graphID   = graph['graphID']
         graphIBCD = graph['graphIBCD']
         if isWireModel: graphInvIBCD_WM = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
-    elif graph is not None and grapheliste==True:  ### Dans warmup tous les transferts doivent etre faits
+    elif graph is not None and grapheliste:  ### Dans warmup tous les transferts doivent etre faits
         procDict  = graph[nssiter-2]['procDict']   ### On va chercher le graphe a nssiter-2 car a cette ssite tous les transferts
         graphID   = graph[nssiter-2]['graphID']    ### sont faits pour le schema a pas de temps local
         graphIBCD = graph[nssiter-2]['graphIBCD']
@@ -1005,7 +1005,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
     #target in no more in tc; need need data in a new file
     #
 
-    if timelevel_target == timelevel_perfile or tc is None or timelevel_motion%timelevel_period == 0 : 
+    if timelevel_target == timelevel_perfile or tc is None or timelevel_motion%timelevel_period == 0: 
 
        graph= {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
        tc =None; tc_skel =None
@@ -1207,7 +1207,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
     return tc, tc_skel, graph
 
 #====================================================================================
-# reordonne  les raccord instationnaire par No croissant  pour chque zone
+# reordonne  les raccords instationnaires par No croissant  pour chaque zone
 #====================================================================================
 def _sortByName(t):
     names = []
@@ -1233,6 +1233,7 @@ def _sortByName(t):
     ret = []
     for i in zip(*zipped): ret = i
     t[2] = list(ret)
+
 #====================================================================================
 # Calcule la CFL en chaque maille et la met dans l'arbre t pour dtloc instationnaire
 #====================================================================================
@@ -1411,7 +1412,7 @@ def _decoupe2(t, niveauMax, dtmin):
                     jmax = min((j+1)*taille_bloc+1,nj)
                     kmax = min((k+1)*taille_bloc+1,nk)
 
-                    if dimPb==2:kmax=1
+                    if dimPb==2: kmax=1
                    
                     zp = T.subzone(z,(imin,jmin,kmin),(imax,jmax,kmax))
 

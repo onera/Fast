@@ -1041,7 +1041,7 @@ def _buildOwnData(t, Padding):
         if a is not None: temporal_scheme = Internal.getValue(a)
         a = Internal.getNodeFromName1(d, 'ss_iteration')
         if a is not None: ss_iteration = Internal.getValue(a)
-        if temporal_scheme == "implicit_local": modulo_verif = 7
+        if temporal_scheme == "implicit_local": modulo_verif = 7 # change default
         a = Internal.getNodeFromName1(d, 'modulo_verif')
         if a is not None: modulo_verif = Internal.getValue(a)
         a = Internal.getNodeFromName1(d, 'restart_fields')

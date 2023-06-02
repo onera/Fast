@@ -176,7 +176,7 @@ PyObject* K_FASTC::souszones_list(PyObject* self, PyObject* args)
 
   //calcul distri si implicit ou explicit local + modulo verif et maillage structure 
   E_Int nitrun_loc = nitrun - 1;
-  if (lssiter_loc >=2)nitrun_loc=nitrun;
+  if (lssiter_loc >=2) nitrun_loc=nitrun;
 
   if( nidom_loc==-1 || (  (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2)  )  && nitrun_loc%iptdtloc[1] == 0 ) && ipt_param_int[0][ITYPZONE] !=4 ) 
   //if ( (nidom_loc==-1 || (lssiter_loc >=1 && nitrun_loc%iptdtloc[1] == 0 ) ) && ipt_param_int[0][ITYPZONE] !=4 ) 
@@ -187,14 +187,14 @@ PyObject* K_FASTC::souszones_list(PyObject* self, PyObject* args)
     if(init_exit==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
     if (iptdtloc[1]==1) {lssiter_verif = 1; if (nstep == iptdtloc[0] && ipt_param_int[0][ITYPCP]!=2){ lexit_lu = 1;}  }
     E_Int display = 0;
-    if (nstep==1 and  nidom_loc==-1) display = 1;
+    if (nstep==1 && nidom_loc==-1) display = 1;
     if (verbose == 0) display = 0;
     //display = 2;
     distributeThreads_c( ipt_param_int , ipt_param_real, ipt_ind_dm, nidom  , iptdtloc , mx_omp_size_int , nstep, nitrun, display );
   }
-
+  
   if (init_exit==0) {lexit_lu= 0;lssiter_verif = 0;}
-
+  
   PyObject* dico = PyDict_New();
 
   tmp = Py_BuildValue("i", lexit_lu);
