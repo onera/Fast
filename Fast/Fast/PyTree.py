@@ -16,7 +16,7 @@ try:
     from FastC.PyTree import _setNum2Zones, _setNum2Base, setNum2Zones, setNum2Base, load, \
             save, loadFile, loadFileG, saveFile, loadTree, saveTree, \
             getDictOfNobNozOfRcvZones, _addPair, getDictOfNobNozOfDnrZones, _pushCenters, \
-            ramp, _pushWalls
+            ramp, _rampTimeStep, _rampCFL, _pushWalls
 except ImportError: 
     raise ImportError("Fast.PyTree: requires FastC module.")
 

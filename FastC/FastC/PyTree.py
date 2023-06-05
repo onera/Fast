@@ -4317,22 +4317,44 @@ def _rampMotion(t, it, it0, itf):
             vz[1][:] = coeff * vz[1][:]
     return None
 
-# Modify time step in t and numz
-def _setTimeStep(t, numz, dt):
+# Modify time step in t
+def _setTimeStep(t, dt):
     """Set time step."""
-    numz["time_step"] = dt
-    _setNum2Zones(t, numz)
     zones = Internal.getZones(t)
     for z in zones:
         n = Internal.getNodeFromName2(z, 'Parameter_real')[1]
         n[0] = dt
+
+        time_step = Internal.getNodeFromName1(z, '.Solver#define') 
+        time_step = Internal.getNodeFromName1(time_step, 'time_step') 
+        Internal.setValue(time_step, dt)
     return None
 
 # Ramp time step
-def _rampTimeStep(t, numz, it, it0, itf):
+def _rampTimeStep(t, it, it0, itf, dt0, dtf):
     """Ramp time step."""
-    dt = ramp(it, it0, itf)
-    _setTimeStep(t, numz, dt)
+    dt = dt0 + (dtf-dt0)*ramp(it, it0, itf)
+    _setTimeStep(t, dt)
+    return None
+
+# Modify cfl in t
+def _setCFL(t, cfl):
+    """Set cfl."""
+    zones = Internal.getZones(t)
+    for z in zones:
+        n = Internal.getNodeFromName2(z, 'Parameter_real')[1]
+        n[15] = cfl
+
+        cfl_value = Internal.getNodeFromName1(z, '.Solver#define') 
+        cfl_value = Internal.getNodeFromName1(cfl_value, 'cfl') 
+        Internal.setValue(cfl_value, cfl)
+    return None
+
+# Ramp time step
+def _rampCFL(t, it, it0, itf, cfl0, cflf):
+    """Ramp cfl."""
+    cfl = cfl0 + (cflf-cfl0)*ramp(it, it0, itf)
+    _setCFL(t, cfl)
     return None
 
 # Push t wall centers to teff coordinates
