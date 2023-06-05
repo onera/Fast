@@ -1,5 +1,6 @@
 """Services for FAST solvers.
 """
+from fileinput import filename
 import numpy
 import os, fnmatch
 from . import fastc
@@ -3789,6 +3790,8 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
     import Converter.PyTree as C
 
     fileName = os.path.splitext(fileName)[0] # full path without extension
+    if len(directory) > 0 and directory[-1] == '/': directory = directory[:-1]
+    if fileName[0] == '/': fileName = fileName[1:]        
 
     graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
     if mpirun: # mpi run
@@ -3811,9 +3814,9 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
                     try: import cPickle as pickle
                     except: import pickle
                     file = open('%s/graph.pk'%directory, 'rb')
-                    graphN= pickle.load(file)
+                    graphN = pickle.load(file)
                     file.close()
-                # Load all sqeleton proc files
+                # Load all skeleton proc files
                 else:
                     ret = 1; no = 0; t = []
                     while ret == 1:
