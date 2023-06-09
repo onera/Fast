@@ -1026,8 +1026,8 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
              tc = Cmpi.readZones(tc, FILE, rank=rank)
              tc = Cmpi.convert2PartialTree(tc, rank=rank)
              t1 = timeit.default_timer()
-             print( "cout steady= ", t1-t0, 'rank=', rank)
-             sys.stdout.flush
+             #print( "cout steady= ", t1-t0, 'rank=', rank)
+             #sys.stdout.flush
           # unsteady part
           FILE = dir_unsteady +'/'+root_unsteady+str(root)+'.cgns'
           if rank==0: print('chargement tc: timelevel_target=',timelevel_target, 'file=',FILE, root)
@@ -1038,8 +1038,8 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
              tc_inst = Cmpi.readZones(tc_inst, FILE, rank=rank)
              tc_inst = Cmpi.convert2PartialTree(tc_inst, rank=rank)
              t1=timeit.default_timer()
-             print( "cout unsteady= ", t1-t0, 'rank=', rank)
-             sys.stdout.flush
+             #print( "cout unsteady= ", t1-t0, 'rank=', rank)
+             #sys.stdout.flush
 
        else:
           # steady part
@@ -1059,7 +1059,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
           cpu_S = t1 -t0
           t0=t1
           #print( "cout steady= ", t1-t0, 'rank=', rank)
-          sys.stdout.flush
+          #sys.stdout.flush
 
           # unsteady part: toto_Nit_skeleton.cgns
           t0=timeit.default_timer()
@@ -1079,7 +1079,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
           cpu_U = t1 -t0
           t0=t1
           #print( "cout unsteady= ", t1-t0, 'rank=', rank)
-          sys.stdout.flush
+          #sys.stdout.flush
 
        #mise a zero timelevel_target en fin de fichier ou fin de periode azymutale
        if timelevel_target == timelevel_perfile or timelevel_motion%timelevel_period == 0:
@@ -1167,8 +1167,8 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
           cpu_plat = t1 -t0
           t0=t1
           
-          print("cout skelS=",cpu_skelS, 'skelU=', cpu_skelU, "S=",cpu_S, 'U=', cpu_U, 'merge', cpu_merge, 'graph', cpu_graph, 'plat', cpu_plat, 'rank=', rank)
-          sys.stdout.flush
+          #print("cout skelS=",cpu_skelS, 'skelU=', cpu_skelU, "S=",cpu_S, 'U=', cpu_U, 'merge', cpu_merge, 'graph', cpu_graph, 'plat', cpu_plat, 'rank=', rank)
+          #sys.stdout.flush
 
           FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int')[1]
           param_real_tc              = Internal.getNodeFromName1( tc, 'Parameter_real')
@@ -1194,7 +1194,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
           sys.stdout.flush
 
     if timelevel_motion > timelevel_360:
-       print('remise a ZERO dans updateUnsteady')
+       #print('remise a ZERO dans updateUnsteady')
        timelevel_motion = 1
        Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0] = timelevel_motion
 
