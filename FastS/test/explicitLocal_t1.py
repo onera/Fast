@@ -10,15 +10,9 @@ import Fast.PyTree as Fast_
 import FastC.PyTree as internal
 import FastS.PyTree as FastS
 import Post.PyTree as P
-import Fast.Utils
 import Connector.PyTree as X
 import Transform.PyTree as T
-import sys
 import Converter.Internal as Internal
-import numpy
-import math
-import timeit
-import pickle
 import KCore.test as test
 
 #### Maillage ####

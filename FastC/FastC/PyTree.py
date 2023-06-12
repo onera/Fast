@@ -3791,7 +3791,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
 
     fileName = os.path.splitext(fileName)[0] # full path without extension
     if len(directory) > 0 and directory[-1] == '/': directory = directory[:-1]
-    if fileName[0] == '/': fileName = fileName[1:]        
+    if fileName[0] == '/': fileName = fileName[1:]      
 
     graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
     if mpirun: # mpi run
@@ -3838,7 +3838,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
 
     else: # sequential run
         if split == 'single':
-            FILE = fileName+'.cgns'
+            FILE = directory+'/'+fileName+'.cgns'
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
             else: t = None
         else: # multiple
@@ -4320,40 +4320,38 @@ def _rampMotion(t, it, it0, itf):
             vz[1][:] = coeff * vz[1][:]
     return None
 
-# Modify time step in t
+# Modify time step in t (parameter_real + solver#define)
 def _setTimeStep(t, dt):
     """Set time step."""
     zones = Internal.getZones(t)
     for z in zones:
         n = Internal.getNodeFromName2(z, 'Parameter_real')[1]
         n[0] = dt
-
         time_step = Internal.getNodeFromName1(z, '.Solver#define') 
         time_step = Internal.getNodeFromName1(time_step, 'time_step') 
         Internal.setValue(time_step, dt)
     return None
 
-# Ramp time step
+# Ramp time step between it0 (dt0) et itf (dtf)
 def _rampTimeStep(t, it, it0, itf, dt0, dtf):
     """Ramp time step."""
     dt = dt0 + (dtf-dt0)*ramp(it, it0, itf)
     _setTimeStep(t, dt)
     return None
 
-# Modify cfl in t
+# Modify cfl in t (parameter_real + solver#define)
 def _setCFL(t, cfl):
     """Set cfl."""
     zones = Internal.getZones(t)
     for z in zones:
         n = Internal.getNodeFromName2(z, 'Parameter_real')[1]
         n[15] = cfl
-
         cfl_value = Internal.getNodeFromName1(z, '.Solver#define') 
         cfl_value = Internal.getNodeFromName1(cfl_value, 'cfl') 
         Internal.setValue(cfl_value, cfl)
     return None
 
-# Ramp time step
+# Ramp CFL between it0 (cfl0) and itf (cflf)
 def _rampCFL(t, it, it0, itf, cfl0, cflf):
     """Ramp cfl."""
     cfl = cfl0 + (cflf-cfl0)*ramp(it, it0, itf)

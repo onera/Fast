@@ -9,7 +9,6 @@ import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import KCore.test as test
 import Transform.PyTree as T
-import numpy
 import os
 import tarfile
 import shutil
@@ -24,8 +23,8 @@ if not os.path.isfile(LOCAL+'/cgns_lts/t3DLTS.cgns'):
     tar.extractall(path=LOCAL)
     tar.close()
 
-t  = Fast.loadTree(LOCAL+'/cgns_lts/t3DLTS.cgns')
-tc = Fast.loadTree(LOCAL+'/cgns_lts/tc3DLTS.cgns')
+t  = Fast.loadTree('cgns_lts/t3DLTS.cgns', directory=LOCAL)
+tc = Fast.loadTree('cgns_lts/tc3DLTS.cgns', directory=LOCAL)
 
 NIT                        = 100     # number of iterations
 display_probe_freq         = 10      # iteration frequency to display modulo_verif
