@@ -2278,15 +2278,17 @@ def write_plt_format(t,i,FileCvg,nd,it = [],RSD_L2 = [],RSD_oo = [],RSD_L2_diff 
     return nd
 
 
-def extractConvergenceHistory(t, fileout):
+def _extractConvergenceHistory(t, fileout,onlyGlobal=False):
     """Extract residuals in an ascii file."""
     zones = Internal.getZonePaths(t)
     nd = 0
     FileCvgName = fileout
     FileCvg = open(FileCvgName,'w')
-    for i in zones:
-        nd = write_plt_format(t,i,FileCvg,nd,it = [],RSD_L2 = [],RSD_oo = [],RSD_L2_diff = [], RSD_oo_diff = [], a = [],convergence_name='ZoneConvergenceHistory')
 
+    if not onlyGlobal:
+        for i in zones:
+            nd = write_plt_format(t,i,FileCvg,nd,it = [],RSD_L2 = [],RSD_oo = [],RSD_L2_diff = [], RSD_oo_diff = [], a = [],convergence_name='ZoneConvergenceHistory')
+    
     for i in Internal.getPathsFromType(t, 'CGNSBase_t'):
         base       = Internal.getNodeFromPath(t, i)
         zone_check =Internal.getNodeByName(base,'GlobalConvergenceHistory')
