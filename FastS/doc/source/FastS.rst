@@ -397,15 +397,19 @@ Post
 
 --------------------------------------------------------
 
-.. py:function:: FastS.PyTree.extractConvergenceHistory(t, fileout)
+.. py:function:: FastS.PyTree.extractConvergenceHistory(t, fileout, perZones=True, perBases=True)
 
-    Extract convergence information (residuals) in each zone (residuals)
-    t is a pyTree, fileout is the name of the output file in the tecplot ascii format.
+    Extract convergence information (residuals) for each zone or/and for each base.
 
-    :param t: input pyTree
+    
+    :param t: input pyTree with ConvergenceHistory computed
     :type t: pyTree
-    :param fileout: name of file for resiudal extraction
+    :param fileout: name of file for resiudal extraction (tp format)
     :type fileout: string
+    :param perZones: if True, write residuals for each zones
+    :type perZones: Boolean
+    :param perBases: if True, write residuals for each bases
+    :type perBases: Boolean
     
     *Example of use:*
 

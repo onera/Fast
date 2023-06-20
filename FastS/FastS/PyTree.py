@@ -2236,7 +2236,8 @@ def createConvergenceHistory(t, nrec):
 #==============================================================================
 # extraction des residus du Pytree dans fichier tecplot ascii
 # ==============================================================================
-def write_plt_format(t,i,FileCvg,nd,it = [],RSD_L2 = [],RSD_oo = [],RSD_L2_diff = [], RSD_oo_diff = [], a = [],convergence_name='ZoneConvergenceHistory'):
+def write_plt_format(t, i, FileCvg, nd, it=[], RSD_L2=[], RSD_oo=[], RSD_L2_diff=[], RSD_oo_diff=[], 
+                     a=[], convergence_name='ZoneConvergenceHistory'):
     node    = Internal.getNodeFromPath(t, i+'/'+convergence_name)
     lastRec = node[1][0]
 
@@ -2278,24 +2279,33 @@ def write_plt_format(t,i,FileCvg,nd,it = [],RSD_L2 = [],RSD_oo = [],RSD_L2_diff 
     return nd
 
 
-def _extractConvergenceHistory(t, fileout,onlyGlobal=False):
-    """Extract residuals in an ascii file."""
+# IN: t: tree with ConvergenceHistory ()
+# IN: fileout: fileName for output of residuas in tp format
+# IN: perZones: write ConvergenceHistory for each zones
+# IN: perBases: write ConvergenceHistory for each base
+def _extractConvergenceHistory(t, fileout, perZones=True, perBases=True):
+    """Extract residuals in an ascii file (tp format)."""
     zones = Internal.getZonePaths(t)
     nd = 0
-    FileCvgName = fileout
-    FileCvg = open(FileCvgName,'w')
+    fileCvgName = fileout
+    fileCvg = open(fileCvgName, 'w')
 
-    if not onlyGlobal:
-        for i in zones:
-            nd = write_plt_format(t,i,FileCvg,nd,it = [],RSD_L2 = [],RSD_oo = [],RSD_L2_diff = [], RSD_oo_diff = [], a = [],convergence_name='ZoneConvergenceHistory')
+    # Ecrit le residu de chaque zone    
+    if perZones:
+        for z in zones:
+            nd = write_plt_format(t, z, fileCvg, nd, it=[], RSD_L2=[], RSD_oo=[], RSD_L2_diff=[], RSD_oo_diff=[], 
+                                  a=[], convergence_name='ZoneConvergenceHistory')
     
-    for i in Internal.getPathsFromType(t, 'CGNSBase_t'):
-        base       = Internal.getNodeFromPath(t, i)
-        zone_check =Internal.getNodeByName(base,'GlobalConvergenceHistory')
-        if Internal.getChildren(zone_check):
-            nd   = write_plt_format(t,i,FileCvg,nd,it = [],RSD_L2 = [],RSD_oo = [],RSD_L2_diff = [], RSD_oo_diff = [], a = [],convergence_name='GlobalConvergenceHistory')
-           
-    FileCvg.close()
+    # Ecrit le residu par base
+    if perBases:
+        for i in Internal.getPathsFromType(t, 'CGNSBase_t'):
+            base = Internal.getNodeFromPath(t, i)
+            zone_check = Internal.getNodeByName(base, 'GlobalConvergenceHistory')
+            if Internal.getChildren(zone_check): # if list is not empty
+                nd = write_plt_format(t, i, fileCvg, nd, it=[], RSD_L2=[], RSD_oo=[], RSD_L2_diff=[], RSD_oo_diff=[], 
+                                      a=[], convergence_name='GlobalConvergenceHistory')
+    
+    fileCvg.close()
 
 #==============================================================================
 # Cree un arbre Stress pour calcul effort
