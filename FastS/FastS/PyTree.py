@@ -3932,7 +3932,11 @@ def calc_global_convergence(t):
         for z in Internal.getZones(b):
             #if z[0]=='GlobalConvergentHistory': continue
             zone_cong_history     =Internal.getNodeByName(z,'ZoneConvergenceHistory')            
-            isCalc                =Internal.getNodeByName(z,'isCalc')[1]
+            isCalcCheck           =Internal.getNodeByName(z,'isCalc')
+            
+            if isCalcCheck is None:isCalc=1
+            else: isCalc=Internal.getValue(isCalcCheck)
+
             nx = Internal.getValue(z)[0][0]
             ny = Internal.getValue(z)[1][0]
             nz = Internal.getValue(z)[2][0]
@@ -3988,10 +3992,10 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
             if sol:
                 celN           = Internal.getNodeFromName(sol, 'cellN')[1]
                 cells_zone_1   = numpy.count_nonzero(celN==1)
-                isCalc =0
+                isCalc = 0
                 if cells_zone_1>0: isCalc=1
             else:
-                isCalc=1
+                isCalc = 1
             Internal.createUniqueChild(z, 'isCalc', 'DataArray_t', value=isCalc)
         
         for z2 in Internal.getChildren(z):
