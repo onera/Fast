@@ -3907,6 +3907,7 @@ def calc_global_convergence(t):
         nzones= len(Internal.getZones(b))
         c     = Internal.getNodeByName(b,'GlobalConvergenceHistory')
         
+        
         zones                 = Internal.getZones(b)
         zone_cong_history     = Internal.getNodeByName(zones[0],'ZoneConvergenceHistory')
         RSD_                  = Internal.getNodeByName(zone_cong_history,'IterationNumber')[1]
@@ -3930,31 +3931,31 @@ def calc_global_convergence(t):
         total_Ncells = 0
         for z in Internal.getZones(b):
             #if z[0]=='GlobalConvergentHistory': continue
-            
-            zone_cong_history     =Internal.getNodeByName(z,'ZoneConvergenceHistory')
+            zone_cong_history     =Internal.getNodeByName(z,'ZoneConvergenceHistory')            
+            isCalc                =Internal.getNodeByName(z,'isCalc')[1]
             nx = Internal.getValue(z)[0][0]
             ny = Internal.getValue(z)[1][0]
             nz = Internal.getValue(z)[2][0]
-            total_Ncells += nx*ny*nz
+            total_Ncells += nx*ny*nz*isCalc
 
-            ##Loo per base
-            for var_local in var_list_Loo:
-                RSD_     = Internal.getNodeByName(zone_cong_history,var_local)[1]
-                RSD_b    = Internal.getNodeByName(c,var_local)[1]
-                sh_local = numpy.shape(RSD_b)[0]
-                sh       = nrec    *sh_local//nrec
-                for i in range(sh):
-                    if RSD_b[i]==0:RSD_b[i]=-10e10
-                    RSD_b[i]=max(RSD_b[i],RSD_[i])
-
-            ##L2 per base (here only sum)
-            for var_local in var_list_L2:
-                RSD_     = Internal.getNodeByName(zone_cong_history,var_local)[1]
-                RSD_b    = Internal.getNodeByName(c,var_local)[1]
-                sh_local = numpy.shape(RSD_b)[0]
-                sh       = nrec    *sh_local//nrec
-                for i in range(sh):
-                    RSD_b[i]+=RSD_[i]*nx*ny*nz
+            if isCalc==1:
+                ##Loo per base
+                for var_local in var_list_Loo:
+                    RSD_     = Internal.getNodeByName(zone_cong_history,var_local)[1]
+                    RSD_b    = Internal.getNodeByName(c,var_local)[1]
+                    sh_local = numpy.shape(RSD_b)[0]
+                    sh       = nrec    *sh_local//nrec
+                    for i in range(sh):
+                        RSD_b[i]=max(RSD_b[i],RSD_[i])
+                
+                ##L2 per base (here only sum)
+                for var_local in var_list_L2:
+                    RSD_     = Internal.getNodeByName(zone_cong_history,var_local)[1]
+                    RSD_b    = Internal.getNodeByName(c,var_local)[1]
+                    sh_local = numpy.shape(RSD_b)[0]
+                    sh       = nrec    *sh_local//nrec
+                    for i in range(sh):
+                        RSD_b[i]+=RSD_[i]*nx*ny*nz
 
         ##Average L2 per base            
         for var_local in var_list_L2:
@@ -3977,8 +3978,24 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
     ##Remove unncessary nodes in the zones    
     for z in Internal.getZones(t):
         listzones_rm=[]
+
+        CalcNode = Internal.getNodeFromName(z, 'isCalc')
+        if CalcNode is None:
+            ##CHECK to see if cellN==1 can be found in the zone
+            ## if N_cells(cellN=1)=0: isCalc=0
+            ## else: isCalc=1
+            sol = Internal.getNodeFromName(z, 'FlowSolution#Centers')
+            if sol:
+                celN           = Internal.getNodeFromName(sol, 'cellN')[1]
+                cells_zone_1   = numpy.count_nonzero(celN==1)
+                isCalc =0
+                if cells_zone_1>0: isCalc=1
+            else:
+                isCalc=1
+            Internal.createUniqueChild(z, 'isCalc', 'DataArray_t', value=isCalc)
+        
         for z2 in Internal.getChildren(z):
-            if z2[0] != 'ZoneConvergenceHistory' and z2[0] != 'ZoneType':
+            if z2[0] != 'ZoneConvergenceHistory' and z2[0] != 'ZoneType' and z2[0] != 'isCalc':
                 listzones_rm.append(z2)
         for z2 in listzones_rm:
             Internal._rmNode(z,z2)
