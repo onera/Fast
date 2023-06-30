@@ -3524,7 +3524,7 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
     ## 2) exposantMax: for forcing niveauTps < 0.0 and by making exposantMax< thexposantMax
     ##                 one can play with taille_bloc such that we have more control of the regions of
     ##                 with smaller time steps without "exploding" the different levels of time zones.
-    for z in zones :
+    for z in zones:
         cflmax_loc = C.getMaxValue(z, 'centers:CFL')
         dtmin_loc = 1./cflmax_loc
         niveauTps = math.log2(((2**exposantMax)*dtmin)/dtmin_loc)
@@ -3533,7 +3533,7 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
         dicoTps[z[0]]=niveauTps
         z = C._initVars(z,'centers:niveaux_temps',float(niveauTps))
         
-    for z in zones :
+    for z in zones:
         cflmax_loc = C.getMaxValue(z, 'centers:CFL')
         dtmin_loc = 1./cflmax_loc
         niveauTps = math.log2(((2**exposantMax)*dtmin)/dtmin_loc)    
@@ -3545,11 +3545,11 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
     ### Tant que ce n'est pas le cas, on modifie les niveaux afin d arriver dans cette situtation ###
     print("Checking smooth transition in times levels...start")
     chgt = 1    
-    while chgt != 0 :
+    while chgt != 0:
         chgt = 0      
-        for z in zones :
+        for z in zones:
             gcs = Internal.getNodesFromType2(z, 'GridConnectivity_t')
-            for gc in gcs :
+            for gc in gcs:
                 name = Internal.getValue(gc)                
                 if dicoTps[z[0]] - dicoTps[name] > 1:
                     dicoTps[name] = dicoTps[z[0]] - 1

@@ -187,12 +187,12 @@ c      c7     = c4/c5
       qen = 0.  !pour blinder Roe 6eme variable   
 
 
-      v2flu =   param_int_eff(NDIMDX)
+      v2flu = param_int_eff(NDIMDX)
 
       norm =2./(param_real(ROINF)*param_real(VINF)**2)
 
       sens = norm
-      sens1=1.
+      sens1 = 1.
       if(mod(param_int_eff(EFF_IDIR),2).eq.1) then
        sens =-sens
        sens1=-sens1
