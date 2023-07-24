@@ -677,7 +677,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
         ndimdx = dens[1].size
         size   = nbr_krylov*ndimdx*5
         if sa: size = nbr_krylov*ndimdx*6
-        kry = numpy.empty( size , dtype=numpy.float64)
+        kry = numpy.empty(size, dtype=numpy.float64)
 
         sol  = Internal.getNodeFromName2(zone, 'FlowSolution#Centers')
         vars = ['Density','MomentumX','MomentumY','MomentumZ','EnergyStagnationDensity']
@@ -835,7 +835,7 @@ def _buildOwnData(t, Padding):
     # 3: requires array/list of ints, 4: requires array/list of floats,
     # []: requires given strings
     keys4Base = {
-    'temporal_scheme':['explicit', 'implicit', 'implicit_local','explicit_local'],
+    'temporal_scheme':['explicit', 'implicit', 'implicit_local', 'explicit_local'],
     'ss_iteration':0,
     'rk':0, 
     'modulo_verif':0,
@@ -1052,7 +1052,7 @@ def _buildOwnData(t, Padding):
         if temporal_scheme == "implicit" or temporal_scheme =="implicit_local": rk=3
         a = Internal.getNodeFromName1(d, 'exp_local')
         if a is not None: exploc = Internal.getValue(a)
-        if temporal_scheme == "implicit" or temporal_scheme =="implicit_local": exploc=0
+        if temporal_scheme == "implicit" or temporal_scheme == "implicit_local": exploc=0
         a = Internal.getNodeFromName1(d, 'explicit_local_type')         
         if a is not None: exploctype = Internal.getValue(a)
         a = Internal.getNodeFromName1(d, 'time_begin_ale')
@@ -1067,7 +1067,7 @@ def _buildOwnData(t, Padding):
     elif temporal_scheme == "explicit_lbm": nssiter = 1
     elif temporal_scheme == "implicit": nssiter = ss_iteration+1
     elif temporal_scheme == "implicit_local": nssiter = ss_iteration+1
-    elif temporal_scheme == "explicit_local": #explicit local instationnaire ordre 3
+    elif temporal_scheme == "explicit_local": # explicit local instationnaire ordre 3
         nssiter = 4*maxlevel 
         rk = 3
         exploc = 1
@@ -1076,9 +1076,9 @@ def _buildOwnData(t, Padding):
     except: print('Warning: Fast: invalid value %s for key ss_iteration.'%ss_iteration)
     try: modulo_verif = int(modulo_verif)
     except: print('Warning: Fast: invalid value %s for key modulo_verif.'%modulo_verif)
-    if rk == 1 and exploc==0 and temporal_scheme == "explicit": nssiter = 1 # explicit global
-    if rk == 2 and exploc==0 and temporal_scheme == "explicit": nssiter = 2 # explicit global
-    if rk == 3 and exploc==0 and temporal_scheme == "explicit": nssiter = 3 # explicit global
+    if rk == 1 and exploc == 0 and temporal_scheme == "explicit": nssiter = 1 # explicit global
+    if rk == 2 and exploc == 0 and temporal_scheme == "explicit": nssiter = 2 # explicit global
+    if rk == 3 and exploc == 0 and temporal_scheme == "explicit": nssiter = 3 # explicit global
 
     size_omp = MX_OMP_SIZE_INT
     if MX_OMP_SIZE_INT == 25*OMP_NUM_THREADS:
@@ -1092,7 +1092,7 @@ def _buildOwnData(t, Padding):
     dtdim = 12 + nitCyclLBM
     #print('ncycl_LBM', nitCyclLBM, maxlevel)
 
-    datap = numpy.zeros((dtdim+ size_omp), numpy.int32) 
+    datap = numpy.zeros((dtdim+ size_omp), numpy.int32)
     datap[0] = nssiter 
     datap[1] = modulo_verif
     datap[2] = restart_fields-1
@@ -1111,7 +1111,7 @@ def _buildOwnData(t, Padding):
       for level in range(maxlevel,0,-1):
          it_tg = 2**(level-1) 
          if it%it_tg == 0: 
-             datap[12+it]=level
+             datap[12+it] = level
              #print('Nblevel',datap[12+it],'itCycl=',it )
              break
        
@@ -1122,13 +1122,13 @@ def _buildOwnData(t, Padding):
     dtloc = Internal.getNodeFromName1(o, '.Solver#dtloc')[1]
     #partage memoire entre dtloc et Noeud timeMotion,....
     first = Internal.getNodeFromName1(t, 'TimeLevelMotion')
-    if first is not None: first[1]=dtloc[3:4]
+    if first is not None: first[1] = dtloc[3:4]
     first = Internal.getNodeFromName1(t, 'TimeLevelTarget')
-    if first is not None: first[1]=dtloc[4:5]
+    if first is not None: first[1] = dtloc[4:5]
     first = Internal.getNodeFromName1(t, 'Iteration')
-    if first is not None: first[1]=dtloc[7:8]
+    if first is not None: first[1] = dtloc[7:8]
     first = Internal.getNodeFromName1(t, 'LBMCycleIteration')
-    if first is not None: first[1]=dtloc[10:11]
+    if first is not None: first[1] = dtloc[10:11]
 
 
 
@@ -1934,8 +1934,7 @@ def _buildOwnData(t, Padding):
             Internal.createUniqueChild(o, 'exp_local', 'DataArray_t', exploc)
             Internal.createUniqueChild(o, 'rk', 'DataArray_t', rk)
 
-
-            ndom+=1
+            ndom += 1
 
     return None
 
@@ -1954,19 +1953,19 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     rk_ = Internal.getNodeFromName2(zones[0],'rk')
     if rk_ is not None: rk = Internal.getValue(rk_)
    
-    exploc=0
-    exploc_ = Internal.getNodeFromName2(zones[0], 'exp_local')
-    if exploc_ is not None: exploc = Internal.getValue(exploc_)
+    exploc = Internal.getNodeFromName2(zones[0], 'exp_local')
+    if exploc is not None: exploc = Internal.getValue(exploc)
+    else: exploc = 0
 
     lssiter_loc = 0
     if scheme == 'implicit_local':  lssiter_loc = 1  # sous-iteration local
     if exploc == 1:                 lssiter_loc = 2  # dtloc G Jeanmasson   
 
-    neq_max =0
+    neq_max = 0
     for z in zones:
         model = "Euler"
         a = Internal.getNodeFromName2(z, 'model')
-        model  = Internal.getValue(a)
+        model = Internal.getValue(a)
         neq = 5
         if model == 'nsspalart' or model =='NSTurbulent': neq = 6
         param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
@@ -1987,7 +1986,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
            
         # dim from getZoneDim
         dims = Internal.getZoneDim(z)
-        if dims[0]=='Structured' : 
+        if dims[0] == 'Structured': 
             nijk = (dims[1]-1)*(dims[2]-1)*(dims[3]-1)+shiftvar
             dimJK    = (dims[2]-1)*(dims[3]-1); dimIK = (dims[1]-1)*(dims[3]-1); dimIJ=(dims[1]-1)*(dims[2]-1)
             ndimplan = max( ndimplan, dimIJ)
@@ -2018,10 +2017,10 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
            ndima3  +=       6*nijk
            ndima4  +=     neq*nijk
 
-        c       += 1
+        c += 1
      
     #           3 depth     6 faces  5 tableau
-    ndimface= neq*3*ndimplan*6*5*len(zones)
+    ndimface = neq*3*ndimplan*6*5*len(zones)
     ndimface = min(ndimface, 2000000000)
     #si pas de temps local inactif (rk3)
     #if rk!=3 or exploc !=2: ndimface=1
@@ -2041,9 +2040,9 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     flu   = numpy.empty(ndimFlu , dtype=numpy.float64)
     grad  = numpy.empty(ndimgrad, dtype=numpy.float64)
 
-    if   (rk==4 and exploc==0): size_drodm = 4*ndimt
-    elif (rk==5 and exploc==0): size_drodm = 5*ndimt
-    else                      : size_drodm =   ndimt
+    if   rk==4 and exploc==0: size_drodm = 4*ndimt
+    elif rk==5 and exploc==0: size_drodm = 5*ndimt
+    else                    : size_drodm =   ndimt
     #print('taille tab drodm=%d'%ndimt)
     drodm     = numpy.empty(ndimt   , dtype=numpy.float64)        
     tab_dtloc = numpy.empty(ndimface, dtype=numpy.float64)
@@ -2121,7 +2120,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
 
     if dtloc is None:
        own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
-       dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+       dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')    # noeud
 
     #print("compact dtloc=", dtloc)
 
@@ -3430,6 +3429,7 @@ def save(t, fileName='restart', split='single', NP=0, compress=0):
     Internal._rmNodesFromName(t2, 'Displacement#0')
     Internal._rmNodesFromName(t2, 'Motion')
 
+    Internal._rmNodeByPath(t2, '.Solver#ownData')
     zones = Internal.getZones(t2)
     for z in zones:
         Internal._rmNodeByPath(z, '.Solver#ownData')
@@ -3518,7 +3518,7 @@ def getMaxProc(t):
 # and the communication graph for IBM transfers
 #==============================================================================
 def loadFile(fileName='t.cgns', split='single', graph=False, 
-             mpirun=False, exploc=False):
+             mpirun=False, exploc=0):
     """Load tree and connectivity tree."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -3543,7 +3543,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
             
         else: # load 1 fichier par proc
 
-            if graph and exploc == False:
+            if graph and exploc == 0:
 
                 # Try to load graph from file
                 if os.access('%s/graph.pk'%fileName, os.R_OK):
@@ -3567,7 +3567,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                     else: print('graph non calculable: manque de fichiers connectivite.')
 
 
-            if graph and exploc : ## dtloc instationnaire
+            if graph and exploc == 1: ## dtloc instationnaire
 
                 # Try to load graph from file
                 if os.access('%s/graph.pk'%fileName, os.R_OK):
@@ -3609,8 +3609,8 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
             if t != []: t = Internal.merge(t)
             else: t = None
     
-    if graph and not exploc : return t, graphN
-    elif graph and exploc :   return t, list_graph
+    if graph and not exploc: return t, graphN
+    elif graph and exploc:   return t, list_graph
     else:     return t
     
 #==============================================================================
@@ -3642,8 +3642,8 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
             if mp+1 != size: 
                 raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d)'%(mp+1,size)) 
             if graph:
-                graphN = prepGraphs(t, exploc=False)
-                graphN_= prepGraphs(t, exploc=True)
+                graphN = prepGraphs(t, exploc=0)
+                graphN_= prepGraphs(t, exploc=1)
             
             t = Cmpi.readZones(t, FILE, rank=rank)
             t = Cmpi.convert2PartialTree(t, rank=rank)
@@ -4062,7 +4062,7 @@ def calc_post_stats(t, iskeeporig=False, mode=None, cartesian=True):
 def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FILEOUT='listZonesSlow.dat', FILEOUT1='diagCPU.dat', RECORD=None):
 
  own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
- dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+ dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')    # noeud
 
  node = Internal.getNodeFromName1(t, '.Solver#define')
  node = Internal.getNodeFromName1(node, 'omp_mode')
@@ -4565,13 +4565,13 @@ def tcStat_IBC(t,tc,vartTypeIBC=2,bcTypeIB=3):
 #==============================================================================
 # Graph related functions
 #==============================================================================
-def prepGraphs(t, exploc=False):
+def prepGraphs(t, exploc=0):
     graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=exploc)
     graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=exploc)
     procDict  = D2.getProcDict(t)
     procList  = D2.getProcList(t, sort=True)
     list_graph= []
-    if not exploc:
+    if exploc == 0:
         graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
     else:
         i=0
@@ -4590,7 +4590,7 @@ def prepGraphs(t, exploc=False):
     return graphN
 
 
-def printGraph(t, directory='.', exploc=False):
+def printGraph(t, directory='.', exploc=0):
     graphN = prepGraphs(t, exploc)
     # Write graph
     try: import cPickle as pickle

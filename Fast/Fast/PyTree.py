@@ -322,10 +322,10 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
 
     if dtloc is None:
        own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
-       dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+       dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')    # noeud
 
     zones = Internal.getZones(t)
-    ndom =0
+    ndom = 0
     for z in zones:
         if ParentElements:
           E_NG   = Internal.getNodeFromName(z   ,'NGonElements')
@@ -415,8 +415,8 @@ def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmo
                  else                    : varType = 21
               # = Cas LBM
               elif infos_zones["NS"]==[[],[]]:
-                 if   hook1["neq_max"] == 19 and overset==0 : varType = 4 #LBM
-                 elif hook1["neq_max"] == 19 and overset==1 :
+                 if   hook1["neq_max"] == 19 and overset == 0: varType = 4 #LBM
+                 elif hook1["neq_max"] == 19 and overset == 1:
                       varType = 41 #LBM avec Overset
               else: varType = 5; couplageNSLBM = 1 #Couplage NSLBM
 
@@ -471,7 +471,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     import KCore.test as test
 
     own   = Internal.getNodeFromName1(t, '.Solver#ownData')  # noeud
-    dtloc = Internal.getNodeFromName1(own     , '.Solver#dtloc')    # noeud
+    dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')    # noeud
 
     node = Internal.getNodeFromName1(t, '.Solver#define')
     omp_node = Internal.getNodeFromName1(node, 'omp_mode')
@@ -625,7 +625,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
     maxlevel   = dtloc[9]
     nitCyclLBM = 2**(maxlevel-1)
-    dtloc[10]+=1    #itCycl_lbm
+    dtloc[10] += 1    #itCycl_lbm
     if dtloc[10] == nitCyclLBM: dtloc[10]=0
 
 

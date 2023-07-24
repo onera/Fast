@@ -186,13 +186,13 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
       E_Int nd = zones_dtloc[i];
       E_Int* ipt_nidom_loc = ipt_ind_dm[nd] + param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
       E_Int nb_subzone     = ipt_nidom_loc [nstep-1];   
-      mxzone +=nb_subzone;
+      mxzone += nb_subzone;
     } // loop zone
 
  
    if(nstep==1){ipt_omp[ nssiter ]= 2*nssiter;}
 
-   FldArrayI tab_nijk(mxzone*3*2);   E_Int* ipt_nijk    = tab_nijk.begin();
+   FldArrayI tab_nijk(mxzone*3*2); E_Int* ipt_nijk    = tab_nijk.begin();
    FldArrayI tab_ndimdx(mxzone);   E_Int* ipt_ndimdx  = tab_ndimdx.begin();
    FldArrayI tab_nozone(mxzone);   E_Int* ipt_nozone  = tab_nozone.begin();
    FldArrayI tab_nosszone(mxzone); E_Int* ipt_nosszone= tab_nosszone.begin();
