@@ -49,8 +49,7 @@ import Distributor2.PyTree as D2
 
 MX_SYNCHRO = 1000
 MX_SSZONE  = 10
-MX_OMP_SIZE_INT = 25*OMP_NUM_THREADS
-
+MX_OMP_SIZE_INT = -1 # set in warmup
 
 #==============================================================================
 # Met un dictionnaire de numerics dans une/des zones
@@ -1080,14 +1079,14 @@ def _buildOwnData(t, Padding):
     if rk == 2 and exploc == 0 and temporal_scheme == "explicit": nssiter = 2 # explicit global
     if rk == 3 and exploc == 0 and temporal_scheme == "explicit": nssiter = 3 # explicit global
 
-    size_omp = MX_OMP_SIZE_INT
-    if MX_OMP_SIZE_INT == 25*OMP_NUM_THREADS:
+    if MX_OMP_SIZE_INT == -1:
        #print("resize MX_OMP_SIZE_INT dans buildOwndata")
        ntask = len(zones)*2  # 4 sous-zones max par zone en moyenne 
        size_task =  (6 + 7*OMP_NUM_THREADS)*ntask
        size_omp  =  1 + nssiter*(2 + size_task)
        MX_OMP_SIZE_INT = size_omp
-
+    size_omp = MX_OMP_SIZE_INT
+    
     nitCyclLBM = 2**(maxlevel-1)
     dtdim = 12 + nitCyclLBM
     #print('ncycl_LBM', nitCyclLBM, maxlevel)

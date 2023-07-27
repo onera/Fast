@@ -909,20 +909,20 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                   E_Int sens =-1;
                   E_Int dirr = c/ __NUMTHREADS__;
                   if (dirr%2==0) {sens=1; th_current=c%__NUMTHREADS__;}
-	          //E_Int th_current = socket_tg*core_per_socket;
+                  //E_Int th_current = socket_tg*core_per_socket;
 
-		  //E_Int th_current = 0;
-		  E_Int szi= dim_i[i];
-		  E_Int szj= dim_j[j];
-		  E_Int szk= dim_k[k];
+                  //E_Int th_current = 0;
+                  E_Int szi= dim_i[i];
+                  E_Int szj= dim_j[j];
+                  E_Int szk= dim_k[k];
                   if(i== topo_lu[0]-1) szi+=1;
                   if(j== topo_lu[1]-1) szj+=1;
                   if(k== topo_lu[2]-1) szk+=1;
                   E_Int size_th = (cc*dim_i[i]*dim_j[j]*dim_k[k] + ci*szi*dim_j[j]*dim_k[k] + cj*szj*dim_i[i]*dim_k[k] + ck*szk*dim_i[i]*dim_j[j] )*poids;
                   E_Int size_loc   = size_th;
 
-	          //On cherche de la place sur un des socket, puis sur le suivant si pas de candidat local
-	          while( (size_loc/marge > remaind[th_current] || list_affected[th_current]!=-1)  && th_count < __NUMTHREADS__-1) 
+                //On cherche de la place sur un des socket, puis sur le suivant si pas de candidat local
+                while( (size_loc/marge > remaind[th_current] || list_affected[th_current]!=-1)  && th_count < __NUMTHREADS__-1) 
                     { 
                       //on ajuste le sens de parcours pour la recherche de place si on est au limite min ou max des threads
                       if (th_current==0                && sens==-1) sens= 1;
@@ -980,7 +980,7 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 		  //printf("No_zone,  PtZoneomp + th_current, th = %d %d %d %d\n",No_zone, PtZoneomp + th_current, grain[th_current], th_current); 
 
                   //pour optimiser graph dependance, on bascule en premiere position les threads deja sollicité sur les zones precedente
-		  
+
                   if( dependence[th_current]==1)
                   {  
                     E_Int thcurrent_save, size;
@@ -1003,9 +1003,9 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                        th_current = thread_list[th];
                        ipt_omp[PtTask + 2 + thcurrent_save] = th;  
                        ipt_omp[PtTask + 2 + th_current] = th-j;  
-		       thread_list[th-j] = th_current;
-		       thread_list[th] = thcurrent_save;
-		       //printf("th, th-j, thcurrent_save, th_current = %d %d %d %d \n", th, th-j, thcurrent_save, th_current);
+                       thread_list[th-j] = th_current;
+                       thread_list[th] = thcurrent_save;
+                       //printf("th, th-j, thcurrent_save, th_current = %d %d %d %d \n", th, th-j, thcurrent_save, th_current);
                      }
                     if ( k == topo_lu[2]-1  && k !=0)
                      { size    = dim_k[k];
@@ -1015,12 +1015,12 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                        th_current = thread_list[th];
                        ipt_omp[PtTask + 2 + thcurrent_save] = th;  
                        ipt_omp[PtTask + 2 + th_current] = th-k;  
-		       thread_list[th-k] = th_current;
-		       thread_list[th] = thcurrent_save;
-		       //printf("th, th-k, thcurrent_save, th_current = %d %d %d %d \n", th, th-k, thcurrent_save, th_current);
+                       thread_list[th-k] = th_current;
+                       thread_list[th] = thcurrent_save;
+                       //printf("th, th-k, thcurrent_save, th_current = %d %d %d %d \n", th, th-k, thcurrent_save, th_current);
                      }
                   }
-		  
+
                   if(i == topo_lu[0]-1) { dependence[th_current]=1;}
                   if(j == topo_lu[1]-1) { dependence[th_current]=1;}
                   if(k == topo_lu[2]-1) { dependence[th_current]=1;}
@@ -1092,13 +1092,13 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
              printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d, cycle=%d \n", c, No_zone, Nthreads, nstep, param_int[No_zone][NSSITER]/param_int[No_zone][LEVEL]);
              //printf("souszone %d de la zone %d calcule par %d  Threads,  nstep= %d, cycle=%d %d  \n", c, No_zone, Nthreads, nstep, PtTask,PtiterTask );
-	     
+
              for (E_Int th_current = 0; th_current < __NUMTHREADS__; th_current++){
 
                  E_Int th = ipt_omp[PtTask + 2 + th_current] ; //Thread inactif
-		 //printf("No_zone,  PtZoneomp + th_current, th = %d %d %d \n",No_zone, PtZoneomp + th_current, th); 
+                //printf("No_zone,  PtZoneomp + th_current, th = %d %d %d \n",No_zone, PtZoneomp + th_current, th); 
 
-		 if( th != -2)
+             if( th != -2)
                  {
                    E_Int* ind_dm = ipt_omp + PtTask + __NUMTHREADS__ +6 + th*6;
 
@@ -1110,7 +1110,7 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 
         }// if mono ou subzone
 
-       if(boom == 1 )
+       if (boom == 1)
                {
                 printf("------\n");
                 printf("Error msg\n");
@@ -1256,7 +1256,7 @@ PyObject* K_FASTC::distributeThreads(PyObject* self, PyObject* args)
 
 // -----------------------------------------------------------------------------------
 // 
-// optimisation topo thraed pour balancing
+// optimisation topo thread pour balancing
 // 
 // -----------------------------------------------------------------------------------
 E_Int K_FASTC::topo_test( E_Int* topo, E_Int* nijk, E_Int& cells_tg, E_Int& lmin, E_Int& dim_i,  E_Int& dim_j, E_Int& dim_k)
