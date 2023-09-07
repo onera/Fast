@@ -1904,7 +1904,7 @@ def _buildOwnData(t, Padding):
             datap[59] = NbptsLinelets
 
             # Wire Model
-            datap[60] = numpy.sqrt(((0.25*KWire_p)**2+1))-0.25*KWire_p
+            datap[60] = numpy.sqrt(((0.25*KWire_p)**2+1))-0.25*KWire_p # DeltaVWire
             datap[61] = KWire_p
             datap[62] = DiameterWire_p
             datap[63] = CtWire_p
