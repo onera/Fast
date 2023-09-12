@@ -86,7 +86,7 @@ setup(
     version="3.7",
     description="Fast NS and LBM solvers.",
     author="ONERA",
-    url="https://w3.onera.fr/FAST",
+    url="https://fast.onera.fr",
     packages=['Fast'],
     package_dir={"":"."},
     ext_modules=listExtensions
