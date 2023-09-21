@@ -55,12 +55,6 @@ if mpi:
     ADDITIONALCPPFLAGS = ['-D_MPI']
     libraries += mpiLibs
     
-##   
-## Modif pour calcul MPI sur poste GC   
-##   
-#libraryDirs += ["/usr/lib64/openmpi/lib"]
-#libraries += ['mpi_f77'] 
-
 # Extensions ==================================================================
 listExtensions = []
 listExtensions.append(

@@ -16,7 +16,6 @@ try:
     import Connector.PyTree as X
     import Connector.OversetData as XOD
     import FastC.PyTree as FastC
-    import KCore
     import math
     import time as Time
     import Connector.Mpi as Xmpi
@@ -3238,7 +3237,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
                     jmax = min((j+1)*taille_bloc+1,nj+1)
                     kmax = min((k+1)*taille_bloc+1,nk+1)
 
-                    if dimPb==2:kmax=1
+                    if dimPb == 2: kmax=1
 
                     zp = T.subzone(z,(imin,jmin,kmin),(imax,jmax,kmax))
 
@@ -3249,7 +3248,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
                     zones_decoupe.append(zp)
 
     zones_decoupe_=[]
-    for zp in zones_decoupe :
+    for zp in zones_decoupe:
         cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
         dtmin_loc = 1./cflmax_loc
         niveauTps = math.log(((2**exposantMax)*dtmin)/dtmin_loc)/math.log(2)
@@ -3286,13 +3285,13 @@ def _decoupe2(t, exposantMax = 2, NP=0):
 
     chgt = 1
 
-    while chgt != 0 :
+    while chgt != 0:
 
         chgt = 0
-        for z in newZones :
+        for z in newZones:
 
             gcs = Internal.getNodesFromType2(z, 'GridConnectivity_t')
-            for gc in gcs :
+            for gc in gcs:
 
                 name = Internal.getValue(gc)
 
@@ -3303,7 +3302,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
                     chgt = 1
 
             gcs = Internal.getNodesFromType2(z, 'GridConnectivity1to1_t')
-            for gc in gcs :
+            for gc in gcs:
 
                 name = Internal.getValue(gc)
 
@@ -3364,7 +3363,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
             iso_niveau_ = T.merge(iso_niveau, tol=1.e-11)
             print('nb zones ap merge', len(iso_niveau_))
 
-            for ziso in iso_niveau_ :
+            for ziso in iso_niveau_:
                 zones_merged.append(ziso)
 
 
@@ -3401,8 +3400,8 @@ def _decoupe2(t, exposantMax = 2, NP=0):
 ## the number of "cuts" in each direction.
 def splitting_per_direction(t,dir,taille_bloc):
     import Transform.PyTree as T
-    zones  = Internal.getNodesFromType(t     , 'Zone_t')
-    zones_delete=[]
+    zones  = Internal.getNodesFromType(t, 'Zone_t')
+    zones_delete = []
     for z in zones:
         dim = Internal.getZoneDim(z)
         ni = dim[1]-1
@@ -3411,7 +3410,7 @@ def splitting_per_direction(t,dir,taille_bloc):
 
         dimPb = dim[4]
         
-        if dimPb==2:nk=1
+        if dimPb == 2: nk=1
 
         nbbloc_i = ni/taille_bloc
         nbbloc_i = int(nbbloc_i)
@@ -3495,9 +3494,9 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
     print('Post split: Total number of zones=', len(zones))
 
     print("Setting 'centers:niveaux_temps' as a flow variables...start")
-    dtmin=1e15
+    dtmin = 1e15
     count = 0
-    for z in zones :
+    for z in zones:
         dim = Internal.getZoneDim(z)
         if dimPb == 3:
             zp = T.subzone(z,(3,3,3),(dim[1]-2,dim[2]-2,dim[3]-2))
@@ -3508,7 +3507,7 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
         if dtmin_loc < dtmin: dtmin = dtmin_loc
 
     if not isOctree:
-        for z in zones :
+        for z in zones:
             gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
             Internal._rmNode(z,gcs)
         
@@ -3558,7 +3557,7 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
                     chgt = 1
 
             gcs = Internal.getNodesFromType2(z, 'GridConnectivity1to1_t')
-            for gc in gcs : 
+            for gc in gcs: 
                 name = Internal.getValue(gc)
                 if dicoTps[z[0]] - dicoTps[name] > 1:
                     dicoTps[name] = dicoTps[z[0]] - 1
@@ -3572,7 +3571,7 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
     max_time_level=0
     for z in zones:
          niveau = C.getMaxValue(z, 'centers:niveaux_temps')
-         if niveau < niveau_min :
+         if niveau < niveau_min:
              niveau_min = niveau
     print('Smallest time level= ', niveau_min)
     
@@ -3622,14 +3621,14 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
         if NP > 0 :
             t = _distribMpiDtloc(t, pow(2,niveauMax), NP)
     
-        zones  = Internal.getNodesFromType(t, 'Zone_t')
-        for z in zones :
+        zones = Internal.getNodesFromType(t, 'Zone_t')
+        for z in zones:
             gcs = Internal.getNodeFromName(z, 'ZoneGridConnectivity')
             Internal._rmNode(z,gcs)
             
         t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
         for perio in liste_BCPeriodiques:
-            t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+            t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7, dim=dimPb)
     
         C.addState2Node__(t, 'EquationDimension', dimPb)   
         t = Internal.addGhostCells(t, t, 2, adaptBCs=1, fillCorner=0)

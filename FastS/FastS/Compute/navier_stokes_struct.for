@@ -282,7 +282,7 @@ c       endif
                      neq_rot = 3
                      depth   = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
                      call lesvist(ndo,param_int,param_real,
-     &                            neq_rot,depth,ithread,
+     &                            neq_rot,depth,ithread,nitrun,
      &                            ind_grad, ind_coe, ind_dm_zone,
      &                            xmut, rop_ssiter, ti,tj,tk, vol, rot)
                   endif
