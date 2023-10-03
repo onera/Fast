@@ -35,9 +35,7 @@ PyObject* K_FASTS::recup3para_(PyObject* self, PyObject* args)
   PyObject *pyParam_int, *pyParam_real;
   E_Int nstep, vartype, omp_mode, Notransfert;
 
-  if (!PYPARSETUPLE(args,
-                    "OOOOOllll", "OOOOOiiii",
-                    "OOOOOllll", "OOOOOiiii",
+  if (!PYPARSETUPLE_(args, OOOO_ O_ IIII_,
                     &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work,&vartype,&nstep,&omp_mode, &Notransfert))
   {
       return NULL;

@@ -36,9 +36,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
   E_Int loc, nstep, vartype;
   E_Int omp_mode, NoTransfert, process;
 
-  if (!PYPARSETUPLE(args,
-                    "OOOOOlllll", "OOOOOiiiii",
-                    "OOOOOlllll", "OOOOOiiiii",
+  if (!PYPARSETUPLE_(args, OOOO_ O_ IIII_ I_,
                     &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work,
                     &vartype, &nstep, &omp_mode, &NoTransfert, &process))
   {

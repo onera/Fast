@@ -38,9 +38,7 @@ PyObject* K_FASTS::dtlocal(PyObject* self, PyObject* args)
   PyObject* stock;
   E_Int loc, nstep, vartype;
 
-  if (!PYPARSETUPLE(args,
-                    "OOOOOOOOll", "OOOOOOOOii",
-                    "OOOOOOOOll", "OOOOOOOOii",
+  if (!PYPARSETUPLE_(args, OOOO_ OOOO_ II_,
                     &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work,&stock, &drodmstock, &constk,
                     &vartype,&nstep))
   {

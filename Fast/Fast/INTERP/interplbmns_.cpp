@@ -38,9 +38,7 @@ PyObject* K_FAST::interplbmns_(PyObject* self, PyObject* args)
   E_Int loc, nstep, nitrun, nitmax;
   E_Int NoTransfert, process;
 
-  if (!PYPARSETUPLE(args,
-                    "OOOOOlllll", "OOOOOiiiii",
-                    "OOOOOlllll", "OOOOOiiiii",
+  if (!PYPARSETUPLE_(args, OOOO_ O_ IIII_ I_, 
                     &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work, &nitmax, &nitrun, &nstep,  &NoTransfert, &process))
   {
       return NULL;

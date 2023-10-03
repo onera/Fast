@@ -36,9 +36,7 @@ PyObject* K_FASTS::recup2(PyObject* self, PyObject* args)
   PyObject* stock;
   E_Int nstep, vartype;
 
-  if (!PYPARSETUPLE(args,
-                    "OOOOOOll", "OOOOOOii",
-                    "OOOOOOll", "OOOOOOii",
+  if (!PYPARSETUPLE_(args, OOOO_ OO_ II_, 
                     &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work,&stock,&vartype,&nstep))
   {
       return NULL;

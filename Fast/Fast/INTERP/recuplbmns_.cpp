@@ -37,9 +37,7 @@ PyObject* K_FAST::recuplbmns_(PyObject* self, PyObject* args)
   E_Int loc, nstep, nitrun, nitmax;
   E_Int omp_mode, NoTransfert, process;
 
-  if (!PYPARSETUPLE(args,
-                    "OOOOOllllll", "OOOOOiiiiii",
-                    "OOOOOllllll", "OOOOOiiiiii",
+  if (!PYPARSETUPLE_(args, OOOO_ O_ IIII_ I_, 
                     &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work, &nitmax, &nitrun, &nstep, &omp_mode,  &NoTransfert, &process))
   {
       return NULL;
