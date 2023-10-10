@@ -1226,7 +1226,7 @@ def _buildOwnData(t, Padding):
             source          = 0
             cups            = [1.,1.]
             ratiom          = 10000.
-            meshtype        = 1  #stuctured
+            meshtype        = 1  #structured
             senseurtype     = 1  #version celia laurent du schema senseur
             coef_hyper      = [0.009,0.015] # coeff schema hypersonique M Lugrin
 
