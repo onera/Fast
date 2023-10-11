@@ -9,10 +9,9 @@ if n != 2:
 
 dico= {}
 dico["SENSOR_INIT"] = { 'name':'flusenseur_init', 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
-dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
-dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
+dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3','o3sc','o5','o5sc']}
+dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3','o3sc','o5','o5sc']}
 dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3','o1']}
-dico["SENSORHYPER"] = { 'name':'flushyper'      , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 
 rep = sys.argv[1]
 if rep not in dico:
@@ -28,7 +27,7 @@ flux       = dico[ rep ]['name']
 opt_ale = {'ale':1, '':0}
 opt_flu = {'flu_ausm':1, 'flu_senseur':2, 'flu_roe':5 }
 opt_mod = {'euler':1, 'lamin':2, 'SA':3 }
-opt_slp = {'o1':1, 'o3':2, 'minmod':3 }
+opt_slp = {'o1':1, 'o3':2, 'minmod':3 ,'o5':5,'o3sc':6,'o5sc':7}
 opt_mesh= {"3dfull":0, "3dhomo":1, "3dcart":2, "2d":3}
 
 
@@ -84,10 +83,10 @@ for ale in TypeMotion:
                 for i in range( len(lines) ):
                     lines[i]=lines[i].replace("FLUX_CONV", rep)
 
-                # correction pour flushyper (wig dim)
-                if flux == 'flushyper':
+                # correction pour flusenseur (wig dim)
+                if flux == 'flusenseur' and ( slope=='o5sc' or slope=='o3sc'):
                     for i in range( 60 ):
-                        lines[i]=lines[i].replace("wig( param_int(NDIMDX)     * 3                  )", "wig( param_int(NDIMDX)     * 4                  )")
+                        lines[i]=lines[i].replace("wig( param_int(NDIMDX)     * 3                  )", "wig( param_int(NDIMDX)     * 6                  )")
 
                 # correction pour Roe (p1p2)
                 #if flux == 'fluroe':

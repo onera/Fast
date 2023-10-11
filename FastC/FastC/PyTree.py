@@ -203,6 +203,9 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             
             #recuperation option de calcul
             define = Internal.getNodeFromName1(z, '.Solver#define')
+            sponge= 0
+            a = Internal.getNodeFromName1(define,'lbm_sponge')
+            if a is not None: sponge = Internal.getValue(a)
             source = 0
             a = Internal.getNodeFromName1(define,'source')
             if a is not None: source = Internal.getValue(a)
@@ -314,8 +317,10 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
               vars.append(fields2compact)
     
             # on compacte les variables "visqueuse"
-            loc            ='centers:'
-            fields         = [loc+'ViscosityEddy',loc+'TurbulentDistance', loc+'zgris']
+            loc       ='centers:'
+            fields    = []
+            #for v in ['ViscosityEddy','TurbulentDistance', 'zgris', 'ViscosityEddyCorrection', 'sgsCorrection']: fields.append(loc+v)
+            for v in ['ViscosityEddy','TurbulentDistance', 'zgris', 'ViscosityEddyCorrection']: fields.append(loc+v)
             for sufix in ['0','N']:
                for i in range(1,len(vars_p)+1):
                   fields.append(loc+'drodm'+sufix+'_'+str(i))
@@ -747,9 +752,9 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
 
     # fin du if adjoint ------------------------------------
 
+    define = Internal.getNodeFromName1(zone, '.Solver#define')
     # init termes sources
     source = 0
-    define = Internal.getNodeFromName1(zone, '.Solver#define')
     a = Internal.getNodeFromName1(define,'source')
     if a is not None: source = Internal.getValue(a)
     if source == 1:
@@ -759,6 +764,20 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
        if C.isNamePresent(zone, 'centers:MomentumZ_src') != 1:   C._initVars(zone, 'centers:MomentumZ_src', 0.)
        if C.isNamePresent(zone, 'centers:EnergyStagnationDensity_src') != 1: C._initVars(zone, 'centers:EnergyStagnationDensity_src', 0.)
        if (sa and C.isNamePresent(zone, 'centers:TurbulentSANuTildeDensity_src') != 1): C._initVars(zone, 'centers:TurbulentSANuTildeDensity_src', 0.)
+
+    # init termes zone eponge
+    sponge = 0
+    a = Internal.getNodeFromName1(define,'lbm_sponge')
+    if a is not None: sponge = Internal.getValue(a)
+    if sponge == 1:
+       if C.isNamePresent(zone, 'centers:ViscosityEddyCorrection') != 1: C._initVars(zone, 'centers:ViscosityEddyCorrection', 1.)
+       '''
+       sgsmodel='Miles'
+       a = Internal.getNodeFromName1(define,'sgsmodel')
+       if a is not None: sgsmodel = Internal.getValue(a)
+       if sgsmodel =='smsm' or sgsmodel=='msm':
+          if C.isNamePresent(zone, 'centers:sgsCorrection') != 1: C._initVars(zone, 'centers:sgsCorrection', 1.)
+       '''
 
     return sa, lbm, neq_lbm, FIRST_IT
 
@@ -853,7 +872,7 @@ def _buildOwnData(t, Padding):
     'rotation':4,
     'time_step':1,
     'io_thread':0,
-    'sgsmodel': ['smsm','Miles'],
+    'sgsmodel': ['smsm','msm','Miles'],
     'wallmodel': ['musker','power'],
     'wallmodel_sample': 0,
     'ransmodel': ['SA', 'SA_comp', 'SA_diff'],
@@ -877,7 +896,7 @@ def _buildOwnData(t, Padding):
     'sfd_chi':1, 
     'sfd_delta':1, 
     'sfd_init_iter':0, 
-    'slope':["o1", "o3", "minmod"],
+    'slope':["o1", "o3","o5", "minmod","o3sc","o5sc"],
     'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3", "zdes3_w"],
     'SA_add_LowRe': 0,
     'SA_add_RotCorr': 0,
@@ -902,6 +921,7 @@ def _buildOwnData(t, Padding):
     'lbm_hrr_sigma':1,   
     'lbm_adaptive_filter_chi':1,
     'lbm_chi_spongetypeII':1,
+    'lbm_sponge':0,
     'lbm_sponge_size':0,
     'lbm_spng_xmin':1,
     'lbm_spng_xmax':0,
@@ -1221,6 +1241,7 @@ def _buildOwnData(t, Padding):
             nit_inflow      = 10
             epsi_inflow     = 1.e-5
             DES_debug       = 0
+            sa_dist         = 0
             extract_res     = 0
             ibc             = numpy.zeros( 7, dtype=numpy.int32)
             source          = 0
@@ -1263,6 +1284,7 @@ def _buildOwnData(t, Padding):
             lbm_chi_spongetypeII       = 0.2             # chi value for sponge type II absorbing layer Xu & Sagaut 2013
 
             # Non-reflecting boundary condition : Absorbing/Sponge Layer
+            lbm_sponge             = 0               #  pas de zone eponge par defaut
             lbm_sponge_size        = 0               # Sponge size - Number of grid points
             lbm_sponge_prep        = 0               # Prepare Sponge
             lbm_cbc_prep           = 0               # Prepare Sponge
@@ -1280,6 +1302,10 @@ def _buildOwnData(t, Padding):
             lbm_zlim               = 0.
 
             
+            sol  = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+            dist = Internal.getNodeFromName1(sol, 'TurbulentDistance')
+            if dist is not None: sa_dist =1
+
             KWire_p=0.1 
             DiameterWire_p=0.1 
             CtWire_p=0.1
@@ -1427,7 +1453,12 @@ def _buildOwnData(t, Padding):
                     lbm_neq = 19                  
                 if ngon:
                     lbm_neq=0
-                    
+                 
+    
+                a = Internal.getNodeFromName1(d, 'lbm_sponge')
+                if a is not None: lbm_sponge = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'LBM_sponge')
+                if a is not None: lbm_sponge = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'LBM_taug')
                 if a is not None: lbm_taug = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'lbm_taug')
@@ -1570,7 +1601,8 @@ def _buildOwnData(t, Padding):
                  print('Warning: Fast: model %s is invalid.'%model)
 
             iles = 0
-            if sgsmodel == 'smsm': iles = 1
+            if   sgsmodel == 'smsm': iles = 1
+            elif sgsmodel ==  'msm': iles = 2
             if iles ==1:
                cacheblckI = max(cacheblckI,4)
                cacheblckJ = max(cacheblckJ,4)
@@ -1603,7 +1635,10 @@ def _buildOwnData(t, Padding):
             if   slope == "o1"    : islope = 1
             elif slope == "o2"    : islope = 4
             elif slope == "o3"    : islope = 2
+            elif slope == "o5"    : islope = 5
             elif slope == "minmod": islope = 3
+            elif slope == "o3sc"  : islope = 6
+            elif slope == "o5sc"  : islope = 7
 
             kfludom = 1
             if   scheme == "ausmpred" : kfludom = 1
@@ -1650,7 +1685,7 @@ def _buildOwnData(t, Padding):
             # creation noeud parametre integer
 
             
-            number_of_defines_param_int = 133                           # Number Param INT
+            number_of_defines_param_int = 134                           # Number Param INT
             size_int                   = number_of_defines_param_int +1 # number of defines + 1
 
 
@@ -1770,13 +1805,14 @@ def _buildOwnData(t, Padding):
             datap[87]   = iwallmodel
             datap[88]   = wallmodel_sample
 
+            datap[VSHARE.SA_DIST]        = sa_dist
             ## LBM
             datap[VSHARE.NEQ_LBM]        = lbm_neq
             #datap[VSHARE.LBM_COL_OP]     = lbm_collision_operator
             datap[VSHARE.LBM_COL_OP]     = kcolldom
             datap[VSHARE.LBM_FILTER]     = lbm_selective_filter
             datap[VSHARE.LBM_FILTER_SZ]  = lbm_selective_filter_size
-            datap[VSHARE.LBM_SPONGE]     = 0
+            datap[VSHARE.LBM_SPONGE]     = lbm_sponge
             datap[VSHARE.LBM_SPONGE_SIZE]= lbm_sponge_size
             datap[VSHARE.LBM_SPONGE_PREP]= lbm_sponge_prep
 
@@ -2004,11 +2040,11 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 
         ndimt   +=     neq*nijk       # surdimensionne ici
         ndimcoe += neq_coe*nijk       # surdimensionne ici
-       
-        if param_int[VSHARE.KFLUDOM]==2:   #schema senseur
-           ndimwig +=   3*nijk 
-        elif param_int[VSHARE.KFLUDOM]==8: #schema senseur hyper
-           ndimwig +=   4*nijk 
+
+        if param_int[VSHARE.KFLUDOM]==2:   #senseur wiggle
+            ndimwig +=   3*nijk
+        if param_int[VSHARE.SLOPE]==6 or param_int[VSHARE.SLOPE]==7 : #senseur choc
+            ndimwig +=   3*nijk
 
         if param_int[VSHARE.IFLOW]==4:   #schema LBM
            print("workarray: affiner taille tableau lbm")
@@ -2035,6 +2071,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #    coe   = KCore.empty(ndimcoe, CACHELINE)
 #    drodm = KCore.empty(ndimt  , CACHELINE)
     wig   = numpy.empty(ndimwig , dtype=numpy.float64)
+
     coe   = numpy.empty(ndimcoe , dtype=numpy.float64)
     flu   = numpy.empty(ndimFlu , dtype=numpy.float64)
     grad  = numpy.empty(ndimgrad, dtype=numpy.float64)

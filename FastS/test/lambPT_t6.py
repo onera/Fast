@@ -23,7 +23,8 @@ numb["temporal_scheme"]    = "explicit"
 numb["ss_iteration"]       = 20
 numz = {}
 numz["time_step"]          = 0.01
-numz["scheme"]             = "senseur_hyper"
+numz["scheme"]             = "senseur"
+numz["slope"]              = "o3sc"
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)

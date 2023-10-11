@@ -185,7 +185,7 @@ PyObject* K_FAST::interplbmns_(PyObject* self, PyObject* args)
 
                   stk  = param_real[nd]+  pt_racReal;
                   //                                                             macro,         distribution,   Sij,   , autre terme...
-                  interp_lbm_dtloc_( neq, param_int[nd], range, range_th, size,  stk, iptrom_CL[nd], iptro_CL,  iptS, iptPsiG, pos_p1, typ_rac, nstep);
+                  interp_lbm_dtloc_( nd, neq, param_int[nd],  param_real[nd], range, range_th, size,  stk, iptrom_CL[nd], iptro_CL,  iptS, iptPsiG, pos_p1, typ_rac, nstep);
                  }
                 else
                  {

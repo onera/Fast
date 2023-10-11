@@ -103,7 +103,10 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     E_Int* dim = K_PYTREE::getValueAI(zone, hook);
     E_Int ni =  dim[0]; E_Int nj = dim[1]; E_Int nk = dim[2];
 
-    E_Int nfic =2;
+    E_Int nfic;
+    t= K_PYTREE::getNodeFromName1(zone      , "RindCFD");
+    if (t != NULL){ E_Int* rind =  K_PYTREE::getValueAI(t, hook); nfic = rind[0];}
+    else {nfic =2;}
     E_Int ific = nfic; E_Int ific_xyz = nfic;
     if (kfludom == 3)  { ific_xyz = 6; ific = 3; }
 

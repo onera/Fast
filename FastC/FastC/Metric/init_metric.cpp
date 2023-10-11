@@ -206,6 +206,60 @@ PyObject* K_FASTC::init_metric(PyObject* self, PyObject* args)
         {
           E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
           E_Int nd = ipt_omp[ pttask ];
+
+#ifdef __DEBUG__
+            if (param_int[nd][ITYPZONE]==0) //3dfull
+              {
+#pragma omp for 
+               for (E_Int l = 0; l < param_int[nd][NDIMDX_MTR]*3; l++) {
+                    ipti[nd][l] = -999.
+                    iptj[nd][l] = -999.
+                    iptk[nd][l] = -999.
+                    ipti0[nd][l] = -999.
+                    iptj0[nd][l] = -999.
+                    iptk0[nd][l] = -999.
+                 }
+              }
+            else if (param_int[nd][ITYPZONE]==1) //3dhomo
+              {
+#pragma omp for 
+               for (E_Int l = 0; l < param_int[nd][NDIMDX_MTR]*2; l++) {
+                    ipti[nd][l] = -999.
+                    iptj[nd][l] = -999.
+                    ipti0[nd][l] = -999.
+                    iptj0[nd][l] = -999.
+                 }
+#pragma omp for 
+               for (E_Int l = 0; l < param_int[nd][NDIMDX_MTR]; l++) {
+                    iptk[nd][l] = -999.
+                    iptk0[nd][l] = -999.
+                 }
+
+              }
+            else if (param_int[nd][ITYPZONE]==2) //3dcart
+              {
+#pragma omp for 
+               for (E_Int l = 0; l < param_int[nd][NDIMDX_MTR]; l++) {
+                    ipti[nd][l] = -999.
+                    iptj[nd][l] = -999.
+                    iptk[nd][l] = -999.
+                    ipti0[nd][l] = -999.
+                    iptj0[nd][l] = -999.
+                    iptk0[nd][l] = -999.
+                 }
+              }
+            else{
+#pragma omp for 
+               for (E_Int l = 0; l < param_int[nd][NDIMDX_MTR]*2; l++) {
+                    ipti[nd][l] = -999.
+                    iptj[nd][l] = -999.
+                    ipti0[nd][l] = -999.
+                    iptj0[nd][l] = -999.
+                 }
+            }
+
+#endif
+
 #         include "Metric/indice_omp1.h" 
           cp_tijk_( param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], ind_mtr);
         }

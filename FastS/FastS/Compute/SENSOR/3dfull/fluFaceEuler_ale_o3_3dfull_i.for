@@ -4,7 +4,10 @@ c.....Metrique
 
         nm  = l -  inci
         nm2 = l -2*inci
+        
         np  = l +  inci
+        
+
 
 ! pente (qm) a l'interface droite et  (qp) a l'interface gauche
         vslp = v1

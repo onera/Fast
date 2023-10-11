@@ -5,7 +5,7 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine extract_res(ndom, param_int, param_real, 
      &                       ind_loop,
-     &                       drodm, vol, ro_res)
+     &                       drodm, vol, wig, ro_res)
 c***********************************************************************
 c_U   USER : DANDOIS
 c
@@ -19,6 +19,7 @@ c***********************************************************************
       INTEGER_E ndom, ind_loop(6), param_int(0:*)
  
       REAL_E   drodm( param_int(NDIMDX) , param_int(NEQ) )
+      REAL_E   wig( param_int(NDIMDX) , 3 )
       REAL_E     vol( param_int(NDIMDX_MTR) )
       REAL_E  ro_res( param_int(NDIMDX) , param_int(NEQ) )
 
@@ -89,7 +90,6 @@ C Var loc
 
         IF(param_int(NEQ).eq.6) THEN
 
-         if(param_int(ITYPZONE).ne.2) then !domaine 3d general, domaine 3d k homogene, 2d
 #include  "FastS/Compute/loop_begin.for"
             ro_res(l,1)= volinv*drodm(l,1) 
             ro_res(l,2)= volinv*drodm(l,2) 
@@ -99,37 +99,18 @@ C Var loc
             ro_res(l,6)= volinv*drodm(l,6) 
 #include  "FastS/Compute/loop_end.for"
 
-         else
-            volinv = 1./vol(1)
-#include  "FastS/Compute/loop_begin.for"
-            ro_res(l,1)= volinv*drodm(l,1) 
-            ro_res(l,2)= volinv*drodm(l,2) 
-            ro_res(l,3)= volinv*drodm(l,3) 
-            ro_res(l,4)= volinv*drodm(l,4) 
-            ro_res(l,5)= volinv*drodm(l,5)
-            ro_res(l,6)= volinv*drodm(l,6) 
-#include  "FastS/Compute/loop_end.for"
-
-         endif
         ELSE !neq=5
 
-         if (param_int(ITYPZONE).ne.2) then
 #include  "FastS/Compute/loop_begin.for"
+            !ro_res(l,1)= wig(l,1) 
+            !ro_res(l,2)= wig(l,2) 
+            !ro_res(l,3)= wig(l,3) 
             ro_res(l,1)= volinv*drodm(l,1) 
             ro_res(l,2)= volinv*drodm(l,2) 
             ro_res(l,3)= volinv*drodm(l,3) 
             ro_res(l,4)= volinv*drodm(l,4) 
             ro_res(l,5)= volinv*drodm(l,5)
 #include  "FastS/Compute/loop_end.for"
-         else
-#include  "FastS/Compute/loop_begin.for"
-            ro_res(l,1)= volinv*drodm(l,1) 
-            ro_res(l,2)= volinv*drodm(l,2) 
-            ro_res(l,3)= volinv*drodm(l,3) 
-            ro_res(l,4)= volinv*drodm(l,4) 
-            ro_res(l,5)= volinv*drodm(l,5)
-#include  "FastS/Compute/loop_end.for"
-         endif
         ENDIF!neq
       
       ENDIF

@@ -20,6 +20,7 @@ NEQ                         =36
 NDIMDX                      =41 
 LEVEL	                    =53
 LEVELG	                    =56
+SLOPE                       =64 
 SHIFTVAR                    =66
 
 NEQ_LBM                     =89
@@ -68,8 +69,9 @@ LBM_NS                      =128
 IBC_PT_FLUX                 =129
 SA_LOW_RE                   =130
 SA_ROT_CORR                 =131
-PT_INTERP                   =132
-NONZ                      =133
+SA_DIST                     =132
+PT_INTERP                   =133
+NONZ                        =134
 
 LBM_c0                      =42
 LBM_taug                    =43

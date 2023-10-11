@@ -69,7 +69,10 @@ C Var loc
       omt    = omega*temps+phi
       eps    = amp*sin(omt)
 
-      seuil = exp(-alpha*30.)
+      !seuil = exp(-alpha*30.)
+      !seuil = exp(-alpha*0.5)
+      !seuil = exp(-alpha*0.09)
+      seuil = exp(-alpha*0.25)
  
       !on split pour vectoriser en compilo v11
       IF(param_int(ITYPZONE).eq.2) THEN  !3D cart
@@ -103,7 +106,10 @@ C Var loc
 
 c            r2=r2*r2
 c            sro = eps*vol(lvo)/(1.+r2)
-            if(r2.ge.30) then
+            !if(r2.ge.30) then
+            !if(r2.ge.0.5) then
+            !if(r2.ge.0.09) then
+            if(r2.ge.0.25) then
               sro = eps*seuil*vol(lvo)
             else
              sro = eps*exp(-alpha*r2)*vol(lvo)

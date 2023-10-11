@@ -4,7 +4,7 @@ c     $Revision: 58 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine mcmvi(ndom, param_int, param_real, neq_rot,ithread,
-     &                 nitrun,ind_loop,
+     &                 ind_loop,
      &                 xmut, rop, rot)
 c***********************************************************************
 c_P                          O N E R A
@@ -29,7 +29,7 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
  
-      INTEGER_E ndom,neq_rot,ithread,nitrun,ind_loop(6), param_int(0:*)
+      INTEGER_E ndom,neq_rot,ithread,ind_loop(6), param_int(0:*)
 
       REAL_E xmut( param_int(NDIMDX) )
       REAL_E rot ( param_int(NDIMDX) * neq_rot)
@@ -42,7 +42,7 @@ C var loc
      & l0,l1,l2,l3, l4,l5,l6,l7,l8,var,v1,v2,v3,v4,v5
 
       REAL_E pi, angle,cste,vref,vort,vortmoy,vortflu,r1,r2,fs,xkc_l,fv,
-     & c111,c110,c100,c000,c1,c0,temp01,cmus1,coesut,t1
+     & c111,c110,c100,c000,c1,c0,temp01,cmus1,coesut,t1,c_selection
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -69,6 +69,9 @@ C var loc
       angle = 45 * pi / 360.
       vref  = 1. / max(tan(angle)**2, 1.e-20)
       cste  = 0.08
+
+      c_selection =1.
+      if(param_int(ILES).eq.2) c_selection=0.
 
 c     c1 = 0.25
 c     c0 = 0.5
@@ -173,7 +176,7 @@ c             rop(l+v5)=fv
              r2        = max( (vort + vortmoy)**2 - vortflu**2, 1.e-20 )
              fs        = 1.65*min( 1., (vref*r1/r2)**2 )
  
-
+             fs=  (1.-c_selection) + fs*c_selection
 
              ! mut = mulam + mu_sgs
              t1     = rop(l + v5)

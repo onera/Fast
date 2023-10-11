@@ -29,6 +29,7 @@
 #include "setInterpTransfersD.h"
 #endif
 
+
 #include <utility>
 
 using namespace std;
@@ -837,6 +838,7 @@ void K_FASTC::setInterpTransfersIntra(
             // %d  %d \n", irac, NoR,NoD, ntype[ 1 + ndtyp],pt_deb,pt_fin  ,
             // type, ithread );
 
+
                       noi       = shiftDonor;                             // compteur sur le tableau d indices donneur
                       indCoef   = (pt_deb-ideb)*sizecoefs +  shiftCoef;
                       E_Int shiftv =0;
@@ -889,7 +891,7 @@ void K_FASTC::setInterpTransfersIntra(
                       //*
                       //        } //chunk
                       //*/
-                      ideb       = ideb + ifin;
+                      ideb       = ideb + ntype[1 + ndtyp];
                       shiftCoef  = shiftCoef   +  ntype[1+ndtyp]*sizecoefs; //shift coef   entre 2 types successif
                       shiftDonor= shiftDonor +  ntype[1+ndtyp];           //shift donor entre 2 types successif
 
@@ -907,6 +909,7 @@ void K_FASTC::setInterpTransfersIntra(
   ipt_timecount[1] = ipt_timecount[1] + time_out - time_in;
   time_in = omp_get_wtime();
 #endif
+
 
   delete[] ipt_cnd;
   // return varType;
@@ -1487,7 +1490,7 @@ if (has_data_to_send) {
 	              E_Int* ipt_listRcv = param_int_tc + PtlistDonor;
 
                       //        } //chunk
-                      ideb        = ideb + ifin;
+                      ideb        = ideb + ntype[1 + ndtyp];
                       shiftCoef   = shiftCoef + ntype[1 + ndtyp] * sizecoefs;  // shift coef   entre 2 types successif
                       shiftDonor = shiftDonor + ntype[1 + ndtyp];            // shift donor entre 2 types successif
                      }                                                        // type

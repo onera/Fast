@@ -88,7 +88,7 @@ c***********************************************************************
 c
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6), topo_s(3),
      & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
-     & param_int(0:*), lok(*), cycl
+     & param_int(0:*), lok(*), cycl, visco_type, ierr,l
 
       REAL_E rop(*),rop_m1(*),rop_tmp(*),rop_ssiter(*),xmut(*),drodm(*),
      & coe(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
@@ -106,13 +106,9 @@ c      REAL_E drodmstk(20000,param_int(NEQ)), rostk(20000,param_int(NEQ))
 C Var loc
 #include "FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
-
-
-
-
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
      & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2,
-     & flag_wait,cells, it_dtloc, flag_NSLBM
+     & flag_wait,cells, it_dtloc, flag_NSLBM,lcomput
 
 
       REAL_E rhs_begin,rhs_end
@@ -178,15 +174,15 @@ c         enddo
 c       endif
 
           
-         !!! variable pour l'explicit local !!!!
-         !!! utilisee pour savoir si on est a la premiere ss-ite des zones !!!
-         cycl=param_int(NSSITER)/param_int(LEVEL) 
+          !!! variable pour l'explicit local !!!!
+          !!! utilisee pour savoir si on est a la premiere ss-ite des zones !!!
+          cycl=param_int(NSSITER)/param_int(LEVEL) 
+          lcomput=0
+          if(param_int(EXPLOC).eq.0.and.nitcfg.eq.1) lcomput=1
+          if(param_int(EXPLOC).ne.0.and.mod(nitcfg,cycl).eq.1) lcomput=1
 
-!     STEP I & II : Laminar/turbulent viscosity (i) & Timestep/vol computation (ii)   
-         IF (param_int(EXPLOC) .eq. 0) then !!! explicit global ou implicit
-
-
-            IF(nitcfg.eq.1) then
+!         STEP I & II : Laminar/turbulent viscosity (i) & Timestep/vol computation (ii)   
+          IF (lcomput.eq.1) then !!! calcul donnee specifique premiere sous iteration
 
               if(param_int(LALE).eq.1) then ! mise a jour Vent et tijk si mvt corps solide
                 call mjr_ale(ndo,nitcfg, ithread,
@@ -206,16 +202,19 @@ c       endif
                  if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
                 
                    if(param_int(ITYPCP).le.1) then 
+                     visco_type = 0
                      call invist(ndo, param_int, param_real, ind_coe,
      &                           rop_ssiter, xmut )
                    else 
+                     visco_type = 1
                      call invist(ndo, param_int, param_real, ind_grad,
      &                           rop_ssiter, xmut )
                    endif
                  !LES selective mixed scale model
                  else
-                   neq_rot = 3
-                   depth   = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
+                   neq_rot    = 3
+                   depth      = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
+                   visco_type = 1
                    call lesvist(ndo, param_int,param_real,neq_rot,depth,
      &                  ithread, nitrun,
      &                  ind_grad, ind_coe, ind_dm_zone,
@@ -224,11 +223,28 @@ c       endif
 
               elseif(param_int(IFLOW).eq.3) then
 
+                 visco_type = 0
                  !! remplissage tableau xmut si SA uniquememnt. 
                  !! Pour ZDES, remplissage dans terme source 
                  !call vispalart(ndo, param_int, param_real, ind_grad,
                  call vispalart(ndo, param_int, param_real, ind_coe,
      &                         xmut,rop_ssiter)
+              endif
+              !Calcul hyperviscosite zone eponge
+              if(param_int(LBM_SPONGE).eq.1.and.param_int(IFLOW).ne.1) then
+                 shift2=1
+                 if(param_int(SA_DIST).eq.1) shift2=shift2+1 !!distance paroi
+                 if(param_int(SA_INT + SA_IDES-1).ge.6) shift2=shift2+1 !!zgris var
+
+                 !write(*,*)"shift2", shift2, ndo
+                 shift2=shift2*param_int(NDIMDX)
+                   if(visco_type.eq.0) then 
+                      call visco_sponge(ndo, param_int, ind_coe,
+     &                            xmut, xmut(1 + shift2) )
+                   else 
+                      call visco_sponge(ndo, param_int, ind_grad,
+     &                            xmut, xmut(1 + shift2) )
+                   endif
               endif
 
               !!sinon cfl foireux
@@ -236,118 +252,47 @@ c       endif
 #include       "FastC/HPC_LAYER/SYNCHRO_WAIT.for"
                 flag_wait = 1
               ENDIF
-
               ! Calcul du pas de temps
               call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
      &                    flagCellN, param_int, param_real,
      &                    ind_sdm, ind_grad, ind_coe,
      &                    cfl, xmut,rop_ssiter, cellN, coe,
      &                    ti,tj,tk, vol,venti)
-           ENDIF!!1ere sous-iteration
 
-
-         ELSE !!!  explicite local instationnaire
-         
-             IF(mod(nitcfg,cycl).eq.1) then !!! On teste si on est a la premiere ss-ite de la zone
-
-                if(param_int(LALE).eq.1) then ! mise a jour Vent et tijk si mvt corps solide
-                   call mjr_ale(ndo,nitcfg, ithread,
-     &                        param_int, param_real,
-     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
-     &                        icache, jcache, kcache,
-     &                        x,y,z,ti,ti_df,tj,tj_df,tk,tk_df,vol,
-     &                        venti, ventj, ventk)
-                endif
-
-                !Calcul de la viscosite laminaire si nslaminar ou (nsles + dom 2D)
-                if(param_int(IFLOW).eq.2) then
-                 
-                  if(param_int(ILES).eq.0.or.param_int(NIJK+4).eq.0) then
-                
-                     if(param_int(ITYPCP).le.1) then 
-                       call invist(ndo, param_int, param_real, ind_coe,
-     &                             rop_ssiter, xmut )
-                     else 
-                       call invist(ndo, param_int, param_real, ind_grad,
-     &                             rop_ssiter, xmut )
-                     endif
-                  !LES selective mixed scale model
-                  else
-#include            "FastC/HPC_LAYER/SYNCHRO_WAIT.for"
-                     flag_wait = 1
-
-                     neq_rot = 3
-                     depth   = 1 !pour extrapolation mut, on travaille sur 1 seule rangee
-                     call lesvist(ndo,param_int,param_real,
-     &                            neq_rot,depth,ithread,nitrun,
-     &                            ind_grad, ind_coe, ind_dm_zone,
-     &                            xmut, rop_ssiter, ti,tj,tk, vol, rot)
-                  endif
-
-                elseif(param_int(IFLOW).eq.3) then
-
-                  !! remplissage tableau xmut si SA uniquememnt. 
-                  !! Pour ZDES, remplissage dans terme source 
-                  !call vispalart(ndo, param_int, param_real, ind_grad,
-                  call vispalart(ndo, param_int, param_real, ind_coe,
-     &                           xmut,rop_ssiter)
-                endif
-
-               !!sinon cfl foireux
-               IF(param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1) then
-#include        "FastC/HPC_LAYER/SYNCHRO_WAIT.for"
-                 flag_wait = 1
-               ENDIF
-
-               ! Calcul du pas de temps
-               call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
-     &                     flagCellN, param_int, param_real,
-     &                     ind_sdm, ind_grad, ind_coe,
-     &                     cfl, xmut,rop_ssiter, cellN, coe,
-     &                     ti,tj,tk, vol,venti)
-
-             ENDIF !!1ere sous-ite de la zone
-
-         ENDIF !! fin test explicit local
+          ENDIF !! fin test 1ere sous-ite de la zone
 
            
-           !SI SA implicit, verrou ici car dependence entre coe(5)
-           !calculee sur ind_coe dans cptst3 et coe(6) calculee sur
-           !ind_ssa dans src_term
-           ! pareil pour ibc0
-           IF( (    (param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1)
+          !SI SA implicit, verrou ici car dependence entre coe(5)
+          !calculee sur ind_coe dans cptst3 et coe(6) calculee sur
+          !ind_ssa dans src_term
+          ! pareil pour ibc0
+          IF( (    (param_int(IFLOW).eq.3.and.param_int(ITYPCP).le.1)
      &          .or.param_int(IBC).eq.1
      &         )
      &                             .and.flag_wait.eq.0) then
 #include "FastC/HPC_LAYER/SYNCHRO_WAIT.for"
                flag_wait = 1
-           ENDIF
-!     STEP I & II: END
+          ENDIF
+!         STEP I & II: END
 
 
+!         STEP III: RHS init + source term S
+          ! - Ajout d'un eventuel terme source au second membre
+          ! - initialisation drodm
+          call src_term(ndo, nitcfg, nb_pulse, param_int, param_real,
+     &                  ind_sdm, ind_rhs, ind_ssa, ind_grad,
+     &                  temps, nitrun, cycl,
+     &                  rop_ssiter, xmut, drodm, coe, x,y,z,cellN_IBC,
+     &                  ti,tj,tk,vol, delta, ro_src, wig, rop, rop_m1)
 
-!     STEP III: RHS init + source term S
-           ! - Ajout d'un eventuel terme source au second membre
-           ! - initialisation drodm
-           call src_term(ndo, nitcfg, nb_pulse, param_int, param_real,
-     &                   ind_sdm, ind_rhs, ind_ssa,
-     &                   temps,
-     &                   rop_ssiter, xmut, drodm, coe, x,y,z,cellN_IBC,
-     &                   ti,tj,tk,vol, delta, ro_src, wig)
-
-
-           IF(flag_wait.eq.0) then
+          IF(flag_wait.eq.0) then
 #include "FastC/HPC_LAYER/SYNCHRO_WAIT.for"
-           ENDIF
+          ENDIF
+!         STEP III: END
 
-!     STEP III: END
-           !print*, param_int(KFLUDOM)
-!     STEP IV: euler and viscous fluxes computation and balance
-           ! -----assemblage drodm euler+visqueux
-              if(param_int(KFLUDOM).eq.1) then
+!         STEP IV: euler and viscous fluxes computation and balance
+          ! -----assemblage drodm euler+visqueux
+          if(param_int(KFLUDOM).eq.1) then
 
                 call fluausm_select(ndo,nitcfg, ithread,nptpsi,
      &                        param_int, param_real,
@@ -360,37 +305,8 @@ c       endif
      &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
      &                        venti, ventj, ventk, xmut)
 
-              elseif(param_int(KFLUDOM).eq.2.and.nitcfg.eq.1 .and.
-     & param_int(EXPLOC) .eq. 0 ) then
+          elseif(param_int(KFLUDOM).eq.2) then
    
-             !elseif(param_int(KFLUDOM).eq.2.and.nitcfg.eq.1 .and.
-     & !param_int(EXPLOC) .eq. 0 .or. param_int(KFLUDOM).eq.2
-     & !.and.nitcfg.eq.5 .and.param_int(EXPLOC) .eq. 0 ) then
-
-
-              
-                call flusenseur_init_select(ndo,nitcfg,ithread, nptpsi,
-     &                        param_int, param_real,
-     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
-     &                        icache, jcache, kcache,
-     &                        psi,wig,stat_wig, rop_ssiter, drodm,
-     &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
-     &                        venti, ventj, ventk, xmut)
-
-
-     
-
-              elseif(param_int(KFLUDOM).eq.2.and.nitcfg.gt.1 .and.
-     & param_int(EXPLOC) .eq. 0 ) then
-
-              !elseif(param_int(KFLUDOM).eq.2.and.nitcfg.ne.1 .and.
-     & !param_int(EXPLOC) .eq. 0 .and.nitcfg.ne.5 ) then
- 
-
-
                 call flusenseur_select(ndo,nitcfg,ithread, nptpsi,
      &                        param_int, param_real,
      &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
@@ -402,45 +318,7 @@ c       endif
      &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
      &                        venti, ventj, ventk, xmut)
 
-
-              elseif(param_int(KFLUDOM).eq.2.and.mod(nitcfg,cycl).eq.1
-     & .and. param_int(EXPLOC) .ne. 0 ) then !!! senseur pour l'explicit local
-                 
-                 
-                call flusenseur_init_select(ndo,nitcfg,ithread, nptpsi,
-     &                        param_int, param_real,
-     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
-     &                        icache, jcache, kcache,
-     &                        psi,wig,stat_wig, rop_ssiter, drodm,
-     &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
-     &                        venti, ventj, ventk, xmut)
-
-
-     
-
-              elseif(param_int(KFLUDOM).eq.2.and.mod(nitcfg,cycl).ne.1
-     & .and. param_int(EXPLOC) .ne. 0 ) then !!! senseur pour l'explicit local
-
- 
-                call flusenseur_select(ndo,nitcfg,ithread, nptpsi,
-     &                        param_int, param_real,
-     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
-     &                        icache, jcache, kcache,
-     &                        psi,wig,stat_wig, rop_ssiter, drodm,
-     &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
-     &                        venti, ventj, ventk, xmut)
-
-
-
-
-
-              elseif(param_int(KFLUDOM).eq.5) then
+          elseif(param_int(KFLUDOM).eq.5) then
 
                 call fluroe_select(ndo,nitcfg,ithread, nptpsi,
      &                        param_int, param_real,
@@ -453,62 +331,45 @@ c       endif
      &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
      &                        venti, ventj, ventk, xmut)
 
-
-             elseif(param_int(KFLUDOM).eq.8) then
-
-                call flushyper_select(ndo,nitcfg,ithread, nptpsi,
-     &                        param_int, param_real,
-     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
-     &                        icache, jcache, kcache,
-     &                        psi,wig,stat_wig, rop_ssiter, drodm,
-     &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
-     &                        venti, ventj, ventk, xmut)
-
-
-
-              else
-
+          else
                  if(ithread.eq.1) then
                    write(*,*)'Unknown flux',param_int(KFLUDOM)
                  endif
-             endif
+          endif
 
 #include "FastC/HPC_LAYER/SYNCHRO_GO.for"
 
-           !correction flux roe au CL si pas de mvt ALE,....
-           nb_bc = param_int( param_int(PT_BC) )
-           if(param_int(KFLUDOM).eq.5.and.nb_bc.ne.0) then
+          !correction flux roe au CL si pas de mvt ALE,....
+          nb_bc = param_int( param_int(PT_BC) )
+          if(param_int(KFLUDOM).eq.5.and.nb_bc.ne.0) then
 
               call bfl3(ndo, ithread, param_int, param_real, 
      &                  ind_dm_zone, ind_sdm,
      &                  psi,wig,stat_wig, rop_ssiter, drodm,
      &                  ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
      &                  venti, ventj, ventk, xmut)
-           endif
+          endif
 
-           !boundary flux correction for LES wall model
-           if(param_int(NEQ).eq.5.and.nb_bc.ne.0) then
+          !boundary flux correction for LES wall model
+          if(param_int(NEQ).eq.5.and.nb_bc.ne.0) then
               call wall_model_flux(ndo,ithread, param_int, param_real,
      &                  ind_dm_zone, ind_sdm, nitcfg, nitrun, cycl,
      &                  psi,wig,stat_wig, rop_ssiter, drodm,x,y,z,
      &                  ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
      &                  venti, ventj, ventk, xmut)
-           endif
-!     STEP IV: END
+          endif
+!         STEP IV: END
 
-!     STEP V: SOLUTION UPDATE           
-           !Extraction tableau residu
-           if(param_int(EXTRACT_RES).eq.1) then
+!         STEP V: SOLUTION UPDATE           
+          !Extraction tableau residu
+          if(param_int(EXTRACT_RES).eq.1) then
               call extract_res(ndo, param_int, param_real,
      &                         ind_mjr,
      &                         drodm, vol, ro_res)
-           endif
+          endif
  
-           !! impicit krylov             
-           if(param_int(ITYPCP).le.1.and.
+          !! impicit krylov             
+          if(param_int(ITYPCP).le.1.and.
      &        (param_int(IMPLICITSOLVER).eq.1.and.layer_mode.eq.1)) then
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
               if(flagCellN.eq.0) then
@@ -527,7 +388,7 @@ c       endif
 
 
            !! implicit Lu                 
-           elseif(param_int(ITYPCP).le.1) then
+          elseif(param_int(ITYPCP).le.1) then
 
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
               if(flagCellN.eq.0) then
@@ -545,8 +406,12 @@ c       endif
              if( param_int(EXTRACT_RES).eq.2.and.
      &           (nitcfg.eq.1.or.nitcfg.eq.nssiter) ) then
 
+              
                 shift2=1
-                if(param_int(IFLOW).eq.3) shift2=2
+                if(param_int(SA_DIST).eq.3) shift2=shift2+1 !!distance paroi: adresse a revoir si loi de paroi laminaire 
+                if(param_int(SA_INT + SA_IDES-1).ge.6) shift2=shift2+1!!zgris var
+                if(param_int(LBM_SPONGE).eq.1) shift2=shift2+1 !!viscosityEddy correction
+                !if(param_int(ILES).ge.1) shift2=shift2+1 !!sgsCorrection
 
                 if(nitcfg.eq.1)  then
                    shift1 = param_int(NDIMDX)*shift2
@@ -556,58 +421,40 @@ c       endif
 
                 call extract_res(ndo, param_int, param_real,
      &                           ind_mjr,
-     &                         drodm, vol, xmut(1+shift1) )
+     &                           drodm, vol, wig, xmut(1+shift1) )
              endif
-           !! explicit Lu                 
-           else
+          !! explicit Lu                 
+          else
              !c--------------------------------------------------
              !calcul param_int( IO_THREAD)uveau champ en explicite rk3
              !c-----Mise a jour de iptdrodm0 et de la solution
              !c     iptrotmp(nitcfg+1)=iptrotmp(nitcfg)+CoefW *drodm (rk3)
              !c--------------------------------------------------
-
-
-
               if (param_int(EXPLOC)==0) then ! Explicit global
 
-
                  if(mod(nitcfg,2)==1) then
-                       
                      call core3ark3(ndo,nitcfg, param_int, param_real,
-     &                      ind_mjr,
-     &                   rop_tmp, rop, drodm, coe)
+     &                      ind_mjr, rop_tmp, rop, drodm, coe)
                  else
-
                      call core3ark3(ndo,nitcfg, param_int, param_real,
-     &                   ind_mjr,
-     &                   rop, rop_tmp, drodm, coe)
-
+     &                      ind_mjr, rop, rop_tmp, drodm, coe)
                  end if
-           
     
              else if(param_int(EXPLOC)==1) then ! Explicit local instationnaire
-             !else if(param_int(EXPLOC)==2) then ! Explicit local instationnaire
 
                  if (MOD(nitcfg,2)==0) then
-
                      call core3_dtloc(ndo,nitcfg, param_int, param_real,
-     &                    ind_mjr,
-     &                    rop, rop_tmp, drodm, coe)
+     &                      ind_mjr, rop, rop_tmp, drodm, coe)
                  else
-
                      call core3_dtloc(ndo,nitcfg, param_int, param_real,
-     &                    ind_mjr,
-     &                   rop_tmp, rop, drodm, coe)
-                     
+     &                      ind_mjr, rop_tmp, rop, drodm, coe)
                  endif
-
-                  
               endif
+
           end if
 
 #include "FastC/HPC_LAYER/LOOP_CACHE_END.for"
 #include "FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
-
 
 
            !!! omp barriere
@@ -621,7 +468,6 @@ c       endif
         timer_omp(1)=timer_omp(1)+(rhs_end-rhs_begin)/float(cells)
         timer_omp(2)=float(cells)
       endif
-
 
 
       end

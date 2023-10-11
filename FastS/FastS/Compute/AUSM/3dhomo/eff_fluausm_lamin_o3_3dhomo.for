@@ -71,7 +71,7 @@ C Var loc
       INTEGER_E inc,incmax,l,lt,i,j,k,incmax2,nm,nm2,np,
      & l0,lt0,inci,incj,inck,ci,cj,lij,ltij,inci_mtr, incj_mtr,
      & inck_mtr,icorr,jcorr,ls,v1,v2,v3,v4,v5,v6,wig_i,wig_j,wig_k,
-     & wigd,
+     & sl_i,sl_j,sl_k,shift_wig, np2,nm3,
      & lfij,lxij,lf,lx,inc_x1,inc_x2,inc_x3,vslp,lvol,lvor,ir,il,
      & lt200,lt100,lt010,lt210,lt020,lt110,lt002,lt012,lt102,lt001,
      & lt021,lt201,lt120,v2flu,indflu,lvo,lvo200,lvo020,lvo002,
@@ -90,7 +90,8 @@ C Var loc
      & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
      & qn,r,v,w,h,q,r_1,psiroe,sens,sens1,flagi,flagj,flagk,norm,
-     & xktvol, xmulam, xmutur, xmutot
+     & xktvol, xmulam, xmutur, xmutot,
+     & c50,c51,c52,c53,c54
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_xyz_param.h"
@@ -163,8 +164,13 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       c4     = 5.*c6
       c5     = 2.*c6
       c6     =-1.*c6
-
-c      c7     = c4/c5
+      ! MUSCL O5
+      c50   = 1./60
+      c51   =27.*c50
+      c52   =-13.*c50
+      c53   =-3.*c50
+      c54   =2.*c50
+      c50   =47.*c50
 
       cvisq = 1./3
 
@@ -182,7 +188,11 @@ c      c7     = c4/c5
       wig_i = v1
       wig_j = v2
       wig_k = v3
-      wigd = v4
+      shift_wig = 0
+      if(param_int(KFLUDOM).eq.2)shift_wig = v4
+      sl_i  = wig_i +shift_wig
+      sl_j  = wig_j +shift_wig
+      sl_k  = wig_k +shift_wig
 
       qen = 0.  !pour blinder Roe 6eme variable   
 

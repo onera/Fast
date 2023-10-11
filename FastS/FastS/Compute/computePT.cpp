@@ -353,7 +353,7 @@ else
 
     if (ipt_param_int[nd][ ITYPCP ]      <= 1) kimpli     = 1;
     if (ipt_param_int[nd][ IFLAGFLT ]    == 1) kfiltering = 1;
-    if (ipt_param_int[nd][ IFLOW ] >= 2 &&  ipt_param_int[nd][ ILES ] == 1 && ipt_param_int[nd][ IJKV+ 2] > 1) kles = 1;
+    if (ipt_param_int[nd][ IFLOW ] >= 2 &&  ipt_param_int[nd][ ILES ] >= 1 && ipt_param_int[nd][ IJKV+ 2] > 1) kles = 1;
 
      //Recherche domaine a filtrer
      if (ipt_param_int[nd][ IFLAGFLT ] == 1) 

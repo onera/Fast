@@ -477,6 +477,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
  
        X.miseAPlatDonorTree__(zones, tc, graph=graph, list_graph=list_graph, nbpts_linelets=nbpts_linelets)
 
+
        FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
        param_real_tc = Internal.getNodeFromName1(tc, 'Parameter_real')
        if param_real_tc is not None: FastC.HOOK['param_real_tc']= param_real_tc[1]
@@ -524,6 +525,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     fasts._computePT_mut(zones, metrics, hook1)
+
 
     return (t, tc, metrics)
 
@@ -1373,10 +1375,6 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
 
     for i in range(len(varmy)): varmy[i] = 'centers:'+varmy[i]
 
-    # on determine le nbr de cellule fictive active pour le calcul des moyennes
-    numcellfic = 2
-    ific       = 2   # a adapter en DF
-    if lgrad == 1: numcellfic = 1
 
     zones = []
     for b0 in Internal.getNodesFromType1(t,'CGNSBase_t'):
@@ -1388,14 +1386,21 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
 
     tmy[2].append(own)
 
-    if dir == '0':
-        for z in zones:
-            #
-            datap = numpy.empty((17), numpy.int32)
-            #
-            dim  = Internal.getZoneDim(z)
-            inck = 1
-            if dim[3] == 2: inck =  0
+    for z in zones:
+       # on determine le nbr de cellule fictive active pour le calcul des moyennes
+       Rind = Internal.getNodeByName(z,"RindCFD")
+       if Rind  is not None:
+         numcellfic = Internal.getValue(Rind)[0]
+       else: 
+         numcellfic=2
+       ific        =  numcellfic  # a adapter en DF
+       if lgrad == 1: numcellfic = 1
+       
+       datap = numpy.empty((17), numpy.int32)
+       dim   = Internal.getZoneDim(z)
+       inck  = 1
+       if dim[3] == 2: inck =  0
+       if dir == '0':
             zp = T.subzone(z, (1,1,1), (-1,-1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
@@ -1432,12 +1437,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
 
             b[0][2].append(zp)
 
-    elif dir == 'i':
-        for z in zones:
-            datap = numpy.empty((17), numpy.int32)
-            dim   = Internal.getZoneDim(z)
-            inck = 1
-            if dim[3] == 2: inck =  0
+       elif dir == 'i':
             zp = T.subzone(z, (1,1,1), (1,-1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
@@ -1483,15 +1483,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    elif dir == 'j':
-        for z in zones:
-            #
-            datap = numpy.empty((17), numpy.int32)
-            #
-            dim  = Internal.getZoneDim(z)
-            inck = 1
-            if dim[3] == 2: inck =  0
-
+       elif dir == 'j':
             zp = T.subzone(z, (1,1,1), (-1,1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
@@ -1536,14 +1528,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    elif dir == 'k':
-        for z in zones:
-            datap = numpy.empty(17, numpy.int32)
-
-            dim  = Internal.getZoneDim(z)
-            inck = 1
-            if dim[3] == 2: inck =  0
-
+       elif dir == 'k':
             zp = T.subzone(z, (1,1,1), (-1,-1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
@@ -1588,14 +1573,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    elif dir == 'ij':
-        for z in zones:
-
-            datap = numpy.empty((17), numpy.int32)
-            dim   = Internal.getZoneDim(z)
-            inck = 1
-            if dim[3] == 2: inck =  0
-
+       elif dir == 'ij':
             zp = T.subzone(z, (1,1,1), (1,1,-1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
@@ -1640,14 +1618,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    elif dir == 'ik':
-        for z in zones:
-            datap = numpy.empty((17), numpy.int32)
-
-            dim   = Internal.getZoneDim(z)
-            inck = 1
-            if dim[3] == 2: inck =  0
-
+       elif dir == 'ik':
             zp = T.subzone(z, (1,1,1), (1,-1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
@@ -1692,13 +1663,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    elif dir == 'jk':
-        for z in zones:
-            datap = numpy.empty((17), numpy.int32)
-            dim   = Internal.getZoneDim(z)
-            inck = 1
-            if dim[3] == 2: inck =  0
-
+       elif dir == 'jk':
             zp = T.subzone(z, (1,1,1), (-1,1,1)) ; zp[0] = z[0]
             C._extractVars(zp, vars0)
             for var in varmy: C._initVars(zp, var, 0.)
@@ -1742,7 +1707,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
             zp[2].append([DataNodeName,datap,[],'UserDefinedData_t'])
             b[0][2].append(zp)
 
-    else: raise ValueError("createStatNodes: not a valid direction.")
+       else: raise ValueError("createStatNodes: not a valid direction.")
 
     Internal._rmNodesByType(b,'ZoneBC_t')
     Internal._rmNodesByType(b,'ZoneGridConnectivity_t')
@@ -1759,12 +1724,20 @@ def _computeStats(t, tmy, metrics):
     zones    = Internal.getZones(t)
     zones_my = Internal.getZones(tmy)
 
-    node = Internal.getNodeFromName1(t, '.Solver#define')
-    node = Internal.getNodeFromName1(node, 'omp_mode')
-    ompmode = FastC.OMP_MODE
-    if  node is not None: ompmode = Internal.getValue(node)
+    # Cree des tableaux temporaires de travail (wiggle, coe, drodm, lok, iskip_lu)
+    if FastC.HOOK is None:
+            own    = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
+            dtloc  = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
+            dtloc  = Internal.getValue(dtloc)                       # tab numpy
+            FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, FastC.FIRST_IT)
+            nitrun =0; nstep =1
 
-    fasts.computePT_my(zones, zones_my, metrics, ompmode)
+            hook1 = FastC.HOOK.copy()
+            hook1.update(FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, 0) )
+
+    else:  hook1  = FastC.HOOK
+
+    fasts.computePT_my(zones, zones_my, metrics, hook1)
     return None
 
 #==============================================================================
@@ -2368,7 +2341,11 @@ def createStressNodes(t, BC=None, windows=None):
                 if bc is not None: list_bc = bc[2]
             else:
                 list_bc =['window']
-            ific = 2
+            Rind = Internal.getNodeByName(z,"RindCFD")
+            if Rind  is not None:
+              ific = Internal.getValue(Rind)[0]
+            else: 
+              ific=2
             param_int = Internal.getNodeFromName2(z, 'Parameter_int')
             if param_int is not None: ific = param_int[1][3]
             ndf = 0

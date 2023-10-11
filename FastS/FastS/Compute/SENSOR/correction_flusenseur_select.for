@@ -96,6 +96,126 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
                                                
+       ELSEIF (option.eq.620) THEN
+                                               
+         call corr_flusenseur_lamin_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.621) THEN
+                                               
+         call corr_flusenseur_lamin_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.622) THEN
+                                               
+         call corr_flusenseur_lamin_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.623) THEN
+                                               
+         call corr_flusenseur_lamin_o3sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.520) THEN
+                                               
+         call corr_flusenseur_lamin_o5_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.521) THEN
+                                               
+         call corr_flusenseur_lamin_o5_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.522) THEN
+                                               
+         call corr_flusenseur_lamin_o5_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.523) THEN
+                                               
+         call corr_flusenseur_lamin_o5_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.720) THEN
+                                               
+         call corr_flusenseur_lamin_o5sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.721) THEN
+                                               
+         call corr_flusenseur_lamin_o5sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.722) THEN
+                                               
+         call corr_flusenseur_lamin_o5sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.723) THEN
+                                               
+         call corr_flusenseur_lamin_o5sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
        ELSEIF (option.eq.230) THEN
                                                
          call corr_flusenseur_SA_o3_3dfull(ndom,
@@ -129,6 +249,126 @@ C Var loc
        ELSEIF (option.eq.233) THEN
                                                
          call corr_flusenseur_SA_o3_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.630) THEN
+                                               
+         call corr_flusenseur_SA_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.631) THEN
+                                               
+         call corr_flusenseur_SA_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.632) THEN
+                                               
+         call corr_flusenseur_SA_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.633) THEN
+                                               
+         call corr_flusenseur_SA_o3sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.530) THEN
+                                               
+         call corr_flusenseur_SA_o5_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.531) THEN
+                                               
+         call corr_flusenseur_SA_o5_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.532) THEN
+                                               
+         call corr_flusenseur_SA_o5_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.533) THEN
+                                               
+         call corr_flusenseur_SA_o5_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.730) THEN
+                                               
+         call corr_flusenseur_SA_o5sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.731) THEN
+                                               
+         call corr_flusenseur_SA_o5sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.732) THEN
+                                               
+         call corr_flusenseur_SA_o5sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.733) THEN
+                                               
+         call corr_flusenseur_SA_o5sc_2d(ndom,
      &                 ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
@@ -176,6 +416,126 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
                                                
+       ELSEIF (option.eq.610) THEN
+                                               
+         call corr_flusenseur_euler_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.611) THEN
+                                               
+         call corr_flusenseur_euler_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.612) THEN
+                                               
+         call corr_flusenseur_euler_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.613) THEN
+                                               
+         call corr_flusenseur_euler_o3sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.510) THEN
+                                               
+         call corr_flusenseur_euler_o5_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.511) THEN
+                                               
+         call corr_flusenseur_euler_o5_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.512) THEN
+                                               
+         call corr_flusenseur_euler_o5_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.513) THEN
+                                               
+         call corr_flusenseur_euler_o5_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.710) THEN
+                                               
+         call corr_flusenseur_euler_o5sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.711) THEN
+                                               
+         call corr_flusenseur_euler_o5sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.712) THEN
+                                               
+         call corr_flusenseur_euler_o5sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.713) THEN
+                                               
+         call corr_flusenseur_euler_o5sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
        ELSEIF (option.eq.1220) THEN
                                                
          call corr_flusenseur_ale_lamin_o3_3dfull(ndom,
@@ -209,6 +569,126 @@ C Var loc
        ELSEIF (option.eq.1223) THEN
                                                
          call corr_flusenseur_ale_lamin_o3_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1620) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1621) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1622) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1623) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o3sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1520) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o5_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1521) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o5_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1522) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o5_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1523) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o5_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1720) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o5sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1721) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o5sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1722) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o5sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1723) THEN
+                                               
+         call corr_flusenseur_ale_lamin_o5sc_2d(ndom,
      &                 ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
@@ -256,6 +736,126 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
                                                
+       ELSEIF (option.eq.1630) THEN
+                                               
+         call corr_flusenseur_ale_SA_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1631) THEN
+                                               
+         call corr_flusenseur_ale_SA_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1632) THEN
+                                               
+         call corr_flusenseur_ale_SA_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1633) THEN
+                                               
+         call corr_flusenseur_ale_SA_o3sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1530) THEN
+                                               
+         call corr_flusenseur_ale_SA_o5_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1531) THEN
+                                               
+         call corr_flusenseur_ale_SA_o5_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1532) THEN
+                                               
+         call corr_flusenseur_ale_SA_o5_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1533) THEN
+                                               
+         call corr_flusenseur_ale_SA_o5_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1730) THEN
+                                               
+         call corr_flusenseur_ale_SA_o5sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1731) THEN
+                                               
+         call corr_flusenseur_ale_SA_o5sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1732) THEN
+                                               
+         call corr_flusenseur_ale_SA_o5sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1733) THEN
+                                               
+         call corr_flusenseur_ale_SA_o5sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
        ELSEIF (option.eq.1210) THEN
                                                
          call corr_flusenseur_ale_euler_o3_3dfull(ndom,
@@ -289,6 +889,126 @@ C Var loc
        ELSEIF (option.eq.1213) THEN
                                                
          call corr_flusenseur_ale_euler_o3_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1610) THEN
+                                               
+         call corr_flusenseur_ale_euler_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1611) THEN
+                                               
+         call corr_flusenseur_ale_euler_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1612) THEN
+                                               
+         call corr_flusenseur_ale_euler_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1613) THEN
+                                               
+         call corr_flusenseur_ale_euler_o3sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1510) THEN
+                                               
+         call corr_flusenseur_ale_euler_o5_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1511) THEN
+                                               
+         call corr_flusenseur_ale_euler_o5_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1512) THEN
+                                               
+         call corr_flusenseur_ale_euler_o5_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1513) THEN
+                                               
+         call corr_flusenseur_ale_euler_o5_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1710) THEN
+                                               
+         call corr_flusenseur_ale_euler_o5sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1711) THEN
+                                               
+         call corr_flusenseur_ale_euler_o5sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1712) THEN
+                                               
+         call corr_flusenseur_ale_euler_o5sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1713) THEN
+                                               
+         call corr_flusenseur_ale_euler_o5sc_2d(ndom,
      &                 ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,

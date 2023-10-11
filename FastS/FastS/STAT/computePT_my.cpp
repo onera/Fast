@@ -33,11 +33,11 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
 {
-  PyObject* zones; PyObject* zones_my;  PyObject* metrics; E_Int omp_mode;
+  PyObject* zones; PyObject* zones_my;  PyObject* metrics; PyObject* work;
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOl", &zones , &zones_my, &metrics, &omp_mode)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOOO", &zones , &zones_my, &metrics, &work)) return NULL;
 #else
-  if (!PyArg_ParseTuple(args, "OOOi", &zones , &zones_my, &metrics, &omp_mode)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOOO", &zones , &zones_my, &metrics, &work)) return NULL;
 #endif
 
   /* tableau pour stocker dimension sous-domaine omp */
@@ -77,6 +77,16 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
   iptmoy_param      = ipt_param_int    + nidom;
 
   vector<PyArrayObject*> hook;
+
+
+  /// Tableau pour // omp
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+  E_Int omp_mode = iptdtloc[ 8 ];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
+
 
   E_Int lcyl = 0;
   for (E_Int nd = 0; nd < nidom; nd++)
@@ -162,6 +172,11 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
+
+      E_Int nitcfg = 1;
+      E_Int nbtask = ipt_omp[nitcfg-1]; 
+      E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+      E_Int pttask;
       //
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
@@ -170,27 +185,23 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
         for (E_Int nd = 0; nd < nidom; nd++)
           {  
 
+             for (E_Int ntask = 0; ntask < nbtask; ntask++)
+               {
+                 pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+                 if (ipt_omp[ pttask ] == nd) break;
+               }
+
              E_Int* ipt_topology_thread    = ipt_topology    + (ithread-1)*3; 
              E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_omp  + (ithread-1)*6;
 
+             E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+             E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+
+             if (ithread_loc == -1) {continue;}
+
+
              // Distribution de la sous-zone sur les threads
              E_Int lmin =4;
-
-             E_Int Nbre_thread_actif_loc; E_Int ithread_loc;
-
-             if(omp_mode == 1)
-              { E_Int       Ptomp = ipt_param_int[nd][PT_OMP];
-                E_Int  PtrIterOmp = ipt_param_int[nd][Ptomp];
-                E_Int  PtZoneomp  = ipt_param_int[nd][PtrIterOmp]; 
-
-                Nbre_thread_actif_loc = ipt_param_int[nd][ PtZoneomp + Nbre_thread_actif ];
-                ithread_loc           = ipt_param_int[nd][ PtZoneomp +  ithread -1       ] +1 ;
-                if (ithread_loc == -1) {continue;}
-              }
-             else 
-              { Nbre_thread_actif_loc = Nbre_thread_actif;
-                ithread_loc = ithread;
-              }
 
              indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, lmin,
                                iptmoy_param[nd]+11, 
@@ -222,6 +233,7 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
   delete [] iptx;
   delete [] ipt_param_int;
 
+  RELEASESHAREDN( dtlocArray     , dtloc);
   RELEASEHOOK(hook)
 
   Py_INCREF(Py_None);

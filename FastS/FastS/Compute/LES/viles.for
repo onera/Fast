@@ -79,7 +79,7 @@ C Var loc
             !depth =  param_int(NIJK+3)
             depth =  1
             call lesvist(ndo, param_int, param_real, neq_rot,depth,
-     &                   ithread,nitrun,
+     &                   ithread,
      &                   ind_grad, ind_coe, ind_dm_zone,
      &                   xmut, rop, ti,tj,tk, vol, rot)
          endif

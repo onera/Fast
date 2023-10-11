@@ -1,0 +1,30 @@
+         !calcul wiggle
+         qm2  = (rop(nm2+v1)-rop(nm3 +v1))*(rop(nm +v1)-rop(nm2+v1))
+         qm1  = (rop(nm +v1)-rop(nm2 +v1))*(rop(l  +v1)-rop(nm +v1))
+         qp1  = (rop(l  +v1)-rop(nm  +v1))*(rop(np +v1)-rop(l  +v1))
+         qp2  = (rop(np +v1)-rop(l   +v1))*(rop(np2+v1)-rop(np +v1))
+         f1   = sign(1.,qm1 )+sign(1.,qp1)+sign(1.,qm2 )+sign(1.,qp2)
+
+         qm2  = (rop(nm2+v2)-rop(nm3 +v2))*(rop(nm +v2)-rop(nm2+v2))
+         qm1  = (rop(nm +v2)-rop(nm2 +v2))*(rop(l  +v2)-rop(nm +v2))
+         qp1  = (rop(l  +v2)-rop(nm  +v2))*(rop(np +v2)-rop(l  +v2))
+         qp2  = (rop(np +v2)-rop(l   +v2))*(rop(np2+v2)-rop(np +v2))
+         f2   = sign(1.,qm1 )+sign(1.,qp1)+sign(1.,qm2 )+sign(1.,qp2)
+
+         qm2  = (rop(nm2+v3)-rop(nm3 +v3))*(rop(nm +v3)-rop(nm2+v3))
+         qm1  = (rop(nm +v3)-rop(nm2 +v3))*(rop(l  +v3)-rop(nm +v3))
+         qp1  = (rop(l  +v3)-rop(nm  +v3))*(rop(np +v3)-rop(l  +v3))
+         qp2  = (rop(np +v3)-rop(l   +v3))*(rop(np2+v3)-rop(np +v3))
+         f3   = sign(1.,qm1 )+sign(1.,qp1)+sign(1.,qm2 )+sign(1.,qp2)
+
+         qm2  = (rop(nm2+v4)-rop(nm3 +v4))*(rop(nm +v4)-rop(nm2+v4))
+         qm1  = (rop(nm +v4)-rop(nm2 +v4))*(rop(l  +v4)-rop(nm +v4))
+         qp1  = (rop(l  +v4)-rop(nm  +v4))*(rop(np +v4)-rop(l  +v4))
+         qp2  = (rop(np +v4)-rop(l   +v4))*(rop(np2+v4)-rop(np +v4))
+         f4   = sign(1.,qm1 )+sign(1.,qp1)+sign(1.,qm2 )+sign(1.,qp2)
+
+         qm2  = (rop(nm2+v5)-rop(nm3 +v5))*(rop(nm +v5)-rop(nm2+v5))
+         qm1  = (rop(nm +v5)-rop(nm2 +v5))*(rop(l  +v5)-rop(nm +v5))
+         qp1  = (rop(l  +v5)-rop(nm  +v5))*(rop(np +v5)-rop(l  +v5))
+         qp2  = (rop(np +v5)-rop(l   +v5))*(rop(np2+v5)-rop(np +v5))
+         f5   = sign(1.,qm1 )+sign(1.,qp1)+sign(1.,qm2 )+sign(1.,qp2)

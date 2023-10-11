@@ -103,6 +103,126 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
                                                
+       ELSEIF (option.eq.620) THEN
+                                               
+           call eff_fluausm_lamin_o3sc_3dfull(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.621) THEN
+                                               
+           call eff_fluausm_lamin_o3sc_3dhomo(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.622) THEN
+                                               
+           call eff_fluausm_lamin_o3sc_3dcart(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.623) THEN
+                                               
+           call eff_fluausm_lamin_o3sc_2d(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.520) THEN
+                                               
+           call eff_fluausm_lamin_o5_3dfull(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.521) THEN
+                                               
+           call eff_fluausm_lamin_o5_3dhomo(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.522) THEN
+                                               
+           call eff_fluausm_lamin_o5_3dcart(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.523) THEN
+                                               
+           call eff_fluausm_lamin_o5_2d(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.720) THEN
+                                               
+           call eff_fluausm_lamin_o5sc_3dfull(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.721) THEN
+                                               
+           call eff_fluausm_lamin_o5sc_3dhomo(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.722) THEN
+                                               
+           call eff_fluausm_lamin_o5sc_3dcart(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.723) THEN
+                                               
+           call eff_fluausm_lamin_o5sc_2d(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
        ELSEIF (option.eq.210) THEN
                                                
            call eff_fluausm_euler_o3_3dfull(ndom, ithread, 
@@ -136,6 +256,126 @@ C Var loc
        ELSEIF (option.eq.213) THEN
                                                
            call eff_fluausm_euler_o3_2d(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.610) THEN
+                                               
+           call eff_fluausm_euler_o3sc_3dfull(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.611) THEN
+                                               
+           call eff_fluausm_euler_o3sc_3dhomo(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.612) THEN
+                                               
+           call eff_fluausm_euler_o3sc_3dcart(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.613) THEN
+                                               
+           call eff_fluausm_euler_o3sc_2d(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.510) THEN
+                                               
+           call eff_fluausm_euler_o5_3dfull(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.511) THEN
+                                               
+           call eff_fluausm_euler_o5_3dhomo(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.512) THEN
+                                               
+           call eff_fluausm_euler_o5_3dcart(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.513) THEN
+                                               
+           call eff_fluausm_euler_o5_2d(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.710) THEN
+                                               
+           call eff_fluausm_euler_o5sc_3dfull(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.711) THEN
+                                               
+           call eff_fluausm_euler_o5sc_3dhomo(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.712) THEN
+                                               
+           call eff_fluausm_euler_o5sc_3dcart(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.713) THEN
+                                               
+           call eff_fluausm_euler_o5sc_2d(ndom, ithread, 
      &                 param_int, param_real,param_int_eff,
      &                 ind_loop, effort, pos,
      &                 rop, flu , wig,

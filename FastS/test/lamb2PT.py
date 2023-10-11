@@ -40,11 +40,12 @@ FastC._setNum2Zones(t, numz) ; FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
-nit = 10 ; time = 0.
+nit = 11 ; time = 0.
 timeStep = numz['time_step']
 for it in range(nit):
     FastS._compute(t, metrics, it, tc)
-    if it%1 == 0:
+    if it%5 == 0:
         print('- %d - %g'%(it, time))
+        FastS.display_temporal_criteria(t,metrics,it)
         #CPlot.display(t, dim=2, mode=3, scalarField=1)
     time += timeStep

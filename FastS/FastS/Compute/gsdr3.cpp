@@ -258,7 +258,8 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
               shift_zone = shift_zone + param_int[n][ NDIMDX ]*param_int[n][ NEQ ];
               shift_coe  = shift_coe  + param_int[n][ NDIMDX ]*param_int[n][ NEQ_COE ];
               if(param_int[n][ KFLUDOM ]==2){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*3;}
-              if(param_int[n][ KFLUDOM ]==8){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*4;}
+              if(param_int[n][ SLOPE   ]==6){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*3;}
+              if(param_int[n][ SLOPE   ]==7){  shift_wig  = shift_wig  + param_int[n][ NDIMDX ]*3;}
              }
 #include "FastS/Compute/rhs.cpp"
           } 
@@ -298,7 +299,6 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
           }
 
 
-
           //
           //finalisation timer pour omp "dynamique"
           //
@@ -325,7 +325,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 #else  
      E_Float     trans_deb = 0.;
 #endif
- 
+
   //
   //
   //FillGhostcell si mise a jour necessaire et transfer dans C layer 
@@ -338,8 +338,11 @@ E_Int nitcfg_stk = nitcfg;
 if(lexit_lu ==0 && layer_mode==1)
 {   
   //remplissage ghost transfert
+  for (E_Int ipass = 0; ipass < 1; ipass++)
+  {
   #include "FastS/Compute/transfert_multiblock.cpp"
-  //E_Int cycl;
+  }
+  E_Int cycl;
  
   for (E_Int nd = 0; nd < nidom; nd++)
     {

@@ -9,10 +9,9 @@ if n != 2:
 
 dico= {}
 dico["SENSOR_INIT"] = { 'name':'flusenseur_init', 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
-dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
-dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
+dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3','o3sc','o5','o5sc']}
+dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3','o3sc','o5','o5sc']}
 dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3','o1']}
-dico["SENSORHYPER"] = { 'name':'flushyper'      , 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 
 rep = sys.argv[1]
 if rep not in dico:
@@ -26,9 +25,8 @@ TypeSlope  = dico[ rep ]['TypeSlope']
 flux       = dico[ rep ]['name']
 
 opt_ale = {'ale':1, '':0}
-opt_flu = {'flu_ausm':1, 'flu_senseur':2, 'flu_roe':5 }
 opt_mod = {'euler':1, 'lamin':2, 'SA':3 }
-opt_slp = {'o1':1, 'o3':2, 'minmod':3 }
+opt_slp = {'o1':1, 'o3':2, 'minmod':3 ,'o5':5,'o3sc':6,'o5sc':7}
 opt_mesh= {"3dfull":0, "3dhomo":1, "3dcart":2, "2d":3}
 
 
@@ -82,10 +80,10 @@ for ale in TypeMotion:
                     lines[i]=lines[i].replace("FLUX_CONV", rep)
 
 
-                # correction pour flushyper (wig dim)
-                if flux == 'flushyper':
+                # correction pour flusenseur (wig dim)
+                if flux == 'flusenseur' and ( slope=='o5sc' or slope=='o3sc'):
                     for i in range( 60 ):
-                        lines[i]=lines[i].replace("wig( param_int(NDIMDX)     * 3                  )", "wig( param_int(NDIMDX)     * 4                  )")
+                        lines[i]=lines[i].replace("wig( param_int(NDIMDX)     * 3                  )", "wig( param_int(NDIMDX)     * 6                  )")
 
                 # suppression fluk en 2d et metrique k (pour que mode debug soit OK)
                 if typezone == '2d':
@@ -172,23 +170,35 @@ for ale in TypeMotion:
 
                     if typezone == '2d':
                         for i in range( len(lines_euler) ):
-                            lines_euler[i]=lines_euler[i].replace("etat_GD",'etat_GD_2d').replace("etat_roe_GD",'etat_roe_GD_2d').replace("etat_hyper_GD",'etat_hyper_GD_2d')
+                            lines_euler[i]=lines_euler[i].replace("etat_GD",'etat_GD_2d').replace("etat_roe_GD",'etat_roe_GD_2d')
                         c = 0
                         for l in lines_euler:
                             if '3D only' in l: lines_euler = lines_euler[:c] + lines_euler[c+1:]; c-=1
                             c += 1
 
+                    # suppression slope shock capturing
+                    if slope!='o5sc' and slope!='o3sc':
+                       c=0
+                       for l in lines_euler:
+                           if 'SC only' in l:  lines_euler = lines_euler[:c] + lines_euler[c+1:]; c-=1
+                           c+=1
+
+
                     for i in range( len(lines_euler) ):
+                        if slope!='o5' and slope!='o5sc': #slope schock capturing
+                            lines_euler[i]=lines_euler[i].replace("nm3 = l -3*inci","")
+                            lines_euler[i]=lines_euler[i].replace("np2 = l +2*inci","")
                         lines_euler[i]=lines_euler[i].replace("o3"                , slope)
                         lines_euler[i]=lines_euler[i].replace("inci"              , 'inc'+dir)
                         lines_euler[i]=lines_euler[i].replace("si"                , 's'  +dir)
                         lines_euler[i]=lines_euler[i].replace("normale_3dfull_i"  , 'normale_'+typezone+'_'+dir)
-                        lines_euler[i]=lines_euler[i].replace("wiggle_i"          , 'wiggle_'+dir)
-                        lines_euler[i]=lines_euler[i].replace("ducros_i"          , 'ducros_'+dir)
+                        if slope=='o5' or slope=='o5sc' :
+                           lines_euler[i]=lines_euler[i].replace("wiggle_i"       , 'wiggle5_'+dir)
+                        else :
+                           lines_euler[i]=lines_euler[i].replace("wiggle_i"       , 'wiggle_'+dir)
                         lines_euler[i]=lines_euler[i].replace("wig_i"             , 'wig_'   +dir)
-                        lines_euler[i]=lines_euler[i].replace("wigd_i"             , 'wigd_'   +dir)
+                        lines_euler[i]=lines_euler[i].replace("sl_i"              , 'sl_'   +dir)
                         lines_euler[i]=lines_euler[i].replace("fluvector_3dfull_i", 'fluvector'+ale1 +typezone+'_'+dir)
-                        lines_euler[i]=lines_euler[i].replace("fluhyper_3dfull_i", 'fluhyper'+ale1 +typezone+'_'+dir)
                         lines_euler[i]=lines_euler[i].replace("fludiffer_3dfull_i", 'fludiffer'+ale1 +typezone+'_'+dir)
                         lines_euler[i]=lines_euler[i].replace("qn_3dfull_i"       , 'qn'+ale1+typezone+'_'+dir)
                         lines_euler[i]=lines_euler[i].replace("!3D only"          , '')

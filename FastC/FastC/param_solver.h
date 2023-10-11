@@ -204,10 +204,11 @@
 /* SA options */
 #define SA_LOW_RE     130
 #define SA_ROT_CORR   131
+#define SA_DIST       132
 
 /* stockage pour interpolation temporelle*/
-#define PT_INTERP     132
-#define NONZ          133
+#define PT_INTERP     133
+#define NONZ          134
 
 
 

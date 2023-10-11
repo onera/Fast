@@ -72,7 +72,7 @@ C Var loc
 
       ELSEIF (kflu_loc.eq.2) THEN
 
-          call eff_flusenseur_init_select(ndom, ithread,
+          call eff_flusenseur_select(ndom, ithread,
      &                        param_int, param_real,param_int_eff,
      &                        ind_loop, effort, xyz_ref,
      &                        rop, flu, wig,
@@ -83,16 +83,6 @@ C Var loc
       ELSEIF (kflu_loc.eq.5) THEN
 
           call eff_fluroe_select(ndom, ithread,
-     &                        param_int, param_real,param_int_eff,
-     &                        ind_loop, effort, xyz_ref,
-     &                        rop, flu, wig,
-     &                        x, y, z,
-     &                        venti, ventj, ventk,
-     &                        ti, tj, tk, vol, xmut)
-
-      ELSEIF (kflu_loc.eq.8) THEN
-
-          call eff_flushyper_select(ndom, ithread,
      &                        param_int, param_real,param_int_eff,
      &                        ind_loop, effort, xyz_ref,
      &                        rop, flu, wig,

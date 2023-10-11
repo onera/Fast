@@ -61,9 +61,11 @@ Fast._setNum2Zones(t, numz)
 for z in Internal.getZones(t):
   if z[0]=='cyl2':
     numz["scheme"]= "senseur"
+    numz["slope"] = "o3"
     Fast._setNum2Zones(z, numz)
   elif z[0]=='cyl3':
-    numz["scheme"]= "senseur_hyper"
+    numz["scheme"]= "senseur"
+    numz["slope"] = "o3sc"
     Fast._setNum2Zones(z, numz)
 
 # Prim vars, solver tag, compact, metrics
@@ -85,3 +87,4 @@ test.testT(teff, 1)
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 2)
+C.convertPyTree2File(t,'verif.cgns')
