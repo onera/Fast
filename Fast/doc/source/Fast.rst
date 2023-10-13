@@ -93,27 +93,22 @@ Actions
     - **'scheme'**: possible values are
  
         + 'ausmpred' (see p49 https://tel.archives-ouvertes.fr/pastel-00834850/document)
-        + 'senseur'   (for DNS/LES, see p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
-        + 'senseur_hyper' (for DNS/LES with shock, see :download:`Lugrin scheme <documents/SCHEMA_lugrin.pdf>`)
-        + 'roe'
+        + 'senseur'  (for DNS/LES, see p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
+        + 'roe'      (classical Roe fluxes)
         + default value is 'ausmpred'
 
     - **'slope'**: possible values are
 
         + 'o3'      (third order, see  p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
+        + 'o3sc'    (third order with limiter, see :download:`Lugrin scheme <documents/SCHEMA_lugrin.pdf>`)
         + 'o1'      (first order,  only valid for roe scheme)
-        + 'minmod'  (only valid for roe scheme)
+        + 'minmod'  (second order with minmod limiter, only valid for roe scheme)
         + default value is 'o3'
 
     - **'senseurType'**:  only valid for 'senseur' scheme. Possible values are
 
         + 0 : correction for speed only
         + 1 : correction for speed, density and pressure
-
-    - **'coef_hyper'**:  only valid for 'senseur_hyper' scheme. Possible values are
-
-        + [coeff1, coeff2] (see pdf M. Lugrin)
-        + default value are [0.009, 0.015]
         
     - **'motion'**: possible values are
 

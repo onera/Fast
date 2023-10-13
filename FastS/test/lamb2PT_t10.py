@@ -27,9 +27,10 @@ a2 = C.addBC2Zone(a2, 'extrap', 'BCExtrapolate', 'jmax')
 a2 = C.addBC2Zone(a2, 'ov', 'BCOverlap', 'imin')
 t = C.newPyTree(['Base']); t[2][1][2] += [a1,a2]
 
-#Ajout rind pour 3 ghost
+# Ajout rind pour 3 ghost
 for z in Internal.getZones(t):
-  Internal.newRind([3,3,3,3,3,3], parent=z,name='RindCFD')
+  Internal._createUniqueChild(z, 'RindCFD', 'Rind_t', value=[3,3,3,3,3,3])
+  #Internal.newRind([3,3,3,3,3,3], parent=z, name='RindCFD')
   #Internal.newRind([3,3,3,3,3,3], parent=z)
 
 # Chimera
