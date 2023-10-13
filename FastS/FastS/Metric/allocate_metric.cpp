@@ -104,9 +104,23 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     E_Int ni =  dim[0]; E_Int nj = dim[1]; E_Int nk = dim[2];
 
     E_Int nfic;
-    t= K_PYTREE::getNodeFromName1(zone      , "RindCFD");
-    if (t != NULL){ E_Int* rind =  K_PYTREE::getValueAI(t, hook); nfic = rind[0];}
-    else {nfic =2;}
+    t= K_PYTREE::getNodeFromName1(zone, "Rind");
+    if (t != NULL)
+      { E_Int* rind =  K_PYTREE::getValueAI(t, hook);
+
+        if( ipt_param_int[SLOPE] == 5 || ipt_param_int[SLOPE] == 7) //ordre5
+          { E_Int imax  =6;
+            E_Int count =0; 
+            if(nk == 2) imax=4;
+            for (E_Int i = 0; i < imax; i++){count +=rind[i];}
+            if(nk == 2 && count ==12) {nfic=3;}
+            else if (nk != 2 && count ==18) {nfic=3;}
+            else { printf("Error: ghostcell number unsufficient for o(5) slope \n"); E_Int ierr; exit(ierr); }   
+          }
+        else{nfic =2;}
+      }
+    else{nfic=2;}
+
     E_Int ific = nfic; E_Int ific_xyz = nfic;
     if (kfludom == 3)  { ific_xyz = 6; ific = 3; }
 

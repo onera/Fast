@@ -16,6 +16,7 @@ try:
     import Connector.PyTree as X
     import Connector.OversetData as XOD
     import FastC.PyTree as FastC
+    import Fast.variables_share_pytree as VSHARE
     import math
     import time as Time
     import Connector.Mpi as Xmpi
@@ -1387,15 +1388,12 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
     tmy[2].append(own)
 
     for z in zones:
+       param_int_t = Internal.getNodeFromName2(z, 'Parameter_int')[1]
        # on determine le nbr de cellule fictive active pour le calcul des moyennes
-       Rind = Internal.getNodeByName(z,"RindCFD")
-       if Rind  is not None:
-         numcellfic = Internal.getValue(Rind)[0]
-       else: 
-         numcellfic=2
+       numcellfic= param_int_t[VSHARE.NIJK+3];
        ific        =  numcellfic  # a adapter en DF
        if lgrad == 1: numcellfic = 1
-       
+
        datap = numpy.empty((17), numpy.int32)
        dim   = Internal.getZoneDim(z)
        inck  = 1
@@ -2341,13 +2339,13 @@ def createStressNodes(t, BC=None, windows=None):
                 if bc is not None: list_bc = bc[2]
             else:
                 list_bc =['window']
-            Rind = Internal.getNodeByName(z,"RindCFD")
-            if Rind  is not None:
-              ific = Internal.getValue(Rind)[0]
-            else: 
-              ific=2
+
             param_int = Internal.getNodeFromName2(z, 'Parameter_int')
-            if param_int is not None: ific = param_int[1][3]
+            if param_int is not None: ific = param_int[1][VSHARE.NIJK+3]
+            else:
+              print("Error: CreateStress node must be called after warmup function")
+              import sys; sys.exit()
+
             ndf = 0
             for v in list_bc:
 
