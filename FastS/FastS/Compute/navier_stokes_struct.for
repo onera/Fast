@@ -365,7 +365,7 @@ c       endif
           if(param_int(EXTRACT_RES).eq.1) then
               call extract_res(ndo, param_int, param_real,
      &                         ind_mjr,
-     &                         drodm, vol, ro_res)
+     &                         drodm, vol, wig, ro_res)
           endif
  
           !! impicit krylov             
