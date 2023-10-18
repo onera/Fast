@@ -29,7 +29,7 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 # Compute
 for it in range(1,10):
     FastS._compute(t, metrics, it)
-    FastS.displayTemporalCriteria(t, metrics, it, format='double')
+    FastS._displayTemporalCriteria(t, metrics, it, format='double')
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

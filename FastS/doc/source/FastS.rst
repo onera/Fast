@@ -47,7 +47,7 @@ List of functions
     FastS.PyTree._computeStress
     FastS.PyTree._computeVariables
     FastS.PyTree._computeGrad
-    FastS.PyTree.extractConvergenceHistory
+    FastS.PyTree._extractConvergenceHistory
 
 Contents
 #########
@@ -101,10 +101,10 @@ Preparation
 
 -------------------------------------------
 
-.. py:function:: FastS.PyTree.createConvergenceHistory(t, nrec)
+.. py:function:: FastS.PyTree._createConvergenceHistory(t, nrec)
 
     Create a node in each zone with convergence information (residuals)
-    MUST be called before displayTemporalCriteria() and only for steady case.
+    MUST be called before _displayTemporalCriteria() and only for steady cases.
     t is a pyTree, nrec is the size of the data arrays to store the residuals.
     The data arrays are stored during the call to  **FastS.displayTemporalCriteria**
 
@@ -221,7 +221,7 @@ Running computation
 
 -------------------------------------------
 
-.. py:function:: FastS.PyTree.displayTemporalCriteria(t, metrics, nit, format=None)
+.. py:function:: FastS.PyTree._displayTemporalCriteria(t, metrics, nit, format=None)
 
     Displays CFL and implicit convergence information.
 
@@ -397,11 +397,10 @@ Post
 
 --------------------------------------------------------
 
-.. py:function:: FastS.PyTree.extractConvergenceHistory(t, fileout, perZones=True, perBases=True)
+.. py:function:: FastS.PyTree._extractConvergenceHistory(t, fileout, perZones=True, perBases=True)
 
     Extract convergence information (residuals) for each zone or/and for each base.
 
-    
     :param t: input pyTree with ConvergenceHistory computed
     :type t: pyTree
     :param fileout: name of file for resiudal extraction (tp format)

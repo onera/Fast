@@ -6,6 +6,8 @@ import FastC.PyTree as FastC
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import Initiator.PyTree as I
+import KCore.test as test
+LOCAL = test.getLocal()
 
 ni = 155; dx = 100./(ni-1); dz = 0.01
 a1 = G.cart((-50,-50,0.), (dx,dx,dz), (ni,ni,2))
@@ -51,3 +53,4 @@ for it in range(nit):
 
 # extraction des residus et creation du fichier "residus.dat"
 FastS._extractConvergenceHistory(t,"residus.dat")
+test.testF(LOCAL+'/residus.dat', 1)

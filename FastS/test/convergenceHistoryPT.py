@@ -35,7 +35,7 @@ FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 nrec = 100//modulo_verif
 
 #To remove old ConvergenceHistory nodes 
-t = C.rmNodes(t, "ZoneConvergenceHistory")
+C._rmNodes(t, "ZoneConvergenceHistory")
 
 #Convergence history with nrec records
 FastS.createConvergenceHistory(t, nrec)
@@ -46,7 +46,7 @@ time_step = Internal.getValue(time_step)
 for it in range(nit):
     FastS._compute(t, metrics, it, tc)
     if it%modulo_verif == 0:
-    	FastS.displayTemporalCriteria(t, metrics, it)
+    	FastS.displayTemporalCriteria(t, metrics, it, format='store')
     time += time_step
 
 # time stamp

@@ -2062,6 +2062,9 @@ def _computeGrad(t, metrics, varlist, order=2):
 # Display
 #==============================================================================
 def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', stopAtNan=True):
+    return _displayTemporalCriteria(t, metrics, nitrun, format=format, gmres=gmres, verbose=verbose, stopAtNan=stopAtNan)
+
+def _displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', stopAtNan=True):
     """Display CFL and convergence information."""
     return display_temporal_criteria(t, metrics, nitrun, format, gmres, verbose, stopAtNan)
 
@@ -2180,6 +2183,8 @@ def _movegrid(t):
 # Convergence
 #==============================================================================
 def createConvergenceHistory(t, nrec):
+    return _createConvergenceHistory(t, nrec)
+def _createConvergenceHistory(t, nrec):
     """Create a node in tree to store convergence history."""
     varsR   = ['RSD_L2','RSD_oo','RSD_L2_diff','RSD_oo_diff']
     bases   = Internal.getNodesFromType1(t, 'CGNSBase_t')
@@ -2253,6 +2258,9 @@ def write_plt_format(t, i, FileCvg, nd, it=[], RSD_L2=[], RSD_oo=[], RSD_L2_diff
 # IN: fileout: fileName for output of residuas in tp format
 # IN: perZones: write ConvergenceHistory for each zones
 # IN: perBases: write ConvergenceHistory for each base
+def extractConvergenceHistory(t, fileout, perZones=True, perBases=True):
+    return _extractConvergenceHistory(t, fileout, perZonesperZones, perBases=perBases)
+
 def _extractConvergenceHistory(t, fileout, perZones=True, perBases=True):
     """Extract residuals in an ascii file (tp format)."""
     zones = Internal.getZonePaths(t)
@@ -2276,6 +2284,7 @@ def _extractConvergenceHistory(t, fileout, perZones=True, perBases=True):
                                       a=[], convergence_name='GlobalConvergenceHistory')
     
     fileCvg.close()
+    return None
 
 #==============================================================================
 # Cree un arbre Stress pour calcul effort
@@ -3028,7 +3037,7 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
                if CHECK: check_k[ ptlistD[l] ] += val*1000000
                if c != sz_kmin-1: Fkmin[ sz_kmin-1] += 1
                if lprint: print("verif kmin", c, sz_kmin, Fkmin[ sz_kmin-1], Fkmin[c], ptlistD[l], l, 'celln=', celln[Fkmin[c]-1], celln[Fkmin[c]-1+sh[0]*sh[1]])
-
+ return None
 #====================================================================================
 # Calcule la CFL en chaque maille et la met dans l'arbre t pour dtloc instationnaire
 #====================================================================================

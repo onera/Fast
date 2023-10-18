@@ -33,6 +33,6 @@ FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 # Compute
 for it in range(1,5):
     FastS._compute(t, metrics, it)
-    FastS.displayTemporalCriteria(t, metrics, it)
+    FastS._displayTemporalCriteria(t, metrics, it)
 
 C.convertPyTree2File(t, 'out.cgns')
