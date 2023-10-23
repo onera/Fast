@@ -341,6 +341,9 @@ E_Int K_FASTS::BCzone(
                      { 
 #                      include "BC/INCREMENT_BC.h"
 
+                       if(nbdata != 6 and param_int[IFLOW]==3){ printf("ERROR BCInflow: inappropriate number of BC data \n"); exit(err);}
+                       if(nbdata != 5 and param_int[IFLOW]<=2){ printf("ERROR BCInflow: inappropriate number of BC data \n"); exit(err);}
+
                        E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
 
                        E_Float* ipt_data1 = ipt_data;
@@ -356,7 +359,7 @@ E_Int K_FASTS::BCzone(
                      }
 
                 } else if ( bc_type == 19 ) {//inflow Lund
-                    DEFAULT_STATE( "BCInflow" )
+                    DEFAULT_STATE( "BCInflowLund" )
 
 #                   include "BC/INCREMENT_BC.h"
 
@@ -376,6 +379,9 @@ E_Int K_FASTS::BCzone(
 
 #                   include "BC/INCREMENT_BC.h"
 
+                   if(nbdata != 6 and param_int[IFLOW]==3){ printf("ERROR BCInjMFR: inappropriate number of BC data \n"); exit(err);}
+                   if(nbdata != 5 and param_int[IFLOW]<=2){ printf("ERROR BCInjMFR: inappropriate number of BC data \n"); exit(err);}
+
                    E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
 
                    E_Float* ipt_d0x = ipt_data;                     // d0x
@@ -392,6 +398,8 @@ E_Int K_FASTS::BCzone(
                      DEFAULT_STATE( "BCOutMFR" )
 
 #                   include "BC/INCREMENT_BC.h"
+
+                     if(nbdata < 1){ printf("ERROR BCOutMFR: inappropriate number of BC data \n"); exit(err);}
 
                      E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
 
@@ -412,6 +420,9 @@ E_Int K_FASTS::BCzone(
                     else
                      { 
 #                      include "BC/INCREMENT_BC.h"
+
+                       if(nbdata != 6 and param_int[IFLOW]==3){ printf("ERROR BCInflowSupersonic: inappropriate number of BC data \n"); exit(err);}
+                       if(nbdata != 5 and param_int[IFLOW]<=2){ printf("ERROR BCInflowSupersonic: inappropriate number of BC data \n"); exit(err);}
 
                        E_Int size_work = ipt_ind_CL[1] - ipt_ind_CL[0] + 1;
 
@@ -524,6 +535,7 @@ E_Int K_FASTS::BCzone(
 
 #                   include "BC/INCREMENT_BC.h"
                     
+                    if(nbdata < 1 ){ printf("ERROR BCOutpres: inappropriate number of BC data \n"); exit(err);}
                     bvbs_outpres_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                    iptijk, iptrop, ipt_data, iptsize_data[0], inc_bc );
 
@@ -539,6 +551,9 @@ E_Int K_FASTS::BCzone(
                     E_Float* ipt_data4 = ipt_data3 + iptsize_data[0];
                     E_Float* ipt_data5 = ipt_data4 + iptsize_data[0];
                     E_Float* ipt_data6 = ipt_data5 + iptsize_data[0];
+
+                    if(nbdata != 6 and param_int[IFLOW]==3){ printf("ERROR BCInj1: inappropriate number of BC data \n"); exit(err);}
+                    if(nbdata != 5 and param_int[IFLOW]<=2){ printf("ERROR BCInj1: inappropriate number of BC data \n"); exit(err);}
 
                     bvbs_inflow_newton_( idir, lrhs_loc, neq_mtr, param_int, ipt_ind_CL, param_real, c4, c5, c6, ipventijk,
                                          iptijk, iptrop, ipt_data1, ipt_data2, ipt_data3, ipt_data4, ipt_data5,
