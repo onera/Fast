@@ -33,8 +33,14 @@
 
            if(param_int[nd][LALE]>=2 && param_int[nd][ITYPZONE]!=4)
            {
+
+             //recuperation pointeur pour stockage volume instant N+1
+             param_int[nd][PT_VOL] +=1;
+             if (param_int[nd][PT_VOL] ==3 ) { param_int[nd][PT_VOL]=0; }
+             E_Float* vol_p = iptvol[nd] + param_int[nd][PT_VOL]* param_int[nd][ NDIMDX_MTR ];
+
 #            include "FastC/Metric/indice_omp1.h" 
-             cp_vol_(  param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], ind_mtr);
+             cp_vol_(  param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], vol_p, ind_mtr);
 
              for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
               for (E_Int j = ind_mtr[2]; j <= ind_mtr[3]; j++){ 
@@ -44,7 +50,7 @@
                           + (j+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR+1]
                           + (k+ param_int[nd][NIJK_MTR+4]-1)*param_int[nd][NIJK_MTR+2];
 
-                 iptvol[nd][l] = K_FUNC::E_max(iptvol[nd][l], 1.e-30);
+                 vol_p[l] = K_FUNC::E_max(vol_p[l], 1.e-30);
                 }
                }
               }
@@ -64,6 +70,7 @@
               
          if(param_int[nd][LALE]>=2 && param_int[nd][ITYPZONE]!=4)
          {
+          E_Float* vol_p = iptvol[nd] + param_int[nd][PT_VOL]* param_int[nd][ NDIMDX_MTR ];
 #         include "FastC/Metric/indice_omp1.h" 
           if (param_int[nd][ ITYPZONE ] != 2  && ithread_loc == 1)
           {
@@ -103,7 +110,7 @@
                          param_int[nd][ NEQ_IJ ]    , param_int[nd][ NEQ_K ],
                          ipt_ind_dm_loc,
                          ipt_degen[nd] ,
-                         ipti[nd]      , iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd]); 
+                         ipti[nd]      , iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], vol_p); 
 
            if(param_int[nd][ IFLOW ] ==3)
              { ipt_ind_dm_loc[1]= param_int[nd][ IJKV ]; ipt_ind_dm_loc[3]= param_int[nd][ IJKV+1 ]; ipt_ind_dm_loc[5]= param_int[nd][IJKV+2];
@@ -114,33 +121,6 @@
           }
          }//ale
         }//loop task 
-        if(barrier ==1)
-        {
-       	   #pragma omp barrier
-        }
-        // recopie vol dans vol2 pour ALE
-        for (E_Int ntask = 0; ntask < nbtask; ntask++)
-        {
-          E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
-          E_Int nd = ipt_omp[ pttask ];
-#         include "FastC/Metric/indice_omp1.h"
-            if (param_int[nd][ LALE ] == 3)
-            {
-              E_Float* iptvol2 = iptvol[nd]+param_int[nd][NDIMDX_MTR];
-
-              for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
-               for (E_Int j = ind_mtr[2]; j <= ind_mtr[3]; j++){ 
-                for (E_Int i = ind_mtr[0]; i <= ind_mtr[1]; i++){ 
-
-                 E_Int l =  (i+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR]
-                          + (j+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR+1]
-                          + (k+ param_int[nd][NIJK_MTR+4]-1)*param_int[nd][NIJK_MTR+2];
-                 iptvol2[l] = iptvol[nd][l];
-               }
-              }
-             }
-            }
-         }
         if(barrier ==1)
         {
        	   #pragma omp barrier

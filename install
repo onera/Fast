@@ -30,7 +30,7 @@ else
     exit 1
 fi
 
-. ./MODULES
+. ./MODULES_IVAN
 
 for mod in $FULLMODULES
 do

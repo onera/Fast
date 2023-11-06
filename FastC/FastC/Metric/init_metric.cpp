@@ -348,9 +348,10 @@ PyObject* K_FASTC::init_metric(PyObject* self, PyObject* args)
           E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
           E_Int nd = ipt_omp[ pttask ];
 #         include "Metric/indice_omp1.h"
-            if (param_int[nd][ LALE ] == 3)
+            if (param_int[nd][ LALE ] == 2)
             {
               E_Float* iptvol2 = iptvol[nd]+param_int[nd][NDIMDX_MTR];
+              E_Float* iptvol3 = iptvol[nd]+param_int[nd][NDIMDX_MTR]*2;
 
               for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
                for (E_Int j = ind_mtr[2]; j <= ind_mtr[3]; j++){ 
@@ -360,6 +361,7 @@ PyObject* K_FASTC::init_metric(PyObject* self, PyObject* args)
                           + (j+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR+1]
                           + (k+ param_int[nd][NIJK_MTR+4]-1)*param_int[nd][NIJK_MTR+2];
                  iptvol2[l] = iptvol[nd][l];
+                 iptvol3[l] = iptvol[nd][l];
                }
               }
              }

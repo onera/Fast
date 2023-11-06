@@ -29,12 +29,11 @@ using namespace K_FLD;
 PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 {
   PyObject *zones; PyObject *metrics; PyObject* work;
-  E_Int nssiter; E_Int ompmode;
 
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOlOl", &zones, &metrics, &nssiter, &work, &ompmode)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOO", &zones, &metrics, &work )) return NULL; 
 #else 
-  if (!PyArg_ParseTuple(args, "OOiOi", &zones, &metrics, &nssiter, &work, &ompmode)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOO", &zones, &metrics, &work )) return NULL; 
 #endif
   
   PyObject* ssors  = PyList_New(0);
@@ -42,6 +41,13 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
   vector<PyArrayObject*> hook;
   E_Int nidom = PyList_Size(zones), nb_subzones;
   E_Int *ipt_param_int, *ipt_ind_dm, *ipt_nidom_loc;
+
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+  E_Int omp_mode = iptdtloc[8];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
 
   //PyObject* tmp = PyDict_GetItemString(work, "MX_SSZONE"); 
   //E_Int mx_sszone = PyLong_AsLong(tmp);
@@ -55,8 +61,20 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
     E_Int Nbre_thread_actif = 1;
 #endif
 
-  for (E_Int nd = 0; nd < nidom; nd++)
-    {
+   E_Int nitcfg = 1;
+   E_Int nbtask = ipt_omp[nitcfg-1]; 
+   E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+
+   // loop calcul normale
+   for (E_Int ntask = 0; ntask < nbtask; ntask++)
+     {
+      E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+      E_Int nd = ipt_omp[ pttask ];
+
+      //ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+      E_Int nd_subzone            = ipt_omp[ pttask + 1 ];
+      E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+
       PyObject* zone   = PyList_GetItem(zones  , nd);
       PyObject* metric = PyList_GetItem(metrics, nd);
 
@@ -73,60 +91,26 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 	  ipt_ind_dm = K_NUMPY::getNumpyPtrI(PyList_GetItem(metric, METRIC_INDM));
 
 	  ipt_nidom_loc = ipt_ind_dm + ipt_param_int[MXSSDOM_LU] * 6 * nssiter + nssiter;
-	  nb_subzones = ipt_nidom_loc[0]; //nstep = 0
 
-	  for (E_Int nd_subzone = 0; nd_subzone < nb_subzones; nd_subzone++)
+	  for (E_Int i = 0; i < Nbre_thread_actif_loc; i++)
 	    {
-	      if (ompmode == 1)
-		{
-		  E_Int       Ptomp = ipt_param_int[PT_OMP];
-		  E_Int  PtrIterOmp = ipt_param_int[Ptomp];   
-		  E_Int  PtZoneomp  = ipt_param_int[PtrIterOmp + nd_subzone];
+              E_Int* ipt_ind_dm_thread   = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + i*6;
 
-		  for (E_Int i = 0; i < Nbre_thread_actif; i++)
-		    {
-		      if (ipt_param_int[PtZoneomp + i] != - 2)
-			{
-			  E_Int* ipt_ind_dm_thread = ipt_param_int + PtZoneomp +  Nbre_thread_actif + 4 + (ipt_param_int[PtZoneomp + i]) * 6;
+               sizessor += (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic_ij) *
+                           (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic_ij) *
+                           (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
+	    }
+	
+          E_Int sz_ssortmp = sizessor;
+          E_Int sz_ssor    = sizessor;
+          if (ipt_param_int[NB_RELAX] == 1) sz_ssor=1;
 
-			  sizessor += (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic_ij) *
-			    (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic_ij) *
-			    (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
-			}
-		    }
-		}
-        else //ompmode = 0
-		{
-		  E_Int* ipt_ind_dm_loc  = ipt_ind_dm + 6 * nd_subzone;
-		  E_Int ipt_topology_socket[3];
-		  E_Int ipt_ind_dm_thread[6];
-		  E_Int lmin = 10;
-		  if (ipt_param_int[ITYPCP] == 2) lmin = 4;
+          //printf("sizessor %d %d %d \n",nd, sz_ssor, Nbre_thread_actif_loc);
 
-		  for (E_Int i = 1; i < Nbre_thread_actif + 1; i++)
-		    {
-		      indice_boucle_lu_(nd, i, Nbre_thread_actif, lmin,
-					ipt_ind_dm_loc,
-					ipt_topology_socket, ipt_ind_dm_thread);
-
-		      if (i > ipt_topology_socket[0]*ipt_topology_socket[1]*ipt_topology_socket[2])
-			break;
-
-		      sizessor += (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic_ij) *
-			(ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic_ij) *
-			(ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
-		    }
-		}
-        }//loop subzone
-        E_Int sz_ssortmp = sizessor;
-        E_Int sz_ssor    = sizessor;
-        if (ipt_param_int[NB_RELAX] == 1) sz_ssor=1;
-
-        ssor    = K_NUMPY::buildNumpyArray(sz_ssor   , neq, 0, 1);  PyList_Append(ssors, ssor);
-        ssortmp = K_NUMPY::buildNumpyArray(sz_ssortmp, neq, 0, 1);  PyList_Append(ssors, ssortmp);
-
-    }// test NB_RELAX
-    }//loop zone
+          ssor    = K_NUMPY::buildNumpyArray(sz_ssor   , neq, 0, 1);  PyList_Append(ssors, ssor);
+          ssortmp = K_NUMPY::buildNumpyArray(sz_ssortmp, neq, 0, 1);  PyList_Append(ssors, ssortmp);
+       }// test NB_RELAX
+    }//loop task
   
   if ( nidom != 0 && (ipt_param_int[NB_RELAX] > 1 || ipt_param_int[LU_MATCH]==1 ) )
     { 

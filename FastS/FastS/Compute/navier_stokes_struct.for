@@ -108,7 +108,8 @@ C Var loc
 
       INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
      & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2,
-     & flag_wait,cells, it_dtloc, flag_NSLBM,lcomput
+     & flag_wait,cells, it_dtloc, flag_NSLBM,lcomput,shift_vol,
+     & shift_vol_n,shift_vol_m
 
 
       REAL_E rhs_begin,rhs_end
@@ -128,7 +129,17 @@ C Var loc
       include 'omp_lib.h'
 
        rhs_begin = OMP_GET_WTIME()
-
+  
+       shift_vol   = param_int(PT_VOL)*param_int(NDIMDX_MTR)
+       if(param_int(LALE).eq.2) then
+         shift_vol_n = param_int(PT_VOL)-1
+         if (shift_vol_n.lt.0) shift_vol_n = 2
+         shift_vol_m = shift_vol_n-1
+         if (shift_vol_m.lt.0) shift_vol_m = 2
+         shift_vol_n   = shift_vol_n*param_int(NDIMDX_MTR)
+         shift_vol_m   = shift_vol_m*param_int(NDIMDX_MTR)
+       endif
+       
 #include "FastC/HPC_LAYER/SIZE_MIN.for"
 #include "FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
 #include "FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
@@ -257,7 +268,7 @@ c       endif
      &                    flagCellN, param_int, param_real,
      &                    ind_sdm, ind_grad, ind_coe,
      &                    cfl, xmut,rop_ssiter, cellN, coe,
-     &                    ti,tj,tk, vol,venti)
+     &                    ti,tj,tk, vol(1+shift_vol),venti)
 
           ENDIF !! fin test 1ere sous-ite de la zone
 
@@ -283,7 +294,8 @@ c       endif
      &                  ind_sdm, ind_rhs, ind_ssa, ind_grad,
      &                  temps, nitrun, cycl,
      &                  rop_ssiter, xmut, drodm, coe, x,y,z,cellN_IBC,
-     &                  ti,tj,tk,vol, delta, ro_src, wig, rop, rop_m1)
+     &                  ti,tj,tk,vol(1+shift_vol), 
+     &                  delta, ro_src, wig, rop, rop_m1)
 
           IF(flag_wait.eq.0) then
 #include "FastC/HPC_LAYER/SYNCHRO_WAIT.for"
@@ -302,7 +314,8 @@ c       endif
      &                        ibloc , jbloc , kbloc ,
      &                        icache, jcache, kcache,
      &                        psi,wig,stat_wig, rop_ssiter, drodm,
-     &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
+     &                        ti,ti_df,tj,tj_df,tk,tk_df,
+     &                        vol(1+shift_vol),vol_df,
      &                        venti, ventj, ventk, xmut)
 
           elseif(param_int(KFLUDOM).eq.2) then
@@ -315,7 +328,8 @@ c       endif
      &                        ibloc , jbloc , kbloc ,
      &                        icache, jcache, kcache,
      &                        psi,wig,stat_wig, rop_ssiter, drodm,
-     &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
+     &                        ti,ti_df,tj,tj_df,tk,tk_df,
+     &                        vol(1+shift_vol),vol_df,
      &                        venti, ventj, ventk, xmut)
 
           elseif(param_int(KFLUDOM).eq.5) then
@@ -328,7 +342,8 @@ c       endif
      &                        ibloc , jbloc , kbloc ,
      &                        icache, jcache, kcache,
      &                        psi,wig,stat_wig, rop_ssiter, drodm,
-     &                        ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
+     &                        ti,ti_df,tj,tj_df,tk,tk_df,
+     &                        vol(1+shift_vol),vol_df,
      &                        venti, ventj, ventk, xmut)
 
           else
@@ -346,7 +361,8 @@ c       endif
               call bfl3(ndo, ithread, param_int, param_real, 
      &                  ind_dm_zone, ind_sdm,
      &                  psi,wig,stat_wig, rop_ssiter, drodm,
-     &                  ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
+     &                  ti,ti_df,tj,tj_df,tk,tk_df,
+     &                  vol(1+shift_vol),vol_df,
      &                  venti, ventj, ventk, xmut)
           endif
 
@@ -355,7 +371,8 @@ c       endif
               call wall_model_flux(ndo,ithread, param_int, param_real,
      &                  ind_dm_zone, ind_sdm, nitcfg, nitrun, cycl,
      &                  psi,wig,stat_wig, rop_ssiter, drodm,x,y,z,
-     &                  ti,ti_df,tj,tj_df,tk,tk_df, vol,vol_df,
+     &                  ti,ti_df,tj,tj_df,tk,tk_df,
+     &                  vol(1+shift_vol),vol_df,
      &                  venti, ventj, ventk, xmut)
           endif
 !         STEP IV: END
@@ -365,7 +382,7 @@ c       endif
           if(param_int(EXTRACT_RES).eq.1) then
               call extract_res(ndo, param_int, param_real,
      &                         ind_mjr,
-     &                         drodm, vol, wig, ro_res)
+     &                         drodm, vol(1+shift_vol), wig, ro_res)
           endif
  
           !! impicit krylov             
@@ -390,16 +407,32 @@ c       endif
            !! implicit Lu                 
           elseif(param_int(ITYPCP).le.1) then
 
-              !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
-              if(flagCellN.eq.0) then
-               call core3as2(ndo,nitcfg, first_it, param_int,param_real,
-     &                        ind_mjr,
-     &                       rop_ssiter, rop, rop_m1, drodm, coe)
+              !!maillage indeformable
+              if(param_int(LALE).lt.2) then
+                 !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
+                 if(flagCellN.eq.0) then
+                   call core3as2(ndo,nitcfg, first_it, 
+     &                               param_int,param_real, ind_mjr,
+     &                           rop_ssiter, rop, rop_m1, drodm, coe)
+                 else
+                   call core3as2_chim(ndo,nitcfg, first_it, 
+     &                            param_int, param_real, ind_mjr, cellN,
+     &                            rop_ssiter,rop, rop_m1, drodm, coe)
+                 endif
               else
-               call core3as2_chim(ndo,nitcfg, first_it, 
-     &                            param_int,param_real,
-     &                            ind_mjr, cellN,
-     &                            rop_ssiter, rop, rop_m1, drodm, coe)
+                 if(flagCellN.eq.0) then
+                   call core3as2_def(ndo,nitcfg, first_it, 
+     &                             param_int,param_real, ind_mjr,
+     &                             vol(1+shift_vol), vol(1+shift_vol_n),
+     &                             vol(1+shift_vol_m),
+     &                             rop_ssiter, rop, rop_m1, drodm, coe)
+                 else
+                   call core3as2_chim_def(ndo,nitcfg, first_it, 
+     &                            param_int, param_real, ind_mjr, cellN,
+     &                            vol(1+shift_vol), vol(1+shift_vol_n),
+     &                            vol(1+shift_vol_m),
+     &                            rop_ssiter,rop, rop_m1, drodm, coe)
+                 endif
               endif
 
              !Extraction tableau residu
@@ -421,7 +454,8 @@ c       endif
 
                 call extract_res(ndo, param_int, param_real,
      &                           ind_mjr,
-     &                           drodm, vol, wig, xmut(1+shift1) )
+     &                           drodm, vol(1+shift_vol),
+     &                           wig, xmut(1+shift1) )
              endif
           !! explicit Lu                 
           else

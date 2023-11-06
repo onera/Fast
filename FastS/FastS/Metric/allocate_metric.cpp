@@ -256,6 +256,10 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
            ipt_param_int[ NIJK_VENT+4]  = ipt_param_int[ NIJK_XYZ+4];
        }
 
+
+
+     ipt_param_int[ PT_VOL] =0; // volume N+1 toujours en position zero a l'initialisation. A modifier si volume stocke dans champ de reprise.
+
      // On remonte la valeur de type zone dans l'arbre
      o = K_PYTREE::getNodeFromName1(numerics, "type_zone");
      if (o == NULL) { PyErr_SetString(PyExc_ValueError, "metric: type zone is missing or is invalid."); return 0; }
@@ -278,7 +282,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
      PyObject* ipti;
 
      E_Int neq_vol = 1;
-     if (lale == 3) neq_vol = 2; // 2 volumes pour la GCL
+     if (lale == 2) neq_vol = 3; // 3 volumes pour la GCL
      E_Int neq_mtr = 2*neq_ij+ neq_k + neq_vol; // ti+ tj+ tk+ vol
      
 

@@ -22,6 +22,9 @@ LEVEL	                    =53
 LEVELG	                    =56
 SLOPE                       =64 
 SHIFTVAR                    =66
+PT_BC	                    =70
+BC_NBDATA                   = 8
+BC_TYPE	                    = 0
 
 NEQ_LBM                     =89
 PT_LBM_Cs                   =90  

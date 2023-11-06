@@ -303,11 +303,10 @@ def allocate_ssor(t, metrics, hook, ompmode):
     own         = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc       = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc_numpy = Internal.getValue(dtloc)
-    nssiter = int(dtloc_numpy[0])
 
     zones = Internal.getZones(t)
     ssors = []
-    ssors = fasts.allocate_ssor(zones, metrics, nssiter, hook, ompmode)
+    ssors = fasts.allocate_ssor(zones, metrics, hook)
 
     return ssors
 
