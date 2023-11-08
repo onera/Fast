@@ -1,11 +1,6 @@
         E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp; 
-        E_Int* ipt_ind_sdm  = ipt_ind_CL;
-
-        E_Int ipt_ind_dm_loc[6];           
-        E_Int ipt_topology_socket_thread[6];
-        E_Int ipt_ind_sdm_thread[6];
-        E_Int ipt_ind_coe_thread[6];
-        E_Int ipt_ind_grad_thread[6];
+        E_Int* ipt_ind_sdm   = ipt_ind_CL;
+        E_Int* ipt_ind_dm_loc= ipt_shift_lu;           
 
         // loop calcul normale
         for (E_Int ntask = 0; ntask < nbtask; ntask++)
@@ -33,10 +28,7 @@
 
            if(param_int[nd][LALE]>=2 && param_int[nd][ITYPZONE]!=4)
            {
-
              //recuperation pointeur pour stockage volume instant N+1
-             param_int[nd][PT_VOL] +=1;
-             if (param_int[nd][PT_VOL] ==3 ) { param_int[nd][PT_VOL]=0; }
              E_Float* vol_p = iptvol[nd] + param_int[nd][PT_VOL]* param_int[nd][ NDIMDX_MTR ];
 
 #            include "FastC/Metric/indice_omp1.h" 

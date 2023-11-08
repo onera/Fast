@@ -141,7 +141,7 @@ E_Int K_FASTS::gsdr3(
       E_Int nbtask = ipt_omp[nitcfg-1]; 
       E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
 
-      //mise a jour it_bloc implicit local et  pointeur ssor
+      //mise a jour it_bloc implicit local, pointeur volume en deformable  et  pointeur ssor
 #include   "FastS/Compute/ssor.cpp"
 
 //modif Guillaume??
@@ -184,8 +184,6 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
    if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
 
    E_Int Nbre_thread_actif_loc, ithread_loc;
-   if( omp_mode == 1) { Nbre_thread_actif_loc = 1;                 ithread_loc = 1;}
-   else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
 
    E_Int thread_parsock  =  Nbre_thread_actif/Nbre_socket;
    E_Int socket          = (ithread-1)/thread_parsock +1;
@@ -405,14 +403,7 @@ E_Int lrhs=0; E_Int lcorner=0;
    E_Int Nbre_thread_actif = 1;
 #endif
 
-   //E_Int Nbre_socket   = NBR_SOCKET;             
-   E_Int Nbre_socket   = 1;                       // nombre de proc (socket) sur le noeud a memoire partagee
-   if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
-
    E_Int Nbre_thread_actif_loc, ithread_loc;
-   if( omp_mode == 1) { Nbre_thread_actif_loc = 1;                 ithread_loc = 1;}
-   else               { Nbre_thread_actif_loc = Nbre_thread_actif; ithread_loc = ithread;}
-
    //
    //Apply BC (parcour Zones) + reinitialisation verrou pour calcul rhs
    //
