@@ -8,7 +8,6 @@ if n != 2:
     sys.exit()
 
 dico= {}
-dico["SENSOR_INIT"] = { 'name':'flusenseur_init', 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
 dico["SENSOR"]      = { 'name':'flusenseur'     , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3','o3sc','o5','o5sc']}
 dico["AUSM"]        = { 'name':'fluausm'        , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3','o3sc','o5','o5sc']}
 dico["ROE"]         = { 'name':'fluroe'         , 'model':['lamin','euler'], 'TypeMotion':[''], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['minmod','o3','o1']}
@@ -133,6 +132,9 @@ for ale in TypeMotion:
                 eq2=''
                 # Viscous flux suppression for Euler
                 if eq == 'euler': 
+                    for i in range( len(lines) ):
+                        lines[i]=lines[i].replace("= 0.5*(xmut(ir)+xmut(il))","= 0. !mut=0")
+
                     c = 0
                     for l in lines:
                         if 'Rans' in l: lines = lines[:c] + lines[c+1:]; c-=1

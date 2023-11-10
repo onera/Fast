@@ -6,18 +6,24 @@ import FastS.PyTree as FastS
 import FastC.PyTree as FastC
 import Initiator.PyTree as I
 import Converter.Internal as Internal
+import Transform.PyTree as T
 import KCore.test as test
 
 ni = 155 ; dx = 100./(ni-1) ; dz = 1.
-a1 = G.cart((-50,-50,0.), (dx,dx,dz), (ni,ni,2))
+a1 = G.cart((-50,-50,0.), (dx,dx,dz), (ni,ni,1))
 a1 = C.addBC2Zone(a1, 'far', 'BCFarfield', 'imin')
 a1 = C.addBC2Zone(a1, 'fam', 'FamilySpecified:mywall', 'imax')
 a1 = C.fillEmptyBCWith(a1, 'wall', 'BCWall', dim=2)
 a1 = I.initConst(a1, MInf=0.4, loc='centers')
 a1 = C.addState(a1, 'GoverningEquations', 'Euler')
-a1 = C.addState(a1, MInf=0.4)
+a1 = C.addState(a1, MInf=0.4, alphaZ=0.0000001)
 t = C.newPyTree(['Base', a1])
 C._addFamily2Base(Internal.getNodeFromName1(t, 'Base'), 'mywall', bndType='BCWall')
+
+Internal._addGhostCells(t,t,2,adaptBCs=1)
+t = T.addkplane(t)
+T._contract(t, (0,0,0), (1,0,0), (0,1,0), 0.01)
+T._makeDirect(t)
 
 # Numerics
 numb = {}; numz = {}

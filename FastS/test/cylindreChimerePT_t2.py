@@ -34,7 +34,7 @@ t = C.newPyTree(['CYL',a,'FOND',b])
 # prepare
 for name in ['CYL','FOND']:
     C._addState(Internal.getNodeFromName1(t, name),
-                adim='adim1', MInf=0.2, alphaZ=0., alphaY=0., ReInf=1.e6, 
+                adim='adim1', MInf=0.2, alphaZ=0.0000000000001, alphaY=0., ReInf=1.e6, 
                 EquationDimension=2, GoverningEquations='NSLaminar')
 
 R._setPrescribedMotion3(Internal.getNodeFromName1(t, 'CYL'),
@@ -98,7 +98,8 @@ R._copyGrid2GridInit(t)
 R._copyGrid2GridInit(tc)
 
 # compute
-numb={"temporal_scheme": "explicit", "omp_mode":0, "modulo_verif":10}
+modulo_verif=10
+numb={"temporal_scheme": "explicit", "omp_mode":1, "modulo_verif":modulo_verif}
 numz={"time_step": 2.e-3, "scheme":"roe_min"}
 
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
@@ -170,6 +171,9 @@ for it in range(500):
               1, 2, 1) # freq, order, verbose
     
     FastS._compute(t, metrics, it, tc, None, layer="Python", ucData=ucData)
+
+    if it%modulo_verif==0:
+      FastS.display_temporal_criteria(t, metrics, it)
 
 for adt in dictOfADT.values():
     if adt is not None: C.freeHook(adt)

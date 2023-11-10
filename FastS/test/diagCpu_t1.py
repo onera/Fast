@@ -17,7 +17,7 @@ import sys
 
 LOCAL = test.getLocal()
 
-MInf = 0.5 ; alpha = 0.
+MInf = 0.5 ; alpha = 0.0000000001
 adim = Adim.adim1(MInf=MInf)
 
 # Cylindre
