@@ -91,8 +91,9 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
 
     GET_VENT( METRIC_VENT, metric, ipt_param_int[nd], iptventi[nd], iptventj[nd], iptventk[nd] )
 
-    if(ipt_param_int[nd][ LALE ]== 0 || ipt_param_int[nd][ LALE ]== 2 ){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
-    else                                                               { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
+    if(ipt_param_int[nd][ LALE ]== 0 || ipt_param_int[nd][ LALE ]== 2 || ipt_param_int[nd][ LALE ]== 3)
+    { GET_XYZ( "GridCoordinates", zone, iptx[nd], ipty[nd], iptz[nd])}
+    else { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
 
     if( ipt_param_int[nd][ NDIMDX ] > ndimdx ){ ndimdx = ipt_param_int[nd][ NDIMDX ]; } 
 
@@ -159,7 +160,7 @@ PyObject* K_FASTS::copy_velocity_ale(PyObject* self, PyObject* args)
                               ipt_ind_dm_loc, 
                               ipt_topology_socket, ipt_ind_dm_socket );
 
-             if (ipt_param_int[nd][ LALE ] == 2)
+             if (ipt_param_int[nd][ LALE ] == 2 || ipt_param_int[nd][ LALE ] == 3)
              {
                copy_ventijk_(nd, ithread, ipt_param_int[nd], ipt_param_real[nd],
                             iptx[nd], ipty[nd], iptz[nd],

@@ -104,10 +104,10 @@ PyObject* K_FASTC::init_metric(PyObject* self, PyObject* args)
     /*-------------------------------------*/
     /* Extraction (x,y,z): pour forcage spatia */
     /*-------------------------------------*/
-    if(param_int[nd][ LALE ]== 0 || param_int[nd][ LALE ]== 2 ){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
-    else                                                       { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
-    //GET_XYZ( "GridCoordinates", zone, iptx[nd], ipty[nd], iptz[nd]) 
-
+    if(param_int[nd][ LALE ]== 0 || param_int[nd][ LALE ]== 2 || param_int[nd][ LALE ]== 3)
+    { GET_XYZ( "GridCoordinates", zone, iptx[nd], ipty[nd], iptz[nd])}
+    else { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])} // ALE=1
+    
     /* get distance paroi */
 
     //Pointeur visqueux: mut, dist, zgris sont en acces compact
@@ -126,7 +126,7 @@ PyObject* K_FASTC::init_metric(PyObject* self, PyObject* args)
     E_Int lale, kfludom;
     lale = param_int[nd][LALE]; kfludom = param_int[nd][KFLUDOM];
     GET_TI(METRIC_TI  , metric, param_int[nd], ipti [nd]  , iptj [nd]  , iptk [nd]  , iptvol[nd]   )
-    if (lale>=1)
+    if (lale >= 1)
      {
        GET_TI(METRIC_TI0 , metric, param_int[nd], ipti0[nd]  , iptj0[nd]  , iptk0[nd]  , dummy )
        GET_VENT( METRIC_VENT, metric, param_int[nd], iptventi[nd], iptventj[nd], iptventk[nd] )
@@ -348,7 +348,7 @@ PyObject* K_FASTC::init_metric(PyObject* self, PyObject* args)
           E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
           E_Int nd = ipt_omp[ pttask ];
 #         include "Metric/indice_omp1.h"
-            if (param_int[nd][ LALE ] == 2)
+            if (param_int[nd][ LALE ] == 3)
             {
               E_Float* iptvol2 = iptvol[nd]+param_int[nd][NDIMDX_MTR];
               E_Float* iptvol3 = iptvol[nd]+param_int[nd][NDIMDX_MTR]*2;

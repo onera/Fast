@@ -287,7 +287,7 @@ def allocate_metric(t):
         num = Internal.getNodeFromName1(z, '.Solver#ownData')
         if num is None:
             raise ValueError("metric: numerics is missing for zone %s."%z[0])
-        if motion == 'rigid' or motion == 'deformation':
+        if motion == 'rigid' or motion == 'rigid_ext' or motion == 'deformation':
             grids = Internal.getNodesFromType1(z, 'GridCoordinates_t')
             if len(grids) == 1:
                grid_init = Internal.copyTree(grids[0])
@@ -303,7 +303,7 @@ def allocate_ssor(t, metrics, hook, ompmode):
     own         = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc       = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc_numpy = Internal.getValue(dtloc)
-
+    
     zones = Internal.getZones(t)
     ssors = []
     ssors = fasts.allocate_ssor(zones, metrics, hook)
@@ -322,7 +322,7 @@ def _init_metric(t, metrics, hook):
     for metric in metrics:
        z = zones[c]
        param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
-       if param_int[34]!= 2: del metric[7]  # on efface l'info sur maille degen si pas besoin de recalculer metric mesh deforme
+       if param_int[34] < 2: del metric[7]  # on efface l'info sur maille degen si pas besoin de recalculer metric mesh deforme
        c+=1
 
     return None
@@ -409,7 +409,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     zones = Internal.getZones(t)
 
-    #compactage des champs en fonction option de calcul
+    # compactage des champs en fonction option de calcul
     count = -1
     if ompmode == 1: count = 0
     for data in zones2compact:
@@ -419,7 +419,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         for fields in varnames:
             FastC._compact(zone, fields=fields, mode=count, dtloc=dtlocPy)
 
-    #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
+    # correction pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     c   = 0
     ale = 0
     for z in zones:
@@ -430,10 +430,11 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
             sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
             ro = Internal.getNodeFromName1(sol, 'Density')
             metrics[c][2] = ro[1]
-        elif motion == 'deformation': ale = 2
-        else: ale = 1
+        elif motion == 'rigid': ale = 1
+        elif motion == 'rigid_ext': ale = 2
+        elif motion == 'deformation': ale = 3
+        else: raise ValueError('warmup: invalid value for motion.')
         c += 1
-
 
     # mise a jour vitesse entrainememnt
     #
@@ -449,6 +450,15 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         else: time = 0.
         R._evalPosition(t, time)
         R._evalGridSpeed(t, time)
+        copy_velocity_ale(t, metrics)
+    elif ale == 3:
+        # force init (provisoire)
+        first = Internal.getNodeFromName1(t, 'Time')
+        if first is not None: time = Internal.getValue(first)
+        else: time = 0.
+        R._evalPosition(t, time)
+        R._evalGridSpeed(t, time)
+        # end force 
         copy_velocity_ale(t, metrics)
 
     #t1=timeit.default_timer()
@@ -826,7 +836,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                         print('Warning: createTBLESA: non consistent with the version of IBM preprocessing.')
                      else:
                        if zsrname[1] == '16':
-                        print('Using MuskerSA2 wall model')
+                        print('Info: createTBLESA: using MuskerSA2 wall model.')
                         pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
                         addrIBC.append(size_IBC)
@@ -835,7 +845,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                         u_ODE = Internal.getNodeFromName1(s, 'VelocityT_ODE')
                         if u_ODE is not None: isODEDataPresent = 1
                        elif zsrname[1] == '17':
-                        print('Using FULL_TBLE_SA wall model')
+                        print('Info: createTBLESA: using FULL_TBLE_SA wall model.')
                         pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
                         addrIBC.append(size_IBC)
@@ -844,7 +854,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                         u_ODE = Internal.getNodeFromName1(s, 'VelocityT_ODE')
                         if u_ODE is not None: isODEDataPresent = 1
                        elif zsrname[1] == '18':
-                        print('Using FULL_TBLE_Prandtl wall model')
+                        print('Info: createTBLESA: using FULL_TBLE_Prandtl wall model.')
                         pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
                         addrIBC.append(size_IBC)
@@ -853,7 +863,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                         u_ODE = Internal.getNodeFromName1(s, 'VelocityT_ODE')
                         if u_ODE is not None: isODEDataPresent = 1
                        elif zsrname[1] == '19':
-                        print('Using MafzalSA wall model')
+                        print('Info: createTBLESA: using MafzalSA wall model.')
                         pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
                         Nbpts_D       = numpy.shape(pointlistD[1])[0]
                         addrIBC.append(size_IBC)
@@ -1033,15 +1043,11 @@ def _updateGradPInfoHO(t, tc, metrics, type='IBCD', algo="Fast"):
     _computeGrad(t, metrics, varGrad)
   else:
     for var in variablesIBC:
-      print(var)
       t = P.computeGrad(t, 'centers:'+var)
     for var in varGrad:
-      print(var)
       t = P.computeGrad(t, 'centers:'+var)
 
   variables = variablesIBC+varGrad+varGrad2
-
-  print(variables)
 
   for v in variables: C._cpVars(t, 'centers:'+v, tc, v)
   XOD._setInterpTransfers(t, tc, variables=variables, variablesIBC=[], compact=0, compactD=0)
@@ -1172,7 +1178,7 @@ def checkBalance(t):
        trans =  4*(iv*jv + iv*kv + kv*jv)
        size_reelle = size_reelle +iv*jv*kv
        size_transf = size_transf + trans
-    print("size Pb: totale =", size_reelle+size_transf, 'woghost=', size_reelle, 'NB ghost=',size_transf, 'Nbzone=',len(zones))
+    print("size Pb: totale=", size_reelle+size_transf, 'woghost=', size_reelle, 'NB ghost=',size_transf, 'Nbzone=',len(zones))
     return None
 
 #==============================================================================
@@ -2351,7 +2357,7 @@ def createStressNodes(t, BC=None, windows=None):
             param_int = Internal.getNodeFromName2(z, 'Parameter_int')
             if param_int is not None: ific = param_int[1][VSHARE.NIJK+3]
             else:
-              print("Error: CreateStress node must be called after warmup function")
+              print("Error: CreateStress node must be called after warmup function.")
               import sys; sys.exit()
 
             ndf = 0
@@ -2946,7 +2952,7 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
       else: FamName='all'
 
       lprint =False
-      if znameR == ztg: lprint =True
+      if znameR == ztg: lprint = True
       #if not lprint  : continue
       #if FamName != 'cuve3': continue
       if lprint: print ("zone=",zc[0], "rac=", bc[0], 'fam=', FamName)

@@ -113,7 +113,8 @@ Actions
     - **'motion'**: possible values are
 
         + 'none' (no motion)
-        + 'rigid' (ALE without deformation see p47 https://tel.archives-ouvertes.fr/tel-01011273/document)
+        + 'rigid' (rigid motion defined in Fast see p47 https://tel.archives-ouvertes.fr/tel-01011273/document)
+        + 'rigid_ext' (rigid motion defined externally by RigidMotion)
         + 'deformation' (ALE with deformation)
         + default value is 'none'
 

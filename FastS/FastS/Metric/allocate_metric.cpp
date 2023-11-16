@@ -192,7 +192,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     ipt_param_int[ ITYPVENT ] = 0;
     if  (rot_z   < 1.e-14)             ipt_param_int[ ITYPVENT ] = 1; //rot axe z
     if  (rot_tot < 1.e-14)             ipt_param_int[ ITYPVENT ] = 2; //translation
-    if  ( lale  == 2                 ) ipt_param_int[ ITYPVENT ] = 0; // maillage deformable, vitesse general
+    if  ( lale  >= 2                )  ipt_param_int[ ITYPVENT ] = 0; // maillage deformable, vitesse general
     if  (ipt_param_int[ ITYPZONE ]==3) ipt_param_int[ ITYPVENT ] = 3; // maillage 2d
 
      //printf("vent type= %d  \n", ipt_param_int[ ITYPVENT ]);
@@ -282,7 +282,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
      PyObject* ipti;
 
      E_Int neq_vol = 1;
-     if (lale == 2) neq_vol = 3; // 3 volumes pour la GCL
+     if (lale == 3) neq_vol = 3; // 3 volumes pour la GCL
      E_Int neq_mtr = 2*neq_ij+ neq_k + neq_vol; // ti+ tj+ tk+ vol
      
 

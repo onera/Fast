@@ -248,8 +248,9 @@ else
     //Pointeur maillage
     //
     //
-    if(ipt_param_int[nd][ LALE ]== 0 || ipt_param_int[nd][ LALE ]== 2 ){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
-    else                                                               { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
+    if(ipt_param_int[nd][ LALE ]== 0 || ipt_param_int[nd][ LALE ]== 2 || ipt_param_int[nd][ LALE ]== 3)
+    { GET_XYZ( "GridCoordinates", zone, iptx[nd], ipty[nd], iptz[nd])}
+    else { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
 
     //
     //Pointeur var primitive + visco + distance paroi + cellN
@@ -337,7 +338,8 @@ else
     ipt_ind_dm[ nd ]      =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
     ipt_it_lu_ssdom[ nd ] =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_ITLU) );
 
-    if(ipt_param_int[nd][ LALE ] == 2){ ipt_degen[ nd ] = K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_DEGEN) );}
+    if(ipt_param_int[nd][ LALE ] == 2 || ipt_param_int[nd][ LALE ] == 3)
+    { ipt_degen[ nd ] = K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_DEGEN) );}
     else{ ipt_degen[ nd ] =  NULL;}
  
     if (lcfl == 1 && nstep_deb == 1) 

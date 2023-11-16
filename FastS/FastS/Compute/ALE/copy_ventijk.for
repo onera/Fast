@@ -33,11 +33,19 @@ c
 c***********************************************************************
       implicit none
 
+#include "FastS/param_solver.h"
+
       INTEGER_E ndo,ithread,ind_dm(6),ind_loop1(6),param_int(0:*)
 
-      REAL_E venti(*),ventj(*),ventk(*),vent_vertex(*)
+      REAL_E vent_vertex(param_int(NDIMDX_XYZ)*param_int(NEQ_VENT))
+      REAL_E venti(param_int(NDIMDX_VENT) * param_int(NEQ_VENT))
+      REAL_E ventj(param_int(NDIMDX_VENT) * param_int(NEQ_VENT))
+      REAL_E ventk(param_int(NDIMDX_VENT) * param_int(NEQ_VENT))
+      
       REAL_E param_real(0:*)
-      REAL_E x(*),y(*),z(*)
+      REAL_E x(param_int(NDIMDX_XYZ))
+      REAL_E y(param_int(NDIMDX_XYZ))
+      REAL_E z(param_int(NDIMDX_XYZ))
 
 C Var loc 
       INTEGER_E ind_loop(6),v1ven,v2ven,v3ven,v2in,v3in,
@@ -49,7 +57,6 @@ C Var loc
       INTEGER_E lj0,ljp,li0,lip
       REAL_E bilanx, bilany
 
-#include "FastS/param_solver.h"
 #include "FastS/formule_param.h"
 #include "FastS/formule_xyz_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -582,10 +589,10 @@ C     &           -(x(lx3)-x(lx1))*(z(lx2)-z(lx3))
      &                             +vent_vertex(lx3) 
      &                             +vent_vertex(lx1) )
 
-             venti(l+v2ven) = .25*( vent_vertex(l111+v2in) 
+            venti(l+v2ven) = .25*( vent_vertex(l111+v2in) 
      &                             +vent_vertex(lx2 +v2in) 
      &                             +vent_vertex(lx3 +v2in) 
-     &                             +vent_vertex(lx1 +v2in) )
+     &                             +vent_vertex(lx1 +v2in)  )
 
             ! formule de pechier
 #if FORMULA == 1

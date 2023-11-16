@@ -8,9 +8,9 @@
           E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
           E_Int nd = ipt_omp[ pttask ];
 
-           if(param_int[nd][LALE]==2 && param_int[nd][ITYPZONE]!=4)
+           if(param_int[nd][LALE]>=2 && param_int[nd][ITYPZONE]!=4)
            {
-#            include "FastC/Metric/indice_omp1.h" 
+#             include "FastC/Metric/indice_omp1.h" 
              cp_tijk_( param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], ind_mtr);
            }
         }

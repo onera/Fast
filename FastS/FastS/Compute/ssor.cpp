@@ -22,7 +22,7 @@
         //
         //modification pointeur pour stockage volume instant N+1 en maillage deformable
         //
-        if(param_int[nd][LALE]>=2 && param_int[nd][ITYPZONE]!=4 && nitcfg==1)
+        if(param_int[nd][LALE]==3 && param_int[nd][ITYPZONE]!=4 && nitcfg==1)
            {
              param_int[nd][PT_VOL] +=1;
              if (param_int[nd][PT_VOL] ==3 ) { param_int[nd][PT_VOL]=0; }

@@ -16,7 +16,7 @@ a1 = C.addBC2Zone(a1, 'fam', 'FamilySpecified:mywall', 'imax')
 a1 = C.fillEmptyBCWith(a1, 'wall', 'BCWall', dim=2)
 a1 = I.initConst(a1, MInf=0.4, loc='centers')
 a1 = C.addState(a1, 'GoverningEquations', 'Euler')
-a1 = C.addState(a1, MInf=0.4, alphaZ=0.0000001)
+a1 = C.addState(a1, MInf=0.4, alphaZ=0.0)
 t = C.newPyTree(['Base', a1])
 C._addFamily2Base(Internal.getNodeFromName1(t, 'Base'), 'mywall', bndType='BCWall')
 

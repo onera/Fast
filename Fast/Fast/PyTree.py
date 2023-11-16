@@ -171,7 +171,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     #allocate tab ssor en structure
     zones_str   = infos_zones["struct"][0]
     metrics_str = infos_zones["struct"][1]
-    ssors = FastS.fasts.allocate_ssor(zones_str, metrics_str, nssiter, hook1, ompmode)
+    ssors = FastS.fasts.allocate_ssor(zones_str, metrics_str, hook1)
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     c   = 0

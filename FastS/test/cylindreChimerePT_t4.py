@@ -1,4 +1,5 @@
 # - cylindre chimere avec mouvement -
+# cylindre traite en deformable (3 volumes)
 import Converter.PyTree as C
 import Converter.Internal as Internal
 import Connector.PyTree as X
@@ -29,13 +30,13 @@ N = 280; h = 8./(N-1)
 b = G.cart((-5,-4,0), (h,h+0.01,1), (N,N,1))
 C._fillEmptyBCWith(b, 'farfield', 'BCFarfield')
 
-# prepare
 t = C.newPyTree(['CYL',a,'FOND',b])
 
+# prepare
 for name in ['CYL','FOND']:
     C._addState(Internal.getNodeFromName1(t, name),
                 adim='adim1', MInf=0.2, alphaZ=0.0, alphaY=0., ReInf=1.e6, 
-                EquationDimension=2, GoverningEquations='NSLaminar')
+                EquationDimension=2, GoverningEquations='NSTurbulent')
 
 R._setPrescribedMotion3(Internal.getNodeFromName1(t, 'CYL'),
                 'rot', axis_pnt=(-1.5,0.,0.), axis_vct=(0,0,1), omega=0.5)
@@ -98,9 +99,8 @@ R._copyGrid2GridInit(t)
 R._copyGrid2GridInit(tc)
 
 # compute
-modulo_verif=10
-numb={"temporal_scheme": "explicit", "omp_mode":0, "modulo_verif":modulo_verif}
-numz={"time_step": 2.e-3, "scheme":"roe_min"}
+numb={"temporal_scheme":"implicit_local", "ss_iteration":20, "omp_mode":0, "modulo_verif":10}
+numz={"time_step": 8.e-3, "epsi_newton":0.01, "scheme":"ausmpred", "slope":"o3", "DES": "zdes2", "SA_add_RotCorr":True}
 
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
@@ -112,7 +112,7 @@ for z in zones:
     timeMotion = Internal.getNodeFromName(z, 'TimeMotion')
     if timeMotion is not None:
         define = Internal.getNodeFromName1(z, '.Solver#define')
-        Internal._createUniqueChild(define, 'motion', 'DataArray_t', value='rigid_ext')
+        Internal._createUniqueChild(define, 'motion', 'DataArray_t', value='deformation')
 
 (t, tc, metrics) = FastS.warmup(t, tc)
 
@@ -146,14 +146,13 @@ dictOfADT={}
 
 time = 0
 
-for it in range(500):
+for it in range(100):
     time += time_step
 
     R._evalPosition(tb, time)
     R._evalPosition(t, time)
     R._evalPosition(tc, time)
     R._evalGridSpeed(t, time)
-
     FastS.copy_velocity_ale(t, metrics, it=it)
 
     C._initVars(t,"{centers:cellN#Motion}={centers:cellN#MotionInit}")
@@ -170,12 +169,12 @@ for it in range(500):
               dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
               time, procDict, True, 0,
               1, 2, 1) # freq, order, verbose
-
+    
     FastS._compute(t, metrics, it, tc, None, layer="Python", ucData=ucData)
 
-    if it%modulo_verif==0:
-      FastS.display_temporal_criteria(t, metrics, it)
-
+    if it%numb["modulo_verif"] == 0: 
+        FastS.displayTemporalCriteria(t, metrics, it)
+    
 for adt in dictOfADT.values():
     if adt is not None: C.freeHook(adt)
 C._rmVars(t, 'centers:cellN#Motion')
@@ -183,6 +182,4 @@ C._rmVars(t, 'centers:cellN#MotionInit')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData') 
 
-C.convertPyTree2File(t, 'out.cgns')
 test.testT(t, 1)
-

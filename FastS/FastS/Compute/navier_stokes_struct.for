@@ -36,8 +36,8 @@ c_V    processeur domaine
 c_V    steady/unsteady
 c
 c     INP
-c_I    tijk     : vecteur param_int( IO_THREAD)rmale aux facettes des mailles
-c_I    vent     : vitesses d'entrainement aux facettes preced.
+c_I    tijk     : vecteur normale aux facettes des mailles
+c_I    vent     : vitesses d entrainement aux facettes preced.
 c
 c     LOC
 c_L    flu      : flux convectifs dans une direction de maillage
@@ -131,7 +131,7 @@ C Var loc
        rhs_begin = OMP_GET_WTIME()
   
        shift_vol   = param_int(PT_VOL)*param_int(NDIMDX_MTR)
-       if(param_int(LALE).eq.2) then
+       if(param_int(LALE).eq.3) then
          shift_vol_n = param_int(PT_VOL)-1
          if (shift_vol_n.lt.0) shift_vol_n = 2
          shift_vol_m = shift_vol_n-1
@@ -385,7 +385,7 @@ c       endif
      &                         drodm, vol(1+shift_vol), wig, ro_res)
           endif
  
-          !! impicit krylov             
+          !! implicit krylov             
           if(param_int(ITYPCP).le.1.and.
      &        (param_int(IMPLICITSOLVER).eq.1.and.layer_mode.eq.1)) then
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
@@ -408,11 +408,11 @@ c       endif
           elseif(param_int(ITYPCP).le.1) then
 
               !!maillage indeformable
-              if(param_int(LALE).lt.2) then
+              if(param_int(LALE).lt.3) then
                  !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
                  if(flagCellN.eq.0) then
                    call core3as2(ndo,nitcfg, first_it, 
-     &                               param_int,param_real, ind_mjr,
+     &                           param_int,param_real, ind_mjr,
      &                           rop_ssiter, rop, rop_m1, drodm, coe)
                  else
                    call core3as2_chim(ndo,nitcfg, first_it, 

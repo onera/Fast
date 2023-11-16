@@ -34,7 +34,7 @@ t = C.newPyTree(['CYL',a,'FOND',b])
 # prepare
 for name in ['CYL','FOND']:
     C._addState(Internal.getNodeFromName1(t, name),
-                adim='adim1', MInf=0.2, alphaZ=0.0000000000001, alphaY=0., ReInf=1.e6, 
+                adim='adim1', MInf=0.2, alphaZ=0.0, alphaY=0., ReInf=1.e6, 
                 EquationDimension=2, GoverningEquations='NSTurbulent')
 
 R._setPrescribedMotion3(Internal.getNodeFromName1(t, 'CYL'),
@@ -111,7 +111,7 @@ for z in zones:
     timeMotion = Internal.getNodeFromName(z, 'TimeMotion')
     if timeMotion is not None:
         define = Internal.getNodeFromName1(z, '.Solver#define')
-        Internal._createUniqueChild(define, 'motion', 'DataArray_t', value='deformation')
+        Internal._createUniqueChild(define, 'motion', 'DataArray_t', value='rigid_ext')
 
 (t, tc, metrics) = FastS.warmup(t, tc)
 

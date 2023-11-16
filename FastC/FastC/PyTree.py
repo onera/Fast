@@ -258,7 +258,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
 
                 vars.append(['centers:SpongeCoef'])
 
-            #Compacatage des variables dans le cas du couplage
+            #Compactage des variables dans le cas du couplage
             if flag_NSLBM == 1:
                fields2compact=[]
                for i in range(len(vars_s)):
@@ -281,7 +281,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                for v in vars_c:
                  fields2compact.append('centers:'+v+'_src')
                vars.append(fields2compact)
-            if motion == 'deformation':     #ale deformable
+            if motion == 'deformation' or motion == 'rigid_ext':     #ale deformable
                fields2compact =[]
                for v in ['VelocityX','VelocityY','VelocityZ']:
                  fields2compact.append('Motion:'+v)
@@ -574,7 +574,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     if b is not None:
        a = Internal.getNodeFromName1(b, 'motion')
        if a is not None: ale = Internal.getValue(a)
-       if ale =='deformation':
+       if ale =='deformation' or ale == 'rigid_ext':
           Motion = Internal.getNodeFromName1(zone, 'Motion')
           vx = None
           if Motion is not None: vx = Internal.getNodeFromName1(Motion, 'VelocityX')
@@ -868,7 +868,7 @@ def _buildOwnData(t, Padding):
     'nb_relax':0,
     'nb_krylov':0,
     'nb_restart':0,
-    'motion':['none', 'rigid', 'deformation'],
+    'motion':['none', 'rigid', 'rigid_ext', 'deformation'],
     'rotation':4,
     'time_step':1,
     'io_thread':0,
@@ -1663,12 +1663,13 @@ def _buildOwnData(t, Padding):
 
             else: print('Warning: Fast: scheme %s is invalid.'%scheme)
 
-            lale = 0; size_ale = 0
+            lale = 0
             if    motion == "none"       : lale = 0
-            elif  motion == "rigid"      : lale = 1; size_ale = 11
-            elif  motion == "deformation": lale = 2
+            elif  motion == "rigid"      : lale = 1
+            elif  motion == "rigid_ext"  : lale = 2
+            elif  motion == "deformation": lale = 3
             else: print('Warning: Fast: motion %s is invalid.'%motion)
-
+            
             iflagflt = 0
             if filtrage == "on": iflagflt = 1
 
@@ -1742,10 +1743,10 @@ def _buildOwnData(t, Padding):
                nfac_elconn = Internal.getNodeFromName1(nface, 'ElementConnectivity')
                nfac_elconn_size = numpy.size( nfac_elconn[1])
                datap[12]  = nfac_elconn_size
-               #Nb cache bloc
+               # Nb cache bloc
                cellScheduler = Internal.getNodeFromName1(z, 'CellScheduler')
                Nb_Cache_Bloc = numpy.shape(cellScheduler[1])[2]
-               print("Nb_Cache_Bloc",Nb_Cache_Bloc)
+               print("Nb_Cache_Bloc", Nb_Cache_Bloc)
                datap[13]  = Nb_Cache_Bloc
 
             datap[25]  = 0     # zone 3D curvi par defaut
@@ -1878,7 +1879,6 @@ def _buildOwnData(t, Padding):
             Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
             
             # creation noeud parametre real 
-            #size_real = 23 +  size_ale   
             number_of_defines_param_real = 63                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
