@@ -405,6 +405,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     else: lbm = True
 
     rgp = (adim[11]-1.)*adim[7]
+
     t0 = timeit.default_timer()
     if C.isNamePresent(zone, 'centers:VelocityX'  ) != 1: P._computeVariables(zone, ['centers:VelocityX'  ], rgp=rgp)
     if C.isNamePresent(zone, 'centers:VelocityY'  ) != 1: P._computeVariables(zone, ['centers:VelocityY'  ], rgp=rgp)
@@ -2737,6 +2738,16 @@ def _BCcompact(t):
                 nb_cell = max([wrange[0][1] - wrange[0][0],1])* max([wrange[1][1] - wrange[1][0],1])*max([wrange[2][1] - wrange[2][0],1])
                 rand = numpy.zeros((1,nb_cell), dtype=numpy.float64)
                 Internal.createUniqueChild(bc, 'random_vec', 'DataArray_t', rand)
+
+            if btype == 'BCWallViscousIsothermal':
+               Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
+               if Prop == None:
+                  ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
+                  rg  = ptrange[0][1]
+                  sz  = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
+                  print ('Error: Tableau Temperature absent pour la CL BCWallViscousIsothermal sur la zone',z[0])
+                  print ('Error: besoin d un noeud .Solver#Property contenant un numpy Temperature de taille',sz,' dans le noeud BC')
+                  import os; os._exit(1)
 
             if btype == 'BCWallExchange':
                 sol   = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
