@@ -57,7 +57,7 @@ listExtensions.append(
 # setup ======================================================================
 setup(
     name="FastC",
-    version="3.7",
+    version="4.0",
     description="FastC common part of fluid solvers.",
     author="Onera",
     package_dir={"":"."},
