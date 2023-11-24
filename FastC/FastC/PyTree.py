@@ -2741,7 +2741,7 @@ def _BCcompact(t):
 
             if btype == 'BCWallViscousIsothermal':
                Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
-               if Prop == None:
+               if Prop is None:
                   ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
                   rg  = ptrange[0][1]
                   sz  = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
@@ -2752,7 +2752,7 @@ def _BCcompact(t):
             if btype == 'BCWallExchange':
                 sol   = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
                 cellN = Internal.getNodeFromName1(sol, 'cellN')
-                if cellN == None:
+                if cellN is None:
                   C._initVars(z, 'centers:cellN', 1.)
                   cellN = Internal.getNodeFromName1(sol, 'cellN')[1]
                   ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
@@ -2764,12 +2764,12 @@ def _BCcompact(t):
                   print ('nb couche loi de paroi',shift,'Nb echant pour moyenne:',Ntg)
                   
                   Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
-                  if Prop == None:
+                  if Prop is None:
                      Internal.createUniqueChild(bc,'.Solver#Property','UserDefinedData_t')
                      Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
 
                   wmles  = Internal.getNodeFromName(Prop,'WMLES_parameter')
-                  if wmles == None:
+                  if wmles is None:
                      sz     = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
 
                      #vars=['AvgDensity','AvgVelocityX','AvgVelocityY','AvgVelocityZ','AvgTemperature']
@@ -2790,11 +2790,11 @@ def _BCcompact(t):
 
 
                   #verif que coef mobile est bien le premier tableau
-                  datas   = Internal.getNodesFromType(Prop,'DataArray_t')
-                  pos =0
+                  datas = Internal.getNodesFromType(Prop, 'DataArray_t')
+                  pos = 0
                   for data in datas:
                       if data[0]=='mobile_coef' and pos != 0:
-                        print("zonz:",z[0],"bc:",bc[0],"mobile_coef doit etre le premier noeud de .Solver#Property")
+                        print("zone:",z[0],"bc:",bc[0],"mobile_coef doit etre le premier noeud de .Solver#Property")
                         import sys; sys.exit()
                       pos+=1
 
