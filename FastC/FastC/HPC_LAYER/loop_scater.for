@@ -28,14 +28,22 @@ c        endif
 
            !on dertemine synchro_socket
 
+#if defined(__INTEL_COMPILER)
+#if not defined(__INTEL_LLVM_COMPILER)
 !DIR$ ATTRIBUTES FORCEINLINE :: crsdm
+#endif
+#endif
            call crsdm( ndo, size_cache,
      &                 synchro_receive_sock, synchro_send_sock,
      &                 ind_dm_zone, ind_dm_socket, ijkv_sdm ) 
 
            !on dertemine synchro_thrread + nbre sous-domaine )cache !bloc)
 
+#if defined(__INTEL_COMPILER)
+#if not defined(__INTEL_LLVM_COMPILER)
 !DIR$ ATTRIBUTES FORCEINLINE :: crsdm_scater
+#endif
+#endif
            call crsdm_scater( ndo, ibloc , jbloc , kbloc, topo_s, 
      &                       size_cache,
      &                       synchro_receive_th, synchro_send_th,

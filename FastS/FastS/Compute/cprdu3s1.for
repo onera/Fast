@@ -64,7 +64,7 @@ c     & ndim_rdm,Nbre_thread_actif,nisdom_residu(nitcfg)
 
       !if(nisdom_residu(nitcfg).eq.0) goto 1000
 
-      conv_loo = ALOG10(epsi)
+      conv_loo = LOG10(epsi)
 
         if(ndim_rdm.le.Nbre_thread_actif) then
            no_start = ithread

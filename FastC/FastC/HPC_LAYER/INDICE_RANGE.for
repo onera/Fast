@@ -1,4 +1,8 @@
+#if defined(__INTEL_COMPILER)
+#if not defined(__INTEL_LLVM_COMPILER)
 !DIR$ ATTRIBUTES FORCEINLINE :: indice_boucle_ssdom
+#endif
+#endif
            call indice_boucle_ssdom(ndo, extended_range,
      &                              ibloc , jbloc , kbloc,
      &                              icache, jcache, kcache,

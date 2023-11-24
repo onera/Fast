@@ -140,16 +140,16 @@ C              endif
             rdm_sdm(it_bloc, ne, 2, no_rdm) = xinterm(ne,2)
           enddo
 
-          xro1  = ALOG10(max(rdm_sdm(it_bloc,1,2,no_rdm),cut0x))
-     &          - ALOG10(max(rdm_sdm(1      ,1,2,no_rdm),cut0x))
-          xrou1 = ALOG10(max(rdm_sdm(it_bloc,2,2,no_rdm),cut0x))
-     &          - ALOG10(max(rdm_sdm(1      ,2,2,no_rdm),cut0x)) 
-          xrov1 = ALOG10(max(rdm_sdm(it_bloc,3,2,no_rdm),cut0x))
-     &          - ALOG10(max(rdm_sdm(1      ,3,2,no_rdm),cut0x)) 
-          xrow1 = ALOG10(max(rdm_sdm(it_bloc,4,2,no_rdm),cut0x)) 
-     &          - ALOG10(max(rdm_sdm(1      ,4,2,no_rdm),cut0x))
-          xroe1 = ALOG10(max(rdm_sdm(it_bloc,5,2,no_rdm),cut0x))
-     &          - ALOG10(max(rdm_sdm(1      ,5,2,no_rdm),cut0x))
+          xro1  = LOG10(max(rdm_sdm(it_bloc,1,2,no_rdm),cut0x))
+     &          - LOG10(max(rdm_sdm(1      ,1,2,no_rdm),cut0x))
+          xrou1 = LOG10(max(rdm_sdm(it_bloc,2,2,no_rdm),cut0x))
+     &          - LOG10(max(rdm_sdm(1      ,2,2,no_rdm),cut0x)) 
+          xrov1 = LOG10(max(rdm_sdm(it_bloc,3,2,no_rdm),cut0x))
+     &          - LOG10(max(rdm_sdm(1      ,3,2,no_rdm),cut0x)) 
+          xrow1 = LOG10(max(rdm_sdm(it_bloc,4,2,no_rdm),cut0x)) 
+     &          - LOG10(max(rdm_sdm(1      ,4,2,no_rdm),cut0x))
+          xroe1 = LOG10(max(rdm_sdm(it_bloc,5,2,no_rdm),cut0x))
+     &          - LOG10(max(rdm_sdm(1      ,5,2,no_rdm),cut0x))
 
           if(nijk(5).ne.0) then
             rmax = (xrou1+xrov1+xrow1+xro1+xroe1)*0.2
@@ -158,8 +158,8 @@ C              endif
           endif
 
 C          if(neq.eq.6) then
-C          xroe1 = ALOG10(max(rdm_sdm(it_bloc,6,2,no_rdm),cut0x))
-C     &          - ALOG10(max(rdm_sdm(1 ,6,2,no_rdm),cut0x))
+C          xroe1 = LOG10(max(rdm_sdm(it_bloc,6,2,no_rdm),cut0x))
+C     &          - LOG10(max(rdm_sdm(1 ,6,2,no_rdm),cut0x))
 C          rmax = (5.*rmax+ xroe1)/6.
 C          endif
 

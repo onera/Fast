@@ -8,7 +8,11 @@
       cache(2)       = param_int(CACHEBLCKJ)
       cache(3)       = param_int(CACHEBLCKK)
 
+#if defined(__INTEL_COMPILER)
+#if not defined(__INTEL_LLVM_COMPILER)
 !DIR$ ATTRIBUTES FORCEINLINE :: topo_scater
+#endif
+#endif
       call topo_scater(ndo, ithread, socket, lmin,
      &                  param_int(KFLUDOM),
      &                  thread_parsock, thread_parsock_actif,
