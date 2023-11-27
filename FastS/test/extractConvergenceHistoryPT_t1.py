@@ -52,5 +52,5 @@ for it in range(nit):
     time += time_step
 
 # extraction des residus et creation du fichier "residus.dat"
-FastS._extractConvergenceHistory(t,"residus.dat")
+FastS._extractConvergenceHistory(t,LOCAL+"residus.dat")
 test.testF(LOCAL+'/residus.dat', 1)

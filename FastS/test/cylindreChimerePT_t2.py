@@ -17,6 +17,7 @@ import Converter.Mpi as Cmpi
 import CPlot.PyTree as CPlot
 import KCore.test as test
 import numpy
+LOCAL = test.getLocal()
 
 # case
 N = 100; h = 1./(N-1)
@@ -183,6 +184,6 @@ C._rmVars(t, 'centers:cellN#MotionInit')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData') 
 
-C.convertPyTree2File(t, 'out.cgns')
+C.convertPyTree2File(t, LOCAL+'out.cgns')
 test.testT(t, 1)
 
