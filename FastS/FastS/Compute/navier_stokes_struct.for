@@ -441,10 +441,10 @@ c       endif
 
               
                 shift2=1
-                if(param_int(SA_DIST).eq.3) shift2=shift2+1 !!distance paroi: adresse a revoir si loi de paroi laminaire 
-                if(param_int(SA_INT + SA_IDES-1).ge.6) shift2=shift2+1!!zgris var
-                if(param_int(LBM_SPONGE).eq.1) shift2=shift2+1 !!viscosityEddy correction
-                !if(param_int(ILES).ge.1) shift2=shift2+1 !!sgsCorrection
+                if(param_int(SA_DIST).eq.1) shift2=shift2+1             !!distance paroi: adresse a revoir si loi de paroi laminaire 
+                if(param_int(SA_INT + SA_IDES-1).ge.6) shift2=shift2+1  !!zgris var
+                if(param_int(LBM_SPONGE).eq.1) shift2=shift2+1          !!viscosityEddy correction
+                !if(param_int(ILES).ge.1) shift2=shift2+1               !!sgsCorrection
 
                 if(nitcfg.eq.1)  then
                    shift1 = param_int(NDIMDX)*shift2
