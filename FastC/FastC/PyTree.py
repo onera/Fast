@@ -2754,22 +2754,22 @@ def _BCcompact(t):
                 cellN = Internal.getNodeFromName1(sol, 'cellN')
                 if cellN is None:
                   C._initVars(z, 'centers:cellN', 1.)
-                  cellN = Internal.getNodeFromName1(sol, 'cellN')[1]
-                  ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
-                  rg  = ptrange[0][1]
-                  shift =1
-                  if '2couche' in bc[0]: shift=2
-                  if '3couche' in bc[0]: shift=3
-                  Ntg= 101 #nbr echant pour calcul moyenne temporelle
-                  print ('nb couche loi de paroi',shift,'Nb echant pour moyenne:',Ntg)
+                cellN = Internal.getNodeFromName1(sol, 'cellN')[1]
+                ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
+                rg  = ptrange[0][1]
+                shift =1
+                if '2couche' in bc[0]: shift=2
+                if '3couche' in bc[0]: shift=3
+                Ntg= 101 #nbr echant pour calcul moyenne temporelle
+                print ('nb couche loi de paroi',shift,'Nb echant pour moyenne:',Ntg)
                   
-                  Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
-                  if Prop is None:
+                Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
+                if Prop is None:
                      Internal.createUniqueChild(bc,'.Solver#Property','UserDefinedData_t')
                      Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
 
-                  wmles  = Internal.getNodeFromName(Prop,'WMLES_parameter')
-                  if wmles is None:
+                wmles  = Internal.getNodeFromName(Prop,'WMLES_parameter')
+                if wmles is None:
                      sz     = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
 
                      #vars=['AvgDensity','AvgVelocityX','AvgVelocityY','AvgVelocityZ','AvgTemperature']
@@ -2789,35 +2789,39 @@ def _BCcompact(t):
                      wmles  = Internal.getNodeFromName(Prop,'WMLES_parameter')
 
 
-                  #verif que coef mobile est bien le premier tableau
-                  datas = Internal.getNodesFromType(Prop, 'DataArray_t')
-                  pos = 0
-                  for data in datas:
+                #verif que coef mobile est bien le premier tableau
+                datas = Internal.getNodesFromType(Prop, 'DataArray_t')
+                pos = 0
+                for data in datas:
                       if data[0]=='mobile_coef' and pos != 0:
                         print("zone:",z[0],"bc:",bc[0],"mobile_coef doit etre le premier noeud de .Solver#Property")
                         import sys; sys.exit()
                       pos+=1
 
-                  #CL I
-                  if rg[0][1] - rg[0][0]==0:
+                if numpy.shape(cellN)[2]==1:
+                  kmin=0;kmax=1
+                else:
+                  kmin= rg[2][0]-1; kmax = rg[2][1]
+                #CL I
+                if rg[0][1] - rg[0][0]==0:
                      if rg[0][1]==1: ijk_tg =2;          sens = 1
                      else:           ijk_tg =rg[0][1]-4; sens =-1
 
-                     for k in range(rg[2][0]-1,rg[2][1]):
+                     for k in range(kmin,kmax):
                         for j in range(rg[1][0]-1,rg[1][1]):
                           for s in range(shift):
                             cellN[ijk_tg+ s*sens, j , k]=2.
-                  #CL J
-                  if rg[1][1] - rg[1][0]==0:
+                #CL J
+                if rg[1][1] - rg[1][0]==0:
                      if rg[1][1]==1: ijk_tg =2;          sens = 1
                      else:           ijk_tg = rg[1][1]-4;sens =-1
 
-                     for k in range(rg[2][0]-1,rg[2][1]):
+                     for k in range(kmin,kmax):
                         for i in range(rg[0][0]-1,rg[0][1]):
                           for s in range(shift):
                              cellN[i, ijk_tg+ s*sens  , k]=2.
-                  #CL K
-                  if numpy.shape(cellN)[2]!=1:
+                #CL K
+                if numpy.shape(cellN)[2]!=1:
                     if rg[2][1] - rg[2][0]==0:
                        if rg[2][1]==1: ijk_tg =2;           sens = 1
                        else:           ijk_tg = rg[2][1]-4; sens =-1

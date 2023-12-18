@@ -97,12 +97,7 @@ c           endif
              g2    = yplus*(yplus-8.15) + 86
              g3    = (2*yplus-8.15)/16.7
 
-            f = 5.424*atan(g3) + log10(g1/(g2*g2)) - unorm/utau - 3.52
-
-c           if(k.eq.6.and.i.eq.14) then
-c           write(*,'(a,3f20.12,i4)') 'newt',utau, yplus,fp,iter
-c            endif
-
+             f = 5.424*atan(g3) + log10(g1/(g2*g2)) - unorm/utau - 3.52
             end do
 
            ! test affinage utau en passant par psiroe
@@ -115,28 +110,14 @@ c            endif
 
            !umod = abs(umod)*param_real(PSIROE)
 
-           rop(l,1) = rop(ldjr3,1)
+           rop(l,1) = rop(m,1)
            rop(l,2) = umod*ut/unorm + xmut(l,2)/xmut(m,2)*un
-c           rop(l,3) = 2*rop(ldjr3,3) - rop(ldjr4,3)
-c           rop(l,3) = max(rop(l,3),-4.)
-c           rop(l,3) = min(rop(l,3),2.4)
-           rop(l,3) = (umod*vt/unorm + xmut(l,2)/xmut(m,2)*vn)
-c     &               *param_real(PSIROE)
+           rop(l,3) = umod*vt/unorm + xmut(l,2)/xmut(m,2)*vn
            rop(l,4) = umod*wt/unorm + xmut(l,2)/xmut(m,2)*wn
-           rop(l,5) = rop(ldjr3,5)
+           rop(l,5) = rop(m,5)
 
-c           if(k.eq.6.and.i.eq.600) then
-c           write(*,'(7f14.8,2i2)')
-c     & rop(l,1),u,v,w,rop(l,3),rop(ldjr3,3),yplus
-c     & ,j,iter
-c           write(*,'(8f14.8,2i2)')
-c     & rop(ldjr,2),umod,utau, unorm,ut, xmut(l,2),xmut(m,2),yplus
-c     & ,j,iter
-c            endif
-
-c           rop(l,1) = 2*rop(ldjr,1) - rop(ldjr2,1)
-c           rop(l,2) = 2*rop(ldjr,2) - rop(ldjr2,2)
-c           rop(l,3) = 2*rop(ldjr,3) - rop(ldjr2,3)
-c           rop(l,4) = 2*rop(ldjr,4) - rop(ldjr2,4)
-c           rop(l,5) = 2*rop(ldjr,5) - rop(ldjr2,5)
-
+           pwall = rop(l,5)*rop(l,1)
+           twall = rop(l,5) 
+     &   + 0.5*prandlt**0.33333/(cv*gam)*(unorm**2-umod**2) ! Crocco-Busemann
+           rop(l,5) = twall
+           rop(l,1) = pwall/twall
