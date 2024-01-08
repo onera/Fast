@@ -87,7 +87,7 @@ void K_FASTS::setInterpTransfersFastS(
   E_Int& nstep        , E_Int& nitmax          , E_Int& rk           , E_Int& exploc           , E_Int& numpassage)
 
 {
-  E_Int rank = 0;
+  int rank = 0;
   E_Int dest = 0;
 
 #ifdef _MPI

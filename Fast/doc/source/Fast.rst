@@ -101,6 +101,8 @@ Actions
 
         + 'o3'      (third order, see  p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
         + 'o3sc'    (third order with limiter, see :download:`Lugrin scheme <documents/SCHEMA_lugrin.pdf>`)
+        + 'o5'      (fifth order)
+        + 'o5sc'    (fifth order with limiter)
         + 'o1'      (first order,  only valid for roe scheme)
         + 'minmod'  (second order with minmod limiter, only valid for roe scheme)
         + default value is 'o3'
