@@ -170,7 +170,8 @@ for_srcs5 = srcs.for_srcs[400:500]
 for_srcs6 = srcs.for_srcs[500:600]
 for_srcs7 = srcs.for_srcs[600:700]
 for_srcs8 = srcs.for_srcs[700:800]
-for_srcs9 = srcs.for_srcs[800:]
+for_srcs9 = srcs.for_srcs[800:900]
+for_srcs10 = srcs.for_srcs[900:]
 
 ppf1 = []
 for f in for_srcs1:
@@ -217,9 +218,14 @@ for f in for_srcs9:
     ffile = env.FPROC(target=f)
     ofile = env.Fortran(target=ffile)
     ppf9.append(ofile[0])
+ppf10 = []
+for f in for_srcs10:
+    ffile = env.FPROC(target=f)
+    ofile = env.Fortran(target=ffile)
+    ppf10.append(ofile[0])
 
 env.Command('merge.l', 'merge.ar', "sed -e s/ELSAPROD/%s/g merge.ar > merge.l"%ELSAPROD)
-env.Command('libfasts.a', ['libfastS1.a', 'libfastS2.a', 'libfastS3.a', 'libfastS4.a', 'libfastS5.a', 'libfastS6.a', 'libfastS7.a', 'libfastS8.a', 'libfastS9.a', 'merge.l'], "ar -M < merge.l")
+env.Command('libfasts.a', ['libfastS1.a', 'libfastS2.a', 'libfastS3.a', 'libfastS4.a', 'libfastS5.a', 'libfastS6.a', 'libfastS7.a', 'libfastS8.a', 'libfastS9.a', 'libfastS10.a', 'merge.l'], "ar -M < merge.l")
 
 #==============================================================================
 myMod1 = env.StaticLibrary('fastS1', srcs.cpp_srcs+ppf1)
@@ -231,6 +237,7 @@ myMod6 = env.StaticLibrary('fastS6', ppf6)
 myMod7 = env.StaticLibrary('fastS7', ppf7)
 myMod8 = env.StaticLibrary('fastS8', ppf8)
 myMod9 = env.StaticLibrary('fastS9', ppf9)
+myMod10 = env.StaticLibrary('fastS10', ppf10)
 
 myMod = 'libfasts.a'
 modDir = installPath+'/FastS/'
