@@ -209,13 +209,8 @@ c       endif
       ELSE !domaine 3D
 
        xcart    = .true.
-       !!xcart    = .false.
        ycart    = .true.
        zcart    = .true.
-C        xcart = .false.  
-C        ycart = .false.  
-       !zcart = .false.  
-       !zcart = .false.
        xcte     = .true.
        ycte     = .true.
        zcte     = .true.
@@ -257,7 +252,6 @@ C        ycart = .false.
           if((ztest1.ge.souszero.or.ztest2.ge.souszero.or.
      &        ztest3.ge.souszero.or.ztest4.ge.souszero).and.
      &        degener(ind).eq.0) then
-
             zcart= .false.
           endif
          enddo
@@ -310,7 +304,6 @@ C        ycart = .false.
           if((ztest1.ge.souszero.or.ztest2.ge.souszero.or.
      &        ztest3.ge.souszero.or.ztest4.ge.souszero).and.
      &       degener(ind).eq.0) then
-
             ycart= .false.
           endif
 
@@ -363,7 +356,6 @@ C        ycart = .false.
           if((ztest1.ge.souszero.or.ztest2.ge.souszero.or.
      &        ztest3.ge.souszero.or.ztest4.ge.souszero).and.
      &       degener(ind).eq.0) then
-           
               xcart= .false.
           endif
          enddo
@@ -386,20 +378,24 @@ C        ycart = .false.
          enddo
          enddo
 
-          !verifie sir movement de rotation 2d/3d  ou translation
-          ztest2=  param_real(ROT_OMEGA  )* param_real(ROT_OMEGA  )
+          !verifie si mouvement de rotation 2d/3d ou translation
+          if (lale.eq.1) then
+            ztest2=  param_real(ROT_OMEGA  )* param_real(ROT_OMEGA  )
      &           + param_real(ROT_OMEGA+1)* param_real(ROT_OMEGA+1)
 
-          ztest1= ztest2+param_real(ROT_OMEGA+2)*param_real(ROT_OMEGA+2)
+            ztest1= ztest2+param_real(ROT_OMEGA+2)*param_real(ROT_OMEGA+2)
 
-          ztest2= sqrt(ztest2)*lale
-          ztest1= sqrt(ztest1)*lale
+            ztest2= sqrt(ztest2)
+            ztest1= sqrt(ztest1)
+          else
+            ztest1 = 0.
+            ztest2 = 0.
+          endif
 
-         ! zcart= .false.
          ! domaine cartesien pas constant
          if(xcart.and.xcte.and.ycart.and.ycte
      &                    .and.zcart.and.zcte
-     &      .and.lale.ne.2.and.ztest1.le.1.e-7) then
+     &      .and.lale.le.1.and.ztest1.le.1.e-7) then
 
                    type_zone = 2
                    neq_ij    = 1
@@ -439,7 +435,6 @@ C        ycart = .false.
                if((ztest1.ge.souszero.or.ztest2.ge.souszero.or.
      &             ztest3.ge.souszero.or.ztest4.ge.souszero).and.
      &              degener(ind).eq.0) then
-
                    xflag= .false.
                endif
 
@@ -462,7 +457,6 @@ C        ycart = .false.
                if((ztest1.ge.souszero.or.ztest2.ge.souszero.or.
      &             ztest3.ge.souszero.or.ztest4.ge.souszero).and.
      &              degener(ind).eq.0) then
-
                    yflag= .false.
                endif
 
@@ -470,7 +464,7 @@ C        ycart = .false.
              enddo
              enddo
 
-             if(xflag.and.yflag.and.lale.ne.2.and.ztest2.le.1.e-7) then
+             if(xflag.and.yflag.and.lale.le.1.and.ztest2.le.1.e-7) then
                  !domaine  3d homogene avec rotation eventuelle sur axe z
                  type_zone = 1
                  neq_ij    = 2
@@ -483,7 +477,7 @@ C        ycart = .false.
                  nijk_mtr(5) =  0
                  ndimdx_mtr  =  nijk_xyz(1)*nijk_xyz(2)
              else
-                 !domaine  3d general
+                 !domaine 3d general
                  type_zone = 0
                  neq_ij    = 3
                  neq_k     = 3

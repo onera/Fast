@@ -799,7 +799,7 @@ def _build_omp(t):
             dims = Internal.getZoneDim(z)
 
             #on concatene les donnes omp dans param_int
-            param_int = Internal.getNodeFromName1( o, 'Parameter_int')
+            param_int = Internal.getNodeFromName1(o, 'Parameter_int')
             size = numpy.shape(param_int[1])
             c = 1
             for s in size: c=c*s
@@ -2005,7 +2005,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         neq = 5
         if model == 'nsspalart' or model =='NSTurbulent': neq = 6
         param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
-        if model == 'LBMLaminar' :
+        if model == 'LBMLaminar':
            neq = param_int[VSHARE.NEQ_LBM]
         if scheme == 'implicit' or scheme == 'implicit_local':   neq_coe = neq     
         else:                                                    neq_coe = 1    # explicit
