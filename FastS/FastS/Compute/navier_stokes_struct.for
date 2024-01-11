@@ -426,12 +426,14 @@ c       endif
      &                             vol(1+shift_vol), vol(1+shift_vol_n),
      &                             vol(1+shift_vol_m),
      &                             rop_ssiter, rop, rop_m1, drodm, coe)
+
                  else
                    call core3as2_chim_def(ndo,nitcfg, first_it, 
      &                            param_int, param_real, ind_mjr, cellN,
      &                            vol(1+shift_vol), vol(1+shift_vol_n),
      &                            vol(1+shift_vol_m),
      &                            rop_ssiter,rop, rop_m1, drodm, coe)
+
                  endif
               endif
 

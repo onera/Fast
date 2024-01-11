@@ -143,6 +143,46 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
                                                
+       ELSEIF (option.eq.620) THEN
+                                               
+           call eff_fluroe_lamin_o3sc_3dfull(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.621) THEN
+                                               
+           call eff_fluroe_lamin_o3sc_3dhomo(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.622) THEN
+                                               
+           call eff_fluroe_lamin_o3sc_3dcart(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.623) THEN
+                                               
+           call eff_fluroe_lamin_o3sc_2d(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
        ELSEIF (option.eq.120) THEN
                                                
            call eff_fluroe_lamin_o1_3dfull(ndom, ithread, 
@@ -256,6 +296,46 @@ C Var loc
        ELSEIF (option.eq.213) THEN
                                                
            call eff_fluroe_euler_o3_2d(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.610) THEN
+                                               
+           call eff_fluroe_euler_o3sc_3dfull(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.611) THEN
+                                               
+           call eff_fluroe_euler_o3sc_3dhomo(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.612) THEN
+                                               
+           call eff_fluroe_euler_o3sc_3dcart(ndom, ithread, 
+     &                 param_int, param_real,param_int_eff,
+     &                 ind_loop, effort, pos,
+     &                 rop, flu , wig,
+     &                 x, y, z,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.613) THEN
+                                               
+           call eff_fluroe_euler_o3sc_2d(ndom, ithread, 
      &                 param_int, param_real,param_int_eff,
      &                 ind_loop, effort, pos,
      &                 rop, flu , wig,

@@ -59,7 +59,9 @@ C var local
       gam1 = param_real(STAREF)/param_real(VISCO +1)
       gam2 = param_real(STAREF)*rgp
       
-      !print*, ind_loop(1), ind_loop(2),ind_loop(3), ind_loop(4)
+      !print*, ind_loop(:)
+      !print*, param_int(NIJK), param_int(NIJK+1), param_int(NIJK+2), 
+      !& param_int(NIJK+3), param_int(NIJK+4) 
       
       if (param_int(EXPLOC).ne.0) then
          dt = param_real(DTC)/param_int(LEVEL)
@@ -190,6 +192,7 @@ c******* NS unsteady *****
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
 
+          do k = ind_loop(5), ind_loop(6)
           do j = ind_loop(3), ind_loop(4)
              lij  =         inddm( ind_loop(1) , j, k)
              lvij =  lij-  indven( ind_loop(1) , j, k)
@@ -197,7 +200,8 @@ c******* NS unsteady *****
              do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               lv = l - lvij
- 
+              lvo = 1
+
               u = rop(l,2)
               v = rop(l,3)
               w = rop(l,4)
@@ -227,6 +231,7 @@ c******* NS unsteady *****
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
              enddo
+          enddo
           enddo
        else
 

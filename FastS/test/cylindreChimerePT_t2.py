@@ -184,6 +184,5 @@ C._rmVars(t, 'centers:cellN#MotionInit')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData') 
 
-C.convertPyTree2File(t, LOCAL+'out.cgns')
+#C.convertPyTree2File(t, 'out.cgns')
 test.testT(t, 1)
-

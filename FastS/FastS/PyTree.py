@@ -490,7 +490,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
        FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
        param_real_tc = Internal.getNodeFromName1(tc, 'Parameter_real')
-       if param_real_tc is not None: FastC.HOOK['param_real_tc']= param_real_tc[1]
+       if param_real_tc is not None: FastC.HOOK['param_real_tc'] = param_real_tc[1]
 
        # FastC.HOOK['param_real_tc'][ 58 ] = nbpts_linelets
 
@@ -1209,7 +1209,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
        if tc is not None:
            tc_compact = Internal.getNodeFromName1( tc, 'Parameter_real')
            #Si param_real n'existe pas, alors pas de raccord dans tc
-           if tc_compact is not  None:
+           if tc_compact is not None:
 
               param_real= tc_compact[1]
               param_int = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
@@ -1395,7 +1395,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
     for z in zones:
        param_int_t = Internal.getNodeFromName2(z, 'Parameter_int')[1]
        # on determine le nbr de cellule fictive active pour le calcul des moyennes
-       numcellfic= param_int_t[VSHARE.NIJK+3];
+       numcellfic = param_int_t[VSHARE.NIJK+3]
        ific        =  numcellfic  # a adapter en DF
        if lgrad == 1: numcellfic = 1
 

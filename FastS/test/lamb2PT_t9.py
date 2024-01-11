@@ -34,7 +34,7 @@ tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse',
                      sameName=1, method='lagrangian', dim=3)
 
 t = I.initLamb(t, position=(45.,25.), Gamma=2., MInf=0.7, loc='centers')
-t = C.addState(t, 'GoverningEquations', 'NSlaminar')
+t = C.addState(t, 'GoverningEquations', 'NSLaminar')
 t = C.addState(t, MInf=MInf)
 # Numerics
 numb = {'temporal_scheme':'explicit', 'ss_iteration':20}

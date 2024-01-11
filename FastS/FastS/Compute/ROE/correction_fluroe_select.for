@@ -136,6 +136,46 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
                                                
+       ELSEIF (option.eq.620) THEN
+                                               
+         call corr_fluroe_lamin_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.621) THEN
+                                               
+         call corr_fluroe_lamin_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.622) THEN
+                                               
+         call corr_fluroe_lamin_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.623) THEN
+                                               
+         call corr_fluroe_lamin_o3sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
        ELSEIF (option.eq.120) THEN
                                                
          call corr_fluroe_lamin_o1_3dfull(ndom,
@@ -249,6 +289,46 @@ C Var loc
        ELSEIF (option.eq.233) THEN
                                                
          call corr_fluroe_SA_o3_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.630) THEN
+                                               
+         call corr_fluroe_SA_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.631) THEN
+                                               
+         call corr_fluroe_SA_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.632) THEN
+                                               
+         call corr_fluroe_SA_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.633) THEN
+                                               
+         call corr_fluroe_SA_o3sc_2d(ndom,
      &                 ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
@@ -376,6 +456,46 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
                                                
+       ELSEIF (option.eq.610) THEN
+                                               
+         call corr_fluroe_euler_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.611) THEN
+                                               
+         call corr_fluroe_euler_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.612) THEN
+                                               
+         call corr_fluroe_euler_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.613) THEN
+                                               
+         call corr_fluroe_euler_o3sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
        ELSEIF (option.eq.110) THEN
                                                
          call corr_fluroe_euler_o1_3dfull(ndom,
@@ -489,6 +609,46 @@ C Var loc
        ELSEIF (option.eq.1223) THEN
                                                
          call corr_fluroe_ale_lamin_o3_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1620) THEN
+                                               
+         call corr_fluroe_ale_lamin_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1621) THEN
+                                               
+         call corr_fluroe_ale_lamin_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1622) THEN
+                                               
+         call corr_fluroe_ale_lamin_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1623) THEN
+                                               
+         call corr_fluroe_ale_lamin_o3sc_2d(ndom,
      &                 ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
@@ -616,6 +776,46 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
                                                
+       ELSEIF (option.eq.1630) THEN
+                                               
+         call corr_fluroe_ale_SA_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1631) THEN
+                                               
+         call corr_fluroe_ale_SA_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1632) THEN
+                                               
+         call corr_fluroe_ale_SA_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1633) THEN
+                                               
+         call corr_fluroe_ale_SA_o3sc_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
        ELSEIF (option.eq.1130) THEN
                                                
          call corr_fluroe_ale_SA_o1_3dfull(ndom,
@@ -729,6 +929,46 @@ C Var loc
        ELSEIF (option.eq.1213) THEN
                                                
          call corr_fluroe_ale_euler_o3_2d(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1610) THEN
+                                               
+         call corr_fluroe_ale_euler_o3sc_3dfull(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1611) THEN
+                                               
+         call corr_fluroe_ale_euler_o3sc_3dhomo(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1612) THEN
+                                               
+         call corr_fluroe_ale_euler_o3sc_3dcart(ndom,
+     &                 ithread, idir,
+     &                 param_int, param_real,
+     &                 ind_loop,
+     &                 rop, drodm , wig,
+     &                 venti, ventj, ventk,
+     &                 ti, tj, tk, vol, xmut)
+                                               
+       ELSEIF (option.eq.1613) THEN
+                                               
+         call corr_fluroe_ale_euler_o3sc_2d(ndom,
      &                 ithread, idir,
      &                 param_int, param_real,
      &                 ind_loop,
