@@ -279,21 +279,23 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
                   ##3) perfom the ibc & id interpolation as normal, excluding the additional points for WM
 
                   
-                  ###WIRE MODEL ADDITIONS
+                  ##1) Interpolate the values at the additional interpolated points for WM
                   C._cpVars(zones, 'centers:Density_WM', zonesD, 'Density_WM')
                   nvars_local     = hook1['neq_max']
                   type_transfert  = 1  
-                 
+
                   Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                             nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict,
                                             isWireModel_int=1)
-                  
+
+                  ##2) Transfers info at target points from flow field to the tc 
                   Xmpi.__setInterpTransfers_WireModel(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,
                                                       nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict,
                                                       graphIBCD=graphIBCD, graphInvIBCD_WM=graphInvIBCD_WM, nvars=nvars_local)
+                  
                   C._rmVars(zonesD, 'Density_WM')
                   
-                  ##ORIG MPI FILLGHOSTCELLS
+                  ##3)
                   isWireModel_int = -1  # is a local flag for Xmpi.__setInterpTransfers
                   type_transfert  =  1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
                   Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
@@ -803,7 +805,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         if isWireModel: graphInvIBCD_WM  = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
     else: 
         procDict=None; graphID=None; graphIBCD=None; graphInvIBCD_WM = None
-
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
