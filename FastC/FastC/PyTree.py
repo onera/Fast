@@ -861,7 +861,7 @@ def _buildOwnData(t, Padding):
     'exp_local':0,
     'time_begin_ale':1,
     'omp_mode':0,
-    'explicit_local_type':0    ## 0:explicit local non conservatif,  1:explicit local conservatif (correction du bilan de flux aux interface)  
+'explicit_local_type':0,    ## 0:explicit local non conservatif,  1:explicit local conservatif (correction du bilan de flux aux interface)
     }
     keys4Zone = {
     'scheme':['ausmpred', 'senseur', 'roe_min', 'roe', 'roe_nul', 'roe_kap', 'senseur_hyper'],
@@ -1051,7 +1051,6 @@ def _buildOwnData(t, Padding):
     timelevel_prfile= 0
     exploctype      = 0
     ompmode         = 0
-
     if d is not None:
         checkKeys(d, keys4Base)
         a = Internal.getNodeFromName1(d, 'omp_mode')
@@ -1880,7 +1879,7 @@ def _buildOwnData(t, Padding):
             Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
             
             # creation noeud parametre real 
-            number_of_defines_param_real = 63                                    # Number Param REAL
+            number_of_defines_param_real = 64                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
@@ -1946,6 +1945,14 @@ def _buildOwnData(t, Padding):
             datap[62] = DiameterWire_p
             datap[63] = CtWire_p
 
+
+            
+            ## Rotation IBM            
+            datap[64]=0
+            timemotion = Internal.getNodesFromName(z,'TimeMotion')
+            if timemotion:
+                rotlocal = Internal.getNodeFromType(timemotion, 'TimeRigidMotion_t')
+                datap[64]    = Internal.getValue(Internal.getNodeFromName(rotlocal,'MotionType'))
 
             datap[VSHARE.LBM_c0]      = lbm_c0
             datap[VSHARE.LBM_taug]    = lbm_taug
@@ -4287,7 +4294,7 @@ def _addPair(idic, z1, z2):
 # center et axis servent dans le cas d'adt cylindrique
 # Filter = 'Base' or '*' or 'Base/*toto' or '*/cart*'
 def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT, 
-                              cartFilter='CARTESIAN', cylFilter='CYLINDER*', center=(0,0,0), axis=(0,0,1), depth=2, thetaShift=0.):
+                              cartFilter='CARTESIAN', cylFilter='CYLINDER*', center=(0,0,0), axis=(0,0,1), depth=2, thetaShift=0.,isIbmAle=False):
     """Fill dictOfAdt."""
     cartFilter = cartFilter.split('/')
     cartBaseFilter = cartFilter[0]
@@ -4298,7 +4305,7 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT,
     #if cylBaseFilter[-1]=='*': cylBaseFilter=cylBaseFilter[0:-1] # WildCard
     cylZoneFilter = '*'
     if len(cylFilter) > 1: cylZoneFilter = cylFilter[1]
-    
+
     dnrnames=[]
     for i in intersectionDict.values(): dnrnames += i
     dnrnames = list(set(dnrnames))
@@ -4306,17 +4313,19 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT,
     dictOfNobOfDnrZones={}; dictOfNozOfDnrZones={}
     for nob in range(len(tc[2])):
         if Internal.getType(tc[2][nob]) == 'CGNSBase_t':
-            baseName = Internal.getName(tc[2][nob])
-            baseNamePref = baseName[0:len(cylBaseFilter)]
+            baseName       = Internal.getName(tc[2][nob])
+            baseNamePref   = baseName[0:len(cylBaseFilter)]
+            baseNameSelect = baseName
+            if isIbmAle:baseNameSelect = baseNamePref
             for nozc in range(len(tc[2][nob][2])):
                 zc = tc[2][nob][2][nozc]
                 if Internal.getType(zc) == 'Zone_t':
                     zdnrname = Internal.getName(zc)
                     if zdnrname in dnrnames and zdnrname not in dictOfADT:              
-                        if fnmatch.fnmatch(baseName, cartBaseFilter) and fnmatch.fnmatch(zdnrname, cartZoneFilter): 
+                        if fnmatch.fnmatch(baseNameSelect, cartBaseFilter) and fnmatch.fnmatch(zdnrname, cartZoneFilter): 
                             print('INFO: Creating adt cart for %s.'%zdnrname)
                             adt = None
-                        elif fnmatch.fnmatch(baseName, cylBaseFilter) and fnmatch.fnmatch(zdnrname, cylZoneFilter): 
+                        elif fnmatch.fnmatch(baseNameSelect, cylBaseFilter) and fnmatch.fnmatch(zdnrname, cylZoneFilter): 
                             print('INFO: Creating adt cyl for %s.'%zdnrname)
                             adt = C.createHookAdtCyl(zc, center, axis, depth=depth, thetaShift=thetaShift)
                         else:
@@ -4701,7 +4710,7 @@ def convertPointwise2Fast(FILEIN):
 
     ## Remove further unneccesary information
     ## output is bare bones for FastS
-    vars = ['Descriptor_t','FamilyName_t','DataClass_t','DimensionalUnits_t','GridLocation_t','FamilyName']
+    vars = ['Descriptor_t','FamilyName_t','DataClass_t','DimensionalUnits_t','GridLocation_t','FamilyName','DimensionalExponents_t']
     for v in vars:
         for fam in Internal.getNodesFromType(t, v):
             Internal.rmNode(t, fam)

@@ -94,7 +94,7 @@ C 0: 1/4 node velocity, 1: ponderated by triangles
       incj = param_int( NIJK_XYZ )
       inck = param_int( NIJK_XYZ )*param_int( NIJK_XYZ+1 )
 
-      IF(param_int(ITYPVENT).eq.0) THEN
+      IF(param_int(ITYPVENT).eq.0) THEN !! maillage deformable, vitesse general (chimere passes through here by default)
 
        do k = ind_loop(5), ind_loop(6)
        do j = ind_loop(3), ind_loop(4)
@@ -317,7 +317,7 @@ C 0: 1/4 node velocity, 1: ponderated by triangles
            enddo
           enddo
 
-      ELSEIF(param_int(ITYPVENT).eq.1) THEN
+      ELSEIF(param_int(ITYPVENT).eq.1) THEN !!rot axe z
 
        do k = ind_loop(5), ind_loop(6)
        do j = ind_loop(3), ind_loop(4)
@@ -483,7 +483,7 @@ C 0: 1/4 node velocity, 1: ponderated by triangles
           enddo
 
 
-      ELSEIF(param_int(ITYPVENT).eq.3) THEN !2d
+      ELSEIF(param_int(ITYPVENT).eq.3) THEN !! maillage 2d
 
        do k = ind_loop(5), ind_loop(6)
        do j = ind_loop(3), ind_loop(4)

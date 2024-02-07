@@ -146,25 +146,25 @@ C var loc
             m     = l  - exchange
             mvent = lven  - shiftvent
 
-            tcx = tijk(lt +vmtr*ic)*ci_mtr
-            tcy = tijk(lt +vmtr*jc)*cj_mtr
-            tcz = tijk(lt +vmtr*kc)*ck_mtr
+            tcx = tijk(lt +vmtr*ic)*ci_mtr !surface normal x
+            tcy = tijk(lt +vmtr*jc)*cj_mtr !surface normal y
+            tcz = tijk(lt +vmtr*kc)*ck_mtr !surface normal z
 
-            surf = sqrt(tcx*tcx+tcy*tcy+tcz*tcz)
+            surf = sqrt(tcx*tcx+tcy*tcy+tcz*tcz) ! magnitude of surface normal
             surf = max(surf,1e-30)
 
-            nx = tcx/surf
-            ny = tcy/surf
-            nz = tcz/surf
+            nx = tcx/surf ! normalized surface normal x
+            ny = tcy/surf ! normalized surface normal y
+            nz = tcz/surf ! normalized surface normal z
 
-            ventx= ventijk(lven              )*c_ale*mobile_coef
-            venty= ventijk(lven +vven        )*c_ale*mobile_coef
-            ventz= ventijk(lven +vven*kc_vent)*ck_vent*c_ale*mobile_coef
+            ventx= ventijk(lven              )*c_ale*mobile_coef          ! rotational/translational velocity
+            venty= ventijk(lven +vven        )*c_ale*mobile_coef          ! rotational/translational velocity 
+            ventz= ventijk(lven +vven*kc_vent)*ck_vent*c_ale*mobile_coef  ! rotational/translational velocity       
 
           qen =(  ventijk(lven              )*tcx
      &           +ventijk(lven +vven        )*tcy
      &           +ventijk(lven +vven*kc_vent)*tcz*ck_vent
-     &         )*c_ale
+     &         )*c_ale     ! vent (dot) surface normal
 
             ! Calculate tangential velocity and its norm
             u = rop(m+v2) 
@@ -173,20 +173,20 @@ C var loc
 
             u_int = nx*u + ny*v + nz*w ! normal velocity
 
-            un = u_int*nx
-            vn = u_int*ny
-            wn = u_int*nz
+            un = u_int*nx ! wall normal velocity x
+            vn = u_int*ny ! wall normal velocity y
+            wn = u_int*nz ! wall normal velocity z
 
-            wall_int = nx*ventx + ny*venty + nz*ventz
+            wall_int = nx*ventx + ny*venty + nz*ventz ! normal rotational/translationvelocity
 
             wall_ut = ventx-wall_int*nx
             wall_vt = venty-wall_int*ny
             wall_wt = ventz-wall_int*nz
 
             !Modif Ivan
-            ut = u-u_int*nx - wall_ut
-            vt = v-u_int*ny - wall_vt
-            wt = w-u_int*nz - wall_wt
+            ut = u-u_int*nx - wall_ut ! wall tangential (relative) velocity x
+            vt = v-u_int*ny - wall_vt ! wall tangential (relative) velocity y
+            wt = w-u_int*nz - wall_wt ! wall tangential (relative) velocity z
 
             unorm = sqrt(ut*ut+vt*vt+wt*wt)
 
@@ -255,7 +255,8 @@ C var loc
             v     = 0.5*(rop(l+v3)+rop(iadrf+v3))
             w     = 0.5*(rop(l+v4)+rop(iadrf+v4))
 
-            !determination vitesse normale interface
+            ! determination vitesse normale interface
+            ! relative for rotational/translational
             u_int= tcx*u +tcy*v +tcz*w -qen 
 
             qwall = 0.

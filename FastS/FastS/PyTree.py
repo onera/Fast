@@ -38,6 +38,30 @@ except: pass
 # Variable alignement pour vectorisation
 #CACHELINE = Dist.getCacheLine()
 
+##[AJ] 
+##needed for wmm validation test case
+def _change_bc(t,up_lim):
+    for z in Internal.getZones(t):
+        sol  = Internal.getNodeByName(z,'FlowSolution#Centers')
+        dens = Internal.getNodeByName(sol,'Density')[1]
+        velx = Internal.getNodeByName(sol,'VelocityX')[1]
+        vely = Internal.getNodeByName(sol,'VelocityY')[1]
+        velz = Internal.getNodeByName(sol,'VelocityZ')[1]
+        temp = Internal.getNodeByName(sol,'Temperature')[1]
+        nutilde = Internal.getNodeByName(sol,'TurbulentSANuTilde')[1]
+        sh   = numpy.shape(dens)
+        for k in range(sh[2]):
+            for j in range(up_lim):
+                for i in range(2,sh[0]-2):
+                    dens[i,j,k] = dens[i,up_lim+up_lim-1-j,k]
+                    velx[i,j,k] =-velx[i,up_lim+up_lim-1-j,k]
+                    vely[i,j,k] =-vely[i,up_lim+up_lim-1-j,k]
+                    velz[i,j,k] =-velz[i,up_lim+up_lim-1-j,k]
+                    temp[i,j,k] = temp[i,up_lim+up_lim-1-j,k]
+                    nutilde[i,j,k] = -nutilde[i,up_lim+up_lim-1-j,k]
+    return None
+                    
+
 #==============================================================================
 # generation maillage pour tble
 #==============================================================================
@@ -486,7 +510,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
          _createTBLESA2(t, tc, h0=h0, hn=-1, nbpts_linelets=nbpts_linelets)
  
        X.miseAPlatDonorTree__(zones, tc, graph=graph, list_graph=list_graph, nbpts_linelets=nbpts_linelets)
-
 
        FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
        param_real_tc = Internal.getNodeFromName1(tc, 'Parameter_real')

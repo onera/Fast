@@ -279,7 +279,6 @@
 #define LBM_zlim                53
 #define LBM_DX                  54
 
-
 /*schema HYPERSONIC*/
 #define HYPER_COEF1  55  
 #define HYPER_COEF2  56
@@ -294,6 +293,9 @@
 #define KWire        61
 #define DiameterWire 62  
 #define CtWire       63
+
+/*Rotation - IBM*/
+#define MotionType   64
 
 /*CONSTANTS*/
 #define SA_CKARM    0.41 
