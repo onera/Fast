@@ -120,7 +120,7 @@ c.....formulation originelle
 
 #include   "FastS/Compute/loop_begin.for"
 
-#include       "FastS/Compute/SA/metric_3dfull.for"
+#include       "FastS/Compute/SA/metric_3dfull.for" 
 #include       "FastS/Compute/SA/rot_3dfull.for" 
 #include       "FastS/Compute/SA/delta_vol.for"
 #include       "FastS/Compute/SA/sourceZDES3_prod_dest.for"
@@ -131,8 +131,10 @@ c.....formulation originelle
        Else  !calcul explicit, Stockage terme source inutile
 
 #include   "FastS/Compute/loop_begin.for"
+          !! Calc: sph2 :: Δ_max = max(Δx,Δy,Δz)
 #include       "FastS/Compute/SA/metric_3dfull.for"
-#include       "FastS/Compute/SA/rot_3dfull.for" 
+#include       "FastS/Compute/SA/rot_3dfull.for"
+          !! Calc: voldes :: volume  || adelta1 :: Δ_volume=∛ (Δx*Δy*Δz)
 #include       "FastS/Compute/SA/delta_vol.for"
 #include       "FastS/Compute/SA/sourceZDES3_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
