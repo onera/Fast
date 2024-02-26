@@ -115,7 +115,7 @@
 #define DTLOC          46   
 #define SA_INT         47
                                                   
-#define RK	       52
+#define RK             52
 #define LEVEL	       53
 #define EXPLOC         54
 #define ITEXPLOC       55
@@ -294,6 +294,9 @@
 #define KWire        61
 #define DiameterWire 62  
 #define CtWire       63
+
+/*Rotation - IBM*/
+#define MotionType   64
 
 /*CONSTANTS*/
 #define SA_CKARM    0.41 

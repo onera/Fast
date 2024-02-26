@@ -240,9 +240,9 @@ X._setInterpTransfers(t,tc,variables=VARSMACRO,storage=1)
 C._initVars(t,'{centers:Vorticity} = {gradxVelocityY}-{gradyVelocityX}')
 C._initVars(t,'{centers:DivV} = {gradxVelocityX}+{gradyVelocityY}')
 tempVar=['gradxVelocityX','gradyVelocityX','gradzVelocityX']
-C._rmVars(t,tempVar)
+C._rmVars(t, tempVar)
 tempVar=['gradxVelocityY','gradyVelocityY','gradzVelocityY']
-C._rmVars(t,tempVar)
+C._rmVars(t, tempVar)
 
 VARSMACRO = ['Vorticity','DivV']
 for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
