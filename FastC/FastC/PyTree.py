@@ -861,8 +861,9 @@ def _buildOwnData(t, Padding):
     'exp_local':0,
     'time_begin_ale':1,
     'omp_mode':0,
-'explicit_local_type':0,    ## 0:explicit local non conservatif,  1:explicit local conservatif (correction du bilan de flux aux interface)
+    'explicit_local_type':0    ## 0:explicit local non conservatif,  1:explicit local conservatif (correction du bilan de flux aux interface)  
     }
+    
     keys4Zone = {
     'scheme':['ausmpred', 'senseur', 'roe_min', 'roe', 'roe_nul', 'roe_kap', 'senseur_hyper'],
     'implicit_solver':['lussor', 'gmres'],
@@ -909,17 +910,22 @@ def _buildOwnData(t, Padding):
     'Cups':4,
     'senseurType':0,
     'ratiom':1, 
-    'lbm_neq':0,
+    #=========================================================
+    # LBM specific keywords
+    #=========================================================
+    'LBM_velocity_set':['D3Q19','D3Q27'],
+    'LBM_coll_model':['BGK', 'BGK+', 'RR', 'HRR', 'TRT'],
+    # 'lbm_col_op':['BGK','TRT','HRR'],
+    'LBM_relax_time':1,
+    'LBM_hrr_sigma':1,
+    'LBM_compressible':0,
     'lbm_ns':0,
-    'lbm_col_op':['BGK','TRT','HRR'],
     'lbm_c0':1,
-    'lbm_taug':1,
     'lbm_gamma_precon':1,    
     'lbm_dif_coef':1,
     'lbm_selective_filter':0,
     'lbm_selective_filter_size':0,
     'lbm_selective_filter_sigma':1,
-    'lbm_hrr_sigma':1,   
     'lbm_adaptive_filter_chi':1,
     'lbm_chi_spongetypeII':1,
     'lbm_sponge':0,
@@ -934,14 +940,11 @@ def _buildOwnData(t, Padding):
     'lbm_isforce':0,
     'lbm_zlim':1,
     'lbm_ibm_connector':0,
-    'LBM_taug':1,
-    'LBM_HRR_sigma':1,
-    'LBM_collision':['BGK_O2', 'BGK_O3', 'RR', 'HRR'],
-    'LBM_corrective':0,
     'LBM_overset':0,
-    'LBM_HLBM':0,
     'LBM_dx':1,
     'LBM_NS':0,
+    #=========================================================
+    #========================================================= 
     'KWire_p':1,
     'DiameterWire_p':1,
     'CtWire_p':1    
@@ -949,6 +952,7 @@ def _buildOwnData(t, Padding):
 
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')  # noeud
 
+    # Checks if there is at least one LBM zone (or base)
     flaglbm=False
     for base in bases:
       model    = 'NSLaminar'
@@ -958,6 +962,7 @@ def _buildOwnData(t, Padding):
       if model == 'LBMLaminar': 
           flaglbm=True
           break
+      
       zones= Internal.getZones(base)
       for z in zones:
 
@@ -984,7 +989,6 @@ def _buildOwnData(t, Padding):
     else:
        if flaglbm: Internal.createUniqueChild(t, 'LBMCycleIteration', 'DataArray_t', value=0)
 
-
     MafzalMode = 3
     first = Internal.getNodeFromName1(t, 'MafzalMode')
     if first is not None: MafzalMode = Internal.getValue(first)
@@ -996,8 +1000,6 @@ def _buildOwnData(t, Padding):
     NbptsLinelets = 0
     first = Internal.getNodeFromName1(t, 'NbptsLinelets')
     if first is not None: NbptsLinelets = Internal.getValue(first)
-
-
 
     zones = Internal.getZones(t)
 
@@ -1051,6 +1053,7 @@ def _buildOwnData(t, Padding):
     timelevel_prfile= 0
     exploctype      = 0
     ompmode         = 0
+
     if d is not None:
         checkKeys(d, keys4Base)
         a = Internal.getNodeFromName1(d, 'omp_mode')
@@ -1252,19 +1255,18 @@ def _buildOwnData(t, Padding):
             coef_hyper      = [0.009,0.015] # coeff schema hypersonique M Lugrin
 
             ##LBM
-            #General
-            lbm_neq                = 19              #Stencil
-            lbm_col_op             = "BGK"           #Collision Operator
-            lbm_taug               = 0.5             #relaxation time | for BGK this is tau for TRT this is big lambda Par defaut:Viscosite nulle (Euler)
-            lbm_gamma_precon       = 1.
-            lbm_c0                 = 1./math.sqrt(3.)# speed of sound
-            lbm_dif_coef           = 0.              # nu_local
             #===================================================================
-            lbm_hrr_sigma= 0.985    #Par defaut: Valeur M2P2 pour HRR
-            coll_model   = "BGK_O3" #Par defaut: Modele BGK avec eq ordre 3
-            corr_term    = 0
+            lbm_neq                = 19               # Number of discrete velocities
+            lbm_coll_model         = "BGK"            # Collision Model
+            lbm_compressible       = 0                # Flag if compressible LBM
+            lbm_taug               = 0.5              # Relaxation time | for BGK this is tau for TRT this is big lambda Par defaut:Viscosite nulle (Euler)
+            lbm_hrr_sigma          = 0.985            # Par defaut: Valeur M2P2 pour HRR
+            lbm_c0                 = 1./math.sqrt(3.) # Lattice speed of sound
+            
+            lbm_gamma_precon       = 1.
+            lbm_dif_coef           = 0.               # nu_local
+            # coll_model   = "BGK_O3" #Par defaut: Modele BGK avec eq ordre 3
             lbm_overset  = 0        #Par defaut, pas d'overset
-            lbm_hlbm     = 0        #Par defaut, pas de LBM hybride
             lbm_dx       = 1.0      #Par defaut, on fixe dx=1
             flag_nslbm   = 0        #Par defaut, zone sans couplage NS-LBM
 
@@ -1444,97 +1446,78 @@ def _buildOwnData(t, Padding):
                 a = Internal.getNodeFromName1(d, 'CtWire_p')
                 if a is not None: CtWire_p = Internal.getValue(a)
 
+                #==========================================================
                 ##LBM                 
-                a = Internal.getNodeFromName1(d, 'lbm_neq')
+                #==========================================================
+                a = Internal.getNodeFromName1(d, 'LBM_velocity_set')
                 if a is not None:
-                    lbm_neq = Internal.getValue(a)
-                    if kv == 1: lbm_neq=9  # over-ride to default value of 9 for 2d
-                else:
-                    lbm_neq = 19                  
-                if ngon:
-                    lbm_neq=0
-                 
-    
+                    lattice_name = Internal.getValue(a)
+                    if lattice_name =='D3Q19' and kv>=2:
+                        lbm_neq = 19
+                        lbm_c0 = 1./numpy.sqrt(3.)
+                    elif lattice_name=='D3Q27' and kv>=2:
+                        lbm_neq = 27
+                        lbm_c0 = 1./numpy.sqrt(3.)
+                    else:
+                        print(lattice_name+' lattice cannot be used on a 2D mesh.')
+                        import sys; sys.exit()
+                # if kv == 1: lbm_neq=9  # over-ride to default value of 9 for 2d
+                else: lbm_neq = 19                  
+                if ngon: lbm_neq=0
+                
+                a = Internal.getNodeFromName1(d, 'lbm_c0')
+                if a is not None: lbm_c0 = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'LBM_coll_model')
+                if a is not None: lbm_coll_model = Internal.getValue(a)
+                if   lbm_coll_model == "BGK":  lbm_collision_model = 1
+                elif lbm_coll_model == "BGK+": lbm_collision_model = 2
+                elif lbm_coll_model == "RR":   lbm_collision_model = 3
+                elif lbm_coll_model == "HRR":  lbm_collision_model = 4
+                elif lbm_coll_model == 'TRT':  lbm_collision_model = 2 #Works only for FastLBM (AJ)
+
+                a = Internal.getNodeFromName1(d, 'LBM_compressible')
+                if a is not None: lbm_compressible = Internal.getValue(a)
+
+                a = Internal.getNodeFromName1(d, 'LBM_hrr_sigma')
+                if a is not None: lbm_hrr_sigma = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'LBM_relax_time')
+                if a is not None: lbm_taug = Internal.getValue(a)
+
                 a = Internal.getNodeFromName1(d, 'lbm_sponge')
                 if a is not None: lbm_sponge = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'LBM_sponge')
                 if a is not None: lbm_sponge = Internal.getValue(a)
-                a = Internal.getNodeFromName1(d, 'LBM_taug')
-                if a is not None: lbm_taug = Internal.getValue(a)
-                a = Internal.getNodeFromName1(d, 'lbm_taug')
-                if a is not None: lbm_taug = Internal.getValue(a)
 
-                a = Internal.getNodeFromName1(d, 'LBM_HRR_sigma')
-                if a is not None: lbm_hrr_sigma = Internal.getValue(a)
-                a = Internal.getNodeFromName1(d, 'lbm_hrr_sigma')
-                if a is not None: lbm_hrr_sigma = Internal.getValue(a)
-
-                a = Internal.getNodeFromName1(d, 'LBM_collision')
-                if a is not None: coll_model = Internal.getValue(a)
-                a = Internal.getNodeFromName1(d, 'LBM_corrective')
-                if a is not None: corr_term = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'LBM_overset')
                 if a is not None: lbm_overset = Internal.getValue(a)
-                a = Internal.getNodeFromName1(d, 'LBM_HLBM')
-                if a is not None: lbm_hlbm = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'LBM_dx')
                 if a is not None: lbm_dx = Internal.getValue(a)
 
                 a = Internal.getNodeFromName1(d, 'LBM_NS')
                 if a is not None: flag_nslbm = Internal.getValue(a)
 
-                a = Internal.getNodeFromName1(d, 'lbm_col_op')
-                if a is not None: lbm_col_op = Internal.getValue(a)
-                if   lbm_col_op == 'BGK':
-                    lbm_collision_operator=1
-                elif  lbm_col_op == 'TRT':
-                    lbm_collision_operator=2
-                elif  lbm_col_op == 'HRR':
-                    lbm_collision_operator=3
-
-                kcolldom = 1
-                if   coll_model == "BGK_O2": kcolldom = 1
-                elif coll_model == "BGK_O3": kcolldom = 2
-                elif coll_model == "RR": kcolldom = 3
-                elif coll_model == "HRR": kcolldom = 4
-                else: print( 'Warning: Fast: collision model %s is invalid.'%coll_model)
-
-                kcorrterm = 0
-                if corr_term == 1: kcorrterm = 1
                 klbmoverset = 0
                 if lbm_overset == 1: klbmoverset = 1
-                klbm_hlbm = 0
-                if lbm_hlbm == 1: klbm_hlbm = 1
 
-                a = Internal.getNodeFromName1(d, 'lbm_c0')
-                if a is not None: lbm_c0 = Internal.getValue(a)
 
 
                 a = Internal.getNodeFromName1(d, 'lbm_gamma_precon')
                 if a is not None: lbm_gamma_precon = Internal.getValue(a)
-               
                 a = Internal.getNodeFromName1(d, 'lbm_dif_coef')
                 if a is not None: lbm_dif_coef = Internal.getValue(a)
-                
                 a = Internal.getNodeFromName1(d, 'lbm_selective_filter')
                 if a is not None: lbm_selective_filter = Internal.getValue(a)
-
                 a = Internal.getNodeFromName1(d, 'lbm_selective_filter_size')
                 if a is not None: lbm_selective_filter_size = Internal.getValue(a)
-
                 a = Internal.getNodeFromName1(d, 'lbm_selective_filter_sigma')
                 if a is not None: lbm_selective_filter_sigma = Internal.getValue(a)
-
-
                 a = Internal.getNodeFromName1(d, 'lbm_adaptive_filter_chi')
                 if a is not None: lbm_adaptive_filter_chi = Internal.getValue(a)
-
                 a = Internal.getNodeFromName1(d, 'lbm_chi_spongetypeII')
                 if a is not None: lbm_chi_spongetypeII = Internal.getValue(a)
-
                 a = Internal.getNodeFromName1(d, 'lbm_sponge_size')
                 if a is not None: lbm_sponge_size = Internal.getValue(a)
-                
                 a = Internal.getNodeFromName1(d, 'lbm_spng_xmin')
                 if a is not None: lbm_spng_xmin = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'lbm_spng_xmax')
@@ -1547,22 +1530,16 @@ def _buildOwnData(t, Padding):
                 if a is not None: lbm_spng_zmin = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'lbm_spng_zmax')
                 if a is not None: lbm_spng_zmax = Internal.getValue(a)
-
                 a = Internal.getNodeFromName1(d, 'lbm_ibm')
                 if a is not None: lbm_ibm = Internal.getValue(a)
-
                 a = Internal.getNodeFromName1(d, 'lbm_ibm_connector')
                 if a is not None: lbm_ibm_connector = Internal.getValue(a)
-
                 a = Internal.getNodeFromName1(d, 'lbm_init_method')
                 if a is not None: lbm_initialize = Internal.getValue(a)
-
                 a = Internal.getNodeFromName1(d, 'lbm_isforce')
                 if a is not None: lbm_isforce = Internal.getValue(a)
-
                 a = Internal.getNodeFromName1(d, 'lbm_force')
                 if a is not None: lbm_forcex = Internal.getValue(a)
-
                 a = Internal.getNodeFromName1(d, 'lbm_zlim')
                 if a is not None: lbm_zlim = Internal.getValue(a) 
                 
@@ -1807,10 +1784,13 @@ def _buildOwnData(t, Padding):
             datap[88]   = wallmodel_sample
 
             datap[VSHARE.SA_DIST]        = sa_dist
+            
             ## LBM
             datap[VSHARE.NEQ_LBM]        = lbm_neq
-            #datap[VSHARE.LBM_COL_OP]     = lbm_collision_operator
-            datap[VSHARE.LBM_COL_OP]     = kcolldom
+            datap[VSHARE.LBM_COL_OP]     = lbm_collision_model
+            datap[VSHARE.LBM_HLBM]       = lbm_compressible
+            
+            #Unused parameters at the moment
             datap[VSHARE.LBM_FILTER]     = lbm_selective_filter
             datap[VSHARE.LBM_FILTER_SZ]  = lbm_selective_filter_size
             datap[VSHARE.LBM_SPONGE]     = lbm_sponge
@@ -1824,9 +1804,8 @@ def _buildOwnData(t, Padding):
             datap[VSHARE.LBM_isforce]              = lbm_isforce
             datap[VSHARE.flag_BConQstar_switch]    = 0
 
-            datap[VSHARE.LBM_CORR_TERM]     = kcorrterm
+            datap[VSHARE.LBM_CORR_TERM]     = 0
             datap[VSHARE.LBM_OVERSET]       = klbmoverset
-            datap[VSHARE.LBM_HLBM]          = klbm_hlbm
             datap[VSHARE.LBM_NS]            = flag_nslbm
 
             datap[VSHARE.LBM_IBC]          = lbm_ibm
@@ -1878,7 +1857,9 @@ def _buildOwnData(t, Padding):
          
             Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
             
+            #=====================================================================
             # creation noeud parametre real 
+            #=====================================================================
             number_of_defines_param_real = 64                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
@@ -1945,8 +1926,6 @@ def _buildOwnData(t, Padding):
             datap[62] = DiameterWire_p
             datap[63] = CtWire_p
 
-
-            
             ## Rotation IBM            
             datap[64]=0
             timemotion = Internal.getNodesFromName(z,'TimeMotion')
@@ -1954,19 +1933,21 @@ def _buildOwnData(t, Padding):
                 rotlocal = Internal.getNodeFromType(timemotion, 'TimeRigidMotion_t')
                 datap[64]    = Internal.getValue(Internal.getNodeFromName(rotlocal,'MotionType'))
 
-            datap[VSHARE.LBM_c0]      = lbm_c0
-            datap[VSHARE.LBM_taug]    = lbm_taug
+            # LBM related stuff
+            datap[VSHARE.LBM_c0]        = lbm_c0
+            datap[VSHARE.LBM_taug]      = lbm_taug
+            datap[VSHARE.LBM_HRR_sigma] = lbm_hrr_sigma
+
             datap[VSHARE.LBM_difcoef] = lbm_dif_coef
             
             datap[VSHARE.LBM_filter_sigma]        = lbm_selective_filter_sigma
             datap[VSHARE.LBM_forcex:VSHARE.LBM_forcex+3] = lbm_forcex[0:3]
             datap[VSHARE.LBM_adaptive_filter_chi] = lbm_adaptive_filter_chi
             datap[VSHARE.LBM_chi_spongetypeII]    = lbm_chi_spongetypeII
-            datap[VSHARE.LBM_HRR_sigma]           = lbm_hrr_sigma
             datap[VSHARE.LBM_gamma_precon]        = lbm_gamma_precon
             datap[VSHARE.LBM_zlim]                = lbm_zlim            
             datap[VSHARE.LBM_DX]                  = lbm_dx
-                       
+                                   
             Internal.createUniqueChild(o, 'Parameter_real', 'DataArray_t', datap)
 
             # More

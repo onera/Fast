@@ -195,7 +195,7 @@ PyObject* K_FASTS::computePT_enstrophy(PyObject* self, PyObject* args)
                             ipt_topology_socket, ipt_ind_dm_socket );
 
           E_Int* ipt_lok_thread   = ipt_lok   + ntask*mx_synchro*Nbre_thread_actif;
-
+        
           post_( nd, Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro, neq_grad,
                  ipt_param_int[nd], ipt_param_real[nd], ipt_tke[ithread-1], ipt_enst[ithread-1], ipt_compteur[ithread-1],
                  ipt_ijkv_sdm_thread,

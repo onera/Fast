@@ -1937,10 +1937,11 @@ def _computePhaseStats(t, ts, metrics, time, omega, dpsi):
 #==============================================================================
 # compute enstropy et TKE in place
 #==============================================================================
-def _computeEnstrophy(t, metrics, time):
+def _computeEnstrophy(t, metrics):
+
     own   = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
-    dtloc = Internal.getValue(dtloc)                       # tab numpy
+    dtloc = Internal.getValue(dtloc)                        # tab numpy
 
 
     zones = Internal.getZones(t)

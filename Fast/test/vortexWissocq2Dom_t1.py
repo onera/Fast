@@ -127,9 +127,9 @@ numz["io_thread"]          = -1
 #numz['cache_blocking_J']=1000000
 #numz['cache_blocking_K']=1000000
 
-numz["LBM_taug"]        = 0.5#+nu_d/(c0[0]*c0[0]*numz["time_step"])
-numz["LBM_collision"]   = "HRR"
-numz["LBM_HRR_sigma"]   = 0.995
+numz["LBM_relax_time"]        = 0.5#+nu_d/(c0[0]*c0[0]*numz["time_step"])
+numz["LBM_coll_model"]   = "HRR"
+numz["LBM_hrr_sigma"]   = 0.995
 numz["LBM_NS"]          = 1
 #numz["niveaux_temps"]           = 1
 

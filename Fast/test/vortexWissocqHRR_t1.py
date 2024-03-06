@@ -117,11 +117,11 @@ numz["time_step"]=dt # pour l instant taug=0.5 (pas de viscosite)
 
 # LBM own parameters
 nu_d = (15.6e-6)/Rhoref
-numz["LBM_taug"]        = 0.5#+nu_d/(c0[0]*c0[0]*numz["time_step"])
-numz["LBM_collision"]   = "HRR"
-numz["LBM_HRR_sigma"]   = 0.98
-numz["LBM_HLBM"] = 0
-numz["LBM_dx"] = dx
+numz["LBM_relax_time"]        = 0.5#+nu_d/(c0[0]*c0[0]*numz["time_step"])
+numz["LBM_coll_model"]   = "HRR"
+numz["LBM_hrr_sigma"]   = 0.98
+# numz["LBM_HLBM"] = 0
+# numz["LBM_dx"] = dx
 
 
 myApp.set(numb=numb); myApp.set(numz=numz)
