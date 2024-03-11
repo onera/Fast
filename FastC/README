@@ -1,14 +1,14 @@
 =============================================================================
-Fast
-Flexible Aerodynamics Solver Technology
+FastC
+Flexible Aerodynamics Solver Technology common methods
 =============================================================================
 
-C.Benoit, S. Peron (Onera).
+ONERA.
 Licenced under GPL3.
 
-For support, go to http://elsa.onera.fr/Cassiopee/Forum.
+For support, go to https://cassiopee.onera.fr
 
-See doc/Fast.txt for installation requirements.
+See doc/FastC.txt for installation requirements.
 See doc/Notes.txt for important notes and limitations.
 
 =============================================================================
