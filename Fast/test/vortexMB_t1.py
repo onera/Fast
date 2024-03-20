@@ -122,5 +122,5 @@ C._initVars(t,'{centers:VelocityZ}={centers:VelocityZ}*%20.16g/{centers:Density}
 
 # test.testT(t,1)
 #t=FastLBM.rmGhostCells(t,NG)
-C.convertPyTree2File(t,"restart.cgns")
+#C.convertPyTree2File(t,"restart.cgns")
 
