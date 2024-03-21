@@ -29,12 +29,12 @@ try:
     import Converter.PyTree as C
     import Converter.Internal as Internal
     import Post.PyTree as P
-    import Fast.variables_share_pytree as VSHARE
+    import Fast.VariablesSharePyTree as VSHARE
     import Post.ExtraVariables2 as PE
     import RigidMotion.PyTree as R
     import math
 except:
-    raise ImportError("FastC.PyTree: requires Converter and Post module.")
+    raise ImportError("FastC.PyTree: requires Converter, Post and RigidMotion module.")
 
 try: range = xrange
 except: pass

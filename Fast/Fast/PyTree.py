@@ -27,9 +27,9 @@ try:
     #import FastP.PyTree as FastP
     import FastASLBM.PyTree as FastLBM
     import Connector.PyTree as X
-    from . import  variables_share_pytree as VSHARE
+    from . import  VariablesSharePyTree as VSHARE
 except:
-    raise ImportError("Fast.PyTree: requires Converter and FastS/P modules.")
+    raise ImportError("Fast.PyTree: requires Converter, Connector, FastS, FastASLBM modules.")
 
 try:
     OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']

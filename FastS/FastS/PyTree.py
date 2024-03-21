@@ -16,7 +16,7 @@ try:
     import Connector.PyTree as X
     import Connector.OversetData as XOD
     import FastC.PyTree as FastC
-    import Fast.variables_share_pytree as VSHARE
+    import Fast.VariablesSharePyTree as VSHARE
     import math
     import time as Time
     import Connector.Mpi as Xmpi
@@ -25,7 +25,7 @@ try:
     #import timeit
     #import KCore.Dist as Dist
 except:
-  raise ImportError("FastS: requires Converter, Connector, Fast modules.")
+  raise ImportError("FastS: requires Converter, Connector, RigidMotion, FastC, Fast modules.")
 
 try:
     OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
