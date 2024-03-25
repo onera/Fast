@@ -2218,15 +2218,16 @@ def tagBC(bcname):
   elif bcname == "BCInjMFR":                tag =20
   elif bcname == "BCOutMFR":                tag =21
   elif bcname == "BCOverlap":               tag =22
-  elif bcname == "BCReconsLBM":             tag =23
-  elif bcname == "BCdimNS":                 tag =24
-  elif bcname == "BCadimcoins":             tag =25
-  elif bcname == "BCOversetLBM":            tag =26
+  elif bcname == "BCReconsLBM":             tag =23#LBM 
+  elif bcname == "BCdimNS":                 tag =24#LBM
+  elif bcname == "BCadimcoins":             tag =25#LBM
+  elif bcname == "BCOversetLBM":            tag =26#LBM
   elif bcname == "BCEquilibrium":           tag =27
   elif bcname == "BCWallModel":             tag =30
   elif bcname == "BCWallExchange":          tag =31
   elif bcname == "BCWallViscousIsothermal": tag =32
-
+  elif bcname == "BCTDIBC":                 tag =90;#LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen
+  
   elif bcname == "LBM_BCPeriodic":           tag =100;#ok
   elif bcname == "LBM_BCSymmetryPlane":      tag =101;#ok
   elif bcname == "LBM_BCSlip":               tag =101;#ok
