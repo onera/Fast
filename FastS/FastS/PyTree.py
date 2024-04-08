@@ -3987,7 +3987,7 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
     var_list_Loo=['RSD_oo','RSD_oo_diff']
     
     ##Create local copy by removing unnecessary stuff
-    t=Internal.rmNodesByName(t2,'ReferenceState')
+    t = Internal.rmNodesByName(t2,'ReferenceState')
     list_vars=['.Solver#define','.Solver#ownData']
     for var in list_vars:Internal._rmNodesByName(t,var)
 
@@ -4002,8 +4002,13 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
             ## else: isCalc=1
             sol = Internal.getNodeFromName(z, 'FlowSolution#Centers')
             if sol:
-                celN           = Internal.getNodeFromName(sol, 'cellN')[1]
-                cells_zone_1   = numpy.count_nonzero(celN==1)
+                celN           = Internal.getNodeFromName(sol, 'cellN')
+                if celN:
+                    celN = celN[1]
+                    cells_zone_1   = numpy.count_nonzero(celN==1)
+                else:
+                    cells_zone_1   = numpy.count_nonzero(Internal.getNodeFromName(sol, 'Density')[1])
+                
                 isCalc = 0
                 if cells_zone_1>0: isCalc=1
             else:

@@ -2226,7 +2226,8 @@ def tagBC(bcname):
   elif bcname == "BCWallModel":             tag =30
   elif bcname == "BCWallExchange":          tag =31
   elif bcname == "BCWallViscousIsothermal": tag =32
-  elif bcname == "BCTDIBC":                 tag =90;#LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen
+  elif bcname == "BCTDIBC":                 tag =90;#LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen (copy of BCEquilibrium)
+  elif bcname == "BCTDIBCNSCBC":            tag =91;#LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen (copy of BCFarfield w/ NSCBC)
   
   elif bcname == "LBM_BCPeriodic":           tag =100;#ok
   elif bcname == "LBM_BCSymmetryPlane":      tag =101;#ok
