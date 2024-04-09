@@ -426,6 +426,9 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
 
 
     FIRST_IT = 1
+    #===========================================================================
+    # ZONE NS
+    #===========================================================================
     if model != 'LBMLaminar':
        neq_lbm = 0
        #on test s'il existe 2 niveaux en temps dans l'arbre pour appliquer la bonne formule de derivee temporelle a la premere iteration
@@ -473,45 +476,47 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     #===========================================================================
     # ZONE LBM
     #===========================================================================
-           
     else:
-       neq_lbm = Internal.getNodeFromName2(zone, 'Parameter_int')[1][VSHARE.NEQ_LBM]
+        neq_lbm = Internal.getNodeFromName2(zone, 'Parameter_int')[1][VSHARE.NEQ_LBM]
+        sponge = Internal.getNodeFromName2(zone, 'Parameter_int')[1][VSHARE.LBM_SPONGE]
+        
+        #On cree les fonctions de distribution
+        for i in range(1,neq_lbm+1):
+            if C.isNamePresent(zone, 'centers:Q'+str(i))       != 1: C._initVars(zone, 'centers:Q'+str(i), 0.)
+            if C.isNamePresent(zone, 'centers:Q'+str(i)+'_M1') != 1: C._initVars(zone, 'centers:Q'+str(i)+'_M1', 0.)
+            #var AJ
+            #if C.isNamePresent(zone, 'centers:Qstar_'+str(i)      ) != 1: C._initVars(zone, 'centers:Qstar_'+str(i)      , 0.)  /Q1_M1
+            #if C.isNamePresent(zone, 'centers:Qeq_'  +str(i)      ) != 1: C._initVars(zone, 'centers:Qeq_'  +str(i)      , 0.)  /drodm
+            #if C.isNamePresent(zone, 'centers:Qneq_' +str(i)      ) != 1: C._initVars(zone, 'centers:Qneq_' +str(i)      , 0.)  /drodm2
+        
+        #Mettre un flag si l'on veut le HRR ? Sinon le tenseur S et psi ne sont pas necessaires.
+        #Tenseur grad des vitesses pour le HRR
+        COMPOSANTES_S = ['xx','xy','xz','yy','yz','zz'] #en  3D 9 composantes mais que 6 ici car symetrique (xy=yx, xz=zx et yz=zy)
+        for comps in COMPOSANTES_S:
+            if C.isNamePresent(zone, 'centers:S'+str(comps)) != 1: C._initVars(zone, 'centers:S'+str(comps), 0.)
+        #Gradiens pour le PSI
+        COMPOSANTES_PSI = ['xx','yy','zz','x','y','z']
+        for comppsi in COMPOSANTES_PSI:
+            if C.isNamePresent(zone, 'centers:corr_'+str(comppsi)) != 1: C._initVars(zone, 'centers:corr_'+str(comppsi), 0.)
+        
+        #Ajout du coef des zones eponges si necessaire
+        if sponge == 1:
+            if C.isNamePresent(zone, 'centers:SpongeCoef') != 1: C._initVars(zone, 'centers:SpongeCoef', 0.)
 
-       #print('Internal fast: neq_LBM=', neq_lbm)
-       for i in range(1,neq_lbm+1):
-           #On cree les fonctions de distribution
-           if C.isNamePresent(zone, 'centers:Q'+str(i))       != 1: C._initVars(zone, 'centers:Q'+str(i), 0.)
-           if C.isNamePresent(zone, 'centers:Q'+str(i)+'_M1') != 1: C._initVars(zone, 'centers:Q'+str(i)+'_M1', 0.)
+        #var AJ
+        if lbmAJ:
+          for i in range(1,3+1):
+              if C.isNamePresent(zone, 'centers:cellN_IBC_LBM'    +str(i)      ) != 1: C._initVars(zone, 'centers:cellN_IBC_LBM_'    +str(i)      , 0.)
+            
+          if C.isNamePresent(zone, 'centers:SpongeCoef')    != 1: C._initVars(zone, 'centers:SpongeCoef'    , 0.)
 
-           #var AJ
-           #if C.isNamePresent(zone, 'centers:Qstar_'+str(i)      ) != 1: C._initVars(zone, 'centers:Qstar_'+str(i)      , 0.)  /Q1_M1
-           #if C.isNamePresent(zone, 'centers:Qeq_'  +str(i)      ) != 1: C._initVars(zone, 'centers:Qeq_'  +str(i)      , 0.)  /drodm
-           #if C.isNamePresent(zone, 'centers:Qneq_' +str(i)      ) != 1: C._initVars(zone, 'centers:Qneq_' +str(i)      , 0.)  /drodm2
-           
-       #Mettre un flag si l'on veut le HRR ? Sinon le tenseur S n'est pas necessaire.
-       #Tenseur grad des vitesses pour le HRR
-       COMPOSANTES_S = ['xx','xy','xz','yy','yz','zz'] #en  3D 9 composantes mais que 6 ici car symetrique (xy=yx, xz=zx et yz=zy)
-       for comps in COMPOSANTES_S:
-           if C.isNamePresent(zone, 'centers:S'+str(comps)) != 1: C._initVars(zone, 'centers:S'+str(comps), 0.)
-       #Gradiens pour le PSI
-       COMPOSANTES_PSI = ['xx','yy','zz','x','y','z']
-       for comppsi in COMPOSANTES_PSI:
-           if C.isNamePresent(zone, 'centers:corr_'+str(comppsi)) != 1: C._initVars(zone, 'centers:corr_'+str(comppsi), 0.)
-
-       #var AJ
-       if lbmAJ:
-         for i in range(1,3+1):
-             if C.isNamePresent(zone, 'centers:cellN_IBC_LBM'    +str(i)      ) != 1: C._initVars(zone, 'centers:cellN_IBC_LBM_'    +str(i)      , 0.)
-           
-         if C.isNamePresent(zone, 'centers:SpongeCoef')    != 1: C._initVars(zone, 'centers:SpongeCoef'    , 0.)
-
-         if C.isNamePresent(zone, 'centers:Density_M1'    ) != 1: C._cpVars(zone, 'centers:Density'    , zone, 'centers:Density_M1'    ); FIRST_IT=0
-         if C.isNamePresent(zone, 'centers:VelocityX_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityX'  , zone, 'centers:VelocityX_M1'  ); FIRST_IT=0
-         if C.isNamePresent(zone, 'centers:VelocityY_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityY'  , zone, 'centers:VelocityY_M1'  ); FIRST_IT=0
-         if C.isNamePresent(zone, 'centers:VelocityZ_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityZ'  , zone, 'centers:VelocityZ_M1'  ); FIRST_IT=0
-         if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
-       '''
-       '''
+          if C.isNamePresent(zone, 'centers:Density_M1'    ) != 1: C._cpVars(zone, 'centers:Density'    , zone, 'centers:Density_M1'    ); FIRST_IT=0
+          if C.isNamePresent(zone, 'centers:VelocityX_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityX'  , zone, 'centers:VelocityX_M1'  ); FIRST_IT=0
+          if C.isNamePresent(zone, 'centers:VelocityY_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityY'  , zone, 'centers:VelocityY_M1'  ); FIRST_IT=0
+          if C.isNamePresent(zone, 'centers:VelocityZ_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityZ'  , zone, 'centers:VelocityZ_M1'  ); FIRST_IT=0
+          if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
+        '''
+        '''
     # fin du if zone LBM ------------------------------------
 
     # init moyenne loi de paroi
@@ -915,11 +920,11 @@ def _buildOwnData(t, Padding):
     # LBM specific keywords
     #=========================================================
     'LBM_velocity_set':['D3Q19','D3Q27'],
-    'LBM_coll_model':['BGK', 'BGK+', 'RR', 'HRR', 'TRT'],
-    # 'lbm_col_op':['BGK','TRT','HRR'],
+    'LBM_coll_model':['BGK', 'BGK+', 'RR', 'HRR', 'TRT'], #Remarque : TRT uniquement pour FastLBM (AJ)
     'LBM_relax_time':1,
     'LBM_hrr_sigma':1,
     'LBM_compressible':0,
+    'LBM_sponge':0,
     'lbm_ns':0,
     'lbm_c0':1,
     'lbm_gamma_precon':1,    
@@ -929,7 +934,6 @@ def _buildOwnData(t, Padding):
     'lbm_selective_filter_sigma':1,
     'lbm_adaptive_filter_chi':1,
     'lbm_chi_spongetypeII':1,
-    'lbm_sponge':0,
     'lbm_sponge_size':0,
     'lbm_spng_xmin':1,
     'lbm_spng_xmax':0,
@@ -953,24 +957,22 @@ def _buildOwnData(t, Padding):
 
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')  # noeud
 
-    # Checks if there is at least one LBM zone (or base)
+    # Checks if there is at least one LBM zone (or base) in tree
     flaglbm=False
     for base in bases:
+      # First check at base level
       model    = 'NSLaminar'
       a        = Internal.getNodeFromName2(base, 'GoverningEquations')
       if a is not None: model = Internal.getValue(a)
-
       if model == 'LBMLaminar': 
           flaglbm=True
           break
-      
+      # Then check at zone level
       zones= Internal.getZones(base)
       for z in zones:
-
         model_z = None
         a = Internal.getNodeFromName2(z, 'GoverningEquations')
         if a is not None: model_z = Internal.getValue(a)
-
         if model_z == 'LBMLaminar': 
             flaglbm=True
             break
@@ -1007,6 +1009,7 @@ def _buildOwnData(t, Padding):
     val=1; i=0
     veclevel = []; mod=""; posg=[] 
  
+    # Recherche des niveaux en temps des differentes zones
     d = Internal.getNodeFromName1(t, '.Solver#define')
     a = Internal.getNodeFromName1(d, 'temporal_scheme')
     if a is not None:
@@ -1018,7 +1021,6 @@ def _buildOwnData(t, Padding):
             level = C.getValue(z, 'centers:niveaux_temps', (i,j,k))
             veclevel.append(int(level))
        else:
-
          for z in zones: 
            d = Internal.getNodeFromName1(z, '.Solver#define')
            if d is not None:
@@ -1026,7 +1028,6 @@ def _buildOwnData(t, Padding):
                a = Internal.getNodeFromName1(d, 'niveaux_temps')
                if a is not None: veclevel.append( Internal.getValue(a) )
                else: veclevel.append(1)
-
     else:
       for z in zones: 
         d = Internal.getNodeFromName1(z, '.Solver#define')
@@ -1482,13 +1483,14 @@ def _buildOwnData(t, Padding):
 
                 a = Internal.getNodeFromName1(d, 'LBM_hrr_sigma')
                 if a is not None: lbm_hrr_sigma = Internal.getValue(a)
+
                 a = Internal.getNodeFromName1(d, 'LBM_relax_time')
                 if a is not None: lbm_taug = Internal.getValue(a)
 
-                a = Internal.getNodeFromName1(d, 'lbm_sponge')
-                if a is not None: lbm_sponge = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'LBM_sponge')
                 if a is not None: lbm_sponge = Internal.getValue(a)
+                # a = Internal.getNodeFromName1(d, 'lbm_sponge')
+                # if a is not None: lbm_sponge = Internal.getValue(a)
 
                 a = Internal.getNodeFromName1(d, 'LBM_overset')
                 if a is not None: lbm_overset = Internal.getValue(a)
@@ -2242,6 +2244,9 @@ def tagBC(bcname):
   elif bcname == "LBM_BCLinearExtrapol":     tag =112;#ok
   elif bcname == "LBM_BCNeumannCentralDir":  tag =113;#ok
   elif bcname == "LBM_BCExtrapolJunk":       tag =114;#ok
+
+  elif bcname == "LBM_Sponge":               tag =150;
+
   else:
     tag = -1
     print("Warning: Fast: unknown BC type %s."%bcname)
@@ -2951,6 +2956,10 @@ def _InterpTemporelcompact(t,tc):
           lout =True
           break
 
+    # 1er cas de figure :il s'agit d'une reprise.
+    # Dans ce cas, on a pas besoin de tout recreer, il suffit de mettre a jour 
+    # les pointeurs d'adresse dans param_int et param_real pour prendre en compte
+    # un eventuel changement de taille des tableaux pour le nouveau calcul
     if lout: 
        for z in zones:
            # zone ownData (generated)
@@ -3025,9 +3034,14 @@ def _InterpTemporelcompact(t,tc):
              param_int[1]                   = datap
 
        return lout
+    # Fin premier cas de figure
 
+    # 2eme cas de figure :il s'agit d'un nouveau calcul
+    # Dans ce cas, il faut creer les tableaux de stockage, les donnees pour 
+    # param_int et param_real, et creer les noeuds Temporal_Interpolation
+    # pour les zones concernees.
 
-    #dimensionnememnt tableau
+    # 2.1 : Dimensionnememnt tableau
     sizeRac={}
     zones_tc = Internal.getZones(tc)
     for z in zones_tc:
@@ -3038,13 +3052,13 @@ def _InterpTemporelcompact(t,tc):
            zrname     = Internal.getValue(match)
            zR         = Internal.getNodeFromName(t,zrname)
            zD         = Internal.getNodeFromName(t,z[0])
-           param_intR =  Internal.getNodeFromName(zR,'Parameter_int')[1]
-           param_intD =  Internal.getNodeFromName(zD,'Parameter_int')[1]
+           param_intR = Internal.getNodeFromName(zR,'Parameter_int')[1]
+           param_intD = Internal.getNodeFromName(zD,'Parameter_int')[1]
            nslbm      = Internal.getNodeFromName(match,'NSLBM')
-           rac_nslbm= False
+           rac_nslbm  = False
            if nslbm is not None and param_intD[VSHARE.IFLOW]==4: rac_nslbm= True # on retient uniquement les raccod nslbm si zD ==lbm
            #recherche raccord entre zone de pas de temps different ou lbmns
-           if (param_intD[VSHARE.LEVEL] >   param_intR[VSHARE.LEVEL]) or rac_nslbm:
+           if (param_intD[VSHARE.LEVEL] > param_intR[VSHARE.LEVEL]) or rac_nslbm:
               print ( 'stockage actif:', match[0], 'zD=', zD[0], 'zR=',  zR[0], 'levelDR=', param_intD[VSHARE.LEVEL],param_intR[VSHARE.LEVEL],'nslbm=',rac_nslbm  )
               ptlist    = Internal.getNodeFromName1(match,'PointList')[1]
               interptyp = Internal.getNodeFromName1(match,'InterpolantsType')[1]
@@ -3093,7 +3107,7 @@ def _InterpTemporelcompact(t,tc):
     #print (sizeRac)
 
 
-    ## allocation new param_int/real
+    # 2.2 : Allocation new param_int/real
     for z in Internal.getZones(t):
         # zone ownData (generated)
         o = Internal.getNodeFromName1(z, '.Solver#ownData')

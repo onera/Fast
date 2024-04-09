@@ -26,7 +26,7 @@ using namespace std;
 
 #include <iostream>
 #include <fstream>
-#include <string> 
+#include <string>
 #include <iomanip>
 #include <sstream>
 
@@ -50,7 +50,7 @@ E_Int K_FAST::gsdr3(E_Int**& param_int          , E_Float**& param_real       , 
 		    E_Float** iptssortmp        , E_Int* ipt_ssor_size        , E_Float* ipt_drodmd         , E_Float* ipt_Hessenberg ,
 		    E_Float** iptkrylov         , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry       , E_Float** ipt_gmrestmp  ,
 		    E_Float* ipt_givens         , E_Float*   ipt_cfl          , E_Float**  iptx             , E_Float**  ipty         ,
-		    E_Float**    iptz           , E_Float**  iptCellN         , E_Float**  iptCellN_IBC     , E_Float** iptFltrN      , E_Int** ipt_degen   ,
+		    E_Float**    iptz           , E_Float**  iptCellN         , E_Float**  iptCellN_IBC     , E_Float** iptFltrN      , E_Float** iptSpongeCoef, E_Int** ipt_degen   ,
 		    E_Float**& iptro            , E_Float**& iptro_m1         , E_Float**&  iptrotmp        , E_Float**& iptrof       , E_Float**& iptS     ,  E_Float**& iptPsiG,
 		    E_Float**  iptmut           , E_Float*   ipt_mutd         , E_Float**  ipti             , E_Float**  iptj         ,
 		    E_Float** iptk              , E_Float** iptvol            , E_Float**  ipti0            , E_Float**  iptj0        ,
@@ -67,24 +67,24 @@ E_Int K_FAST::gsdr3(E_Int**& param_int          , E_Float**& param_real       , 
   E_Float*  feq          = iptdrodm;
   E_Float** feq_transfer = iptdrodm_transfer;
 
-#ifdef TimeShow  
+#ifdef TimeShow
   E_Float* ipt_timecount = new E_Float[5];
   ipt_timecount[0:4] = 0.0;
   E_Int nbpointsTot =0;
 
   for (E_Int nd = 0; nd < nidom; nd++){ nbpointsTot = nbpointsTot + param_int[nd][ IJKV ]*param_int[nd][ IJKV +1 ]*param_int[nd][ IJKV +2 ]; }
 #else
-  E_Float* ipt_timecount = NULL;        
+  E_Float* ipt_timecount = NULL;
 #endif
 
-E_Int rank =0; 
+E_Int rank =0;
 #ifdef TimeShow
 #ifdef _MPI
   if(mpi){ MPI_Comm_rank (MPI_COMM_WORLD, &rank);  }
 #endif
 
   time_init = 0;
-#ifdef _OPENMP  
+#ifdef _OPENMP
   time_init = omp_get_wtime();
 #endif
 #endif
@@ -137,7 +137,7 @@ E_Int rank =0;
       }
       else  { // Explicit global ou Implicit
 	if( nitcfg == 1) { iptro_ssiter[nd] = iptro[nd];  iptro_CL[nd] = iptrotmp[nd]; ishift  = 1; lfwmean  = 1; }
-	else{      
+	else{
 	  if (param_int[0][ ITYPCP ] < 2                )                                             {iptro_ssiter[nd] = iptrotmp[nd];  iptro_CL[nd] = iptrotmp[nd]; ishift =-1; lfwmean  = 0;} // Implicit
 	  if (param_int[0][ ITYPCP ] == 2 && nitcfg%2==0 && nitcfg != param_int[nd][ NSSITER ] )      {iptro_ssiter[nd] = iptrotmp[nd];  iptro_CL[nd] = iptro[nd];    ishift =-1; lfwmean  = 0;} // Explicite
 	  else if (param_int[0][ ITYPCP ] == 2 && nitcfg%2==0 && nitcfg == param_int[nd][ NSSITER ] ) {iptro_ssiter[nd] = iptrotmp[nd];  iptro_CL[nd] = iptro[nd];                             } // Explicite
@@ -148,11 +148,11 @@ E_Int rank =0;
     }
     else{ // param_int[nd][IFLOW]== 4
       iptro_ssiter[nd]      = iptrotmp[nd];
-      iptro_CL[nd]          = iptro[nd]; 
-      iptro_CL[nd+   nidom] = iptrotmp[nd]; 
-      iptro_CL[nd+ 2*nidom] = iptS[nd]; 
-      iptro_CL[nd+ 3*nidom] = iptPsiG[nd]; 
-      iptrom_CL[nd]      = iptro[nd]; 
+      iptro_CL[nd]          = iptro[nd];
+      iptro_CL[nd+   nidom] = iptrotmp[nd];
+      iptro_CL[nd+ 2*nidom] = iptS[nd];
+      iptro_CL[nd+ 3*nidom] = iptPsiG[nd];
+      iptrom_CL[nd]      = iptro[nd];
       iptroS_CL[nd]      = iptS[nd];
       iptpsiG_CL         = iptPsiG;
     }
@@ -161,7 +161,7 @@ E_Int rank =0;
   //
   //Calcul taille tableau ssor par thread et mise a jour Nombre sous_iter pour implicit
   //
-  E_Int nbtask = ipt_omp[nitcfg-1]; 
+  E_Int nbtask = ipt_omp[nitcfg-1];
   E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
 #include   "../FastS/FastS/Compute/ssor.cpp"
 
@@ -221,7 +221,7 @@ E_Int rank =0;
      /****************************************************
       -----Boucle sous-iteration
      ****************************************************/
-  
+
         if( nitcfg == 1)
                   {
                      for (E_Int nd = 0; nd < nidom; nd++) //mise a jour metric et vent ale zone cart et 3dhom(3dfull et 2d a la volee)
@@ -241,7 +241,7 @@ E_Int rank =0;
                          }//zone
 
                    // calcul metric si maillage deformable
-                   //  
+                   //
 #include           "../FastS/FastS/Metric/cp_metric.cpp"
                    }
 
@@ -252,7 +252,7 @@ E_Int rank =0;
         E_Int shift_a1=0;   E_Int shift_a3=0;  E_Int shift_a4=0;
 	E_Float rhs_end=0; E_Int ncells=0;
 
-        E_Int nbtask = ipt_omp[nitcfg-1]; 
+        E_Int nbtask = ipt_omp[nitcfg-1];
         E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
 
         for (E_Int ntask = 0; ntask < nbtask; ntask++)
@@ -312,7 +312,7 @@ E_Int rank =0;
   } // Fin zone // omp
 
 
-#pragma omp parallel default(shared) 
+#pragma omp parallel default(shared)
   {
 #ifdef _OPENMP
     E_Int  ithread           = omp_get_thread_num() +1;
@@ -339,7 +339,7 @@ E_Int rank =0;
 
   E_Int nitcfg_loc= 1;
 
-  E_Int nbtask = ipt_omp[nitcfg_loc-1]; 
+  E_Int nbtask = ipt_omp[nitcfg_loc-1];
   E_Int ptiter = ipt_omp[nssiter+ nitcfg_loc-1];
 
   //calcul du sous domaine a traiter par le thread
@@ -374,20 +374,20 @@ for (E_Int nd = 0; nd < nidom; nd++)
 
 
 #ifdef TimeShow
-#ifdef _OPENMP  
+#ifdef _OPENMP
   time_COM = omp_get_wtime();
 #endif
-#ifdef _OPENMP  
+#ifdef _OPENMP
   time_init = omp_get_wtime();
-#endif 
-#endif 
+#endif
+#endif
 
 /*
 */
 
   //
   //
-  //FillGhostcell si mise a jour necessaire et transfer dans C layer 
+  //FillGhostcell si mise a jour necessaire et transfer dans C layer
   //
   //
 E_Int autorisation_bc[nidom];
@@ -406,11 +406,11 @@ if(flag_NSLBM==1)
          E_Int ech  = param_int_tc[ip2p+shift_graph];
          E_Int dest = param_int_tc[ech];
          if (dest == rank)  // Intra Process
-         { 
+         {
            E_Int numpassage1    = 1;
            E_Int rk1            = param_int[0][RK];
            E_Int exploc1        = param_int[0][EXPLOC];
-           E_Int bidim          =1; //on annule les d/dz 
+           E_Int bidim          =1; //on annule les d/dz
            E_Int TypeTransfert1 =0; // uniquement ID
 
            K_FAST::compute_sij(iptro_CL, iptS, iptvol, param_int_tc, param_real_tc , param_int, param_real, ipt_omp,
@@ -423,28 +423,28 @@ if(flag_NSLBM==1)
 
 E_Int nitcfg_stk = nitcfg;
 if(lexit_lu ==0 && layer_mode==1)
-{   
+{
   //remplissage ghost transfert
   #include "FastS/Compute/transfert_multiblock.cpp"
   //E_Int cycl;
- 
+
   for (E_Int nd = 0; nd < nidom; nd++)
     {
      // flag pour transfert optimiser explicit local
      autorisation_bc[nd]=0;
-     if (param_int[0][EXPLOC] == 1)    //if (rk == 3 and exploc == 2) 
+     if (param_int[0][EXPLOC] == 1)    //if (rk == 3 and exploc == 2)
       {
 	cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
-	 
-        // modif de nitcfg pour appliquer les BC partout 
+
+        // modif de nitcfg pour appliquer les BC partout
 	if      (nitcfg_stk%cycl == cycl/2 -1       and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}
-	else if (nitcfg_stk%cycl == cycl/2 + cycl/4 and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}	    
+	else if (nitcfg_stk%cycl == cycl/2 + cycl/4 and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}
 	else if (nitcfg_stk%cycl == cycl-1          and cycl != 4 ){ nitcfg = 1; autorisation_bc[nd] = 1;}
 	else if((nitcfg_stk%cycl == 1 or nitcfg_stk%cycl == cycl/2  or nitcfg_stk%cycl== cycl-1) and cycl == 4 ) { nitcfg = 1; autorisation_bc[nd] = 1; }
-      } 
+      }
      else {autorisation_bc[nd] = 1;}
   }//loop zone
-} //lexit  
+} //lexit
 
 
 
@@ -458,8 +458,8 @@ for (E_Int nd = 0; nd < nidom; nd++)
   }
 
 if(lexit_lu ==0 && layer_mode==1)
-{   
-  E_Int lrhs=0; E_Int lcorner=0; 
+{
+  E_Int lrhs=0; E_Int lcorner=0;
 #pragma omp parallel default(shared)
  {
 #ifdef _OPENMP
@@ -470,7 +470,7 @@ if(lexit_lu ==0 && layer_mode==1)
    E_Int Nbre_thread_actif = 1;
 #endif
 
-   //E_Int Nbre_socket   = NBR_SOCKET;             
+   //E_Int Nbre_socket   = NBR_SOCKET;
    E_Int Nbre_socket   = 1;                       // nombre de proc (socket) sur le noeud a memoire partagee
    if( Nbre_thread_actif < Nbre_socket) Nbre_socket = 1;
 
@@ -490,6 +490,6 @@ if(lexit_lu ==0 && layer_mode==1)
   delete [] iptro_ssiter;
   delete [] iptrom_CL;
   delete [] iptroS_CL;
-  
+
   return ibord_ale;
 }

@@ -1,4 +1,4 @@
-/*    
+/*
       Copyright 2013-2024 Onera.
 
       This file is part of Cassiopee.
@@ -47,13 +47,13 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 {
-  PyObject* zones; PyObject* metrics; PyObject* work; 
+  PyObject* zones; PyObject* metrics; PyObject* work;
 
-  E_Int nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, flag_NSLBM; 
-  
+  E_Int nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, flag_NSLBM;
+
 #if defined E_DOUBLEINT
   if (!PyArg_ParseTuple(args, "OOllllllO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &nit_c, &flag_NSLBM, &work)) return NULL;
-#else 
+#else
   if (!PyArg_ParseTuple(args, "OOiiiiiiO" , &zones , &metrics, &nitrun, &nstep_deb,  &nstep_fin, &layer_mode, &nit_c, &flag_NSLBM, &work)) return NULL;
 #endif
 
@@ -66,9 +66,9 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   //* tableau pour stocker dimension sous-domaine omp *//
   E_Int threadmax_sdm  = __NUMTHREADS__;
 
-  PyObject* tmp = PyDict_GetItemString(work,"MX_SSZONE");      E_Int mx_sszone       = PyLong_AsLong(tmp);  
-            tmp = PyDict_GetItemString(work,"MX_SYNCHRO");     E_Int mx_synchro      = PyLong_AsLong(tmp);  
-            tmp = PyDict_GetItemString(work,"MX_OMP_SIZE_INT");E_Int mx_omp_size_int = PyLong_AsLong(tmp);  
+  PyObject* tmp = PyDict_GetItemString(work,"MX_SSZONE");      E_Int mx_sszone       = PyLong_AsLong(tmp);
+            tmp = PyDict_GetItemString(work,"MX_SYNCHRO");     E_Int mx_synchro      = PyLong_AsLong(tmp);
+            tmp = PyDict_GetItemString(work,"MX_OMP_SIZE_INT");E_Int mx_omp_size_int = PyLong_AsLong(tmp);
             tmp = PyDict_GetItemString(work,"FIRST_IT");       E_Int first_it        = PyLong_AsLong(tmp);
             tmp = PyDict_GetItemString(work,"mpi");            E_Int mpi             = PyLong_AsLong(tmp);
 
@@ -80,15 +80,15 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   E_Int* ipt_omp = iptdtloc + shift_omp;
 
   E_Int lcfl= 0;
-  // 
-  // 
-  // 
+  //
+  //
+  //
   // partie code specifique au Transfer Data
-  // 
-  // 
+  //
+  //
   //
   PyObject* pyParam_int_tc;PyObject* pyParam_real_tc; PyObject* iskipArray;
-  PyObject* pyLinlets_int; PyObject* pyLinlets_real; 
+  PyObject* pyLinlets_int; PyObject* pyLinlets_real;
   FldArrayI* param_int_tc;  FldArrayI* iskip_lu;  FldArrayI* linelets_int;
   FldArrayF* param_real_tc; FldArrayF* linelets_real;
   E_Int* ipt_iskip_lu;  E_Int*  ipt_param_int_tc ;
@@ -102,7 +102,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   if(nitrun % iptdtloc[1] == 0 || nitrun == 1) lcfl =1;
 
       pyParam_int_tc = PyDict_GetItemString(work,"param_int_tc");
-      pyParam_real_tc= PyDict_GetItemString(work,"param_real_tc"); 
+      pyParam_real_tc= PyDict_GetItemString(work,"param_real_tc");
 
       if (pyParam_int_tc != Py_None)
 	{ K_NUMPY::getFromNumpyArray(pyParam_int_tc , param_int_tc , true); ipt_param_int_tc = param_int_tc -> begin(); }
@@ -118,18 +118,18 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       pyLinlets_int = PyDict_GetItemString(work,"linelets_int");
       if (pyLinlets_int != Py_None)
 	{K_NUMPY::getFromNumpyArray(pyLinlets_int, linelets_int, true); ipt_linelets_int = linelets_int->begin();}
-      else{ipt_linelets_int = NULL;}  
-  
+      else{ipt_linelets_int = NULL;}
+
       pyLinlets_real = PyDict_GetItemString(work,"linelets_real");
       if (pyLinlets_real != Py_None)
 	{K_NUMPY::getFromNumpyArray(pyLinlets_real, linelets_real, true); ipt_linelets_real = linelets_real->begin();}
       else{ipt_linelets_real = NULL;}
-  
-    
+
+
       iskipArray = PyDict_GetItemString(work,"skip_lu");
       K_NUMPY::getFromNumpyArray(iskipArray, iskip_lu, true); ipt_iskip_lu = iskip_lu->begin();
 
-      PyObject* tmp1 = PyDict_GetItemString(work,"lssiter_loc"); 
+      PyObject* tmp1 = PyDict_GetItemString(work,"lssiter_loc");
       if (PyLong_Check(tmp1) == true) lssiter_loc = PyLong_AsLong(tmp1);
       else lssiter_loc = PyInt_AsLong(tmp1);
 
@@ -139,7 +139,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       PyObject* tmp = PyDict_GetItemString(work,"lexit_lu");      lexit_lu      = PyLong_AsLong(tmp);
                 tmp = PyDict_GetItemString(work,"lssiter_verif"); lssiter_verif = PyLong_AsLong(tmp);
       ipt_linelets_int  = NULL;
-      ipt_linelets_real = NULL; 
+      ipt_linelets_real = NULL;
       //ipt_param_int_tc  = NULL;
       //ipt_param_real_tc = NULL;
     }
@@ -151,7 +151,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
 
   E_Int**   ipt_param_int;  E_Int** ipt_ind_dm; E_Int** ipt_it_lu_ssdom; E_Int** ipt_degen;  E_Int** ipt_ng_pe; E_Int** ipt_nfconn; E_Int** ipt_nfindex;
-  
+
   E_Float** ipt_param_real  ;
   E_Float** iptx;          E_Float** ipty;         E_Float** iptz;    E_Float** iptro; E_Float** iptroQ_m1; E_Float** iptroQ_p1; E_Float** iptmut;
   E_Float** ipti;          E_Float** iptj;         E_Float** iptk;    E_Float** iptvol;
@@ -163,7 +163,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   E_Float** iptCellN  ;    E_Float** iptCellN_IBC; E_Float** ipt_cfl_zones;
   E_Float** iptssor;       E_Float** iptssortmp;
   E_Float** ipt_gmrestmp;  E_Float** iptdrodm_transfer;
-  E_Float** iptS; E_Float** iptFltrN; E_Float** iptPsiG;
+  E_Float** iptS; E_Float** iptFltrN; E_Float** iptPsiG; E_Float** iptSpongeCoef;
 
   ipt_param_int     = new E_Int*[nidom*7];
   ipt_ind_dm        = ipt_param_int   + nidom;
@@ -173,9 +173,9 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   ipt_nfconn        = ipt_ng_pe       + nidom;
   ipt_nfindex       = ipt_nfconn      + nidom;
 
-  iptx              = new E_Float*[nidom*44];      
-  ipty              = iptx               + nidom;  
-  iptz              = ipty               + nidom;  
+  iptx              = new E_Float*[nidom*45];
+  ipty              = iptx               + nidom;
+  iptz              = ipty               + nidom;
   //
   // Do not change order of 4 following pointers: order needed by transfert C layer
   //
@@ -185,42 +185,43 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   iptPsiG           = iptS               + nidom;
   //
   //
-  iptro_sfd         = iptPsiG            + nidom;  
-  iptdelta          = iptro_sfd          + nidom;  
-  iptro_res         = iptdelta           + nidom;  
-  iptmut            = iptro_res          + nidom;  
-  ipti              = iptmut             + nidom;  
-  iptj              = ipti               + nidom;  
-  iptk              = iptj               + nidom;  
-  iptvol            = iptk               + nidom;  
-  ipti0             = iptvol             + nidom;  
-  iptj0             = ipti0              + nidom;  
-  iptk0             = iptj0              + nidom;  
-  ipti_df           = iptk0              + nidom;  
-  iptj_df           = ipti_df            + nidom;  
-  iptk_df           = iptj_df            + nidom;  
-  iptvol_df         = iptk_df            + nidom;  
-  iptventi          = iptvol_df          + nidom;  
-  iptventj          = iptventi           + nidom;  
-  iptventk          = iptventj           + nidom;  
-  iptrdm            = iptventk           + nidom;  
-  iptCellN          = iptrdm             + nidom;  
-  ipt_param_real    = iptCellN           + nidom;  
-  iptkrylov         = ipt_param_real     + nidom;  
-  iptkrylov_transfer= iptkrylov          + nidom;  
-  ipt_gmrestmp      = iptkrylov_transfer + nidom;  
+  iptro_sfd         = iptPsiG            + nidom;
+  iptdelta          = iptro_sfd          + nidom;
+  iptro_res         = iptdelta           + nidom;
+  iptmut            = iptro_res          + nidom;
+  ipti              = iptmut             + nidom;
+  iptj              = ipti               + nidom;
+  iptk              = iptj               + nidom;
+  iptvol            = iptk               + nidom;
+  ipti0             = iptvol             + nidom;
+  iptj0             = ipti0              + nidom;
+  iptk0             = iptj0              + nidom;
+  ipti_df           = iptk0              + nidom;
+  iptj_df           = ipti_df            + nidom;
+  iptk_df           = iptj_df            + nidom;
+  iptvol_df         = iptk_df            + nidom;
+  iptventi          = iptvol_df          + nidom;
+  iptventj          = iptventi           + nidom;
+  iptventk          = iptventj           + nidom;
+  iptrdm            = iptventk           + nidom;
+  iptCellN          = iptrdm             + nidom;
+  ipt_param_real    = iptCellN           + nidom;
+  iptkrylov         = ipt_param_real     + nidom;
+  iptkrylov_transfer= iptkrylov          + nidom;
+  ipt_gmrestmp      = iptkrylov_transfer + nidom;
   iptssor           = ipt_gmrestmp       + nidom;    //ndimdx+2rangee ghost par thread
   iptssortmp        = iptssor            + nidom;    //ndimdx
   ipt_cfl_zones     = iptssortmp         + nidom;    //3composants: attention a la prochaine addition
-  iptdrodm_transfer = ipt_cfl_zones      + nidom;  
-  iptCellN_IBC      = iptdrodm_transfer  + nidom;  
-  iptsrc            = iptCellN_IBC       + nidom;  
+  iptdrodm_transfer = ipt_cfl_zones      + nidom;
+  iptCellN_IBC      = iptdrodm_transfer  + nidom;
+  iptsrc            = iptCellN_IBC       + nidom;
   iptroQ_m1         = iptsrc             + nidom;
   iptFltrN          = iptroQ_m1          + nidom;
-    
+  iptSpongeCoef     = iptFltrN           + nidom;
+
   vector<PyArrayObject*> hook;
   PyObject* ssorArray = PyDict_GetItemString(work,"ssors");
-    
+
   E_Int nb_pulse      = 0;                  // =1 => pulse acoustic centree a l'origine
   E_Int ndimdx_max    = 0;
   E_Int ndimdx_sa     = 0;
@@ -243,9 +244,9 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
       /* Get numerics from zone */
       PyObject*   numerics  = K_PYTREE::getNodeFromName1(zone    , ".Solver#ownData");
-      PyObject*          o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int"); 
+      PyObject*          o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_int");
       ipt_param_int[nd]     = K_PYTREE::getValueAI(o, hook);
-      o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
+      o  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real");
       ipt_param_real[nd]    = K_PYTREE::getValueAF(o, hook);
 
       temps = (nitrun-1)*ipt_param_real[nd][ DTC];
@@ -253,7 +254,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
 
       if( ipt_param_int[nd][ NDIMDX ] > ndimdx_max ) ndimdx_max = ipt_param_int[nd][ NDIMDX ];
-    
+
       //
       //
       //Pointeur maillage
@@ -267,11 +268,11 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       //
       //
       PyObject* sol_center; PyObject* t; PyObject* ngon;
-      ngon         = K_PYTREE::getNodeFromName1(zone      , "NGonElements"); 
+      ngon         = K_PYTREE::getNodeFromName1(zone      , "NGonElements");
       if (ngon == NULL) {ipt_ng_pe[nd]= NULL;ipt_nfconn[nd]=NULL;ipt_nfindex[nd]=NULL; }
       else {
 	t    = K_PYTREE::getNodeFromName1( ngon , "ParentElements");      ipt_ng_pe[nd]= K_PYTREE::getValueAI(t, hook);
-	ngon = K_PYTREE::getNodeFromName1( zone , "NFaceElements"); 
+	ngon = K_PYTREE::getNodeFromName1( zone , "NFaceElements");
 	t    = K_PYTREE::getNodeFromName1( ngon , "ElementConnectivity"); ipt_nfconn[nd] = K_PYTREE::getValueAI(t, hook);
 	t    = K_PYTREE::getNodeFromName1( ngon , "ElementIndex");        ipt_nfindex[nd]= K_PYTREE::getValueAI(t, hook);
       }
@@ -281,7 +282,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       iptro[nd]    = K_PYTREE::getValueAF(t, hook);
 
 
-      if ( ipt_param_int[nd][ IFLOW ]== 4) 
+      if ( ipt_param_int[nd][ IFLOW ]== 4)
 	{
           t             = K_PYTREE::getNodeFromName1(sol_center, "Q1");
           iptroQ_p1[nd] = K_PYTREE::getValueAF(t, hook);
@@ -314,7 +315,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       if (t == NULL) iptsrc[nd] = NULL;
       else iptsrc[nd]   = K_PYTREE::getValueAF(t, hook);
 
-      if(ipt_param_int[nd][ IBC ]== 1){t=K_PYTREE::getNodeFromName1(sol_center, "cellN_IBC"); iptCellN_IBC[nd] = K_PYTREE::getValueAF(t, hook); } 
+      if(ipt_param_int[nd][ IBC ]== 1){t=K_PYTREE::getNodeFromName1(sol_center, "cellN_IBC"); iptCellN_IBC[nd] = K_PYTREE::getValueAF(t, hook); }
       else { iptCellN_IBC[nd] = NULL;}
 
       //Pointeur sur patch de filtrage
@@ -336,7 +337,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 	  iptssor[nd]    = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd));
 	  iptssortmp[nd] = K_NUMPY::getNumpyPtrF(PyList_GetItem(ssorArray, 2 * nd + 1));
 	}
-  
+
       //Pointeur sfd
       if (ipt_param_int[nd][ SFD ] == 1)
 	{
@@ -348,7 +349,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 	{
 	  t            = K_PYTREE::getNodeFromName1(sol_center, "delta");
 	  iptdelta[nd] = K_PYTREE::getValueAF(t, hook);
-	}    
+	}
       //Pointeur extraction RHS
       if (ipt_param_int[nd][ EXTRACT_RES ] == 1)
 	{
@@ -361,7 +362,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 	{ t          = K_PYTREE::getNodeFromName1(sol_center, "ViscosityEddy");
 	  iptmut[nd] = K_PYTREE::getValueAF(t, hook);
 
-	  if (ipt_param_int[nd][ IFLOW ] ==3) 
+	  if (ipt_param_int[nd][ IFLOW ] ==3)
             { neq_max = 6;
               //Recherche du domaine RANS/DES le + gros
               if (ipt_param_int[nd][ ILES ] == 0) { if( ipt_param_int[nd][ NDIMDX ] > ndimdx_sa ) ndimdx_sa = ipt_param_int[nd][ NDIMDX ]; }
@@ -400,9 +401,9 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 	ipt_ind_dm[ nd ]      =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM_NG) );
 	ipt_it_lu_ssdom[ nd ] =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_ITLU_NG) );
       }
- 
-      if(lcfl  == 1 && nstep_deb ==1 ) 
-	{ 
+
+      if(lcfl  == 1 && nstep_deb ==1 )
+	{
 	  PyObject* t2 = K_PYTREE::getNodeFromName1(numerics, "CFL_minmaxmoy");
 	  if (t2 != NULL) { ipt_cfl_zones[nd] = K_PYTREE::getValueAF(t2, hook);}
 	}
@@ -417,18 +418,18 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       if (ipt_param_int[nd][ IFLOW ] >= 2 &&  ipt_param_int[nd][ ILES ] >= 1 && ipt_param_int[nd][ IJKV+ 2] > 1) kles = 1;
 
       //Recherche domaine a filtrer
-      if (ipt_param_int[nd][ IFLAGFLT ] == 1) 
-	{ kfiltering     = 1; 
+      if (ipt_param_int[nd][ IFLAGFLT ] == 1)
+	{ kfiltering     = 1;
 	  ipt_n0_flt[nd] = ndimt_flt;
-	  if (ipt_param_int[nd][ ITYPZONE] == 3)ndimt_flt=ndimt_flt+ (ipt_param_int[nd][ IJKV ]+iorder_flt)*(ipt_param_int[nd][ IJKV +1]+iorder_flt); 
+	  if (ipt_param_int[nd][ ITYPZONE] == 3)ndimt_flt=ndimt_flt+ (ipt_param_int[nd][ IJKV ]+iorder_flt)*(ipt_param_int[nd][ IJKV +1]+iorder_flt);
 	  else     ndimt_flt=ndimt_flt+ (ipt_param_int[nd][ IJKV ]+iorder_flt)*(ipt_param_int[nd][ IJKV +1]+iorder_flt)*(ipt_param_int[nd][ IJKV +2]+iorder_flt);
 	}
     } // boucle zone
-  
+
   //on determine le type de variable pour les transferts match,...
   E_Int vartype = 2;
   if(neq_max == 6){ vartype = 21;}
-  if(ipt_param_int[0][ IFLOW ] ==4){ vartype = 4;}  
+  if(ipt_param_int[0][ IFLOW ] ==4){ vartype = 4;}
   /// codage vartype a generaliser pour couplage NS/LBM
 
   //  // Reservation tableau travail temporaire pour calcul du champ N+1
@@ -444,9 +445,9 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   if(kles==1) neq_les = 3;
   FldArrayF  rot(ndimt*neq_les);
   E_Float* iptrot = rot.begin();
-  E_Int kwig_stat    = 0;  
+  E_Int kwig_stat    = 0;
   E_Int neq_wig_stat = 0;
-  if (kwig_stat ==  1) neq_wig_stat = 3; 
+  if (kwig_stat ==  1) neq_wig_stat = 3;
   FldArrayF  stat_wig(ndimt*neq_wig_stat); E_Float* iptstat_wig = stat_wig.begin();
 
 
@@ -463,7 +464,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   if (ipt_param_int[0][NB_RELAX] > 1 || ipt_param_int[0][LU_MATCH] == 1 ) size_ssortmp = 1;
   FldArrayI ssor_size(nidom * mx_sszone * threadmax_sdm * size_ssortmp); ipt_ssor_size = ssor_size.begin();
 
-  /// Tableau pour GMRES (on test la premiere zone 
+  /// Tableau pour GMRES (on test la premiere zone
   //
   E_Float* ipt_VectG          = NULL;
   E_Float* ipt_VectY          = NULL;
@@ -479,7 +480,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   FldArrayF gmrestmp(size_tot); E_Float* iptgmrestmp = gmrestmp.begin();
 
   if (ipt_param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1 )
-    { 
+    {
       num_max_vect = ipt_param_int[0][NB_KRYLOV];
       size_hessenb = num_max_vect*(num_max_vect-1);
       if (ipt_param_int[0][IFLOW   ] == 3) ndim_xmutd = ndimt;
@@ -536,7 +537,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   PyObject* tab_psiArray  = PyDict_GetItemString(work,"psi_corr"); FldArrayF* tab_psi;
   K_NUMPY::getFromNumpyArray(tab_psiArray, tab_psi, true); E_Float* psi_corr = tab_psi->begin();
 
-  
+
   // Tableau de travail coe   ( dt/vol et diags LU)
   PyObject* coeArray = PyDict_GetItemString(work,"coe"); FldArrayF* coe;
   K_NUMPY::getFromNumpyArray(coeArray, coe, true); E_Float* iptcoe = coe->begin();
@@ -563,10 +564,10 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   FldArrayF* stk; E_Float* iptstk=NULL; E_Float* iptdrodmstk=NULL; E_Float* iptcstk=NULL;
   E_Int stk_size=1; E_Int taille_tabs=1; E_Int flag_dtloc=0;
 
-  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==1 and layer_mode ==1)  
+  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==1 and layer_mode ==1)
   //if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==2 and ipt_param_int[0][RK]==3 and layer_mode ==1)
   {
-    dtloc_stk = PyDict_GetItemString(work,"tab_dtloc"); 
+    dtloc_stk = PyDict_GetItemString(work,"tab_dtloc");
     K_NUMPY::getFromNumpyArray(dtloc_stk, stk, true);  iptstk = stk->begin();
 
     stk_size    = stk[0].getSize();
@@ -601,30 +602,30 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   FldArrayF cfl( nidom*3*threadmax_sdm); E_Float* ipt_cfl = cfl.begin();
 
   if(lcfl ==1 && nstep_deb == 1)
-    { 
+    {
       for (E_Int i = 0;  i <  nidom*threadmax_sdm; i++){ ipt_cfl[ i*3 ] = 0;  ipt_cfl[ i*3 +1] = 100000000; ipt_cfl[ i*3 +2] = 0; }
     }
 
 
   // Iteration C level
-  // 
-  // 
-  // 
+  //
+  //
+  //
   // loop sur les iteration demander au niveau C
-  // 
-  // 
+  //
+  //
   //
 
   for (E_Int it = 0; it < nit_c; ++it)
     {
       // SOUS PAS
-      // 
-      // 
-      // 
+      //
+      //
+      //
       // loop sur les sous pas
-      // 
-      // 
-      // 
+      //
+      //
+      //
 
       E_Int nitrun_loc = nitrun*nit_c + it;
       //printf("nitrun= %d \n", nitrun_loc);
@@ -643,16 +644,16 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
            {
              init_exit =1;
              E_Int flag_res=1; //init Nbe ssiter, pas de modif des souszone
-         
+
              K_FASTC::souszones_list_c( ipt_param_int , ipt_param_real, ipt_ind_dm, ipt_it_lu_ssdom, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom,
                                nitrun_loc, nstep, flag_res,  lexit_lu, lssiter_verif);
            }
 
            E_Int nitrun_split = nitrun_loc - 1;
-           if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2) )  && nitrun_split%iptdtloc[1] == 0 ) 
+           if( (lssiter_loc ==1 || (ipt_param_int[0][EXPLOC] != 0 && ipt_param_int[0][ITYPCP]==2) )  && nitrun_split%iptdtloc[1] == 0 )
            {
              E_Int flag_res = 0;
-          
+
              K_FASTC::souszones_list_c( ipt_param_int , ipt_param_real,  ipt_ind_dm, ipt_it_lu_ssdom, iptdtloc, ipt_iskip_lu, lssiter_loc, nidom,
                                nitrun_split, nstep, flag_res, lexit_lu, lssiter_verif);
              if(init_exit  ==0){lexit_lu= 0;lssiter_verif = 0;  init_exit=2;}
@@ -682,24 +683,24 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 		    iptssortmp         , ipt_ssor_size     , ipt_drodmd         , ipt_Hessenberg    ,
 		    iptkrylov          , iptkrylov_transfer, ipt_norm_kry       , ipt_gmrestmp      ,
 		    ipt_givens         , ipt_cfl           , iptx               , ipty              ,
-		    iptz               , iptCellN          , iptCellN_IBC       , iptFltrN          , ipt_degen,
+		    iptz               , iptCellN          , iptCellN_IBC       , iptFltrN          , iptSpongeCoef, ipt_degen,
 		    iptro              , iptroQ_m1         , iptroQ_p1          , iptro_sfd         , iptS     , iptPsiG,
 		    iptmut             , ipt_xmutd         , ipti               , iptj              ,
 		    iptk               , iptvol            , ipti0              , iptj0             ,
 		    iptk0              , ipti_df           , iptj_df            , iptk_df           ,
-		    iptvol_df          , iptventi          , iptventj           , iptventk          ,  
+		    iptvol_df          , iptventi          , iptventj           , iptventk          ,
 		    iptrdm             , iptroflt          , iptroflt2          , iptgrad           ,
 		    iptwig             , iptstat_wig       , iptflu             , iptdrodm          ,
 		    iptcoe             , iptrot            , iptdelta           , iptro_res         ,
 		    iptdrodm_transfer  , ipt_param_int_tc  , ipt_param_real_tc  , ipt_linelets_int  ,
 		    ipt_linelets_real  , taille_tabs       , iptstk             , iptdrodmstk       ,
-		    iptcstk            , iptsrc            , 
-                    f_horseq           , a1_pr             , a1_fd              , a1_hrr      , 
+		    iptcstk            , iptsrc            ,
+                    f_horseq           , a1_pr             , a1_fd              , a1_hrr      ,
                     aneq_o3            , psi_corr          , flag_NSLBM);
 
               if (lcfl == 1 && nstep == 1)  //mise a jour eventuelle du CFL au 1er sous-pas
               {
-                E_Int nbtask = ipt_omp[nstep-1]; 
+                E_Int nbtask = ipt_omp[nstep-1];
                 E_Int ptiter = ipt_omp[nssiter+ nstep-1];
 
                 for (E_Int ntask = 0; ntask < nbtask; ntask++)
@@ -715,7 +716,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
                    E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + threadmax_sdm ];
 
-                   for (E_Int ithread = 1; ithread < Nbre_thread_actif_loc ; ithread++) 
+                   for (E_Int ithread = 1; ithread < Nbre_thread_actif_loc ; ithread++)
                      {
                       E_Float* ipt_cfl_thread  = ipt_cfl + ithread*3+ nd*3*threadmax_sdm;
 
@@ -731,7 +732,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
 	      if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]!= 0) // mise a jour du temps par zone en explicite local
 		{
-		  for (E_Int nd = 0; nd < nidom ; nd++) 
+		  for (E_Int nd = 0; nd < nidom ; nd++)
 		    {
 		      E_Int cycl = ipt_param_int[nd][NSSITER]/ipt_param_int[nd][LEVEL];
 		      if (nstep%cycl == 0)
@@ -751,8 +752,8 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
       //data update for unsteady joins
       if(layer_mode==1)
-      { iptdtloc[3] +=1;  //time_level_motion 
-	iptdtloc[4] +=1;  //time_level_target 
+      { iptdtloc[3] +=1;  //time_level_motion
+	iptdtloc[4] +=1;  //time_level_target
       }
 
       first_it = 1;
@@ -761,13 +762,13 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
       for (E_Int nd = 0; nd < nidom ; nd++)
 	{ E_Float* ptsave  = iptroQ_m1[nd];
 	  if(ipt_param_int[nd][ IFLOW ] ==4)
-	    { 
-	      iptroQ_m1[nd]= iptroQ_p1[nd]; 
+	    {
+	      iptroQ_m1[nd]= iptroQ_p1[nd];
 	      iptroQ_p1[nd]= ptsave;
 	    }
 	  else
 	    {
-	      iptroQ_m1[nd]= iptro[nd]; 
+	      iptroQ_m1[nd]= iptro[nd];
 	      iptro[nd]    = iptroQ_p1[nd];
 	      iptroQ_p1[nd]= ptsave;
 	    }
@@ -777,7 +778,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 
 
   delete [] iptx; delete [] ipt_param_int;
-  
+
   RELEASESHAREDN( wigArray       , wig  );
   RELEASESHAREDN( drodmArray     , drodm);
   RELEASESHAREDN( coeArray       , coe  );
@@ -786,7 +787,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   RELEASESHAREDN( lokArray       , lok  );
   RELEASESHAREDN( timer_omp_Array, tab_timer_omp);
   RELEASESHAREDN( dtlocArray     , dtloc);
- 
+
   RELEASESHAREDN( drodm2Array    , drodm2);
   RELEASESHAREDN( tab_a1prArray  , tab_a1pr);
   RELEASESHAREDN( tab_a1fdArray  , tab_a1fd);

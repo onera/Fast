@@ -1,4 +1,4 @@
-/*    
+/*
       Copyright 2013-2024 Onera.
 
       This file is part of Cassiopee.
@@ -36,7 +36,7 @@ using namespace K_FLD;
 
 
 namespace K_FAST
-{ 
+{
   // Fonctions
   // =========
   PyObject* _computePT(              PyObject* self, PyObject* args);
@@ -46,10 +46,10 @@ namespace K_FAST
 
 void compute_sij( E_Float**& ipt_ro      , E_Float**& iptS     , E_Float**& ipt_vol   ,E_Int*& param_int_tc,
                   E_Float*& param_real_tc, E_Int**& param_int  , E_Float**& param_real, E_Int*& ipt_omp,
-                  E_Int& TypeTransfert   , E_Int& it_target    , E_Int& nidom         , E_Int& NoTransfert, E_Int& bidim, 
+                  E_Int& TypeTransfert   , E_Int& it_target    , E_Int& nidom         , E_Int& NoTransfert, E_Int& bidim,
                   E_Int& nstep           , E_Int& nssiter      , E_Int& rk            , E_Int& exploc, E_Int& num_passage);
 
-  E_Int gsdr3( 
+  E_Int gsdr3(
 	      E_Int**& ipt_param_int     , E_Float**& ipt_param_real   , E_Int& nidom               , E_Int& nitrun               ,
 	      E_Int& nstep               , E_Int& nstep_last           , E_Int& nssiter             , E_Int& it_target            ,
 	      E_Int& first_it            , E_Int& kimpli               , E_Int& lssiter_verif       , E_Int& lexit_lu             ,
@@ -63,7 +63,7 @@ void compute_sij( E_Float**& ipt_ro      , E_Float**& iptS     , E_Float**& ipt_
 	      E_Float** ipt_ssortmp      , E_Int* ipt_ssor_size        , E_Float* ipt_drodmd        , E_Float* ipt_Hessenberg     ,
 	      E_Float** iptkrylov        , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry      , E_Float** ipt_gmrestmp      ,
 	      E_Float* ipt_givens        , E_Float*   ipt_cfl          , E_Float**  iptx            , E_Float**  ipty             ,
-	      E_Float** iptz             , E_Float**  iptCellN         , E_Float**  iptCellN_IBC    , E_Float** iptFltrN          ,  E_Int**  iptdegen   ,
+	      E_Float** iptz             , E_Float**  iptCellN         , E_Float**  iptCellN_IBC    , E_Float** iptFltrN          ,  E_Float** iptSpongeCoef, E_Int**  iptdegen   ,
 	      E_Float**& iptro           , E_Float**& iptro_m1         , E_Float**&  iptrotmp       , E_Float**& iptro_sfd        ,  E_Float**& iptS     ,  E_Float**& iptPsiG,
 	      E_Float**  iptmut          , E_Float*  ipt_mutd          , E_Float**  ipti            , E_Float**  iptj             ,
 	      E_Float** iptk             , E_Float** iptvol            , E_Float**  ipti0           , E_Float**  iptj0            ,
