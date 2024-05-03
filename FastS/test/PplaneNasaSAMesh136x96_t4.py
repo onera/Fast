@@ -6,7 +6,7 @@ import FastS.PyTree as FastS
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import KCore.test as test
-import sys
+test.TOLERANCE = 1.e-10
 
 t = C.convertFile2PyTree('Pplane_136_96.cgns')
 t = C.addState(t, MInf=0.2, ReInf=25.e6, MutSMuInf=15)
@@ -23,13 +23,11 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
-FastS._applyBC(t, metrics)
-
 nit = 500; time = 0.
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
-    if (it%50 == 0):
-        print '- %d - %g'%(it, time)
+    if it%50 == 0:
+        print('- %d - %g'%(it, time))
         FastS.display_temporal_criteria(t, metrics, it, format='double')
     time += numz['time_step']
 

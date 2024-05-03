@@ -1,8 +1,8 @@
-        r1  =qp1
-        rou1=r1*qp2
-        rov1=r1*qp3
-        p1  =r1*qp5*rgp
-        h1  =gam1*p1 + .5*(rou1*qp2+rov1*qp3)
+        r1  =qp1        ! rho
+        rou1=r1*qp2     ! rho*u
+        rov1=r1*qp3     ! rho*v
+        p1  =r1*qp5*rgp ! rho*T*R
+        h1  =gam1*p1 + .5*(rou1*qp2+rov1*qp3) !total enthalpy
 
         !determination etat droite: ro, roui, roe+p
         r2  =qm1

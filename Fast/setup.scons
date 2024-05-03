@@ -26,38 +26,147 @@ installPath = Dist.getInstallPath(prefix)
 # Test if kcore exists =======================================================
 (kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
 
+# Test if xcore exists =======================================================
+(xcoreVersion, xcoreIncDir, xcoreLibDir) = Dist.checkXCore()
+
+# Test if connector exists ==================================================
+(connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
+
+# Test if fastc exists =====================================================
+(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkFastC()
+
+# Test if fasts exists =====================================================
+(fastsVersion, fastsIncDir, fastsLibDir) = Dist.checkFastS()
+
+# Test if fastp exists =====================================================
+#(fastpVersion, fastpIncDir, fastpLibDir) = Dist.checkFastP()
+
+# Test if fastlbm exists =====================================================
+#(fastlbmVersion, fastlbmIncDir, fastlbmLibDir) = Dist.checkFastLBM()
+(fastaslbmVersion, fastaslbmIncDir, fastaslbmLibDir) = Dist.checkFastASLBM()
+
+# Test if libmpi exists ======================================================
+(mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
+
 from KCore.config import *
 
 # Setting libraryDirs and libraries ===========================================
-libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, pythonIncDir]
-libraries = ["kcore"]
+libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir, fastsLibDir, fastaslbmLibDir ]
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, pythonIncDir, fastcIncDir, fastsIncDir, fastaslbmIncDir ]
+libraries = ["fastc", "fasts", "fastaslbm", "connector", "xcore", "kcore"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
+
+if mpi:
+    libraryDirs.append(mpiLibDir)
+    includeDirs.append(mpiIncDir)
+    ADDITIONALCPPFLAGS = ['-D_MPI']
+else:	       
+    ADDITIONALCPPFLAGS = []
+
+if mpi: libraries += mpiLibs
+
+# Builder fortran
+#==============================================================================
+# Essai emitter
+def addSourceScannerToTargets(target, source, env):
+   #import SCons.Scanner
+   #scanner = SCons.Scanner.C.CScanner()
+   #scanner.skeys = ['.for', '.h']
+   #for q in zip(source, target):
+   #   f = q[0] 
+   #   includes = scanner(f, env, scanner.path_function(env))
+   #   print f,'=='
+   #   for i in includes:
+   #      print "  + %s" % (str(i))
+   #      Depends(q[1], str(i))
+   return (target, source)
+
+PP = Dist.getPP() # preprocessing des fortrans
+f77CppArgs = '-D_NOOPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'+" -I'"+fastcIncDir+"'"
+#f77CppArgs = '-D_OPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'+" -I'"+fastcIncDir+"'"
+cacheLine = Dist.getCacheLine()
+if cacheLine == 1: f77CppArgs += ' -DCACHELINE=16'
+else: f77CppArgs += ' -DCACHELINE=%d'%cacheLine
+nbsocket = Dist.getNbSocket()
+if nbsocket == 1: f77CppArgs += ' -DNB_SOCKET=1'
+else: f77CppArgs += ' -DNB_SOCKET=%d'%nbsocket
+
+corePerSock = Dist.getCorePerSocket()
+if  corePerSock== 1: f77CppArgs += ' -DCORE_PER_SOCK=1'
+else: f77CppArgs += ' -DCORE_PER_SOCK=%d'%corePerSock
+
+action = PP+'\"'+kcoreIncDir+'\" -I. '+f77CppArgs+' $SOURCES $TARGETS'
+bld = Builder(action=action, suffix='.f', src_suffix='.for')
+#emitter=addSourceScannerToTargets)
 
 # Env =========================================================================
 import srcs
 if Dist.getSystem()[0] == 'mingw': tools = ['mingw']
 else: tools = None
 AR = Dist.getAR()
-env = Environment(tools=tools, CC=cc, CXX=cxx, AR=AR, CCFLAGS=[], CXXFLAGS=[],
-                  FORTRAN=f77compiler,
+env = Environment(tools=tools, CC=cc, CXX=cxx, AR=AR, CFLAGS=[], CXXFLAGS=[],
+                  BUILDERS={'FPROC': bld}, FORTRAN=f77compiler,
                   LIBPATH=additionalLibPaths+libraryDirs,
                   LIBS=libraries+additionalLibs,
                   SHLIBSUFFIX=so_ext, SHLIBPREFIX='',
                   LINKFLAGS=Dist.getLinkArgs(),
                   ENV=Dist.getEnvForScons())
-env.Replace(CPPPATH=["Fast"]+additionalIncludePaths+includeDirs)
-env.Replace(CPPFLAGS=Dist.getCppArgs())
+env.Replace(CPPPATH=[".","Fast"]+additionalIncludePaths+includeDirs)
 
-env = Dist.createFortranBuilder(env, [kcoreIncDir])
-ppf = Dist.createFortranFiles(env, srcs)
+ELSAPROD = os.environ.get('ELSAPROD', 'x86_r8')
+env.SConsignFile('build/'+ELSAPROD+'/.sconsign.dblite')
+
+env = Dist.createFortranScanner(env)
+
+# Pre processing du C
+cppArgs = Dist.getCppArgs()+['-g']+["-DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN"]
+if Dist.getCacheLine() == 1: cppArgs += ['-DCACHELINE=16']
+env.Replace(CPPFLAGS=cppArgs+ADDITIONALCPPFLAGS)
+
+### voir installBase de KCore pour option de compil par defaut
+if f90compiler == 'ifort':
+   FFLAGS = Dist.getForArgs()
+   env.Replace(FORTRANFLAGS=FFLAGS)
+else:
+   env.Replace(FORTRANFLAGS=Dist.getForArgs())
+
+if f77compiler == 'ifort':
+   version = Dist.getForVersion() # A utiliser version=(13,4)
+   f77Args = '-r8 -i4 -g -fno-alias -fno-fnalias -ip'
+   cacheLine = Dist.getCacheLine()
+
+   simd = Dist.getSimd()
+   if cacheLine != 1: f77Args += ' -align array%dbyte '%cacheLine
+
+   if version[0] >= 17:
+      env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
+   else:
+      env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -unroll0 -c -o $TARGET $SOURCE')
+
+env.Replace(FORTRANSUFFIXES=['.f', '.F', '.f90', '.F90'])
+fortran_builder = Builder(action='$FORTRANCOM',
+                          suffix='.o', src_suffix='.f')
+
+
+env.Append(BUILDERS={'Fortran' : fortran_builder})
+for_srcs1 = srcs.for_srcs[0:100]
+ppf1 = []
+for f in for_srcs1:
+    ffile = env.FPROC(target=f)
+    ofile = env.Fortran(target=ffile)
+    ppf1.append(ofile[0])
+
+#env.Command('merge.l', 'merge.ar', "sed -e s/ELSAPROD/%s/g merge.ar > merge.l"%ELSAPROD)
+#env.Command('libfast.a', ['libfast1.a', 'merge.l'], "ar -M < merge.l")
+
+#ppf = Dist.createFortranFiles(env, srcs)
 
 #==============================================================================
 
-myMod = env.StaticLibrary('fast', srcs.cpp_srcs+ppf)
+myMod = env.StaticLibrary('fast', srcs.cpp_srcs+ppf1)
 modDir = installPath+'/Fast/'
 dp1 = env.Install(modDir, myMod)
 dp2 = env.Install(modDir, Glob('Fast/*.py'))

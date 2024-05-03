@@ -1,6 +1,5 @@
 # - setNum2Base (pyTree) -
 import Converter.PyTree as C
-import FastS.PyTree as FastS
 import Fast.PyTree as Fast
 import KCore.test as test
 

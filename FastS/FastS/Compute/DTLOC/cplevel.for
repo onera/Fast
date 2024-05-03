@@ -11,7 +11,7 @@ c***********************************************************************
 c_U   USER :  PECHIER
 c
 c     ACT
-c_A    Calcul du CFL local max par domaine lors d'un calcul 
+c_A    Calcul du CFL local max par domaine lors d un calcul 
 c_A    instationnaire.
 c
 c     VAL
@@ -183,11 +183,11 @@ c******* NS unsteady *****
           lt  = 1
           lvo = lt
 
-          do 102 k = ind_loop(5), ind_loop(6)
-          do 102 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
              lij  =         inddm( ind_loop(1) , j, k)
              lvij =  lij-  indven( ind_loop(1) , j, k)
-             do 102 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               lv = l - lvij
  
@@ -217,8 +217,9 @@ c******* NS unsteady *****
               cfloc = max(cfloc, param_real(DTC)/comp)
 
               level(l) = int(1./cfloc)
-102   continue
-
+             enddo
+          enddo
+          enddo
        else
 
 #include   "FastS/Compute/loop_ale_begin.for"
@@ -357,10 +358,10 @@ c******* NS steady *****
           lt  = 1
           lvo = 1
 
-          do 202 k = ind_loop(5), ind_loop(6)
-          do 202 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
              lij  =        inddm( ind_loop(1) , j, k)
-             do 202 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               u = rop(l,2)
               v = rop(l,3)
@@ -381,7 +382,9 @@ c******* NS steady *****
               cfloc = max(cfloc, param_real(DTC)/comp)
 
               level(l) = int(1./cfloc)
-202   continue
+             enddo
+          enddo
+          enddo
 
        else
 
@@ -535,10 +538,10 @@ c******* Euler unsteady *****
           lt  = 1
           lvo = lt
 
-          do 302 k = ind_loop(5), ind_loop(6)
-          do 302 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
              lij  =        inddm( ind_loop(1) , j, k)
-             do 302 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               u = rop(l,2)
               v = rop(l,3)
@@ -563,7 +566,9 @@ c******* Euler unsteady *****
               cfloc = max(cfloc, param_real(DTC)/comp)
 
               level(l) = int(1./cfloc)
-302   continue
+             enddo
+          enddo
+          enddo
 
        else
 
@@ -691,10 +696,10 @@ c******* Euler steady *****
           lt  = 1
           lvo = lt
 
-          do 402 k = ind_loop(5), ind_loop(6)
-          do 402 j = ind_loop(3), ind_loop(4)
+          do k = ind_loop(5), ind_loop(6)
+          do j = ind_loop(3), ind_loop(4)
              lij  = inddm( ind_loop(1) , j, k)
-             do 402 l = lij,  lij + ind_loop(2) - ind_loop(1)
+             do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               u = rop(l,2)
               v = rop(l,3)
@@ -712,7 +717,9 @@ c******* Euler steady *****
               cfloc = max(cfloc, param_real(DTC)/comp)
 
               level(l) = int(1./cfloc)
-402   continue
+             enddo
+          enddo
+          enddo
 
        else
 

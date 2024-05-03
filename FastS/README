@@ -3,12 +3,12 @@ FastS
 Flexible Aerodynamics Solver Technology for Structured grids
 =============================================================================
 
-I. Mary, C.Benoit, S. Peron (Onera).
+ONERA.
 Licenced under GPL3.
 
-For support, go to http://elsa.onera.fr/Cassiopee/Forum.
+For support, go to https://cassiopee.onera.fr.
 
-See doc/Converter.txt for installation requirements.
+See doc/FastS.txt for installation requirements.
 See doc/Notes.txt for important notes and limitations.
 
 =============================================================================

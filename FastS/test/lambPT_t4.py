@@ -5,10 +5,8 @@ import Converter.PyTree as C
 import Initiator.PyTree as I
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
-import KCore.Adim as Adim
 import KCore.test as test
 import Converter.Internal as Internal
-import sys
 
 mach = 0.5
 a = G.cart((0,0,0), (0.25,0.25,0.25), (400,200,2))
@@ -46,17 +44,15 @@ Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 #iptvar[2][:,:,:] = 1./iptvar[3][:,:,:]
 
 #C.convertPyTree2File(t, 'funk.cgns')
-#sys.exit()
 
 nit = 102; time = 0.
 timeStep = numz['time_step']
-for it in xrange(1,nit):
-    #print 'it=', it
+for it in range(1,nit):
+    #print('it=', it)
     FastS._compute(t, metrics, it)
-    
     if it%10 == 0: FastS.display_temporal_criteria(t, metrics, it)
     time += timeStep
-    if it%100 == 0:print time
+    if it%100 == 0: print(time)
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

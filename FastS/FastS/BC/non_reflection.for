@@ -40,6 +40,16 @@ c
         s_1   = 1./sn
         qn    = tcx*u + tcy*v + tcz*w - qen
 
+        tn = sqrt(tcx**2+tcy**2)
+c
+c        if(tn.eq.0.)then
+c          tnx=1.
+c          tny=0.
+c        else
+c          tnx= tcx/tn
+c          tny= tcx/tn
+c        endif
+
         if(sn.eq.0.)then
           tnx=1.
           tny=0.
@@ -147,9 +157,9 @@ c
         !v  = v + r*svar3*roinv
         !w  = w + r*svar4*roinv
 
-       !rop(l,1) =  svar1
-       !rop(l,2) =  u 
-       ! rop(l,3) =  v 
-       ! rop(l,4) =  w 
-       ! rop(l,5) =  (qvar5*roinv - .5*(u*u+v*v+w*w))*cvinv
+        !rop(l,1) =  svar1
+        !rop(l,2) =  u 
+        !rop(l,3) =  v 
+        !rop(l,4) =  w 
+        !rop(l,5) =  (qvar5*roinv - .5*(u*u+v*v+w*w))*cvinv
 

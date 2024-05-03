@@ -1,7 +1,7 @@
           m =indmy(i, j, k)
           l =inddm(i, j, k)
 
-          !cn prise en compte eNb echantillon espace et temsp
+          !cn prise en compte Nb echantillon espace et temps
           rho        = rop(l,1)
           rho_cn     = rop(l,1) * cn
 

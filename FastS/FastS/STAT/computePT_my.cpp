@@ -1,5 +1,5 @@
 /*    
-    Copyright 2013-2018 Onera.
+    Copyright 2013-2024 Onera.
 
     This file is part of Cassiopee.
 
@@ -19,6 +19,7 @@
 
 
 # include "fastS.h"
+# include "FastC/fastc.h"
 # include "param_solver.h"
 # include "string.h"
 #ifdef _OPENMP
@@ -32,9 +33,12 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
 {
-  PyObject* zones; PyObject* zones_my;  PyObject* metrics; 
-  if (!PyArg_ParseTuple(args, "OOO", &zones , &zones_my, &metrics)) 
-    return NULL;
+  PyObject* zones; PyObject* zones_my;  PyObject* metrics; PyObject* work;
+#if defined E_DOUBLEINT
+  if (!PyArg_ParseTuple(args, "OOOO", &zones , &zones_my, &metrics, &work)) return NULL;
+#else
+  if (!PyArg_ParseTuple(args, "OOOO", &zones , &zones_my, &metrics, &work)) return NULL;
+#endif
 
   /* tableau pour stocker dimension sous-domaine omp */
   E_Int threadmax_sdm = 1;
@@ -49,11 +53,14 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
   E_Float** iptro; E_Float** iptmut; E_Float** iptromoy;
   E_Float** ipti;  E_Float** iptj;  E_Float** iptk; E_Float** iptvol;
   E_Float** ipti_df; E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
-  E_Float** ipt_param_real;
+  E_Float** ipt_param_real; E_Float** iptx; E_Float** ipty; E_Float** iptz;
 
-  E_Int** iptmoy_param; E_Int**   ipt_param_int;
+  E_Int** iptmoy_param; E_Int** ipt_param_int;
 
-  ipt_param_real    = new  E_Float*[nidom*12];
+  iptx              = new E_Float*[nidom*15];
+  ipty              = iptx           + nidom;
+  iptz              = ipty           + nidom;
+  ipt_param_real    = iptz           + nidom;
   iptro             = ipt_param_real + nidom;
   iptmut            = iptro          + nidom;
   ipti              = iptmut         + nidom;
@@ -71,6 +78,17 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
 
   vector<PyArrayObject*> hook;
 
+
+  /// Tableau pour // omp
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+  E_Int omp_mode = iptdtloc[ 8 ];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
+
+
+  E_Int lcyl = 0;
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
     // check zone
@@ -84,19 +102,19 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
                        t  = K_PYTREE::getNodeFromName1(numerics, "Parameter_real"); 
     ipt_param_real[nd]    = K_PYTREE::getValueAF(t, hook);
 
-
     PyObject* sol_center;
     sol_center   = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
     t            = K_PYTREE::getNodeFromName1(sol_center, "Density");
     iptro[nd]    = K_PYTREE::getValueAF(t, hook);
 
-    if(ipt_param_int[nd][ IFLOW ] > 1)
+    if (ipt_param_int[nd][ IFLOW ] > 1)
       { t  = K_PYTREE::getNodeFromName1(sol_center, "ViscosityEddy");
         if (t == NULL) { PyErr_SetString(PyExc_ValueError, "viscosity is missing for NS computation."); return NULL; }
         else           { iptmut[nd]   = K_PYTREE::getValueAF(t, hook);}
       }
     else {iptmut[nd] = iptro[nd];}
 
+    GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])
 
     // Check metrics
     PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
@@ -110,10 +128,17 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
     /*----------------------------------*/
     sol_center   = K_PYTREE::getNodeFromName1(zone_my   , "FlowSolution#Centers");
     t            = K_PYTREE::getNodeFromName1(sol_center, "MomentumX");
-    iptromoy[nd] = K_PYTREE::getValueAF(t, hook);
+    PyObject* t2 = K_PYTREE::getNodeFromName1(sol_center, "Momentum_t");
+    if (t2 != NULL && t != NULL) lcyl = 1; // cyl x
+    else if (t2 != NULL && t == NULL) lcyl = 2; // cylz
+    else lcyl = 0;
+
+    if (lcyl == 0) iptromoy[nd] = K_PYTREE::getValueAF(t, hook);
+    else if (lcyl == 1) iptromoy[nd] = K_PYTREE::getValueAF(t, hook);
+    else if (lcyl == 2) iptromoy[nd] = K_PYTREE::getValueAF(t2, hook);
 
     t  = K_PYTREE::getNodeFromName1(zone_my, ".Solver#post");
-    if ( t == NULL) { PyErr_SetString(PyExc_ValueError, "stat: .Solver#post is missing or is invalid."); return 0; }
+    if (t == NULL) { PyErr_SetString(PyExc_ValueError, "stat: .Solver#post is missing or is invalid."); return 0; }
 
     iptmoy_param[nd]= K_PYTREE::getValueAI(t, hook);
 
@@ -147,6 +172,11 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
+
+      E_Int nitcfg = 1;
+      E_Int nbtask = ipt_omp[nitcfg-1]; 
+      E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+      E_Int pttask;
       //
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
@@ -155,12 +185,25 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
         for (E_Int nd = 0; nd < nidom; nd++)
           {  
 
+             for (E_Int ntask = 0; ntask < nbtask; ntask++)
+               {
+                 pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+                 if (ipt_omp[ pttask ] == nd) break;
+               }
+
              E_Int* ipt_topology_thread    = ipt_topology    + (ithread-1)*3; 
              E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_omp  + (ithread-1)*6;
 
+             E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+             E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+
+             if (ithread_loc == -1) {continue;}
+
+
              // Distribution de la sous-zone sur les threads
-             E_Int type_decoup =2;
-             indice_boucle_lu_(nd, ithread, Nbre_thread_actif, type_decoup,
+             E_Int lmin =4;
+
+             indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, lmin,
                                iptmoy_param[nd]+11, 
                                ipt_topology_thread, ipt_ind_dm_omp_thread );
 
@@ -173,15 +216,12 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
             //c1 = 7./6
             //c2 = 1./6
 
-
-             cpmys_rij_(nd,  ipt_param_int[nd][ NDIMDX ] , ipt_param_int[nd][ NDIMDX_MTR ], iptmoy_param[nd][3],
-                             ipt_param_int[nd][ NEQ ]    , iptmoy_param[nd][4]            , neq_grad           ,
-                             ipt_param_int[nd][ NEQ_IJ ] , ipt_param_int[nd][ NEQ_K ]     ,  ipt_param_int[nd][ ITYPZONE ],
-                             lthermique                  , lreynolds                      ,
-                             ipt_param_int[nd]+ NIJK_MTR , ipt_param_int[nd]+ NIJK        ,  iptmoy_param[nd]+6,  ipt_param_int[nd]+ IJKV     ,
-                             iptmoy_param[nd]        ,
+             cpmys_rij_(nd,  iptmoy_param[nd][3], iptmoy_param[nd][4]            , neq_grad ,
+                             lthermique                  , lreynolds             , lcyl,
+                             iptmoy_param[nd]+6      , iptmoy_param[nd]           , ipt_param_int[nd]           ,
                              ipt_ind_dm_omp_thread   , ipt_param_real[nd][ GAMMA ],  ipt_param_real[nd][ CVINF ], ipt_param_real[nd][ PRANDT ],
                              iptro[nd]               , iptmut[nd]             ,
+                             iptx[nd]                , ipty[nd]               , iptz[nd]                ,
                              ipti[nd]                , iptj[nd]               , iptk[nd]                , iptvol[nd]       , 
                              ipti_df[nd]             , iptj_df[nd]            , iptk_df[nd]             , iptvol_df[nd]    ,
                              iptromoy[nd]);           
@@ -190,9 +230,10 @@ PyObject* K_FASTS::computePT_my(PyObject* self, PyObject* args)
   }  // zone OMP
 
 
-  delete [] ipt_param_real;
+  delete [] iptx;
   delete [] ipt_param_int;
 
+  RELEASESHAREDN( dtlocArray     , dtloc);
   RELEASEHOOK(hook)
 
   Py_INCREF(Py_None);

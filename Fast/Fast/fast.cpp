@@ -1,5 +1,5 @@
 /*    
-    Copyright 2013-2018 Onera.
+    Copyright 2013-2024 Onera.
 
     This file is part of Cassiopee.
 
@@ -24,43 +24,44 @@
 // ============================================================================
 static PyMethodDef Pyfast [] =
 {
+  {"_computePT"          , K_FAST::_computePT          ,  METH_VARARGS},
+  {"interplbmns_"        , K_FAST::interplbmns_        ,  METH_VARARGS},
+  {"recuplbmns_"         , K_FAST::recuplbmns_         ,  METH_VARARGS},
+  {"filtering_"          , K_FAST::filtering_          ,  METH_VARARGS},
   {NULL, NULL}
 };
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "fast",
+        NULL,
+        -1,
+        Pyfast
+};
+#endif
 
 // ============================================================================
 /* Init of module */
 // ============================================================================
 extern "C"
 {
-  void initfast();
-  void initfast()
+#if PY_MAJOR_VERSION >= 3
+  PyMODINIT_FUNC PyInit_fast();
+  PyMODINIT_FUNC PyInit_fast()
+#else
+  PyMODINIT_FUNC initfast();
+  PyMODINIT_FUNC initfast()
+#endif
   {
-    Py_InitModule("fast", Pyfast);
     import_array();
+#if PY_MAJOR_VERSION >= 3
+    PyObject* module = PyModule_Create(&moduledef);
+#else
+    Py_InitModule("fast", Pyfast);
+#endif
+#if PY_MAJOR_VERSION >= 3
+    return module;
+#endif
   }
-}
-//=============================================================================
-/* Fonctions fortran declarees dans Fast mais non appelees dans Fast   
-   Used to force some functions to belong to fast library  */
-//=============================================================================
-void K_FAST::testFooFast()
-{
-  E_Int i; E_Float f;
-  cptimestepconv_(i, f, NULL, NULL, NULL, NULL, NULL, NULL, f, f);
-  cptimestepconvmotion_(i, NULL, NULL, NULL, f,  NULL, NULL, NULL, NULL, NULL, NULL, f, f);
-  cptimesteptur_(i, NULL, f, NULL, NULL, NULL, NULL, f, f, f, f);
-  denconvec_(i, NULL, NULL, NULL, NULL, NULL, NULL,NULL, NULL, NULL);
-  pressure_(i, NULL, NULL, NULL, NULL, NULL, f, NULL);
-  cons2velocity_(i, NULL, NULL, NULL, NULL,NULL, NULL, NULL);
-  viscosity_(i, f, f, NULL, NULL);
-  heatcoef_(i, f, f, NULL, NULL);
-  temp_(i, f, NULL, NULL, NULL, NULL, NULL, NULL);
-  heatflux_(i, NULL, NULL, NULL, NULL, NULL, NULL, NULL); 
-  visctensor_(i, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  densfluxdiff_(i, NULL, NULL, NULL, NULL, NULL, NULL, 
-                NULL, NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL);
-  setallbvaluesatf_(i, i, NULL, f, i, i, i, i);
-  extrapallbvaluesf_(i, i, NULL, i, i, i, i);
 }

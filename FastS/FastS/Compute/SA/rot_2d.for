@@ -18,7 +18,7 @@
                !dudy
                rotz =-(   u3*tiy1 - u1*tiy
      &                  + u2*tjy1 - u4*tjy ) 
-
+               dudy = rotz
                auijuij = auijuij + rotz*rotz
 
 
@@ -27,22 +27,27 @@
                u3 = (rop(l,3)+rop(l1,3))
                u4 = (rop(l,3)+rop(l4,3))
                !dvdx
-               dudx = (   u3*tix1 - u1*tix
+               dvdx = (   u3*tix1 - u1*tix
      &                  + u2*tjx1 - u4*tjx ) 
 
-               rotz    = (rotz + dudx)*xvol
-               auijuij = auijuij + dudx*dudx
+               rotz    = (rotz + dvdx)*xvol
+               auijuij = auijuij + dvdx*dvdx
 
                !dvdy
-               dudx = (   u3*tiy1 - u1*tiy
-     &                  + u2*tjy1 - u4*tjy ) 
+               dvdy = (   u3*tiy1 - u1*tiy
+     &                  + u2*tjy1 - u4*tjy )
 
-               auijuij = auijuij + dudx*dudx
+               auijuij = auijuij + dvdy*dvdy
 
 
                !! mise a jour  auijuij par le volume
                rot     = abs(rotz)
 
+               S11   = dudx
+               S22   = dvdy
+               S12   = 0.5*(dudy + dvdx)
+               St    = S11**2+S22**2+2*S12**2
+               St    = sqrt(2*St) * xvol
 
 
                auijuij   = auijuij*xvol*xvol

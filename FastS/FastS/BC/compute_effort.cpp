@@ -1,5 +1,5 @@
 /*    
-    Copyright 2013-2018 Onera.
+    Copyright 2013-2024 Onera.
 
     This file is part of Cassiopee.
 
@@ -16,8 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
-# include "fastS.h"
-# include "param_solver.h"
+# include "FastS/fastS.h"
+# include "FastS/param_solver.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -32,10 +32,12 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
 {
-  PyObject *zones; PyObject *zones_eff; PyObject *metrics; PyObject* work;  PyObject* effarray;
-  if (!PyArg_ParseTuple(args, "OOOOO", &zones, &zones_eff, &metrics, &work, &effarray)) return NULL;
-
-
+  PyObject *zones; PyObject *zones_eff; PyObject *metrics; PyObject* work; PyObject* effarray; PyObject* pos_eff;
+#if defined E_DOUBLEINT
+  if (!PyArg_ParseTuple(args, "OOOOOO", &zones, &zones_eff, &metrics, &work, &effarray, &pos_eff)) return NULL;
+#else
+  if (!PyArg_ParseTuple(args, "OOOOOO", &zones, &zones_eff, &metrics, &work, &effarray, &pos_eff)) return NULL;
+#endif
 
   E_Int**   ipt_param_int;
   
@@ -44,7 +46,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
   E_Float** ipti;       E_Float** iptj;     E_Float** iptk;    E_Float** iptvol;
   E_Float** ipti0;      E_Float** iptj0;    E_Float** iptk0;
   E_Float** ipti_df;    E_Float** iptj_df;  E_Float** iptk_df ; E_Float** iptvol_df;
-  E_Float** iptdist;    E_Float** iptventi; E_Float** iptventj; E_Float** iptventk;
+  E_Float** iptventi; E_Float** iptventj; E_Float** iptventk;
 
   E_Int nidom    = PyList_Size(zones);
 
@@ -78,9 +80,18 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
   vector<PyArrayObject*> hook;
 
   /// Tableau pour stockage senseur oscillation
-  PyObject* wigArray = PyList_GetItem(work,0); FldArrayF* wig; FldArrayF* eff;
+  PyObject* wigArray = PyDict_GetItemString(work,"wiggle"); FldArrayF* wig; FldArrayF* eff; FldArrayF* pos;
   K_NUMPY::getFromNumpyArray(wigArray, wig, true); E_Float* iptwig = wig->begin();
   K_NUMPY::getFromNumpyArray(effarray, eff, true); E_Float* ipteff = eff->begin();
+  K_NUMPY::getFromNumpyArray(pos_eff , pos, true); E_Float* xyz_ref= pos->begin();
+
+  /// Tableau pour // omp
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+  E_Int omp_mode = iptdtloc[ 8 ];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
 
   
   ///
@@ -146,10 +157,10 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
   ///
   E_Int**  ipt_param_int_eff;  E_Float** iptflu;
 
-  nidom             = PyList_Size(zones_eff);
-  ipt_param_int_eff = new E_Int*[nidom]; iptflu = new E_Float*[nidom];
+  E_Int nidom_eff  = PyList_Size(zones_eff);
+  ipt_param_int_eff = new E_Int*[nidom_eff]; iptflu = new E_Float*[nidom_eff];
 
-  for (E_Int nd = 0; nd < nidom; nd++)
+  for (E_Int nd = 0; nd < nidom_eff; nd++)
   { 
 
      PyObject* zone   = PyList_GetItem(zones_eff , nd); 
@@ -169,19 +180,16 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
    } // boucle zone arbre effort
 
 
-  FldArrayF  xyz_ref(3); E_Float* ipt_xyz_ref = xyz_ref.begin();
-  xyz_ref[0]=0.; xyz_ref[1]=0.;xyz_ref[2]=0.;
-
-
   E_Int  Nbre_thread_max = 1;
 #ifdef _OPENMP
   Nbre_thread_max = omp_get_max_threads();
 #endif
-  FldArrayF          effort(8*Nbre_thread_max); 
+  E_Int sz_eff = 12;
+  FldArrayF         effort(sz_eff*Nbre_thread_max); 
   FldArrayI thread_topology(3*Nbre_thread_max); 
   FldArrayI   ind_dm_thread(6*Nbre_thread_max);  
 
-  E_Int itypecp_loc=2;
+  E_Int lmin = 4;
   //
   //
   //loop sur les fenetres pour calcul flux
@@ -198,45 +206,60 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-       for (E_Int nd = 0; nd < nidom; nd++)
+
+    E_Int nitcfg = 1;
+    E_Int nbtask = ipt_omp[nitcfg-1]; 
+    E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+
+    E_Int pttask;
+     for (E_Int nd = 0; nd < nidom_eff; nd++)
        { 
 
        E_Int nd_ns  = ipt_param_int_eff[nd][EFF_NONZ];
 
+       for (E_Int ntask = 0; ntask < nbtask; ntask++)
+        {
+         pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+         if (ipt_omp[ pttask ] == nd_ns) break;
+        }
        //printf("no zone ns %d %d \n", nd, nd_ns);
        E_Int shift_wig = 0;
-       for (E_Int i = 0; i < nd_ns; i++) shift_wig  = shift_wig  + ipt_param_int[i][ NDIMDX ]*3;
+       for (E_Int i = 0; i < nd_ns; i++)
+          {
+            if(ipt_param_int[i][ KFLUDOM ]==2){  shift_wig  = shift_wig  + ipt_param_int[i][ NDIMDX ]*3;}
+            if(ipt_param_int[i][ KFLUDOM ]==8){  shift_wig  = shift_wig  + ipt_param_int[i][ NDIMDX ]*4;}
+          }
 
        E_Int* ipt_thread_topology = thread_topology.begin() + (ithread-1)*3;
        E_Int* ind_loop            = ind_dm_thread.begin()   + (ithread-1)*6;
-       E_Float* effort_omp        = effort.begin()          + (ithread-1)*8;
+       E_Float* effort_omp        = effort.begin()          + (ithread-1)*sz_eff;
 
-       if(nd==0) for (E_Int i = 0; i < 8; i++) effort_omp[i]=0;
+       if(nd==0) for (E_Int i = 0; i < sz_eff; i++) effort_omp[i]=0;
 
-        //calcul du sous domaine a traiter par le thread 
-        indice_boucle_lu_(nd, ithread, Nbre_thread_actif, itypecp_loc,
+       E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+       E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+
+       if (ithread_loc == -1) {continue;}
+
+       indice_boucle_lu_(nd, ithread_loc, Nbre_thread_actif_loc, lmin,
                            ipt_param_int_eff[nd]+EFF_LOOP,
                            ipt_thread_topology, ind_loop);
 
-          bceffort_( nd, ithread, ipt_param_int[nd_ns], ipt_param_real[nd_ns], ipt_param_int_eff[nd],
-                     ind_loop, effort_omp, ipt_xyz_ref,
-                     iptro[nd_ns]   , iptflu[nd]     , iptwig +shift_wig, iptmut[nd_ns]  ,   
-                     iptx[nd_ns]    , ipty[nd_ns]    , iptz[nd_ns]      ,
-                     ipti[nd_ns]    , iptj[nd_ns]    , iptk[nd_ns]      , iptvol[nd_ns]  ,
-                     iptventi[nd_ns], iptventj[nd_ns], iptventk[nd_ns]);
-
+       bceffort_( nd, ithread, ipt_param_int[nd_ns], ipt_param_real[nd_ns], ipt_param_int_eff[nd],
+                  ind_loop, effort_omp, xyz_ref,
+                  iptro[nd_ns]   , iptflu[nd]     , iptwig +shift_wig, iptmut[nd_ns]  ,   
+                  iptx[nd_ns]    , ipty[nd_ns]    , iptz[nd_ns]      ,
+                  ipti[nd_ns]    , iptj[nd_ns]    , iptk[nd_ns]      , iptvol[nd_ns]  ,
+                  iptventi[nd_ns], iptventj[nd_ns], iptventk[nd_ns]);
 
        } // fin loop zone
   } // Fin zone // omp
 
-
-  ipteff[0] = 0.; ipteff[1] = 0.; ipteff[2] = 0.; ipteff[3] = 0.; ipteff[4] = 0.; ipteff[5] = 0.; ipteff[6] = 0.; ipteff[7] = 0.;
-
-  if(nidom > 0)
+  if(nidom_eff > 0)
     {
       for (E_Int ithread = 0; ithread < Nbre_thread_max ; ithread++) 
                     {
-                      E_Float* effort_omp   = effort.begin()  + ithread*8;
+                      E_Float* effort_omp   = effort.begin()  + ithread*sz_eff;
 
                         //printf("surf %f %d \n",  effort_omp[6], ithread );
                        ipteff[0]  = ipteff[0]  + effort_omp[0];
@@ -247,14 +270,18 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
                        ipteff[5]  = ipteff[5]  + effort_omp[5];
                        ipteff[6]  = ipteff[6]  + effort_omp[6];
                        ipteff[7]  = ipteff[7]  + effort_omp[7];
+                       ipteff[8]  = ipteff[8]  + effort_omp[8];
+                       ipteff[9]  = ipteff[9]  + effort_omp[9];
+                       ipteff[10] = ipteff[10] + effort_omp[10];
                     }
     }
 
   delete [] iptx; delete [] ipt_param_int;  delete [] iptflu; delete [] ipt_param_int_eff;
 
   RELEASESHAREDN( wigArray  , wig  );
-
-
+  RELEASESHAREDN( effarray  , eff);
+  RELEASESHAREDN( pos_eff   , pos);
+  RELEASESHAREDN( dtlocArray, dtloc);
   RELEASEHOOK(hook)
 
   Py_INCREF(Py_None);

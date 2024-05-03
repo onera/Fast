@@ -2,7 +2,7 @@
 import Converter.PyTree as C
 import Generator.PyTree as G
 import FastS.PyTree as FastS
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import Initiator.PyTree as I
@@ -27,15 +27,15 @@ numz["time_step_nature"]   = "local"
 numz["cfl"]                = 4.0
 numz["scheme"]             = "roe"
 numz["slope"]              = "minmod"
-Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
 # Number or records to store residuals 
-nrec = 100/modulo_verif
+nrec = 100//modulo_verif
 
 #To remove old ConvergenceHistory nodes 
-t = C.rmNodes(t, "ZoneConvergenceHistory")
+C._rmNodes(t, "ZoneConvergenceHistory")
 
 #Convergence history with nrec records
 FastS.createConvergenceHistory(t, nrec)
@@ -43,14 +43,13 @@ FastS.createConvergenceHistory(t, nrec)
 nit = 100; time = 0
 time_step = Internal.getNodeFromName(t, 'time_step')
 time_step = Internal.getValue(time_step)
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it, tc)
-    if (it%modulo_verif == 0):
-    	FastS.display_temporal_criteria(t, metrics, it)
+    if it%modulo_verif == 0:
+    	FastS.displayTemporalCriteria(t, metrics, it, format='store')
     time += time_step
 
 # time stamp
 Internal.createUniqueChild(t, 'Iteration', 'DataArray_t', value=nit)
 Internal.createUniqueChild(t, 'Time', 'DataArray_t', value=time)
 C.convertPyTree2File(t, 'out.cgns')
-

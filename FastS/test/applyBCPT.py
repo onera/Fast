@@ -1,7 +1,7 @@
 # - applyBC (pyTree)-
 import Converter.PyTree as C
 import Generator.PyTree as G
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import Initiator.PyTree as I
 import KCore.Adim
@@ -24,6 +24,6 @@ t = C.newPyTree(['Base',a])
 # Numerics
 numb = {}
 numb["temporal_scheme"] = "explicit"
-Fast._setNum2Base(t, numb)
+FastC._setNum2Base(t, numb)
 FastS._applyBC(t, metrics)
 C.convertPyTree2File(t, 'out.cgns')

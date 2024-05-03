@@ -5,7 +5,6 @@ import Converter.PyTree as C
 import Initiator.PyTree as I
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
-import KCore.Adim as Adim
 import KCore.test as test
 import Converter.Internal as Internal
 
@@ -25,11 +24,11 @@ numz["time_step"]          = 0.01
 numz["scheme"]             = "ausmpred"
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
-(t, tc, metrics) = FastS.warmup(t, None)
+(t, tc, metrics) = FastS.warmup(t, None, verbose=1)
 
 nit = 1000; time = 0.
 timeStep = numz['time_step']
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
     time += timeStep
 

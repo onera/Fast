@@ -7,7 +7,7 @@ c***********************************************************************
      &                            param_int, ind_loop,
      &                            param_real, c4,c5,c6,
      &                            ventijk, tijk, rop,
-     &                            d0x, d0y, d0z,  pa, ha, nue, 
+     &                            ux, uy, uz,  dens, temp, nue, 
      &                            size_data, inc_bc, size_work) 
 c***********************************************************************
 c_U   USER : PECHIER
@@ -18,7 +18,7 @@ c     VAL
 c_V    Optimisation NEC
 c
 c     COM
-c_C    MODIFIER bvas3.f (passage de ird1,ird2a,ird2b ?????)
+c_C    MODIFIER bvas3.f (densssage de ird1,ird2a,ird2b ?????)
 c***********************************************************************
       implicit none
 
@@ -26,7 +26,7 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E idir,lrhs, neq_mtr, ind_loop(6), param_int(0:*)
-      INTEGER_E size_data,inc_bc, size_work
+      INTEGER_E size_data,inc_bc(3), size_work
 
       REAL_E rop    (param_int(NDIMDX     ), param_int(NEQ)      )
       REAL_E ventijk(param_int(NDIMDX_VENT), param_int(NEQ_VENT) )
@@ -35,8 +35,8 @@ c***********************************************************************
       REAL_E c4,c5,c6, param_real(0:*)
 
 C...  Contient les donnees CGNS pour l injection subsonique:
-      REAL_E d0x(size_data),d0y(size_data),d0z(size_data),pa(size_data),
-     & ha(size_data),nue(size_data)
+      REAL_E ux(size_data),uy(size_data),uz(size_data),dens(size_data),
+     & temp(size_data),nue(size_data)
 
 C Var local
       INTEGER_E l,lij,lr,lp,i,j,k,l1,l2,ic,jc,kc,kc_vent,ldp,lmtr,l0,
@@ -56,7 +56,7 @@ C Var local
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_vent_param.h"
 
-       indbci(j_1,k_1) = 1 + (j_1-1) + (k_1-1)*inc_bc
+      indbci(j_1,k_1) = 1 + (j_1-inc_bc(2)) + (k_1-inc_bc(3))*inc_bc(1)
 
 c......determine la forme des tableuz metrique en fonction de la nature du domaine
       !Seule la valeur de k_vent et ck_vent a un sens dans cet appel
@@ -75,7 +75,6 @@ c      write(*,*)'loop=', ind_loop
 
       !!! premiere rangee = state
       !!! rangee suivante pour que : Phi_L + Phi_R = 2 * state
-
 
 
       !if(param_int(NEQ).eq.6) nue = state(6)/roe
@@ -118,7 +117,6 @@ c      write(*,*)'loop=', ind_loop
                enddo
              enddo
              enddo
-
 
           else
 
@@ -392,7 +390,7 @@ c      write(*,*)'loop=', ind_loop
 
                   l    = inddm( i , j,  ind_loop(5)   )
                   lmtr = indmtr(i , j,  ind_loop(5)   )
-                  ldp  = indven(i , j,  ind_loop(6)   )
+                  ldp  = indven(i , j,  ind_loop(5)   )
                   l1   = l +   inck
                   li   = indbci(i,  j )
 #include        "FastS/BC/BCInflow_fich_firstrank.for"
@@ -421,7 +419,7 @@ c      write(*,*)'loop=', ind_loop
 
                   l    = inddm( i , j,  ind_loop(5)   )
                   lmtr = indmtr(i , j,  ind_loop(5)   )
-                  ldp  = indven(i , j,  ind_loop(6)   )
+                  ldp  = indven(i , j,  ind_loop(5)   )
                   l1   = l +   inck
                   li   = indbci(i,  j )
 #include        "FastS/BC/BCInflow_fich_firstrank_SA.for"

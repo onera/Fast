@@ -1,5 +1,5 @@
 /*    
-    Copyright 2013-2018 Onera.
+    Copyright 2013-2024 Onera.
 
     This file is part of Cassiopee.
 
@@ -57,7 +57,11 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
     {
       bc   = PyList_GetItem(list_bc, i);
       node = PyList_GetItem(bc, 3);
-      str  = PyString_AsString(node); // type
+      if (PyString_Check(node)) str  = PyString_AsString(node);  // type
+#if PY_VERSION_HEX >= 0x03000000
+      else if (PyUnicode_Check(node)) str = (char*)PyUnicode_AsUTF8(node); 
+#endif
+      else str = NULL;
       if (K_STRING::cmp(str, "BC_t") == 0)
       {
         E_Int flag_data = 0;
@@ -74,6 +78,8 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
         else if (K_STRING::cmp(st, s, "FamilySpecified")         == 0) type = 5;
         else if (K_STRING::cmp(st, s, "BCWallViscous")           == 0) type = 6;
         else if (K_STRING::cmp(st, s, "BCWallViscous_isot_fich") == 0) type = 7;
+        else if (K_STRING::cmp(st, s, "BCWallModel")             == 0) type =30;
+        else if (K_STRING::cmp(st, s, "BCWallExchange")          == 0) type =31;
         else if (K_STRING::cmp(st, s, "BC_fich")                 == 0) type = 8;
         else if (K_STRING::cmp(st, s, "Nearmatch")               == 0) type = 9;
         else if (K_STRING::cmp(st, s, "BCOutflow")               == 0) type =10;
@@ -95,7 +101,11 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
         {
           param = PyList_GetItem( list_param, j);
           node  = PyList_GetItem( param, 3);
-          str   = PyString_AsString(node); 
+          if (PyString_Check(node)) str = PyString_AsString(node);
+#if PY_VERSION_HEX >= 0x03000000
+          else if (PyUnicode_Check(node)) str = (char*)PyUnicode_AsUTF8(node);
+#endif
+          else str = NULL;
           if (K_STRING::cmp(str, "IndexRange_t") == 0)
           {
             E_Int s0, s1;
@@ -118,7 +128,11 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
             {
               dataset = PyList_GetItem( list_dataset, k);
               node    = PyList_GetItem( dataset, 3);
-              str     = PyString_AsString(node); 
+              if (PyString_Check(node)) str = PyString_AsString(node);
+#if PY_VERSION_HEX >= 0x03000000
+              else if (PyUnicode_Check(node)) str = (char*)PyUnicode_AsUTF8(node);
+#endif
+              else str = NULL;
               if (K_STRING::cmp(str, "BCData_t") == 0)
               {
                 PyObject* list_datarray= PyList_GetItem(dataset, 2);
@@ -126,13 +140,21 @@ E_Int K_FASTS::getbcfromzone(PyObject* zone ,
                 PyObject* datarray; 
                 for (E_Int l = 0; l < nb_array; l++)
                 {
-                  datarray = PyList_GetItem( list_datarray, l);
-                  node     = PyList_GetItem( datarray, 3);
-                  str      = PyString_AsString(node); 
+                  datarray = PyList_GetItem(list_datarray, l);
+                  node     = PyList_GetItem(datarray, 3);
+                  if (PyString_Check(node)) str = PyString_AsString(node);
+#if PY_VERSION_HEX >= 0x03000000
+                  else if (PyUnicode_Check(node)) str = (char*)PyUnicode_AsUTF8(node);
+#endif
+                  else str = NULL;
                   if (K_STRING::cmp(str, "DataArray_t") == 0)
                   {
-                    node       = PyList_GetItem( datarray, 0); // var name
-                    str        = PyString_AsString(node);
+                    node = PyList_GetItem(datarray, 0); // var name
+                    if (PyString_Check(node)) str = PyString_AsString(node);
+#if PY_VERSION_HEX >= 0x03000000
+                    else if (PyUnicode_Check(node)) str = (char*)PyUnicode_AsUTF8(node);
+#endif
+                    else str = NULL;
                     E_Float* f = K_PYTREE::getValueAF(datarray, hook);
                     data_bc.push_back(f);
                     

@@ -1,6 +1,6 @@
-#!/usr/bin/env python
 from distutils.core import setup, Extension
-import os, sys
+#from setuptools import setup, Extension
+import os
 
 #=============================================================================
 # FastS requires:
@@ -8,7 +8,7 @@ import os, sys
 # C++ compiler
 # Fortran compiler: defined in config.py
 # Numpy
-# KCore library
+# KCore
 #=============================================================================
 
 # Write setup.cfg file
@@ -21,53 +21,61 @@ Dist.writeSetupCfg()
 # Test if kcore exists =======================================================
 (kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
 
+# Test if xcore exists =======================================================
+(xcoreVersion, xcoreIncDir, xcoreLibDir) = Dist.checkXCore()
+
+# Test if connector exists =====================================================
+(connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
+
+# Test if fast exists =======================================================
+(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkFastC()
+
 from KCore.config import *
 
-# Compilation des fortrans ====================================================
-if (f77compiler == "None"):
-    print "Error: a fortran 77 compiler is required for compiling FastS."
-os.system('./MakeLinks')
-args = Dist.getForArgs(); opt = ''
-for c in xrange(len(args)):
-    opt += 'FOPT'+str(c)+'='+args[c]+' '
-if (f77compiler == 'gfortran'): opt += 'FOPT3=-fdefault-real-8'
+# Test if libmpi exists ======================================================
+(mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
 
-os.system("make -e FC="+f77compiler+" WDIR=FastS/Metric "+opt)
-os.system("make -e FC="+f77compiler +" WDIR=FastS/Compute "+opt)
-os.system('./RmLinks')
+# Compilation des fortrans ====================================================
 prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir, fastLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, fastIncDir]
-libraries = ["MetricF", "ComputeF", "kcore", "fast"]
+libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir, '.']
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir]
+libraries = [ "fasts", "fastc", "connector", "xcore", "kcore"]
+
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
-libraryDirs += paths; libraries += libs    
-
+libraryDirs += paths; libraries += libs
+ADDITIONALCPPFLAGS=[]
+if mpi:
+    libraryDirs.append(mpiLibDir)
+    includeDirs.append(mpiIncDir)
+    ADDITIONALCPPFLAGS = ['-D_MPI']
+    libraries += mpiLibs
+    
 # Extensions ==================================================================
-import srcs
 listExtensions = []
 listExtensions.append(
     Extension('FastS.fasts',
-              sources=['FastS/fastS.cpp']+srcs.cpp_srcs,
-              include_dirs=["FastS"]+additionalIncludePaths+includeDirs,
+              sources=['FastS/fastS.cpp'],
+              include_dirs=[".","FastS"]+additionalIncludePaths+includeDirs,
               library_dirs=additionalLibPaths+libraryDirs,
               libraries=libraries+additionalLibs,
               extra_compile_args=Dist.getCppArgs(),
-              extra_link_args=Dist.getLinkArgs()
+              extra_link_args=Dist.getLinkArgs()+['-p']
               ) )
     
 # setup ======================================================================
 setup(
     name="FastS",
-    version="2.6",
+    version="4.0",
     description="Fast for structured grids.",
-    author="Onera",
-    package_dir={"":"."},
+    author="ONERA",
+    url="https://fast.onera.fr",
     packages=['FastS'],
+    package_dir={"":"."},
     ext_modules=listExtensions
     )
 

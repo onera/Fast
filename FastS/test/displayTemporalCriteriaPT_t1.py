@@ -1,4 +1,4 @@
-# - display_temporal_criteria (pyTree)-
+# - displayTemporalCriteria (pyTree)-
 import Converter.PyTree as C
 import Converter.Internal as Internal
 import Generator.PyTree as G
@@ -29,7 +29,7 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 # Compute
 for it in range(1,10):
     FastS._compute(t, metrics, it)
-    FastS.display_temporal_criteria(t, metrics, it, format='double')
+    FastS._displayTemporalCriteria(t, metrics, it, format='double')
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

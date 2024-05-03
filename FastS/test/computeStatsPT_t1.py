@@ -17,6 +17,7 @@ t = C.newPyTree(['Base', a1])
 
 # Numerics
 numb = {}
+numb["omp_mode"]    =1
 numb["temporal_scheme"]    = "explicit"
 numb["ss_iteration"]       = 20
 numz = {}

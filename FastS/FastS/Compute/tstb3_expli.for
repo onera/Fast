@@ -336,14 +336,14 @@ C Var loc
            tc2k = sqrt( tczk*tczk )
            detj = max(vol(lvo),cut0x)
  
-           do 202 k = ind_loop(5), ind_loop(6)
-           do 202 j = ind_loop(3), ind_loop(4)
+           do k = ind_loop(5), ind_loop(6)
+           do j = ind_loop(3), ind_loop(4)
 
             lij   =       inddm(ind_loop(1) , j, k)
             lvij  = lij - indven(ind_loop(1) , j, k)
 
 CDIR$ IVDEP
-            do 202 l = lij,  lij + ind_loop(2) - ind_loop(1)
+            do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
                lv = l-lvij
 
@@ -364,8 +364,10 @@ CDIR$ IVDEP
                c=sqrt(gam2*rop(l,5))
  
 #include       "FastS/Compute/dtloc.for"
-202    continue
 
+            enddo
+            enddo
+            enddo
 
          else !maillage mobile, 2d
 

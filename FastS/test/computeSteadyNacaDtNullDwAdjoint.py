@@ -3,7 +3,7 @@
 #
 import Generator.PyTree as G
 import Converter.PyTree as C
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import Post.PyTree as P
 import Connector.PyTree as X
@@ -19,7 +19,7 @@ NP = 0               # NP: 0: Seq, NP> 0: running with mpi, distributed on NP pr
 rank=0               # sequential 8 cores
 it0 = 0
 
-t_m129,tc_m129,ts,graph=Fast.load(DOSSIER+'restart_129'+SUFFIXE+'.cgns',DOSSIER+'tc_m129.cgns', 'ts.cgns', split='single', restart=False, NP=NP)
+t_m129,tc_m129,ts,graph=FastC.load(DOSSIER+'restart_129'+SUFFIXE+'.cgns',DOSSIER+'tc_m129.cgns', 'ts.cgns', split='single', restart=False)
 
 modulo_verif = 1
 mycfl = 0.00000001
@@ -37,7 +37,7 @@ numz['cache_blocking_J']   = 1000
 numz['cache_blocking_K']   = 1000
 numz["io_thread"]          =    1
 
-Fast._setNum2Zones(t_m129, numz); Fast._setNum2Base(t_m129, numb)
+FastC._setNum2Zones(t_m129, numz); FastC._setNum2Base(t_m129, numb)
 
 #(t_m129, tc_m129, metrics) = FastS.warmup(t_m129,tc_m129, graph=graph)
 
@@ -48,17 +48,17 @@ nrec = NIT/modulo_verif
  ReInf, Cs, Gamma, RokInf, RoomegaInf, RonutildeInf,
  Mus, Cs, Ts, Pr] = C.getState(t_m129)
 
-print " RoInf ",RoInf
-print " RouInf ",RouInf
-print " RovInf ",RovInf
-print " RowInf ",RowInf
-print " RoeInf ",RoeInf
+print(" RoInf ",RoInf)
+print(" RouInf ",RouInf)
+print(" RovInf ",RovInf)
+print(" RowInf ",RowInf)
+print(" RoeInf ",RoeInf)
 
 QInf   = math.sqrt(RouInf**2+RovInf**2+RowInf**2)
 cosAoA = RouInf/QInf
 sinAoA = RovInf/QInf
-print " cosAoA ",cosAoA
-print " sinAoA ",sinAoA
+print(" cosAoA ",cosAoA)
+print(" sinAoA ",sinAoA)
 
 
 #====================================================================================
@@ -71,7 +71,7 @@ t_eff  = FastS.createStressNodes(t_m129,['BCWall'])
 zmin1  = C.getMinValue(t_m129,"CoordinateZ")
 zmax1  = C.getMaxValue(t_m129,"CoordinateZ")
 span   = zmax1-zmin1
-print " pseudo-span ",span
+print(" pseudo-span ",span)
 corde = 1.
 nit=NIT
 
@@ -87,22 +87,22 @@ f.write(titre)
 
 #=======================================================================================
 
-for it in xrange(NIT):
+for it in range(NIT):
     FastS._compute(t_m129, metrics, it, tc_m129, graph)
     #FastS._compute(t_m129, metrics, it, 0, tc_m129, graph)
 
-    if (it%modulo_verif == 0):
-        print '- %d / %d '%(it+it0, NIT+it0)
+    if it%modulo_verif == 0:
+        print('- %d / %d '%(it+it0, NIT+it0))
         surfinv = 1/(corde*span)
         FastS.display_temporal_criteria(t_m129, metrics, it, format='double')	
         eff      = FastS._computeStress(t_m129, t_eff, metrics)
 #        eff      = FastS._computeStress(t_m129, t_eff, metrics,cosAoA,sinAoA,surfinv,0)
         drag = (eff[0]*cosAoA+eff[1]*sinAoA)/(corde*span)
         lift = (eff[1]*cosAoA-eff[0]*sinAoA)/(corde*span)        
-        print 'it, lift, drag:', it+it0, lift, drag
+        print('it, lift, drag:', it+it0, lift, drag)
         line="{0} {1} {2} \n".format(it+it0,lift,drag)
         f.write(line)
-        f.flush()        
+        f.flush()
 #eff2 = FastS._computeStress(t_m129, t_eff, metrics,1)		
 #eff2 = FastS._computeStress(t_m129, t_eff, metrics,cosAoA,sinAoA,surfinv,1)
 eff2 = FastS._compute_dpJ_dpW(t_m129, t_eff, metrics, cosAoA, sinAoA, surfinv)
@@ -119,7 +119,7 @@ eff2 = FastS._compute_dpJ_dpW(t_m129, t_eff, metrics, cosAoA, sinAoA, surfinv)
  Mus, Cs, Ts, Pr] = C.getState(t_m129)
 Q2Inf = (RouInf**2+RovInf**2+RowInf**2)/(RoInf**2)
 Href = Gamma/(Gamma-1)*PInf/RoInf + .5 * Q2Inf
-print 'Q2Inf = %f , Href = %f'%(Q2Inf,Href)
+print('Q2Inf = %f , Href = %f'%(Q2Inf,Href))
 
 #%f(C.isNamePresent(t_eff,'centers:CoefPressure')):
 #        print C.getValue( t_eff, 'centers:CoefPressure', 0 )
@@ -130,8 +130,8 @@ print 'Q2Inf = %f , Href = %f'%(Q2Inf,Href)
 
 #===================================================================================
 
-#Fast.save(t_m129, DOSSIER+'restart_129'+'.cgns', split='single', NP=NP)
+#FastC.save(t_m129, DOSSIER+'restart_129'+'.cgns', split='single', NP=NP)
 C.convertPyTree2File(t_eff, DOSSIER+'effort_m129_adj'+SUFFIXE+'.cgns')
-Fast.save(t_m129, DOSSIER+'restart_129_bis'+'.cgns', split='single', NP=NP)
+FastC.save(t_m129, DOSSIER+'restart_129_bis'+'.cgns', split='single', NP=NP)
 
 #===================================================================================

@@ -6,7 +6,7 @@ c***********************************************************************
       subroutine mjr_ale_3dhomocart(ndom, param_int, param_real,
      &                        socket,  Nbre_socket,
      &                        ithread_sock, thread_parsock,
-     &                        ind_dm_socket, socket_topology, ind_loop,
+     &                        ind_dm_socket, socket_topology,
      &                        x,y,z,ti,tj,tk,ti0,tj0,tk0, vol,
      &                        venti, ventj, ventk)
 c***********************************************************************
@@ -36,7 +36,7 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E ndom, socket, Nbre_socket, ithread_sock, thread_parsock,
-     & ind_loop(6),ind_dm_socket(6), socket_topology(3), param_int(0:*)
+     & ind_dm_socket(6), socket_topology(3), param_int(0:*)
 
 
       REAL_E ti(*),tj(*),tk(*),vol(*),venti(*),ventj(*),ventk(*),
@@ -45,7 +45,7 @@ c***********************************************************************
       REAL_E param_real(0:*)
 
 C Var loc
-      INTEGER_E translation_pur,lskip,ind_mtr(6)
+      INTEGER_E translation_pur,lskip,ind_mtr(6),ind_coe(6),lmin
       REAL_E rot(4,3), vtrans(3)
 
       vtrans=0.
@@ -72,32 +72,33 @@ C Var loc
 
       IF(lskip.eq.0) THEN
 
-         call indice_boucle_lu(ndom, socket, Nbre_socket,
-     &                         param_int(ITYPCP), ind_mtr, 
+         lmin = 10
+         if(param_int(ITYPCP).eq.2) lmin = 4
+
+         call indice_boucle_lu(ndom, socket, Nbre_socket, lmin, ind_mtr,
      &                         socket_topology, ind_dm_socket )
 
-         call indice_boucle_lu(ndom, ithread_sock, thread_parsock, 
-     &                        param_int(ITYPCP),
+         call indice_boucle_lu(ndom, ithread_sock, thread_parsock, lmin,
      &                        ind_dm_socket, 
-     &                        socket_topology, ind_loop )
+     &                        socket_topology, ind_coe )
 
-         if(ind_loop(1).eq.ind_mtr(1)) 
-     &    ind_loop(1)= ind_loop(1) -param_int( NIJK_MTR+3)
-         if(ind_loop(3).eq.ind_mtr(3)) 
-     &    ind_loop(3)= ind_loop(3) -param_int( NIJK_MTR+3)
-         if(ind_loop(2).eq.ind_mtr(2)) 
-     &    ind_loop(2)= ind_loop(2) +param_int( NIJK_MTR+3)
-         if(ind_loop(4).eq.ind_mtr(4)) 
-     &    ind_loop(4)= ind_loop(4) +param_int( NIJK_MTR+3)
+         if(ind_coe(1).eq.ind_mtr(1)) 
+     &    ind_coe(1)= ind_coe(1) -param_int( NIJK_MTR+3)
+         if(ind_coe(3).eq.ind_mtr(3)) 
+     &    ind_coe(3)= ind_coe(3) -param_int( NIJK_MTR+3)
+         if(ind_coe(2).eq.ind_mtr(2)) 
+     &    ind_coe(2)= ind_coe(2) +param_int( NIJK_MTR+3)
+         if(ind_coe(4).eq.ind_mtr(4)) 
+     &    ind_coe(4)= ind_coe(4) +param_int( NIJK_MTR+3)
 
 
-          if(ind_loop(1).gt.ind_loop(2)) goto 100  
-          if(ind_loop(3).gt.ind_loop(4)) goto 100
-          if(ind_loop(5).gt.ind_loop(6)) goto 100
+          if(ind_coe(1).gt.ind_coe(2)) goto 100  
+          if(ind_coe(3).gt.ind_coe(4)) goto 100
+          if(ind_coe(5).gt.ind_coe(6)) goto 100
 
           !mvt de rotation: modific(ndom)ation de normale*surf
           if(translation_pur.ne.0) call cptijk_ale(ndom, param_int, 
-     &                                             ind_loop, rot,
+     &                                             ind_coe, rot,
      &                                             ti0,tj0,tk0,ti,tj,tk)
       ENDIF
 
@@ -123,30 +124,28 @@ C Var loc
 
       IF(lskip.eq.0) THEN
 
-         call indice_boucle_lu(ndom, socket, Nbre_socket,
-     &                         param_int(ITYPCP), ind_mtr, 
+         call indice_boucle_lu(ndom, socket, Nbre_socket, lmin, ind_mtr,
      &                         socket_topology, ind_dm_socket )
 
-         call indice_boucle_lu(ndom, ithread_sock, thread_parsock, 
-     &                        param_int(ITYPCP),
+         call indice_boucle_lu(ndom, ithread_sock, thread_parsock, lmin,
      &                        ind_dm_socket, 
-     &                        socket_topology, ind_loop )
+     &                        socket_topology, ind_coe )
 
-         if(ind_loop(1).eq.ind_mtr(1)) 
-     &    ind_loop(1)= ind_loop(1) -param_int( NIJK_VENT+3)
-         if(ind_loop(3).eq.ind_mtr(3)) 
-     &    ind_loop(3)= ind_loop(3) -param_int( NIJK_VENT+3)
-         if(ind_loop(2).eq.ind_mtr(2)) 
-     &    ind_loop(2)= ind_loop(2) +param_int( NIJK_VENT+3)
-         if(ind_loop(4).eq.ind_mtr(4)) 
-     &    ind_loop(4)= ind_loop(4) +param_int( NIJK_VENT+3)
+         if(ind_coe(1).eq.ind_mtr(1)) 
+     &    ind_coe(1)= ind_coe(1) -param_int( NIJK_VENT+3)
+         if(ind_coe(3).eq.ind_mtr(3)) 
+     &    ind_coe(3)= ind_coe(3) -param_int( NIJK_VENT+3)
+         if(ind_coe(2).eq.ind_mtr(2)) 
+     &    ind_coe(2)= ind_coe(2) +param_int( NIJK_VENT+3)
+         if(ind_coe(4).eq.ind_mtr(4)) 
+     &    ind_coe(4)= ind_coe(4) +param_int( NIJK_VENT+3)
 
-          if(ind_loop(1).gt.ind_loop(2)) return  
-          if(ind_loop(3).gt.ind_loop(4)) return
-          if(ind_loop(5).gt.ind_loop(6)) return
+          if(ind_coe(1).gt.ind_coe(2)) return  
+          if(ind_coe(3).gt.ind_coe(4)) return
+          if(ind_coe(5).gt.ind_coe(6)) return
 
          !mvt de rotation: modific(ndom)ation de normale*surf
-         call cpventijk_ale(ndom, param_int, param_real, ind_loop, 
+         call cpventijk_ale(ndom, param_int, param_real, ind_coe, 
      &                      x,y,z, rot, venti, ventj, ventk )
 
       ENDIF

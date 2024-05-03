@@ -1,6 +1,6 @@
-#!/usr/bin/env python
 from distutils.core import setup, Extension
-import os, sys
+#from setuptools import setup, Extension
+import os
 
 #=============================================================================
 # Fast requires:
@@ -21,34 +21,59 @@ Dist.writeSetupCfg()
 # Test if kcore exists =======================================================
 (kcoreVersion, kcoreIncDir, kcoreLibDir) = Dist.checkKCore()
 
+# Test if xcore exists =======================================================
+(xcoreVersion, xcoreIncDir, xcoreLibDir) = Dist.checkXCore()
+
+# Test if connector exists =====================================================
+(connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkConnector()
+
+# Test if fastc exists =====================================================
+(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkFastC()
+
+# Test if fasts exists =====================================================
+(fastsVersion, fastsIncDir, fastsLibDir) = Dist.checkFastS()
+
+# Test if fastp exists =====================================================
+#(fastpVersion, fastpIncDir, fastpLibDir) = Dist.checkFastP()
+
+# Test if fastlbm exists =====================================================
+#(fastlbmVersion, fastlbmIncDir, fastlbmLibDir) = Dist.checkFastLBM()
+(fastaslbmVersion, fastaslbmIncDir, fastaslbmLibDir) = Dist.checkFastASLBM()
+
 from KCore.config import *
 
+# Test if libmpi exists ======================================================
+(mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
+
 # Compilation des fortrans ====================================================
-if (f77compiler == "None"):
-    print "Error: a fortran 77 compiler is required for compiling Fast."
-args = Dist.getForArgs(); opt = ''
-for c in xrange(len(args)):
-    opt += 'FOPT'+str(c)+'='+args[c]+' '
-os.system("make -e FC="+f77compiler+" WDIR=Fast/Fortran "+opt)
 prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir]
-libraries = ["FastF", "kcore"]
+libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastaslbmLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir, fastsIncDir, fastaslbmIncDir]
+libraries = ["fast", "fasts", "fastaslbm", "fastc", "connector", "xcore", "kcore"]
+#libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastlbmLibDir]
+#includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir, fastsIncDir, fastlbmIncDir]
+#libraries = ["fast", "fasts", "fastlbm", "fastc", "connector", "xcore", "kcore"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 
+ADDITIONALCPPFLAGS=[]
+if mpi:
+    libraryDirs.append(mpiLibDir)
+    includeDirs.append(mpiIncDir)
+    ADDITIONALCPPFLAGS = ['-D_MPI']
+    libraries += mpiLibs
+    
 # Extensions ==================================================================
-import srcs
 listExtensions = []
 listExtensions.append(
     Extension('Fast.fast',
-              sources=['Fast/fast.cpp']+srcs.cpp_srcs,
-              include_dirs=["Fast"]+additionalIncludePaths+includeDirs,
+              sources=['Fast/fast.cpp'],
+              include_dirs=[".","Fast"]+additionalIncludePaths+includeDirs,
               library_dirs=additionalLibPaths+libraryDirs,
               libraries=libraries+additionalLibs,
               extra_compile_args=Dist.getCppArgs(),
@@ -58,11 +83,12 @@ listExtensions.append(
 # setup ======================================================================
 setup(
     name="Fast",
-    version="2.6",
-    description="Fast Navier-Stokes solver.",
-    author="Onera",
-    package_dir={"":"."},
+    version="4.0",
+    description="Fast NS and LBM solvers.",
+    author="ONERA",
+    url="https://fast.onera.fr",
     packages=['Fast'],
+    package_dir={"":"."},
     ext_modules=listExtensions
     )
 

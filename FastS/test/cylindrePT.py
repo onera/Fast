@@ -4,13 +4,12 @@ import Generator.PyTree as G
 import Converter.PyTree as C
 import Initiator.PyTree as I
 import CPlot.PyTree as CPlot
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import Transform.PyTree as T
-import KCore.Adim as Adim
-import sys 
+import KCore.Adim as Adim 
 
 varsN = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
 
@@ -42,15 +41,15 @@ numb["ss_iteration"]       = 20
 numz = {}
 numz["time_step"]          = 0.003
 numz["scheme"]             = "ausmpred"
-Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 (t, tc, metrics)  = FastS.warmup(t, tc)
 
 nit = 3000; time = 0.
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it, tc)
-    if (it%20 == 0):
-        print '- %d - %g'%(it, time)
+    if it%20 == 0:
+        print('- %d - %g'%(it, time))
         CPlot.display(t, dim=2, mode=3, scalarField=1)
     time += numz['time_step']
 

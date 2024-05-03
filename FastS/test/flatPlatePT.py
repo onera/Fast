@@ -4,7 +4,7 @@ import Generator.PyTree as G
 import Converter.PyTree as C
 import Initiator.PyTree as I
 import CPlot.PyTree as CPlot
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import Connector.PyTree as X
 import Converter.Internal as Internal
@@ -21,16 +21,16 @@ t = C.initVars(t, 'centers:ViscosityEddy', 0.)
 
 numb = {'temporal_scheme':'explicit', 'ss_iteration':20}
 numz = {'time_step':0.00002, 'scheme':'ausmpred'}
-Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz) ; FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
 nit = 30000 ; time = 0.
 
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
-    if (it%20 == 0):
-        print '- %d - %g'%(it, time)
+    if it%20 == 0:
+        print('- %d - %g'%(it, time))
         CPlot.display(t, dim=2, mode=3, scalarField=2)
     time += numz['time_step']
 

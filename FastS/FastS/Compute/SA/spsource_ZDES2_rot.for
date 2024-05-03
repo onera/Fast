@@ -4,7 +4,7 @@ c     $Revision: 38 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine spsource_ZDES2_rot(ndom, param_int, param_real,
-     &                     ind_loop, 
+     &                             ind_loop, 
      &                     xmut,rop,coe, ti, tj, tk, vol,dlng, drodm)
 c***********************************************************************
 c_P                          O N E R A
@@ -65,8 +65,11 @@ c Var loc
      & auijuij,adcut,variable2,fa,testfa,ra,c1,cw1,
      & tjx,tjy,tjz,tjx1,tjy1,tjz1,si,sj,sk,
      & tix,tiy,tiz,tix1,tiy1,tiz1,
-     & tkx,tky,tkz,tkx1,tky1,tkz1,u1,u2,u3,u4,u5,u6,xvol,dudx,dudy,dudz,
-     & dx,dy,dz,tn,tx,ty,tz,nx,ny,nz
+     & tkx,tky,tkz,tkx1,tky1,tkz1,u1,u2,u3,u4,u5,u6,xvol,
+     & dudx,dudy,dudz,dvdx,dvdy,dvdz,dwdx,dwdy,dwdz,
+     & dx,dy,dz,tn,tx,ty,tz,nx,ny,nz,
+     & SA_CW2_LRE,S11,S22,S33,S12,S13,S23,St,r5,
+     & SWITCH_SA_LOW_RE,SWITCH_SA_ROT_CORR
 
 
 #include "FastS/formule_param.h"
@@ -74,9 +77,11 @@ c Var loc
 
 c.....formulation originelle
       fw(s)      = s*((1.+SA_CW3)/(s**6+SA_CW3))**(1./6.)
-      fv1(s)     = (s**3)/(s**3+SA_CV1)
+      fv1(s)     = 1./(1.+SA_CV1/(s*s*s))
       fv2(s,t)   = 1.-s/(1.+s*t)
 
+      SWITCH_SA_LOW_RE = param_int(SA_LOW_RE)
+      SWITCH_SA_ROT_CORR = param_int(SA_ROT_CORR)
       cmus1  = param_real(VISCO+4)
       temp01 = 1./param_real(VISCO+3)
       coesut =  param_real(VISCO+2) * (1.+cmus1*temp01)
@@ -193,32 +198,28 @@ c.....formulation originelle
         If(param_int(ITYPCP).le.1) then !calcul implicite, on stocke coe pour ssor SA
 
 
-           do 102 k = ind_loop(5), ind_loop(6)
-           do 102 j = ind_loop(3), ind_loop(4)
-             lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-            do 102 l = lij, lij +  ind_loop(2)- ind_loop(1)
+          do k = ind_loop(5), ind_loop(6)
+           do j = ind_loop(3), ind_loop(4)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/rot_3dcart.for" 
 #include       "FastS/Compute/SA/delta_rot_3dcart.for"
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
- 102  continue
+#include    "FastS/Compute/loop_end.for"
 
         Else  !calcul explicit, Stockage terme source inutile
 
-           do 202 k = ind_loop(5), ind_loop(6)
-           do 202 j = ind_loop(3), ind_loop(4)
-            lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-            do 202 l = lij, lij +  ind_loop(2)- ind_loop(1)
+          do k = ind_loop(5), ind_loop(6)
+           do j = ind_loop(3), ind_loop(4)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/rot_3dcart.for" 
 #include       "FastS/Compute/SA/delta_rot_3dcart.for"
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
- 202  continue
+#include    "FastS/Compute/loop_end.for"
 
        endif!explicite/implicite 3dcart
 

@@ -6,15 +6,38 @@
           f2       = fv2(chi,f1)
           
           dist     = max(dlng(l), 1.e-27)
-          stild    = rot + (anutild*f2)/(SA_CKARM*SA_CKARM*dist*dist)
 
-          prod     = rop(l,1)*SA_CB1*stild*anutild
+          !Version F Renac
+          !rot = rot+ sign(1.e-14, rot)
+          !stild    = (anutild*f2)/(SA_CKARM*SA_CKARM*dist*dist)
+          !Oliver modification
+          !if(stild+SA_CV2*rot.ge.0.)then
+          !   stild = rot + stild
+          !else
+!             stild = rot*(1. + (SA_CV2*SA_CV2*rot + SA_CV3*stild)
+!     &                        /(SA_CV3-2.*SA_CV2*rot-stild)
+!     &                   )
+!          endif
+
+          stild = rot + (anutild*f2)/(SA_CKARM*SA_CKARM*dist*dist)
+
+          !!correction SA-R
+          stild = stild + SWITCH_SA_ROT_CORR 
+     &      *SA_CROT*min(0.00000000000000000001,St-rot)
+
+          prod  = rop(l,1)*SA_CB1*stild*anutild
        
           !CALCUL DU TERME DE DESTRUCTION
+          !Version F Renac: commenter limitation stild qui suit
           stild     = max(stild,0.00000000000000000001)
           r         = anutild/(stild*SA_CKARM*SA_CKARM*dist*dist)
           r         = min(r,10.)
-          g         = r *(1.+  SA_CW2*(r*r*r*r*r-1.) )
+          r5        = r*r*r*r*r-1.
+          g         = r *(1.+SA_CW2*r5)
+          !!correction SA-LRE
+          SA_CW2_LRE = SA_CW4 + SA_CW5 / ((1.+ chi/40.)**2) 
+          g  = SWITCH_SA_LOW_RE*r*(1.+SA_CW2_LRE*r5) +
+     &               (1.-SWITCH_SA_LOW_RE)*g
           fwg       = fw(g)
 
           destruc   =rop(l,1)*cw1*fwg*(anutild/dist)*(anutild/dist)

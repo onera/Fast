@@ -1,19 +1,17 @@
 """Structured grid Navier-Stokes solver.
 """
-__version__ = '2.6'
+__version__ = '4.0'
 __author__ = "Ivan Mary, Stephanie Peron, Christophe Benoit, Thomas Renaud, Guillaume Jeanmasson"
 
-import fasts
-import numpy
-try: import Converter as C
-except: raise ImportError("FastS: requires Converter module.")
+from . import fasts
 
 #==============================================================================
 # metric
 #==============================================================================
 def metric(xyz, numerics):
-   ret = fasts.metric(xyz, numerics)
-   return ret
+    """Compute Metric."""
+    ret = fasts.metric(xyz, numerics)
+    return ret
 
 def cart(Xo, H, N):
     """Create a cartesian mesh defined by a structured array.
@@ -24,7 +22,6 @@ def initVars(ro, varName, val):
     """Initialise variable sur partition omp"""
     fasts.initVars(ro, varName, val)
     return None
-
 
 # def compute(array, tijk, sol, nitrun):
 # #    return fasts.compute(array, tijk, sol, nitrun)

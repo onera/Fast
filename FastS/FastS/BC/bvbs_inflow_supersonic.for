@@ -45,7 +45,7 @@ C Var local
       w     = state(4)/state(1)
       t     = ( state(5) -0.5*ro*(u*u+v*v+w*w) ) /(ro*param_real(CVINF))
 
-      if(param_int(NEQ).eq.6) nut = state(6)/state(1)
+      if (param_int(NEQ).eq.6) nut = state(6)/state(1)
 
       !write(*,'(a,5f18.12)')'state', ro,u,v,w,t
 

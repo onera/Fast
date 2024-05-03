@@ -1,5 +1,5 @@
 /*    
-    Copyright 2013-2018 Onera.
+    Copyright 2013-2024 Onera.
 
     This file is part of Cassiopee.
 
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
-# include "fastS.h"
+# include "FastS/fastS.h"
 # include "param_solver.h"
 #ifdef _OPENMP
 #include <omp.h>
@@ -84,7 +84,7 @@ PyObject* K_FASTS::compute_dpJ_dpW(PyObject* self, PyObject* args)
 
 
   /// Tableau pour stockage senseur oscillation
-  PyObject* wigArray = PyList_GetItem(work,0); FldArrayF* wig; FldArrayF* eff;
+  PyObject* wigArray = PyDict_GetItemString(work,"wiggle"); FldArrayF* wig; FldArrayF* eff;
   K_NUMPY::getFromNumpyArray(wigArray, wig, true); E_Float* iptwig = wig->begin();
 //  K_NUMPY::getFromNumpyArray(effarray, eff, true); E_Float* ipteff = eff->begin();
 
@@ -186,7 +186,7 @@ PyObject* K_FASTS::compute_dpJ_dpW(PyObject* self, PyObject* args)
   FldArrayI thread_topology(3*Nbre_thread_max); 
   FldArrayI   ind_dm_thread(6*Nbre_thread_max);  
 
-  E_Int itypecp_loc=2;
+  E_Int lmin=4;
   //
   //
   //loop sur les fenetres pour calcul flux
@@ -223,7 +223,7 @@ PyObject* K_FASTS::compute_dpJ_dpW(PyObject* self, PyObject* args)
         //calcul du sous domaine a traiter par le thread 
 
         
-        indice_boucle_lu_(nd, ithread, Nbre_thread_actif, itypecp_loc,
+        indice_boucle_lu_(nd, ithread, Nbre_thread_actif, lmin,
                            ipt_param_int_eff[nd]+EFF_LOOP,
                            ipt_thread_topology, ind_loop);
 

@@ -4,7 +4,10 @@ c.....Metrique
 
         nm  = l -  incj
         nm2 = l -2*incj
+        
         np  = l +  incj
+        
+
 
 ! pente (qm) a l'interface droite et  (qp) a l'interface gauche
         vslp = v1
@@ -41,7 +44,7 @@ c.....Metrique
 
         ! modification de vitesse normale par ajout
         ! de stabilisation de type Rhie-Chow
-        u   = 0.25*(qn1+qn2)- c2*sj*(p2-p1)*wig( l+ wig_j)
+        u  = 0.25*(qn1+qn2)- c2*sj*(p2-p1)*(opt0*wig( l+ wig_j)+1.-opt0)
 
         tdu = max(abs(u),c1*sj)*wig( l+ wig_j)
 

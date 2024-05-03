@@ -3,7 +3,7 @@ import Converter.PyTree as C
 import Generator.PyTree as G
 import Connector.PyTree as X
 import FastS.PyTree as FastS
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import Initiator.PyTree as I
 
 ni = 155 ; dx = 100./(ni-1) ; dz = 0.01
@@ -21,7 +21,7 @@ numb["ss_iteration"]       = 20
 numz = {}
 numz["time_step"]          = 0.00004444
 numz["scheme"]             = "ausmpred"
-Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz) ; FastC._setNum2Base(t, numb)
 
 # Prim vars, solver tag, compact, metric
 (t, tc, metrics) = FastS.warmup(t, None)

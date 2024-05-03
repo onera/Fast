@@ -36,17 +36,18 @@ c***********************************************************************
 
 C     Var loc
       INTEGER_E ndf,lf,npass,incijk, nb_bc, iptdata, flag_correct_flu
-      INTEGER_E bc_type, pt_bc,idir,nbdata,lskip
+      INTEGER_E bc_type, pt_bc,pt_bcs, idir,nbdata,lskip, iflow
       INTEGER_E ind_CL(6), ind_CL119(6)
       REAL_E mobile_coef
  
       ! pas de debordement coin pour calcul des flu
       npass =0
-      nb_bc = param_int(BC_NBBC)
-      !write(*,*)'bc',param_int(BC_NBBC)
+      pt_bcs = param_int(PT_BC)
+      nb_bc = param_int(pt_bcs)
+      !write(*,*)'bc', nb_bc
       do 100 ndf = 0, nb_bc-1
          
-        pt_bc  = param_int(BC_NBBC + 1 + ndf)
+        pt_bc  = param_int(pt_bcs + 1 + ndf)
 
         bc_type= param_int(pt_bc + BC_TYPE)
 
@@ -62,7 +63,6 @@ C     &     .and.bc_type.ne.BCINFLOW.and.bc_type.ne.BCINJ1)
 
         idir   = param_int( pt_bc + BC_IDIR)
         nbdata = param_int( pt_bc + BC_NBDATA)
-
 
 
        !calcul intersection sous domaine et fenetre CL
@@ -95,7 +95,11 @@ C     &     .and.bc_type.ne.BCINFLOW.and.bc_type.ne.BCINJ1)
 
          if (param_int(KFLUDOM).eq.5) then
 
-           call corr_fluroe_select(ndom, ithread, idir,
+           !!  attention flux convectif 6eme variable SA pas retranché
+           !! donc pas de garantie de flux(6) =0 a la paroi en Roe
+           iflow =1 
+           
+           call corr_fluroe_select(ndom, ithread, idir, iflow,
      &                        param_int, param_real,
      &                        ind_CL, 
      &                        rop, drodm  , wig,

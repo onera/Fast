@@ -3,16 +3,14 @@
 #
 #mpirun -x OMP_NUM_THREADS -np 8 python tgv_mpi.py
 #
-import Connector.PyTree as X
 import Generator.PyTree as G
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import FastS.Mpi as FastSmpi
 import Converter.PyTree as C
 import Distributor2.PyTree as D2
 import Converter.Mpi as Cmpi
 import Converter.Internal as Internal
-import KCore.test as test
 import sys
 import math, numpy
 
@@ -35,9 +33,9 @@ mpi_i = 2
 mpi_j = 2
 mpi_k = 2
 
-kpos = rank/(mpi_i*mpi_j)
-jpos = ( rank-kpos*(mpi_i*mpi_j))/mpi_i
-ipos =  rank-kpos*(mpi_i*mpi_j) -jpos*mpi_i
+ipos = int(rank%mpi_i)
+jpos = int((rank-ipos)/mpi_i%mpi_j)
+kpos = int((rank-ipos-jpos*mpi_i)/(mpi_i*mpi_j))
 
 #print "rank", rank, "pos", ipos,jpos,kpos
 # Bloc avec ghost cells
@@ -60,7 +58,6 @@ C._initVars(a, '{centers:VelocityZ} = 0.')
 C._initVars(a, '{centers:Temperature}=%f'%T0)
 
 t = C.newPyTree(['Base']) ; t[2][1][2] += [a]
-print t[2][1][2][0][0] 
 t[2][1][2][0][0] ='cart'+str(rank)
 t = C.addState(t, 'GoverningEquations', 'NSLaminar')
 t = C.addState(t, MInf=0.1, ReInf=1600, adim='adim2funk')
@@ -131,7 +128,7 @@ for key in proc.keys():
    dirs= proc[key]
    nfen= len(dirs)
    #print "dirs", dirs,nfen, rank
-   if rank == 0:  print "dirs", dirs,nfen, rank
+   if rank == 0:  print("dirs", dirs,nfen, rank)
    o = Internal.createUniqueChild( z , 'ID_cart'+key, 'ZoneSubRegion_t', 'cart'+key  )
    subRegion = Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
    o = Internal.createChild( subRegion[c] , 'ZoneRole', 'DataArray_t', 'Donor')
@@ -147,7 +144,6 @@ for key in proc.keys():
    l = 0
    ni   = (N-1+4)
    ninj = ni*ni
-   print 'ni, ninj=', ni, ninj
    for  dir in dirs:
 
      if dir == 'imin':
@@ -205,15 +201,15 @@ procDict={}
 graphID ={}
 procs={}
 for i in range(size):
-  print 'i=',i 
   proc ={}
   procDict['cart'+str(i)]= i
   procList.append(['cart'+str(i)])
   rank =i
   
-  kpos = rank/(mpi_i*mpi_j)
-  jpos = ( rank-kpos*(mpi_i*mpi_j))/mpi_i
-  ipos =  rank-kpos*(mpi_i*mpi_j) -jpos*mpi_i
+  ipos = int(rank%mpi_i)
+  jpos = int((rank-ipos)/mpi_i%mpi_j)
+  kpos = int((rank-ipos-jpos*mpi_i)/(mpi_i*mpi_j))
+  
   racs =[]
   if mpi_i != 1:
      #Imin
@@ -253,7 +249,6 @@ for i in range(size):
   procs[i]= proc
  
  
-#print procs
 graph={}
 graph['graphID']=procs
 graph['graphIBCD']={}
@@ -262,14 +257,11 @@ graph['procList']=procList
 
 rank = Cmpi.rank
 
-if rank ==0: print "proc", graph
+if rank ==0: print("proc", graph)
 #for s in subRegions:
 #   print "rac",s[0], rank
 
 
-
-#t,tc,ts,graph=Fast.load(FILE, FILED, split='single', 
-#                        restart=False, NP=size)
 
 # Numerics
 numb = {}
@@ -278,7 +270,7 @@ numb["modulo_verif"]    = 50
 numz = {}
 numz["time_step"]          = 0.003
 numz["scheme"]             = "senseur"
-Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 #Initialisation parametre calcul: calcul metric + var primitive + compactage + alignement + placement DRAM
 (t, tc, metrics) = FastSmpi.warmup(t, tc, graph)
@@ -286,14 +278,13 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 C.convertPyTree2File(t, 't_'+str(rank)+'.cgns')
 C.convertPyTree2File(tc, 'tc_'+str(rank)+'.cgns')
 
-nit = 1000; time = 0.
-for it in xrange(nit):
+nit = 5000; time = 0.
+for it in range(nit):
     FastSmpi._compute(t, metrics, it, tc, graph)
     #FastSmpi._compute(t, metrics, it)
-    if (rank == 0 and it%50 == 0):
-        print '- %d - %f -'%(it, time); sys.stdout.flush()
+    if rank == 0 and it%50 == 0:
+        print('- %d - %f -'%(it, time)); sys.stdout.flush()
         FastS.display_temporal_criteria(t, metrics, it)
     #time += numz['time_step']
 t1 = C.node2Center(t)
 Cmpi.convertPyTree2File(t1, 't.cgns')
-

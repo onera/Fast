@@ -1,6 +1,5 @@
-#!/bin/sh
+#! /bin/sh
 echo 'Installing Fast tests and doc'
-
 if ([ $# -eq 0 ])
 then
     if [ "$CASSIOPEE" = "" ]; then
@@ -28,7 +27,7 @@ elif ([ $# -eq 2 ])
 then
     PRODUCTION=1
     # Destination docs
-    DEST="$CASSIOPEE/Validation/WWW"
+    DEST="$CASSIOPEE/WWW/fast-web/FAST"
     # Destination tests unitaires
     DEST2="$DEST/Examples/Fast"
     # Destination des release notes
@@ -39,53 +38,75 @@ else
     exit
 fi
 
-# Nom du fichier doc
-DOC=Fast
-
-# Creation des repertoires de destination
-if test ! -e $DEST
-then 
-    mkdir $DEST
-fi
-if test ! -e "$DEST/Examples"
-then 
-    mkdir "$DEST/Examples"
-fi
-if test ! -e $DEST2
-then 
-    mkdir $DEST2
-fi
-if test ! -e $DEST3
-then 
-    mkdir $DEST3
-fi
-
-# copie de la doc html
-cp $DOC.html $DEST
-
-# Production + copie des tests unitaires
+# Copy examples to global dir (production mod)
 if ([ $PRODUCTION -eq 1 ])
 then
-    LOCAL=`pwd`
-    cd $DEST
-    if test ! -e Latex
-    then
-        mkdir Latex
+    if test ! -e $DEST
+    then 
+        mkdir $DEST
     fi
-    python parseDoc.py $DOC.html Latex/$DOC.tex
-    cd Latex ; compile $DOC > out ; cd $LOCAL
-    cp $DEST/Latex/$DOC.pdf .
-else
+    if test ! -e "$DEST/Examples"
+    then 
+        mkdir "$DEST/Examples"
+    fi
+    if test ! -e $DEST2
+    then 
+        mkdir $DEST2
+    fi
+    if test ! -e $DEST3
+    then 
+        mkdir $DEST3
+    fi
+
     cp ../test/*.py $DEST2
-    if test -f $DOC.pdf
-    then
-        cp *.pdf $DEST
-    fi
+fi
+
+# Create Links for Examples (local)
+if test ! -e build
+then
+    mkdir build
+fi
+cd build
+if test ! -e Examples
+then
+    mkdir Examples
+    ln -s $CASSIOPEE/Apps/PModules/Fast/test Examples/Fast
+fi
+cd ..
+
+# Build html
+touch source/*.rst
+sphinx-build -b html ./source ./build
+if ([ $PRODUCTION -eq 1 ])
+then
+# Build pdf
+    sphinx-build -b latex ./source ./build
+    cd build
+    pdflatex Fast >& /dev/null
+    cd ..
+fi
+
+# Copie dans le DEST
+if ([ $PRODUCTION -eq 1 ])
+then
+    taghtml build/Fast.html
+    sed -i 's/Fast.Fast/Fast/g' build/Fast.html
+    cp build/Fast.html $DEST
+    cp build/Fast.pdf $DEST
+    cp -rf source/documents $DEST/
+    # ajoute le search index
+    cp build/searchindex.js $DEST
+    cp build/genindex.html $DEST
+    cp build/py-modindex.html $DEST
+    cp build/search.html $DEST
 fi
 
 # Copie des release Notes
-version=`grep -e __version__ ../Fast/Fast.py`
-version1=${version:15:10}
-version1=${version1/"'"/""}
-v='Fast-'$version1'.txt'
-cp Fast.txt $DEST3/$v
+if ([ $PRODUCTION -eq 1 ])
+then
+    version=`grep -e __version__ ../Fast/Fast.py`
+    version1=${version:15:4}
+    version1=${version1/"'"/""}
+    v='Fast-'$version1'.txt'
+    cp Fast.txt $DEST3/$v
+fi

@@ -2,9 +2,7 @@
             lx2 = l111 + inck
             lx3 = lx1  + inck
 
-            cenx = .25*( x(l111) + x(lx2) + x(lx3) + x(lx1) )
-            ceny = .25*( y(l111) + y(lx2) + y(lx3) + y(lx1) )
-            cenz = .25*( z(l111) + z(lx2) + z(lx3) + z(lx1) )
+#include "FastS/Compute/ALE/target_pt.for"
 
             cax =  rot(1,1)*(cenx - param_real(ROT_CENTER  ))
      &           + rot(1,2)*(ceny - param_real(ROT_CENTER+1))

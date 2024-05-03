@@ -19,26 +19,40 @@ c
                u3 = (rop(l,2)+rop(l1,2))
                u4 = (rop(l,2)+rop(l4,2))
 
+               !dudx
+               dudx  = (   u3*tix1 - u1*tix
+     &                   + u2*tjx1 - u4*tjx  )
+
                !dudy
-               rotz =-(   u3*tiy1 - u1*tiy
+               dudy = (   u3*tiy1 - u1*tiy
      &                  + u2*tjy1 - u4*tjy )
 
                u1 = (rop(l,3)+rop(l2,3))
                u2 = (rop(l,3)+rop(l3,3))
                u3 = (rop(l,3)+rop(l1,3))
                u4 = (rop(l,3)+rop(l4,3))
+               
                !dvdx
-               dudx = (   u3*tix1 - u1*tix
+               dvdx = (   u3*tix1 - u1*tix
      &                  + u2*tjx1 - u4*tjx )
 
-               rotz    = rotz + dudx
+               !dvdy
+               dvdy = (   u3*tiy1 - u1*tiy
+     &                  + u2*tjy1 - u4*tjy )
 
+               rotz    = dvdx - dudy
 
                !! mise a jour rot et auijuij par le volume
                xvol = 0.5/vol(lvo)
                rot     = abs(rotz)* xvol
 
+               S11   = dudx
+               S22   = dvdy
+               S12   = 0.5*(dudy + dvdx)
+               St    = S11**2+S22**2+2*S12**2
+               St    = sqrt(2*St) * xvol
 
+               
                !formulation compressible complete
                u1 = (rop(l,6)+rop(l2,6))
                u2 = (rop(l,6)+rop(l3,6))

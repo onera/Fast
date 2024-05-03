@@ -129,6 +129,12 @@ c
           r_1            = 1./rop_1(l +v1)
 
           rop_1(l +v2)     = (ro_old*u_old + tab2)*r_1
+
+        !if (k==2 .and. j==8 .and. l-lij == 112 .and. ndom==0)
+     &  !then
+        !       print*, 'ro= ', rop_1(l +v1)
+        ! end if
+
           rop_1(l +v3)     = (ro_old*v_old + tab3)*r_1
           rop_1(l +v4)     = (ro_old*w_old + tab4)*r_1
  

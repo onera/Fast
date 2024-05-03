@@ -5,7 +5,7 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine invlu_ale_l_SA(ndom, param_int, param_real,
      &                      ind_loop,
-     &                      drodm,rop,
+     &                      drodm_in,drodm_out,rop,
      &                      ti,tj,tk,venti,ventj,ventk,
      &                      coe)
 c***********************************************************************
@@ -36,7 +36,8 @@ c***********************************************************************
       INTEGER_E ndom, ind_loop(6), param_int(0:*)
  
       REAL_E  param_real(0:*)
-      REAL_E drodm(param_int(NDIMDX),param_int(NEQ))
+      REAL_E drodm_in(param_int(NDIMDX),param_int(NEQ))
+      REAL_E drodm_out(param_int(NDIMDX),param_int(NEQ))
       REAL_E rop(  param_int(NDIMDX),param_int(NEQ))
       REAL_E coe(  param_int(NDIMDX),param_int(NEQ_COE))
 
@@ -53,7 +54,8 @@ c Var loc
      & kddeb,kdfin,ipas,kfin,kdeb,jfin,jdeb,ifin,ideb,
      & l1,l2,lt,lt1,lt2,lij,lv,lv1,lv2,v2ven,v3ven,
      & inci_ven,incj_ven,inck_ven,inci2_ven,incj2_ven,inck2_ven,
-     & inci2_mtr,incj2_mtr,inck2_mtr,inci_mtr,incj_mtr,inck_mtr
+     & inci2_mtr,incj2_mtr,inck2_mtr,inci_mtr,incj_mtr,inck_mtr,
+     & ls,l1s,incis,incjs,incks
 
       REAL_E gam2,gam1,gamm1,cp,xal,diag,
      & b11,b12,b13,b14,b15,b21,b22,b23,b24,b25,b31,b32,b33,b34,b35,b41,
@@ -105,26 +107,30 @@ c Var loc
         kfin  = ind_loop(6)
         jfin  = ind_loop(4)
         ifin  = ind_loop(2)
+
+        incis = inci
+        incjs = incj
+        incks = inck
  
       IF(param_int(ITYPZONE).eq.0) THEN !domaine 3d general
 
-
-
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
-
-#include "FastS/Compute/LU/lu_dinv_SA.for"
+        ls = l
+#include "FastS/Compute/LU/lu_dinv_IO_SA.for"
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
+          ls = l
           lt     = indmtr(i,jdeb,kdeb)
           lv     = indven(i,jdeb,kdeb)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_i_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
         enddo
 
@@ -134,24 +140,29 @@ c Var loc
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
+          ls = l
           lt     = indmtr(ideb,j,kdeb)
           lv     = indven(ideb,j,kdeb)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_j_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
+            ls = l
             lt     = indmtr(i,j,kdeb)
             lv     = indven(i,j,kdeb)
 
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include    "FastS/Compute/LU/lu_j_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
           enddo
         enddo
@@ -160,50 +171,62 @@ c Var loc
         do  k= kdeb+ipas,kfin,ipas
 
           l      =  inddm(ideb,jdeb,k)
+          ls = l
           lt     = indmtr(ideb,jdeb,k)
           lv     = indven(ideb,jdeb,k)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
           !!! Fin plan jdeb 
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
+             ls = l
              lt     = indmtr(i,jdeb,k)
              lv     = indven(i,jdeb,k)
 
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
+             ls = l
              lt     = indmtr(ideb,j,k)
              lv     = indven(ideb,j,k)
 
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_j_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
+               ls = l
                lt= indmtr(i,j,k)
                lv= indven(i,j,k)
 
                 xal    = coe(l,1)*signe
 
 #include       "FastS/Compute/LU/lu_i_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include       "FastS/Compute/LU/lu_j_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
              enddo
           enddo
@@ -216,19 +239,21 @@ c Var loc
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
-
-#include "FastS/Compute/LU/lu_dinv_SA.for"
+        ls = l
+#include "FastS/Compute/LU/lu_dinv_IO_SA.for"
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
+          ls = l
           lt     = indmtr(i,jdeb,kdeb)
           lv     = indven(i,jdeb,kdeb)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_i_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
         enddo
 
@@ -238,24 +263,29 @@ c Var loc
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
+          ls = l
           lt     = indmtr(ideb,j,kdeb)
           lv     = indven(ideb,j,kdeb)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_j_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
+            ls = l
             lt     = indmtr(i,j,kdeb)
             lv     = indven(i,j,kdeb)
 
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include    "FastS/Compute/LU/lu_j_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
           enddo
         enddo
@@ -264,50 +294,62 @@ c Var loc
         do  k= kdeb+ipas,kfin,ipas
 
           l      =  inddm(ideb,jdeb,k)
+          ls = l
           lt     = indmtr(ideb,jdeb,k)
           lv     = indven(ideb,jdeb,k)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
           !!! Fin plan jdeb 
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
+             ls = l
              lt     = indmtr(i,jdeb,k)
              lv     = indven(i,jdeb,k)
 
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
+             ls = l
              lt     = indmtr(ideb,j,k)
              lv     = indven(ideb,j,k)
 
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_j_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
+               ls = l
                lt= indmtr(i,j,k)
                lv= indven(i,j,k)
 
                 xal    = coe(l,1)*signe
 
 #include       "FastS/Compute/LU/lu_i_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include       "FastS/Compute/LU/lu_j_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
              enddo
           enddo
@@ -323,19 +365,22 @@ c Var loc
 
       !!! coin (ideb,jdeb,kdb)
         l = inddm(ideb,jdeb,kdeb)
+        ls = l
         lv= indven(ideb,jdeb,kdeb)
 
-#include "FastS/Compute/LU/lu_dinv_SA.for"
+#include "FastS/Compute/LU/lu_dinv_IO_SA.for"
 
         !!! ligne (jdeb,kdeb) dans le plan kdeb
         do i= ideb+ipas,ifin,ipas
 
           l      = inddm(i,jdeb,kdeb)
+          ls = l
           lv     = indven(i,jdeb,kdeb)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_i_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
         enddo
 
@@ -345,22 +390,27 @@ c Var loc
 
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =  inddm(ideb,j,kdeb)
+          ls = l
           lv     = indven(ideb,j,kdeb)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_j_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,kdeb)
+            ls = l
             lv     = indven(i,j,kdeb)
 
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include    "FastS/Compute/LU/lu_j_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
           enddo
         enddo
@@ -369,46 +419,58 @@ c Var loc
         do  k= kdeb+ipas,kfin,ipas
 
           l      =  inddm(ideb,jdeb,k)
+          ls = l
           lv     = indven(ideb,jdeb,k)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
           !!! Fin plan jdeb 
           do i= ideb+ipas,ifin,ipas
 
              l      =  inddm(i,jdeb,k)
+             ls = l
              lv     = indven(i,jdeb,k)
 
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
 
              l      =  inddm(ideb,j,k)
+             ls = l
              lv     = indven(ideb,j,k)
 
              xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_j_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include    "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
 
              do  i= ideb+ipas,ifin,ipas
       
                l = inddm(i,j,k)
+               ls = l
                lv= indven(i,j,k)
 
                 xal    = coe(l,1)*signe
 
 #include       "FastS/Compute/LU/lu_i_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_SA.for"
 #include       "FastS/Compute/LU/lu_j_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
              enddo
           enddo
@@ -420,43 +482,51 @@ c Var loc
 
       !!! coin (ideb,jdeb,kdb)
           l = inddm(ideb,jdeb,1)
-#include "FastS/Compute/LU/lu_dinv_2d_SA.for"
+          ls     = l
+#include "FastS/Compute/LU/lu_dinv_IO_2d_SA.for"
 
       !!! ligne (jdeb,kdeb) dans le plan kdeb
       do i= ideb+ipas,ifin,ipas
 
           l      =  inddm(i,jdeb,1)
+          ls     = l
           lt     = indmtr(i,jdeb,1)
           lv     = indven(i,jdeb,1)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_i_2d_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_2d_SA.for"
 #include "FastS/Compute/LU/lu_dinv_2d_SA.for"
       enddo
 
       do j= jdeb+ipas,jfin,ipas
 
           l      =  inddm(ideb,j,1)
+          ls     = l
           lt     = indmtr(ideb,j,1)
           lv     = indven(ideb,j,1)
 
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_j_2d_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_2d_SA.for"
 #include "FastS/Compute/LU/lu_dinv_2d_SA.for"
         enddo
       do j= jdeb+ipas,jfin,ipas
           do i= ideb+ipas,ifin,ipas
 
             l      =  inddm(i,j,1)
+            ls     = l
             lt     = indmtr(i,j,1)
             lv     = indven(i,j,1)
 
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_2d_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_IO_2d_SA.for"
 #include    "FastS/Compute/LU/lu_j_2d_SA_ale.for"
+#include "FastS/Compute/LU/mjr_drodm_2d_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_2d_SA.for"
           enddo
         enddo

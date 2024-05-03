@@ -5,7 +5,7 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine cptst3(ndom,nitcfg,nitrun,first_it, lssiter_verif,
      &                  flagCellN, param_int, param_real,
-     &                  ind_sdm, ind_loop,
+     &                  ind_sdm, ind_grad, ind_coe,
      &                  cfl, xmut,rop, cellN, coe, ti,tj,tk, vol,venti)
 c***********************************************************************
 c_U   USER : PECHIER
@@ -31,7 +31,7 @@ c***********************************************************************
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ind_sdm(6),ind_loop(6), param_int(0:*),
+      INTEGER_E ind_sdm(6),ind_grad(6),ind_coe(6), param_int(0:*),
      & ndom,nitcfg,nitrun,lssiter_verif,first_it, flagCellN
  
       REAL_E xmut( param_int(NDIMDX) )
@@ -60,77 +60,50 @@ C Var loc
            if(param_int(ITYPCP).le.1.and.flagCellN.ne.1) then
  
            call tstb3_impli(ndom, first_it, param_int, param_real,
-     &                      ind_loop,
+     &                      ind_coe ,
      &                      rop,coe,xmut,venti,cellN,
      &                      ti,tj,tk,vol)
 
            elseif(param_int(ITYPCP).le.1.and.flagCellN.eq.1) then
 
            call tstb3_impli_chimer(ndom,first_it, param_int, param_real,
-     &                             ind_loop,
+     &                             ind_coe ,
      &                             rop,coe,xmut,venti,cellN,
      &                             ti,tj,tk,vol)
 
            elseif(param_int(ITYPCP).eq.2.and.flagCellN.ne.1) then
 
            call tstb3_expli(ndom, first_it, param_int, param_real,
-     &                      ind_loop,
+     &                      ind_sdm ,
      &                      rop,coe,xmut,venti,cellN,
      &                      ti,tj,tk,vol)
 
            else
            call tstb3_expli_chimer(ndom,first_it, param_int, param_real,
-     &                      ind_loop,
+     &                      ind_sdm ,
      &                      rop,coe,xmut,venti,cellN,
      &                      ti,tj,tk,vol)
            endif
 
-      ! Calcul pas de temps global (dt/vol) 
+      ! Calcul pas de temps global
       ELSE
 
-       If(flagCellN.eq.1) then  !zone chimere
+       if(param_int(ITYPCP).le.1) then  !implicit
 
-         if(param_int(ITYPZONE).ne.2) then !domaine 3d general, domaine 3d k homogene, 2d
+         !! calcul dt/vol
+         call tstb3_global(ndom,flagCellN, param_int, param_real,
+     &                     ind_coe,
+     &                     coe, vol, cellN)
 
-#include     "FastS/Compute/loop_begin.for" 
-             coe(l,1)=param_real(DTC)/vol(lvo)*MIN(cellN(l),2.-cellN(l))
-#include     "FastS/Compute/loop_end.for" 
-           
-         else  
-           volinv = param_real(DTC)/vol(1)
-
-#include     "FastS/Compute/loop_begin.for" 
-              coe(l,1) = volinv*MIN(cellN(l),2.-cellN(l))
-#include     "FastS/Compute/loop_end.for" 
-
-        endif
-
-       Else  ! non chimere
-
-         if(param_int(ITYPZONE).ne.2) then !domaine 3d general, domaine 3d k homogene, 2d
-
-#include     "FastS/Compute/loop_begin.for" 
-               coe(l,1) = param_real(DTC)/vol(lvo)
-#include     "FastS/Compute/loop_end.for" 
-           
-         else            
-           volinv = param_real(DTC)/vol(1)
-
-#include     "FastS/Compute/loop_begin.for" 
-               coe(l,1) = volinv
-#include     "FastS/Compute/loop_end.for" 
-           
-        endif
-
-       Endif !chimere ou pas
-
-       !! calcul coef matrice LU
-       if(param_int(ITYPCP).le.1) then
-
-              !call tstb3c( ndom, nitrun, param_int, param_real,
-              call tstb3c( ndom, first_it, param_int, param_real,
-     &                    ind_loop,
+         !! calcul coef matrice LU
+         call tstb3c( ndom, first_it, param_int, param_real,
+     &                    ind_coe,
      &                    rop, coe, xmut, venti, ti, tj, tk, vol)
+       else
+         !! calcul dt/vol
+         call tstb3_global(ndom,flagCellN, param_int, param_real,
+     &                     ind_sdm,
+     &                     coe, vol, cellN)
        endif
 
       ENDIF  !param_int(DTLOC) ou pas

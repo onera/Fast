@@ -104,11 +104,11 @@ C var loc
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-         do 10 l=ind1,ind2
+         do l=ind1,ind2
 #else
-         do 10 k = ind_loop(5), ind_loop(6)
-         do 10 j = ind_loop(3), ind_loop(4)
-         do 10 i = ind_loop(1), ind_loop(2)
+         do k = ind_loop(5), ind_loop(6)
+         do j = ind_loop(3), ind_loop(4)
+         do i = ind_loop(1), ind_loop(2)
       
            l     = indcg(i,j,k)
 #endif
@@ -116,7 +116,14 @@ CVD$  NODEPCHK
            indap = l + inc
 
            f1(l) = (f0(indap) - f0(indav))*c1
-  10     continue
+           
+#ifndef E_SCALAR_COMPUTER
+         enddo
+#else
+         enddo
+         enddo
+         enddo
+#endif
 
         elseif(iordre.eq.4) then
 
@@ -124,11 +131,11 @@ CVD$  NODEPCHK
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-         do 20 l=ind1,ind2
+         do l=ind1,ind2
 #else
-         do 20 k = ind_loop(5), ind_loop(6)
-         do 20 j = ind_loop(3), ind_loop(4)
-         do 20 i = ind_loop(1), ind_loop(2)
+         do k = ind_loop(5), ind_loop(6)
+         do j = ind_loop(3), ind_loop(4)
+         do i = ind_loop(1), ind_loop(2)
       
            l     = indcg(i,j,k)
 #endif
@@ -139,7 +146,14 @@ CVD$  NODEPCHK
 
            f1(l) = (f0(indap ) - f0(indav ))*c1
      &            +(f0(indap2) - f0(indav2))*c2
- 20      continue
+
+#ifndef E_SCALAR_COMPUTER
+         enddo
+#else
+         enddo
+         enddo
+         enddo
+#endif
 
         elseif(iordre.eq.6) then
 
@@ -147,11 +161,11 @@ CVD$  NODEPCHK
 CDIR$ IVDEP
 !CDIR NODEP
 CVD$  NODEPCHK
-         do 30 l=ind1,ind2
+         do l=ind1,ind2
 #else
-         do 30 k = ind_loop(5), ind_loop(6)
-         do 30 j = ind_loop(3), ind_loop(4)
-         do 30 i = ind_loop(1), ind_loop(2)
+         do k = ind_loop(5), ind_loop(6)
+         do j = ind_loop(3), ind_loop(4)
+         do i = ind_loop(1), ind_loop(2)
       
            l     = indcg(i,j,k)
 #endif
@@ -165,7 +179,14 @@ CVD$  NODEPCHK
            f1(l) = (f0(indap ) - f0(indav ))*c1
      &            +(f0(indap2) - f0(indav2))*c2
      &            +(f0(indap3) - f0(indav3))*c3
- 30      continue
+
+#ifndef E_SCALAR_COMPUTER
+         enddo
+#else
+         enddo
+         enddo
+         enddo
+#endif
 
         else 
          call error('derdf_xyz$',70,1)

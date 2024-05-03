@@ -260,14 +260,14 @@ CDIR$ VECTOR NONTEMPORAL (coe)
            tc2j = sqrt( tcyj*tcyj )
            tc2k = sqrt( tczk*tczk )
  
-           do 102 k = ind_loop(5), ind_loop(6)
-           do 102 j = ind_loop(3), ind_loop(4)
+           do k = ind_loop(5), ind_loop(6)
+           do j = ind_loop(3), ind_loop(4)
 
             lij  = inddm(ind_loop(1) , j, k)
 
 CDIR$ VECTOR NONTEMPORAL (coe)
 CDIR$ IVDEP
-            do 102 l = lij,  lij + ind_loop(2) - ind_loop(1)
+            do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
 #ifndef E_SCALAR_COMPUTER
                r   = max(rop(l ,1),cut0x)
@@ -312,8 +312,9 @@ CDIR$ IVDEP
 c               coe(l,5)= xid + coe(l,1)*( vmi + vmj + vmk 
 c     &                     + 2.*xmvis*(tc2i*tc2i+tc2j*tc2j+tc2k*tc2k))
 
-102    continue
-
+         enddo
+         enddo
+         enddo
 
          else !maillage fixe, 2d
 
@@ -582,14 +583,14 @@ CDIR$ VECTOR NONTEMPORAL (coe)
            tc2j = sqrt( tcyj*tcyj )
            tc2k = sqrt( tczk*tczk )
  
-           do 202 k = ind_loop(5), ind_loop(6)
-           do 202 j = ind_loop(3), ind_loop(4)
+           do k = ind_loop(5), ind_loop(6)
+           do j = ind_loop(3), ind_loop(4)
 
             lij   =       inddm(ind_loop(1) , j, k)
             lvij  = lij - indven(ind_loop(1) , j, k)
 
 CDIR$ IVDEP
-            do 202 l = lij,  lij + ind_loop(2) - ind_loop(1)
+            do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
                lv = l-lvij
                !-Vitesse entrainement moyenne au centre de la cellule (maillage indeformable)
@@ -636,8 +637,10 @@ CDIR$ IVDEP
                !Evaluation de la diagonale princi_mtrpale scalaire (5*5) pour la cellule l
                !Id+Partie convective precedente+Partie visqueuse
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
-202    continue
 
+              enddo
+             enddo
+             enddo
 
          else !maillage mobile, 2d
 

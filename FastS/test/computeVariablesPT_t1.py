@@ -12,6 +12,7 @@ a1 = G.cart((-50,-50,0.), (dx,dx,dz), (ni,ni,2))
 a1 = C.fillEmptyBCWith(a1, 'far', 'BCFarfield', dim=2)
 a1 = I.initConst(a1, MInf=0.4, loc='centers')
 a1 = C.addState(a1, 'GoverningEquations', 'Euler')
+a1 = C.addState(a1, 'EquationDimension', 2)
 a1 = C.addState(a1, MInf=0.4)
 t = C.newPyTree(['Base', a1])
 
@@ -37,4 +38,7 @@ for it in range(1,200):
 # Save
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
+
+#on supprime ghost de l'arbre effort car valeur non initialisee
+t = FastS.rmGhostCells(t,2,1)
 test.testT(t, 1)

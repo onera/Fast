@@ -5,8 +5,6 @@ import Converter.PyTree as C
 import Initiator.PyTree as I
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
-import Post.PyTree as P
-import KCore.Adim as Adim
 import KCore.test as test
 import Converter.Internal as Internal
 
@@ -24,7 +22,7 @@ numb["temporal_scheme"]    = "explicit"
 numb["ss_iteration"]       = 20
 numz = {}
 #numz["omp"]                = "scater"
-numz["io_thread"]          =    11
+#numz["io_thread"]          = 11
 numz["time_step"]          = 0.01
 numz["scheme"]             = "ausmpred"
 t = C.addState(t, 'GoverningEquations', 'NSLaminar')
@@ -35,10 +33,10 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 nit = 50; time = 0.
 timeStep = numz['time_step']
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
-    if (it%100 == 0):
-        print '- %d - %g'%(it, time)
+    if it%100 == 0:
+        print('- %d - %g'%(it, time))
     time += timeStep
 
 Internal._rmNodesByName(t, '.Solver#Param')

@@ -1,5 +1,5 @@
 /*    
-    Copyright 2013-2018 Onera.
+    Copyright 2013-2024 Onera.
 
     This file is part of Cassiopee.
 
@@ -18,8 +18,8 @@
 */
 
 
-# include "fastS.h"
-# include "param_solver.h"
+# include "FastS/fastS.h"
+# include "FastS/param_solver.h"
 # include "string.h"
 #ifdef _OPENMP
 # include <omp.h>
@@ -122,8 +122,8 @@ PyObject* K_FASTS::_movegrid(PyObject* self, PyObject* args)
              ipt_ind_dm_thread[5]= ipt_param_int[nd][IJKV+2];
 
              // Distribution de la sous-zone sur les threads
-             E_Int type_decoup =2;
-             indice_boucle_lu_(nd, ithread, Nbre_thread_actif, type_decoup,
+             E_Int lmin =4;
+             indice_boucle_lu_(nd, ithread, Nbre_thread_actif, lmin,
                                ipt_ind_dm_thread, 
                                ipt_topology_thread, ind_mtr );
 

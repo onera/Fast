@@ -4,9 +4,12 @@ c.....Metrique
 
         nm  = l -  inci
         nm2 = l -2*inci
+        nm3 = l -3*inci
         np  = l +  inci
+        np2 = l +2*inci
 
 ! pente (qm) a l'interface droite et  (qp) a l'interface gauche
+        c    = wig(l+sl_i)     !SC only
         vslp = v1
 #include  "FastS/Compute/Slope/o3_slope_var.for"
         qm1 = qm

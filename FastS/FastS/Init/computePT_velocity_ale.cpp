@@ -1,5 +1,5 @@
 /*    
-    Copyright 2013-2018 Onera.
+    Copyright 2013-2024 Onera.
 
     This file is part of Cassiopee.
 
@@ -18,8 +18,8 @@
 */
 
 
-# include "fastS.h"
-# include "param_solver.h"
+# include "FastS/fastS.h"
+# include "FastS/param_solver.h"
 # include "string.h"
 #ifdef _OPENMP
 # include <omp.h>
@@ -33,8 +33,12 @@ using namespace K_FLD;
 PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
 {
     PyObject* zones; PyObject* metrics; PyObject* work;
-    if (!PyArg_ParseTuple(args, "OOO", &zones , &metrics, &work)) 
-      return NULL;
+    E_Int omp_mode;
+#if defined E_DOUBLEINT
+  if (!PyArg_ParseTuple(args, "OOOl", &zones , &metrics, &work, &omp_mode)) return NULL; 
+#else 
+  if (!PyArg_ParseTuple(args, "OOOi", &zones , &metrics, &work, &omp_mode)) return NULL;
+#endif
 
     /* tableau pour stocker dimension sous-domaine omp */
     E_Int threadmax_sdm = 1;
@@ -42,7 +46,14 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
     threadmax_sdm  = omp_get_max_threads();
 #endif
 
-    PyObject* tmp = PyList_GetItem(work, 8); E_Int mx_synchro    = PyLong_AsLong(tmp); 
+  PyObject* tmp = PyDict_GetItemString(work,"MX_SYNCHRO"); E_Int mx_synchro = PyLong_AsLong(tmp); 
+            tmp = PyDict_GetItemString(work,"MX_SSZONE");  //E_Int mx_sszone  = PyLong_AsLong(tmp);
+
+  PyObject* dtlocArray  = PyDict_GetItemString(work,"dtloc"); FldArrayI* dtloc;
+  K_NUMPY::getFromNumpyArray(dtlocArray, dtloc, true); E_Int* iptdtloc  = dtloc->begin();
+  E_Int nssiter = iptdtloc[0];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
 
   E_Int nidom        = PyList_Size(zones);
   E_Int ndimdx       = 0;
@@ -127,7 +138,7 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
 
    if( ipt_param_int[nd][ NDIMDX ] > ndimdx ){ ndimdx = ipt_param_int[nd][ NDIMDX ]; } 
   }
-  
+
 //
 //  
 //  Reservation tableau travail temporaire pour calcul du champ N+1
@@ -137,15 +148,13 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
   //FldArrayI compteur(     threadmax_sdm); E_Int* ipt_compteur   =  compteur.begin();
   FldArrayI ijkv_sdm(   3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(   3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
-  FldArrayI ind_sdm(    6*threadmax_sdm); E_Int* ipt_ind_sdm    =  ind_sdm.begin();
-  FldArrayI ind_coe(    6*threadmax_sdm); E_Int* ipt_ind_coe    =  ind_coe.begin();
-  FldArrayI ind_grad(   6*threadmax_sdm); E_Int* ipt_ind_grad   =  ind_grad.begin();
   FldArrayI ind_dm(     6*threadmax_sdm); E_Int* ipt_ind_dm     =  ind_dm.begin();
   FldArrayI ind_dm_omp(12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
   // Tableau de travail verrou omp
-  PyObject* lokArray = PyList_GetItem(work,3); FldArrayI* lok;
+  PyObject* lokArray = PyDict_GetItemString(work,"verrou_omp"); FldArrayI* lok;
   K_NUMPY::getFromNumpyArray(lokArray, lok, true); E_Int* ipt_lok  = lok->begin();
+
 
 #pragma omp parallel default(shared)
   {
@@ -156,72 +165,75 @@ PyObject* K_FASTS::computePT_velocity_ale(PyObject* self, PyObject* args)
     E_Int ithread = 1;
     E_Int Nbre_thread_actif = 1;
 #endif
-   E_Int Nbre_socket   = NBR_SOCKET;                       // nombre de proc (socket) sur le noeud a memoire partagee
-   if( Nbre_thread_actif < Nbre_socket ) Nbre_socket = 1;
-
-   E_Int thread_parsock  =  Nbre_thread_actif/Nbre_socket;
-   E_Int socket          = (ithread-1)/thread_parsock +1;
-   //E_Int  ithread_sock   = ithread-(socket-1)*thread_parsock;
-
-        for (E_Int nd = 0; nd < nidom; nd++)
-          {
-             E_Int l =  nd*mx_synchro*Nbre_thread_actif  + (ithread-1)*mx_synchro;
-             for (E_Int i = 0;  i < mx_synchro ; i++)
-                { ipt_lok[ l + i ]  = 0; }
-          }
-          #pragma omp barrier
+# include "FastC/HPC_LAYER/INFO_SOCKET.h"
 
       //
       //---------------------------------------------------------------------
       // -----Boucle sur num.les domaines de la configuration
       // ---------------------------------------------------------------------
-        for (E_Int nd = 0; nd < nidom; nd++)
-          {  
+      
+      E_Int nitcfg =1;
 
-            E_Int ndo   = nd; 
-            
-            E_Int* ipt_lok_thread   = ipt_lok   + nd*mx_synchro*Nbre_thread_actif;
-            
-            E_Int* ipt_ind_dm_loc         = ipt_ind_dm         + (ithread-1)*6;
-            ipt_ind_dm_loc[0] = 1;
-            ipt_ind_dm_loc[2] = 1;
-            ipt_ind_dm_loc[4] = 1;
-            ipt_ind_dm_loc[1] = ipt_param_int[nd][ IJKV];
-            ipt_ind_dm_loc[3] = ipt_param_int[nd][ IJKV+1];
-            ipt_ind_dm_loc[5] = ipt_param_int[nd][ IJKV+2];
+      E_Int nbtask = ipt_omp[nitcfg-1]; 
+      E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
 
-            E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
-            E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
-            E_Int* ipt_ind_sdm_thread     = ipt_ind_sdm        + (ithread-1)*6;
-            E_Int* ipt_ind_coe_thread     = ipt_ind_coe        + (ithread-1)*6;
-            E_Int* ipt_ind_grad_thread    = ipt_ind_grad       + (ithread-1)*6;
-            E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
-            E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
+      //printf("ntask %d %d \n", nbtask, 9 + nssiter +nitcfg-1);
 
-             // Distribution de la sous-zone sur les threads
-             //E_Int type_decoup =2;
-             indice_boucle_lu_(ndo, socket , Nbre_socket, ipt_param_int[nd][ ITYPCP ],
-                              ipt_ind_dm_loc, 
-                              ipt_topology_socket, ipt_ind_dm_socket );
+      for (E_Int ntask = 0; ntask < nbtask; ntask++)
+        {
+           E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+           E_Int nd = ipt_omp[ pttask ];
 
-             init_ventijk_( nd, nidom,  Nbre_thread_actif, ithread, Nbre_socket, socket, mx_synchro,
+           E_Int* ipt_ind_dm_loc         = ipt_ind_dm         + (ithread-1)*6;
+           ipt_ind_dm_loc[0] = 1;
+           ipt_ind_dm_loc[2] = 1;
+           ipt_ind_dm_loc[4] = 1;
+           ipt_ind_dm_loc[1] = ipt_param_int[nd][ IJKV];
+           ipt_ind_dm_loc[3] = ipt_param_int[nd][ IJKV+1];
+           ipt_ind_dm_loc[5] = ipt_param_int[nd][ IJKV+2];
+
+           E_Int* ipt_topology_socket    = ipt_topology       + (ithread-1)*3; 
+           E_Int* ipt_ijkv_sdm_thread    = ipt_ijkv_sdm       + (ithread-1)*3; 
+           E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
+
+           // Distribution de la sous-zone sur les threads
+           E_Int lmin =10;
+	   if (ipt_param_int[nd][ITYPCP] == 2) lmin = 4;
+
+           E_Int* ipt_topo_omp; E_Int* ipt_inddm_omp;
+           E_Int ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+           //E_Int nd_subzone            = ipt_omp[ pttask + 1 ];
+           E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+           ipt_topo_omp                = ipt_omp + pttask + 3 + Nbre_thread_actif ;
+           ipt_inddm_omp               = ipt_omp + pttask + 6 + Nbre_thread_actif + (ithread_loc-1)*6;
+
+           if (ithread_loc == -1) { continue;}
+
+           indice_boucle_lu_(nd, socket , Nbre_socket, lmin,
+                             ipt_ind_dm_loc, 
+                             ipt_topology_socket, ipt_ind_dm_socket );
+
+
+           E_Int* ipt_lok_thread   = ipt_lok   + ntask*mx_synchro*Nbre_thread_actif;
+
+           init_ventijk_( nd, nidom,  Nbre_thread_actif_loc, ithread_loc, Nbre_socket, socket, mx_synchro,
                           ipt_param_int[nd], ipt_param_real[nd],
                           ipt_ijkv_sdm_thread,
-                          ipt_ind_sdm_thread, ipt_ind_coe_thread, ipt_ind_grad_thread, 
-                          ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_ind_dm_omp_thread,
-                          ipt_topology_socket, ipt_lok_thread ,
+                          ipt_ind_dm_loc, ipt_ind_dm_socket,
+                          ipt_topology_socket, ipt_lok_thread , ipt_topo_omp, ipt_inddm_omp,
                           ipti[nd]    , iptj[nd]    , iptk[nd]    , iptvol[nd]  ,
                           ipti_df[nd] , iptj_df[nd] , iptk_df[nd] ,
                           iptventi[nd], iptventj[nd], iptventk[nd], iptx[nd], ipty[nd], iptz[nd] );
 
           }// boucle zone 
+# include "FastC/HPC_LAYER/INIT_LOCK.h"
   }  // zone OMP
 
 
   delete [] ipt_param_real;
   delete [] ipt_param_int;
 
-  RELEASESHAREDN( lokArray  , lok  );
+  RELEASESHAREDN( lokArray    , lok  );
   RELEASEHOOK(hook)
 
   Py_INCREF(Py_None);

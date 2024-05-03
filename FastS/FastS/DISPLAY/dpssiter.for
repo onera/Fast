@@ -4,7 +4,7 @@ c     $Revision: 59 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine dpssiter(nitrun, neq, nssiter_loc, iflw, iles, lft,
-     &   zone_name, size_name, rdm, cvg_ptr)
+     &   iverb, zone_name, size_name, rdm, cvg_ptr)
 c***********************************************************************
 c_U   USER : PECHIER
 c
@@ -22,13 +22,12 @@ c UTILISATION
 c                    display ss_iteration +ndoms
 c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       implicit none
-#define ALOG10 LOG10
-      INTEGER_E nitrun, neq,nssiter_loc,lft,iles,iflw,size_name
-      REAL_E rdm(nssiter_loc,neq,2), cvg_ptr(2*neq)
+      INTEGER_E nitrun, neq,nssiter_loc,lft,iles,iflw,size_name,iverb
+      REAL_E rdm(nssiter_loc,neq,2), cvg_ptr(4*neq)
 
       character(len=size_name) zone_name 
 c Var loc
-      INTEGER_E ndm,i,ne,last_it,iverbs_loc,
+      INTEGER_E ndm,i,ne,last_it,iverbs_loc,it_reelle(nssiter_loc),
      &     nitcfg,ndsdm,i_loc,itest,ii,ipass,inds
       REAL_E xro,xrou,xrov,xrow,xroe,xro1,xrou1,xrov1,xrow1,xroe1,
      &     xnut,xnut1,test,test1, cut0x
@@ -42,7 +41,7 @@ c-----Boucle sur les domaines :
 
       last_it = nssiter_loc
     
-      iverbs_loc  = 0
+      iverbs_loc  = iverb
       do ii = 1,neq
          if (rdm(last_it,ii,2).gt.rdm(1,ii,2)) iverbs_loc = 2
       enddo
@@ -51,9 +50,9 @@ c        i_loc = 1
 c        do ii = 1, Niter_max - 1
 c
 c            itest = iskip_lu(Niter_max - 1, ii) + 3
-c         
+cc         
 c            if(itest.le. last_it - 1 ) then
-c 
+cc 
 c              it_reelle(i_loc) = ii
 c              i_loc            = i_loc + 1
 c            endif
@@ -72,18 +71,18 @@ c     &       write(*,'(a18,4i5)')'WARNING dpssiter, nidom_loc=',
 c     &        nidom_loc(nitcfg),nitcfg,im
 
            !Norme L2
-           xro   = ALOG10(max(rdm(i,1,1),cut0x)) 
-           xrou  = ALOG10(max(rdm(i,2,1),cut0x)) 
-           xrov  = ALOG10(max(rdm(i,3,1),cut0x)) 
-           xrow  = ALOG10(max(rdm(i,4,1),cut0x)) 
-           xroe  = ALOG10(max(rdm(i,5,1),cut0x))
+           xro   = LOG10(max(rdm(i,1,1),cut0x)) 
+           xrou  = LOG10(max(rdm(i,2,1),cut0x)) 
+           xrov  = LOG10(max(rdm(i,3,1),cut0x)) 
+           xrow  = LOG10(max(rdm(i,4,1),cut0x)) 
+           xroe  = LOG10(max(rdm(i,5,1),cut0x))
 c            
 c          !Norme Loo
-           xro1  = ALOG10(max(rdm(i,1,2),cut0x)) 
-           xrou1 = ALOG10(max(rdm(i,2,2),cut0x)) 
-           xrov1 = ALOG10(max(rdm(i,3,2),cut0x)) 
-           xrow1 = ALOG10(max(rdm(i,4,2),cut0x)) 
-           xroe1 = ALOG10(max(rdm(i,5,2),cut0x))
+           xro1  = LOG10(max(rdm(i,1,2),cut0x)) 
+           xrou1 = LOG10(max(rdm(i,2,2),cut0x)) 
+           xrov1 = LOG10(max(rdm(i,3,2),cut0x)) 
+           xrow1 = LOG10(max(rdm(i,4,2),cut0x)) 
+           xroe1 = LOG10(max(rdm(i,5,2),cut0x))
 
            !IF(iverbs_loc.le.1) THEN
 
@@ -91,16 +90,18 @@ c          !Norme Loo
 
               if(iflw.eq.3.and.iles.eq.0)  then
 
-                xnut  = ALOG10(max(rdm(i,6,1),cut0x)) !Norme L2
-                xnut1 = ALOG10(max(rdm(i,6,2),cut0x)) !Norme Loo
+                xnut  = LOG10(max(rdm(i,6,1),cut0x)) !Norme L2
+                xnut1 = LOG10(max(rdm(i,6,2),cut0x)) !Norme Loo
                 if(lft.eq.0) then
-                 write(*,3011)zone_name,i,xro ,xrou,xrov ,xrow,xroe,xnut
+                 write(*,3011)zone_name,i,xro,xrou,xrov,xrow,xroe,xnut
+c     &                       ,it_reelle(i)
                  write(*,4011)zone_name,i,xro1,xrou1,xrov1,xrow1,xroe1,
-     &                        xnut1
+     &                        xnut1!, it_reelle(i)
                 else
-                 write(*,3311)zone_name,i,xro,xrou,xrov,xrow,xroe ,xnut 
+                 write(*,3311)zone_name,i,xro,xrou,xrov,xrow,xroe ,xnut
+c     &                       ,it_reelle(i)
                  write(*,4311)zone_name,i,xro1,xrou1,xrov1,xrow1,xroe1,
-     &                        xnut1
+     &                        xnut1!, it_reelle(i)
                 endif
               else
 
@@ -118,34 +119,34 @@ c          !Norme Loo
 
              if(i==last_it)then
               !Norme L2
-              xro   = ALOG10(max(rdm(last_it,1,1),cut0x))
-     &              - ALOG10(max(rdm(      1,1,1),cut0x))
-              xrou  = ALOG10(max(rdm(last_it,2,1),cut0x))
-     &              - ALOG10(max(rdm(      1,2,1),cut0x)) 
-              xrov  = ALOG10(max(rdm(last_it,3,1),cut0x))
-     &              - ALOG10(max(rdm(      1,3,1),cut0x)) 
-              xrow  = ALOG10(max(rdm(last_it,4,1),cut0x)) 
-     &              - ALOG10(max(rdm(      1,4,1),cut0x))
-              xroe  = ALOG10(max(rdm(last_it,5,1),cut0x))
-     &              - ALOG10(max(rdm(      1,5,1),cut0x))
+              xro   = LOG10(max(rdm(last_it,1,1),cut0x))
+     &              - LOG10(max(rdm(      1,1,1),cut0x))
+              xrou  = LOG10(max(rdm(last_it,2,1),cut0x))
+     &              - LOG10(max(rdm(      1,2,1),cut0x)) 
+              xrov  = LOG10(max(rdm(last_it,3,1),cut0x))
+     &              - LOG10(max(rdm(      1,3,1),cut0x)) 
+              xrow  = LOG10(max(rdm(last_it,4,1),cut0x)) 
+     &              - LOG10(max(rdm(      1,4,1),cut0x))
+              xroe  = LOG10(max(rdm(last_it,5,1),cut0x))
+     &              - LOG10(max(rdm(      1,5,1),cut0x))
 c
               !Norme Loo
-              xro1  = ALOG10(max(rdm(last_it,1,2),cut0x))
-     &              - ALOG10(max(rdm(      1,1,2),cut0x))
-              xrou1 = ALOG10(max(rdm(last_it,2,2),cut0x))
-     &              - ALOG10(max(rdm(      1,2,2),cut0x)) 
-              xrov1 = ALOG10(max(rdm(last_it,3,2),cut0x))
-     &              - ALOG10(max(rdm(      1,3,2),cut0x)) 
-              xrow1 = ALOG10(max(rdm(last_it,4,2),cut0x)) 
-     &              - ALOG10(max(rdm(      1,4,2),cut0x))
-              xroe1 = ALOG10(max(rdm(last_it,5,2),cut0x))
-     &              - ALOG10(max(rdm(      1,5,2),cut0x))
+              xro1  = LOG10(max(rdm(last_it,1,2),cut0x))
+     &              - LOG10(max(rdm(      1,1,2),cut0x))
+              xrou1 = LOG10(max(rdm(last_it,2,2),cut0x))
+     &              - LOG10(max(rdm(      1,2,2),cut0x)) 
+              xrov1 = LOG10(max(rdm(last_it,3,2),cut0x))
+     &              - LOG10(max(rdm(      1,3,2),cut0x)) 
+              xrow1 = LOG10(max(rdm(last_it,4,2),cut0x)) 
+     &              - LOG10(max(rdm(      1,4,2),cut0x))
+              xroe1 = LOG10(max(rdm(last_it,5,2),cut0x))
+     &              - LOG10(max(rdm(      1,5,2),cut0x))
            
               if(neq.eq.6) then
-                 xnut  = ALOG10(max(rdm(last_it,6,1),cut0x))
-     &                 - ALOG10(max(rdm(      1,6,1),cut0x))
-                 xnut1 = ALOG10(max(rdm(last_it,6,2),cut0x))
-     &                 - ALOG10(max(rdm(      1,6,2),cut0x))
+                 xnut  = LOG10(max(rdm(last_it,6,1),cut0x))
+     &                 - LOG10(max(rdm(      1,6,1),cut0x))
+                 xnut1 = LOG10(max(rdm(last_it,6,2),cut0x))
+     &                 - LOG10(max(rdm(      1,6,2),cut0x))
 
                  if(lft.eq.0) then
                   write(*,3021)zone_name,last_it,xro,xrou,xrov,xrow,
@@ -161,12 +162,12 @@ c
 
                  test =max(xro,xrou,xrov,xrow,xroe,xnut)
                  if(test.gt.0)
-     &           write(*,'(a,a,a,i5,a,f12.5)')'Warning convergence
+     &           write(*,'(a,a,a,i6,a,f12.5)')'Warning convergence
      &             L2  Newton: dom=',zone_name,
      &             ' Pas de temps=',nitrun,' divergence=',test
                  test1=max(xro1,xrou1,xrov1,xrow1,xroe1,xnut1)
                  if(test1.gt.0)
-     &           write(*,'(a,a,a,i5,a,f12.5)')'Warning convergence
+     &           write(*,'(a,a,a,i6,a,f12.5)')'Warning convergence
      &             Loo Newton: dom=',zone_name,
      &          ' Pas de temps=',nitrun,' divergence=',test1
 
@@ -184,12 +185,12 @@ c
  
                 test =max(xro,xrou,xrov,xrow,xroe)
                 if(test.gt.0)
-     &           write(*,'(a,a,a,i5,a,f12.5)')'Warning convergence
+     &           write(*,'(a,a,a,i6,a,f12.5)')'Warning convergence
      &             L2  Newton: dom=',zone_name,' Pas de temps=',nitrun,
      &             ' divergence=', test
                 test1=max(xro1,xrou1,xrov1,xrow1,xroe1)
                 if(test1.gt.0)
-     &           write(*,'(a,a,a,i5,a,f12.5)')'Warning convergence
+     &           write(*,'(a,a,a,i6,a,f12.5)')'Warning convergence
      &             Loo Newton: dom=',zone_name,' Pas de temps=',nitrun,
      &            ' divergence=',test1
 
@@ -199,10 +200,17 @@ c
  2        continue
 C
       endif
-          do ne=1,neq
-          cvg_ptr(ne)     = ALOG10(max(rdm(1,ne,1),cut0x))
-          cvg_ptr(neq+ne) = ALOG10(max(rdm(1,ne,2),cut0x))
-          enddo
+      do ne=1,neq
+            cvg_ptr(ne)     = LOG10(max(rdm(1,ne,1),cut0x))
+            cvg_ptr(neq+ne) = LOG10(max(rdm(1,ne,2),cut0x))
+
+            cvg_ptr(2*neq+ne) = LOG10(max(rdm(last_it,ne,1),cut0x))
+     &                        - LOG10(max(rdm(      1,ne,1),cut0x)) 
+            cvg_ptr(3*neq+ne) = LOG10(max(rdm(last_it,ne,2),cut0x))
+     &                        - LOG10(max(rdm(      1,ne,2),cut0x))         
+ 
+
+      enddo
 C
 
 
@@ -210,16 +218,7 @@ C
 2000  format('  Zone  =',a,' / Ss-Iteration',i3)
 2001  format('  Zone  =',a,' / Diff SsI 1 -',i3)
 
-3000  format('  Residus L2 (log) : ',5(2x,f14.9))
-4000  format('  Residus Loo(log) : ',5(2x,f14.9))
-3001  format('  Residus L2 (log) : ',6(2x,f14.9))
-4001  format('  Residus Loo(log) : ',6(2x,f14.9))
-3300  format('  Residus L2 (log) : ',5(2x,f7.2))
-4300  format('  Residus Loo(log) : ',5(2x,f7.2))
-3301  format('  Residus L2 (log) : ',6(2x,f7.2))
-4301  format('  Residus Loo(log) : ',6(2x,f7.2))
-
-3010  format(' Res_L2 (zone=',a,', ssiter =   ',i3,')',5(2x,f14.9))
+3010  format(' Res_L2 (zone=',a,', ssiter =   ',i3,')',5(2x,f14.9)) 
 4010  format(' Res_Loo(zone=',a,', ssiter =   ',i3,')',5(2x,f14.9))
 3011  format(' Res_L2 (zone=',a,', ssiter =   ',i3,')',6(2x,f14.9))
 4011  format(' Res_Loo(zone=',a,', ssiter =   ',i3,')',6(2x,f14.9))

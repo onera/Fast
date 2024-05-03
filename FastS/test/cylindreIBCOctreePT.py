@@ -9,7 +9,7 @@ import numpy
 import Dist2Walls.PyTree as DTW
 import Transform.PyTree as T
 import Initiator.PyTree as I
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import CPlot.PyTree as CPlot
 import Converter.Internal as Internal
@@ -75,7 +75,7 @@ if restart == False:
     t = C.addState(t, 'GoverningEquations', 'Euler')
     t = C.addState(t, MInf=MInf, alphaZ=alpha)
     t = I.initConst(t, MInf=MInf, alphaZ=alpha, loc='centers')
-    Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
+    FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
     #C.convertPyTree2File(t, 'out.cgns') ; sys.exit()
     C.convertPyTree2File(t ,"mesh.cgns")
     C.convertPyTree2File(tc, "tc.cgns")
@@ -89,6 +89,6 @@ nit = 1001
 for it in xrange(nit):
     FastS._compute(t, metrics, nit, tc)
     if it%100 == 0:
-        print '- %d -'%it ; sys.stdout.flush()
+        print('- %d -'%it); sys.stdout.flush()
         CPlot.display(t, dim=2, mode=3, scalarField=1)
 C.convertPyTree2File(t, "out.cgns")

@@ -6,7 +6,6 @@ import FastS.PyTree as FastS
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import KCore.test as test
-import sys
 
 t = C.convertFile2PyTree('Pplane_136_96.cgns')
 t = C.addState(t, MInf=0.2, ReInf=25.e6, MutSMuInf=15)
@@ -18,18 +17,16 @@ numz = { 'ssdom_IJK': [600, 30, 20000],
          'cfl': 7., 
          'scheme':'ausmpred', 
          'epsi_newton': 0.5}
-Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
+Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
-FastS._applyBC(t, metrics)
-
 nit = 500; time = 0.
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, it)
-    if (it%50 == 0):
-        print '- %d - %g'%(it, time)
-        FastS.display_temporal_criteria(t, metrics, it)
+    if it%50 == 0:
+        print('- %d - %g'%(it, time))
+        FastS.displayTemporalCriteria(t, metrics, it)
     time += numz['time_step']
 
 Internal._rmNodesByName(t, '.Solver#Param')

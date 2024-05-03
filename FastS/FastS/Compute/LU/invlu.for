@@ -4,144 +4,341 @@ c     $Revision: 40 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine invlu(ndo, nitcfg, nitrun, param_int, param_real,
-     &                 ind_loop_lu,
-     &                 rotmp,rop_ssiter,
-     &                 drodm,
-     &                 ti,tj,tk,
-     &                 venti,ventj,ventk,
-     &                 coe)
+     &     ind_loop_lu, ind_loop_sdm, mjrnewton,
+     &     rotmp,rop_ssiter,
+     &     drodm_in, drodm_out,
+     &     ti,tj,tk,
+     &     venti,ventj,ventk,
+     &     coe, ssor, ssor_size)
 c***********************************************************************
-c_U   USER : PECHIER 
-c_U   USER : DECK
+c     _U   USER : PECHIER 
+c     _U   USER : DECK
 c     ACT
-c_A      Factorisation LU
-c        LU+SSOR pour Spalart Allmaras
+c     _A      Factorisation LU
+c     LU+SSOR pour Spalart Allmaras
 c     VAL
-c_V      LCI + Jameson-Turkel
+c     _V      LCI + Jameson-Turkel
 c     I/O
-c_/    rop_ssiter
+c     _/    rop_ssiter
 c***********************************************************************
       implicit none
 
 #include "FastS/param_solver.h"
 
-      INTEGER_E ndo, nitcfg, nitrun, ind_loop_lu(6), param_int(0:*)
+      INTEGER_E ndo, nitcfg, nitrun, ind_loop_lu(6), param_int(0:*),
+     &     mjrnewton, ssor_size, ind_loop_sdm(6)
 
-      REAL_E rotmp(*),rop_ssiter(*),drodm(*),coe(*)
+      REAL_E rotmp(*),rop_ssiter(*),coe(*),drodm_out(*)
       REAL_E ti(*),tj(*),tk(*),venti(*), ventj(*),ventk(*)
+      REAL_E ssor(ssor_size, param_int(NEQ)), 
+     &     drodm_in(param_int(NDIMDX), param_int(NEQ))
       REAL_E param_real(0:*)
 
-c Var loc
-      INTEGER_E lSA
+c     Var loc
+      INTEGER_E lSA, lussor_end, m, k, j, lij, ls, i, l, depth, mjr_ssor
       logical llower
 
-      ! on blinde si pas assez de travail pour tous les threads
-      if(ind_loop_lu(2).lt.ind_loop_lu(1)) return
+#include "FastS/formule_param.h"
+#include "FastS/formule_ssor_param.h"
+! on blinde si pas assez de travail pour tous les threads
 
+      if(ind_loop_lu(2).lt.ind_loop_lu(1)) return
       lSA           = 0
+      depth         = 1
       if(param_int(IFLOW).eq.3.and.param_int(ILES).eq.0) lSA= 1
 
-      ! domaine fixe
-      IF(param_int(LALE).eq.0) THEN
+      IF (param_int(NB_RELAX) == 1) THEN
+         
+       !write(*,*)'lu', ind_loop_lu
+       !write(*,*)'sdm',ind_loop_sdm
+! domaine fixe
+         If(param_int(LALE).eq.0) Then
 
-        if(lSA.eq.1) Then
+            if(lSA.eq.1) Then
 
-        !lower
-        call invlu_l_SA(ndo, param_int, param_real, ind_loop_lu,
-     &                  drodm,rop_ssiter,
-     &                  ti,tj,tk,
-     &                  coe)
-        !Diag + upper + mjr_newton
-        call invlu_u_SA(ndo, param_int, param_real,
-     &                  param_real(VISCO),param_real(SA_REAL),
-     &                  ind_loop_lu,
-     &                  drodm,rop_ssiter, rotmp,
-     &                  ti,tj,tk,
-     &                  coe)
+               !extrap coe(6) sur la 2eme rangee fictive
+               if(param_int(LU_MATCH).eq.1) then
+                 call extrap_coe(ndo, param_int, depth, 
+     &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
 
-        else
+                 !lower
+                 call invlu_overlap_l_SA(ndo, param_int, param_real, 
+     &                   ind_loop_lu, ind_loop_sdm,
+     &                   drodm_out,drodm_in, rop_ssiter,
+     &                   ti,tj,tk,
+     &                   coe, ssor_size)
 
-c        llower =.true. !flag pour parcourir la matrice L (lower) ou U (upper)
-c        call invlu_lu(ndo,param_int(NEQ),param_int(NEQ_IJ),param_int(NEQ_K),param_int(NEQ_COE),
-c     &                param_int(NDIMDX), param_int(NDIMDX_MTR), param_int(NIJK), param_int(NIJK_MTR),
-c     &                param_int(ITYPZONE), param_real(GAMMA), param_real(CVINF),
-c     &                ind_loop_lu,
-c     &                llower,
-c     &                drodm,rop_ssiter,
-c     &                ti,tj,tk,
-c     &                coe)
-c        call invlu_d(ndo,param_int(NEQ),param_int(NEQ_COE),param_int(NDIMDX),param_int(NIJK),lSA,param_int(ITYPZONE),
-c     &               ind_loop_lu,
-c     &               drodm,
-c     &               coe)
-c       llower =.false. 
-c       call invlu_lu(ndo,param_int(NEQ),param_int(NEQ_IJ),param_int(NEQ_K),param_int(NEQ_COE),
-c     &                param_int(NDIMDX), param_int(NDIMDX_MTR), param_int(NIJK), param_int(NIJK_MTR),
-c     &                param_int(ITYPZONE), param_real(GAMMA), param_real(CVINF),
-c     &                ind_loop_lu,
-c     &                llower,
-c     &                drodm,rop_ssiter,
-c     &                ti,tj,tk,
-c     &                coe)
-c       ! Mise a jour de la solution roptmp(P+1) = rop_ssiter(P) + w(idrodm)
-c        call mjro_newton(ndo, nitcfg,  param_int(NEQ), param_int(NDIMDX), param_int(NIJK), ijkv,
-c     &                   lSA, param_int(ITYPZONE), param_real(CVINF),  param_real(VISCO),param_real(RATIOM),
-c     &                   ind_loop_lu,
-c     &                   rotmp,rop_ssiter,
-c     &                   drodm)
-c
-        !lower 
-        call invlu_l(ndo, param_int, param_real, ind_loop_lu,
-     &                drodm,rop_ssiter,
-     &                ti,tj,tk,
-     &                coe)
+                  !Diag + upper + mjr_newton
+                  call invlu_overlap_u_SA(ndo, param_int, param_real,
+     &                 param_real(VISCO),param_real(SA_REAL),
+     &                 ind_loop_lu, ind_loop_sdm, mjrnewton,
+     &                 drodm_out, rop_ssiter, rotmp,
+     &                 ti,tj,tk,
+     &                 coe, ssor_size)
 
-        !Diag + upper + mjr_newton
-        call invlu_u(ndo, param_int, param_real, ind_loop_lu,
-     &                drodm,rop_ssiter, rotmp,
-     &                ti,tj,tk,
-     &                coe)
-c
-        endif!5 ou 6 Eq
-      ELSE
+               else !sans overlap
 
-        if(lSA.eq.1) Then
+               !lower
+               call invlu_l_SA(ndo, param_int, param_real, ind_loop_lu,
+     &              drodm_in,drodm_out,rop_ssiter,
+     &              ti,tj,tk,
+     &              coe)
+               !Diag + upper + mjr_newton
+               call invlu_u_SA(ndo, param_int, param_real,
+     &              param_real(VISCO),param_real(SA_REAL),
+     &              ind_loop_lu,
+     &              drodm_out,rop_ssiter, rotmp,
+     &              ti,tj,tk,
+     &              coe, mjrnewton)
+               endif
 
-        call invlu_ale_l_SA(ndo, param_int, param_real, ind_loop_lu,
-     &                      drodm,rop_ssiter,
-     &                      ti,tj,tk,venti,ventj,ventk,
-     &                      coe)
-        !Diag + upper + mjr_newton
-        call invlu_ale_u_SA(ndo, param_int, param_real,
-     &                      param_real(VISCO),param_real(SA_REAL),
-     &                      ind_loop_lu,
-     &                      drodm,rop_ssiter, rotmp,
-     &                      ti,tj,tk,venti,ventj,ventk,
-     &                      coe)
+            else !5 Eqs
 
 
+               if(param_int(LU_MATCH).eq.1) then
+                 !lower
+                 call invlu_overlap_l(ndo, param_int, param_real, 
+     &                   ind_loop_lu, ind_loop_sdm,
+     &                   drodm_out,drodm_in, rop_ssiter,
+     &                   ti,tj,tk, coe, ssor_size)
 
-        else
+                  !Diag + upper + mjr_newton
+                  call invlu_overlap_u(ndo, param_int, param_real,
+     &                             ind_loop_lu, ind_loop_sdm, mjrnewton,
+     &                             drodm_out, rop_ssiter, rotmp,
+     &                             ti,tj,tk, coe, ssor_size)
+               else !sans overlap
+                !lower
+                 call invlu_l(ndo, param_int, param_real, ind_loop_lu,
+     &                        drodm_in,drodm_out,rop_ssiter,
+     &                        ti,tj,tk, coe)
+                !Diag + upper + mjr_newton
+                 call invlu_u(ndo, param_int, param_real, ind_loop_lu,
+     &                        drodm_out,rop_ssiter, rotmp,
+     &                        ti,tj,tk, coe, mjrnewton)
+     
+               endif ! overlap          
+            endif    !5 ou 6 Eq
 
-        !lower 
-        call invlu_ale_l(ndo, param_int, param_real, ind_loop_lu,
-     &                drodm,rop_ssiter,
-     &                ti,tj,tk,venti,ventj,ventk,
-     &                coe)
+         ELSE   !ALE
 
-        !Diag + upper + mjr_newton
-        call invlu_ale_u(ndo, param_int, param_real, ind_loop_lu,
-     &                drodm,rop_ssiter, rotmp,
-     &                ti,tj,tk,venti,ventj,ventk,
-     &                coe)
+            if(lSA.eq.1) Then
+
+               if(param_int(LU_MATCH).eq.1) then
+                 call extrap_coe(ndo, param_int, depth, 
+     &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
+
+                 !lower
+                 call invlu_overlap_ale_l_SA(ndo, param_int,param_real, 
+     &                   ind_loop_lu, ind_loop_sdm,
+     &                   drodm_out,drodm_in, rop_ssiter,
+     &                   ti,tj,tk,venti,ventj,ventk,
+     &                   coe, ssor_size)
+
+                  !Diag + upper + mjr_newton
+                  call invlu_overlap_ale_u_SA(ndo, param_int,param_real,
+     &                 param_real(VISCO),param_real(SA_REAL),
+     &                 ind_loop_lu, ind_loop_sdm, mjrnewton,
+     &                 drodm_out, rop_ssiter, rotmp,
+     &                 ti,tj,tk,venti,ventj,ventk,
+     &                 coe, ssor_size)
+               else
+                 !lower
+                 call invlu_ale_l_SA(ndo, param_int, param_real, 
+     &                               ind_loop_lu,
+     &                               drodm_in,drodm_out,rop_ssiter,
+     &                               ti,tj,tk,venti,ventj,ventk,
+     &                               coe)
+                 !Diag + upper + mjr_newton
+                 call invlu_ale_u_SA(ndo, param_int, param_real,
+     &                            param_real(VISCO),param_real(SA_REAL),
+     &                            ind_loop_lu,
+     &                            drodm_out, rop_ssiter, rotmp,
+     &                            ti,tj,tk,venti,ventj,ventk,
+     &                            coe, mjrnewton)
+
+               endif !!recouvrememnt
+            else
+
+               if(param_int(LU_MATCH).eq.1) then
+
+                 !lower
+                 call invlu_overlap_ale_l(ndo, param_int,param_real, 
+     &                   ind_loop_lu, ind_loop_sdm,
+     &                   drodm_out,drodm_in, rop_ssiter,
+     &                   ti,tj,tk,venti,ventj,ventk,
+     &                   coe, ssor_size)
+
+                  !Diag + upper + mjr_newton
+                  call invlu_overlap_ale_u(ndo, param_int,param_real,
+     &                 ind_loop_lu, ind_loop_sdm, mjrnewton,
+     &                 drodm_out, rop_ssiter, rotmp,
+     &                 ti,tj,tk,venti,ventj,ventk,
+     &                 coe, ssor_size)
+
+               else
+                 !lower 
+                  call invlu_ale_l(ndo,param_int,param_real,ind_loop_lu,
+     &                             drodm_in, drodm_out, rop_ssiter,
+     &                             ti,tj,tk,venti,ventj,ventk, coe)
+
+                 !Diag + upper + mjr_newton
+                 call invlu_ale_u(ndo, param_int,param_real,ind_loop_lu,
+     &                            drodm_out, rop_ssiter, rotmp,
+     &                            ti,tj,tk,venti,ventj,ventk,
+     &                            coe, mjrnewton)
+               endif !!recouvrememnt
+
+            endif               !5 ou 6 Eq
+         ENDIF                  !maillge fixe/mobile
+
+      elseif (param_int(NB_RELAX) .GE. 2) then
 
 
-        endif !5 ou 6 Eq
-      ENDIF !maillge fixe/mobile
-c
+         mjr_ssor =1 
 
-c      call check(ndom,param_int(NEQ),param_int(NDIMDX),
-c     &           param_int(NIJK)(1),param_int(NIJK)(1)*param_int(NIJK)(2),2,2,
-c     &           w(itro_ssiter),'champ 1  p',1,-1,3,88,92,-1,3)
- 
+         !loop relaxation
+         do m = 1, param_int(NB_RELAX)
+
+            lussor_end = 0
+            if (m.eq.param_int(NB_RELAX)) then
+
+              mjr_ssor =0 
+              if(mjrnewton.eq.1)lussor_end=1
+
+            endif
+
+            !domaine fixe
+            IF(param_int(LALE).eq.0) THEN
+
+               if(lSA.eq.1) Then
+
+                  if(m.eq.1.and.param_int(LU_MATCH).eq.1) Then
+
+                     call extrap_coe(ndo, param_int, depth, 
+     &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
+                  endif
+
+                  !lower
+                  if(m.eq.1) then
+
+                    call invlussor1_l_SA(ndo, param_int, param_real, 
+     &                   ind_loop_lu, ind_loop_sdm,
+     &                   drodm_out,drodm_in, rop_ssiter,
+     &                   ti,tj,tk,
+     &                   coe, ssor, ssor_size)
+                  else
+
+                    call invlussor_l_SA(ndo, param_int, param_real, 
+     &                   ind_loop_lu, ind_loop_sdm,
+     &                   drodm_out, drodm_in, rop_ssiter,
+     &                   ti,tj,tk,
+     &                   coe, ssor, ssor_size)
+                  endif
+
+                  
+                  !Diag + upper + mjr_newton
+                  call invlussor_u_SA(ndo, param_int, param_real,
+     &                 param_real(VISCO),param_real(SA_REAL),
+     &                 ind_loop_lu, ind_loop_sdm, mjr_ssor,
+     &                 drodm_out, drodm_in, rop_ssiter, rotmp,
+     &                 ti,tj,tk,
+     &                 coe, ssor, lussor_end, ssor_size)
+
+               else
+
+                  !lower
+                  if(m.eq.1) then
+
+                  call invlussor1_l(ndo, param_int, param_real, 
+     &                 ind_loop_lu, ind_loop_sdm,
+     &                 drodm_out,drodm_in,rop_ssiter,
+     &                 ti,tj,tk,
+     &                 coe, ssor, ssor_size)
+                  else
+                  call invlussor_l(ndo, param_int, param_real, 
+     &                 ind_loop_lu, ind_loop_sdm,
+     &                 drodm_out, drodm_in, rop_ssiter,
+     &                 ti,tj,tk,
+     &                 coe, ssor, ssor_size)
+                  endif
+
+!#include "FastS/Compute/LU/lussor_mjrtmp.for"
+
+!     Diag + upper + mjr_newton
+                  call invlussor_u(ndo, param_int, param_real,
+     &                 ind_loop_lu, ind_loop_sdm, mjr_ssor,
+     &                 drodm_out, drodm_in, rop_ssiter, rotmp,
+     &                 ti,tj,tk,
+     &                 coe, ssor, lussor_end, ssor_size)
+c     
+               endif            !5 ou 6 Eq
+            ELSE
+
+               if(lSA.eq.1) Then
+
+                 if(m.eq.1.and.param_int(LU_MATCH).eq.1) Then
+
+                 call extrap_coe(ndo, param_int, depth, 
+     &                           ind_loop_lu,coe(1+5*param_int(NDIMDX)))
+                 endif
+
+                  !lower
+                  if(m.eq.1) then
+
+                  call invlussor1_ale_l_SA(ndo, param_int, param_real, 
+     &                 ind_loop_lu, ind_loop_sdm,
+     &                 drodm_out,drodm_in,rop_ssiter,
+     &                 ti,tj,tk,venti,ventj,ventk,
+     &                 coe, ssor, ssor_size)
+                  else
+                  call invlussor_ale_l_SA(ndo, param_int, param_real, 
+     &                 ind_loop_lu, ind_loop_sdm,
+     &                 drodm_out, drodm_in, rop_ssiter,
+     &                 ti,tj,tk,venti,ventj,ventk,
+     &                 coe, ssor, ssor_size)
+                  endif
+
+!     Diag + upper + mjr_newton
+                  call invlussor_ale_u_SA(ndo, param_int, param_real,
+     &                 param_real(VISCO),param_real(SA_REAL),
+     &                 ind_loop_lu, ind_loop_sdm, mjr_ssor,
+     &                 drodm_out, drodm_in,rop_ssiter, rotmp,
+     &                 ti,tj,tk,venti,ventj,ventk,
+     &                 coe, ssor, lussor_end, ssor_size)
+
+               else
+
+                  !lower
+                  if(m.eq.1) then
+                  call invlussor1_ale_l(ndo, param_int, param_real,
+     &                 ind_loop_lu, ind_loop_sdm,
+     &                 drodm_out, drodm_in, rop_ssiter,
+     &                 ti,tj,tk,venti,ventj,ventk,
+     &                 coe, ssor, ssor_size)
+
+                  else
+                  call invlussor_ale_l(ndo, param_int, param_real,
+     &                 ind_loop_lu, ind_loop_sdm,
+     &                 drodm_out, drodm_in, rop_ssiter,
+     &                 ti,tj,tk,venti,ventj,ventk,
+     &                 coe, ssor, ssor_size)
+                  endif
+
+
+!     Diag + upper + mjr_newton
+                  call invlussor_ale_u(ndo, param_int, param_real, 
+     &                 ind_loop_lu, ind_loop_sdm, mjr_ssor,
+     &                 drodm_out, drodm_in, rop_ssiter, rotmp,
+     &                 ti,tj,tk,venti,ventj,ventk,
+     &                 coe, ssor, lussor_end, ssor_size)
+
+
+               endif            !5 ou 6 Eq
+            ENDIF               !maillge fixe/mobile
+
+         enddo !loop relaxation
+
+      endif
+      
       end

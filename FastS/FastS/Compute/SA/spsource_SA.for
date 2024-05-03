@@ -7,7 +7,7 @@ c***********************************************************************
      &                     ind_loop, 
      &                     xmut,rop,coe, ti, tj, tk, vol,dlng, drodm)
 c***********************************************************************
-c_P                          O N E R A
+c_P                           O N E R A
 c     ACT
 c_A    Calcul de la contribution des termes sources 
 c_A    pour l'equation de Spalart Allmaras 
@@ -54,32 +54,36 @@ c Var loc
      & incj_mtr,inck_mtr, l1,l2,l3,l4,l5,l6,ltij,lij,lt,ndimdx,lvo
 
       REAL_E adtild,adtild1,ad1,adelta1,adelta2,
-     1  testzg2,testzg,fw,fv1,fv2,r1_1,amulam,anulam,
-     &  amutild,anutild,voldes,tci,tcj,tck,sph2,amut,xmuprov,
-     &  rotx,roty,rotz,rot,chi,prod,stild,stides,r,r2,g,fwg1,fwg,
+     & testzg2,testzg,fw,fv1,fv2,r1_1,amulam,anulam,
+     & amutild,anutild,voldes,tci,tcj,tck,sph2,amut,xmuprov,
+     & rotx,roty,rotz,rot,chi,prod,stild,stides,r,r2,g,fwg1,fwg,
      & aseuil,destruc,dest2,anvisc,tsource,tsourceb,
      & tsourcenu,f1,f2,dist,s,t,df2dchi,dstidnu,
      & dpdnu,dfwdg,dgdr,drdnu,dfwdnu,ddesdnu,
      & temp01,cmus1,coesut,t1,t1_1,
      & auijuij,adcut,variable2,fa,testfa,ra,c1,cw1,c1d,c2d,
-     & tjx, tjy,tjz,tjx1,tjy1,tjz1,si,sj,sk,
-     & tix, tiy,tiz,tix1,tiy1,tiz1,
-     & tkx, tky,tkz,tkx1,tky1,tkz1,u1,u2,u3,u4,u5,u6,xvol,dudx,dudy,dudz
+     & tjx,tjy,tjz,tjx1,tjy1,tjz1,si,sj,sk,
+     & tix,tiy,tiz,tix1,tiy1,tiz1,
+     & tkx,tky,tkz,tkx1,tky1,tkz1,u1,u2,u3,u4,u5,u6,xvol,
+     & dudx,dudy,dudz,dvdx,dvdy,dvdz,dwdx,dwdy,dwdz,
+     & SA_CW2_LRE,S11,S22,S33,S12,S13,S23,St,r5,
+     & SWITCH_SA_LOW_RE,SWITCH_SA_ROT_CORR
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 
 c.....formulation originelle
       fw(s)      = s*((1.+SA_CW3)/(s**6+SA_CW3))**(1./6.)
-      fv1(s)     = (s**3)/(s**3+SA_CV1)
+      fv1(s)     = 1./(1.+SA_CV1/(s*s*s))
       fv2(s,t)   = 1.-s/(1.+s*t)
 
+      SWITCH_SA_LOW_RE = param_int(SA_LOW_RE)
+      SWITCH_SA_ROT_CORR = param_int(SA_ROT_CORR)
       cmus1  = param_real(VISCO+4)
       temp01 = 1./param_real(VISCO+3)
       coesut =  param_real(VISCO+2) * (1.+cmus1*temp01)
       c1     =  SA_CB2/SA_SIGMA
       cw1    = (SA_CB1/SA_CKARM/SA_CKARM)+(1.+SA_CB2)/SA_SIGMA
- 
 
       incmax=param_int(NIJK)*param_int(NIJK+1)*param_int(NIJK+4)
 
@@ -120,7 +124,7 @@ c.....formulation originelle
 
 #include       "FastS/Compute/SA/sourceSA_grad_3d.for"
 #include       "FastS/Compute/SA/sourceSA_prod_dest.for"
-               drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
+               drodm(l,6)= drodm(l,6) + vol(lvo)*tsource 
 
 #include  "FastS/Compute/loop_end.for"
 
@@ -203,9 +207,7 @@ c.....formulation originelle
 
           do k = ind_loop(5), ind_loop(6)
            do j = ind_loop(3), ind_loop(4)
-                lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-             do l = lij, lij +  ind_loop(2)- ind_loop(1)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_grad_3dcart.for"
 #include       "FastS/Compute/SA/sourceSA_prod_dest.for"
@@ -219,9 +221,7 @@ c.....formulation originelle
 
           do k = ind_loop(5), ind_loop(6)
            do j = ind_loop(3), ind_loop(4)
-                lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-             do l = lij, lij +  ind_loop(2)- ind_loop(1)
+#include     "FastS/Compute/loopI3dcart_begin.for"
 
 #include       "FastS/Compute/SA/sourceSA_grad_3dcart.for"
 #include       "FastS/Compute/SA/sourceSA_prod_dest.for"

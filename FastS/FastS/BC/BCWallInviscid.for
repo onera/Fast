@@ -2,6 +2,7 @@
             tcy  = tijk(lmtr,jc)*cj_mtr
             tcz  = tijk(lmtr,kc)*ck_mtr
 
+            !on calcule l inverse de la surface de la facette
             surf = sqrt(tcx*tcx + tcy*tcy +tcz*tcz)
             surf = max(surf,1e-30)
             s_1  = 1./surf
@@ -10,15 +11,13 @@
             tcy = tcy*s_1
             tcz = tcz*s_1
 
-            ventx      = ventijk(ldp ,1)
-            venty      = ventijk(ldp ,2)
-            ventz      = ventijk(ldp ,kc_vent)*ck_vent
+            ventx = ventijk(ldp ,1)
+            venty = ventijk(ldp ,2)
+            ventz = ventijk(ldp ,kc_vent)*ck_vent
 
-           !on calcule l'inverse de la surface de la facette
-
-            u  =  rop(ldjr,2)
-            v  =  rop(ldjr,3)
-            w  =  rop(ldjr,4)
+            u  =  rop(ldjr,2) - ventx*c_ale
+            v  =  rop(ldjr,3) - venty*c_ale
+            w  =  rop(ldjr,4) - ventz*c_ale
 
             qn = (u*tcx+v*tcy+w*tcz)
 

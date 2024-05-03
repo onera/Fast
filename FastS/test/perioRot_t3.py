@@ -5,24 +5,20 @@ import Generator.PyTree as G
 import Connector.PyTree as X
 import Converter.PyTree as C
 import FastS.PyTree as FastS
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
 import Converter.Internal as Internal
-import Fast.Utils as Utils
-import KCore.Adim as Adim
 import KCore.test as test
 
 angle = 20.
-
 anglex = angle
 angley = 0.    
 anglez = 0.
-
 
 a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5)) 
 b = T.rotate(a, (0.,0.,0.), (0.,1.,0.), 90.); b[0] = 'cart'
 t = C.newPyTree(['Base',b])
 C._addState(t, 'GoverningEquations', 'NSLaminar')
-C._addState(t, MInf=0.1, ReInf=1600, adim='adim2funk')
+C._addState(t, MInf=0.1, ReInf=1600., adim='adim2funk')
 
 # Get dim
 dim = 3
@@ -38,7 +34,7 @@ ret = C.isNamePresent(t, 'centers:Density')
 if ret != 1: # Density not present
     state = Internal.getNodeFromType(t, 'ReferenceState_t')
     if state is None:
-        raise ValueError, 'Reference state is missing in input cgns.'
+        raise ValueError('Reference state is missing in input cgns.')
     vars = ['Density', 'MomentumX', 'MomentumY', 'MomentumZ',
             'EnergyStagnationDensity']
     for v in vars:
@@ -47,7 +43,7 @@ if ret != 1: # Density not present
             val = float(node[1][0])
             C._initVars(t, 'centers:'+v, val)
         else:
-            raise ValueError, v + ' is missing in ReferenceState.'
+            raise ValueError(v + ' is missing in ReferenceState.')
     if Model == 'NSTurbulent':
         vars = ['TurbulentSANuTildeDensity']
         for v in vars:
@@ -79,6 +75,11 @@ C._initVars(t, '{centers:VelocityX} = 1.')
 C._initVars(t, '{centers:VelocityY}= {centers:CoordinateY}/{centers:Rayon}')
 C._initVars(t, '{centers:VelocityZ}= {centers:CoordinateZ}/{centers:Rayon}')
 C._initVars(t, '{centers:Temperature}=1.')
+
+# Numerics
+numb = {}; numz = {}
+numb["temporal_scheme"]    = "explicit"
+FastC._setNum2Base(t, numb); FastC._setNum2Zones(t, numz)
 
 (t, tc, metrics) = FastS.warmup(t, tc, graph=None)
 

@@ -1,2 +1,2 @@
-from FastS import *
+from .FastS import *
 __version__ = FastS.__version__

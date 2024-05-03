@@ -22,7 +22,7 @@ c***********************************************************************
       INTEGER_E idir, ind_loop(6), param_int(0:*),ind,nzone
 
       REAL_E rop( param_int(NDIMDX),param_int(NEQ))
-      REAL_E stock(20000,param_int(NEQ))
+      REAL_E stock(4000000,param_int(NEQ))
       
  
 C Var local
@@ -50,12 +50,16 @@ C Var local
                l  = inddm(i,j,k)
 
                lstk  =  (i+1 - ind_loop(1))
-     &                +(j-1+param_int(NIJK+3))*nistk
+     &                +(j-ind_loop(3))*nistk
      &              +(k-ind_loop(5))*nistk*nistk2
      &         + nzone*nistk*nistk2*nistk3
 
                stock(lstk,ne) = rop(l,ne)
                !print*, stock(lstk,1)-rop(l,1)
+
+               !if (j==50.and.ne==2) then
+               !   print*, stock(lstk,ne), rop(l,ne)
+               !end if
                          
            enddo
                           
@@ -75,7 +79,7 @@ C Var local
 
 
                lstk  =  (i+1 - ind_loop(1))
-     &                +(j-1+param_int(NIJK+3))*nistk
+     &                +(j-ind_loop(3))*nistk
      &              +(k-ind_loop(5))*nistk*nistk2
      &         + nzone*nistk*nistk2*nistk3
 

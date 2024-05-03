@@ -4,7 +4,8 @@ c     $Revision : ?? $
 c     $Author: DidierBlaise $
 c***********************************************************************
       subroutine conv2pytree(cvg_ptr, nitrun, neq, LastRec, zone_name,
-     &   size_name, lft, nrec, nd, Itnum, Res_L2, Res_oo)
+     &     size_name, lft, nrec, nd, Itnum, Res_L2, Res_oo,
+     &     Res_L2_diff, Res_oo_diff)
 c
 c     ACT
 c_A     Stockage des residus moyens du processus sous iteratif (L_2 et oo)
@@ -21,7 +22,8 @@ c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       implicit none
       INTEGER_E nrec, nd
       INTEGER_E nitrun, neq, Itnum(nrec), LastRec, size_name, lft
-      REAL_E cvg_ptr(2*neq), Res_L2(neq*nrec), Res_oo(neq*nrec)
+      REAL_E cvg_ptr(4*neq), Res_L2(neq*nrec), Res_oo(neq*nrec)
+      REAL_E Res_L2_diff(neq*nrec), Res_oo_diff(neq*nrec)
       Character(len=size_name)zone_name 
       Character(len=40)zname
       Character(len=132)vart
@@ -42,6 +44,7 @@ c
 c     INP
 c_I    cvg_ptr, nit
 C
+      
       IF(LastRec .EQ . (nrec + 1) .OR. lft.LT.0)THEN
         DO I=1,LastRec
         Irec = (I-1)*neq
@@ -85,13 +88,16 @@ C
       ENDIF
 
       IF( lft.GE.0)THEN
+      
       Irec = (neq-1)*LastRec
       LastRec = LastRec + 1
       Itnum(LastRec) = nitrun
         DO ne=1,neq
         Irec = (LastRec-1)*neq + ne
-        Res_L2( Irec ) = cvg_ptr(ne)
-        Res_oo( Irec ) = cvg_ptr(neq + ne)
+        Res_L2( Irec )      = cvg_ptr(ne)
+        Res_oo( Irec )      = cvg_ptr(neq + ne)
+        Res_L2_diff( Irec ) = cvg_ptr(2*neq + ne)
+        Res_oo_diff( Irec ) = cvg_ptr(3*neq + ne)
         ENDDO
       ENDIF
 C

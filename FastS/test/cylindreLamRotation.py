@@ -5,9 +5,10 @@ import Generator.PyTree as G
 import Connector.PyTree as X
 import Converter.PyTree as C
 import FastS.PyTree as FastS
-import Fast.PyTree as Fast
+import FastC.PyTree as FastC
+import FastC.Internal as FastI
 import Converter.Internal as Internal
-import Fast.Utils as Utils
+import FastC.Utils as Utils
 import KCore.Adim as Adim
 import KCore.test as test
 import numpy
@@ -15,13 +16,11 @@ import math
 import sys  
 import script_prepareCaseHdf_r37 as SPCH
 
-
 angle = 10.
 
 anglex =angle
 angley = 0.
 anglez = 0.
-
 
 a = G.cylinder((0.,0.,0.), 0.24, 0.3, angle , 0., 0.22, (21,77,35)) 
 
@@ -61,7 +60,7 @@ ret = C.isNamePresent(t, 'centers:Density')
 if ret != 1: # Density not present
     state = Internal.getNodeFromType(t, 'ReferenceState_t')
     if state is None:
-        raise ValueError, 'Reference state is missing in input cgns.'
+        raise ValueError('Reference state is missing in input cgns.')
     vars = ['Density', 'MomentumX', 'MomentumY', 'MomentumZ',
             'EnergyStagnationDensity']
     for v in vars:
@@ -70,7 +69,7 @@ if ret != 1: # Density not present
             val = float(node[1][0])
             C._initVars(t, 'centers:'+v, val)
         else:
-            raise ValueError, v + ' is missing in ReferenceState.'
+            raise ValueError(v + ' is missing in ReferenceState.')
     if Model == 'NSTurbulent':
         vars = ['TurbulentSANuTildeDensity']
         for v in vars:
@@ -156,10 +155,10 @@ NTOUR    = 1
 NIT_TOUR = 360
 RED_DT   = 0.10
 time_step = RED_DT*2.*math.pi/(NIT_TOUR*abs(omgrpm))
-print'+++++++++++++++++++++++++'
-print'time_step = ',time_step
-print'niter     e= ',NIT
-print'+++++++++++++++++++++++++'
+print('+++++++++++++++++++++++++')
+print('time_step = ',time_step)
+print('niter     e= ',NIT)
+print('+++++++++++++++++++++++++')
 
 teta      = 0.
 tetap     = 0.
@@ -187,8 +186,8 @@ numz["scheme"]             = "ausmpred"
 numz["time_step_nature"]   = "local"
 numz["cfl"]                = 10
 
-Fast._setNum2Zones(t, numz)
-Fast._setNum2Base(t, numb)
+FastC._setNum2Zones(t, numz)
+FastC._setNum2Base(t, numb)
 
 
 # Number or records to store residuals 
@@ -216,7 +215,7 @@ if steady == 'no' :
 time = time0
 
 
-print'it_init, it_fin :',NIT_REP-1,NIT_REP+NIT-1
+print('it_init, it_fin :',NIT_REP-1,NIT_REP+NIT-1)
 
 #Initialisation parametre vitesse d entrainememnt
 time_ale = time + 0.5*time_step
@@ -253,24 +252,21 @@ node_debit_wall = SPCH.prepareDebit2Fast(t_debit_wall)
 #sys.exit()
 
 modulo_debit = 100
-modulo_convNewt =  modulo_verif
-for it in xrange(NIT_REP, NIT_REP+NIT):
-#for it in xrange(NIT):
+modulo_convNewt = modulo_verif
+for it in range(NIT_REP, NIT_REP+NIT):
+#for it in range(NIT):
     if steady == 'no':
-	time_ale = time + 0.5*time_step
-	teta = omgrpm*time_ale
-	tetap= omgrpm
-    
-	FastS._motionlaw(t, teta, tetap)
+      time_ale = time + 0.5*time_step
+      teta = omgrpm*time_ale
+      tetap= omgrpm
+      FastI._motionlaw(t, teta, tetap)
     
     FastS._compute(t, metrics, it, tc)
     
-    if (it%modulo_convNewt == 0):
+    if it%modulo_convNewt == 0:
       FastS.display_temporal_criteria(t, metrics, it)
-    
-    
 
-    if (it%modulo_debit == 0):
+    if it%modulo_debit == 0:
       # Extraction debits	
 
       #FastS._applyBC(t,metrics)
@@ -289,17 +285,15 @@ for it in xrange(NIT_REP, NIT_REP+NIT):
     
     
       #CV.setValue(debit_amont, ((it-NIT_REP+1)/modulo_verif ,1,1), [it,-1*debit_in])
-      print  "debit amont =", -1*debit_in
+      print("debit amont =", -1*debit_in)
     
       #CV.setValue(debit_aval, ((it-NIT_REP+1)/modulo_verif,1,1), [it,debit_out])
-      print  "debit aval =", debit_out
+      print("debit aval =", debit_out)
       
-      print  "debit wall =", debit_wall, debit_in+debit_out
-
+      print("debit wall =", debit_wall, debit_in+debit_out)
     
-    
-    if (it%modulo_debit) == 0:
-        print "it,time,omega*t = ",it,time,omgrpm*time*180/math.pi
+    if it%modulo_debit == 0:
+        print("it,time,omega*t = ",it,time,omgrpm*time*180/math.pi)
     
     FastS._movegrid(t)
     
@@ -336,4 +330,3 @@ C._rmVars(t, vars)
 #C.convertPyTree2File(t, 'out.cgns')
 
 test.testT(t, 1)
-

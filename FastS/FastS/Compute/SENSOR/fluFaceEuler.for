@@ -4,9 +4,13 @@ c.....Metrique
 
         nm  = l -  inci
         nm2 = l -2*inci
+        nm3 = l -3*inci
         np  = l +  inci
+        np2 = l +2*inci
+
 
 ! pente (qm) a l'interface droite et  (qp) a l'interface gauche
+        c    = wig(l+sl_i)    !SC only
         vslp = v1
 #include  "FastS/Compute/Slope/o3_slope_var.for"
         qm1 = qm
@@ -41,7 +45,7 @@ c.....Metrique
 
         ! modification de vitesse normale par ajout
         ! de stabilisation de type Rhie-Chow
-        u   = 0.25*(qn1+qn2)- c2*si*(p2-p1)*wig( l+ wig_i)
+        u  = 0.25*(qn1+qn2)- c2*si*(p2-p1)*(opt0*wig( l+ wig_i)+1.-opt0)
 
         tdu = max(abs(u),c1*si)*wig( l+ wig_i)
 
