@@ -53,7 +53,10 @@ from KCore.config import *
 # Setting libraryDirs and libraries ===========================================
 libraryDirs = ['..', '.', pythonLibDir, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir, fastsLibDir, fastaslbmLibDir ]
 includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, pythonIncDir, fastcIncDir, fastsIncDir, fastaslbmIncDir ]
-libraries = ["fastc", "fasts", "fastaslbm", "connector", "xcore", "kcore"]
+libraries = ["fastc", "fasts"]
+#libraries += ["fastaslbm"]
+libraries += ["connector", "xcore", "kcore"]
+
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)

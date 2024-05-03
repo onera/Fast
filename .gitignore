@@ -1,5 +1,9 @@
-opencascade-7.4.0.tgz
-/FFX
-/Fast
-/FastP
-/FastS
+.vscode
+build
+__pycache__
+*.egg-info
+setup.cfg
+
+Fast/FastC/installPath.py
+Fast/FastS/merge.l
+tools/MigrationSVN

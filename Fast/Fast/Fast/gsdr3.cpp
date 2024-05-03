@@ -1,7 +1,7 @@
 # include "FastS/fastS.h"
 //# include "fastP.h"
 //# include "FastLBM/fastLBM.h"
-# include "FastASLBM/fastLBM.h"
+//# include "FastASLBM/fastLBM.h"
 # include "FastC/fastc.h"
 # include "Fast/fast.h"
 # include "Fast/param_solver.h"
@@ -294,7 +294,7 @@ E_Int rank =0;
               {
                 lmin =4;
                 //Quand on fait du couplage : LBM avance en une iteration
-#include        "FastASLBM/Compute/rhs.cpp"
+//#include        "FastASLBM/Compute/rhs.cpp"
               }
               else if (param_int[nd][IFLOW] != 4)
               {
@@ -348,7 +348,7 @@ E_Int rank =0;
         E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
         E_Int nd = ipt_omp[ pttask ];
 
-#include "FastASLBM/INTERP/stck.cpp"
+//#include "FastASLBM/INTERP/stck.cpp"
      }
   } // Fin zone // omp
 /*

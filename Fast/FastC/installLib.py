@@ -29,3 +29,7 @@ else: # Essai en dynamique
                         libPath+"/libfastc"+__EXTSHARED__) 
     else:
         print("Error: fastc" +__EXTMODULE__+" can not be found.")
+        
+# Copie aussi les .py
+import KCore.installPath as K
+shutil.copyfile("installPath.py", K.installPath+"/FastC/installPath.py")

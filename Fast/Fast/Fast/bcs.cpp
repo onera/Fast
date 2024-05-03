@@ -45,14 +45,14 @@
                     {
                       E_Float* iptventi =NULL; E_Float* iptventj =NULL; E_Float* iptventk =NULL;
 
-                      E_Int ierr = K_FASTASLBM::BCzone(nd, lrhs , nitcfg_stk, lcorner, param_int[nd], param_real[nd], npass,
-		               	                    ipt_ind_dm_loc, ipt_inddm_omp, 
-		      	                            ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
-                                                    iptrotmp[nd] , iptrom_CL[nd], iptroS_CL[nd], iptpsiG_CL[nd], 
-                                                    //iptro_CL[nd] , iptrom_CL[nd], iptroS_CL[nd], iptpsiG_CL[nd], 
-                                                    ipti[nd]     , iptj[nd]    , iptk[nd],
-                                                    iptx[nd]     , ipty[nd]    , iptz[nd],
-                                                    iptventi     , iptventj    , iptventk);
+                      //E_Int ierr = K_FASTASLBM::BCzone(nd, lrhs , nitcfg_stk, lcorner, param_int[nd], param_real[nd], npass,
+		              // 	                    ipt_ind_dm_loc, ipt_inddm_omp, 
+		      	      //                      ipt_ind_CL_thread, ipt_ind_CL119,  ipt_ind_CLgmres, ipt_shift_lu,
+                      //                              iptrotmp[nd] , iptrom_CL[nd], iptroS_CL[nd], iptpsiG_CL[nd], 
+                      //                              //iptro_CL[nd] , iptrom_CL[nd], iptroS_CL[nd], iptpsiG_CL[nd], 
+                      //                              ipti[nd]     , iptj[nd]    , iptk[nd],
+                      //                              iptx[nd]     , ipty[nd]    , iptz[nd],
+                      //                              iptventi     , iptventj    , iptventk);
                     }
 	    }//autorisation
 

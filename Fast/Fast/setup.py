@@ -52,7 +52,10 @@ if prod is None: prod = 'xx'
 # Setting libraryDirs, include dirs and libraries =============================
 libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastaslbmLibDir]
 includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir, fastsIncDir, fastaslbmIncDir]
-libraries = ["fast", "fasts", "fastaslbm", "fastc", "connector", "xcore", "kcore"]
+libraries = ["fast", "fasts"]
+#libraries += ["fastaslbm"]
+libraries += ["fastc", "connector", "xcore", "kcore"]
+
 #libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastlbmLibDir]
 #includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir, fastsIncDir, fastlbmIncDir]
 #libraries = ["fast", "fasts", "fastlbm", "fastc", "connector", "xcore", "kcore"]

@@ -20,7 +20,7 @@
 # include <string.h>
 /*# include "fastS.h"*/
 # include "fast.h"
-# include "../FastASLBM/FastASLBM/fastLBM.h"
+//# include "../FastASLBM/FastASLBM/fastLBM.h"
 # include "param_solver.h"
 # include <string.h>
 # include <omp.h>
