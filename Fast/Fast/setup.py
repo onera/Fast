@@ -38,7 +38,7 @@ Dist.writeSetupCfg()
 
 # Test if fastlbm exists =====================================================
 #(fastlbmVersion, fastlbmIncDir, fastlbmLibDir) = Dist.checkFastLBM()
-(fastaslbmVersion, fastaslbmIncDir, fastaslbmLibDir) = Dist.checkFastASLBM()
+#(fastaslbmVersion, fastaslbmIncDir, fastaslbmLibDir) = Dist.checkFastASLBM()
 
 from KCore.config import *
 
@@ -50,11 +50,12 @@ prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
 # Setting libraryDirs, include dirs and libraries =============================
-libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastaslbmLibDir]
-includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir, fastsIncDir, fastaslbmIncDir]
-libraries = ["fast", "fasts"]
+libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir, fastsLibDir]
+includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir, fastsIncDir]
+libraries = ["fast", "fasts", "fastc", "connector", "xcore", "kcore"]
+#libraryDirs += [fastaslbmLibDir]
+#includeDirs += [fastaslbmIncDir]
 #libraries += ["fastaslbm"]
-libraries += ["fastc", "connector", "xcore", "kcore"]
 
 #libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir,fastsLibDir, fastlbmLibDir]
 #includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir, fastsIncDir, fastlbmIncDir]
