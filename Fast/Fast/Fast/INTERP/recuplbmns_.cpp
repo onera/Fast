@@ -194,7 +194,7 @@ PyObject* K_FAST::recuplbmns_(PyObject* self, PyObject* args)
                         tab1 = iptro_p1[nd];
                         tab2 = iptro[nd];
 
-                        fill_ghostcellspara_(param_intt[nd], donorPts, donorPts_, tab1, tab2);
+                        //fill_ghostcellspara_(param_intt[nd], donorPts, donorPts_, tab1, tab2);
 
 #pragma omp barrier
 
@@ -207,7 +207,7 @@ PyObject* K_FAST::recuplbmns_(PyObject* self, PyObject* args)
                        tab1 = iptro_p1[nd];
                        tab2 = iptro[nd];
 
-                       fill_ghostcellspara_(param_intt[nd], donorPts, donorPts_, tab1, tab2);
+                       //fill_ghostcellspara_(param_intt[nd], donorPts, donorPts_, tab1, tab2);
 
 #pragma omp barrier
 

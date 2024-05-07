@@ -9,3 +9,5 @@ Fast/FastS/merge.l
 tools/MigrationSVN
 
 Data
+*.cgns
+*.dat

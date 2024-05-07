@@ -181,11 +181,14 @@ PyObject* K_FAST::interplbmns_(PyObject* self, PyObject* args)
                   printf("COPY: %d rac= %d , nd= %d %d , pos= %d , th= %d , nstep= %d \n ",  pt_racReal + pos_p1*neq*size, rac, nd, neq, pos_p1, ithread_loc, nstep);
                   //sauvegarde de macro (instant N) dans stk 
                   //                                                              macro,         distribution,   Sij,   , autre terme...
-                  if(nstep==1){copy_values_( nd, neq, param_int[nd], range, range_th, size,  stk, iptrom[nd], iptro_CL,  iptS, iptPsiG, sens, typ_rac);}
+                  if(nstep==1)
+                  {
+                    //copy_values_( nd, neq, param_int[nd], range, range_th, size,  stk, iptrom[nd], iptro_CL,  iptS, iptPsiG, sens, typ_rac);
+                  }
 
                   stk  = param_real[nd]+  pt_racReal;
                   //                                                             macro,         distribution,   Sij,   , autre terme...
-                  interp_lbm_dtloc_( nd, neq, param_int[nd],  param_real[nd], range, range_th, size,  stk, iptrom_CL[nd], iptro_CL,  iptS, iptPsiG, pos_p1, typ_rac, nstep);
+                  //interp_lbm_dtloc_( nd, neq, param_int[nd],  param_real[nd], range, range_th, size,  stk, iptrom_CL[nd], iptro_CL,  iptS, iptPsiG, pos_p1, typ_rac, nstep);
                  }
                 else
                  {
@@ -199,7 +202,7 @@ PyObject* K_FAST::interplbmns_(PyObject* self, PyObject* args)
                   E_Float* stk  = param_real[nd]+  pt_racReal + pos_p1*neq*size;
      
                   //                                                             macro,         distribution,   Sij,   , autre terme...
-                  copy_values_( nd, neq, param_int[nd], range, range_th, size,  stk, iptrom[nd], iptro_CL,  iptS, iptPsiG, sens, typ_rac);
+                  //copy_values_( nd, neq, param_int[nd], range, range_th, size,  stk, iptrom[nd], iptro_CL,  iptS, iptPsiG, sens, typ_rac);
                  }
 
              }//typ_rac

@@ -3,8 +3,8 @@
 #==============================================================================
 cpp_srcs = ["Fast/computePT.cpp",
             "Fast/gsdr3.cpp",
-            #"Fast/INTERP/interplbmns_.cpp",
-            #"Fast/INTERP/recuplbmns_.cpp",
+            "Fast/INTERP/interplbmns_.cpp",
+            "Fast/INTERP/recuplbmns_.cpp",
             "Fast/INTERP/compute_sij.cpp",
             "Fast/FILTER/filtering_.cpp"]
 #==============================================================================
