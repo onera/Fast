@@ -25,11 +25,17 @@ try:
     import Converter.Internal as Internal
     import FastS.PyTree as FastS  
     #import FastP.PyTree as FastP
-    #import FastASLBM.PyTree as FastLBM
     import Connector.PyTree as X
-    from . import  VariablesSharePyTree as VSHARE
+    from . import VariablesSharePyTree as VSHARE
 except:
     raise ImportError("Fast.PyTree: requires Converter, Connector, FastS, FastASLBM modules.")
+
+FASTLBM = False
+try:
+    import FastASLBM.PyTree as FastLBM
+    FASTLBM = True
+except:
+   FASTLBM = False
 
 try:
     OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
@@ -165,7 +171,8 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 
     # init Q variables from macro variable if lbm et creation noeud pipeau density_P1 pour transfert
     flag_initprecise = 1
-    #FastLBM._init_Q(t,FastC.HOOK, flag_initprecise)
+    if FASTLBM:
+      FastLBM._init_Q(t, FastC.HOOK, flag_initprecise)
 
     #print("apres initQ", flush=True)
     #allocate tab ssor en structure
@@ -256,7 +263,8 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 
     # creation/init data dans param_int/real  pour interp temporelle LBM/NS et LBM/LBM
     init_interp = FastC._InterpTemporelcompact(t,tc)
-    #if not init_interp: FastLBM.fastaslbm.interp_temporel(zones, 1,1,-10)
+    if FASTLBM:
+      if not init_interp: FastLBM.fastaslbm.interp_temporel(zones, 1,1,-10)
 
     # data pour interp temporel couplage NS/LBM
     hook1 = FastC.HOOK.copy(); hook1.update( {'lexit_lu':0, 'lssiter_verif':0})
@@ -268,7 +276,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
        overset = max(overset,param_int[VSHARE.LBM_OVERSET])
 
     
-    _fillGhostcells(zones, tc,  infos_zones, timelevel_target, vars, nstep,  ompmode, hook1, overset=overset) 
+    _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep,  ompmode, hook1, overset=overset) 
     if tc is not None: C._rmVars(tc, 'FlowSolution')
 
     #
@@ -307,8 +315,9 @@ def allocate_metric(t, nghost):
            param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
 
            if param_int[27] == 4:   #IFLOW=4
-           #   metrics.append(FastLBM.fastaslbm.allocate_metric(z, nssiter))
-              raise ValueError("FastLBM not installed")
+              if FASTLBM:
+                metrics.append(FastLBM.fastaslbm.allocate_metric(z, nssiter))
+              else: raise ValueError("FastLBM needed but not installed.")
            else:
               metrics.append(FastS.fasts.allocate_metric(z, nssiter))
         #else: metrics.append(FastP.fastp.allocate_metric(z, nssiter))
@@ -621,8 +630,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
          if case != 0 and itypcp < 2: FastC.switchPointers__(zones_ns, case)
          if case != 0 and itypcp ==2: FastC.switchPointers__(zones_ns, case, nitmax%2+2)
 
-    #if  NIT%2 != 0:
-    #  FastC.switchPointersLBM__(zones_lbm, FastLBM.NQ, dtloc)
+    if FASTLBM:
+      if  NIT%2 != 0:
+        FastC.switchPointersLBM__(zones_lbm, FastLBM.NQ, dtloc)
 
     maxlevel   = dtloc[9]
     nitCyclLBM = 2**(maxlevel-1)
@@ -660,10 +670,11 @@ def _applyBC(infos_zones, hook1, nstep, nitmax, var=["Density","Q1"]):
        FastS.fasts._applyBC(infos_zones["NS_str"][0]  , infos_zones["NS_str"][1]  , hook1, nstep_NS,  varns  )
        #print('FastS BC applied')
     #LBM : FastLBM
-    #if len(infos_zones['LBM'][0]) != 0 and (nstep==0 or nstep==nstep_bc):
-    #    FastLBM.fastaslbm._applyBC(infos_zones["LBM"][0] , infos_zones["LBM"][1]  , hook1, nstep_LBM, varlbm )
-        #if nstep==0: print('FastLBM BC applied 1')
-        #else: print('FastLBM BC applied 2')
+    if FASTLBM:
+      if len(infos_zones['LBM'][0]) != 0 and (nstep==0 or nstep==nstep_bc):
+          FastLBM.fastaslbm._applyBC(infos_zones["LBM"][0] , infos_zones["LBM"][1]  , hook1, nstep_LBM, varlbm )
+          #if nstep==0: print('FastLBM BC applied 1')
+          #else: print('FastLBM BC applied 2')
 
     #Navier Stokes non structure : FastP
     #if len(infos_zones['NS_ustr'][0]) != 0:
