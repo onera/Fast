@@ -4,6 +4,7 @@
 *.tpp text
 *.cpp text
 *.C text
+*.c text
 *.for text
 *.f90 text
 *.py text

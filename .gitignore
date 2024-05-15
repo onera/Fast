@@ -8,9 +8,7 @@ Fast/FastC/installPath.py
 Fast/FastS/merge.l
 tools/MigrationSVN
 
-Data
-Data_*
-ValidData
-ValidData_*
+Data*
+ValidData*
 *.cgns
 *.dat
