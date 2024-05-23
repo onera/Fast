@@ -457,7 +457,7 @@ PyObject* K_FASTS::dtlocal(PyObject* self, PyObject* args)
 		       donorPts[3] =  ipt_param_int[ech + 2 + nrac*14 + 14*irac + 10];
 		       donorPts[4] =  ipt_param_int[ech + 2 + nrac*14 + 14*irac + 11];
 		       donorPts[5] =  ipt_param_int[ech + 2 + nrac*14 + 14*irac + 12];
-		       int dir = ipt_param_int[ech + 2 + nrac*14 + 14*irac + 13];
+		       E_Int dir = ipt_param_int[ech + 2 + nrac*14 + 14*irac + 13];
 
 		       donorPts[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*1;
 
@@ -500,7 +500,7 @@ PyObject* K_FASTS::dtlocal(PyObject* self, PyObject* args)
 		       donorPts[3] =  ipt_param_int[ech + 2 + nrac*14 + 14*irac + 10];
 		       donorPts[4] =  ipt_param_int[ech + 2 + nrac*14 + 14*irac + 11];
 		       donorPts[5] =  ipt_param_int[ech + 2 + nrac*14 + 14*irac + 12];
-		       int dir = ipt_param_int[ech + 2 + nrac*14 + 14*irac + 13];
+		       E_Int dir = ipt_param_int[ech + 2 + nrac*14 + 14*irac + 13];
 
 		       donorPts[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*1;
 
@@ -582,7 +582,7 @@ PyObject* K_FASTS::dtlocal(PyObject* self, PyObject* args)
 		       donorPts[3] =  ipt_param_int[ech + 2 + nrac*14 + 14*irac + 10];
 		       donorPts[4] =  ipt_param_int[ech + 2 + nrac*14 + 14*irac + 11];
 		       donorPts[5] =  ipt_param_int[ech + 2 + nrac*14 + 14*irac + 12];
-		       int dir = ipt_param_int[ech + 2 + nrac*14 + 14*irac + 13];
+		       E_Int dir = ipt_param_int[ech + 2 + nrac*14 + 14*irac + 13];
 
 		       donorPts[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*3;
 

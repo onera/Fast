@@ -91,7 +91,7 @@ void K_FASTC::setInterpTransfersFast(
   E_Int& nstep        , E_Int& nitmax          , E_Int& rk           , E_Int& exploc           , E_Int& numpassage)
 
 {
-  E_Int rank = 0;
+  int rank = 0;
   E_Int dest = 0;
 
 #ifdef _MPI
@@ -125,7 +125,7 @@ void K_FASTC::setInterpTransfersFast(
 
     //premier passage dans transfert couche C depuis  mise a plat de tc
     if (param_int_tc[0]==0 and mpi)
-    { E_Int szCom;
+    { int szCom;
       MPI_Comm_size(MPI_COMM_WORLD, &szCom);
       for (E_Int proc = 0; proc < szCom; ++proc){source_flag[proc]=0;}
 
@@ -209,7 +209,7 @@ void K_FASTC::setInterpTransfersFast(
 
       //MPI_Barrier(MPI_COMM_WORLD);
 
-      int nb_send_buffer = 0;
+      E_Int nb_send_buffer = 0;
       for (E_Int ip2p = 1; ip2p < param_int_tc[1]+1; ++ip2p)
       {
         E_Int ech  = param_int_tc[ip2p + shift_graph];
@@ -342,7 +342,7 @@ void K_FASTC::setInterpTransfersFast(
        ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;
       #endif
 
-      int cpt_send_buffer = 0;
+      E_Int cpt_send_buffer = 0;
       for (E_Int ip2p = 1; ip2p < param_int_tc[1]+1; ++ip2p)
         {
          E_Int ech  = param_int_tc[ip2p+shift_graph];
