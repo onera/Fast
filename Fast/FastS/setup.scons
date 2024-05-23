@@ -130,25 +130,26 @@ else:
 
 if f77compiler == 'ifort':
    version = Dist.getForVersion() # A utiliser version=(13,4)
-   f77Args = '-r8 -i4 -g -fno-alias -fno-fnalias -ip'
+   floatType = '-r8' if Dist.EDOUBLEINT else '-r8 -i4'
+   f77Args = floatType+' -g -fno-alias -fno-fnalias -ip'
    cacheLine = Dist.getCacheLine()
 
    simd = Dist.getSimd()
    if cacheLine != 1: f77Args += ' -align array%dbyte '%cacheLine
 
    if version[0] >= 17:
-      #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 -r8 -i4 -traceback -fpe0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
+      #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 '+floatType+' -traceback -fpe0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'  -qopt-zmm-usage=high -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'   -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -fp-model=strict  -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -O3 -no-prec-sqrt -qopt-report5 -qopt-report-phase=loop,vec,cg -qopt-report-embed -unroll0 -c -o $TARGET $SOURCE')
       if Dist.DEBUG:
-         env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 -r8 -i4 -traceback -fpe0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
+         env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 '+floatType+' -traceback -fpe0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
    elif version[0] >= 15:
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -qopt-report5 -qopt-report-phase=vec,loop -unroll0 -c -o $TARGET $SOURCE')
       #env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+'-override-limit -qopt-report5 -qopt-report-phase=vec,loop -unroll0 -c -o $TARGET $SOURCE')
       if Dist.DEBUG:
-         env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 -r8 -i4 -traceback -fpe0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
+         env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS -O0 '+floatType+' -traceback -fpe0 -fp-stack-check -ftrapuv -g -c -o $TARGET $SOURCE')
    else:
       env.Replace(FORTRANCOM = '$FORTRAN $FORTRANFLAGS '+f77Args+' -unroll0 -c -o $TARGET $SOURCE')
 

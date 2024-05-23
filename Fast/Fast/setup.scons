@@ -139,7 +139,8 @@ else:
 
 if f77compiler == 'ifort':
    version = Dist.getForVersion() # A utiliser version=(13,4)
-   f77Args = '-r8 -i4 -g -fno-alias -fno-fnalias -ip'
+   floatType = '-r8' if Dist.EDOUBLEINT else '-r8 -i4'
+   f77Args = floatType+' -g -fno-alias -fno-fnalias -ip'
    cacheLine = Dist.getCacheLine()
 
    simd = Dist.getSimd()
