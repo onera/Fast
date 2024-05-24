@@ -284,7 +284,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 		donorPts_[3] =  ipt_param_int[debut_rac + 10];
 		donorPts_[4] =  ipt_param_int[debut_rac + 11];
 		donorPts_[5] =  ipt_param_int[debut_rac + 12];
-		int dir = ipt_param_int[debut_rac + 13];
+		E_Int dir = ipt_param_int[debut_rac + 13];
 		E_Int profondeur = ipt_param_int[debut_rac + 20];
 
 
@@ -476,7 +476,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 		donorPts_[3] =  ipt_param_int[debut_rac + 10];
 		donorPts_[4] =  ipt_param_int[debut_rac + 11];
 		donorPts_[5] =  ipt_param_int[debut_rac + 12];
-		int dir = ipt_param_int[debut_rac + 13];
+		E_Int dir = ipt_param_int[debut_rac + 13];
 		E_Int profondeur = ipt_param_int[debut_rac + 20];
 
 		donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*(profondeur);

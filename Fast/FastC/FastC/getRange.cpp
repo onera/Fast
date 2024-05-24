@@ -62,12 +62,12 @@ E_Int K_FASTC::getRange( E_Int* in_bc, E_Int* ind_fen, E_Int* param_int ) {
         else
             ind_fen[0] = in_bc[0];
 
-        ind_fen[0] = std::max( 1, ind_fen[0] - 2 * param_int[NIJK + 3] );
+        ind_fen[0] = std::max( E_Int(1), ind_fen[0] - 2 * param_int[NIJK + 3] );
         ind_fen[1] = ind_fen[0];
 
-        ind_fen[2] = std::max( in_bc[2] - param_int[NIJK + 3], 1 );
+        ind_fen[2] = std::max( in_bc[2] - param_int[NIJK + 3], E_Int(1) );
         ind_fen[3] = std::min( in_bc[3] - param_int[NIJK + 3] - 1, param_int[IJKV + 1] );
-        ind_fen[4] = std::max( in_bc[4] - param_int[NIJK + 4], 1 );
+        ind_fen[4] = std::max( in_bc[4] - param_int[NIJK + 4], E_Int(1) );
         ind_fen[5] = std::min( in_bc[5] - param_int[NIJK + 4] - 1, param_int[IJKV + 2] );
     } else if ( in_bc[2] == in_bc[3] ) {
         if ( in_bc[2] > 1 )
@@ -75,12 +75,12 @@ E_Int K_FASTC::getRange( E_Int* in_bc, E_Int* ind_fen, E_Int* param_int ) {
         else
             ind_fen[2] = in_bc[2];
 
-        ind_fen[2] = std::max( 1, ind_fen[2] - 2 * param_int[NIJK + 3] );
+        ind_fen[2] = std::max( E_Int(1), ind_fen[2] - 2 * param_int[NIJK + 3] );
         ind_fen[3] = ind_fen[2];
 
-        ind_fen[0] = std::max( in_bc[0] - param_int[NIJK + 3], 1 );
+        ind_fen[0] = std::max( in_bc[0] - param_int[NIJK + 3], E_Int(1) );
         ind_fen[1] = std::min( in_bc[1] - param_int[NIJK + 3] - 1, param_int[IJKV] );
-        ind_fen[4] = std::max( in_bc[4] - param_int[NIJK + 4], 1 );
+        ind_fen[4] = std::max( in_bc[4] - param_int[NIJK + 4], E_Int(1) );
         ind_fen[5] = std::min( in_bc[5] - param_int[NIJK + 4] - 1, param_int[IJKV + 2] );
     } else if ( in_bc[4] == in_bc[5] ) {
         if ( in_bc[4] > 1 )
@@ -88,12 +88,12 @@ E_Int K_FASTC::getRange( E_Int* in_bc, E_Int* ind_fen, E_Int* param_int ) {
         else
             ind_fen[4] = in_bc[4];
 
-        ind_fen[4] = std::max( 1, ind_fen[4] - 2 * param_int[NIJK + 4] );
+        ind_fen[4] = std::max( E_Int(1), ind_fen[4] - 2 * param_int[NIJK + 4] );
         ind_fen[5] = ind_fen[4];
 
-        ind_fen[0] = std::max( in_bc[0] - param_int[NIJK + 3], 1 );
+        ind_fen[0] = std::max( in_bc[0] - param_int[NIJK + 3], E_Int(1) );
         ind_fen[1] = std::min( in_bc[1] - param_int[NIJK + 3] - 1, param_int[IJKV] );
-        ind_fen[2] = std::max( in_bc[2] - param_int[NIJK + 3], 1 );
+        ind_fen[2] = std::max( in_bc[2] - param_int[NIJK + 3], E_Int(1) );
         ind_fen[3] = std::min( in_bc[3] - param_int[NIJK + 3] - 1, param_int[IJKV + 1] );
     }
      //printf("fen  %d %d %d %d %d %d  \n", ind_fen[0], ind_fen[1],ind_fen[2],ind_fen[3],ind_fen[4],ind_fen[5] );

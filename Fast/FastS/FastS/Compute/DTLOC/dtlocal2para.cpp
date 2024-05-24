@@ -231,7 +231,7 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
              donorPts_[3] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 10];
              donorPts_[4] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 11];
              donorPts_[5] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 12];
-	     int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
+	     E_Int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
 	     //cout << dir << endl;
 	     donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*1;
 
@@ -333,7 +333,7 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
          donorPts_[3] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 10];
          donorPts_[4] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 11];
          donorPts_[5] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 12];
-	 int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
+	 E_Int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
 
 	 donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*1;
 		       
@@ -584,7 +584,7 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
              donorPts_[3] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 10];
              donorPts_[4] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 11];
              donorPts_[5] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 12];
-	     int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
+	     E_Int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
 	     donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*1;
 
 	     //cout << "irac= " <<irac<< endl;

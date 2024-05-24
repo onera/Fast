@@ -172,7 +172,7 @@ void K_FASTS::setInterpTransfersFastS(
        ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;
       #endif
 
-      int nb_send_buffer = 0;
+      E_Int nb_send_buffer = 0;
       for (E_Int ip2p = 1; ip2p < param_int_tc[0] +1; ++ip2p)
       {
         E_Int ech  = param_int_tc[ip2p + shift_graph];

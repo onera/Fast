@@ -464,7 +464,7 @@ if(param_int[0][ EXPLOCTYPE ] == 1)
 		donorPts_[3] =  param_int_tc[debut_rac + 3];
 		donorPts_[4] =  param_int_tc[debut_rac + 4];
 		donorPts_[5] =  param_int_tc[debut_rac + 5];
-		int dir = param_int_tc[debut_rac + 6];
+		E_Int dir = param_int_tc[debut_rac + 6];
 
 		//cout << "dir= " << dir << endl;
 
