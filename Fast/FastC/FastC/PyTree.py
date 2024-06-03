@@ -4065,7 +4065,8 @@ def calc_post_stats(t, iskeeporig=False, mode=None, cartesian=True):
         pres2    = Internal.getNodeFromName1(flowsol,'Pressure^2')
         if iskeeporig: Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
         pres2[0] = pres[0]+'_RMS'
-        pres2[1] = numpy.sqrt( numpy.abs(pres2[1]-pres[1]**2))
+        pres2[1] = numpy.sqrt(numpy.abs(pres2[1]-pres[1]**2)) # is abs necessary?
+        
 
         #Velocity RMS
         for i in dict_var:
@@ -4073,7 +4074,7 @@ def calc_post_stats(t, iskeeporig=False, mode=None, cartesian=True):
             pres2    = Internal.getNodeFromName1(flowsol,dict_var[i])
             if iskeeporig: Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
             pres2[0] = pres[0]+'_RMS'
-            pres2[1] = numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
+            pres2[1] = numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )  # is abs necessary?
 
         #Reynolds Stress
         for i in list_var:
