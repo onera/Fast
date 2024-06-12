@@ -68,8 +68,9 @@
 !# 44 "build/x86_r8/FastS/Compute/AUSM/2d/eff_fluausm_euler_o3_2d.for" 2
 
 
-      INTEGER*4 ndom, ithread, ind_loop(6), param_int(0:*), 
+      INTEGER*4 ndom, ithread, param_int(0:*), 
      & param_int_eff(0:*), iter
+      INTEGER_E ind_loop(6)
 
       REAL*8   xmut( param_int(41) )
       REAL*8   rop( param_int(41) * param_int(36) )
@@ -94,7 +95,7 @@
 
 
 !C Var loc
-      INTEGER*4 inc,incmax,l,lt,i,j,k,incmax2,nm,nm2,np,                  
+      INTEGER_E inc,incmax,l,lt,i,j,k,incmax2,nm,nm2,np,                  
      & l0,lt0,inci,incj,inck,ci,cj,lij,ltij,inci_mtr, incj_mtr,     
      & inck_mtr,icorr,jcorr,ls,v1,v2,v3,v4,v5,v6,wig_i,wig_j,wig_k, 
      & lfij,lxij,lf,lx,inc_x1,inc_x2,inc_x3,vslp,lvol,lvor,ir,il,   
@@ -238,7 +239,7 @@
 c -----------------*------------------*-------------------*-----------------*
 
 !C    adresse point courant pour tableau de la taille d'un domaine 
-      integer*4 inddm, i_1,j_1,k_1
+      INTEGER_E inddm, i_1,j_1,k_1
 
       inddm(i_1,j_1,k_1) = 1  
      &     + (i_1+param_int(0+3)-1) 
@@ -247,7 +248,7 @@ c -----------------*------------------*-------------------*-----------------*
 
 
 !C    adresse point courant pour tableau x ou de la taille d'un domaine 
-      integer*4 indcg, i_2,j_2,k_2
+      INTEGER_E indcg, i_2,j_2,k_2
 
       indcg(i_2,j_2,k_2) = 1  
      &     + (i_2+param_int(10+3)-1)  
@@ -257,7 +258,7 @@ c -----------------*------------------*-------------------*-----------------*
 
 
 !C    adresse interface pour tableau metric
-      integer*4 indmtr, i_3,j_3,k_3
+      INTEGER_E indmtr, i_3,j_3,k_3
 
       indmtr(i_3,j_3,k_3) =  1
      &                    + (i_3+param_int(5+3)-1)*param_int(5)

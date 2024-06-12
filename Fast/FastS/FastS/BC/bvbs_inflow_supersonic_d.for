@@ -71,7 +71,7 @@ C Var local
       REAL*8 ro, u, v, w, t, nut, c0, c1, c2, c3
 C
 C    adresse point courant pour tableau de la taille d'un domaine 
-      INTEGER*4 inddm, i_1, j_1, k_1
+      INTEGER_E inddm, i_1, j_1, k_1
       INTRINSIC ABS
       REAL*8 abs0
       REAL*8 abs1

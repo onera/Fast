@@ -17,7 +17,7 @@ C
       INTEGER*4 l, i, j, k, lij
 C
 C    adresse point courant pour tableau de la taille d'un domaine 
-      INTEGER*4 inddm, i_1, j_1, k_1
+      INTEGER_E inddm, i_1, j_1, k_1
 C
       IF (param_int(36) .EQ. 6) THEN
         DO k=ind_loop(5),ind_loop(6)
