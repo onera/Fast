@@ -31,7 +31,7 @@ c***********************************************************************
  
 C Var local
       INTEGER_E l,ijkm,im,jm,km,ldjr,i,j,k,ne,lij,neq,n,nistk,lstk,ind
-      integer*4 inddm2,i_2,j_2,k_2
+      INTEGER_E inddm2,i_2,j_2,k_2
       INTEGER_E nistk2,nistk3,l2,lstk2,posbis
       REAL_E c1,roe,cv,cvinv,ro_old,u_old,v_old,w_old,t_old,roe_old
 

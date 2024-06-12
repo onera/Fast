@@ -61,7 +61,7 @@ C Var local
       REAL*8 c1, vmax
 C
 C    adresse point courant pour tableau de la taille d'un domaine 
-      INTEGER*4 inddm, i_1, j_1, k_1
+      INTEGER_E inddm, i_1, j_1, k_1
       INTRINSIC MAX
       REAL*8 max1
       REAL*8 max1d

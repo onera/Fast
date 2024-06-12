@@ -148,10 +148,10 @@ C!    VARIABLES LOCALES POUR LE CALCUL DE dpP_dpW **************************
 c*************************************************************************
 
 CC    adresse point courant pour tableau de la taille d'un domaine 
-      INTEGER*4 inddm, i_1, j_1, k_1
+      INTEGER_E inddm, i_1, j_1, k_1
 C
 CC    adresse interface pour tableau metric
-      INTEGER*4 indmtr, i_3, j_3, k_3
+      INTEGER_E indmtr, i_3, j_3, k_3
       INTRINSIC ABS
       INTRINSIC SQRT
       INTRINSIC MAX

@@ -78,9 +78,9 @@ C
      +       dud, dvd, dpd, dqnd, qnd, rd, vd, hd, qd, r_1d
 C
 C    adresse point courant pour tableau de la taille d'un domaine 
-      INTEGER*4 inddm, i_1, j_1, k_1
+      INTEGER_E inddm, i_1, j_1, k_1
 C    adresse interface pour tableau metric
-      INTEGER*4 indmtr, i_3, j_3, k_3
+      INTEGER_E indmtr, i_3, j_3, k_3
       REAL*8 abs0
       REAL*8 abs0d
       REAL*8 abs1

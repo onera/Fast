@@ -62,7 +62,7 @@ C Var local
       REAL*8 c1
 C
 C    adresse point courant pour tableau de la taille d'un domaine 
-      INTEGER*4 inddm, i_1, j_1, k_1
+      INTEGER_E inddm, i_1, j_1, k_1
 C
       IF (lrhs .EQ. 1) THEN
         c1 = 0.

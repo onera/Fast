@@ -68,9 +68,9 @@ C Var local
       REAL*8 ud, vd, wd
 C
 C    adresse point courant pour tableau de la taille d'un domaine 
-      INTEGER*4 inddm, i_1, j_1, k_1
+      INTEGER_E inddm, i_1, j_1, k_1
 C    adresse interface pour tableau vitesse entrainement
-      INTEGER*4 indven, i_4, j_4, k_4
+      INTEGER_E indven, i_4, j_4, k_4
       EXTERNAL SHAPE_TAB_MTR
 C
 C
