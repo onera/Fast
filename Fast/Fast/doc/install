@@ -19,14 +19,14 @@ elif ([ $# -eq 2 ])
 then
     PRODUCTION=1
     # Destination docs
-    DEST="../../../web/doc"
+    DEST="../../../docs/doc"
     # Destination tests unitaires
     DEST2="$DEST/Examples/Fast"
     # Destination des release notes
-    DEST3="../../../web/Download"
+    DEST3="../../../docs/Download"
 else
     echo 'install: install locally'
-    echo 'install 1 2: install in web/doc.'
+    echo 'install 1 2: install in docs/doc.'
     exit
 fi
 
