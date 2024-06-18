@@ -1146,7 +1146,7 @@ C Var loc
      &                 venti, ventj, ventk,
      &                 ti, tj, tk, vol, xmut)
                                                
-       ELSEIF (option.eq.1313) THEN 
+       ELSEIF (option.eq.1313) THEN
                                                
            call fluroe_ale_euler_minmod_2d(ndom, ithread,
      &                 param_int, param_real,

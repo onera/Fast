@@ -7,6 +7,7 @@ c.....Metrique
         np  = l +  incj
 
 ! pente (qm) a l'interface droite et  (qp) a l'interface gauche
+        c    = wig(l+sl_j)     !SC only
         vslp = v1
 #include  "FastS/Compute/Slope/o3sc_slope_var.for"
         qm1 = qm
