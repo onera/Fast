@@ -711,6 +711,9 @@ def _updateGradPInfo(t, tc, metrics, type='IBCD'):
   return None
 #==============================================================================
 def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0):
+    Cmpi.barrier()
+    if Cmpi.rank == 0: print("Info: FastS Warmup [Start]")
+
     Re  =-1
     Lref= 1.
     gradP      =False
@@ -814,7 +817,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
-    metrics = allocate_metric(t)
+    metrics = allocate_metric(t, verbose)
 
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t) 
@@ -938,6 +941,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     fasts._computePT_mut(zones, metrics, hook1)
+
+    if Cmpi.rank == 0: print("Info: FastS Warmup [End]")
+    Cmpi.barrier()
 
     return (t, tc, metrics)
 

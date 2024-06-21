@@ -33,11 +33,11 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
 {
-  PyObject *zone; E_Int nssiter;
+  PyObject *zone; E_Int nssiter, verbose;
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "Ol", &zone, &nssiter)) return NULL; 
+  if (!PyArg_ParseTuple(args, "Oll", &zone, &nssiter, &verbose)) return NULL;
 #else 
-  if (!PyArg_ParseTuple(args, "Oi", &zone, &nssiter)) return NULL; 
+  if (!PyArg_ParseTuple(args, "Oii", &zone, &nssiter, &verbose)) return NULL;
 #endif
 
   vector<PyArrayObject*> hook;
@@ -271,11 +271,13 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
      else if (PyUnicode_Check(zname_py)) zname = (char*)PyUnicode_AsUTF8(zname_py);
 #endif
      else zname = NULL;
-     if      (typ_zone == 0) {printf("typezone: 3D curvilinear, %s (%d, %d, %d)\n", zname, ipt_param_int[ IJKV ], ipt_param_int[ IJKV +1], ipt_param_int[ IJKV +2]);}
-     else if (typ_zone == 1) {printf("typezone: 3D, homogenous k direction with constant step, %s (%d, %d, %d)\n", zname,ipt_param_int[ IJKV ], ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
-     else if (typ_zone == 2) {printf("typezone: 3D cartesian with constant step, %s (%d, %d, %d)\n",  zname,ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
-     else if (typ_zone == 3) {printf("typezone: 2D curvilinear, %s (%d, %d, %d)\n", zname, ipt_param_int[ IJKV ], ipt_param_int[ IJKV +1], ipt_param_int[ IJKV +2]);}
-
+     if (verbose == 1)
+     {
+      if      (typ_zone == 0) {printf("typezone: 3D curvilinear, %s (%d, %d, %d)\n", zname, ipt_param_int[ IJKV ], ipt_param_int[ IJKV +1], ipt_param_int[ IJKV +2]);}
+      else if (typ_zone == 1) {printf("typezone: 3D, homogenous k direction with constant step, %s (%d, %d, %d)\n", zname,ipt_param_int[ IJKV ], ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
+      else if (typ_zone == 2) {printf("typezone: 3D cartesian with constant step, %s (%d, %d, %d)\n",  zname,ipt_param_int[ IJKV ],  ipt_param_int[ IJKV +1],  ipt_param_int[ IJKV +2]);}
+      else if (typ_zone == 3) {printf("typezone: 2D curvilinear, %s (%d, %d, %d)\n", zname, ipt_param_int[ IJKV ], ipt_param_int[ IJKV +1], ipt_param_int[ IJKV +2]);}
+     }
      //
      //* Declare memoire pour metric: normales + volume)
      //
