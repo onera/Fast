@@ -295,7 +295,7 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
 #==============================================================================
 # alloue retourne la metrique
 #==============================================================================
-def allocate_metric(t):
+def allocate_metric(t, verbose=1):
 
     own          = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc        = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
@@ -317,7 +317,7 @@ def allocate_metric(t):
                grid_init = Internal.copyTree(grids[0])
                grid_init[0] = 'GridCoordinates#Init'
                Internal.addChild(z, grid_init, pos=-1) # last
-        metrics.append(fasts.allocate_metric(z, nssiter))
+        metrics.append(fasts.allocate_metric(z, nssiter, verbose))
     return metrics
 
 #==============================================================================
@@ -357,6 +357,8 @@ def _init_metric(t, metrics, hook):
 #==============================================================================
 def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_graph=None, Padding=None, verbose=0):
     """Perform necessary operations for the solver to run."""
+    print("Info: FastS Warmup [Start]")
+
     Re  =-1
     Lref= 1.
     gradP      =False
@@ -408,7 +410,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     FastC._build_omp(t)
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
-    metrics = allocate_metric(t)
+    metrics = allocate_metric(t, verbose)
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t)
     # Contruction Conservative_int
@@ -559,7 +561,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     fasts._computePT_mut(zones, metrics, hook1)
 
-
+    print("Info: FastS Warmup [End]")
     return (t, tc, metrics)
 
 #==============================================================================
