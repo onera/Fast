@@ -4,8 +4,8 @@ c     $Revision: 59 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine tstb3c(ndom, first_it, param_int, param_real,
-     &                    ind_loop,
-     &                    rop, coe, xmut, venti, ti, tj, tk, vol)
+     &                  ind_loop,
+     &                  rop, ro_src, coe, xmut, venti, ti, tj, tk, vol)
 c***********************************************************************
 c_U   USER : PECHIER
 c
@@ -24,9 +24,10 @@ c***********************************************************************
 
       INTEGER_E ndom,first_it, param_int(0:*), ind_loop(6)
 
-      REAL_E  xmut( param_int(NDIMDX) )
-      REAL_E   rop( param_int(NDIMDX) , param_int(NEQ) )
-      REAL_E   coe( param_int(NDIMDX) , param_int(NEQ_COE) )
+      REAL_E   xmut( param_int(NDIMDX) )
+      REAL_E    rop( param_int(NDIMDX) , param_int(NEQ) )
+      REAL_E ro_src( param_int(NDIMDX) , param_int(NEQ)+1 )
+      REAL_E    coe( param_int(NDIMDX) , param_int(NEQ_COE) )
 
       REAL_E ti( param_int(NDIMDX_MTR) , param_int(NEQ_IJ) ),
      &       tj( param_int(NDIMDX_MTR) , param_int(NEQ_IJ) ),
@@ -169,6 +170,11 @@ CDIR$ VECTOR NONTEMPORAL (coe)
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
 
 #include   "FastS/Compute/loop_end.for"
+          if(param_int(SRC).eq.2) then
+#include     "FastS/Compute/loop_begin.for"
+               coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
+#include     "FastS/Compute/loop_end.for"
+          endif
 
          elseif(param_int(ITYPZONE).eq.1) then !maillage 3d k homogene:
 
@@ -247,6 +253,11 @@ CDIR$ VECTOR NONTEMPORAL (coe)
               !Id+Partie convective precedente+Partie visqueuse
               coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
 #include   "FastS/Compute/loop_end.for"
+          if(param_int(SRC).eq.2) then
+#include     "FastS/Compute/loop_begin.for"
+               coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
+#include     "FastS/Compute/loop_end.for"
+          endif
 
          elseif(param_int(ITYPZONE).eq.2) then !maillage 3d cartesien:
 
@@ -315,6 +326,11 @@ c     &                     + 2.*xmvis*(tc2i*tc2i+tc2j*tc2j+tc2k*tc2k))
          enddo
          enddo
          enddo
+          if(param_int(SRC).eq.2) then
+#include     "FastS/Compute/loop_begin.for"
+               coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
+#include     "FastS/Compute/loop_end.for"
+          endif
 
          else !maillage fixe, 2d
 
@@ -374,9 +390,13 @@ CDIR$ VECTOR NONTEMPORAL (coe)
    
                !Evaluation de la diagonale princi_mtrpale scalaire (5*5) pour la cellule l
                !Id+Partie convective precedente+Partie visqueuse
-
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3))*0.5
 #include   "FastS/Compute/loop_end.for"
+          if(param_int(SRC).eq.2) then
+#include     "FastS/Compute/loop_begin.for"
+               coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
+#include     "FastS/Compute/loop_end.for"
+          endif
 
        endif !maillage fixe, 2d ou 3d ou 3d homogene
 
@@ -487,6 +507,11 @@ CDIR$ VECTOR NONTEMPORAL (coe)
                !Id+Partie convective precedente+Partie visqueuse
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
 #include   "FastS/Compute/loop_end.for"
+          if(param_int(SRC).eq.2) then
+#include     "FastS/Compute/loop_begin.for"
+               coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
+#include     "FastS/Compute/loop_end.for"
+          endif
 
          elseif(param_int(ITYPZONE).eq.1) then !maillage 3d k homogene:
 
@@ -570,6 +595,11 @@ CDIR$ VECTOR NONTEMPORAL (coe)
               !Id+Partie convective precedente+Partie visqueuse
               coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
 #include   "FastS/Compute/loop_end.for"
+          if(param_int(SRC).eq.2) then
+#include     "FastS/Compute/loop_begin.for"
+               coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
+#include     "FastS/Compute/loop_end.for"
+          endif
 
          elseif(param_int(ITYPZONE).eq.2) then !maillage 3d cartesien:
 
@@ -641,6 +671,11 @@ CDIR$ IVDEP
               enddo
              enddo
              enddo
+          if(param_int(SRC).eq.2) then
+#include     "FastS/Compute/loop_begin.for"
+               coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
+#include     "FastS/Compute/loop_end.for"
+          endif
 
          else !maillage mobile, 2d
 
@@ -708,6 +743,11 @@ CDIR$ VECTOR NONTEMPORAL (coe)
                !Id+Partie convective precedente+Partie visqueuse
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3))*0.5
 #include   "FastS/Compute/loop_end.for"
+          if(param_int(SRC).eq.2) then
+#include     "FastS/Compute/loop_begin.for"
+               coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
+#include     "FastS/Compute/loop_end.for"
+          endif
 
        endif!2d/3d/3d homogene
  

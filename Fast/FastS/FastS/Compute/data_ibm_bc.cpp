@@ -87,7 +87,7 @@
                             iptParamLund,  iptro[nd], iptAvgPlanLund); 
          }
         //wallmodel
-        else if(bc_type==31)
+        else if(bc_type==99)
          {  E_Float* iptAvgPlan; E_Float* iptParam_wmles;
             E_Int sz_data;
             if(iptsize_data[0]==1){iptAvgPlan     = ipt_data + iptsize_data[0]; 

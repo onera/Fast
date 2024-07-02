@@ -74,7 +74,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
         if  node is not None: ompmode = Internal.getValue(node)
 
     # Reordone les zones pour garantir meme ordre entre t et tc
-    FastC._reorder(t, tc, ompmode)
+    FastC._reorder(t, tc)
 
     # Construction param_int et param_real des zones
     FastC._buildOwnData(t, Padding)

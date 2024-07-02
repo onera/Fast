@@ -245,7 +245,6 @@ C var loc
              l3    = (2*yplus-8.15)/16.7
 
              f = 5.424*atan(l3) + log10(l1/(l2*l2)) - unorm/utau - 3.52
-
             end do
 
             utau2 = utau**2
@@ -359,45 +358,29 @@ C var loc
 
             tauw = r*utau2
 
-            qwall = 0 ! adiabatic wall
- 
             u     = 0.5*(rop(l+v2)+rop(iadrf+v2))
             v     = 0.5*(rop(l+v3)+rop(iadrf+v3))
             w     = 0.5*(rop(l+v4)+rop(iadrf+v4))
-
-
             !determination vitesse normale interface
             u_int= tcx*u +tcy*v +tcz*w -qen
 
             unorm = sqrt(rop(l0+v2)**2+rop(l0+v3)**2+rop(l0+v4)**2)
             unorm = max(1.,unorm)
 
-c      if(k.eq.10.and.j.le.15.and.idir.eq.1)
-c     & write(*,'(a,f20.10,i5)')'verI', sqrt(utau2),j
-c      if(k.eq.10.and.i.le.5.and.idir.eq.3)
-c     & write(*,'(a,f20.10,i5)')'verJ', sqrt(utau2),i
-c      if(k.eq.10.and.j.eq.10)write(*,'(a,9f18.14)')'verI',rop(m+v2),
-c     & rop(l+v2),u_int,qen/surf,venty,ventz,nx,ny,nz,idir
-c      if(k.eq.10.and.j.eq.10)write(*,'(a,7f19.14)')'verI',
-c     & u_int/surf,qen/surf,venty,ventz,nx,ny,nz,idir
-
-c      if(k.eq.10.and.i.eq.10)write(*,'(a,7f19.14)')'verJ',
-c     & u_int/surf,qen/surf,venty,ventz,nx,ny,nz
-
-c      if(k.eq.10.and.j.eq.10.and.idir=1)write(*,*)'verifI',rop(m+v2),
-c     & rop(l+v2),m,l,idir
-c      if(idir.eq.4)write(*,*)'verifJ',rop(m+v2),
-
+            qwall = 0 ! adiabatic wall
             flu1= 0.
-            !flu2= tcx*p  + u_int*u*r - (tauw*rop(l0+v2)/unorm)*surf*sens
-            !flu3= tcy*p  + u_int*v*r - (tauw*rop(l0+v3)/unorm)*surf*sens
-            !flu4= tcz*p  + u_int*w*r - (tauw*rop(l0+v4)/unorm)*surf*sens
-            flu2= tcx*p  + u_int*u*r - (tauw*ut/unorm)*surf*sens
-            flu3= tcy*p  + u_int*v*r - (tauw*vt/unorm)*surf*sens
-            flu4= tcz*p  + u_int*w*r - (tauw*wt/unorm)*surf*sens
-            flu5= p*qen              - qwall*surf*sens
-            !flu5= 0.
+            fv  = - (tauw*ut/unorm)*surf*sens
+            flu2= tcx*p  + u_int*u*r + fv
+            fv5 = fv*u
 
+            fv  = - (tauw*vt/unorm)*surf*sens
+            flu3= tcy*p  + u_int*v*r + fv
+            fv5 = fv5 + fv*v
+
+            fv  = - (tauw*wt/unorm)*surf*sens
+            flu4= tcz*p  + u_int*w*r + fv
+            fv5 = fv5 + fv*w
+            flu5= p*qen  + fv5  - qwall*surf*sens
 
 #include  "FastS/Compute/assemble_drodm_corr.for"
            enddo

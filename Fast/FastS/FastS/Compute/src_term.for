@@ -69,9 +69,9 @@ C Var loc
       end if
 
 
-      IF (param_int(SRC).eq.1) THEN
-        call update_src(ndom, nitcfg, param_int, ind_rhs,  drodm , 
-     &              rop, coe, vol, ro_src)
+      IF (param_int(SRC).ge.1) THEN
+        call update_src(ndom, nitcfg, param_int, param_real, ind_rhs,
+     &                  drodm , rop, coe, vol, ro_src)
       ENDIF
 
       ! Si dtloc + ALE 

@@ -771,7 +771,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         if  node is not None: ompmode = Internal.getValue(node)
 
     # Reordone les zones pour garantir meme ordre entre t et tc
-    FastC._reorder(t, tc, ompmode)
+    FastC._reorder(t, tc)
 
     # Construction param_int et param_real des zones
     FastC._buildOwnData(t, Padding)
@@ -1144,17 +1144,9 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
 
        #print("steady",graph['graphID'] )
 
-       #Compactage tc
        # 
-       # Get omp_mode
-       ompmode = FastC.OMP_MODE
-       node = Internal.getNodeFromName1(t, '.Solver#define')
-       if node is not None:
-        node = Internal.getNodeFromName1(node, 'omp_mode')
-        if  node is not None: ompmode = Internal.getValue(node)
-
        # Reordone les zones pour garantir meme ordre entre t et tc
-       FastC._reorder(t, tc, ompmode)
+       FastC._reorder(t, tc)
 
        # Compactage arbre transfert. Si init, compactage dans warmup plus tard
        #

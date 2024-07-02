@@ -272,7 +272,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
                 enddo !j
              enddo !k
 
-       else
+          else
              do  k = ind_loop(5), ind_loop(6)
                 do j = ind_loop(4)+1, ind_loop(4)+2 
 !DEC$ IVDEP
@@ -325,7 +325,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
                 enddo !j
              enddo !k
 
-       else
+          else
              do  k = ind_loop(5), ind_loop(6)
                 do j = ind_loop(3)-2, ind_loop(3)-1
 !DEC$ IVDEP
@@ -378,7 +378,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
                 enddo !j
              enddo !k
 
-       else
+          else
              do  k = ind_loop(6)+1, ind_loop(6)+2
                 do j = ind_loop(3), ind_loop(4) 
 !DEC$ IVDEP
@@ -431,7 +431,7 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
                 enddo !j
              enddo !k
 
-       else
+          else
              do  k = ind_loop(5)-2, ind_loop(5)-1
                 do j = ind_loop(3), ind_loop(4) 
 !DEC$ IVDEP
@@ -458,6 +458,5 @@ c......determine la forme des tableuz metrique en fonction de la nature du domai
        endif !param_int(NEQ)
 
       ENDIF !idir
-
 
       END
