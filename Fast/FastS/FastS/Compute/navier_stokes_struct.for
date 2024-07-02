@@ -267,7 +267,7 @@ c       endif
               call cptst3(ndo, nitcfg, nitrun, first_it, lssiter_verif,
      &                    flagCellN, param_int, param_real,
      &                    ind_sdm, ind_grad, ind_coe,
-     &                    cfl, xmut,rop_ssiter, cellN, coe,
+     &                    cfl, xmut,rop_ssiter, ro_src, cellN, coe,
      &                    ti,tj,tk, vol(1+shift_vol),venti)
 
           ENDIF !! fin test 1ere sous-ite de la zone

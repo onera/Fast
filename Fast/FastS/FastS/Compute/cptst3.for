@@ -6,7 +6,8 @@ c***********************************************************************
       subroutine cptst3(ndom,nitcfg,nitrun,first_it, lssiter_verif,
      &                  flagCellN, param_int, param_real,
      &                  ind_sdm, ind_grad, ind_coe,
-     &                  cfl, xmut,rop, cellN, coe, ti,tj,tk, vol,venti)
+     &                  cfl, xmut,rop, ro_src, cellN,
+     &                  coe, ti,tj,tk, vol,venti)
 c***********************************************************************
 c_U   USER : PECHIER
 c
@@ -36,6 +37,7 @@ c***********************************************************************
  
       REAL_E xmut( param_int(NDIMDX) )
       REAL_E  rop( param_int(NDIMDX) , param_int(NEQ) )
+      REAL_E  ro_src( param_int(NDIMDX) , param_int(NEQ)+1 )
       REAL_E  coe( param_int(NDIMDX) , param_int(NEQ_COE) )
       REAL_E ti( param_int(NDIMDX_MTR) , param_int(NEQ_IJ) ),
      &       tj( param_int(NDIMDX_MTR) , param_int(NEQ_IJ) ),
@@ -97,8 +99,8 @@ C Var loc
 
          !! calcul coef matrice LU
          call tstb3c( ndom, first_it, param_int, param_real,
-     &                    ind_coe,
-     &                    rop, coe, xmut, venti, ti, tj, tk, vol)
+     &                ind_coe,
+     &                rop, ro_src, coe, xmut, venti, ti, tj, tk, vol)
        else
          !! calcul dt/vol
          call tstb3_global(ndom,flagCellN, param_int, param_real,

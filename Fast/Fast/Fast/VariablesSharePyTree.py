@@ -23,6 +23,7 @@ LEVELG	                    =56
 SLOPE                       =64 
 SHIFTVAR                    =66
 PT_BC	                    =70
+SCHEDULER                   =86
 BC_NBDATA                   = 8
 BC_TYPE	                    = 0
 

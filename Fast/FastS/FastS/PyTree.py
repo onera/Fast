@@ -38,37 +38,6 @@ except: pass
 # Variable alignement pour vectorisation
 #CACHELINE = Dist.getCacheLine()
 
-##[AJ] 
-##needed for wmm validation test case
-def _change_bc(t,up_lim):
-    for z in Internal.getZones(t):
-        sol  = Internal.getNodeByName(z,'FlowSolution#Centers')
-        dens = Internal.getNodeByName(sol,'Density')[1]
-        velx = Internal.getNodeByName(sol,'VelocityX')[1]
-        vely = Internal.getNodeByName(sol,'VelocityY')[1]
-        velz = Internal.getNodeByName(sol,'VelocityZ')[1]
-        temp = Internal.getNodeByName(sol,'Temperature')[1]
-        nutilde = Internal.getNodeByName(sol,'TurbulentSANuTilde')[1]
-        sh   = numpy.shape(dens)
-        for k in range(sh[2]):
-            for j in range(up_lim):
-                for i in range(2,sh[0]-2):
-                    dens[i,j,k] = dens[i,up_lim+up_lim-1-j,k]
-                    velx[i,j,k] =-velx[i,up_lim+up_lim-1-j,k]
-                    vely[i,j,k] =-vely[i,up_lim+up_lim-1-j,k]
-                    velz[i,j,k] =-velz[i,up_lim+up_lim-1-j,k]
-                    temp[i,j,k] = temp[i,up_lim+up_lim-1-j,k]
-                    nutilde[i,j,k] = -nutilde[i,up_lim+up_lim-1-j,k]
-    return None
-                    
-
-#==============================================================================
-# generation maillage pour tble
-#==============================================================================
-def _stretch(coord, nbp, x1, x2, dx1, dx2, ityp):
-    fasts._stretch(coord, nbp, x1, x2, dx1, dx2, ityp)
-    return None
-
 #==============================================================================
 # compute in place
 # graph is a dummy argument to be compatible with mpi version
@@ -159,6 +128,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
             nit_c     = 1
             #t0=Time.time()
             tic=Time.time()
+
             fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
             tps_cp +=Time.time()-tic 
             #print('t_compute = %f'%(Time.time() - t0))
@@ -392,7 +362,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         if  node is not None: ompmode = Internal.getValue(node)
 
     # Reordone les zones pour garantir meme ordre entre t et tc
-    FastC._reorder(t, tc, ompmode)
+    FastC._reorder(t, tc)
     # Construction param_int et param_real des zones
     FastC._buildOwnData(t, Padding)
     t = Internal.rmNodesByName(t, 'NbptsLinelets')
@@ -558,7 +528,6 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #
     if infos_ale is not None and len(infos_ale) == 3: nitrun = infos_ale[2]
     fasts._computePT_mut(zones, metrics, hook1)
-
 
     return (t, tc, metrics)
 
@@ -1156,15 +1125,8 @@ def _UpdateUnsteadyJoinParam(t, tc, omega, timelevelInfos, split='single', root_
 
        tc = Internal.merge( [tc, tc_inst] )
 
-       # Get omp_mode
-       ompmode = FastC.OMP_MODE
-       node = Internal.getNodeFromName1(t, '.Solver#define')
-       if node is not None:
-        node = Internal.getNodeFromName1(node, 'omp_mode')
-        if  node is not None: ompmode = Internal.getValue(node)
-
        # Reordone les zones pour garantir meme ordre entre t et tc
-       FastC._reorder(t, tc, ompmode)
+       FastC._reorder(t, tc)
 
        # Compactage arbre transfert
        g = None; l = None
@@ -2339,7 +2301,7 @@ def createStressNodes(t, BC=None, windows=None):
     own   = Internal.getNodeFromName1(t,   '.Solver#ownData')  # noeud
     dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')    # noeud
 
-    teff[2].append(own)
+    if own is not None: teff[2].append(own)
 
     zones = []
     no_z = 0
@@ -2360,11 +2322,9 @@ def createStressNodes(t, BC=None, windows=None):
             # gestion zone2d
             dimzone = Internal.getZoneDim(z)
             inck0 = 2 ; inck1 = 1
-            #vargrad=['gradxVelocityX','gradyVelocityX','gradzVelocityX','gradxVelocityY','gradyVelocityY','gradzVelocityY','gradxVelocityZ','gradyVelocityZ','gradzVelocityZ','gradxTemperature','gradyTemperature','gradzTemperature', 'CoefPressure','ViscosityMolecular']
             vargrad=['gradxVelocityX','gradyVelocityX','gradzVelocityX','gradxVelocityY','gradyVelocityY','gradzVelocityY','gradxVelocityZ','gradyVelocityZ','gradzVelocityZ','gradxTemperature','gradyTemperature','gradzTemperature', 'CoefPressure','ViscosityMolecular','Density2','Pressure']
             if dimzone[3] == 2: 
                 inck0=0 ; inck1=0
-                #vargrad=['gradxVelocityX','gradyVelocityX','gradxVelocityY','gradyVelocityY','gradxTemperature','gradyTemperature','CoefPressure','ViscosityMolecular']
                 vargrad=['gradxVelocityX','gradyVelocityX','gradxVelocityY','gradyVelocityY','gradxTemperature','gradyTemperature','CoefPressure','ViscosityMolecular','Density2','Pressure']
 
             varc  = []
@@ -2733,6 +2693,10 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
 
  dtloc = Internal.getValue(dtloc) # tab numpy
  ss_iteration  = int(dtloc[0])
+ shift_omp     = int(dtloc[11])
+ nitcfg        = 1
+ nbtask        = int(dtloc[shift_omp + nitcfg-1]) 
+ ptiter        = int(dtloc[shift_omp + ss_iteration+ nitcfg-1])
 
  timer_omp = FastC.HOOK["TIMER_OMP"]
  ADR = OMP_NUM_THREADS*2*(ss_iteration)
@@ -2751,17 +2715,20 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
  cells_tot       =0
  data            ={}
  f1 = open(FILEOUT1, 'w')
- for z in zones:
+
+ for ntask in range(nbtask):
+
+    adr_tsk = ptiter + ntask*(6+OMP_NUM_THREADS*7)
+    nd     = int(dtloc[ adr_tsk + shift_omp])
+
+    
+    z = zones[nd]
+    ADR = OMP_NUM_THREADS*2*ss_iteration + nd*(OMP_NUM_THREADS*2+1)
     echant    =  timer_omp[ ADR ]
     param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
-    solver_def= Internal.getNodeFromName2(z, '.Solver#define')
-    if ompmode == 1:
-       Ptomp       = param_int[69]
-       PtrIterOmp  = param_int[Ptomp]
-       PtZoneomp   = param_int[PtrIterOmp]
-       NbreThreads = param_int[ PtZoneomp  + OMP_NUM_THREADS ]
-    else:
-       NbreThreads = OMP_NUM_THREADS
+    solver_def= Internal.getNodeFromName1(z, '.Solver#define')
+
+    NbreThreads = int( dtloc[  adr_tsk + shift_omp + 2 + OMP_NUM_THREADS ])
 
     if diag == 'compact':
       tps_zone_percell     =0.
@@ -2775,34 +2742,21 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
           else:
               cellCount[2*i+1]+=timer_omp[ ADR + 2+i*2 ]
 
-          if ompmode == 1:
-            ithread = param_int[ PtZoneomp  +  i ]
-            if ithread != -2:
-               #print "check", z[0],timer_omp[ ADR + 1+i*2 ]/echant, timer_omp[ ADR + 2+i*2 ], i,"echant=",echant,ijkv
-               #tps_zone_percell += timer_omp[ ADR + 1+ithread ]
-               tps_zone_percell += timer_omp[ ADR + 1+i*2 ]*timer_omp[ ADR + 2+i*2 ]/float(ijkv)*NbreThreads   #tps * Nb cell
-               if timer_omp[ ADR + 1+i*2 ] > tps_zone_percell_max: 
-                    tps_zone_percell_max = timer_omp[ ADR + 1+i*2 ]
-                    ithread_max          = ithread
-               if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min: 
-                    tps_zone_percell_min = timer_omp[ ADR + 1+i*2 ]
-                    ithread_min          = ithread
-          else:
-            tps_zone_percell += timer_omp[ ADR + 1+i*2 ]*timer_omp[ ADR + 2+i*2 ]/float(ijkv)*NbreThreads
-            if timer_omp[ ADR + 1+i*2 ] > tps_zone_percell_max: 
-                 tps_zone_percell_max = timer_omp[ ADR + 1+i*2 ]
-                 ithread_max          = i
-            if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min: 
-                 tps_zone_percell_min = timer_omp[ ADR + 1+i*2 ]
-                 ithread_min          = i
+          ithread = int(dtloc[ adr_tsk + shift_omp + 2 + i ] )
+          if ithread != -2:
+             tps_zone_percell += timer_omp[ ADR + 1+i*2 ]*timer_omp[ ADR + 2+i*2 ]/float(ijkv)*NbreThreads   #tps * Nb cell
+             #print(z[0],'ithread actif', ithread,i,  timer_omp[ ADR + 1+i*2 ], timer_omp[ ADR + 2+i*2 ], echant,NbreThreads, ADR)
+             if timer_omp[ ADR + 1+i*2 ] > tps_zone_percell_max: 
+                  tps_zone_percell_max = timer_omp[ ADR + 1+i*2 ]
+                  ithread_max          = ithread
+             if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min: 
+                  tps_zone_percell_min = timer_omp[ ADR + 1+i*2 ]
+                  ithread_min          = ithread
       
       tps_percell     += tps_zone_percell/echant/NbreThreads*ijkv
       tps_percell_max += tps_zone_percell_max/echant*ijkv
       tps_percell_min += tps_zone_percell_min/echant*ijkv
       cout_zone        = tps_zone_percell/echant/NbreThreads*ijkv
-      #tps_percell     += tps_zone_percell/echant/NbreThreads/
-      #tps_percell_max += tps_zone_percell_max/echant
-      #cout_zone        = tps_zone_percell/echant/NbreThreads
       cout            += cout_zone
       data[ z[0] ]   = [ tps_zone_percell/echant/NbreThreads, cout_zone]
 
@@ -2827,13 +2781,8 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
 
     else:
       for i in range(OMP_NUM_THREADS):
-          if ompmode ==1:
-            ithread = param_int[ PtZoneomp  +  i ]
-            if ithread != -2:
-               if RECORD is None: print('zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread*2 ]/echant,' th=  ', ithread, 'echant= ', echant)
-          else:
-            ithread = i
-            if RECORD is None: print('zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread*2 ]/echant,' th=  ', ithread, 'echant= ', echant)
+          ithread = int(dtloc[ adr_tsk + shift_omp + 2 + i ] )
+          if ithread != -2: print('zone= ', z[0], 'cpu= ',timer_omp[ ADR + 1+ithread*2 ]/echant,' th=  ', ithread, 'echant= ', echant)
 
     ADR+= OMP_NUM_THREADS*2+1
 
@@ -4050,4 +3999,32 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
             
         return t_conv_hist
 
+#==============================================================================
+# generation maillage pour tble
+#==============================================================================
+def _stretch(coord, nbp, x1, x2, dx1, dx2, ityp):
+    fasts._stretch(coord, nbp, x1, x2, dx1, dx2, ityp)
+    return None
 
+##[AJ] 
+##needed for wmm validation test case
+def _change_bc(t,up_lim):
+    for z in Internal.getZones(t):
+        sol  = Internal.getNodeByName(z,'FlowSolution#Centers')
+        dens = Internal.getNodeByName(sol,'Density')[1]
+        velx = Internal.getNodeByName(sol,'VelocityX')[1]
+        vely = Internal.getNodeByName(sol,'VelocityY')[1]
+        velz = Internal.getNodeByName(sol,'VelocityZ')[1]
+        temp = Internal.getNodeByName(sol,'Temperature')[1]
+        nutilde = Internal.getNodeByName(sol,'TurbulentSANuTilde')[1]
+        sh   = numpy.shape(dens)
+        for k in range(sh[2]):
+            for j in range(up_lim):
+                for i in range(2,sh[0]-2):
+                    dens[i,j,k] = dens[i,up_lim+up_lim-1-j,k]
+                    velx[i,j,k] =-velx[i,up_lim+up_lim-1-j,k]
+                    vely[i,j,k] =-vely[i,up_lim+up_lim-1-j,k]
+                    velz[i,j,k] =-velz[i,up_lim+up_lim-1-j,k]
+                    temp[i,j,k] = temp[i,up_lim+up_lim-1-j,k]
+                    nutilde[i,j,k] = -nutilde[i,up_lim+up_lim-1-j,k]
+    return None

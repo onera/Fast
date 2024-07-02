@@ -85,11 +85,14 @@ def _setNum2Base(a, num):
     return None
 
 #==============================================================================
-# Reorder zone pour // openmp mode=1
+# Reorder zone pour // omp 
 #==============================================================================
-def _reorder(t, tc=None, omp_mode=0):
+def _reorder(t, tc=None):
 
     if tc is not None: 
+       #reordone les bases, sinon souci potentiel en MPi si ordre base != entre proc
+       #Internal._sortByName(tc,recursive=False)
+       #Internal._sortByName(t, recursive=False)
 
        #reordone les zones de tc par taille decroissante dans chaque base pour optim openmp
        bases_tc = Internal.getNodesFromType1(tc,'CGNSBase_t')
@@ -172,6 +175,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
     for b in bases:  
         #On regarde si b est une simulation couplee NS-LBM
+        model="MISSING"
         a = Internal.getNodeFromName2(b, 'GoverningEquations')
         if a is not None:
            model = Internal.getValue(a)
@@ -194,6 +198,10 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             model_loc ='Nada'
             a = Internal.getNodeFromName2(z, 'GoverningEquations')
             if a is not None: model_loc = Internal.getValue(a)
+            if model_loc =='Nada': 
+               if model !="MISSING": model_loc =model
+               else: 
+                  model='Euler'; print("WARNING definition model: rien trouver dans bases et zone: Euler imposer")
 
             sa, lbmflag, neq_lbm, FIRST_IT  = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint,gradP=gradP,isWireModel=isWireModel, flag_coupNSLBM=flag_NSLBM, lbmAJ=lbmAJ)
             
@@ -265,7 +273,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                   fields2compact.append('centers:S'+str(vars_s[i]))
                vars.append(fields2compact)
 
-            if model_loc== 'Nada' or model_loc== 'Euler' or model_loc=='NSTurbulent' or model_loc=='NSTurbulent':
+            if model_loc== 'Euler' or model_loc=='NSLaminar' or model_loc=='NSTurbulent':
               timelevel = ['', '_M1','_P1']
             elif model_loc == 'LBMLaminar':
               if lbmAJ:  timelevel = ['', '_M1']
@@ -280,6 +288,12 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                fields2compact =[]
                for v in vars_c:
                  fields2compact.append('centers:'+v+'_src')
+               vars.append(fields2compact)
+            if source == 2:          #terme source volumique
+               fields2compact =[]
+               for v in vars_c:
+                 fields2compact.append('centers:'+v+'_src')
+               fields2compact.append('centers:cellN_src')
                vars.append(fields2compact)
             if motion == 'deformation' or motion == 'rigid_ext':     #ale deformable
                fields2compact =[]
@@ -764,13 +778,14 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     source = 0
     a = Internal.getNodeFromName1(define,'source')
     if a is not None: source = Internal.getValue(a)
-    if source == 1:
+    if source >= 1:
        if C.isNamePresent(zone, 'centers:Density_src')   != 1:   C._initVars(zone, 'centers:Density_src', 0.)
        if C.isNamePresent(zone, 'centers:MomentumX_src') != 1:   C._initVars(zone, 'centers:MomentumX_src', 0.)
        if C.isNamePresent(zone, 'centers:MomentumY_src') != 1:   C._initVars(zone, 'centers:MomentumY_src', 0.)
        if C.isNamePresent(zone, 'centers:MomentumZ_src') != 1:   C._initVars(zone, 'centers:MomentumZ_src', 0.)
        if C.isNamePresent(zone, 'centers:EnergyStagnationDensity_src') != 1: C._initVars(zone, 'centers:EnergyStagnationDensity_src', 0.)
        if (sa and C.isNamePresent(zone, 'centers:TurbulentSANuTildeDensity_src') != 1): C._initVars(zone, 'centers:TurbulentSANuTildeDensity_src', 0.)
+       if source == 2 and C.isNamePresent(zone, 'centers:cellN_src') != 1:  C._initVars(zone, 'centers:cellN_src', 0.)
 
     # init termes zone eponge
     sponge = 0
@@ -822,11 +837,11 @@ def _build_omp(t):
 
             datap[0:c]   = param_int[1][0:c]
             datap[69]    = c                   # debut tableau omp dans param_int
-            datap[87]    = c + size_int        # debut cellscheduler omp dans param_int
+            datap[VSHARE.SCHEDULER] = c + size_int        # debut cellscheduler omp dans param_int
             param_int[1] = datap
 
             if dims[3] == 'NGON':
-               deb = param_int[1][87] 
+               deb = param_int[1][VSHARE.SCHEDULER] 
                size = numpy.size(Nbr_BlkIntra)
                for l in range(size):
                  param_int[1][ deb +l ]=Nbr_BlkIntra [l]
@@ -840,7 +855,7 @@ def _build_omp(t):
                  for k in range(shap[2]):
                    for j in range(shap[1]):
                      for i in range(shap[0]):
-                       #print("deb+c", deb+c, c, l,k,j,i,param_int[1][87] )
+                       #print("deb+c", deb+c, c, l,k,j,i,param_int[1][VSHARE.SCHEDULER] )
                        param_int[1][ deb +c ]= CellScheduler[ i, j, k, l]
                        c +=1
                CellScheduler = param_int[1][ deb:deb+size_scheduler ]
@@ -904,6 +919,8 @@ def _buildOwnData(t, Padding):
     'sfd_chi':1, 
     'sfd_delta':1, 
     'sfd_init_iter':0, 
+    'nudging_ampli':1, 
+    'nudging_vector':4, 
     'slope':["o1", "o3","o5", "minmod","o3sc","o5sc"],
     'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3", "zdes3_w"],
     'SA_add_LowRe': 0,
@@ -1243,6 +1260,11 @@ def _buildOwnData(t, Padding):
             sfd_chi         = 0.
             sfd_delta       = 1.e15
             sfd_init_iter   = 1
+            nudging_ampli   = 1.
+            nudging_vector  = numpy.ones( 6, dtype=numpy.float64)
+            nudging_vector[0]=0 
+            nudging_vector[4]=0 
+            nudging_vector[5]=0  #pas de rappel sur continuite, energie et SA par defaut 
             nit_inflow      = 10
             epsi_inflow     = 1.e-5
             DES_debug       = 0
@@ -1422,6 +1444,10 @@ def _buildOwnData(t, Padding):
                 if a is not None: sfd_delta = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'sfd_init_iter')
                 if a is not None: sfd_init_iter = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'nudging_ampli')
+                if a is not None:  nudging_ampli = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'nudging_vector')
+                if a is not None:  nudging_vector = a[1]
                 a = Internal.getNodeFromName1(d, 'ransmodel')
                 if a is not None: ransmodel = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'DES_debug')
@@ -1863,7 +1889,7 @@ def _buildOwnData(t, Padding):
             #=====================================================================
             # creation noeud parametre real 
             #=====================================================================
-            number_of_defines_param_real = 64                                    # Number Param REAL
+            number_of_defines_param_real = 71                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
             if dtc < 0: 
@@ -1935,6 +1961,10 @@ def _buildOwnData(t, Padding):
             if timemotion:
                 rotlocal = Internal.getNodeFromType(timemotion, 'TimeRigidMotion_t')
                 datap[64]    = Internal.getValue(Internal.getNodeFromName(rotlocal,'MotionType'))
+
+            ##Nudging
+            datap[65]    = nudging_ampli #inutile??
+            datap[66:72] = nudging_vector[:]*nudging_ampli
 
             # LBM related stuff
             datap[VSHARE.LBM_c0]        = lbm_c0
@@ -3874,16 +3904,17 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
                     file.close()
                 # Load all skeleton proc files
                 else:
-                    ret = 1; no = 0; t = []
+                    ret = 1; no= 0; tmp= []
                     while ret == 1:
                        #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, no)
                        FILE = '%s/%s%d.cgns'%(directory, fileName, no)
                        if not os.access(FILE, os.F_OK): ret = 0
                        if ret == 1: 
-                          t.append(Cmpi.convertFile2SkeletonTree(FILE))
-                       no += 1
-                    if no == size and t != []:
-                        t      = Internal.merge(t)
+                          tmp.append(Cmpi.convertFile2SkeletonTree(FILE))
+                          no += 1
+                    if no == size and tmp != []:
+                        t      = Internal.merge(tmp)
+                        Internal._sortByName(t,recursive=False)
                         graphN = prepGraphs(t)
                     else: print('graph non calculable: manque de fichiers connectivite.')
 
@@ -4065,7 +4096,7 @@ def calc_post_stats(t, iskeeporig=False, mode=None, cartesian=True):
         pres2    = Internal.getNodeFromName1(flowsol,'Pressure^2')
         if iskeeporig: Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
         pres2[0] = pres[0]+'_RMS'
-        pres2[1] = numpy.sqrt(numpy.abs(pres2[1]-pres[1]**2)) # is abs necessary?
+        pres2[1] = numpy.sqrt(numpy.abs(pres2[1]-pres[1]**2)) # is abs necessary? reponse IM: Oui
         
 
         #Velocity RMS
