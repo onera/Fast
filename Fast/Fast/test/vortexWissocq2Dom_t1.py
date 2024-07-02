@@ -182,6 +182,8 @@ for it in range(1, nit+1):
 t2 = Internal.copyTree(t)
 Internal._rmNodesByName(t2, '.Solver#Param')
 Internal._rmNodesByName(t2, '.Solver#ownData')
+Internal._rmNodesByName(t2, 'Temporal_Interpolation')
+
 test.testT(t2, 5)
 import sys; sys.exit()
 end = time.time()

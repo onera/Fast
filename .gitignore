@@ -5,6 +5,8 @@ __pycache__
 core.*
 setup.cfg
 
+docs/Download
+docs/doc
 Fast/FastC/installPath.py
 Fast/FastS/merge.l
 tools/MigrationSVN

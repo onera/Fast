@@ -115,7 +115,7 @@ E_Int K_FASTS::gsdr3(
       E_Float** iptro_ssiter;
       E_Float** iptro_CL; 
 
-      if (param_int[0][EXPLOC]== 1 and param_int[0][ITYPCP]==2)   //explicit local instationnaire
+      if (param_int[0][EXPLOC]== 1 && param_int[0][ITYPCP]==2)   //explicit local instationnaire
 	   {
 
 	   if (nitcfg%2 != 0){iptro_ssiter = iptro;  iptro_CL = iptrotmp;}
@@ -346,15 +346,15 @@ if(lexit_lu ==0 && layer_mode==1)
     {
      // flag pour transfert optimiser explicit local
      autorisation_bc[nd]=0;
-     if (param_int[0][EXPLOC] == 1)    //if (rk == 3 and exploc == 2) 
+     if (param_int[0][EXPLOC] == 1)    //if (rk == 3 && exploc == 2) 
       {
 	cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
 	 
         // modif de nitcfg pour appliquer les BC partout 
-	if      (nitcfg_stk%cycl == cycl/2 -1       and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}
-	else if (nitcfg_stk%cycl == cycl/2 + cycl/4 and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}	    
-	else if (nitcfg_stk%cycl == cycl-1          and cycl != 4 ){ nitcfg = 1; autorisation_bc[nd] = 1;}
-	else if((nitcfg_stk%cycl == 1 or nitcfg_stk%cycl == cycl/2  or nitcfg_stk%cycl== cycl-1) and cycl == 4 ) { nitcfg = 1; autorisation_bc[nd] = 1; }
+	if      (nitcfg_stk%cycl == cycl/2 -1       && cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}
+	else if (nitcfg_stk%cycl == cycl/2 + cycl/4 && cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}	    
+	else if (nitcfg_stk%cycl == cycl-1          && cycl != 4 ){ nitcfg = 1; autorisation_bc[nd] = 1;}
+	else if((nitcfg_stk%cycl == 1 || nitcfg_stk%cycl == cycl/2 || nitcfg_stk%cycl== cycl-1) && cycl == 4 ) { nitcfg = 1; autorisation_bc[nd] = 1; }
       } 
      else {autorisation_bc[nd] = 1;}
   }//loop zone

@@ -20,7 +20,6 @@ using namespace std;
 
 #undef Conservatif
 #undef TimeShow
-//#define TimeShow
 
 #ifdef TimeShow
 
@@ -37,18 +36,18 @@ E_Float time_init;
 //E_Float time_COM=0.0;
 //E_Float time_init;
 
-E_Int K_FAST::gsdr3(E_Int**& param_int          , E_Float**& param_real       , E_Int& nidom                , E_Int& nitrun           ,
-		    E_Int&  nitcfg              , E_Int&  nitcfg_last         , E_Int&  nssiter             , E_Int& it_target        ,
-		    E_Int&  first_it            , E_Int& kimpli               , E_Int& lssiter_verif        , E_Int& lexit_lu         ,
-		    E_Int& layer_mode           , E_Int& mpi                  , E_Int& nisdom_lu_max        ,
-		    E_Int& mx_nidom             , E_Int& ndimt_flt            , E_Int& threadmax_sdm        , E_Int& mx_synchro       ,
-		    E_Int& nb_pulse             , E_Float& temps              , E_Int* ipt_ijkv_sdm         , E_Int* ipt_ind_dm_omp   ,  E_Int* iptdtloc    ,
-		    E_Int* ipt_topology         , E_Int* ipt_ind_CL           , E_Int* ipt_lok              , E_Int* verrou_lhs       ,
-		    E_Int& vartype              , E_Float* timer_omp          , E_Int*     iptludic         , E_Int*   iptlumax       ,
-		    E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom     , E_Int** ipt_ng_pe           , E_Int** ipt_nfconn      ,
-		    E_Int** ipt_nfindex         , E_Float* ipt_VectG          , E_Float* ipt_VectY          , E_Float** iptssor       ,
-		    E_Float** iptssortmp        , E_Int* ipt_ssor_size        , E_Float* ipt_drodmd         , E_Float* ipt_Hessenberg ,
-		    E_Float** iptkrylov         , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry       , E_Float** ipt_gmrestmp  ,
+E_Int K_FAST::gsdr3(E_Int**& param_int  , E_Float**& param_real       , E_Int& nidom                , E_Int& nitrun           ,
+            E_Int&  nitcfg              , E_Int&  nitcfg_last         , E_Int&  nssiter             , E_Int& it_target        ,
+            E_Int&  first_it            , E_Int& kimpli               , E_Int& lssiter_verif        , E_Int& lexit_lu         ,
+            E_Int& layer_mode           , E_Int& mpi                  , E_Int& nisdom_lu_max        ,
+            E_Int& mx_nidom             , E_Int& ndimt_flt            , E_Int& threadmax_sdm        , E_Int& mx_synchro       ,
+            E_Int& nb_pulse             , E_Float& temps              , E_Int* ipt_ijkv_sdm         , E_Int* ipt_ind_dm_omp   ,  E_Int* iptdtloc    ,
+            E_Int* ipt_topology         , E_Int* ipt_ind_CL           , E_Int* ipt_lok              , E_Int* verrou_lhs       ,
+            E_Int& vartype              , E_Float* timer_omp          , E_Int*     iptludic         , E_Int*   iptlumax       ,
+            E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom     , E_Int** ipt_ng_pe           , E_Int** ipt_nfconn      ,
+            E_Int** ipt_nfindex         , E_Float* ipt_VectG          , E_Float* ipt_VectY          , E_Float** iptssor       ,
+            E_Float** iptssortmp        , E_Int* ipt_ssor_size        , E_Float* ipt_drodmd         , E_Float* ipt_Hessenberg ,
+            E_Float** iptkrylov         , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry       , E_Float** ipt_gmrestmp  ,
 		    E_Float* ipt_givens         , E_Float*   ipt_cfl          , E_Float**  iptx             , E_Float**  ipty         ,
 		    E_Float**    iptz           , E_Float**  iptCellN         , E_Float**  iptCellN_IBC     , E_Float** iptFltrN      , E_Float** iptSpongeCoef, E_Int** ipt_degen   ,
 		    E_Float**& iptro            , E_Float**& iptro_m1         , E_Float**&  iptrotmp        , E_Float**& iptrof       , E_Float**& iptS     ,  E_Float**& iptPsiG,
@@ -62,7 +61,7 @@ E_Int K_FAST::gsdr3(E_Int**& param_int          , E_Float**& param_real       , 
 		    E_Float**& iptdrodm_transfer, E_Int*&    param_int_tc     , E_Float*& param_real_tc     , E_Int*& linelets_int    ,
 		    E_Float*& linelets_real     , E_Int&     taille_tabs      , E_Float*& stock             , E_Float*& drodmstock    ,
 		    E_Float*& constk            , E_Float** iptsrc            , E_Float* f_horseq           , E_Float* a1_pr          ,
-                    E_Float* a1_fd              , E_Float* a1_hrr             , E_Float* aneq_o3            , E_Float* psi_corr       ,  E_Int& flag_NSLBM)
+            E_Float* a1_fd              , E_Float* a1_hrr             , E_Float* aneq_o3            , E_Float* psi_corr       ,  E_Int& flag_NSLBM)
 {
   E_Float*  feq          = iptdrodm;
   E_Float** feq_transfer = iptdrodm_transfer;
@@ -127,7 +126,7 @@ E_Int rank =0;
     //NS ou LBM
     if ( param_int[nd][IFLOW]!= 4){
       // explicit local
-      if(param_int[0][EXPLOC]== 1 and param_int[0][ITYPCP]==2){
+      if(param_int[0][EXPLOC]== 1 && param_int[0][ITYPCP]==2){
 	if (nitcfg%2 != 0){iptro_ssiter[nd] = iptro[nd];  iptro_CL[nd] = iptrotmp[nd]; ishift  =1; lfwmean  = 1; }
 	else {
 	  if (nitcfg != param_int[0][NSSITER]){iptro_ssiter[nd] = iptrotmp[nd]; iptro_CL[nd] = iptro[nd]; ishift  = -1; lfwmean = 0;}
@@ -178,12 +177,14 @@ E_Int rank =0;
   E_Int iptflux      = param_int[0][IBC_PT_FLUX];
   E_Int Nfamily      = 0;
   E_Int neqFlu       = 26;
-  if(iptflux != -1) Nfamily  = param_int[0][iptflux];
+  if (iptflux != -1) Nfamily  = param_int[0][iptflux];
 
+#ifdef _Conservatif
   E_Float masse[3];
   E_Float debit[Nthread_max*2*6];
   E_Float flux[Nthread_max*neqFlu*Nfamily];
   E_Float ro_corr; E_Float varMasse;
+#endif
 
 #pragma omp parallel default(shared)
   {
@@ -290,9 +291,9 @@ E_Int rank =0;
               }
              else{
 */
-             if (param_int[nd][IFLOW] == 4 and  nitcfg==1)
+             if (param_int[nd][IFLOW] == 4 && nitcfg == 1)
               {
-                lmin =4;
+                lmin = 4;
                 //Quand on fait du couplage : LBM avance en une iteration
 //#include        "FastASLBM/Compute/rhs.cpp"
               }
@@ -357,20 +358,20 @@ E_Int rank =0;
 
 
 for (E_Int nd = 0; nd < nidom; nd++)
-  {  if( param_int[nd][LEVEL] == 1  and nitcfg==3)
-      {
-         E_Int pt_interp = param_int[nd][PT_INTERP];
-         E_Int nrac = param_int[nd][pt_interp];
-         for (E_Int rac=0; rac < nrac; rac++) // Boucle sur les differents raccords
-          {
+{   
+    if ( param_int[nd][LEVEL] == 1 && nitcfg == 3)
+    {
+        E_Int pt_interp = param_int[nd][PT_INTERP];
+        E_Int nrac = param_int[nd][pt_interp];
+        for (E_Int rac=0; rac < nrac; rac++) // Boucle sur les differents raccords
+        {
             E_Int pt_racInt = param_int[nd][ pt_interp + rac +1];
             E_Int pos_p1 = param_int[nd][pt_racInt +1];
             pos_p1+=1; if(pos_p1==3){pos_p1=0;}
             param_int[nd][pt_racInt+1] = pos_p1;
-        //printf("cght pos %d %d %d %d %d \n", pos_p1, nd, rac,pt_interp, PT_INTERP );
-          }
-       }
-  }
+        }
+    }
+}
 
 
 #ifdef TimeShow
@@ -422,27 +423,27 @@ if(flag_NSLBM==1)
 */
 
 E_Int nitcfg_stk = nitcfg;
-if(lexit_lu ==0 && layer_mode==1)
+if (lexit_lu ==0 && layer_mode==1)
 {
   //remplissage ghost transfert
   #include "FastS/Compute/transfert_multiblock.cpp"
   //E_Int cycl;
 
   for (E_Int nd = 0; nd < nidom; nd++)
+  {
+    // flag pour transfert optimiser explicit local
+    autorisation_bc[nd]=0;
+    if (param_int[0][EXPLOC] == 1)    //if (rk == 3 && exploc == 2)
     {
-     // flag pour transfert optimiser explicit local
-     autorisation_bc[nd]=0;
-     if (param_int[0][EXPLOC] == 1)    //if (rk == 3 and exploc == 2)
-      {
-	cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
+        cycl = param_int[nd][NSSITER]/param_int[nd][LEVEL];
 
         // modif de nitcfg pour appliquer les BC partout
-	if      (nitcfg_stk%cycl == cycl/2 -1       and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}
-	else if (nitcfg_stk%cycl == cycl/2 + cycl/4 and cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}
-	else if (nitcfg_stk%cycl == cycl-1          and cycl != 4 ){ nitcfg = 1; autorisation_bc[nd] = 1;}
-	else if((nitcfg_stk%cycl == 1 or nitcfg_stk%cycl == cycl/2  or nitcfg_stk%cycl== cycl-1) and cycl == 4 ) { nitcfg = 1; autorisation_bc[nd] = 1; }
-      }
-     else {autorisation_bc[nd] = 1;}
+        if      (nitcfg_stk%cycl == cycl/2 -1       && cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}
+        else if (nitcfg_stk%cycl == cycl/2 + cycl/4 && cycl != 4) { nitcfg = 1; autorisation_bc[nd] = 1;}
+        else if (nitcfg_stk%cycl == cycl-1          && cycl != 4 ){ nitcfg = 1; autorisation_bc[nd] = 1;}
+        else if((nitcfg_stk%cycl == 1 || nitcfg_stk%cycl == cycl/2 || nitcfg_stk%cycl== cycl-1) && cycl == 4 ) { nitcfg = 1; autorisation_bc[nd] = 1; }
+    }
+    else {autorisation_bc[nd] = 1;}
   }//loop zone
 } //lexit
 

@@ -255,4 +255,5 @@ Internal._rmGhostCells(t,t,2)
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
+Internal._rmNodesByName(t, 'Temporal_Interpolation')
 test.testT(t, 6)

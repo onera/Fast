@@ -112,10 +112,10 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
           { E_Int imax  =6;
             E_Int count =0; 
             if(nk == 2) imax=4;
-            for (E_Int i = 0; i < imax; i++){count +=rind[i];}
+            for (E_Int i = 0; i < imax; i++){count += rind[i];}
             if(nk == 2 && count ==12) {nfic=3;}
             else if (nk != 2 && count ==18) {nfic=3;}
-            else { printf("Error: ghostcell number unsufficient for o(5) slope \n"); E_Int ierr; exit(ierr); }   
+            else { printf("Error: ghostcell number unsufficient for o(5) slope \n"); exit(1); }   
           }
         else{nfic =2;}
       }

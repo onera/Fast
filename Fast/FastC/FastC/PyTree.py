@@ -174,8 +174,8 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
     flag_NSLBM = 0
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
     for b in bases:  
-        #On regarde si b est une simulation couplee NS-LBM
-        model="MISSING"
+        # On regarde si b est une simulation couplee NS-LBM
+        model="Unknown"
         a = Internal.getNodeFromName2(b, 'GoverningEquations')
         if a is not None:
            model = Internal.getValue(a)
@@ -195,15 +195,15 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                NG_indx  =  Internal.getNodeFromPath(z, 'NGonElements/FaceIndex')
                NG_pe    =  Internal.getNodeFromPath(z, 'NGonElements/ParentElements')
 
-            model_loc ='Nada'
+            model_loc = 'Unknown'
             a = Internal.getNodeFromName2(z, 'GoverningEquations')
             if a is not None: model_loc = Internal.getValue(a)
-            if model_loc =='Nada': 
-               if model !="MISSING": model_loc =model
+            if model_loc == 'Unkown':
+               if model != "Unknown" and model != 'CouplageNSLBM': model_loc = model
                else: 
-                  model='Euler'; print("WARNING definition model: rien trouver dans bases et zone: Euler imposer")
+                  model_loc = 'Euler'; print("WARNING: definition model: nothing found in base or zone: Euler imposed.")
 
-            sa, lbmflag, neq_lbm, FIRST_IT  = _createVarsFast(b, z, omp_mode, rmConsVars,Adjoint,gradP=gradP,isWireModel=isWireModel, flag_coupNSLBM=flag_NSLBM, lbmAJ=lbmAJ)
+            sa, lbmflag, neq_lbm, FIRST_IT = _createVarsFast(b, z, omp_mode, rmConsVars, Adjoint, gradP=gradP, isWireModel=isWireModel, flag_coupNSLBM=flag_NSLBM, lbmAJ=lbmAJ)
             
             if FA_intext is not None:
                Internal.getNodeFromPath(z, 'NFaceElements')[2] +=[FA_indx, FA_intext] 
@@ -211,11 +211,11 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             
             #recuperation option de calcul
             define = Internal.getNodeFromName1(z, '.Solver#define')
-            sponge= 0
-            a = Internal.getNodeFromName1(define,'lbm_sponge')
+            sponge = 0
+            a = Internal.getNodeFromName1(define, 'lbm_sponge')
             if a is not None: sponge = Internal.getValue(a)
             source = 0
-            a = Internal.getNodeFromName1(define,'source')
+            a = Internal.getNodeFromName1(define, 'source')
             if a is not None: source = Internal.getValue(a)
             sfd = 0
             a = Internal.getNodeFromName1(define, 'sfd')
@@ -451,16 +451,16 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
        if C.isNamePresent(zone, 'centers:VelocityY_M1')   != 1: C._cpVars(zone, 'centers:VelocityY'  , zone, 'centers:VelocityY_M1'); FIRST_IT=0
        if C.isNamePresent(zone, 'centers:VelocityZ_M1')   != 1: C._cpVars(zone, 'centers:VelocityZ'  , zone, 'centers:VelocityZ_M1'); FIRST_IT=0
        if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
-       if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_M1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_M1'); FIRST_IT=0
+       if sa and C.isNamePresent(zone, 'centers:TurbulentSANuTilde_M1') != 1: C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_M1'); FIRST_IT=0
 
        if C.isNamePresent(zone, 'centers:Density_P1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_P1')  
        if C.isNamePresent(zone, 'centers:VelocityX_P1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_P1')
        if C.isNamePresent(zone, 'centers:VelocityY_P1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_P1')
        if C.isNamePresent(zone, 'centers:VelocityZ_P1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_P1')
        if C.isNamePresent(zone, 'centers:Temperature_P1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_P1')
-       if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_P1') != 1): C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_P1')
+       if sa and C.isNamePresent(zone, 'centers:TurbulentSANuTilde_P1') != 1: C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_P1')
 
-       if (gradP and C.isNamePresent(zone, 'centers:gradxDensity') != 1):
+       if gradP and C.isNamePresent(zone, 'centers:gradxDensity') != 1:
            C._initVars(zone, 'centers:gradxDensity', 1e-15)
            C._initVars(zone, 'centers:gradyDensity', 1e-15)
            C._initVars(zone, 'centers:gradzDensity', 1e-15)
@@ -469,7 +469,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
            C._initVars(zone, 'centers:gradyTemperature', 1e-15)
            C._initVars(zone, 'centers:gradzTemperature', 1e-15)
 
-       if (isWireModel):
+       if isWireModel:
            if (C.isNamePresent(zone, 'centers:Density_WM') != 1):
                C._initVars(zone, 'centers:Density_WM'    , 1e-15)
                C._initVars(zone, 'centers:VelocityX_WM'  , 1e-15)
