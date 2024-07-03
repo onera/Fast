@@ -161,10 +161,10 @@ def _reorder(t, tc=None):
 # IN: adim: etat de reference, on utilise uniquement cvInf pour la temperature.
 # IN: rmConsVars: if True, remove the conservative variables
 #==============================================================================
-def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False,isWireModel=False,lbmAJ=True):
+def createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, isWireModel=False, lbmAJ=True):
     """Create primitive vars from conservative vars."""
     tp = Internal.copyRef(t)
-    first_iter , vars_zones = _createPrimVars(tp, omp_mode, rmConsVars, Adjoint, gradP=gradP,isWireModel=isWireModel, lbmAJ=lbmAJ)
+    first_iter , vars_zones = _createPrimVars(tp, omp_mode, rmConsVars, Adjoint, gradP=gradP, isWireModel=isWireModel, lbmAJ=lbmAJ)
     return tp, first_iter, vars_zones
 
 #==============================================================================
@@ -198,7 +198,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             model_loc = 'Unknown'
             a = Internal.getNodeFromName2(z, 'GoverningEquations')
             if a is not None: model_loc = Internal.getValue(a)
-            if model_loc == 'Unkown':
+            if model_loc == 'Unknown':
                if model != "Unknown" and model != 'CouplageNSLBM': model_loc = model
                else: 
                   model_loc = 'Euler'; print("WARNING: definition model: nothing found in base or zone: Euler imposed.")
@@ -241,16 +241,16 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                vars_c.append('TurbulentSANuTildeDensity')
 
             vars=[]
-            if lbmflag == True :
-                fields2compact =[]
+            if lbmflag:
+                fields2compact=[]
                 for i in range(1,neq_lbm+1):
                    fields2compact.append('centers:Q'+str(i))
                 vars.append(fields2compact)
-                fields2compact =[]
+                fields2compact=[]
                 for i in range(1,neq_lbm+1):
                   fields2compact.append('centers:Q'+str(i)+'_M1')
                 vars.append(fields2compact)
-                fields2compact =[]
+                fields2compact=[]
                 for i in range(len(vars_s)):
                   fields2compact.append('centers:S'+str(vars_s[i])) #Tenseur S pour HRR
                 vars.append(fields2compact)
@@ -259,7 +259,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                 vars.append(fields2compact)
 
             if lbmAJ:
-                fields2compact =[]
+                fields2compact=[]
                 for i in range(1,3+1):
                   fields2compact.append('centers:cellN_IBC_LBM_'+str(i))
                 vars.append(fields2compact)
@@ -273,51 +273,52 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                   fields2compact.append('centers:S'+str(vars_s[i]))
                vars.append(fields2compact)
 
-            if model_loc== 'Euler' or model_loc=='NSLaminar' or model_loc=='NSTurbulent':
+            if model_loc == 'Euler' or model_loc == 'NSLaminar' or model_loc == 'NSTurbulent':
               timelevel = ['', '_M1','_P1']
             elif model_loc == 'LBMLaminar':
               if lbmAJ:  timelevel = ['', '_M1']
               else: timelevel = ['']
-                
+            else: raise ValueError('createPrimVars: unknown model %s.'%model_loc)
+
             for level in timelevel:  #champs primitives
-               fields2compact =[]
+               fields2compact=[]
                for v in vars_p:
                  fields2compact.append('centers:'+v+level)
                vars.append(fields2compact)
             if source == 1:                   #terme source volumique
-               fields2compact =[]
+               fields2compact=[]
                for v in vars_c:
                  fields2compact.append('centers:'+v+'_src')
                vars.append(fields2compact)
             if source == 2:          #terme source volumique
-               fields2compact =[]
+               fields2compact=[]
                for v in vars_c:
                  fields2compact.append('centers:'+v+'_src')
                fields2compact.append('centers:cellN_src')
                vars.append(fields2compact)
             if motion == 'deformation' or motion == 'rigid_ext':     #ale deformable
-               fields2compact =[]
+               fields2compact=[]
                for v in ['VelocityX','VelocityY','VelocityZ']:
                  fields2compact.append('Motion:'+v)
                vars.append(fields2compact)
             if sfd == 1:                       #sfd
-               fields2compact =[]
+               fields2compact=[]
                for v in vars_p:
                  fields2compact.append('centers:'+v+'_f')
                vars.append(fields2compact)
             if extract_res == 1:
-               fields2compact =[]
+               fields2compact=[]
                for v in vars_c:
                  fields2compact.append('centers:Res_'+v)
                vars.append(fields2compact)
             if show_senseur == 1:
-               fields2compact =[]
+               fields2compact=[]
                for v in vars_showsenseur:
                  fields2compact.append('centers:'+v)
                vars.append(fields2compact)
 
             if gradP:
-              fields2compact = []
+              fields2compact=[]
               for v in ['Density', 'Temperature']:
                 fields2compact.append('centers:'+'gradx'+v)
                 fields2compact.append('centers:'+'grady'+v)
@@ -427,7 +428,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     if C.isNamePresent(zone, 'centers:VelocityZ'  ) != 1: P._computeVariables(zone, ['centers:VelocityZ'  ], rgp=rgp)
     if C.isNamePresent(zone, 'centers:Temperature') != 1: P._computeVariables(zone, ['centers:Temperature'], rgp=rgp, gamma=gamma)
 
-    if (sa and C.isNamePresent(zone, 'centers:TurbulentSANuTilde') != 1): 
+    if sa and C.isNamePresent(zone, 'centers:TurbulentSANuTilde') != 1: 
         if C.isNamePresent(zone, 'centers:TurbulentSANuTildeDensity') != 1: C._initVars(zone, '{centers:TurbulentSANuTilde}= %20.16g/{centers:Density}'%adim[14])
         else: C._initVars(zone, '{centers:TurbulentSANuTilde}= {centers:TurbulentSANuTildeDensity}/{centers:Density}')
 
@@ -470,7 +471,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
            C._initVars(zone, 'centers:gradzTemperature', 1e-15)
 
        if isWireModel:
-           if (C.isNamePresent(zone, 'centers:Density_WM') != 1):
+           if C.isNamePresent(zone, 'centers:Density_WM') != 1:
                C._initVars(zone, 'centers:Density_WM'    , 1e-15)
                C._initVars(zone, 'centers:VelocityX_WM'  , 1e-15)
                C._initVars(zone, 'centers:VelocityY_WM'  , 1e-15)
@@ -480,12 +481,12 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
 
        #Pour le couplage NS-LBM on calcule S
        if flag_coupNSLBM:
-          if (C.isNamePresent(zone, 'centers:Sxx') != 1): C._initVars(zone,'centers:Sxx',0.)
-          if (C.isNamePresent(zone, 'centers:Sxy') != 1): C._initVars(zone,'centers:Sxy',0.)
-          if (C.isNamePresent(zone, 'centers:Sxz') != 1): C._initVars(zone,'centers:Sxz',0.)
-          if (C.isNamePresent(zone, 'centers:Syy') != 1): C._initVars(zone,'centers:Syy',0.)
-          if (C.isNamePresent(zone, 'centers:Syz') != 1): C._initVars(zone,'centers:Syz',0.)
-          if (C.isNamePresent(zone, 'centers:Szz') != 1): C._initVars(zone,'centers:Szz',0.)
+          if C.isNamePresent(zone, 'centers:Sxx') != 1: C._initVars(zone,'centers:Sxx',0.)
+          if C.isNamePresent(zone, 'centers:Sxy') != 1: C._initVars(zone,'centers:Sxy',0.)
+          if C.isNamePresent(zone, 'centers:Sxz') != 1: C._initVars(zone,'centers:Sxz',0.)
+          if C.isNamePresent(zone, 'centers:Syy') != 1: C._initVars(zone,'centers:Syy',0.)
+          if C.isNamePresent(zone, 'centers:Syz') != 1: C._initVars(zone,'centers:Syz',0.)
+          if C.isNamePresent(zone, 'centers:Szz') != 1: C._initVars(zone,'centers:Szz',0.)
     # fin du if zone NS ------------------------------------
     #===========================================================================
     # ZONE LBM
@@ -520,7 +521,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
         #var AJ
         if lbmAJ:
           for i in range(1,3+1):
-              if C.isNamePresent(zone, 'centers:cellN_IBC_LBM'    +str(i)      ) != 1: C._initVars(zone, 'centers:cellN_IBC_LBM_'    +str(i)      , 0.)
+              if C.isNamePresent(zone, 'centers:cellN_IBC_LBM'+str(i)) != 1: C._initVars(zone, 'centers:cellN_IBC_LBM_'+str(i), 0.)
             
           if C.isNamePresent(zone, 'centers:SpongeCoef')    != 1: C._initVars(zone, 'centers:SpongeCoef'    , 0.)
 
@@ -529,8 +530,6 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
           if C.isNamePresent(zone, 'centers:VelocityY_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityY'  , zone, 'centers:VelocityY_M1'  ); FIRST_IT=0
           if C.isNamePresent(zone, 'centers:VelocityZ_M1'  ) != 1: C._cpVars(zone, 'centers:VelocityZ'  , zone, 'centers:VelocityZ_M1'  ); FIRST_IT=0
           if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
-        '''
-        '''
     # fin du if zone LBM ------------------------------------
 
     # init moyenne loi de paroi
