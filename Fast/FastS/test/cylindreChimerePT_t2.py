@@ -3,18 +3,11 @@ import Converter.PyTree as C
 import Converter.Internal as Internal
 import Connector.PyTree as X
 import RigidMotion.PyTree as R
-import Geom.PyTree as D
-import Post.PyTree as P
-import Connector.ToolboxIBM as TIBM
 import Generator.PyTree as G
-import Distributor2.PyTree as D2
 import Transform.PyTree as T
-import Compressor.PyTree as Compressor
 import FastS.PyTree as FastS
 import Fast.PyTree as Fast
-import Connector.Mpi as Xmpi
 import Converter.Mpi as Cmpi
-import CPlot.PyTree as CPlot
 import KCore.test as test
 import numpy
 LOCAL = test.getLocal()
@@ -124,7 +117,7 @@ C._initVars(t, "{centers:cellN#MotionInit}={centers:cellN#Motion}")
 
 nbases = len(Internal.getBases(t))
 nbodies = len(Internal.getBases(tb))
-BM = numpy.zeros((nbases, nbodies),dtype=numpy.int32)
+BM = numpy.zeros((nbases, nbodies), dtype=Internal.E_NpyInt)
 BM[1,0] = 1.
 
 tBB = Cmpi.createBBoxTree(t)

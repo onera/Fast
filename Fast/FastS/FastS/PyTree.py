@@ -589,7 +589,7 @@ def _createTBLESA(tc, h0, hn, nbpts_linelets=45):
 
          # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)
          Nbpts_Dtot = size_IBC//(nbpts_linelets*nfields_lin+1)
-         _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=numpy.int32)
+         _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=Internal.E_NpyInt)
 
          FastC.HOOK['linelets_int'] = _addrIBC
 
@@ -873,7 +873,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
 
          # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)
          Nbpts_Dtot = size_IBC//(nbpts_linelets*nfields_lin+1)
-         _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=numpy.int32)
+         _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=Internal.E_NpyInt)
 
          linelets = numpy.zeros(size_IBC + Nbpts_Dtot, dtype=numpy.float64)
 
@@ -1384,7 +1384,7 @@ def createStatNodes(t, dir='0', vars=[], nsamples=0):
        ific        =  numcellfic  # a adapter en DF
        if lgrad == 1: numcellfic = 1
 
-       datap = numpy.empty((17), numpy.int32)
+       datap = numpy.empty((17), Internal.E_NpyInt)
        dim   = Internal.getZoneDim(z)
        inck  = 1
        if dim[3] == 2: inck =  0
@@ -2192,7 +2192,7 @@ def _createConvergenceHistory(t, nrec):
     for z in zones:
         c = Internal.createUniqueChild(z, 'ZoneConvergenceHistory',
                                        'ConvergenceHistory_t', value=curIt)
-        tmp = numpy.zeros((nrec), numpy.int32)
+        tmp = numpy.zeros((nrec), Internal.E_NpyInt)
         Internal.createChild(c, 'IterationNumber', 'DataArray_t', tmp)
         for var in varsR:
             tmp = numpy.zeros((nrec*neq), numpy.float64)
@@ -2372,7 +2372,7 @@ def createStressNodes(t, BC=None, windows=None):
                         if BC is not None:
                             ptrg = Internal.getNodeFromName(v, "PointRange")
                         else: 
-                            wrange = numpy.zeros(6, numpy.int32 ).reshape(3,2)
+                            wrange = numpy.zeros(6, Internal.E_NpyInt).reshape(3,2)
                             wrange[0,0]= window[1]
                             wrange[1,0]= window[3]
                             wrange[2,0]= window[5]
@@ -2589,7 +2589,7 @@ def setIBCData_zero(t, surf, dim=None):
   # Matrice de masquage (arbre d'assemblage)
   nbodies = len(bodies)
   nbases = len(bases)
-  BM = numpy.ones((nbases,nbodies), dtype=numpy.int32)
+  BM = numpy.ones((nbases,nbodies), dtype=Internal.E_NpyInt)
   if dim is None:
      sol= Internal.getNodeFromName1(zones[0],'FlowSolution#Centers')
      nk = Internal.getNodeFromName1(sol,'Density')[1].shape[2]
@@ -2610,7 +2610,7 @@ def setIBCData_zero(t, surf, dim=None):
      Internal._rmNodesByName(z, "IBC")
 
      if 0 in cellN_IBC:
-        ibc = numpy.ones( 7, dtype=numpy.int32)
+        ibc = numpy.ones( 7, dtype=Internal.E_NpyInt)
         itemindex = numpy.where( cellN_IBC==0 )
         ibc[0]=1
         #formule valable pour 2Ghostcells: sinon -ific+1
@@ -2705,7 +2705,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
    print('nombre iterations insuffisant pour diagnostic: nitrun * ss_iteration > 15')
    return None
 
- cellCount = numpy.zeros(2*OMP_NUM_THREADS, dtype=numpy.int32)
+ cellCount = numpy.zeros(2*OMP_NUM_THREADS, dtype=Internal.E_NpyInt)
 
  zones = Internal.getZones(t)
  tps_percell     =0.
@@ -2903,7 +2903,7 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
 
    c = 0
    for face in FaceList:
-       datap = numpy.zeros( dico[key][c], numpy.int32)
+       datap = numpy.zeros( dico[key][c], Internal.E_NpyInt)
        Internal.createUniqueChild(tmp, face, 'DataArray_t', datap)
        c+=1
 
@@ -3880,14 +3880,14 @@ def calc_global_convergence(t):
         Internal.setValue(c, nrec);
 
         ##IterationNumber Node
-        Internal.createChild(c, 'IterationNumber', 'DataArray_t', numpy.zeros((nrec), numpy.int32))
-        RSD_b                 = Internal.getNodeByName(c,'IterationNumber')[1]
-        for i in range(nrec):RSD_b[i]=RSD_[i]
+        Internal.createChild(c, 'IterationNumber', 'DataArray_t', numpy.zeros((nrec), Internal.E_NpyInt))
+        RSD_b = Internal.getNodeByName(c, 'IterationNumber')[1]
+        for i in range(nrec): RSD_b[i]=RSD_[i]
 
         ##The rest of the nodes in the convergence history
         for var in var_list:
             tmp = numpy.zeros((nrec*neq), numpy.float64)
-            Internal.createChild(c, var ,'DataArray_t', tmp)                    
+            Internal.createChild(c, var , 'DataArray_t', tmp)                    
 
         total_Ncells = 0
         for z in Internal.getZones(b):

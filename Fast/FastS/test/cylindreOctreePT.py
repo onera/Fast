@@ -6,7 +6,6 @@ import Connector.PyTree as X
 import Geom.PyTree as D
 import Post.PyTree as P
 import numpy
-import Dist2Walls.PyTree as DTW
 import Transform.PyTree as T
 import Initiator.PyTree as I
 import FastC.PyTree as FastC
@@ -75,7 +74,7 @@ s = T.join([s,g1,g2]); s = G.close(s)
 
 # Blanking
 bodies = [[s]]
-BM = numpy.array([[0],[1]],numpy.int32)
+BM = numpy.array([[0],[1]], dtype=Internal.E_NpyInt)
 t = X.applyBCOverlaps(t, depth=2)
 t = X.blankCells(t, bodies, BM, blankingType='cell_intersect')
 t = X.setHoleInterpolatedPoints(t, depth=+2)

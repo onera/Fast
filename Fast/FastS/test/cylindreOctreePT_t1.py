@@ -13,7 +13,6 @@ import FastS.PyTree as FastS
 import Converter.Internal as Internal
 import KCore.Adim as Adim
 import KCore.test as test
-import sys
 
 MInf = 0.5 ; alpha = 0.
 adim = Adim.adim1(MInf=MInf)
@@ -75,7 +74,7 @@ s = T.join([s,g1,g2]); s = G.close(s)
 
 # Blanking
 bodies = [[s]]
-BM = numpy.array([[0],[1]],numpy.int32)
+BM = numpy.array([[0],[1]], Internal.E_NpyInt)
 t = X.applyBCOverlaps(t, depth=2)
 t = X.blankCells(t, bodies, BM, blankingType='cell_intersect')
 t = X.setHoleInterpolatedPoints(t, depth=+2)

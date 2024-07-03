@@ -5,7 +5,6 @@ import CPlot.PyTree as CPlot
 import Connector.Connector as Connector
 import Connector.OversetData as OversetData
 import Connector.PyTree as X
-import Converter
 import Converter.Internal as Internal
 import Converter.PyTree as C
 import Dist2Walls.PyTree as DTW
@@ -14,13 +13,11 @@ import FastS.PyTree as FastS
 import Generator.PyTree as G
 import Geom.PyTree as D
 import Initiator.PyTree as I
-import KCore
 import KCore.Adim as Adim
 import KCore.test as test
 import Post.PyTree as P
 import Transform.PyTree as T
 import numpy
-import sys
 
 explicit_select = "explicit_local"
 
@@ -85,7 +82,7 @@ t = C.initVars(t, 'centers:cellN', 1.) # init pour les IBCs
 # Blanking
 s2     = T.addkplane(s)
 bodies = [[s2]]
-BM     = numpy.array([[1]],numpy.int32)
+BM     = numpy.array([[1]], dtype=Internal.E_NpyInt)
 t      = X.blankCells(t, bodies, BM, blankingType='center_in',dim=2)
 t      = X.setHoleInterpolatedPoints(t, depth=+2)
 tc     = C.cpVars(t, 'centers:cellN', tc, 'cellN')

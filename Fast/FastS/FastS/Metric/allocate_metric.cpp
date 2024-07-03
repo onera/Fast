@@ -34,11 +34,7 @@ using namespace K_FLD;
 PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
 {
   PyObject *zone; E_Int nssiter;
-#if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "Ol", &zone, &nssiter)) return NULL; 
-#else 
-  if (!PyArg_ParseTuple(args, "Oi", &zone, &nssiter)) return NULL; 
-#endif
+  if (!PYPARSETUPLE_(args, O_ I_, &zone, &nssiter)) return NULL; 
 
   vector<PyArrayObject*> hook;
   PyObject* metrics  = PyList_New(0); 
@@ -93,9 +89,10 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     sol_center= K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
     if (sol_center == NULL) ro = t;                                        //blindage pour appeler metric sur un arbre qui contient seuleemt x,y,x
     else
-      {t         = K_PYTREE::getNodeFromName1(sol_center, "Density");      //Objet python= noeud CGNS
-       ro        = PyList_GetItem(t, 1);                                   //Objet python= tableau numpy du noeud CGNS
-      }
+    {
+      t    = K_PYTREE::getNodeFromName1(sol_center, "Density");      //Objet python= noeud CGNS
+      ro   = PyList_GetItem(t, 1);                                   //Objet python= tableau numpy du noeud CGNS
+    }
 
     //
     // On recupere taille zone et dimensionne tableau
@@ -171,7 +168,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     //determination du nombre de "sous-pas/sousiter" en fonction du domaine impli/expli
     if     (ipt_param_int[ ITYPCP ] <= 1) { coe_shift = 0; }
     else if(ipt_param_int[ ITYPCP ] == 2) { coe_shift = 1; }
-    else { printf("Warning: invalid temporal scheme."); }
+    else { printf("Warning: FastS: invalid temporal scheme.\n"); }
           
     if  (ipt_param_int[ IFLOW ] == 3 && ipt_param_int[ ILES ] == 0){  ipt_param_int[ NEQ_COE ] = 6 -coe_shift*5;}    //!6 en implicite, 1 en rk3
     else{                                                             ipt_param_int[ NEQ_COE ] = 5 -coe_shift*4;}    //!5 en implicite, 1 en rk3

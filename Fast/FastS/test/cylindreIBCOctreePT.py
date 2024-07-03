@@ -3,7 +3,6 @@
 import Converter.PyTree as C
 import Generator.PyTree as G
 import Connector.PyTree as X
-import Geom.PyTree as D
 import Post.PyTree as P
 import numpy
 import Dist2Walls.PyTree as DTW
@@ -51,7 +50,7 @@ if restart == False:
     # Blanking
     s2 = T.addkplane(s)
     bodies = [[s2]]
-    BM = numpy.array([[1]],numpy.int32)
+    BM = numpy.array([[1]], dtype=Internal.E_NpyInt)
     t = X.blankCells(t, bodies, BM, blankingType='center_in',dim=2)
     t = X.setHoleInterpolatedPoints(t, depth=-1)
     t = X.setHoleInterpolatedPoints(t, depth=+2)

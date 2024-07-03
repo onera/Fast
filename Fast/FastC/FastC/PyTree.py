@@ -688,7 +688,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
         #on nettoie l'arbre des vecteur de krylov residuel.Evite la phase de compactage
         flowsol = Internal.getNodeFromName1(zone, 'FlowSolution#Centers')
         if flowsol is not None:
-            vars    = Internal.getNodesFromType1(flowsol, 'DataArray_t')
+            vars = Internal.getNodesFromType1(flowsol, 'DataArray_t')
             for var in vars:
                 if 'Kry' in var[0]:
                      C._rmVars(a, 'centers:'+var[0])
@@ -832,7 +832,7 @@ def _build_omp(t):
                size_scheduler += numpy.size(Nbr_BlkIntra)
 
             #print("SIZE int", size_int,"c=", c,"size_sched=",  size_scheduler)
-            datap = numpy.zeros(size_int + c + size_scheduler, numpy.int32)
+            datap = numpy.zeros(size_int + c + size_scheduler, Internal.E_NpyInt)
 
             datap[0:c]   = param_int[1][0:c]
             datap[69]    = c                   # debut tableau omp dans param_int
@@ -1111,7 +1111,7 @@ def _buildOwnData(t, Padding):
         nssiter = 4*maxlevel 
         rk = 3
         exploc = 1
-    else: print('Warning: FastS: invalid value %s for key temporal_scheme.'%temporal_scheme)
+    else: print('Warning: Fast: invalid value %s for key temporal_scheme.'%temporal_scheme)
     try: ss_iteration = int(ss_iteration)
     except: print('Warning: Fast: invalid value %s for key ss_iteration.'%ss_iteration)
     try: modulo_verif = int(modulo_verif)
@@ -1132,7 +1132,7 @@ def _buildOwnData(t, Padding):
     dtdim = 12 + nitCyclLBM
     #print('ncycl_LBM', nitCyclLBM, maxlevel)
 
-    datap = numpy.zeros((dtdim+ size_omp), numpy.int32)
+    datap = numpy.zeros((dtdim+ size_omp), Internal.E_NpyInt)
     datap[0] = nssiter 
     datap[1] = modulo_verif
     datap[2] = restart_fields-1
@@ -1269,7 +1269,7 @@ def _buildOwnData(t, Padding):
             DES_debug       = 0
             sa_dist         = 0
             extract_res     = 0
-            ibc             = numpy.zeros( 7, dtype=numpy.int32)
+            ibc             = numpy.zeros( 7, dtype=Internal.E_NpyInt)
             source          = 0
             cups            = [1.,1.]
             ratiom          = 10000.
@@ -1681,12 +1681,12 @@ def _buildOwnData(t, Padding):
             dtloc = 0
             if dtnature == "global": dtloc = 0
             elif dtnature == "local": dtloc = 1
-            else: print('Warning: FastS: time_step_nature %s is invalid.'%dtnature)
+            else: print('Warning: Fast: time_step_nature %s is invalid.'%dtnature)
 
             ImplicitSolverNum = 0
             if implicit_solver == "lussor": ImplicitSolverNum = 0
             elif implicit_solver == "gmres": ImplicitSolverNum = 1
-            else: print('Warning: FastS: implicit_solver %s is invalid.'%implicit_solver)
+            else: print('Warning: Fast: implicit_solver %s is invalid.'%implicit_solver)
 
             # creation noeud parametre integer
 
@@ -1695,7 +1695,7 @@ def _buildOwnData(t, Padding):
             size_int                   = number_of_defines_param_int +1 # number of defines + 1
 
 
-            datap      = numpy.empty(size_int, numpy.int32)
+            datap      = numpy.empty(size_int, Internal.E_NpyInt)
 
             datap[0:25]= -1
 
@@ -2131,8 +2131,8 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 #    drodm1 = drodm1.reshape((132*132*132*5), order='Fortran')
 #    print drodm1.shape
 
-    lok      = numpy.zeros(verrou     , dtype=numpy.int32  )
-    iskip_lu = numpy.empty(dtloc[0]*2 , dtype=numpy.int32  )   # (dtloc[0] = nitmax
+    lok      = numpy.zeros(verrou     , dtype=Internal.E_NpyInt )
+    iskip_lu = numpy.empty(dtloc[0]*2 , dtype=Internal.E_NpyInt )   # (dtloc[0] = nitmax
 
     hook = {}
     hook['wiggle']         = wig
@@ -2694,7 +2694,7 @@ def _BCcompactNG(t):
         size_param_int.append(c)
 
         #print("BC size facesched", size_int, "old param int=",c)
-        datap = numpy.zeros(size_int+c, numpy.int32)
+        datap = numpy.zeros(size_int+c, Internal.E_NpyInt)
         datap[0:c]   = param_int[1][0:c]
         param_int[1] = datap
 
@@ -2878,7 +2878,7 @@ def _BCcompact(t):
         for s in size: c=c*s
         size_param_int.append(c)
 
-        datap = numpy.zeros(size_int+c, numpy.int32)
+        datap = numpy.zeros(size_int+c, Internal.E_NpyInt)
         datap[0:c]   = param_int[1][0:c]
         param_int[1] = datap
 
@@ -2937,7 +2937,7 @@ def _BCcompact(t):
 
             Ptrange = Internal.getNodeFromType1(bc, 'IndexRange_t')
             indrange= Internal.getValue(Ptrange)
-            ind_bc  = numpy.zeros(6, numpy.int32)
+            ind_bc  = numpy.zeros(6, Internal.E_NpyInt)
             ind_bc[0] = indrange[0][0]
             ind_bc[1] = indrange[0][1]
             ind_bc[2] = indrange[1][0]
@@ -3030,7 +3030,7 @@ def _InterpTemporelcompact(t,tc):
 
                  #traitement int
                  new_size = size_temporal_int +size_param_int
-                 datap = numpy.empty(new_size, numpy.int32)
+                 datap = numpy.empty(new_size, Internal.E_NpyInt)
                  datap[0:size_param_int]        =    param_int[1][0:size_param_int]
                  datap[VSHARE.PT_INTERP]        =    size_param_int
    
@@ -3056,7 +3056,7 @@ def _InterpTemporelcompact(t,tc):
              for s in size: size_param_int *=s
 
              new_size = 1 +size_param_int
-             datap = numpy.empty(new_size, numpy.int32)
+             datap = numpy.empty(new_size, Internal.E_NpyInt)
              datap[0:size_param_int]        =    param_int[1][0:size_param_int]
              datap[VSHARE.PT_INTERP]        =    size_param_int
              datap[size_param_int]          =    0  #pas de raccord
@@ -3170,7 +3170,7 @@ def _InterpTemporelcompact(t,tc):
           l+=1
 
 
-        datap = numpy.zeros(size_int+size_param_int, numpy.int32)
+        datap = numpy.zeros(size_int+size_param_int, Internal.E_NpyInt)
         datap[0:size_param_int]   = param_int[1][0:size_param_int]
         param_int[1] = datap
 
@@ -3187,9 +3187,9 @@ def _InterpTemporelcompact(t,tc):
             interp = Internal.getNodeFromName1(z,'Temporal_Interpolation')
             data_real = numpy.empty(size_real, numpy.float64)
             Internal.createUniqueChild(interp, 'data_real', 'DataArray_t', data_real)
-            data_int  = numpy.empty(size_int, numpy.int32)
+            data_int  = numpy.empty(size_int, Internal.E_NpyInt)
             Internal.createUniqueChild(interp, 'data_int', 'DataArray_t', data_int)
-            adresse   = numpy.empty(2, numpy.int32)
+            adresse   = numpy.empty(2, Internal.E_NpyInt)
             adresse[0]= size_param_int
             adresse[1]= size_param_real
             Internal.createUniqueChild(interp, 'adresse', 'DataArray_t', adresse)
@@ -3293,7 +3293,7 @@ def _Fluxcompact(t):
                for s in size: c=c*s
 
                #print(z[0],"SIZE int", size_int,"c=", c,"size_flux =",  size_int)
-               datap = numpy.zeros(size_int + c , numpy.int32)
+               datap = numpy.zeros(size_int + c , Internal.E_NpyInt)
 
                datap[0:c] = param_int[1][0:c]
                datap[VSHARE.IBC_PT_FLUX] = c                   # debut tableau flux dans param_int
@@ -3303,7 +3303,7 @@ def _Fluxcompact(t):
                param_int[1][ deb ]= Nfamille
                #on reordone les familles pour a	voir toujour l'ordre de families
                ordre = []
-               count = numpy.zeros(Nfamille, numpy.int32)
+               count = numpy.zeros(Nfamille, Internal.E_NpyInt)
                c = 0
                for family in tmp1:
                   i = families.index(family[0])
@@ -4166,7 +4166,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
    print('nombre iterations insuffisant pour diagnostic: nitrun * ss_iteration > 15')
    return None
 
- cellCount = numpy.zeros(2*OMP_NUM_THREADS, dtype=numpy.int32)
+ cellCount = numpy.zeros(2*OMP_NUM_THREADS, dtype=Internal.E_NpyInt)
 
  zones = Internal.getZones(t)
  tps_percell     =0.
@@ -4762,15 +4762,15 @@ def _pointwise2D2Fast(t):
     for z in zones:
         zonebc = Internal.getNodesFromType(z, 'BC_t')
         for zbc in zonebc:
-            s = np.ones((3,2), dtype=np.int32)
+            s = np.ones((3,2), dtype=Internal.E_NpyInt)
             for j in range(0,2):
                 for i in range(0,2):
                     s[j][i]=zbc[2][0][1][j][i]
             Internal.setValue(zbc[2][0],s)
         zonebc = Internal.getNodesFromType(z, 'GridConnectivity1to1_t')
         for zbc in zonebc:
-            s  = np.ones((3,2), dtype=np.int32)
-            s2 = np.ones((3,2), dtype=np.int32)
+            s  = np.ones((3,2), dtype=Internal.E_NpyInt)
+            s2 = np.ones((3,2), dtype=Internal.E_NpyInt)
             for j in range(0,2):
                 for i in range(0,2):
                     s [j][i]=zbc[2][1][1][j][i]

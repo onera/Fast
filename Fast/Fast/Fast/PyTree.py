@@ -345,9 +345,9 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
           a1     = a[1]
           sh = a1.shape ; sh1= FaceSch[1].shape; sh2 = CellSch[1].shape
 
-          eq = numpy.empty(sh , dtype=numpy.int32, order='F')
-          eq1= numpy.empty(sh1, dtype=numpy.int32, order='F')
-          eq2= numpy.empty(sh2, dtype=numpy.int32, order='F')
+          eq = numpy.empty(sh , dtype=Internal.E_NpyInt, order='F')
+          eq1= numpy.empty(sh1, dtype=Internal.E_NpyInt, order='F')
+          eq2= numpy.empty(sh2, dtype=Internal.E_NpyInt, order='F')
 
           c = 0
           param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
@@ -821,7 +821,7 @@ def prepare_interpolation(t,tc):
    for key in rac_insta:
       info_rac = rac_insta[key]
       nb_rac_tot += info_rac[0]
-      interp_info = numpy.zeros(dim_interp,dtype=numpy.int32)
+      interp_info = numpy.zeros(dim_interp, dtype=Internal.E_NpyInt)
       interp_info[0] = info_rac[0] #Nombre de raccors LBM -> NS pour la zone
       interp_info[1] = size_max*neq*timelevels
       for i in range(info_rac[0]):

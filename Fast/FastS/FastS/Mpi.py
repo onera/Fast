@@ -581,7 +581,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
 
          # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)
          Nbpts_Dtot = size_IBC//(nbpts_linelets*nfields_lin+1)
-         _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot ,dtype=numpy.int32)
+         _addrIBC = numpy.asarray([nbpts_linelets,count_racIBC-1,Nbpts_Dtot] + addrIBC + [0]*Nbpts_Dtot, dtype=Internal.E_NpyInt)
 
          linelets = numpy.zeros(size_IBC + Nbpts_Dtot, dtype=numpy.float64)
 

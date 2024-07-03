@@ -123,7 +123,7 @@ C._initVars(t, "{centers:cellN#MotionInit}={centers:cellN#Motion}")
 
 nbases = len(Internal.getBases(t))
 nbodies = len(Internal.getBases(tb))
-BM = numpy.zeros((nbases, nbodies),dtype=numpy.int32)
+BM = numpy.zeros((nbases, nbodies), dtype=Internal.E_NpyInt)
 BM[1,0] = 1.
 
 tBB = Cmpi.createBBoxTree(t)
