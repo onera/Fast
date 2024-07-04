@@ -1696,7 +1696,7 @@ def _buildOwnData(t, Padding):
 
 
             datap      = numpy.zeros(size_int, Internal.E_NpyInt)
-            
+            datap[:]   = -1000
             datap[0:25]= -1
 
             #Structure ou polyhedric
@@ -1795,6 +1795,8 @@ def _buildOwnData(t, Padding):
             datap[66]  = shiftvar
             datap[67]  = extract_res
             datap[68]  = DES_debug     #index 69 et 70 pour PT_BC et PT_OMP
+            datap[69]  = 0             # setting to zero for non-regression [non-regression redundancy]
+            datap[70]  = 0             # setting to zero for non-regression [non-regression redundancy]
             datap[71]   = nbr_relax
             datap[72]   = nbr_restart
             datap[73]   = nbr_krylov
@@ -1827,11 +1829,15 @@ def _buildOwnData(t, Padding):
             datap[VSHARE.flag_collision_operator]  = 1
             datap[VSHARE.flag_collision]           = 1
             datap[VSHARE.LBM_isforce]              = lbm_isforce
+            datap[VSHARE.flag_BConQstar_switch]    = 0
 
+            datap[VSHARE.LBM_CORR_TERM]     = 0
             datap[VSHARE.LBM_OVERSET]       = klbmoverset
             datap[VSHARE.LBM_NS]            = flag_nslbm
 
             datap[VSHARE.LBM_IBC]          = lbm_ibm
+            datap[VSHARE.LBM_IBC_NUM]      = 0 
+            datap[VSHARE.LBM_IBC_PREP]     = 0
             datap[VSHARE.LBM_IBC_CONNECTOR]= lbm_ibm_connector
 
             datap[VSHARE.LBM_spng_xmin] = lbm_spng_xmin
@@ -1841,10 +1847,27 @@ def _buildOwnData(t, Padding):
             datap[VSHARE.LBM_spng_zmin] = lbm_spng_zmin
             datap[VSHARE.LBM_spng_zmax] = lbm_spng_zmax
 
+            ##Setting pointers to 0 for non-regression tests
+            datap[VSHARE.LBM_NQ_BC]          =0 # [non-regression redundancy]
+            datap[VSHARE.LBM_BConQstar]      =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_Cs]          =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_Ws]          =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_Cminus]      =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_BC]          =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_H2H3]        =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_SPEC]        =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_FILTER_WGHT] =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_FILTER_STNCL]=0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_IBC_LIST]    =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_IBC_DIST]    =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_IBC_DIR]     =0 # [non-regression redundancy]
+
             #correction flux paroi ibm
             datap[VSHARE.IBC_PT_FLUX]   = -1
 
             # options SA
+            datap[VSHARE.SA_LOW_RE] = 0 # active Low Reynolds correction
+            datap[VSHARE.SA_ROT_CORR] = 0 # active Rotation correction
             if d is not None:
                 a = Internal.getNodeFromName1(d, 'SA_add_LowRe')
                 if a is not None: 
