@@ -1695,8 +1695,8 @@ def _buildOwnData(t, Padding):
             size_int                   = number_of_defines_param_int +1 # number of defines + 1
 
 
-            datap      = numpy.empty(size_int, Internal.E_NpyInt)
-
+            datap      = numpy.zeros(size_int, Internal.E_NpyInt)
+            datap[:]   = -1000
             datap[0:25]= -1
 
             #Structure ou polyhedric
@@ -1783,7 +1783,6 @@ def _buildOwnData(t, Padding):
             datap[55]  = exploctype
             datap[56]  = pow(2, veclevel[i]-1)
             #datap[56]  = levelg
-            #print("level", datap[53],datap[56])
             datap[57]  = leveld
             datap[58]  = nssiter
             datap[59]  = cacheblckI
@@ -1796,8 +1795,8 @@ def _buildOwnData(t, Padding):
             datap[66]  = shiftvar
             datap[67]  = extract_res
             datap[68]  = DES_debug     #index 69 et 70 pour PT_BC et PT_OMP
-            datap[69]  = 0             # setting to zero for non-regression
-            datap[70]  = 0             # setting to zero for non-regression
+            datap[69]  = 0             # setting to zero for non-regression [non-regression redundancy]
+            datap[70]  = 0             # setting to zero for non-regression [non-regression redundancy]
             datap[71]   = nbr_relax
             datap[72]   = nbr_restart
             datap[73]   = nbr_krylov
@@ -1849,19 +1848,19 @@ def _buildOwnData(t, Padding):
             datap[VSHARE.LBM_spng_zmax] = lbm_spng_zmax
 
             ##Setting pointers to 0 for non-regression tests
-            datap[VSHARE.LBM_NQ_BC]          =0
-            datap[VSHARE.LBM_BConQstar]      =0
-            datap[VSHARE.PT_LBM_Cs]          =0
-            datap[VSHARE.PT_LBM_Ws]          =0
-            datap[VSHARE.PT_LBM_Cminus]      =0
-            datap[VSHARE.PT_LBM_BC]          =0
-            datap[VSHARE.PT_LBM_H2H3]        =0
-            datap[VSHARE.PT_LBM_SPEC]        =0
-            datap[VSHARE.PT_LBM_FILTER_WGHT] =0
-            datap[VSHARE.PT_LBM_FILTER_STNCL]=0
-            datap[VSHARE.PT_LBM_IBC_LIST]    =0
-            datap[VSHARE.PT_LBM_IBC_DIST]    =0
-            datap[VSHARE.PT_LBM_IBC_DIR]     =0
+            datap[VSHARE.LBM_NQ_BC]          =0 # [non-regression redundancy]
+            datap[VSHARE.LBM_BConQstar]      =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_Cs]          =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_Ws]          =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_Cminus]      =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_BC]          =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_H2H3]        =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_SPEC]        =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_FILTER_WGHT] =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_FILTER_STNCL]=0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_IBC_LIST]    =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_IBC_DIST]    =0 # [non-regression redundancy]
+            datap[VSHARE.PT_LBM_IBC_DIR]     =0 # [non-regression redundancy]
 
             #correction flux paroi ibm
             datap[VSHARE.IBC_PT_FLUX]   = -1
