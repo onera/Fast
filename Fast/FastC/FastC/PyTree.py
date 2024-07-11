@@ -1695,7 +1695,7 @@ def _buildOwnData(t, Padding):
             size_int                   = number_of_defines_param_int +1 # number of defines + 1
 
 
-            datap      = numpy.zeros(size_int, Internal.E_NpyInt)
+            datap      = numpy.empty(size_int, Internal.E_NpyInt)
             datap[:]   = -1000
             datap[0:25]= -1
 
@@ -1795,8 +1795,8 @@ def _buildOwnData(t, Padding):
             datap[66]  = shiftvar
             datap[67]  = extract_res
             datap[68]  = DES_debug     #index 69 et 70 pour PT_BC et PT_OMP
-            datap[69]  = 0             # setting to zero for non-regression [non-regression redundancy]
-            datap[70]  = 0             # setting to zero for non-regression [non-regression redundancy]
+            datap[69]  = 0
+            datap[70]  = 0
             datap[71]   = nbr_relax
             datap[72]   = nbr_restart
             datap[73]   = nbr_krylov
