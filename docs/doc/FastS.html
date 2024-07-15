@@ -1,0 +1,1088 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="ASCII" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>FastS: FAST structured grid Navier-Stokes solver &#8212; FastS 4.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">FastS 4.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FastS: FAST structured grid Navier-Stokes solver</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="fasts-fast-structured-grid-navier-stokes-solver">
+<h1>FastS: FAST structured grid Navier-Stokes solver</h1>
+<section id="preamble">
+<h2>Preamble</h2>
+<p>FastS is an efficient Navier-Stokes solver for use on structured
+grids.</p>
+<p>FastS module works on CGNS/python trees (pyTrees)
+containing grid information (coordinates must be defined, boundary conditions and flow solution).</p>
+<p>This module is only available for the pyTree interface:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+</pre></div>
+</div>
+<span class="target" id="module-FastS"></span></section>
+<section id="list-of-functions">
+<h2>List of functions</h2>
+<p><strong>&#8211; Computation Preparation</strong></p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree.warmup" title="FastS.PyTree.warmup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.warmup</span></code></a>(t,&#160;tc[,&#160;graph,&#160;...])</p></td>
+<td><p>Perform necessary operations for the solver to run.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree._createConvergenceHistory" title="FastS.PyTree._createConvergenceHistory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._createConvergenceHistory</span></code></a>(t,&#160;nrec)</p></td>
+<td><p>Create a node in tree to store convergence history.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree.createStatNodes" title="FastS.PyTree.createStatNodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.createStatNodes</span></code></a>(t[,&#160;dir,&#160;vars,&#160;...])</p></td>
+<td><p>Create node in tree to store stats.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree.createStressNodes" title="FastS.PyTree.createStressNodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.createStressNodes</span></code></a>(t[,&#160;BC,&#160;windows])</p></td>
+<td><p>Create nodes to store stress data.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>&#8211; Running computation</strong></p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._compute" title="FastS.PyTree._compute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._compute</span></code></a>(t,&#160;metrics,&#160;nitrun[,&#160;...])</p></td>
+<td><p>Compute a given number of iterations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.displayTemporalCriteria</span></code>(t,&#160;...)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>&#8211; Post</strong></p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._computeStats" title="FastS.PyTree._computeStats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeStats</span></code></a>(t,&#160;tmy,&#160;metrics)</p></td>
+<td><p>Compute the space/time average of flowfields in tmy.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree._computeStress" title="FastS.PyTree._computeStress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeStress</span></code></a>(t,&#160;teff,&#160;metrics)</p></td>
+<td><p>Compute efforts in teff.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._computeVariables" title="FastS.PyTree._computeVariables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeVariables</span></code></a>(t,&#160;metrics,&#160;...)</p></td>
+<td><p>Compute given variables.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree._computeGrad" title="FastS.PyTree._computeGrad"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeGrad</span></code></a>(t,&#160;metrics,&#160;varlist)</p></td>
+<td><p>Compute gradient of fiven variables.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._extractConvergenceHistory" title="FastS.PyTree._extractConvergenceHistory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._extractConvergenceHistory</span></code></a>(t,&#160;...)</p></td>
+<td><p>Extract residuals in an ascii file (tp format).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="contents">
+<h2>Contents</h2>
+<section id="preparation">
+<h3>Preparation</h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree.warmup">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">warmup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infos_ale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Compute all necessary pre-requisites for solver:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Metrics (face normales, volume)</p></li>
+<li><p>Primitive variables initialization and delete of conservative ones</p></li>
+<li><p>Memory optimimization (Numa access and contiguous access of Density, VelocityX,.. VelocityZ,&#8230;, Temperature)</p></li>
+<li><p>Work array creation (Storage of RHS, Matrix coef for implicit time scheme, lock for openmp,&#8230;)</p></li>
+<li><p>Initialization of grid Velocities (ALE)</p></li>
+<li><p>Memory optimimization access for the connectivity tree, tc.</p></li>
+<li><p>Ghostcell cells filling with BC and connectivity</p></li>
+<li><p>Init of ViscosityEddy for NSLaminar, LES and SA computations</p></li>
+</ol>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input pyTree</p></li>
+<li><p><strong>tc</strong> (<em>pyTree</em>) &#8211; input tree containing connection information</p></li>
+<li><p><strong>graph</strong> (<em>dictionary</em>) &#8211; input communication graph</p></li>
+<li><p><strong>infos_ale</strong> (<em>list</em>) &#8211; input [position angle (rad), angle rotation speed (rad s^1)]</p></li>
+<li><p><strong>tmy</strong> (<em>pyTree</em>) &#8211; stat tree if any</p></li>
+<li><p><strong>verbose</strong> &#8211; if 1, display information about threads distribution</p></li>
+<li><p><strong>verbose</strong> &#8211; int (0 or 1)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(t, tc, metrics)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+<p><strong>CAUTION!!!</strong></p>
+<p><strong>MUST be called before compute or everytime the solution tree is modified by a non in place function</strong></p>
+<p><strong>CAUTION!!!</strong></p>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/warmupPT.py">Warming up (PyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - warmup (pyTree) - </span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span><span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;far&#39;</span><span class="p">,</span> <span class="s1">&#39;BCFarfield&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">I</span><span class="o">.</span><span class="n">_initConst</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">_addState</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">_addState</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a</span><span class="p">])</span>
+
+<span class="c1"># Numerics</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;temporal_scheme&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="s2">&quot;explicit&quot;</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;ss_iteration&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="mi">20</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step&quot;</span><span class="p">]</span>          <span class="o">=</span> <span class="mf">0.00004444</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>             <span class="o">=</span> <span class="s2">&quot;ausmpred&quot;</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">);</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>  <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree._createConvergenceHistory">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">_createConvergenceHistory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nrec</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Create a node in each zone with convergence information (residuals)
+MUST be called before _displayTemporalCriteria() and only for steady cases.
+t is a pyTree, nrec is the size of the data arrays to store the residuals.
+The data arrays are stored during the call to  <strong>FastS.displayTemporalCriteria</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input pyTree</p></li>
+<li><p><strong>nrec</strong> &#8211; <p>??</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/convergenceHistoryPT.py">ConvergenceHistory (PyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - convergenceHistory (pyTree) -</span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Connector.PyTree</span> <span class="k">as</span> <span class="nn">X</span>
+<span class="kn">import</span> <span class="nn">Converter.Internal</span> <span class="k">as</span> <span class="nn">Internal</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span><span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;far&#39;</span><span class="p">,</span> <span class="s1">&#39;BCFarfield&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">initConst</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>
+    
+<span class="c1"># Numerics</span>
+<span class="n">modulo_verif</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;temporal_scheme&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="s2">&quot;implicit&quot;</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;ss_iteration&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="mi">3</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;modulo_verif&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="n">modulo_verif</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step&quot;</span><span class="p">]</span>          <span class="o">=</span> <span class="mf">0.0007</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step_nature&quot;</span><span class="p">]</span>   <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;cfl&quot;</span><span class="p">]</span>                <span class="o">=</span> <span class="mf">4.0</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>             <span class="o">=</span> <span class="s2">&quot;roe&quot;</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;slope&quot;</span><span class="p">]</span>              <span class="o">=</span> <span class="s2">&quot;minmod&quot;</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">);</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="c1"># Number or records to store residuals </span>
+<span class="n">nrec</span> <span class="o">=</span> <span class="mi">100</span><span class="o">//</span><span class="n">modulo_verif</span>
+
+<span class="c1">#To remove old ConvergenceHistory nodes </span>
+<span class="n">C</span><span class="o">.</span><span class="n">_rmNodes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;ZoneConvergenceHistory&quot;</span><span class="p">)</span>
+
+<span class="c1">#Convergence history with nrec records</span>
+<span class="n">FastS</span><span class="o">.</span><span class="n">createConvergenceHistory</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">nrec</span><span class="p">)</span>
+
+<span class="n">nit</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="n">time</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">time_step</span> <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getNodeFromName</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;time_step&#39;</span><span class="p">)</span>
+<span class="n">time_step</span> <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getValue</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nit</span><span class="p">):</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">tc</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">it</span><span class="o">%</span><span class="n">modulo_verif</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    	<span class="n">FastS</span><span class="o">.</span><span class="n">displayTemporalCriteria</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">)</span>
+    <span class="n">time</span> <span class="o">+=</span> <span class="n">time_step</span>
+
+<span class="c1"># time stamp</span>
+<span class="n">Internal</span><span class="o">.</span><span class="n">createUniqueChild</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;Iteration&#39;</span><span class="p">,</span> <span class="s1">&#39;DataArray_t&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">nit</span><span class="p">)</span>
+<span class="n">Internal</span><span class="o">.</span><span class="n">createUniqueChild</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;Time&#39;</span><span class="p">,</span> <span class="s1">&#39;DataArray_t&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">time</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;out.cgns&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree.createStatNodes">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">createStatNodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0'</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Create a tree, tmy, used by FastS._computeStats, to compute and store space and time averaged value of the flowfield.</p>
+<p>The size of zones in tmy and t differs if space averaging occurs.</p>
+<p>Each zone of tmy has a node, named <strong>&#8216;parameter_int&#8217;</strong> with contains a numpy. The number of time <strong>samples</strong> is stored in  parameter_int[2].</p>
+<p>The averaged fields, computed at the center of the cell, are :</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Density</p></li>
+<li><p>MomentumX</p></li>
+<li><p>MomentumY</p></li>
+<li><p>MomentumZ</p></li>
+<li><p>Pressure</p></li>
+<li><p>Pressure&#178;</p></li>
+<li><p>ViscosityEddy</p></li>
+<li><p>MomentumX&#178;/Density</p></li>
+<li><p>MomentumY&#178;/Density</p></li>
+<li><p>MomentumZ&#178;/Density</p></li>
+<li><p>MomentumX * MomentumY / Density</p></li>
+<li><p>MomentumX * MomentumZ / Density</p></li>
+<li><p>MomentumY * MomentumZ / Density</p></li>
+</ol>
+</div></blockquote>
+<p>Return a new tree in tmy:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input pyTree</p></li>
+<li><p><strong>dir</strong> (<em>character</em>) &#8211; input to determine homogeneous direction in a block structured sense</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tmy</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tree</p>
+</dd>
+</dl>
+<p>the <strong>dir</strong> character can have the following values:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>&#8216;0&#8217; :  (no space average)</p></li>
+<li><p>&#8216;i&#8217; :  space average along the I direction of the structured block</p></li>
+<li><p>&#8216;j&#8217; :  space average along the J direction of the structured block</p></li>
+<li><p>&#8216;k&#8217; :  space average along the K direction of the structured block</p></li>
+<li><p>&#8216;ij&#8217;:  space average along the I and J directions of the structured block</p></li>
+<li><p>&#8216;ik&#8217;:  space average along the I and K directions of the structured block</p></li>
+<li><p>&#8216;jk&#8217;:  space average along the J and K directions of the structured block</p></li>
+</ul>
+</div></blockquote>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/createStatNodesPT.py">Create Stat Node (pyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - createStatNodes (pyTree) - </span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">Connector.PyTree</span> <span class="k">as</span> <span class="nn">X</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span> <span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">;</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;far&#39;</span><span class="p">,</span> <span class="s1">&#39;BCFarfield&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">initConst</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>
+
+<span class="c1"># Numerics</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;temporal_scheme&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="s2">&quot;explicit&quot;</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;ss_iteration&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="mi">20</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step&quot;</span><span class="p">]</span>          <span class="o">=</span> <span class="mf">0.00004444</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>             <span class="o">=</span> <span class="s2">&quot;ausmpred&quot;</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">)</span> <span class="p">;</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="c1"># Prim vars, solver tag, compact, metric</span>
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">tmy</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">createStatNodes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s1">&#39;0&#39;</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">tmy</span><span class="p">,</span> <span class="s1">&#39;out.cgns&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree.createStressNodes">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">createStressNodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BC</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">BCTypes</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Create a tree, used by FastS._computeStress, to compute and store numerical fluxes, Gradient and Cp  on a list of boundary conditions.
+Return a new tree in teff.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input pyTree</p></li>
+<li><p><strong>BCTypes</strong> (<em>list</em><em> of </em><em>strings</em>) &#8211; types of BC to extract</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tmy</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tree</p>
+</dd>
+</dl>
+<p>Default value is BC=None.</p>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/createStressNodesPT.py">Create stress Nodes(pyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - createStressNodes (pyTree) - </span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">Connector.PyTree</span> <span class="k">as</span> <span class="nn">X</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span> <span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">;</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;wall&#39;</span><span class="p">,</span> <span class="s1">&#39;BCWall&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">initConst</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>
+
+<span class="c1"># Numerics</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{};</span> <span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">);</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="c1"># Prim vars, solver tag, compact, metric</span>
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">teff</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">createStressNodes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">BC</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BCWall&#39;</span><span class="p">,</span><span class="s1">&#39;BCWallViscous&#39;</span><span class="p">])</span>
+
+<span class="n">FastS</span><span class="o">.</span><span class="n">_computeStress</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">teff</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
+
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">teff</span><span class="p">,</span> <span class="s1">&#39;stress.cgns&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="running-computation">
+<h3>Running computation</h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree._compute">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">_compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Perform one iteration of solver to advance (in place) the solution from t^n to t^(n+1).</p>
+<p>nit is the current iteration number;  metrics contains normale and volume informations; tc is the connectivity tree (if any):</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input pyTree</p></li>
+<li><p><strong>metrics</strong> (<em>list</em>) &#8211; </p></li>
+<li><p><strong>nit</strong> (<em>int</em>) &#8211; current iteration number</p></li>
+<li><p><strong>tc</strong> (<em>pyTree</em>) &#8211; connecting pyTree</p></li>
+<li><p><strong>graph</strong> (<em>dictionary</em>) &#8211; communication graph</p></li>
+</ul>
+</dd>
+</dl>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/computePT.py">compute 200 timesteps of Euler Eqs (PyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - compute (pyTree) - </span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span><span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;far&#39;</span><span class="p">,</span> <span class="s1">&#39;BCFarfield&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">initConst</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>
+
+<span class="c1"># Numerics</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;temporal_scheme&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="s2">&quot;explicit&quot;</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;ss_iteration&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="mi">20</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step&quot;</span><span class="p">]</span>          <span class="o">=</span> <span class="mf">0.00004444</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>             <span class="o">=</span> <span class="s2">&quot;ausmpred&quot;</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">)</span> <span class="p">;</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="c1"># Prim vars, solver tag, compact, metric</span>
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="c1"># Compute</span>
+<span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">200</span><span class="p">):</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
+
+<span class="c1"># Save</span>
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;out.cgns&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree._displayTemporalCriteria">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">_displayTemporalCriteria</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Displays CFL and implicit convergence information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input pyTree</p></li>
+<li><p><strong>metrics</strong> &#8211; </p></li>
+<li><p><strong>nit</strong> &#8211; </p></li>
+<li><p><strong>format</strong> (<em>string</em>) &#8211; format for residual output (&#8216;None&#8217;, &#8216;double&#8217;, &#8216;store&#8217;)</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>format</strong> can take 2 values:</p>
+<ul class="simple">
+<li><p>None   (display residuals on the stdout with f7.2 Fortran format)</p></li>
+<li><p>&#8216;store&#8217; (store residual in the tree if CongergenceHistory node has been created by FastS.createConvergenceHistory)</p></li>
+</ul>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/displayTemporalCriteriaPT.py">Display temporal criteria in stdout (PyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - displayTemporalCriteria (pyTree) - </span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">Connector.PyTree</span> <span class="k">as</span> <span class="nn">X</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+<span class="kn">import</span> <span class="nn">KCore.Adim</span> <span class="k">as</span> <span class="nn">Adim</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span><span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;far&#39;</span><span class="p">,</span> <span class="s1">&#39;BCFarfield&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">I</span><span class="o">.</span><span class="n">_initConst</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">_addState</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">_addState</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">])</span>
+
+<span class="c1"># Numerics</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;temporal_scheme&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="s2">&quot;explicit&quot;</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;ss_iteration&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="mi">20</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;modulo_verif&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="mi">1</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="c1">#numz[&quot;time_step&quot;]          = 0.00004444</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step_nature&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;cfl&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="mf">0.6</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>             <span class="o">=</span> <span class="s2">&quot;ausmpred&quot;</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">);</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="c1"># Prim vars, solver tag, compact, metric</span>
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="c1"># Compute</span>
+<span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_displayTemporalCriteria</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
+
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;out.cgns&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="post">
+<h3>Post</h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree._computeStats">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">_computeStats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Compute the space/time average of the flowfield in a tree tmy (in place).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input pyTree</p></li>
+<li><p><strong>tmy</strong> (<em>pyTree</em>) &#8211; stat tree</p></li>
+<li><p><strong>metrics</strong> (<em>metrics</em>) &#8211; metrics of t</p></li>
+</ul>
+</dd>
+</dl>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/computeStatsPT.py">Compute flowfield average over 200 timesteps and in the k direction (pyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - computeStats (pyTree) - </span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span><span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">15</span><span class="p">))</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;far&#39;</span><span class="p">,</span> <span class="s1">&#39;BCFarfield&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">initConst</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>
+
+<span class="c1"># Numerics</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;temporal_scheme&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="s2">&quot;explicit&quot;</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;ss_iteration&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="mi">20</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step&quot;</span><span class="p">]</span>          <span class="o">=</span> <span class="mf">0.00004444</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>             <span class="o">=</span> <span class="s2">&quot;ausmpred&quot;</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">)</span> <span class="p">;</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="c1"># Prim vars, solver tag, compact, metric</span>
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="c1">## Statsnodes creation from scratch</span>
+<span class="n">tmy</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">createStatNodes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+<span class="c1">### Statsnodes creation from restart file</span>
+<span class="c1">#tmy = FastS.initStats(&#39;stat.cgns&#39;)</span>
+
+<span class="c1"># Compute</span>
+<span class="k">for</span> <span class="n">nitrun</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">200</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;it=&#39;</span><span class="p">,</span> <span class="n">nitrun</span><span class="p">)</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">nitrun</span><span class="p">)</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_computeStats</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tmy</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">tmy</span><span class="p">,</span> <span class="s1">&#39;stat.cgns&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree._computeStress">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">_computeStress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz_ref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.,</span> <span class="pre">0.,</span> <span class="pre">0.)</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Compute in teff (in place) data related to a list of Boundary conditions defined by FastS._createStressNodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input pyTree</p></li>
+<li><p><strong>teff</strong> (<em>pyTree</em>) &#8211; stress tree</p></li>
+<li><p><strong>metrics</strong> (<em>metrics</em>) &#8211; metrics of t</p></li>
+<li><p><strong>xyz_ref</strong> (<em>tupple</em><em> of </em><em>3 floats</em>) &#8211; reference point for momentum computation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>effort</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+<p>in the tree <strong>teff</strong>, the following variables are updated in the <strong>FlowSolution#Centers</strong> node thanks to primitive variable of t:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Density     (contains the numerical fluxes linked to the mass conservation: rho (U . n) x S)</p></li>
+<li><p>MomentumX   (contains the normalized numerical fluxes linked to the MomentumX conservation minus P_inf*n: (( rho (U . n) Ux + (P-P_inf).nx ) x S ) x 0.5/rho_inf/U_inf^2</p></li>
+<li><p>MomentumY&#8230;</p></li>
+<li><p>MomentumZ&#8230;</p></li>
+<li><p>EnergyStagnationDensity  (contains the normalized numerical fluxes of the linked to the energy conservation)</p></li>
+<li><p>gradxVelocityX (gradient in the x direction of VelocityX at the position of the BC)</p></li>
+<li><p>gradyVelocityX</p></li>
+<li><p>gradzVelocityX</p></li>
+<li><p>gradxVelocityY</p></li>
+<li><p>gradyVelocityY</p></li>
+<li><p>gradzVelocityY</p></li>
+<li><p>gradxVelocityZ</p></li>
+<li><p>gradyVelocityZ</p></li>
+<li><p>gradzVelocityZ</p></li>
+<li><p>gradxTemperature</p></li>
+<li><p>gradyTemperature</p></li>
+<li><p>gradzTemperature</p></li>
+<li><p>CoefPressure</p></li>
+<li><p>ViscosityMolecular + ViscosityEddy</p></li>
+<li><p>Density2: contains density (kg/m^3)</p></li>
+<li><p>Pressure</p></li>
+</ol>
+</div></blockquote>
+<p>Normalized data are normalized by 0.5 rho_inf U_inf^2 defined in the ReferenceState CGNS node</p>
+<p>the return of the function, effort, is a list of 8 items which contains integral over the surface of the BC of different variables of teff:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>integral of MomentumX (normalized numerical fluxes linked to the MomentumX conservation) give access to cx (stored in effort[0])</p></li>
+<li><p>integral of MomentumY (normalized numerical fluxes linked to the MomentumY conservation) give access to cy (stored in effort[1])</p></li>
+<li><p>integral of MomentumZ (normalized numerical fluxes linked to the MomentumZ conservation) give access to cz (stored in effort[2])</p></li>
+<li><p>give access to cmx (stored in effort[3])</p></li>
+<li><p>give access to cmy (stored in effort[4])</p></li>
+<li><p>give access to cmz (stored in effort[5])</p></li>
+<li><p>give access to surface of the BC (stored in effort[6])</p></li>
+<li><p>integral of Density   (numerical fluxes linked to the Density conservation) give access to mass flow rate (stored in effort[7])</p></li>
+<li><p>integral of MomemtumX (numerical fluxes linked to the MomentumX conservation) give access to the stress (Newton) in the X direction (stored in effort[8])</p></li>
+<li><p>integral of MomemtumY (numerical fluxes linked to the MomentumY conservation) give access to the stress (Newton) in the Y direction (stored in effort[9])</p></li>
+<li><p>integral of MomemtumZ (numerical fluxes linked to the MomentumZ conservation) give access to the stress (Newton) in the Z direction (stored in effort[10])</p></li>
+</ol>
+</div></blockquote>
+<p>For a 2D computation in (x,y) plan, with an angle of attack of theta:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>drag = eff[0]*cos(theta) + eff[1]*sin(theta)</p></li>
+<li><p>lift = eff[1]*cos(theta) - eff[0]*sin(theta)</p></li>
+</ul>
+</div></blockquote>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/computeStressPT.py">Compute load (pyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - computeStress (pyTree) - </span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">Connector.PyTree</span> <span class="k">as</span> <span class="nn">X</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span> <span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">;</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;wall&#39;</span><span class="p">,</span> <span class="s1">&#39;BCWall&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">initConst</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>
+
+<span class="c1"># Numerics</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{};</span> <span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">);</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="c1"># Prim vars, solver tag, compact, metric</span>
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">teff</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">createStressNodes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;BCWall&#39;</span><span class="p">])</span>
+
+
+<span class="c1"># Compute</span>
+<span class="k">for</span> <span class="n">nitrun</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">200</span><span class="p">):</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">nitrun</span><span class="p">)</span>
+
+<span class="n">effort</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">_computeStress</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">teff</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
+
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">teff</span><span class="p">,</span> <span class="s1">&#39;stress.cgns&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/computeDebitPT.py">Compute debit (pyTree) for Inflow BC condition</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - computeStress (pyTree) - </span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">Connector.PyTree</span> <span class="k">as</span> <span class="nn">X</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Converter.Internal</span> <span class="k">as</span> <span class="nn">Internal</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span> <span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">;</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;wall&#39;</span><span class="p">,</span> <span class="s1">&#39;BCInflow&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">initConst</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>
+
+<span class="c1"># Numerics</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{};</span> <span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">);</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="c1"># Prim vars, solver tag, compact, metric</span>
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">debit_inflow</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">createStressNodes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">BC</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BCInflow&#39;</span><span class="p">])</span>
+
+
+<span class="c1"># Compute</span>
+<span class="k">for</span> <span class="n">nitrun</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">200</span><span class="p">):</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">nitrun</span><span class="p">)</span>
+
+<span class="n">effort</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">_computeStress</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">debit_inflow</span> <span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
+
+<span class="c1"># compute of the mass flow rate with numerical flux old fashion</span>
+<span class="n">zones_debit</span> <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getZones</span><span class="p">(</span><span class="n">debit_inflow</span><span class="p">)</span>
+<span class="n">debit</span> <span class="o">=</span><span class="mf">0.</span>
+<span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">zones_debit</span><span class="p">:</span>
+    <span class="n">sol</span>      <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getNodesFromName1</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="s1">&#39;FlowSolution#Centers&#39;</span><span class="p">)</span>
+    <span class="n">density</span>  <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getNodesFromName1</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span><span class="s1">&#39;Density&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> 
+    <span class="n">debit</span>   <span class="o">+=</span>  <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;the mass flow rate accross the Inflow BC is&#39;</span><span class="p">,</span> <span class="n">debit</span><span class="p">)</span>
+
+<span class="c1"># compute of the mass flow rate with numerical flux new fashion</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;the mass flow rate accross the Inflow BC is&#39;</span><span class="p">,</span> <span class="n">zones_debit</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">debit_inflow</span><span class="p">,</span> <span class="s1">&#39;debit.cgns&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree._computeVariables">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">_computeVariables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Compute specified variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input/output pyTree</p></li>
+<li><p><strong>metrics</strong> (<em>list</em>) &#8211; input metrics of t</p></li>
+<li><p><strong>variables</strong> (<em>list</em><em> of </em><em>strings</em>) &#8211; input variables to compute</p></li>
+</ul>
+</dd>
+</dl>
+<p>The available variables are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>QCriterion</p></li>
+<li><p>QpCriterion = QCriterion* min( 1, abs(dDensitydt) )</p></li>
+<li><p>Enstrophy</p></li>
+</ul>
+</div></blockquote>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/computeVariablesPT.py">Compute variables (pyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - computeVariables (pyTree) - </span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span><span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;far&#39;</span><span class="p">,</span> <span class="s1">&#39;BCFarfield&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">initConst</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>
+
+<span class="c1"># Numerics</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;temporal_scheme&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="s2">&quot;explicit&quot;</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;ss_iteration&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="mi">20</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step&quot;</span><span class="p">]</span>          <span class="o">=</span> <span class="mf">0.00004444</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>             <span class="o">=</span> <span class="s2">&quot;ausmpred&quot;</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">)</span> <span class="p">;</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="c1"># Prim vars, solver tag, compact, metric</span>
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="c1"># Compute</span>
+<span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">200</span><span class="p">):</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_computeVariables</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Enstrophy&#39;</span><span class="p">])</span>
+
+<span class="c1"># Save</span>
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;out.cgns&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree._computeGrad">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">_computeGrad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Compute specified variables gradients at cell centers with FV Green Gauss approach.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input/output pyTree</p></li>
+<li><p><strong>metrics</strong> (<em>list</em>) &#8211; metrics of t</p></li>
+<li><p><strong>variables</strong> (<em>list</em><em> of </em><em>strings</em>) &#8211; list of variable names to extract grad</p></li>
+<li><p><strong>order</strong> (<em>int</em><em> (</em><em>2</em><em> or </em><em>4</em><em>)</em>) &#8211; order for gradients</p></li>
+</ul>
+</dd>
+</dl>
+<p>In case a variable is not in t or in a zone, the computation of the gradients is skipped.</p>
+<dl class="simple">
+<dt>order can take 2 values:</dt><dd><ul class="simple">
+<li><p>2: classical flux reconstruction (2nd order)</p></li>
+<li><p>4: flux reconstruction formula giving 4th order accurate scheme on cartesian grid</p></li>
+</ul>
+</dd>
+</dl>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/computeGradPT.py">Compute grad (pyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - computeGrad (pyTree) - </span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Converter.Internal</span> <span class="k">as</span> <span class="nn">Internal</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">Fast.PyTree</span> <span class="k">as</span> <span class="nn">Fast</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+<span class="kn">import</span> <span class="nn">KCore.test</span> <span class="k">as</span> <span class="nn">test</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span><span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;far&#39;</span><span class="p">,</span> <span class="s1">&#39;BCFarfield&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">initLamb</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">Gamma</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="c1">#a1 = I.initConst(a1, MInf=0.4, loc=&#39;centers&#39;)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>
+
+<span class="c1"># Numerics</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;temporal_scheme&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="s2">&quot;explicit&quot;</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;ss_iteration&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="mi">20</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step&quot;</span><span class="p">]</span>          <span class="o">=</span> <span class="mf">0.0004444</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>             <span class="o">=</span> <span class="s2">&quot;ausmpred&quot;</span>
+<span class="n">Fast</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">)</span> <span class="p">;</span> <span class="n">Fast</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="c1"># Prim vars, solver tag, compact, metric</span>
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="c1"># Compute</span>
+<span class="c1">#for it in range(0,1):</span>
+<span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">50</span><span class="p">):</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
+    <span class="c1">#FastS._computeGrad(t, metrics, [&#39;Density&#39;])</span>
+
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="s1">&#39;bug.cgns&#39;</span><span class="p">)</span>
+<span class="n">Internal</span><span class="o">.</span><span class="n">_rmNodesByName</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;.Solver#Param&#39;</span><span class="p">)</span>
+<span class="n">Internal</span><span class="o">.</span><span class="n">_rmNodesByName</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;.Solver#ownData&#39;</span><span class="p">)</span>
+<span class="n">test</span><span class="o">.</span><span class="n">testT</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="FastS.PyTree._extractConvergenceHistory">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">_extractConvergenceHistory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perZones</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perBases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Extract convergence information (residuals) for each zone or/and for each base.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>pyTree</em>) &#8211; input pyTree with ConvergenceHistory computed</p></li>
+<li><p><strong>fileout</strong> (<em>string</em>) &#8211; name of file for resiudal extraction (tp format)</p></li>
+<li><p><strong>perZones</strong> (<em>Boolean</em>) &#8211; if True, write residuals for each zones</p></li>
+<li><p><strong>perBases</strong> (<em>Boolean</em>) &#8211; if True, write residuals for each bases</p></li>
+</ul>
+</dd>
+</dl>
+<p><em>Example of use:</em></p>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/FastS/extractConvergenceHistoryPT.py">Extract convergence history (pyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - extractConvergenceHistory (pyTree) -</span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
+<span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
+<span class="kn">import</span> <span class="nn">Connector.PyTree</span> <span class="k">as</span> <span class="nn">X</span>
+<span class="kn">import</span> <span class="nn">Converter.Internal</span> <span class="k">as</span> <span class="nn">Internal</span>
+<span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
+
+<span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span><span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">C</span><span class="o">.</span><span class="n">_fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;far&#39;</span><span class="p">,</span> <span class="s1">&#39;BCFarfield&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">I</span><span class="o">.</span><span class="n">_initConst</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">_addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">_addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>
+    
+<span class="c1"># Numerics</span>
+<span class="n">modulo_verif</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;temporal_scheme&quot;</span><span class="p">]</span>    <span class="o">=</span> <span class="s2">&quot;implicit&quot;</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;ss_iteration&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="mi">3</span>
+<span class="n">numb</span><span class="p">[</span><span class="s2">&quot;modulo_verif&quot;</span><span class="p">]</span>       <span class="o">=</span> <span class="n">modulo_verif</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step&quot;</span><span class="p">]</span>          <span class="o">=</span> <span class="mf">0.0007</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;time_step_nature&quot;</span><span class="p">]</span>   <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;cfl&quot;</span><span class="p">]</span>                <span class="o">=</span> <span class="mf">4.0</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;scheme&quot;</span><span class="p">]</span>             <span class="o">=</span> <span class="s2">&quot;roe&quot;</span>
+<span class="n">numz</span><span class="p">[</span><span class="s2">&quot;slope&quot;</span><span class="p">]</span>              <span class="o">=</span> <span class="s2">&quot;minmod&quot;</span>
+<span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">);</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="c1"># Number or records to store residuals </span>
+<span class="n">nrec</span> <span class="o">=</span> <span class="mi">100</span><span class="o">//</span><span class="n">modulo_verif</span>
+
+<span class="c1">#To remove old ConvergenceHistory nodes </span>
+<span class="n">C</span><span class="o">.</span><span class="n">_rmNodes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;ZoneConvergenceHistory&quot;</span><span class="p">)</span>
+
+<span class="c1">#Convergence history with nrec records</span>
+<span class="n">FastS</span><span class="o">.</span><span class="n">_createConvergenceHistory</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">nrec</span><span class="p">)</span>
+
+<span class="n">nit</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="n">time</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">time_step</span> <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getNodeFromName</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;time_step&#39;</span><span class="p">)</span>
+<span class="n">time_step</span> <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getValue</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nit</span><span class="p">):</span>
+    <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">tc</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">it</span><span class="o">%</span><span class="n">modulo_verif</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    	<span class="n">FastS</span><span class="o">.</span><span class="n">_displayTemporalCriteria</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">)</span>
+    <span class="n">time</span> <span class="o">+=</span> <span class="n">time_step</span>
+
+<span class="c1"># extraction des residus et creation du fichier &quot;residus.dat&quot;</span>
+<span class="n">FastS</span><span class="o">.</span><span class="n">_extractConvergenceHistory</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="s2">&quot;residus.dat&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+<section id="index">
+<h2>Index</h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="#">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">FastS: FAST structured grid Navier-Stokes solver</a><ul>
+<li><a class="reference internal" href="#preamble">Preamble</a></li>
+<li><a class="reference internal" href="#list-of-functions">List of functions</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#index">Index</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script><a  href="FastS.pdf" target="_self">Download pdf version</a>
+<p></p>
+<a  href="../index.html" target="_self">Back to main page</a>
+<head>
+<style>
+#myBtn {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  z-index: 99;
+  border: none;
+  outline: none;
+  background-color: rgba(26,85,85,0.5);
+  color: rgb(0, 0, 0);
+  cursor: pointer;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 6px 6px 6px black;
+}
+
+#myBtn:hover {
+  background-color: rgb(26,85,85);
+  color: rgb(255, 255, 255);
+}
+</style>
+</head>
+<body>
+
+<button onclick="topFunction()" id="myBtn" title="Go to top"><img src="./_static/icon.png" width="20" height="20"></button>
+
+<script>
+// When the user scrolls down 20px from the top of the document, show the button
+window.onscroll = function() {scrollFunction()};
+
+function scrollFunction() {
+    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        document.getElementById("myBtn").style.display = "block";
+    } else {
+        document.getElementById("myBtn").style.display = "none";
+    }
+}
+
+// When the user clicks on the button, scroll to the top of the document
+function topFunction() {
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+}
+</script>
+</body>
+<!-- <img src="logo-onera-ident.png">>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">FastS 4.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FastS: FAST structured grid Navier-Stokes solver</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright ONERA.
+    </div>
+  </body>
+</html>

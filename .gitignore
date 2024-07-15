@@ -5,8 +5,10 @@ __pycache__
 core.*
 setup.cfg
 
+docs/doc/Examples
+docs/doc/*.pdf
+docs/doc/documents
 docs/Download
-docs/doc
 Fast/FastC/installPath.py
 Fast/FastS/merge.l
 tools/MigrationSVN
