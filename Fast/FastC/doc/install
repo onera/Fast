@@ -30,68 +30,25 @@ else
     exit
 fi
 
-# Copy examples to global dir (production mod)
-if ([ $PRODUCTION -eq 1 ])
-then
-    if test ! -e $DEST
-    then 
-        mkdir $DEST
-    fi
-    if test ! -e "$DEST/Examples"
-    then 
-        mkdir "$DEST/Examples"
-    fi
-    if test ! -e $DEST2
-    then 
-        mkdir $DEST2
-    fi
-    if test ! -e $DEST3
-    then 
-        mkdir $DEST3
-    fi
-
-    cp ../test/*.py $DEST2
-fi
-
-# Create Links for Examples (local)
-if test ! -e build
-then
-    mkdir build
-fi
-cd build
-if test ! -e Examples
-then
-    mkdir Examples
-    ln -s ../../../test Examples/FastC
-fi
-cd ..
+# Copy all docs locally
+cp ../../FastS/doc/source/FastS.rst source/
+cp ../../Fast/doc/source/Fast.rst source/
 
 # Build html
 touch source/*.rst
 sphinx-build -b html ./source ./build
-if ([ $PRODUCTION -eq 1 ])
-then
-# Build pdf
-    sphinx-build -b latex ./source ./build
-    cd build
-    pdflatex FastC >& /dev/null
-    cd ..
-fi
 
-# Copie dans le DEST
-if ([ $PRODUCTION -eq 1 ])
-then
-    sed -i 's/FastC.FastC/FastC/g' build/FastC.html
-    cp build/FastC.html $DEST
-    cp build/FastC.pdf $DEST
-fi
+# modif de search index
+FILE=build/searchindex.js
+sed -i 's/FastS\.FastS/FastS/g' $FILE
+sed -i 's/Fast\.Fast/Fast/g' $FILE
 
-# Copie des release Notes
-if ([ $PRODUCTION -eq 1 ])
-then
-    version=`grep -e __version__ ../FastC/FastC.py`
-    version1=${version:15:4}
-    version1=${version1/"'"/""}
-    v='FastC-'$version1'.txt'
-    cp FastC.txt $DEST3/$v
-fi
+# meme modif de genindex
+FILE=build/genindex.html
+sed -i 's/FastS\.FastS/FastS/g' $FILE
+sed -i 's/Fast\.Fast/Fast/g' $FILE
+
+cp build/searchindex.js $DEST
+cp build/genindex.html $DEST
+cp build/py-modindex.html $DEST
+cp build/search.html $DEST

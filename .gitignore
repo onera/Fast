@@ -11,6 +11,8 @@ docs/doc/documents
 docs/Download
 Fast/FastC/installPath.py
 Fast/FastS/merge.l
+Fast/FastC/doc/source/FastS.rst
+Fast/FastC/doc/source/Fast.rst
 tools/MigrationSVN
 
 Data*

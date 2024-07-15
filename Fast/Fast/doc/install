@@ -85,11 +85,6 @@ then
     cp build/Fast.html $DEST
     cp build/Fast.pdf $DEST
     cp -rf source/documents $DEST/
-    # ajoute le search index
-    cp build/searchindex.js $DEST
-    cp build/genindex.html $DEST
-    cp build/py-modindex.html $DEST
-    cp build/search.html $DEST
 fi
 
 # Copie des release Notes
