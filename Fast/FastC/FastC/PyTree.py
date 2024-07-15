@@ -2223,7 +2223,7 @@ def _motionlaw(t, teta, tetap):
 # Retourne un tag suivant bcname
 #==============================================================================
 def tagBC(bcname):
-  if   bcname == "BCExtrapolate"    :       tag = 0
+  if   bcname == "BCExtrapolate":           tag = 0
   elif bcname == "BCDegenerateLine":        tag = 0
   elif bcname == "BCFarfield":              tag = 1
   elif bcname == "BCInflowSupersonic":      tag = 2
@@ -2764,13 +2764,13 @@ def _BCcompact(t):
                 Internal.createUniqueChild(bc, 'random_vec', 'DataArray_t', rand)
 
             if btype == 'BCWallViscousIsothermal':
-               Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
+               Prop = Internal.getNodeFromName(bc,'.Solver#Property')
                if Prop is None:
                   ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
                   rg  = ptrange[0][1]
                   sz  = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
-                  print ('Error: Tableau Temperature absent pour la CL BCWallViscousIsothermal sur la zone',z[0])
-                  print ('Error: besoin d un noeud .Solver#Property contenant un numpy Temperature de taille',sz,' dans le noeud BC')
+                  print ('Error: FastC: Tableau Temperature absent pour la CL BCWallViscousIsothermal sur la zone',z[0])
+                  print ('Error: FastC: besoin d un noeud .Solver#Property contenant un numpy Temperature de taille',sz,' dans le noeud BC')
                   import os; os._exit(1)
 
             if btype == 'BCWallExchange':
@@ -2787,14 +2787,14 @@ def _BCcompact(t):
                 Ntg= 101 #nbr echant pour calcul moyenne temporelle
                 print ('nb couche loi de paroi',shift,'Nb echant pour moyenne:',Ntg)
                   
-                Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
+                Prop = Internal.getNodeFromName(bc,'.Solver#Property')
                 if Prop is None:
                      Internal.createUniqueChild(bc,'.Solver#Property','UserDefinedData_t')
-                     Prop   = Internal.getNodeFromName(bc,'.Solver#Property')
+                     Prop = Internal.getNodeFromName(bc,'.Solver#Property')
 
-                wmles  = Internal.getNodeFromName(Prop,'WMLES_parameter')
+                wmles = Internal.getNodeFromName(Prop, 'WMLES_parameter')
                 if wmles is None:
-                     sz     = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
+                     sz = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
 
                      #vars=['AvgDensity','AvgVelocityX','AvgVelocityY','AvgVelocityZ','AvgTemperature']
                      vars=['AvgPlane-Primitive']
@@ -2802,8 +2802,8 @@ def _BCcompact(t):
                      for v in vars:
                          #tab  =  numpy.zeros(sz*Ntg, numpy.float64)
                          tab  =  numpy.zeros(sz*Ntg*5, numpy.float64)
-                         Internal.createUniqueChild( Prop, v,'DataArray_t',value= tab)
-                         c+=1
+                         Internal.createUniqueChild(Prop, v, 'DataArray_t', value=tab)
+                         c += 1
                      tab   =  numpy.zeros(4, numpy.float64)
                      tab[0]= Ntg
                      tab[1]= 0
@@ -2861,7 +2861,6 @@ def _BCcompact(t):
                size = numpy.shape(data[1])
                c = 1
                for s in size: c=c*s
-               # a sortie de la boucle: voir fastP
                size_int  = size_int  + Nb_data
 
                size_real = size_real + c

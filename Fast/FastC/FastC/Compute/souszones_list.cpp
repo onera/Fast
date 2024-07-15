@@ -80,7 +80,7 @@ void K_FASTC::souszones_list_c( E_Int**& param_int, E_Float**& param_real, E_Int
 
      lssiter_verif = 1;
 
-     if (nstep == iptdtloc[0] && itypcp!=2) lexit_lu  = 1;
+     if (nstep == iptdtloc[0] && itypcp!=2) lexit_lu = 1;
 
    }  //fin if module_verif
 

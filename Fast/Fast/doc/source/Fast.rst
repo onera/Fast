@@ -1,5 +1,7 @@
 .. Fast documentation master file
 
+:tocdepth: 2
+
 Fast: Flexible Aerodynamic Solver Technolgy
 ============================================
 

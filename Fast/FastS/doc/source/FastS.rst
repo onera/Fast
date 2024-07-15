@@ -1,5 +1,7 @@
 .. FastS documentation master file
 
+:tocdepth: 2
+
 FastS: FAST structured grid Navier-Stokes solver
 ==================================================
 
@@ -27,7 +29,7 @@ List of functions
 .. autosummary::
 
    FastS.PyTree.warmup
-   FastS.PyTree.createConvergenceHistory
+   FastS.PyTree._createConvergenceHistory
    FastS.PyTree.createStatNodes
    FastS.PyTree.createStressNodes
 
@@ -419,7 +421,7 @@ Post
 
 
 .. toctree::
-   :maxdepth: 2   
+   :maxdepth: 2
 
 
 Index

@@ -62,7 +62,7 @@ cd build
 if test ! -e Examples
 then
     mkdir Examples
-    ln -s ../test Examples/FastC
+    ln -s ../../../test Examples/FastC
 fi
 cd ..
 

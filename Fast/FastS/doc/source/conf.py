@@ -186,7 +186,7 @@ html_show_copyright = True
 html_permalinks = False
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'FastSdoc'
+htmlhelp_basename = 'FastS'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -224,7 +224,7 @@ latex_logo = "../../../../docs/Images/logo-onera-ident.png"
 #latex_use_parts = False
 
 # If true, show page references after internal links.
-#latex_show_pagerefs = False
+# latex_show_pagerefs = False
 
 # If true, show URL addresses after external links.
 #latex_show_urls = False
@@ -241,7 +241,7 @@ latex_domain_indices = False
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'fasts', u'FastS Documentation',
+    ('index', 'Fasts', u'FastS Documentation',
      [u'ONERA'], 1)
 ]
 

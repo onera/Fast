@@ -1,5 +1,7 @@
 .. FastC documentation master file
 
+:tocdepth: 2
+
 FastC: Flexible Aerodynamic Solver Technolgy
 ============================================
 
