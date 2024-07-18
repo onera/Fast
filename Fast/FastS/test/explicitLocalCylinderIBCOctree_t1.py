@@ -1,9 +1,6 @@
 # - FastS: Cylindre IBC Octree -
 # - This is based on cylindreIBCOctreePT.py -
 # - explicit local or Local time stepping (LTS) -
-import CPlot.PyTree as CPlot
-import Connector.Connector as Connector
-import Connector.OversetData as OversetData
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import Converter.PyTree as C
@@ -11,7 +8,6 @@ import Dist2Walls.PyTree as DTW
 import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import Generator.PyTree as G
-import Geom.PyTree as D
 import Initiator.PyTree as I
 import KCore.Adim as Adim
 import KCore.test as test

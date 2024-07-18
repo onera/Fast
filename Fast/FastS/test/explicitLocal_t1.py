@@ -2,14 +2,10 @@
 # - Lamb vortex sur 2 domaines -
 import Generator.PyTree as G
 import Converter.PyTree as C
-import Converter as Co
 import Generator.PyTree as G
 import Initiator.PyTree as I
-import CPlot.PyTree as CPlot
-import Fast.PyTree as Fast_
 import FastC.PyTree as internal
 import FastS.PyTree as FastS
-import Post.PyTree as P
 import Connector.PyTree as X
 import Transform.PyTree as T
 import Converter.Internal as Internal

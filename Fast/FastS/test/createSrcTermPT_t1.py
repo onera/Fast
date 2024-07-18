@@ -5,12 +5,10 @@ import Generator.PyTree as G
 import Initiator.PyTree as I
 import Geom.PyTree as D
 import Transform.PyTree as T
-import CPlot.PyTree as CPlot
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
 import Converter.Internal as Internal
 import Post.PyTree as P
-import time
 import KCore.test as test
 test.TOLERANCE=1.e-9
 

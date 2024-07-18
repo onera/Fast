@@ -4,18 +4,11 @@ import Converter.PyTree as C
 import Converter.Internal as Internal
 import Connector.PyTree as X
 import RigidMotion.PyTree as R
-import Geom.PyTree as D
-import Post.PyTree as P
-import Connector.ToolboxIBM as TIBM
 import Generator.PyTree as G
-import Distributor2.PyTree as D2
 import Transform.PyTree as T
-import Compressor.PyTree as Compressor
 import FastS.PyTree as FastS
 import Fast.PyTree as Fast
-import Connector.Mpi as Xmpi
 import Converter.Mpi as Cmpi
-import CPlot.PyTree as CPlot
 import KCore.test as test
 import numpy
 
