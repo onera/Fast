@@ -119,8 +119,8 @@ void K_FASTS::setInterpTransfersFastS(
 
 
     E_Int nbcomIBC_nstep; E_Int pt_deb; E_Int nbcomID_nstep;
-    //if (rk ==3 and exploc==2 and mpi)
-    if (exploc==1 and mpi)
+    //if (rk ==3 && exploc==2 && mpi)
+    if (exploc==1 && mpi)
       {
         pt_deb         = param_int_tc[1+nstep+(numpassage-1)*nitmax] + 2;
         nbcomIBC_nstep = param_int_tc[ pt_deb ];
@@ -232,7 +232,6 @@ void K_FASTS::setInterpTransfersFastS(
       {
        pt_deb         = param_int_tc[2+nbcomIBC+nstep+(numpassage-1)*nitmax] + 2 +nbcomIBC+1;
        nbcomID_nstep  = param_int_tc[ pt_deb ];
-
       }
       else
       { pt_deb        = nbcomIBC + 2;
@@ -406,7 +405,7 @@ void K_FASTS::setInterpTransfersIntra(
       E_Int irac_auto= irac-irac_deb;
       autorisation_transferts[pass_inst][irac_auto]=0;
 
-      if(rk==3 and exploc == 2) // Si on est en explicit local, on va autoriser les transferts entre certaines zones en fonction de la ss-ite courante
+      if(rk==3 && exploc == 2) // Si on est en explicit local, on va autoriser les transferts entre certaines zones en fonction de la ss-ite courante
 	{
 	  E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
 	  E_Int levelD = ipt_param_int_tc[debut_rac + 25];
@@ -416,7 +415,7 @@ void K_FASTS::setInterpTransfersIntra(
 	  //cout << levelD <<" " <<levelR << endl;
 
 	  // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse
-	  if (levelD > levelR and num_passage == 1)
+	  if (levelD > levelR && num_passage == 1)
 	    {
 
 	      if (nstep%cyclD==cyclD-1 || nstep%cyclD==cyclD/2 && (nstep/cyclD)%2==1)
@@ -426,9 +425,9 @@ void K_FASTS::setInterpTransfersIntra(
 		  }
 	    }
 	  // Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
-	  else if (levelD < levelR and num_passage == 1)
+	  else if (levelD < levelR && num_passage == 1)
 	    {
-	      if (nstep%cyclD==1 or nstep%cyclD==cyclD/4 or nstep%cyclD== cyclD/2-1 or nstep%cyclD== cyclD/2+1 or nstep%cyclD== cyclD/2+cyclD/4 or nstep%cyclD== cyclD-1)
+	      if (nstep%cyclD==1 || nstep%cyclD==cyclD/4 || nstep%cyclD== cyclD/2-1 || nstep%cyclD== cyclD/2+1 || nstep%cyclD== cyclD/2+cyclD/4 || nstep%cyclD== cyclD-1)
 
 		{
 		  autorisation_transferts[pass_inst][irac_auto]=1;
@@ -438,9 +437,9 @@ void K_FASTS::setInterpTransfersIntra(
 
 	    }
 	  // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse
-	  else if (levelD == levelR and num_passage == 1)
+	  else if (levelD == levelR && num_passage == 1)
 	    {
-	      if (nstep%cyclD==cyclD/2-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==0) or nstep%cyclD==cyclD-1)
+	      if (nstep%cyclD==cyclD/2-1 || (nstep%cyclD==cyclD/2 && (nstep/cyclD)%2==0) || nstep%cyclD==cyclD-1)
 
 		{
 		  autorisation_transferts[pass_inst][irac_auto]=1;
@@ -450,11 +449,11 @@ void K_FASTS::setInterpTransfersIntra(
 
 	    }
 	  // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse (cas du deuxieme passage)
-	  else if (levelD == levelR and num_passage == 2)
+	  else if (levelD == levelR && num_passage == 2)
 	    {
 
 	      //if (nstep%8 == 6){autorisation_transferts[pass_inst][irac]=1;}
-	      if (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1)
+	      if (nstep%cyclD==cyclD/2 && (nstep/cyclD)%2==1)
 		{
 		  autorisation_transferts[pass_inst][irac_auto]=1;
 		  if (ipt_param_int_tc[shift_rac + nrac * 10 + 1] > nbRcvPts_mx){nbRcvPts_mx = ipt_param_int_tc[shift_rac + nrac * 10 + 1];}
@@ -866,7 +865,7 @@ void K_FASTS::setInterpTransfersInter(
 	  autorisation_transferts[pass_inst][irac_auto]=0;
 
 
-	  if(rk==3 and exploc == 2) // Si on est en explicit local, on va autoriser les transferts entre certaines zones en fonction de la ss-ite courante
+	  if(rk==3 && exploc == 2) // Si on est en explicit local, on va autoriser les transferts entre certaines zones en fonction de la ss-ite courante
 	    {
 	      E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
 	      E_Int levelD = ipt_param_int_tc[debut_rac + 25];
@@ -874,30 +873,30 @@ void K_FASTS::setInterpTransfersInter(
 	      E_Int cyclD  = nssiter/levelD;
 
 	      // Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse
-	      if (levelD > levelR and num_passage == 1)
+	      if (levelD > levelR && num_passage == 1)
 		{
-		  if (nstep%cyclD==cyclD-1 or nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1){autorisation_transferts[pass_inst][irac_auto]=1;}
+		  if (nstep%cyclD==cyclD-1 || nstep%cyclD==cyclD/2 && (nstep/cyclD)%2==1){autorisation_transferts[pass_inst][irac_auto]=1;}
 		  else {continue;}
 		}
 	      // Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
-	      else if (levelD < levelR and num_passage == 1)
+	      else if (levelD < levelR && num_passage == 1)
 		{
-		  if (nstep%cyclD==1 or nstep%cyclD==cyclD/4 or nstep%cyclD== cyclD/2-1 or nstep%cyclD== cyclD/2+1 or nstep%cyclD== cyclD/2+cyclD/4 or nstep%cyclD== cyclD-1)
+		  if (nstep%cyclD==1 || nstep%cyclD==cyclD/4 || nstep%cyclD== cyclD/2-1 || nstep%cyclD== cyclD/2+1 || nstep%cyclD== cyclD/2+cyclD/4 || nstep%cyclD== cyclD-1)
                      {autorisation_transferts[pass_inst][irac_auto]=1;}
 		  else {continue;}
 		}
 	      // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse
-	      else if (levelD == levelR and num_passage == 1)
+	      else if (levelD == levelR && num_passage == 1)
 		{
 		  //cout << "coucou " << endl;
-		  if (nstep%cyclD==cyclD/2-1 or (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==0) or nstep%cyclD==cyclD-1) { autorisation_transferts[pass_inst][irac_auto]=1; }
+		  if (nstep%cyclD==cyclD/2-1 || (nstep%cyclD==cyclD/2 && (nstep/cyclD)%2==0) || nstep%cyclD==cyclD-1) { autorisation_transferts[pass_inst][irac_auto]=1; }
 		  else {continue;}
 		}
 	      // Le pas de temps de la zone donneuse est egal a celui de la zone receveuse (cas du deuxieme passage)
-	      else if (levelD ==  levelR and num_passage == 2)
+	      else if (levelD ==  levelR && num_passage == 2)
 		{
 		  //if (nstep%8 == 6){autorisation_transferts[pass_inst][irac]=1;}
-		  if (nstep%cyclD==cyclD/2 and (nstep/cyclD)%2==1){autorisation_transferts[pass_inst][irac_auto]=1;}
+		  if (nstep%cyclD==cyclD/2 && (nstep/cyclD)%2==1){autorisation_transferts[pass_inst][irac_auto]=1;}
 		  else {continue;}
 		}
 	      else {continue;}

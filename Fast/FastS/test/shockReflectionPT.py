@@ -8,7 +8,6 @@ import Fast.PyTree as Fast
 import FastS.PyTree as FastS
 import Transform.PyTree as T
 import KCore.Adim as Adim
-import KCore.test as test
 
 MInf = 2.9
 adim = Adim.adim1(MInf)
@@ -38,12 +37,6 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
-#nit = 2300
-nit = 1
+nit = 2300
 for it in range(nit):
-    FastS._compute(t, metrics, it, NIT=1)
-
-Internal._rmNodesByName(t, '.Solver#Param')
-Internal._rmNodesByName(t, '.Solver#ownData')
-C.convertPyTree2File(t,'good.cgns')
-test.testT(t, 2)
+    FastS._compute(t, metrics, it, NIT=nit)

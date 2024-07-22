@@ -3,10 +3,8 @@
 import Generator.PyTree as G
 import Converter.PyTree as C
 import Initiator.PyTree as I
-import CPlot.PyTree as CPlot
 import FastC.PyTree as FastC
 import FastS.PyTree as FastS
-import Post.PyTree as P
 import Connector.PyTree as X
 
 a1 = G.cart((0,0,0), (0.5,0.5,0.25), (105,100,2))

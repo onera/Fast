@@ -3,7 +3,6 @@ import Converter.PyTree as C
 import Generator.PyTree as G
 import FastS.PyTree as FastS
 import FastC.PyTree as FastC
-import Connector.PyTree as X
 import Converter.Internal as Internal
 import Initiator.PyTree as I
 import KCore.test as test

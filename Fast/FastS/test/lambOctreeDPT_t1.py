@@ -1,6 +1,5 @@
 # - compute (pyTree) -
 # - Lamb vortex on octree -
-import Connector.PyTree as X
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
 import Converter.PyTree as C

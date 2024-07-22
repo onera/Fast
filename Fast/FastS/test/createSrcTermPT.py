@@ -1,15 +1,10 @@
 # - source term (pyTree) -
 import Converter.PyTree as C
-import Connector.PyTree as X
 import Generator.PyTree as G
 import Initiator.PyTree as I
-import Geom.PyTree as D
-import Transform.PyTree as T
 import CPlot.PyTree as CPlot
 import FastC.PyTree as FastC
 import FastS.PyTree as FastS
-import Converter.Internal as Internal
-import Post.PyTree as P
 import time
 
 mach=0.
@@ -93,5 +88,5 @@ for it in range(nit):
     time.sleep(0.1)
     temps += timeStep
 
-FastC.save(t,'restart.cgns')
+FastC.save(t, 'restart.cgns')
 import os;os._exit(1)

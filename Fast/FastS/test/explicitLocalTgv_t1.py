@@ -9,11 +9,7 @@ import FastS.PyTree as FastS
 import Initiator.Adim as Adim
 import Generator.PyTree as G
 import KCore.test as test
-import Post.PyTree as P
-import Transform.PyTree as T
 import math
-import numpy
-import time
 
 ##Please refore to the non-regression test case "explicitLocal_dxdtchange.py" for a more detailed explanation of some settings
 ##The same approach/logic is used for the current non-regression test case

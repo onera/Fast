@@ -3,7 +3,6 @@
 import Converter.PyTree as C
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
-import Connector.PyTree as X
 import Converter.Internal as Internal
 import KCore.test as test
 

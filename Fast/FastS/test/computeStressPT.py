@@ -23,7 +23,6 @@ FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 teff = FastS.createStressNodes(t, ['BCWall'])
 
-
 # Compute
 for nitrun in range(1,200):
     FastS._compute(t, metrics, nitrun)

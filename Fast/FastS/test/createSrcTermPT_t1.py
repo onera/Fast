@@ -1,14 +1,10 @@
 # - source term (pyTree) -
 import Converter.PyTree as C
-import Connector.PyTree as X
 import Generator.PyTree as G
 import Initiator.PyTree as I
-import Geom.PyTree as D
-import Transform.PyTree as T
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
 import Converter.Internal as Internal
-import Post.PyTree as P
 import KCore.test as test
 test.TOLERANCE=1.e-9
 

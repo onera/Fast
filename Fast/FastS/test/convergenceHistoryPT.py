@@ -46,7 +46,7 @@ time_step = Internal.getValue(time_step)
 for it in range(nit):
     FastS._compute(t, metrics, it, tc)
     if it%modulo_verif == 0:
-    	FastS.displayTemporalCriteria(t, metrics, it, format='store')
+        FastS.displayTemporalCriteria(t, metrics, it, format='store')
     time += time_step
 
 # time stamp

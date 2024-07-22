@@ -11,7 +11,6 @@ import Fast.PyTree as Fast
 import FastS.PyTree as FastS
 import Converter.Internal as Internal
 import KCore.test as test
-import sys
 
 MInf = 0.5; alpha = 0.
 

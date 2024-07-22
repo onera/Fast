@@ -12,7 +12,6 @@ import Transform.PyTree as T
 import Converter.Internal as Internal
 import KCore.test as test
 
-
 #### Maillage ####
 a1 = G.cart((0,0,0),(0.05,0.05,0.1), (351,201,1))
 a1 = C.addVars(a1, 'centers:niveaux_temps')

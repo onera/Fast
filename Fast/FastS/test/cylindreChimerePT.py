@@ -10,8 +10,6 @@ import Initiator.PyTree as I
 import Fast.PyTree as Fast
 import FastS.PyTree as FastS
 import Converter.Internal as Internal
-import KCore.test as test
-import sys
 
 MInf = 0.5; alpha = 0.
 
@@ -81,18 +79,11 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, tc)
 
-#sys.exit()
 nit = 585
-#nit = 1
-
 for it in range(nit):
     print('it=' ,it)
     FastS._compute(t, metrics, it, tc)
     if it%14==0:
        FastS.displayTemporalCriteria(t, metrics, it)
 
-C.convertPyTree2File(t,'verif.cgns')
-
-Internal._rmNodesByName(t, '.Solver#Param')
-Internal._rmNodesByName(t, '.Solver#ownData')
-#test.testT(t, 1)
+C.convertPyTree2File(t, 'out.cgns')

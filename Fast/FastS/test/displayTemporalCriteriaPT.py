@@ -5,7 +5,6 @@ import Connector.PyTree as X
 import FastS.PyTree as FastS
 import FastC.PyTree as FastC
 import Initiator.PyTree as I
-import KCore.Adim as Adim
 
 ni = 155; dx = 100./(ni-1); dz = 0.01
 a = G.cart((-50,-50,0.), (dx,dx,dz), (ni,ni,2))

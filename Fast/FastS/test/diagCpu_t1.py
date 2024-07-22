@@ -1,5 +1,4 @@
 # - FastS: Cylindre Chimere Octree -
-
 import Converter.PyTree as C
 import Generator.PyTree as G
 import Connector.PyTree as X
@@ -114,5 +113,4 @@ FastS.display_cpu_efficiency(t, mask_cpu=-0.05, mask_cell=0.008, FILEOUT=LOCAL+'
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 #C.convertPyTree2File(t, 'out.cgns')
-
 test.testT(t, 1)

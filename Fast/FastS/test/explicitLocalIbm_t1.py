@@ -1,16 +1,10 @@
 ## - Explicit local/local time stepping for flow past a square cylinder 3D -
 ## Note: mesh is "ugly"
-import Connector.PyTree as X
 import Converter.Internal as Internal
-import Converter.PyTree as C
 import Fast.PyTree as Fast
-import Fast.Utils as Utils
 import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 import KCore.test as test
-import Initiator.Adim as Adim
-import Post.PyTree as P
-import Transform.PyTree as T
 import os
 import tarfile
 import shutil

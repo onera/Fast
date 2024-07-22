@@ -10,7 +10,6 @@ import Converter.Internal as Internal
 import Dist2Walls.PyTree as DTW
 import Connector.PyTree as X
 import Transform.PyTree as T
-import KCore.test as test
 
 MInf = 0.1
 NI = 51; NJ = 36; NK = 15
@@ -84,6 +83,4 @@ for it in range(1,40):
         print('it=%d'%it)
         FastS.display_temporal_criteria(t, metrics, it, format='double')
 
-Internal._rmNodesByName(t, '.Solver#Param')
-Internal._rmNodesByName(t, '.Solver#ownData')
-test.testT(t,1)
+C.convertPyTree2File(t, 'out.cgns')

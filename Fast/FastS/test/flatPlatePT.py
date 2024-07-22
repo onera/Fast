@@ -1,16 +1,10 @@
 # - compute (pyTree) -
 # - Monobloc laminar flat plate -
-import Generator.PyTree as G
 import Converter.PyTree as C
 import Initiator.PyTree as I
 import CPlot.PyTree as CPlot
 import FastC.PyTree as FastC
 import FastS.PyTree as FastS
-import Connector.PyTree as X
-import Converter.Internal as Internal
-import Transform.PyTree as T
-import KCore.Adim as Adim
-import sys 
 
 MInf = 0.2
 t = C.convertFile2PyTree('flatPlate.cgns')

@@ -1,7 +1,6 @@
 # - createStressNodes (pyTree) - 
 import Converter.PyTree as C
 import Generator.PyTree as G
-import Connector.PyTree as X
 import FastS.PyTree as FastS
 import FastC.PyTree as FastC
 import Initiator.PyTree as I

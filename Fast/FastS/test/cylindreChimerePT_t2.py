@@ -10,7 +10,6 @@ import Fast.PyTree as Fast
 import Converter.Mpi as Cmpi
 import KCore.test as test
 import numpy
-LOCAL = test.getLocal()
 
 # case
 N = 100; h = 1./(N-1)

@@ -4,8 +4,8 @@ import Converter.Internal as Internal
 import Generator.PyTree as G
 import FastS.PyTree as FastS
 import Fast.PyTree as Fast
-import KCore.test as test
 import Initiator.PyTree as I
+import KCore.test as test
 
 ni = 155; dx = 100./(ni-1); dz = 0.01
 a1 = G.cart((-50,-50,0.), (dx,dx,dz), (ni,ni,2))

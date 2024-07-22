@@ -1,5 +1,4 @@
 # - FastS: Cylindre IBC Octree -
-
 import Converter.PyTree as C
 import Generator.PyTree as G
 import Connector.PyTree as X
@@ -85,7 +84,7 @@ else:
 (t, tc, metrics) = FastS.warmup(t, tc)
 
 nit = 1001
-for it in xrange(nit):
+for it in range(nit):
     FastS._compute(t, metrics, nit, tc)
     if it%100 == 0:
         print('- %d -'%it); sys.stdout.flush()

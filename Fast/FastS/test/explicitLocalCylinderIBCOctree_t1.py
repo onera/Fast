@@ -55,11 +55,11 @@ if explicit_select == "explicit_local":
     zones = Internal.getNodesFromType(t, 'Zone_t')
     for z in zones:
        if z[0]=="cart5":
-           z          = C._initVars(z,'centers:CFL',3)
+           z = C._initVars(z,'centers:CFL',3)
        elif z[0] in list_lvl2:
-           z          = C._initVars(z,'centers:CFL',2)
+           z = C._initVars(z,'centers:CFL',2)
        else:
-           z          = C._initVars(z,'centers:CFL',1)
+           z = C._initVars(z,'centers:CFL',1)
     for z in zones:
        dim        = Internal.getZoneDim(z)
        zp         = T.subzone(z, (3,3,1), (dim[1]-2,dim[2]-2,1))

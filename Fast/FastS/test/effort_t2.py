@@ -1,7 +1,6 @@
 # test en SA avec une topologie curviligne dans le plan, cartesienne en k
 import Converter.PyTree as C
 import Generator.PyTree as G
-import Geom.PyTree as D
 import FastS.PyTree as FastS
 import Fast.PyTree as Fast
 import Initiator.PyTree as I
