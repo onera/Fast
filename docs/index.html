@@ -1,78 +1,115 @@
-<!DOCTYPE HTML">
+<!DOCTYPE html>
+
 <html>
-<body bgcolor="#FFFFFF">
-<head>
-<title>*Fast*: a compressible flow solver python package</title>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<link rel="icon" type="image/png" href="Images/iconc.png"> </link>
+
+<head> 
+  <meta charset="utf-8" />
+  <title>*Fast*: a compressible flow solver python package</title>
+  <link href="Fast.css" rel="stylesheet" type="text/css">
+  <link rel="icon" type="image/png" href="Images/FastIcon.png"> </link>
+  <script type="text/javascript" src="_static/jquery.js"></script>
+  <script type="text/javascript" src="_static/searchtools.js"></script>
+  <script type="text/javascript" src="JavaScript/all.js" defer> </script>
 </head>
 
 <body>
 
-<div align="center">
- <p>&nbsp;</p>
-      <hr>
-      <table border="0" align="center" cellpadding="0" cellspacing="1">
-      <tr>
-      <td><img src="Images/FastLogo.png"></td>
-      </tr> 
-      </table>
-      <hr>
-            
-      <div style="filter:alpha(opacity=80);-moz-opacity:0.8;opacity:0.8;">
-      <table border="1", width="90%", height="40">
-      <tr>
-      <td>
-      <font size="-1" face="sans-serif">
-      <strong>Purpose:</strong> HPC CFD solvers usable in a flexible python architecture <a href="More.html">[more].</a><br>
-      <strong>Authors: </strong>Onera - Ivan Mary, Jean-Marie Le Gouez, Christophe Benoit, Stephanie Peron, Sam Landier, Thomas Renaud, Didier Blaise, Antoine Jost, Alexandre Suss.<br>
-      <strong>Current release:</strong> 4.0 (07/2024) <a href="News.html">[content]</a><br>
-      <strong>License:</strong> ONERA</a>.<br>
-      <strong>Any questions?</strong> mail to
-      <a href="mailto:cassiopee@onera.fr">cassiopee@onera.fr</a> or go to <a href="https://github.com/onera/Fast">github</a>.<br>
-      </font>
-      </td>
-      </tr>
-      </table>
-      </div>
-
-      <div style="filter:alpha(opacity=80);-moz-opacity:0.8;opacity:0.8;">
-      <table border="1", width="90%", height="40">
-      <tr>
-      <td>
+<!-- Fast banner -->
+<header class="headerIndex">
+  <img src="Images/FastTitre.png" id="FastTitre">
+</header>
       
-      <strong><font size="+0" face="Arial, Helvetica">Reference documentation:</font></strong>
-    <font face="sans-serif">
-    <ul>
-      <li><a href="doc/Fast.html">Fast: general services for Fast solvers</a>
-      <!-- <li><a href="doc/FastC.html">FastC: common services for Fast solvers</a> -->
-      <li><a href="doc/FastS.html">FastS: structured grid Navier-Stokes solver</a>
-      <!-- <li><a href="FastLBM.html">FastLBM: Lattice Boltzmann structured grid solver</a> -->
-      </ul>
-      </font>
+ <!-- informations -->
+<table>
+  <tr>
+    <td> 
+      <img src="Images/icon5_new.png" class="icon">
+      <TEXTcenter>
+      <strong>Purpose:</strong> a suite of HPC CFD solvers available in a flexible Python architecture <a href="More.html">[more]</a>.<br>
+      </TEXTcenter> 
 
-      </td>
-      </tr>
-      </tr>
-      </table>
-           
-      <div style="filter:alpha(opacity=80);-moz-opacity:0.8;opacity:0.8;">
-      <table border="1", width="90%", height="40">
-      <tr>
-      <td>
-      <font size="-1" face="sans-serif">
+      <img src="Images/icon4_new.png" class="icon">
+      <TEXTcenter>
+      <strong>Authors: </strong>ONERA <a href="Authors.html">[more]</a>.<br>
+      </TEXTcenter>
+
+      <img src="Images/icon1_2_new.png" class="icon">
+      <TEXTcenter>
+      <strong>Current release:</strong> <strong>4.0</strong> (07/2024) <a href="News.html">[version content]</a>.<br>
+      </TEXTcenter>
+
+      <img src="Images/icon6_new.png" class="icon">
+      <TEXTcenter>
+      <strong>License:</strong> <a href="https://github.com/onera/Fast/blob/main/LICENCE">Gnu Lesser General Public License v3</a>.<br>
+      </TEXTcenter>
+
+      <img src="Images/icon3_new.png" class="icon"></a>
+      <TEXTcenter>
+      <strong>Questions or bug report: </strong> <a href="https://github.com/onera/Fast/tree/main">go to the GitHub repository</a>.<br>
+      </TEXTcenter>
+
+      <!-- <img src="Images/icon0_new.png" class="icon"></a>
+      <TEXTcenter>
+      <strong>Miss the old theme?</strong> <button onclick="switchTheme()" id="fancyButton">Add some yellow</button><br>
+      </TEXTcenter> -->
+    </td>
+  </tr>
+</table>
+
+ <!-- documentation search bar -->
+<table class="darkBar">
+  <tr>
+    <td>
+
+      <strong>Reference documentation 4.0: </strong>
+
+      <form class="search" action="doc/search.html" method="get">
+        <!-- <input type="search" name="q" placeholder="Search documenation..."/> -->
+        <input type="search" name="q" placeholder="Search documenation..."/>
+        <input type="submit" value="Search" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+      <script type="text/javascript">$('#searchbox').show(0);</script>
+
+    </td>
+  </tr>
+</table>
+
+ <!-- documentation -->
+ <table class="doc">  
+  <tr>
+    <td>
+      <ul>
+        <li><a href="doc/Fast.html"><strong>Fast:</strong> General services for Fast solvers</a>
+        <li><a href="doc/FastC.html"><strong>FastC:</strong> Common tools for Fast solvers</a>
+        <li><a href="doc/FastS.html"><strong>FastS:</strong> Navier-Stokes structured grid solver</a>
+        <li><a href="doc/FastLBM.html"><strong>FastLBM:</strong> Lattice Boltzmann structured grid solver</a>
+        <li><a href="doc/FastIBM.html"><strong>FastIBM:</strong> NS or LBM structured grid solvers optimized for Cartesian grids in an immersed boundary context</a>
+      </ul>    
+    </td>
+  </tr> 
+</table>
+
+<!-- Other links --> 
+<table class="darkBar">
+  <tr>
+    <td>
       <strong>More:</strong>  
-      <a href="Support.html">Get support</a> - 
-      <a href="Gallery/Gallery.html">Gallery</a> -
-      <a href="Tutorials/Tutorials.html">Tutorials</a>
+      <a href="https://github.com/onera/Fast/issues" >Get support</a> - 
+      <a href="Gallery/Gallery.html" >Gallery</a> -
+      <a href="Tutorials/Tutorials.html"  >Tutorials</a> -
+      <a href="https://github.com/onera/Fast/tags" >Download</a> -
+      <a href="Citations.html" >Citations</a>
       <br>
-      </td>
-      </tr>
-      </table>
-      </div> 
-      <hr>
+    </td>
+  </tr>
+</table>
 
-  <p><a href="http://www.onera.fr"><img src="Images/logo-onera.png" style="border-style: none"></a></td> </p>
-</div>
+<footer>
+  <a href="http://www.onera.fr"><img src="Images/logo-onera3.ai"></a>
+</footer>
+
 </body>
+
 </html>

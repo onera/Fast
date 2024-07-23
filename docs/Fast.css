@@ -1,0 +1,234 @@
+/* all styles ############################## */
+:root {
+  --border-width: 5px;
+  --border: var(--border-width) solid #f0fdff;
+  --border-radius: 8px;
+}
+
+body {
+  text-align: justify;
+  background: #282a35;
+  color: white;
+  font-family: sans-serif;
+  font-size: small; /*xx-small, x-small, small, medium, large, x-large, xx-large, xxx-large*/
+  margin-right: 100px;
+  margin-left: 100px;
+}
+
+hr {
+  width: 90%;
+  border-radius: var(--border-radius);
+  border: 2.5px solid #f0fdff;
+}
+
+h1 { 
+  text-align: center;
+  color: #f0fdff;
+  font-size: xx-large;
+  margin-top: 30px;
+ }
+
+h2 {
+  text-align: center;
+  color: #f0fdff;
+  font-size: small;
+  margin-bottom: 30px;
+ }
+
+form {
+  display: inline;
+}
+
+li {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+abbr {
+  position: relative;
+  cursor: default;
+  border-bottom: 0.1em;
+}
+
+table{
+  width: 80%;
+  border: none;
+  border-collapse: separate;
+  margin-top: 30px;
+  border-spacing: 0px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+ul {
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+th, td {
+  border: none;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+p {
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+a {
+  text-decoration: none;
+}
+a:link, a:visited {
+  color: rgb(35, 187, 35);
+}
+a:hover, a:active {
+  color: red;
+}
+a strong {
+  text-decoration: underline;
+}
+
+TEXTcenter { 
+  vertical-align: 8px; 
+}
+
+img[onclick="img_box(this)"] {
+  cursor: pointer;
+}
+
+img {
+  border: var(--border);
+  border-radius: var(--border-radius);
+}
+
+footer {
+  width: 30%;
+  margin-bottom: 60px;
+  margin-top: 60px;
+  margin-left: auto;
+  margin-right: auto;
+}
+footer img {
+  height: auto;
+  width: 100%;
+  border: none;
+  border-radius: 0px;
+}
+footer a:hover {
+  opacity: 50%;
+}
+
+header img {
+  border: none;
+}
+
+/* local styles ############################## */
+
+.icon {
+  height: 25px;
+  margin-right: 5px;
+  margin-left: 5px;
+  border: none;
+  border-radius: 0px;
+}
+
+.headerIndex {
+  width: 90%;
+  margin-top: 60px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.headerIndex img {
+  height: auto;
+  width: 100%;
+}
+
+.headerMore {
+  width: 70%;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.headerMore img {
+  height: auto;
+  width: 100%;
+}
+
+.headerAuthor {
+  width: 25%;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.headerAuthor img {
+  height: auto;
+  width: 100%;
+}
+
+.darkBar {
+  width: 90%;
+  height: 40px;
+  background-color: black;
+  border-radius: var(--border-radius);
+  padding: 10px;
+  font-size: medium;
+  color: white;
+  padding-left: 15px;
+}
+.darkBar strong {
+  color: #2d8573;
+  margin-right: 10px;
+}
+.darkBar input[type="search"] {
+  width: 20%;
+}
+.darkBar a:link, .darkBar a:visited {
+  color: white;
+}
+.darkBar a:active, .darkBar a:hover {
+  color: #2d8573;
+}
+
+.doc {
+  height: 40px;
+  font-size: medium;
+}
+
+.doc li {
+  margin-bottom: 20px;
+}
+
+.tableMoreTwoColumns td {
+  vertical-align: top;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  padding-left: 3%; 
+  padding-right: 3%;
+  width: 50%;
+}
+.tableMoreTwoColumns td strong {
+  font-size: medium;
+}
+.tableMoreTwoColumns td a strong {
+  font-size: small;
+}
+
+.tableGalleryTwoColumns td {
+  vertical-align: top;
+  text-align: center;
+  font-weight: bold;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  padding-left: 3%; 
+  padding-right: 3%;
+  width: 50%;
+}
+.tableGalleryTwoColumns td img {
+  height: auto;
+  width: 100%;
+}
