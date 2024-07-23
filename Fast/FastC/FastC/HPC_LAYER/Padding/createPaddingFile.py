@@ -1,8 +1,5 @@
-from array import array
 import numpy as np
 import read as rd
-import write as wt
-import sys
 
 # Create padding file (binary read by FastS) from multiple Shift_partXX text files created by compute_shift.py
 

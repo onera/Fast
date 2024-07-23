@@ -32,16 +32,16 @@ def blankByBodies(t, tb, loc, dim, gridType='single'):
     if loc == 'centers': typeb = 'cell_intersect'
     else: typeb = 'node_in'
     nbases = len(Internal.getBases(t))
-    BM = numpy.ones((nbases,nbodies),dtype=numpy.int32)
+    BM = numpy.ones((nbases,nbodies), dtype=Internal.E_NpyInt)
     if gridType=='composite':
         if nbodies < nbases:
            for nob in range(nbodies): BM[nob,nob]=0
     if blankalgo == 'xray' or DIM == 2:
         XRAYDIM1 = 2000; XRAYDIM2 = XRAYDIM1
         if DIM == 2:  XRAYDIM2 = 2
-        t = X.blankCells(t, bodies,BM,blankingType=typeb,delta=1.e-10,XRaydim1=XRAYDIM1,XRaydim2=XRAYDIM2,dim=DIM)
+        t = X.blankCells(t, bodies, BM,blankingType=typeb, delta=1.e-10, XRaydim1=XRAYDIM1, XRaydim2=XRAYDIM2, dim=DIM)
     else:
-        t = X.blankCellsTri(t,bodies,BM,blankingType=typeb)
+        t = X.blankCellsTri(t, bodies, BM, blankingType=typeb)
     return t
 
 #----------------------------------------------------------------------------------------------------------

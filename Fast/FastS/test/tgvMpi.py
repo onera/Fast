@@ -135,12 +135,12 @@ for key in proc.keys():
    o = Internal.createChild( subRegion[c] , 'GridLocation', 'GridLocation_t', 'CellCenter')
    datap = numpy.ones( size_fen*nfen , numpy.float64)
    Internal.createUniqueChild(subRegion[c], 'InterpolantsDonor', 'DataArray_t', datap)
-   datap = numpy.ones(size_fen*nfen, numpy.int32)
+   datap = numpy.ones(size_fen*nfen, dtype=Internal.E_NpyInt)
    Internal.createUniqueChild(subRegion[c], 'InterpolantsType', 'DataArray_t', datap)
 
    #pointlistreceveur
-   datar = numpy.zeros(size_fen*nfen, numpy.int32)
-   datad = numpy.zeros(size_fen*nfen, numpy.int32)
+   datar = numpy.zeros(size_fen*nfen, dtype=Internal.E_NpyInt)
+   datad = numpy.zeros(size_fen*nfen, dtype=Internal.E_NpyInt)
    l = 0
    ni   = (N-1+4)
    ninj = ni*ni

@@ -1,14 +1,12 @@
 import Converter.PyTree as CP
 import Converter.Internal as CI
 import numpy
-import os
-import sys
 import math
 from collections import OrderedDict
 from itertools import takewhile, dropwhile
 #import matplotlib.pyplot as plt
-import Transform.PyTree   as T
 import Converter   as CV
+
 #from scipy import interpolate
 #~ ====================
 #~ from etc.post  import AzimutalAverage2D, AzimutalAverage3D 

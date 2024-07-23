@@ -168,7 +168,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
               tic=Time.time()
 
               if not tc2:
-                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP,isWireModel=isWireModel)
+                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP, isWireModel=isWireModel)
               else:
                 _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP)
                 
@@ -308,7 +308,7 @@ def allocate_ssor(t, metrics, hook, ompmode):
 # alloue retourne la metrique
 #==============================================================================
 def _init_metric(t, metrics, hook):
-    zones        = Internal.getZones(t)
+    zones = Internal.getZones(t)
 
     FastC.fastc.init_metric(zones, metrics, hook)
 
@@ -317,7 +317,7 @@ def _init_metric(t, metrics, hook):
        z = zones[c]
        param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
        if param_int[34] < 2: del metric[7]  # on efface l'info sur maille degen si pas besoin de recalculer metric mesh deforme
-       c+=1
+       c += 1
 
     return None
 
