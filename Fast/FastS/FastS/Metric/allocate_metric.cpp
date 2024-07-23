@@ -67,7 +67,6 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
 
     E_Int lale, kfludom;
     lale = ipt_param_int[LALE]; kfludom = ipt_param_int[KFLUDOM]; E_Int* size_ssdom = ipt_param_int+ SIZE_SSDOM;
-
     //
     //
     //Pointeur maillage
@@ -86,7 +85,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     t        = K_PYTREE::getNodeFromName1(sol_center, "CoordinateZ");
     iptz     = K_PYTREE::getValueAF(t, hook);
 
-    sol_center= K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
+    sol_center = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
     if (sol_center == NULL) ro = t;                                        //blindage pour appeler metric sur un arbre qui contient seuleemt x,y,x
     else
     {
@@ -98,8 +97,8 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     // On recupere taille zone et dimensionne tableau
     //
     E_Int* dim = K_PYTREE::getValueAI(zone, hook);
-    E_Int ni =  dim[0]; E_Int nj = dim[1]; E_Int nk = dim[2];
-
+    E_Int ni = dim[0]; E_Int nj = dim[1]; E_Int nk = dim[2];
+    
     E_Int nfic;
     t= K_PYTREE::getNodeFromName1(zone, "Rind");
     if (t != NULL)
@@ -144,7 +143,7 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     
     ipt_param_int[ NDIMDX      ] =  ipt_param_int[ NIJK     ]*ipt_param_int[ NIJK+1     ]*ipt_param_int[ NIJK+2     ] + ipt_param_int[SHIFTVAR]; 
     ipt_param_int[ NDIMDX_XYZ  ] =  ipt_param_int[ NIJK_XYZ ]*ipt_param_int[ NIJK_XYZ+1 ]*ipt_param_int[ NIJK_XYZ+2 ];
-
+    
     //
     //* determine la nature de la zone: 3d curvi, 3d-kcart, 2d,...  *//
     //
@@ -192,9 +191,8 @@ PyObject* K_FASTS::allocate_metric(PyObject* self, PyObject* args)
     if  ( lale  >= 2                )  ipt_param_int[ ITYPVENT ] = 0; // maillage deformable, vitesse general
     if  (ipt_param_int[ ITYPZONE ]==3) ipt_param_int[ ITYPVENT ] = 3; // maillage 2d
 
-     //printf("vent type= %d  \n", ipt_param_int[ ITYPVENT ]);
-
-    if      (ipt_param_int[ ITYPVENT ] == 0)
+     
+    if (ipt_param_int[ ITYPVENT ] == 0)
         { 
            ipt_param_int[ NEQ_VENT ]    = 3;
 
