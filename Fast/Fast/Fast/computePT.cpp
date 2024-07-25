@@ -87,7 +87,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   //
   //
   //
-  PyObject* pyParam_int_tc;PyObject* pyParam_real_tc; PyObject* iskipArray;
+  PyObject* pyParam_int_tc;PyObject* pyParam_real_tc; PyObject* iskipArray=NULL;
   PyObject* pyLinlets_int; PyObject* pyLinlets_real;
   FldArrayI* param_int_tc;  FldArrayI* iskip_lu;  FldArrayI* linelets_int;
   FldArrayF* param_real_tc; FldArrayF* linelets_real;

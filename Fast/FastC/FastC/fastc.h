@@ -44,12 +44,12 @@ namespace K_FASTC
                            E_Int& retInt, E_Float& retFloat, char*& retChar);
 
 
-  PyObject* _motionlaw(     PyObject* self, PyObject* args);
-  PyObject* PygetRange(     PyObject* self, PyObject* args);
-  PyObject* souszones_list( PyObject* self, PyObject* args);
-  PyObject* distributeThreads( PyObject* self, PyObject* args);
+  PyObject* _motionlaw(PyObject* self, PyObject* args);
+  PyObject* PygetRange(PyObject* self, PyObject* args);
+  PyObject* souszones_list(PyObject* self, PyObject* args);
+  PyObject* distributeThreads(PyObject* self, PyObject* args);
 
-  PyObject*     init_metric(PyObject* self, PyObject* args);
+  PyObject* init_metric(PyObject* self, PyObject* args);
 
   //===========
   // - init Numa (optimisation placement memoire sur DRAM)
@@ -99,28 +99,28 @@ namespace K_FASTC
   ---*/
 
   /* Transfers FastLBM */
-  void setInterpTransfersFastLBM(E_Float**& iptro_tmp       , E_Int& vartype             ,
-				 E_Int*& param_int_tc       , E_Float*& param_real_tc    ,
-				 E_Int**& param_int         , E_Float**& param_real      ,
-				 E_Int*& ipt_linelets_int   , E_Float*& ipt_linelets_real,
-				 E_Int& it_target           , E_Int& nidom               , 
-				 E_Float*& ipt_timecount    , E_Int& mpi                 ,
-				 E_Int& nitcfg              , E_Int& nssiter             ,
-				 E_Int& rk                  , E_Int& exploc              ,
-				 E_Int& numpassage          ,
-				 E_Float**& ipt_macros_local, E_Float**& ipt_Qneq_local  );
+  void setInterpTransfersFastLBM(E_Float**& iptro_tmp       , E_Int& vartype,
+                E_Int*& param_int_tc       , E_Float*& param_real_tc    ,
+                E_Int**& param_int         , E_Float**& param_real      ,
+                E_Int*& ipt_linelets_int   , E_Float*& ipt_linelets_real,
+                E_Int& it_target           , E_Int& nidom               , 
+                E_Float*& ipt_timecount    , E_Int& mpi                 ,
+                E_Int& nitcfg              , E_Int& nssiter             ,
+                E_Int& rk                  , E_Int& exploc              ,
+                E_Int& numpassage          ,
+                E_Float**& ipt_macros_local, E_Float**& ipt_Qneq_local  );
   
   /* Intra process */
-  void setInterpTransfersIntraLBM(E_Float**& ipt_ro          , E_Int& vartype             ,
-				  E_Int*& ipt_param_int      , E_Float*& ipt_param_real   ,
-				  E_Int**& param_int         , E_Float**& param_real      ,
-				  E_Int*& ipt_linelets_int   , E_Float*& ipt_linelets_real,
-				  E_Int& TypeTransfert       , E_Int& nitrun              ,
-				  E_Int& nidom               , E_Int& NoTransfert         ,
-				  E_Float*& ipt_timecount    , E_Int& nitcfg              ,
-				  E_Int& nssiter             , E_Int& rk                  ,
-				  E_Int& exploc              , E_Int& numpassage          ,
-				  E_Float**& ipt_macros_local, E_Float**& ipt_Qneq_local  );
+  void setInterpTransfersIntraLBM(E_Float**& ipt_ro          , E_Int& vartype,
+                E_Int*& ipt_param_int      , E_Float*& ipt_param_real   ,
+                E_Int**& param_int         , E_Float**& param_real      ,
+                E_Int*& ipt_linelets_int   , E_Float*& ipt_linelets_real,
+                E_Int& TypeTransfert       , E_Int& nitrun              ,
+                E_Int& nidom               , E_Int& NoTransfert         ,
+                E_Float*& ipt_timecount    , E_Int& nitcfg              ,
+                E_Int& nssiter             , E_Int& rk                  ,
+                E_Int& exploc              , E_Int& numpassage          ,
+                E_Float**& ipt_macros_local, E_Float**& ipt_Qneq_local  );
 
   #ifdef _MPI
   /* Transferts FastS Inter process */
