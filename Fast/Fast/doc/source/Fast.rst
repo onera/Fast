@@ -41,6 +41,7 @@ Contents
 Actions
 --------------------------
 
+
 .. py:function:: Fast.PyTree.setNum2Base(a, numb)
 
     Set the numb dictionary to bases. Exists also
@@ -158,14 +159,6 @@ Actions
         + usefull only if 'time_step_nature'='local'
         + default value is 1
 
-    - **'model'**: possible values are
- 
-        + 'Euler'
-        + 'NSLaminar'
-        + 'NSTurbulent'(only Spalart available)
-        + 'LBMLaminar'
-        + default value is 'Euler'
-
     - **'prandtltb'**:
 
         + turbulent Prandtl number (only active for 'model'='NSTurbulent')
@@ -176,9 +169,18 @@ Actions
         + "SA"      (Standard Spalart-Allmaras model)
         + "SA_comp" (SA with mixing layer compressible correction https://turbmodels.larc.nasa.gov/spalart.html)
         + default value is 'SA'
+    
+    - **'SA_add_RotCorr'**: possible values are
 
-        + "SA_add_LowRe": add low Reynolds correction to spalart model.
-        + "SA_add_RotCorr": add rotation correction to spalart model.
+        + True: add rotation correction to spalart model.
+        + False
+        + default value is False
+
+    - **'SA_add_LowRe'**: possible values are
+
+        + True: add low Reynolds correction to spalart model.
+        + False
+        + default value is False
 
     - **'DES'**: possible values are
 

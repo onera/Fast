@@ -36,9 +36,6 @@ try:
 except:
     raise ImportError("FastC.PyTree: requires Converter, Post and RigidMotion module.")
 
-try: range = xrange
-except: pass
-
 try:
     OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
     OMP_NUM_THREADS = int(OMP_NUM_THREADS)
@@ -49,7 +46,7 @@ import Distributor2.PyTree as D2
 
 MX_SYNCHRO = 1000
 MX_SSZONE  = 10
-MX_OMP_SIZE_INT = -1 # set in warmup
+MX_OMP_SIZE_INT = -1 # set in warmup    
 
 #==============================================================================
 # Met un dictionnaire de numerics dans une/des zones
@@ -95,11 +92,11 @@ def _reorder(t, tc=None):
        #Internal._sortByName(t, recursive=False)
 
        #reordone les zones de tc par taille decroissante dans chaque base pour optim openmp
-       bases_tc = Internal.getNodesFromType1(tc,'CGNSBase_t')
+       bases_tc = Internal.getNodesFromType1(tc, 'CGNSBase_t')
        for base_tc in bases_tc: 
-          zones = Internal.getNodesFromType1(base_tc,'Zone_t')
-          #calcul taille de la zone
-          size_zone =[]
+          zones = Internal.getNodesFromType1(base_tc, 'Zone_t')
+          # calcul taille de la zone
+          size_zone = []
           for z in zones:
              dim = Internal.getZoneDim(z)
              if dim[0] == 'Structured':
@@ -114,9 +111,9 @@ def _reorder(t, tc=None):
           for z in range(len(size_zone)):
               vmax    = max( size_zone )
               pos_max = size_zone.index( vmax )
-              new_zones.append( zones[pos_max])
-              size_zone.pop( pos_max) 
-              zones.pop(     pos_max) 
+              new_zones.append( zones[pos_max] )
+              size_zone.pop( pos_max ) 
+              zones.pop( pos_max ) 
 
           l = base_tc[2]
           orig = []
@@ -125,7 +122,7 @@ def _reorder(t, tc=None):
           base_tc[2] = orig+new_zones
 
        # reordone les zones de t pour garantir meme ordre entre t et tc
-       bases    = Internal.getNodesFromType1(t, 'CGNSBase_t')
+       bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
        for base in bases: 
 
            zones = Internal.getNodesFromType1(base,'Zone_t')
@@ -810,7 +807,7 @@ def _build_omp(t):
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
 
     #dimensionnememnt tableau
-    size_int       = 0
+    size_int = 0
     for b in bases:
         zones = Internal.getZones(b)
         for z in zones:
@@ -974,27 +971,27 @@ def _buildOwnData(t, Padding):
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')  # noeud
 
     # Checks if there is at least one LBM zone (or base) in tree
-    flaglbm=False
+    flaglbm = False
     for base in bases:
       # First check at base level
       model    = 'NSLaminar'
       a        = Internal.getNodeFromName2(base, 'GoverningEquations')
       if a is not None: model = Internal.getValue(a)
       if model == 'LBMLaminar': 
-          flaglbm=True
+          flaglbm = True
           break
       # Then check at zone level
-      zones= Internal.getZones(base)
+      zones = Internal.getZones(base)
       for z in zones:
         model_z = None
         a = Internal.getNodeFromName2(z, 'GoverningEquations')
         if a is not None: model_z = Internal.getValue(a)
         if model_z == 'LBMLaminar': 
-            flaglbm=True
+            flaglbm = True
             break
 
     #init time et No iteration
-    it0 =0; temps=0.; timelevel_motion= 0; timelevel_target= 0;LBMCycleIteration=0
+    it0 =0; temps=0.; timelevel_motion= 0; timelevel_target= 0; LBMCycleIteration=0
     first = Internal.getNodeFromName1(t, 'Iteration')
     if first is not None: it0 = Internal.getValue(first)
     first = Internal.getNodeFromName1(t, 'Time')

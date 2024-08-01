@@ -109,7 +109,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     metrics = allocate_metric(t, nghost)
     #print("apres alocate ", flush=True)
 
-    metrics_str=[]; metrics_unstr=[]; metrics_ns = []; metrics_lbm = []
+    metrics_str=[]; metrics_unstr=[]; metrics_ns=[]; metrics_lbm=[]
     c = 0
     for z in zones:
        ztype = Internal.getValue(Internal.getNodeFromName(z, 'ZoneType'))
@@ -210,7 +210,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
        X.miseAPlatDonorTree__(zones, tc, graph=graph, list_graph=list_graph) 
     
        FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
-       param_real_tc        = Internal.getNodeFromName1( tc, 'Parameter_real')
+       param_real_tc = Internal.getNodeFromName1( tc, 'Parameter_real')
        if param_real_tc is not None: FastC.HOOK['param_real_tc']= param_real_tc[1]
 
 
@@ -404,7 +404,7 @@ def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmo
    #test.testT(zones,  10)
    #test.testT(tc,  11)
 
-   if hook1['lexit_lu'] ==0:
+   if hook1['lexit_lu'] == 0:
 
        #transfert
        if tc is not None :
@@ -471,6 +471,7 @@ def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmo
        #test.testT(t2, 800+nstep)
 
    return None
+
 #==============================================================================
 # compute in place
 # graph is a dummy argument to be compatible with mpi version
@@ -620,7 +621,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
     metrics_lbm = infos_zones["LBM"][1]
 
     #switch pointer a la fin du pas de temps
-    if exploc==1 and tc is not None:
+    if exploc == 1 and tc is not None:
          if layer == 'Python':
              FastC.switchPointers__(zones_ns, 1, 3)
          else:
@@ -680,7 +681,6 @@ def _applyBC(infos_zones, hook1, nstep, nitmax, var=["Density","Q1"]):
     #if len(infos_zones['NS_ustr'][0]) != 0:
     #   FastP.fastp._applyBC(infos_zones["unstruct"][0], infos_zones["unstruct"][1]  , hook1, nstep_NS, ompmode, varns  )
 
-    
     return None
 
 #==============================================================================
@@ -724,6 +724,7 @@ def tri_zones(zones, metrics):
     infos_zones['NS_ustr' ]=[zones_unstr, metrics_unstr]
     infos_zones['iLBM'    ]=ind_LBM
     return infos_zones
+
 #==============================================================================
 # Display
 #==============================================================================
