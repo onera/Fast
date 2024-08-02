@@ -1696,14 +1696,14 @@ def _buildOwnData(t, Padding):
             datap[:]   = -1000
             datap[0:25]= -1
 
-            #Structure ou polyhedric
-            ngon   = Internal.getNodeFromName1(z   , 'NGonElements')
+            # Structure ou polyhedric
+            ngon = Internal.getNodeFromName1(z, 'NGonElements')
             if ngon is not None:
-               nface  = Internal.getNodeFromName1(z   , 'NFaceElements')
+               nface  = Internal.getNodeFromName1(z, 'NFaceElements')
                #Nombre de vextex
                grid      = Internal.getNodeFromName1(z    , 'GridCoordinates')
                coordx    = Internal.getNodeFromName1(grid , 'CoordinateX')
-               nvtx      = numpy.size( coordx[1])
+               nvtx      = numpy.size( coordx[1] )
                datap[0 ] = nvtx
 
                #Nombre de face

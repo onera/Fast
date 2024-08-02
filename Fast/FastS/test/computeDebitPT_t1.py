@@ -7,6 +7,7 @@ import FastC.PyTree as FastC
 import Converter.Internal as Internal
 import Initiator.PyTree as I
 import numpy
+import KCore.test as test
 
 ni = 155 ; dx = 100./(ni-1) ; dz = 1.
 a1 = G.cart((-50,-50,0.), (dx,dx,dz), (ni,ni,2))
@@ -42,8 +43,8 @@ for z in flowRateZones:
     flowRate  += numpy.sum(density)
 
 print('the mass flow rate accross the Inflow BC is: ', flowRate)
+test.testO(flowRate, 1)
 
 # compute of the mass flow rate with numerical flux new way
 print('the mass flow rate accross the Inflow BC is: ', effort[7])
-
-C.convertPyTree2File(flowRateTree, 'flowRate.cgns')
+test.testO(effort[7], 2)

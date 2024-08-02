@@ -5,6 +5,7 @@ import Connector.PyTree as X
 import FastS.PyTree as FastS
 import FastC.PyTree as FastC
 import Initiator.PyTree as I
+import KCore.test as test
 
 ni = 155 ; dx = 100./(ni-1) ; dz = 1.
 a1 = G.cart((-50,-50,0.), (dx,dx,dz), (ni,ni,2))
@@ -31,4 +32,4 @@ for nitrun in range(1,200):
 
 effort = FastS._computeStress(t, teff, metrics)
 
-C.convertPyTree2File(teff, 'stress.cgns')
+test.testT(teff, 1)
