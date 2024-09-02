@@ -69,7 +69,7 @@ tc = X.setInterpData(t,tc, storage='inverse',loc='centers',penalty=1,nature=1,it
 C._rmVars(tc, 'FlowSolution')
 
 # initialisation
-C._initVars(t, '{centers:Rayon}=sqrt ({centers:CoordinateY}**2+{centers:CoordinateZ}**2) ')
+C._initVars(t, '{centers:Rayon}=sqrt({centers:CoordinateY}**2+{centers:CoordinateZ}**2) ')
 C._initVars(t, '{centers:Density}= 1.')
 C._initVars(t, '{centers:VelocityX} = 1.')
 C._initVars(t, '{centers:VelocityY}= {centers:CoordinateY}/{centers:Rayon}')
