@@ -327,6 +327,7 @@ if( flag <10000 && flag >= 1000)
   delete [] ipt_param_real;
   delete [] ipt_param_int;
 
+  RELEASESHAREDN(dtlocArray, dtloc);
   RELEASESHAREDN( lokArray  , lok  );
   RELEASEHOOK(hook)
 

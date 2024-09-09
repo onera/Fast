@@ -240,7 +240,8 @@ PyObject* K_FASTS::computePT_gradient(PyObject* self, PyObject* args)
   delete [] ipt_param_int;
   delete [] iptvar;
   delete [] iptgra;
-
+  
+  RELEASESHAREDN(dtlocArray, dtloc);
   RELEASESHAREDN( lokArray  , lok  );
   RELEASEHOOK(hook)
 

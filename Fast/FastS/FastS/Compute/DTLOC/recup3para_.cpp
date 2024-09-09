@@ -233,6 +233,8 @@ PyObject* K_FASTS::recup3para_(PyObject* self, PyObject* args)
  RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL); 
  RELEASESHAREDN(pyParam_int    , param_int    );
  RELEASESHAREDN(pyParam_real   , param_real   );
+ 
+ delete[] param_intt; delete[] iptro_p1; delete[] iptro;
 
  Py_INCREF(Py_None);
  return Py_None;

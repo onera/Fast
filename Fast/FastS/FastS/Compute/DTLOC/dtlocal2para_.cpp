@@ -862,6 +862,8 @@ if(param_intt[0][ EXPLOCTYPE ] == 1)
  RELEASESHAREDN(pyParam_real   , param_real   );
  RELEASESHAREDN( coeArray,coe);
  RELEASESHAREDN( drodmArray,drodm);
+ 
+ delete[] param_intt; delete[] param_realt; delete[] iptro_p1; delete[] iptro;
 
  Py_INCREF(Py_None);
  return Py_None;

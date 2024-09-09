@@ -370,6 +370,7 @@ PyObject* K_FASTC::init_metric(PyObject* self, PyObject* args)
 
      } //* fin zone parallele  *//
 
+  RELEASESHAREDN(dtlocArray, dtloc);
   RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL);
  
   Py_INCREF(Py_None);
