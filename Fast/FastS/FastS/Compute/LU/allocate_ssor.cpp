@@ -67,55 +67,57 @@ PyObject* K_FASTS::allocate_ssor(PyObject* self, PyObject* args)
 
    // loop calcul normale
    for (E_Int ntask = 0; ntask < nbtask; ntask++)
-     {
-      E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
-      E_Int nd = ipt_omp[ pttask ];
+   {
+    E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+    E_Int nd = ipt_omp[ pttask ];
 
-      //ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
-      E_Int nd_subzone            = ipt_omp[ pttask + 1 ];
-      E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+    //ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+    E_Int nd_subzone            = ipt_omp[ pttask + 1 ];
+    E_Int Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
 
-      PyObject* zone   = PyList_GetItem(zones  , nd);
-      PyObject* metric = PyList_GetItem(metrics, nd);
+    PyObject* zone   = PyList_GetItem(zones  , nd);
+    PyObject* metric = PyList_GetItem(metrics, nd);
 
-      PyObject* o = K_PYTREE::getNodeFromName1(zone, ".Solver#ownData");
-      o = K_PYTREE::getNodeFromName1(o, "Parameter_int"); 
-      ipt_param_int = K_PYTREE::getValueAI(o, hook);
+    PyObject* o = K_PYTREE::getNodeFromName1(zone, ".Solver#ownData");
+    o = K_PYTREE::getNodeFromName1(o, "Parameter_int"); 
+    ipt_param_int = K_PYTREE::getValueAI(o, hook);
 
-      if (ipt_param_int[NB_RELAX] > 1 || ipt_param_int[LU_MATCH]==1 )
-	{
-	  sizessor = 0;
-	  neq = ipt_param_int[NEQ];
-	  nfic_ij = ipt_param_int[NIJK + 3];
-	  nfic_k  = ipt_param_int[NIJK + 4];
-	  ipt_ind_dm = K_NUMPY::getNumpyPtrI(PyList_GetItem(metric, METRIC_INDM));
+    if (ipt_param_int[NB_RELAX] > 1 || ipt_param_int[LU_MATCH]==1 )
+    {
+      sizessor = 0;
+      neq = ipt_param_int[NEQ];
+      nfic_ij = ipt_param_int[NIJK + 3];
+      nfic_k  = ipt_param_int[NIJK + 4];
+      ipt_ind_dm = K_NUMPY::getNumpyPtrI(PyList_GetItem(metric, METRIC_INDM));
 
-	  ipt_nidom_loc = ipt_ind_dm + ipt_param_int[MXSSDOM_LU] * 6 * nssiter + nssiter;
+      ipt_nidom_loc = ipt_ind_dm + ipt_param_int[MXSSDOM_LU] * 6 * nssiter + nssiter;
 
-	  for (E_Int i = 0; i < Nbre_thread_actif_loc; i++)
-	    {
-              E_Int* ipt_ind_dm_thread   = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + i*6;
+      for (E_Int i = 0; i < Nbre_thread_actif_loc; i++)
+      {
+          E_Int* ipt_ind_dm_thread   = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + i*6;
 
-               sizessor += (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic_ij) *
-                           (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic_ij) *
-                           (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
-	    }
-	
-          E_Int sz_ssortmp = sizessor;
-          E_Int sz_ssor    = sizessor;
-          if (ipt_param_int[NB_RELAX] == 1) sz_ssor=1;
+          sizessor += (ipt_ind_dm_thread[1] - ipt_ind_dm_thread[0] + 1 + 2 * nfic_ij) *
+                     (ipt_ind_dm_thread[3] - ipt_ind_dm_thread[2] + 1 + 2 * nfic_ij) *
+                     (ipt_ind_dm_thread[5] - ipt_ind_dm_thread[4] + 1 + 2 * nfic_k);
+      }
+    
+      E_Int sz_ssortmp = sizessor;
+      E_Int sz_ssor    = sizessor;
+      if (ipt_param_int[NB_RELAX] == 1) sz_ssor=1;
 
-          //printf("sizessor %d %d %d \n",nd, sz_ssor, Nbre_thread_actif_loc);
+      //printf("sizessor %d %d %d \n",nd, sz_ssor, Nbre_thread_actif_loc);
 
-          ssor    = K_NUMPY::buildNumpyArray(sz_ssor   , neq, 0, 1);  PyList_Append(ssors, ssor);
-          ssortmp = K_NUMPY::buildNumpyArray(sz_ssortmp, neq, 0, 1);  PyList_Append(ssors, ssortmp);
-       }// test NB_RELAX
-    }//loop task
+      ssor    = K_NUMPY::buildNumpyArray(sz_ssor   , neq, 0, 1);  PyList_Append(ssors, ssor);
+      ssortmp = K_NUMPY::buildNumpyArray(sz_ssortmp, neq, 0, 1);  PyList_Append(ssors, ssortmp);
+     }// test NB_RELAX
+  }//loop task
+    
+  RELEASESHAREDN(dtlocArray, dtloc);
   
   if ( nidom != 0 && (ipt_param_int[NB_RELAX] > 1 || ipt_param_int[LU_MATCH]==1 ) )
-    { 
-      Py_DECREF(ssor);
-      Py_DECREF(ssortmp);
-    }
+  { 
+    Py_DECREF(ssor);
+    Py_DECREF(ssortmp);
+  }
   return ssors;
 }
