@@ -34,7 +34,7 @@ then
         mkdir $DEST3
     fi
 
-    cp ../../../test/*.py $DEST2
+    cp ../test/*.py $DEST2
 fi
 
 # Create Links for Examples (local)
@@ -46,7 +46,7 @@ cd build
 if test ! -e Examples
 then
     mkdir Examples
-    ln -s ../../../test Examples/Fast
+    ln -s ../test Examples/Fast
 fi
 cd ..
 

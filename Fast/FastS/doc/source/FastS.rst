@@ -27,6 +27,7 @@ List of functions
 **-- Computation Preparation**
 
 .. autosummary::
+   :nosignatures:
 
    FastS.PyTree.warmup
    FastS.PyTree._createConvergenceHistory
@@ -37,6 +38,7 @@ List of functions
 **-- Running computation**
 
 .. autosummary::
+    :nosignatures:
 
     FastS.PyTree._compute
     FastS.PyTree.displayTemporalCriteria
@@ -44,7 +46,8 @@ List of functions
 **-- Post**
 
 .. autosummary::
-
+    :nosignatures:
+    
     FastS.PyTree._computeStats
     FastS.PyTree._computeStress
     FastS.PyTree._computeVariables
@@ -223,7 +226,7 @@ Running computation
 
 -------------------------------------------
 
-.. py:function:: FastS.PyTree._displayTemporalCriteria(t, metrics, nit, format=None)
+.. py:function:: FastS.PyTree.displayTemporalCriteria(t, metrics, nit, format=None)
 
     Displays CFL and implicit convergence information.
 

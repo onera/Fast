@@ -24,7 +24,8 @@ List of functions
 **-- Actions**
 
 .. autosummary::
-
+   :nosignatures:
+   
    Fast.PyTree.setNum2Base
    Fast.PyTree.setNum2Zones
    Fast.PyTree.load

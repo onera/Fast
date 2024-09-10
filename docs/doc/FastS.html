@@ -57,16 +57,16 @@ containing grid information (coordinates must be defined, boundary conditions an
 <p><strong>&#8211; Computation Preparation</strong></p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree.warmup" title="FastS.PyTree.warmup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.warmup</span></code></a>(t,&#160;tc[,&#160;graph,&#160;...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree.warmup" title="FastS.PyTree.warmup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.warmup</span></code></a></p></td>
 <td><p>Perform necessary operations for the solver to run.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree._createConvergenceHistory" title="FastS.PyTree._createConvergenceHistory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._createConvergenceHistory</span></code></a>(t,&#160;nrec)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree._createConvergenceHistory" title="FastS.PyTree._createConvergenceHistory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._createConvergenceHistory</span></code></a></p></td>
 <td><p>Create a node in tree to store convergence history.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree.createStatNodes" title="FastS.PyTree.createStatNodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.createStatNodes</span></code></a>(t[,&#160;dir,&#160;vars,&#160;...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree.createStatNodes" title="FastS.PyTree.createStatNodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.createStatNodes</span></code></a></p></td>
 <td><p>Create node in tree to store stats.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree.createStressNodes" title="FastS.PyTree.createStressNodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.createStressNodes</span></code></a>(t[,&#160;BC,&#160;windows])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree.createStressNodes" title="FastS.PyTree.createStressNodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.createStressNodes</span></code></a></p></td>
 <td><p>Create nodes to store stress data.</p></td>
 </tr>
 </tbody>
@@ -74,10 +74,10 @@ containing grid information (coordinates must be defined, boundary conditions an
 <p><strong>&#8211; Running computation</strong></p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._compute" title="FastS.PyTree._compute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._compute</span></code></a>(t,&#160;metrics,&#160;nitrun[,&#160;...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._compute" title="FastS.PyTree._compute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._compute</span></code></a></p></td>
 <td><p>Compute a given number of iterations.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.displayTemporalCriteria</span></code>(t,&#160;...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree.displayTemporalCriteria" title="FastS.PyTree.displayTemporalCriteria"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree.displayTemporalCriteria</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -85,19 +85,19 @@ containing grid information (coordinates must be defined, boundary conditions an
 <p><strong>&#8211; Post</strong></p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._computeStats" title="FastS.PyTree._computeStats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeStats</span></code></a>(t,&#160;tmy,&#160;metrics)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._computeStats" title="FastS.PyTree._computeStats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeStats</span></code></a></p></td>
 <td><p>Compute the space/time average of flowfields in tmy.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree._computeStress" title="FastS.PyTree._computeStress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeStress</span></code></a>(t,&#160;teff,&#160;metrics)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree._computeStress" title="FastS.PyTree._computeStress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeStress</span></code></a></p></td>
 <td><p>Compute efforts in teff.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._computeVariables" title="FastS.PyTree._computeVariables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeVariables</span></code></a>(t,&#160;metrics,&#160;...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._computeVariables" title="FastS.PyTree._computeVariables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeVariables</span></code></a></p></td>
 <td><p>Compute given variables.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree._computeGrad" title="FastS.PyTree._computeGrad"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeGrad</span></code></a>(t,&#160;metrics,&#160;varlist)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#FastS.PyTree._computeGrad" title="FastS.PyTree._computeGrad"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._computeGrad</span></code></a></p></td>
 <td><p>Compute gradient of fiven variables.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._extractConvergenceHistory" title="FastS.PyTree._extractConvergenceHistory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._extractConvergenceHistory</span></code></a>(t,&#160;...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#FastS.PyTree._extractConvergenceHistory" title="FastS.PyTree._extractConvergenceHistory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastS.PyTree._extractConvergenceHistory</span></code></a></p></td>
 <td><p>Extract residuals in an ascii file (tp format).</p></td>
 </tr>
 </tbody>
@@ -247,7 +247,7 @@ The data arrays are stored during the call to  <strong>FastS.displayTemporalCrit
 <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nit</span><span class="p">):</span>
     <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">tc</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">it</span><span class="o">%</span><span class="n">modulo_verif</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-    	<span class="n">FastS</span><span class="o">.</span><span class="n">displayTemporalCriteria</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">)</span>
+        <span class="n">FastS</span><span class="o">.</span><span class="n">displayTemporalCriteria</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">)</span>
     <span class="n">time</span> <span class="o">+=</span> <span class="n">time_step</span>
 
 <span class="c1"># time stamp</span>
@@ -376,7 +376,6 @@ Return a new tree in teff.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - createStressNodes (pyTree) - </span>
 <span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
 <span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
-<span class="kn">import</span> <span class="nn">Connector.PyTree</span> <span class="k">as</span> <span class="nn">X</span>
 <span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
 <span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
 <span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
@@ -467,8 +466,8 @@ Return a new tree in teff.</p>
 
 <hr class="docutils" />
 <dl class="py function">
-<dt class="sig sig-object py" id="FastS.PyTree._displayTemporalCriteria">
-<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">_displayTemporalCriteria</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object py" id="FastS.PyTree.displayTemporalCriteria">
+<span class="sig-prename descclassname"><span class="pre">FastS.PyTree.</span></span><span class="sig-name descname"><span class="pre">displayTemporalCriteria</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Displays CFL and implicit convergence information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -496,7 +495,6 @@ Return a new tree in teff.</p>
 <span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
 <span class="kn">import</span> <span class="nn">FastC.PyTree</span> <span class="k">as</span> <span class="nn">FastC</span>
 <span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
-<span class="kn">import</span> <span class="nn">KCore.Adim</span> <span class="k">as</span> <span class="nn">Adim</span>
 
 <span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span><span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
 <span class="n">a</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
@@ -687,13 +685,14 @@ Return a new tree in teff.</p>
 
 <span class="c1"># Numerics</span>
 <span class="n">numb</span> <span class="o">=</span> <span class="p">{};</span> <span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;temporal_scheme&#39;</span><span class="p">:</span> <span class="s1">&#39;implicit&#39;</span> <span class="p">}</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;scheme&#39;</span><span class="p">:</span> <span class="s1">&#39;ausmpred&#39;</span> <span class="p">}</span>
 <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">);</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
 
 <span class="c1"># Prim vars, solver tag, compact, metric</span>
 <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
 <span class="n">teff</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">createStressNodes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;BCWall&#39;</span><span class="p">])</span>
-
 
 <span class="c1"># Compute</span>
 <span class="k">for</span> <span class="n">nitrun</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">200</span><span class="p">):</span>
@@ -707,7 +706,7 @@ Return a new tree in teff.</p>
 <ul class="simple">
 <li><p><a class="reference external" href="Examples/FastS/computeDebitPT.py">Compute debit (pyTree) for Inflow BC condition</a>:</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - computeStress (pyTree) - </span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - computeStress for flow rate (pyTree) - </span>
 <span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
 <span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
 <span class="kn">import</span> <span class="nn">Connector.PyTree</span> <span class="k">as</span> <span class="nn">X</span>
@@ -719,7 +718,7 @@ Return a new tree in teff.</p>
 
 <span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span> <span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">;</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">1.</span>
 <span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;wall&#39;</span><span class="p">,</span> <span class="s1">&#39;BCInflow&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">fillEmptyBCWith</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;inflow&#39;</span><span class="p">,</span> <span class="s1">&#39;BCInflow&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">a1</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">initConst</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;centers&#39;</span><span class="p">)</span>
 <span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="s1">&#39;GoverningEquations&#39;</span><span class="p">,</span> <span class="s1">&#39;Euler&#39;</span><span class="p">)</span>
 <span class="n">a1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">addState</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">MInf</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
@@ -727,34 +726,35 @@ Return a new tree in teff.</p>
 
 <span class="c1"># Numerics</span>
 <span class="n">numb</span> <span class="o">=</span> <span class="p">{};</span> <span class="n">numz</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">numb</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;temporal_scheme&#39;</span><span class="p">:</span><span class="s1">&#39;implicit&#39;</span> <span class="p">}</span>
+<span class="n">numz</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;scheme&#39;</span><span class="p">:</span><span class="s1">&#39;ausmpred&#39;</span> <span class="p">}</span>
 <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numz</span><span class="p">);</span> <span class="n">FastC</span><span class="o">.</span><span class="n">_setNum2Base</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">numb</span><span class="p">)</span>
 
 <span class="c1"># Prim vars, solver tag, compact, metric</span>
 <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-<span class="n">debit_inflow</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">createStressNodes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">BC</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BCInflow&#39;</span><span class="p">])</span>
-
+<span class="n">flowRateTree</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">createStressNodes</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">BC</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BCInflow&#39;</span><span class="p">])</span>
 
 <span class="c1"># Compute</span>
 <span class="k">for</span> <span class="n">nitrun</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">200</span><span class="p">):</span>
     <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">nitrun</span><span class="p">)</span>
 
-<span class="n">effort</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">_computeStress</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">debit_inflow</span> <span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
+<span class="n">effort</span> <span class="o">=</span> <span class="n">FastS</span><span class="o">.</span><span class="n">_computeStress</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">flowRateTree</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
 
 <span class="c1"># compute of the mass flow rate with numerical flux old fashion</span>
-<span class="n">zones_debit</span> <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getZones</span><span class="p">(</span><span class="n">debit_inflow</span><span class="p">)</span>
-<span class="n">debit</span> <span class="o">=</span><span class="mf">0.</span>
-<span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">zones_debit</span><span class="p">:</span>
-    <span class="n">sol</span>      <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getNodesFromName1</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="s1">&#39;FlowSolution#Centers&#39;</span><span class="p">)</span>
-    <span class="n">density</span>  <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getNodesFromName1</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span><span class="s1">&#39;Density&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> 
-    <span class="n">debit</span>   <span class="o">+=</span>  <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
+<span class="n">flowRateZones</span> <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getZones</span><span class="p">(</span><span class="n">flowRateTree</span><span class="p">)</span>
+<span class="n">flowRate</span> <span class="o">=</span> <span class="mf">0.</span>
+<span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">flowRateZones</span><span class="p">:</span>
+    <span class="n">sol</span>      <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getNodeFromName1</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="s1">&#39;FlowSolution#Centers&#39;</span><span class="p">)</span>
+    <span class="n">density</span>  <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">getNodeFromName1</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="s1">&#39;Density&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">flowRate</span>  <span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;the mass flow rate accross the Inflow BC is&#39;</span><span class="p">,</span> <span class="n">debit</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;the mass flow rate accross the Inflow BC is: &#39;</span><span class="p">,</span> <span class="n">flowRate</span><span class="p">)</span>
 
-<span class="c1"># compute of the mass flow rate with numerical flux new fashion</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;the mass flow rate accross the Inflow BC is&#39;</span><span class="p">,</span> <span class="n">zones_debit</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+<span class="c1"># compute of the mass flow rate with numerical flux new way</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;the mass flow rate accross the Inflow BC is: &#39;</span><span class="p">,</span> <span class="n">effort</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
 
-<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">debit_inflow</span><span class="p">,</span> <span class="s1">&#39;debit.cgns&#39;</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">flowRateTree</span><span class="p">,</span> <span class="s1">&#39;flowRate.cgns&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -857,7 +857,6 @@ Return a new tree in teff.</p>
 <span class="kn">import</span> <span class="nn">FastS.PyTree</span> <span class="k">as</span> <span class="nn">FastS</span>
 <span class="kn">import</span> <span class="nn">Fast.PyTree</span> <span class="k">as</span> <span class="nn">Fast</span>
 <span class="kn">import</span> <span class="nn">Initiator.PyTree</span> <span class="k">as</span> <span class="nn">I</span>
-<span class="kn">import</span> <span class="nn">KCore.test</span> <span class="k">as</span> <span class="nn">test</span>
 
 <span class="n">ni</span> <span class="o">=</span> <span class="mi">155</span><span class="p">;</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">100.</span><span class="o">/</span><span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span> <span class="n">dz</span> <span class="o">=</span> <span class="mf">0.01</span>
 <span class="n">a1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dx</span><span class="p">,</span><span class="n">dz</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">ni</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
@@ -886,10 +885,7 @@ Return a new tree in teff.</p>
     <span class="n">FastS</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
     <span class="c1">#FastS._computeGrad(t, metrics, [&#39;Density&#39;])</span>
 
-<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="s1">&#39;bug.cgns&#39;</span><span class="p">)</span>
-<span class="n">Internal</span><span class="o">.</span><span class="n">_rmNodesByName</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;.Solver#Param&#39;</span><span class="p">)</span>
-<span class="n">Internal</span><span class="o">.</span><span class="n">_rmNodesByName</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;.Solver#ownData&#39;</span><span class="p">)</span>
-<span class="n">test</span><span class="o">.</span><span class="n">testT</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;out.cgns&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1099,3 +1095,24 @@ function resizeFunction() {
 }
 
 </script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">FastS 4.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FastS: FAST structured grid Navier-Stokes solver</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

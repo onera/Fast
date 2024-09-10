@@ -55,22 +55,22 @@ import the module:</p>
 <p><strong>&#8211; Actions</strong></p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Fast.PyTree.setNum2Base" title="Fast.PyTree.setNum2Base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.setNum2Base</span></code></a>(a,&#160;num)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Fast.PyTree.setNum2Base" title="Fast.PyTree.setNum2Base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.setNum2Base</span></code></a></p></td>
 <td><p>Set numeric data dictionary in bases.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Fast.PyTree.setNum2Zones" title="Fast.PyTree.setNum2Zones"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.setNum2Zones</span></code></a>(a,&#160;num)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#Fast.PyTree.setNum2Zones" title="Fast.PyTree.setNum2Zones"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.setNum2Zones</span></code></a></p></td>
 <td><p>Set numeric data dictionary  in zones.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Fast.PyTree.load" title="Fast.PyTree.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.load</span></code></a>([fileName,&#160;fileNameC,&#160;...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Fast.PyTree.load" title="Fast.PyTree.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.load</span></code></a></p></td>
 <td><p>Load tree and connectivity tree.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Fast.PyTree.save" title="Fast.PyTree.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.save</span></code></a>(t[,&#160;fileName,&#160;split,&#160;NP,&#160;...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#Fast.PyTree.save" title="Fast.PyTree.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.save</span></code></a></p></td>
 <td><p>Save tree and connectivity tree.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Fast.PyTree.loadFile" title="Fast.PyTree.loadFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.loadFile</span></code></a>([fileName,&#160;split,&#160;...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Fast.PyTree.loadFile" title="Fast.PyTree.loadFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.loadFile</span></code></a></p></td>
 <td><p>Load tree and connectivity tree.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Fast.PyTree.saveFile" title="Fast.PyTree.saveFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.saveFile</span></code></a>(t[,&#160;fileName,&#160;split,&#160;...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#Fast.PyTree.saveFile" title="Fast.PyTree.saveFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.saveFile</span></code></a></p></td>
 <td><p>Save tree in file.</p></td>
 </tr>
 </tbody>
@@ -260,17 +260,6 @@ and returns None.</p>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;model&#8217;</strong>: possible values are</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>&#8216;Euler&#8217;</p></li>
-<li><p>&#8216;NSLaminar&#8217;</p></li>
-<li><p>&#8216;NSTurbulent&#8217;(only Spalart available)</p></li>
-<li><p>&#8216;LBMLaminar&#8217;</p></li>
-<li><p>default value is &#8216;Euler&#8217;</p></li>
-</ul>
-</div></blockquote>
-</li>
 <li><p><strong>&#8216;prandtltb&#8217;</strong>:</p>
 <blockquote>
 <div><ul class="simple">
@@ -285,8 +274,24 @@ and returns None.</p>
 <li><p>&#8220;SA&#8221;      (Standard Spalart-Allmaras model)</p></li>
 <li><p>&#8220;SA_comp&#8221; (SA with mixing layer compressible correction <a class="reference external" href="https://turbmodels.larc.nasa.gov/spalart.html">https://turbmodels.larc.nasa.gov/spalart.html</a>)</p></li>
 <li><p>default value is &#8216;SA&#8217;</p></li>
-<li><p>&#8220;SA_add_LowRe&#8221;: add low Reynolds correction to spalart model.</p></li>
-<li><p>&#8220;SA_add_RotCorr&#8221;: add rotation correction to spalart model.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>&#8216;SA_add_RotCorr&#8217;</strong>: possible values are</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>True: add rotation correction to spalart model.</p></li>
+<li><p>False</p></li>
+<li><p>default value is False</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>&#8216;SA_add_LowRe&#8217;</strong>: possible values are</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>True: add low Reynolds correction to spalart model.</p></li>
+<li><p>False</p></li>
+<li><p>default value is False</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -689,3 +694,24 @@ function resizeFunction() {
 }
 
 </script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Fast 4.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fast: Flexible Aerodynamic Solver Technolgy</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

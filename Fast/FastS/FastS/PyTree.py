@@ -2053,6 +2053,7 @@ def _computeGrad(t, metrics, varlist, order=2):
 # Display
 #==============================================================================
 def displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', stopAtNan=True):
+    """Display CFL and convergence information."""
     return _displayTemporalCriteria(t, metrics, nitrun, format=format, gmres=gmres, verbose=verbose, stopAtNan=stopAtNan)
 
 def _displayTemporalCriteria(t, metrics, nitrun, format=None, gmres=None, verbose='firstlast', stopAtNan=True):
@@ -2071,7 +2072,7 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbo
     #a = Internal.getNodeFromName2(zones[0], 'model')
     #model = Internal.getValue(a)
     #neq = 5
-    #if (model == 'nsspalart' or model =='NSTurbulent'): neq = 6
+    #if model == 'nsspalart' or model =='NSTurbulent': neq = 6
 
     neq_max = 6
 
