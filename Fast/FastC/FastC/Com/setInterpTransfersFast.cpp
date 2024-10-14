@@ -574,6 +574,8 @@ void K_FASTC::setInterpTransfersIntra(
   FldArrayF tmp(size * 17 * threadmax_sdm);
   E_Float* ipt_tmp = tmp.begin();
 
+  E_Float** RcvFields = new E_Float*[ nvars*threadmax_sdm];
+  E_Float** DnrFields = new E_Float*[ nvars*threadmax_sdm];
 
 //# pragma omp parallel default(shared)  num_threads(1)
 #pragma omp parallel default(shared)
@@ -590,8 +592,8 @@ void K_FASTC::setInterpTransfersIntra(
     E_Int indD0, indD, i, j, k, ncfLoc /*, nocf*/, indCoef, noi, sizecoefs,
         /*Nbchunk,*/ imd, jmd, imdjmd;
 
-    vector<E_Float*> vectOfRcvFields(nvars);
-    vector<E_Float*> vectOfDnrFields(nvars);
+    E_Float** vectOfRcvFields = RcvFields + nvars*(ithread-1);
+    E_Float** vectOfDnrFields = DnrFields +  nvars*(ithread-1);
 
     // 1ere pass_typ: IBC
     // 2eme pass_typ: transfert
@@ -882,7 +884,7 @@ void K_FASTC::setInterpTransfersIntra(
                                                                  xPW    , xPW     +nbRcvPts, xPW     +nbRcvPts*2,
                                                                  xPI    , xPI     +nbRcvPts, xPI     +nbRcvPts*2, 
                                                                  densPtr, 
-                                                                 ipt_tmp, size,
+                                                                 ipt_tmp, size, nvars,
                                                                  param_real[ NoD ],
                                                                  vectOfDnrFields, vectOfRcvFields,
                                                                  nbptslinelets, linelets, indexlinelets);
@@ -911,7 +913,7 @@ void K_FASTC::setInterpTransfersIntra(
 #endif
 
 
-  delete[] ipt_cnd;
+  delete[] ipt_cnd; delete [] RcvFields;  delete [] DnrFields;
   // return varType;
 }
 
@@ -1232,6 +1234,9 @@ if (has_data_to_send) {
   FldArrayI rcvPtsI(nbRcvPts_mx);
   E_Int* rcvPts = rcvPtsI.begin();
 
+  E_Float** RcvFields = new E_Float*[ nvars*threadmax_sdm];
+  E_Float** DnrFields = new E_Float*[ nvars*threadmax_sdm];
+
 //# pragma omp parallel default(shared)  num_threads(1)
 #pragma omp parallel default(shared)
   {
@@ -1247,8 +1252,8 @@ if (has_data_to_send) {
     E_Int type;
     E_Int indD0, indD, i, j, k, ncfLoc, indCoef, noi, sizecoefs, imd, jmd, imdjmd;
 
-    vector<E_Float*> vectOfRcvFields(nvars);
-    vector<E_Float*> vectOfDnrFields(nvars);
+    E_Float** vectOfRcvFields = RcvFields + nvars*(ithread-1);
+    E_Float** vectOfDnrFields = DnrFields +  nvars*(ithread-1);
 
     // 1ere pass: IBC
     // 2eme pass: transfert
@@ -1479,7 +1484,7 @@ if (has_data_to_send) {
 							      xPW, xPW + nbRcvPts, xPW + nbRcvPts * 2, 
 							      xPI, xPI + nbRcvPts, xPI + nbRcvPts * 2,
 							      densPtr, 
-							      ipt_tmp, size,
+							      ipt_tmp, size, nvars,
 							      param_real[ NoD ],
 							      //gamma, cv, muS, Cs, Ts, Pr,
 							      vectOfDnrFields, vectOfRcvFields,
@@ -1501,6 +1506,8 @@ if (has_data_to_send) {
 #pragma omp barrier
         }  // ipass
   }    // omp
+
+  delete [] RcvFields; delete [] DnrFields;
 
  #ifdef TimeShow
     E_Float time_out = omp_get_wtime();
