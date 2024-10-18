@@ -104,7 +104,7 @@ C.addState2Node__(t, 'EquationDimension', 3)
 t = Internal.addGhostCells(t, t, 2, adaptBCs=1, fillCorner=0)
 tc = C.node2Center(t)
 if explicit_select == 'explicit_local':
-    tc = X.setInterpData2(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=3)
+    tc = X.setInterpData3(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=3)
 else:
     tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=3)
 tc = C.rmVars(tc, 'FlowSolution')
