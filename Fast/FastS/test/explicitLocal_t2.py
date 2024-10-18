@@ -57,7 +57,7 @@ t = T.makeDirect(t)
 
 ### Construction du tc ###
 tc = C.node2Center(t)
-tc = X.setInterpData2(t, tc, nature=1, loc='centers', storage='inverse', 
+tc = X.setInterpData3(t, tc, nature=1, loc='centers', storage='inverse', 
                       sameName=1, method='lagrangian',dim=2)
 tc = C.rmVars(tc, 'FlowSolution')
 tc = C.rmVars(tc, 'CellN')

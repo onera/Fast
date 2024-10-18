@@ -2176,6 +2176,7 @@ def _movegrid(t):
 #==============================================================================
 def createConvergenceHistory(t, nrec):
     return _createConvergenceHistory(t, nrec)
+
 def _createConvergenceHistory(t, nrec):
     """Create a node in tree to store convergence history."""
     varsR   = ['RSD_L2','RSD_oo','RSD_L2_diff','RSD_oo_diff']
@@ -2184,18 +2185,21 @@ def _createConvergenceHistory(t, nrec):
     for b in bases:
        Internal.createUniqueChild(b, 'GlobalConvergenceHistory',
                                   'ConvergenceHistory_t', value=curIt)
-    zones = Internal.getZones(t)
-    neq = 5
-    a = Internal.getNodeFromName3(t, 'GoverningEquations')
-    if a is not None:
-       model = Internal.getValue(a)
-       if model == 'nsspalart' or model =='NSTurbulent': neq = 6
-    for z in zones:
-        c = Internal.createUniqueChild(z, 'ZoneConvergenceHistory',
+
+       model='Nada'
+       a = Internal.getNodeFromName2(t, 'GoverningEquations')
+       if a is not None: model = Internal.getValue(a)
+
+       for z in Internal.getZones(b):
+          a = Internal.getNodeFromName2(z, 'GoverningEquations')
+          if a is not None: model = Internal.getValue(a)
+          neq = 5
+          if model == 'nsspalart' or model =='NSTurbulent': neq = 6
+          c = Internal.createUniqueChild(z, 'ZoneConvergenceHistory',
                                        'ConvergenceHistory_t', value=curIt)
-        tmp = numpy.zeros((nrec), Internal.E_NpyInt)
-        Internal.createChild(c, 'IterationNumber', 'DataArray_t', tmp)
-        for var in varsR:
+          tmp = numpy.zeros((nrec), numpy.int32)
+          Internal.createChild(c, 'IterationNumber', 'DataArray_t', tmp)
+          for var in varsR:
             tmp = numpy.zeros((nrec*neq), numpy.float64)
             Internal.createChild(c, var ,'DataArray_t', tmp)
     return None
@@ -3600,13 +3604,13 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
             t = T.contract(t, (0,0,0), (1,0,0), (0,1,0),0.025)
             t = T.makeDirect(t)
         tc = C.node2Center(t)
-        tc = X.setInterpData2(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=dim)
+        tc = X.setInterpData3(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=dim)
         tc = C.rmVars(tc, 'FlowSolution')
         tc = C.rmVars(tc, 'CellN')
     else:
         tc_orig = Internal.copyRef(tc)
         tc = C.node2Center(t)
-        tc = X.setInterpData2(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=dim)
+        tc = X.setInterpData3(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, method='lagrangian',dim=dim)
         bases = Internal.getNodesFromType(tc_orig, 'CGNSBase_t')
         for b in bases:
             zones = Internal.getNodesFromType(b, 'Zone_t')
@@ -3858,7 +3862,6 @@ def add2previous(var_list,zone_save,zone_current,it0):
 
 ##POPULATE GLOBAL CONVERGENCE FOR EACH BASE
 def calc_global_convergence(t):
-    var_list    =['RSD_oo','RSD_L2','RSD_oo_diff','RSD_L2_diff']
     var_list_L2 =['RSD_L2','RSD_L2_diff']
     var_list_Loo=['RSD_oo','RSD_oo_diff']
     neq=5
@@ -3877,17 +3880,19 @@ def calc_global_convergence(t):
 
         ##NOTE: the value of the ZoneConvergenceHistory node has the number of rec taking at time t
         ##      the shape of the array of IterationNumber is total number of nrec.
-                
         Internal.setValue(c, nrec);
 
         ##IterationNumber Node
         Internal.createChild(c, 'IterationNumber', 'DataArray_t', numpy.zeros((nrec), Internal.E_NpyInt))
         RSD_b = Internal.getNodeByName(c, 'IterationNumber')[1]
-        for i in range(nrec): RSD_b[i]=RSD_[i]
-
+        RSD_b[:] = RSD_[:]
+        
         ##The rest of the nodes in the convergence history
-        for var in var_list:
+        for var in var_list_L2:
             tmp = numpy.zeros((nrec*neq), numpy.float64)
+            Internal.createChild(c, var , 'DataArray_t', tmp) 
+        for var in var_list_Loo:
+            tmp = numpy.full((nrec*neq), -numpy.inf, dtype=numpy.float64)
             Internal.createChild(c, var , 'DataArray_t', tmp)                    
 
         total_Ncells = 0
@@ -3902,31 +3907,26 @@ def calc_global_convergence(t):
             nx = Internal.getValue(z)[0][0]
             ny = Internal.getValue(z)[1][0]
             nz = Internal.getValue(z)[2][0]
-            total_Ncells += nx*ny*nz*isCalc
+            zone_Ncells = nx*ny*nz*isCalc
+            total_Ncells += zone_Ncells
 
             if isCalc==1:
                 ##Loo per base
                 for var_local in var_list_Loo:
                     RSD_     = Internal.getNodeByName(zone_cong_history,var_local)[1]
                     RSD_b    = Internal.getNodeByName(c,var_local)[1]
-                    sh_local = numpy.shape(RSD_b)[0]
-                    sh       = nrec    *sh_local//nrec
-                    for i in range(sh):
-                        RSD_b[i]=max(RSD_b[i],RSD_[i])
+                    RSD_b[:] = numpy.maximum(RSD_b, RSD_)
                 
                 ##L2 per base (here only sum)
                 for var_local in var_list_L2:
                     RSD_     = Internal.getNodeByName(zone_cong_history,var_local)[1]
                     RSD_b    = Internal.getNodeByName(c,var_local)[1]
-                    sh_local = numpy.shape(RSD_b)[0]
-                    sh       = nrec    *sh_local//nrec
-                    for i in range(sh):
-                        RSD_b[i]+=RSD_[i]*nx*ny*nz
+                    RSD_b[:] += RSD_[:]*zone_Ncells
 
-        ##Average L2 per base            
+        ##Average L2 per base
         for var_local in var_list_L2:
-                RSD_b    = Internal.getNodeByName(c,var_local)[1]
-                RSD_b[:] = RSD_b[:]/total_Ncells #nzones            
+            RSD_b    = Internal.getNodeByName(c,var_local)[1]
+            RSD_b[:] /= total_Ncells            
     return t
 
 

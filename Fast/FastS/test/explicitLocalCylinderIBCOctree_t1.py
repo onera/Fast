@@ -68,7 +68,7 @@ if explicit_select == "explicit_local":
        z          = C._initVars(z,'centers:niveaux_temps',float(niveauTps))
        if niveauTps > time_lvl_max: time_lvl_max = niveauTps
     dt = dt * time_lvl_max
-    tc = X.setInterpData2 (t, tc, nature=1, loc='centers', storage='inverse',sameName=1, method='lagrangian',dim=2)
+    tc = X.setInterpData3 (t, tc, nature=1, loc='centers', storage='inverse',sameName=1, method='lagrangian',dim=2)
      
 t1c= Internal.copyRef(tc)
 test.testT(t1c, 5)
