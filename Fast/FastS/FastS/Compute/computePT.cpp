@@ -54,11 +54,13 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
 #endif
 
 #if TIMER == 1
+#ifdef _OPENMP
   clock_t c_start,c_end;
   c_start = clock();
   timein = omp_get_wtime();
 #endif
-
+#endif
+  
   //* tableau pour stocker dimension sous-domaine omp *//
   E_Int threadmax_sdm  = __NUMTHREADS__;
 
@@ -702,10 +704,12 @@ else
   RELEASEHOOK(hook)
 
 #if TIMER == 1
+#ifdef _OPENMP
   c_end = clock();
   timeout = omp_get_wtime();
   E_Float duree  = (float)(c_end-c_start) / CLOCKS_PER_SEC/threadmax_sdm;
   printf("nitrun =%d, temps =%g, cpu =%g  %g \n",nitrun,temps,duree, timeout-timein);
+#endif
 #endif
 
 

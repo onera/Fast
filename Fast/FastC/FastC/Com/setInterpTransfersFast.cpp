@@ -98,15 +98,16 @@ void K_FASTC::setInterpTransfersFast(
   if(mpi) { MPI_Comm_rank (MPI_COMM_WORLD, &rank); }
 #endif
 
-  #ifdef TimeShow
+#ifdef TimeShow
    ofstream outputfile;
    std::ostringstream tmp;
    tmp << "Output" << std::setw(4) << std::setfill('0') << std::to_string(rank);
    std::string filename = tmp.str();
    outputfile.open(filename, ios::app);
-
+#ifdef _OPENMP
    E_Float time_in = omp_get_wtime();
-  #endif
+#endif
+#endif
 
  //Swap (call to setInterpTransfer)
   if ( (param_int_tc != NULL) && (param_real_tc != NULL))
@@ -170,7 +171,9 @@ void K_FASTC::setInterpTransfersFast(
       if (pair_of_queue_IBC == NULL) { K_FASTC::init_TransferInter(pair_of_queue_IBC);}
 
       #ifdef TimeShow
+      #ifdef _OPENMP
        time_in = omp_get_wtime();
+      #endif
       #endif
 
     //
@@ -203,8 +206,10 @@ void K_FASTC::setInterpTransfersFast(
         }    
 
       #ifdef TimeShow
+      #ifdef _OPENMP
        E_Float time_out = omp_get_wtime();
        ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;
+      #endif
       #endif
 
       //MPI_Barrier(MPI_COMM_WORLD);
@@ -246,7 +251,9 @@ void K_FASTC::setInterpTransfersFast(
     } //loop ip2p
 
     #ifdef TimeShow
+    #ifdef _OPENMP
       time_in = omp_get_wtime();
+    #endif
     #endif
 
     #ifdef _MPI
@@ -258,9 +265,11 @@ void K_FASTC::setInterpTransfersFast(
       K_FASTC::getTransfersInter(nbcomIBC_S, iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
 
       #ifdef TimeShow
+      #ifdef _OPENMP
        E_Float time_out = omp_get_wtime();
        ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
        time_in= omp_get_wtime();
+      #endif
       #endif
     }
 
@@ -338,8 +347,10 @@ void K_FASTC::setInterpTransfersFast(
 
 
       #ifdef TimeShow
+      #ifdef _OPENMP
        E_Float time_out = omp_get_wtime();
        ipt_timecount[0] = ipt_timecount[0] + time_out -time_in;
+      #endif
       #endif
 
       E_Int cpt_send_buffer = 0;
@@ -379,9 +390,10 @@ void K_FASTC::setInterpTransfersFast(
     }
 
     #ifdef TimeShow
+    #ifdef _OPENMP
      time_in = omp_get_wtime();
     #endif
-
+    #endif
 
     #ifdef _MPI
     if (mpi)
@@ -396,7 +408,8 @@ void K_FASTC::setInterpTransfersFast(
        //printf(" apres get ID  %d %d \n", nstep,  nbcomID);
 
        #ifdef TimeShow
-        E_Float time_out         = omp_get_wtime();
+       #ifdef _OPENMP
+        E_Float time_out = omp_get_wtime();
         ipt_timecount[4] = ipt_timecount[4] + time_out -time_in;
 
         outputfile << "Time in getTransfersInter "     << ipt_timecount[4] << std::endl;
@@ -408,6 +421,7 @@ void K_FASTC::setInterpTransfersFast(
         outputfile.close();
 
         time_in = omp_get_wtime();
+       #endif
        #endif
 
     } // MPI Second part (InterCOM ID)
@@ -432,7 +446,9 @@ void K_FASTC::setInterpTransfersIntra(
 {
 
 #ifdef TimeShow
+#ifdef _OPENMP
   E_Float time_in = omp_get_wtime();
+#endif
 #endif
 
   E_Int pass_deb, pass_fin;
@@ -907,11 +923,12 @@ void K_FASTC::setInterpTransfersIntra(
   }    // omp
 
 #ifdef TimeShow
+#ifdef _OPENMP
   E_Float time_out = omp_get_wtime();
   ipt_timecount[1] = ipt_timecount[1] + time_out - time_in;
   time_in = omp_get_wtime();
 #endif
-
+#endif
 
   delete[] ipt_cnd; delete [] RcvFields;  delete [] DnrFields;
   // return varType;
@@ -934,7 +951,9 @@ void K_FASTC::setInterpTransfersInter(
 
 {
 #ifdef TimeShow
+#ifdef _OPENMP
     E_Float time_in = omp_get_wtime();
+#endif
 #endif
 
   E_Int pass_deb, pass_fin, etiquette;
@@ -979,9 +998,11 @@ void K_FASTC::setInterpTransfersInter(
   E_Int nrac_inst_level = 0;
 
 #ifdef TimeShow
+#ifdef _OPENMP
     time_in = omp_get_wtime();
 #endif
-
+#endif
+    
   if (nrac_inst > 0) {
    pass_inst_fin=2;
    nrac_inst_level = param_int_tc[ech + 4 + it_target + timelevel] - param_int_tc[ech + 4 + it_target] + 1; 
@@ -1124,13 +1145,15 @@ void K_FASTC::setInterpTransfersInter(
     }  // pas inst
 
 
-if (has_data_to_send) {
+if (has_data_to_send)
+{
 #ifdef TimeShow
+#ifdef _OPENMP
  E_Float time_out = omp_get_wtime();
  ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
  time_in  = omp_get_wtime();
 #endif
-
+#endif
 
     send_buffer << count_rac;
 
@@ -1216,11 +1239,13 @@ if (has_data_to_send) {
   } // if has data to send
 
 #ifdef TimeShow
+#ifdef _OPENMP
     E_Float time_out = omp_get_wtime();
     ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
     time_in  = omp_get_wtime();
 #endif
-
+#endif
+    
   E_Int size = (nbRcvPts_mx / threadmax_sdm) + 1;  // on prend du gras pour gerer le residus
   E_Int r = size % 8;
   if (r != 0) size = size + 8 - r;  // on rajoute du bas pour alignememnt 64bits
@@ -1510,36 +1535,50 @@ if (has_data_to_send) {
   delete [] RcvFields; delete [] DnrFields;
 
  #ifdef TimeShow
+ #ifdef _OPENMP
     E_Float time_out = omp_get_wtime();
     ipt_timecount[2] = ipt_timecount[2] + time_out - time_in;
     time_in = omp_get_wtime();
  #endif
-
+ #endif
+    
     // send_buffer_time
 #if defined(PROFILE_TRANSFERT)
+#ifdef TimeShow
+#ifdef _OPENMP
   double beg = omp_get_wtime();
 #endif
-
+#endif
+#endif
+  
 #if defined(PROFILE_TRANSFERT)
+#ifdef TimeShow
+#ifdef _OPENMP
   double beg2 = omp_get_wtime();
 #endif
-
+#endif
+#endif
+  
   //if (has_data_to_send) { send_buffer.isend();  printf("envoi  ID  %d %d  %d \n", dest, TypeTransfert, nstep ); }
   if (has_data_to_send) { send_buffer.isend(); }
 
 #ifdef TimeShow
+#ifdef _OPENMP
     E_Float time_out = omp_get_wtime();
     ipt_timecount[0] = ipt_timecount[0] + time_out - time_in;
 #endif
-
+#endif
 
 
 #if defined(PROFILE_TRANSFERT)
+#ifdef TimeShow
+#ifdef _OPENMP
   double end = omp_get_wtime();
   isend_time += end - beg2;
   send_buffer_time += end - beg;
 #endif
-
+#endif
+#endif
 }
 
 //=============================================================================
@@ -1572,7 +1611,9 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
 
          CMP::RecvBuffer& recv_buffer = (*it).get_message_buffer();
 #if defined(PROFILE_TRANSFERT)
+#ifdef _OPENMP
          beg = omp_get_wtime();
+#endif
 #endif
          E_Int recv_nrac;
          recv_buffer >> recv_nrac;
@@ -1657,8 +1698,10 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
          }//  parallel....
 
 #if defined(PROFILE_TRANSFERT)
+#ifdef _OPENMP
          end = omp_get_wtime();
          recv_buffer_time += end - beg;
+#endif
 #endif
          pt_rcv_queue.pop(it);
        }  // end if (it != pt_msg_manager->end()infos

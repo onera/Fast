@@ -60,12 +60,12 @@ c      write(*,*)'loop vis=', ind_loop
       !end do
 
 
-      if(idir.ne.3) then
-!$OMP SINGLE
-        write(*,*)'BC Wall transition only valide for Jmin'
-        stop 
-!$OMP END SINGLE   
-      endif 
+c      if(idir.ne.3) then
+c!$OMP SINGLE
+c        write(*,*)'BC Wall transition only valide for Jmin'
+c        stop 
+c!$OMP END SINGLE   
+c      endif 
    
       pi   = 4*atan(1.)
 

@@ -103,8 +103,8 @@ C
 C
       IF (idir .NE. 3) THEN
 C$OMP SINGLE
-        WRITE(*, *) 'BC Wall transition only valide for Jmin'
-        STOP
+C        WRITE(*, *) 'BC Wall transition only valide for Jmin'
+C        STOP
 C$OMP END SINGLE   
       ELSE
         pi = 4*ATAN(1.)

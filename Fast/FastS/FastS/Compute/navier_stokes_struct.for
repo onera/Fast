@@ -128,8 +128,11 @@ C Var loc
 
       include 'omp_lib.h'
 
-       rhs_begin = OMP_GET_WTIME()
-  
+#ifdef _OPENMP
+      rhs_begin = omp_get_wtime()
+#else
+      rhs_begin = 0.
+#endif
        shift_vol   = param_int(PT_VOL)*param_int(NDIMDX_MTR)
        if(param_int(LALE).eq.3) then
          shift_vol_n = param_int(PT_VOL)-1
@@ -495,8 +498,12 @@ c       endif
 
            !!! omp barriere
       if(lexit_lu.eq.0.and.nitrun*nitcfg.gt.15
-     &                .and.(nitcfg.lt.3.or.nitcfg.eq.nssiter-1)) then 
-        rhs_end = OMP_GET_WTIME()
+     &         .and.(nitcfg.lt.3.or.nitcfg.eq.nssiter-1)) then
+#ifdef _OPENMP
+         rhs_end = omp_get_wtime()
+#else
+         rhs_end = 0.
+#endif
         cells = (ind_dm_omp(2)-ind_dm_omp(1)+1)
      &         *(ind_dm_omp(4)-ind_dm_omp(3)+1)
      &         *(ind_dm_omp(6)-ind_dm_omp(5)+1)
