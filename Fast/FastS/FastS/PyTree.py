@@ -2197,7 +2197,7 @@ def _createConvergenceHistory(t, nrec):
           if model == 'nsspalart' or model =='NSTurbulent': neq = 6
           c = Internal.createUniqueChild(z, 'ZoneConvergenceHistory',
                                        'ConvergenceHistory_t', value=curIt)
-          tmp = numpy.zeros((nrec), numpy.int32)
+          tmp = numpy.zeros((nrec), dtype=Internal.E_NpyInt)
           Internal.createChild(c, 'IterationNumber', 'DataArray_t', tmp)
           for var in varsR:
             tmp = numpy.zeros((nrec*neq), numpy.float64)
