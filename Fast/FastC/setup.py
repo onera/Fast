@@ -32,7 +32,6 @@ from KCore.config import *
 # Test if libmpi exists ======================================================
 (mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi(additionalLibPaths, additionalIncludePaths)
 
-# Compilation des fortrans ====================================================
 prod = os.getenv("ELSAPROD")
 if prod is None: prod = 'xx'
 
