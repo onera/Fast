@@ -127,6 +127,7 @@ c Var loc
         l =   inddm(ideb,jdeb,kdeb)
         ls= indssor(ideb,jdeb,kdeb)
 
+         !drdm_out(ls)=drodm_in(l)*diag
 #include "FastS/Compute/LU/lu_dinv_IO_SA.for"
           ssor(ls,1) = 0.
           ssor(ls,2) = 0.
@@ -145,7 +146,10 @@ c Var loc
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_i_3dfull_SA_ale.for"
+         !dr0dm_out(ls)=drodm_in(l)+b1
+         !ssor(ls)=b1
 #include "FastS/Compute/LU/mjr_drodm_IO_ssor_SA.for"
+         !drdm_out(ls)=drodm_out(ls)*diag
 #include "FastS/Compute/LU/lu_dinv_SA.for"
         enddo
 
@@ -162,7 +166,10 @@ c Var loc
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_j_3dfull_SA_ale.for"
+         !dr0dm_out(ls)=drodm_in(l)+b1
+         !ssor(ls)=b1
 #include "FastS/Compute/LU/mjr_drodm_IO_ssor_SA.for"
+         !drdm_out(ls)=drodm_out(ls)*diag
 #include "FastS/Compute/LU/lu_dinv_SA.for"
 
           do i= ideb+ipas,ifin,ipas
@@ -175,9 +182,14 @@ c Var loc
             xal    = coe(l,1)*signe
 
 #include    "FastS/Compute/LU/lu_i_3dfull_SA_ale.for"
+            !drodm_out(ls)=drodm_in(l)+b1
+            !ssor(ls)=b1
 #include    "FastS/Compute/LU/mjr_drodm_IO_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_j_3dfull_SA_ale.for"
+            !drodm_out(ls) = drodm_out(ls)+b1
+            !ssor(ls)      = ssor(ls)+b1
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
+            !drdm_out(ls)=drodm_out(ls)*diag
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
           enddo
         enddo
@@ -193,8 +205,13 @@ c Var loc
           xal    = coe(l,1)*signe
 
 #include "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
+          !drodm_out(ls)=drodm_in(l)+b1
+          !ssor(ls)=b1
 #include "FastS/Compute/LU/mjr_drodm_IO_ssor_SA.for"
+          !drdm_out(ls)=drodm_out(ls)*diag
 #include "FastS/Compute/LU/lu_dinv_SA.for"
+          l1  =l -inck
+          l1s =ls-incks
 #include "FastS/Compute/LU/mjr_ssor_SA.for"
 
           !!! Fin plan jdeb 
@@ -212,6 +229,8 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
@@ -228,6 +247,8 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor_SA.for"
              do  i= ideb+ipas,ifin,ipas
       
@@ -245,6 +266,8 @@ c Var loc
 #include       "FastS/Compute/LU/lu_k_3dfull_SA_ale.for"
 #include       "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
+                l1  =l -inck
+                l1s =ls-incks
 #include       "FastS/Compute/LU/mjr_ssor_SA.for"
              enddo
           enddo
@@ -337,6 +360,8 @@ c Var loc
 #include "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
 #include "FastS/Compute/LU/mjr_drodm_IO_ssor_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
+          l1  =l -inck
+          l1s =ls-incks
 #include "FastS/Compute/LU/mjr_ssor_SA.for"
 
           !!! Fin plan jdeb 
@@ -354,6 +379,8 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
@@ -370,6 +397,8 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor_SA.for"
 
              do  i= ideb+ipas,ifin,ipas
@@ -388,6 +417,8 @@ c Var loc
 #include       "FastS/Compute/LU/lu_k_3dhomogene_SA_ale.for"
 #include       "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
+                l1  =l -inck
+                l1s =ls-incks
 #include       "FastS/Compute/LU/mjr_ssor_SA.for"
              enddo
           enddo
@@ -480,6 +511,8 @@ c Var loc
 #include "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
 #include "FastS/Compute/LU/mjr_drodm_IO_ssor_SA.for"
 #include "FastS/Compute/LU/lu_dinv_SA.for"
+          l1  =l -inck
+          l1s =ls-incks
 #include "FastS/Compute/LU/mjr_ssor_SA.for"
 
           !!! Fin plan jdeb 
@@ -496,6 +529,8 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor_SA.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
@@ -511,6 +546,8 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_SA.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor_SA.for"
              do  i= ideb+ipas,ifin,ipas
       
@@ -527,6 +564,8 @@ c Var loc
 #include       "FastS/Compute/LU/lu_k_3dcart_SA_ale.for"
 #include       "FastS/Compute/LU/mjr_drodm_ssor_SA.for"
 #include       "FastS/Compute/LU/lu_dinv_SA.for"
+                l1  =l -inck
+                l1s =ls-incks
 #include       "FastS/Compute/LU/mjr_ssor_SA.for"
              enddo
           enddo
@@ -582,6 +621,8 @@ c Var loc
 #include "FastS/Compute/LU/lu_j_2d_SA_ale.for"
 #include "FastS/Compute/LU/mjr_drodm_IO_ssor_2d_SA.for"
 #include "FastS/Compute/LU/lu_dinv_2d_SA.for"
+          l1  =l -incj
+          l1s =ls-incjs
 #include "FastS/Compute/LU/mjr_ssor_2d_SA.for"
           do i= ideb+ipas,ifin,ipas
 
@@ -597,6 +638,8 @@ c Var loc
 #include    "FastS/Compute/LU/lu_j_2d_SA_ale.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor_2d_SA.for"
 #include    "FastS/Compute/LU/lu_dinv_2d_SA.for"
+             l1  =l -incj
+             l1s =ls-incjs
 #include    "FastS/Compute/LU/mjr_ssor_2d_SA.for"
           enddo
         enddo

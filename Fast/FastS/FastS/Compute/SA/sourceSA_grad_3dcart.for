@@ -13,7 +13,8 @@
                u6 = (rop(l,2)+rop(l6,2))
 
                !dudx
-               dudy = (u3 - u1)*tix
+               dudx = (u3 - u1)*tix
+               !dudy = (u3 - u1)*tix
 
                !dudy
                dudy = (u2 - u4)*tjy

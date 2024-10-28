@@ -134,7 +134,7 @@ for ale in TypeMotion:
                         # Folder modification
                         elif eq == 'SA':
                                 for i in range( len(lines) ):
-                                   lines[i]=lines[i].replace("fluViscRans","SA/fluViscRans").replace("assemble","SA/assemble").replace("flu_send","SA/flu_send")
+                                   lines[i]=lines[i].replace("fluVisc","SA/fluVisc").replace("assemble","SA/assemble").replace("flu_send","SA/flu_send")
                                 eq2=eq+'_'
 
                         # creation subroutine fortran du flux

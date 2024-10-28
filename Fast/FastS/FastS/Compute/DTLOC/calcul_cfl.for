@@ -162,10 +162,13 @@ c******* NS unsteady *****
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
 
+          do k = ind_loop(5), ind_loop(6)
           do j = ind_loop(3), ind_loop(4)
-             lij  =         inddm( ind_loop(1) , j, k)
+             lij  =        inddm( ind_loop(1) , j, k)
              lvij =  lij-  indven( ind_loop(1) , j, k)
              lt   = 1
+             lvo  = 1
+
              do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
               lv = l - lvij
@@ -188,6 +191,7 @@ c******* NS unsteady *****
  
 #include "FastS/Compute/DTLOC/calc_visc_conv.for"             
              enddo
+           enddo
           enddo
 
        else
@@ -463,9 +467,12 @@ c******* Euler unsteady *****
           do k = ind_loop(5), ind_loop(6)
           do j = ind_loop(3), ind_loop(4)
              lij  =        inddm( ind_loop(1) , j, k)
+             lvij =  lij-  indven( ind_loop(1) , j, k)
              lt   = 1
+             lvo  = 1
              do l = lij,  lij + ind_loop(2) - ind_loop(1)
 
+              lv = l-lvij
               u = rop(l,2)
               v = rop(l,3)
               w = rop(l,4)

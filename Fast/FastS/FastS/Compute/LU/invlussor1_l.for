@@ -161,6 +161,8 @@ c Var loc
 #include "FastS/Compute/LU/lu_k_3dfull.for"
 #include "FastS/Compute/LU/mjr_drodm_IO_ssor.for"
 #include "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include "FastS/Compute/LU/mjr_ssor.for"
 
           !!! Fin plan jdeb 
@@ -177,6 +179,8 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dfull.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor.for"
 #include    "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
@@ -192,6 +196,8 @@ c Var loc
 #include    "FastS/Compute/LU/lu_k_3dfull.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor.for"
 #include    "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor.for"
 
              do  i= ideb+ipas,ifin,ipas
@@ -209,6 +215,8 @@ c Var loc
 #include       "FastS/Compute/LU/lu_k_3dfull.for"
 #include       "FastS/Compute/LU/mjr_drodm_ssor.for"
 #include       "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include       "FastS/Compute/LU/mjr_ssor.for"
              enddo
           enddo
@@ -296,6 +304,8 @@ C         DIR$ IVDEP
 #include "FastS/Compute/LU/lu_k_3dhomogene.for"
 #include "FastS/Compute/LU/mjr_drodm_IO_ssor.for"
 #include "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include "FastS/Compute/LU/mjr_ssor.for"
 
           !!! Fin plan jdeb 
@@ -312,6 +322,8 @@ C         DIR$ IVDEP
 #include    "FastS/Compute/LU/lu_k_3dhomogene.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor.for"
 #include    "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
@@ -327,6 +339,8 @@ C         DIR$ IVDEP
 #include    "FastS/Compute/LU/lu_k_3dhomogene.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor.for"
 #include    "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor.for"
 
              do  i= ideb+ipas,ifin,ipas
@@ -344,6 +358,8 @@ C         DIR$ IVDEP
 #include       "FastS/Compute/LU/lu_k_3dhomogene.for"
 #include       "FastS/Compute/LU/mjr_drodm_ssor.for"
 #include       "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include       "FastS/Compute/LU/mjr_ssor.for"
              enddo
           enddo
@@ -427,6 +443,8 @@ C         DIR$ IVDEP
 #include "FastS/Compute/LU/lu_k_3dcart.for"
 #include "FastS/Compute/LU/mjr_drodm_IO_ssor.for"
 #include "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include "FastS/Compute/LU/mjr_ssor.for"
 
           !!! Fin plan jdeb 
@@ -441,6 +459,8 @@ C         DIR$ IVDEP
 #include    "FastS/Compute/LU/lu_k_3dcart.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor.for"
 #include    "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor.for"
           enddo
           do  j= jdeb+ipas,jfin,ipas
@@ -454,6 +474,8 @@ C         DIR$ IVDEP
 #include    "FastS/Compute/LU/lu_k_3dcart.for"
 #include    "FastS/Compute/LU/mjr_drodm_ssor.for"
 #include    "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include    "FastS/Compute/LU/mjr_ssor.for"
 
              do  i= ideb+ipas,ifin,ipas
@@ -469,6 +491,8 @@ C         DIR$ IVDEP
 #include       "FastS/Compute/LU/lu_k_3dcart.for"
 #include       "FastS/Compute/LU/mjr_drodm_ssor.for"
 #include       "FastS/Compute/LU/lu_dinv.for"
+             l1  =l -inck
+             l1s =ls-incks
 #include       "FastS/Compute/LU/mjr_ssor.for"
              enddo
           enddo
@@ -521,6 +545,8 @@ C         DIR$ IVDEP
 #include    "FastS/Compute/LU/lu_j_2d.for"
 #include    "FastS/Compute/LU/mjr_drodm_IO_ssor_2d.for"
 #include    "FastS/Compute/LU/lu_dinv_2d.for"
+             l1  =l -incj
+             l1s =ls-incjs
 #include    "FastS/Compute/LU/mjr_ssor_2d.for"
 
             do i= ideb+ipas,ifin,ipas
@@ -536,6 +562,8 @@ C         DIR$ IVDEP
 #include       "FastS/Compute/LU/lu_j_2d.for"
 #include       "FastS/Compute/LU/mjr_drodm_ssor_2d.for"
 #include       "FastS/Compute/LU/lu_dinv_2d.for"
+             l1  =l -incj
+             l1s =ls-incjs
 #include       "FastS/Compute/LU/mjr_ssor_2d.for"
             enddo
          enddo
