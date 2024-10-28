@@ -432,7 +432,7 @@ c#include  "FastS/Compute/Slope/o3_slope_var.for"
             k = l/inck
             j = (l-k*inck)/incj
             i = l-k*inck - j*incj
-            qn = (u*tcx+v*tcy)
+            !qn = (u*tcx+v*tcy)
 
             !flux(1)=flux(1)+(rop(l ,2)*tcx+rop(l ,3)*tcy)*sens*rop(l,1)
             !flux(2)=flux(2)+(rop(l1,2)*tcx+rop(l1,3)*tcy)*sens*rop(l1,1)

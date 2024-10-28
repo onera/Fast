@@ -20,11 +20,12 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       REAL_E lund_param(5)
 
 c  Var loc
-      INTEGER_E i,j,k,l,nif,ninjf,ci,cj,ck,li,
+      INTEGER_E i,j,k,l,nif,ninjf,ci,cj,ck,li,lt,lvo,ltij,lij,
      &        njf,nkf,ic,jc,kc,l1,ind_loop(6),indbci,
      &        ldjrec,iplanrec,lrec,jrec,krec,irec
       REAL_E cnm,cn,nechant,c1,c2
 
+#include "FastS/formule_mtr_param.h"
 #include "FastS/formule_param.h"
 
       indbci(j_1,k_1) = 1 + (j_1-inc_bc(2)) + (k_1-inc_bc(3))*inc_bc(1)
@@ -87,11 +88,8 @@ c  Var loc
 
       IF (idir.le.2) THEN
 
-
-         do  k = ind_loop(5), ind_loop(6)
-          do  j = ind_loop(3), ind_loop(4)
-
-            l    = inddm( ind_loop(2), j,  k )
+         i = ind_loop(2)
+#include "FastS/Compute/loopPlanI_begin.for"
             li   = indbci(j,  k )
 
             rof2(li,1) = rop(l,1)*cn + cnm*rof2(li,1)
@@ -99,34 +97,22 @@ c  Var loc
             rof2(li,3) = rop(l,3)*cn + cnm*rof2(li,3)
             rof2(li,4) = rop(l,4)*cn + cnm*rof2(li,4)
             rof2(li,5) = rop(l,5)*cn + cnm*rof2(li,5)
-           enddo
-         enddo
-
-       return
-
+#include "FastS/Compute/loopPlan_end.for"
 
       ELSEIF (idir.le.4) THEN
-
-         do  k = ind_loop(5), ind_loop(6)
-          do  i = ind_loop(1), ind_loop(2)
-
-            l    = inddm( i, ind_loop(4),  k )
+         j = ind_loop(4)
+#include "FastS/Compute/loopPlanJ_begin.for"
             li   = indbci(i,  k )
 
             rof2(li,1) = rop(l,1)*cn + cnm*rof2(li,1)
             rof2(li,2) = rop(l,2)*cn + cnm*rof2(li,2)
             rof2(li,3) = rop(l,3)*cn + cnm*rof2(li,3)
             rof2(li,4) = rop(l,4)*cn + cnm*rof2(li,4)
-           rof2(li,5) = rop(l,5)*cn + cnm*rof2(li,5)
-           enddo
-         enddo
- 
+            rof2(li,5) = rop(l,5)*cn + cnm*rof2(li,5)
+#include "FastS/Compute/loopPlan_end.for"
       ELSE
-
-         do  j = ind_loop(3), ind_loop(4)
-          do  i = ind_loop(1), ind_loop(2)
-
-            l    = inddm( i, j, ind_loop(6) )
+         k = ind_loop(6)
+#include "FastS/Compute/loopPlanK_begin.for"
             li   = indbci(i,  j )
 
             rof2(li,1) = rop(l,1)*cn + cnm*rof2(li,1)
@@ -134,9 +120,7 @@ c  Var loc
             rof2(li,3) = rop(l,3)*cn + cnm*rof2(li,3)
             rof2(li,4) = rop(l,4)*cn + cnm*rof2(li,4)
             rof2(li,5) = rop(l,5)*cn + cnm*rof2(li,5)
-           enddo
-         enddo
-
+#include "FastS/Compute/loopPlan_end.for"
       ENDIF
 
       end

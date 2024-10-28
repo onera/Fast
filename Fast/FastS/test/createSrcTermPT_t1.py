@@ -18,6 +18,7 @@ a = G.cart((smin-2*h,smin-2*h,0.), (h,h,h), (npts+4,npts+4,2))
 t = C.newPyTree(['Base', a])
 I._initConst(t, MInf=mach, loc='centers')
 C._addState(t, 'GoverningEquations', 'Euler')
+C._addState(t, 'EquationDimension', 2)
 C._addState(t, adim='dim3', UInf=0.1, PInf=101103., RoInf=1.2, LInf=1., alphaZ=0., alphaY=0.)
 I._initConst(t, loc='centers')
 staref = C.getState(t)
@@ -49,8 +50,6 @@ C._addBC2Zone(t, 'period', 'BCautoperiod', 'imin')
 C._addBC2Zone(t, 'period', 'BCautoperiod', 'imax')
 C._addBC2Zone(t, 'period', 'BCautoperiod', 'jmin')
 C._addBC2Zone(t, 'period', 'BCautoperiod', 'jmax')
-C._addBC2Zone(t, 'period', 'BCautoperiod', 'kmin')
-C._addBC2Zone(t, 'period', 'BCautoperiod', 'kmax')
 
 C._initVars(t,'{centers:r2}=({centers:CoordinateX}-%g)**2+({centers:CoordinateY}-%g)**2+({centers:CoordinateZ}-%g)**2'%(x0,y0,z0))
 
@@ -81,6 +80,7 @@ for it in range(nit):
         C._initVars(t,'{centers:MomentumY_src}=0.')
         C._initVars(t,'{centers:MomentumZ_src}=0.')
         C._initVars(t,'{centers:EnergyStagnationDensity_src}={centers:Temperature}*{centers:Density_src}*%g'%gam3)
+
     FastS._compute(t, metrics, it)
     temps += timeStep
 
