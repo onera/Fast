@@ -11,17 +11,17 @@ C. ... Non-linear equation for the normal velocity => Newton
 C ...  Implementation elsA 
         vni  = ui*tnx + vi*tny + wi*tnz
         
-        roc0(lit) = SQRT(ro0*gam*p0) ! rho*c
+        roc0 = SQRT(ro0*gam*p0) ! rho*c
         
         !sans dimension: produit scalaire direction vitesse . normale
-        usd0n(lit)  = 1./(d0x(li)*tnx + d0y(li)*tny + d0z(li)*tnz)
-        usd0n2(lit) = usd0n(lit)**2
+        usd0n  = 1./(d0x(li)*tnx + d0y(li)*tny + d0z(li)*tnz)
+        usd0n2 = usd0n**2
         
 C ...   Inner caracteristic variable
 C ...   Relative normal velocity        
         wni       = vni - qen
-        ri(lit)   = pi + roc0(lit)*wni
+        ri   = pi + roc0*wni
         
 C ...   Newton Initialization for the relative normal velocity 
         wn0       = u0*tnx + v0*tny + w0*tnz  - qen       
-        wng(lit)  = wn0
+        wng  = wn0

@@ -27,14 +27,13 @@ c     as linearization state
         qref3 =.5*(rve+rvi)
         qref4 =.5*(rwe+rwi)
         qref5 =.5*(ete+eti)
-c     
-        
+
         r     = qref1
         ri    = 1./r
         u     = qref2*ri
         v     = qref3*ri
         w     = qref4*ri
-        p     = gamm1*(qref5-.5*r*(u*u+v*v+w*w))
+        p     = gam1*(qref5-.5*r*(u*u+v*v+w*w))
         c     = sqrt(param_real(GAMMA)*p*ri)
         ci    = 1./c
         s_1   = 1./sn
@@ -80,7 +79,7 @@ c
         svar2=(qvar2-u*qvar1)*ri
         svar3=(qvar3-v*qvar1)*ri
         svar4=(qvar4-w*qvar1)*ri
-        svar5=gamm1*( .5*(u*u+v*v+w*w)*qvar1
+        svar5=gam1*( .5*(u*u+v*v+w*w)*qvar1
      &               - u*qvar2-v*qvar3-w*qvar4
      &               + qvar5 )
 
@@ -110,7 +109,7 @@ c
         svar2=(qvar2-u*qvar1)*ri
         svar3=(qvar3-v*qvar1)*ri
         svar4=(qvar4-w*qvar1)*ri
-        svar5=gamm1*( .5*(u*u+v*v+w*w)*qvar1
+        svar5=gam1*( .5*(u*u+v*v+w*w)*qvar1
      .       - u*qvar2-v*qvar3-w*qvar4+qvar5 )
 c
         rvar1= svar1-ci**2*svar5
@@ -150,16 +149,5 @@ c
         svar5= r*c*(rvar4+rvar5)
 c
         qvar5=.5*(u*u+v*v+w*w)*svar1    + r*(u*svar2+v*svar3+w*svar4)
-     &                                  +gamm1_1*svar5
-
-        !roinv = 1./svar1
-        !u  = u + r*svar2*roinv
-        !v  = v + r*svar3*roinv
-        !w  = w + r*svar4*roinv
-
-        !rop(l,1) =  svar1
-        !rop(l,2) =  u 
-        !rop(l,3) =  v 
-        !rop(l,4) =  w 
-        !rop(l,5) =  (qvar5*roinv - .5*(u*u+v*v+w*w))*cvinv
+     &                                  +gam1_1*svar5
 

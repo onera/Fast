@@ -15,7 +15,7 @@
 
       roinv   = 1./rop(l,1)
 
-      if(qn*snorm.lt.0) then 
+      if(qn.lt.0) then 
         rop(l,2)= rop(l1,2) - qn/(sn*sn)*tcx
         rop(l,3)= rop(l1,3) - qn/(sn*sn)*tcy
         rop(l,4)= rop(l1,4) - qn/(sn*sn)*tcz

@@ -62,24 +62,35 @@ c***********************************************************************
 C var loc
       INTEGER_E im,jm,km,ijkm,l,l0,iadrf,m,i,j,k,lj,ic,jc,kc,
      & kc_vent,v1,v2,v3,v4,v5,v6,vmtr,vven,shift,shiftvent,
-     & lt,lven,lij,ltij,lvij,iter,sampling,
-     & exchange, nitcfg, ilaw,mvent,lx,lr
+     & lt,lven,lij,ltij,lvij,iter,sampling,lvo,
+     & exchange, nitcfg, ilaw,mvent,lx,lr,lwall,ldjr, ltg
 
       REAL_E p,r,u,v,w,qen,ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,
-     & ck_mtr_vent, u_int,sens,rgp,flu1,flu2,flu3,flu4,flu5,flu6,
+     & ck_mtr_vent, u_int,sens,flu1,flu2,flu3,flu4,flu5,flu6,
      & nx, ny,nz,utau2,seuil,mobile_coef,ventx,venty,ventz,unorm1,
      & tcx,tcy,tcz,dist,utau,unorm,surf,aa,yplus,l1,l2,l3,f,tp,fp,tauw,
      & ut,vt,wt,Twall,uplus,pr,prtur,ratio,dt,pf,Tplus,qwall,cp,cond,
      & wall_ut,wall_vt,wall_wt,wall_int,co,si,rot1,rot2,ra,un,vn,wn,
-     & umod, fv, fv5
+     & umod, fv, fv5,cv1,tol, c1,c2,mu_w,t1,rho_w,
+     & gam,gam1,gam3,gam4,rgp,dtdn, xmulam, xmutot, xmutur, xktvol,
+     & expy,nutcible,nu,a,b,q,ap,bp,dp,delta,delta0,delta1,
+     & y1,y2,z1,p1,p2,kappa,superdelta,root,b0,cmus1,temp01,coesut
  
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_xyz_param.h"
 #include "FastS/formule_vent_param.h"
 
+      !-----Variables physiques
+      gam    = param_real( GAMMA )
+      rgp    = param_real( CVINF )*(gam-1.)  !Cv(gama-1)= R (gas parfait)
+      gam1   = gam/(gam-1.)
+      gam3    = gam1/ param_real( PRANDT )*rgp
+      gam4    = gam1/ param_real( PRANDT_TUR )*rgp
 
-      rgp    = param_real( CVINF )*(param_real( GAMMA )-1.)  !Cv(gama-1)= R (gas parfait)
+      cmus1  =    param_real( CS )
+      temp01 = 1./param_real( TEMP0 )
+      coesut =    param_real( XMUL0 ) * (1.+cmus1*temp01)*sqrt(temp01)
 
       v1 = 0
       v2 =   param_int(NDIMDX)
@@ -108,6 +119,19 @@ C var loc
       shift =incijk*shift
       shiftvent = param_int(NIJK_VENT + idir/2)* exchange
 
+      if(idir.eq.1) then
+        lwall = ind_loop(2)+1
+      elseif(idir.eq.2) then
+        lwall = ind_loop(1)-1
+      elseif(idir.eq.3) then
+        lwall = ind_loop(4)+1
+      elseif(idir.eq.4) then
+        lwall = ind_loop(3)-1
+      elseif(idir.eq.5) then
+        lwall = ind_loop(6)+1
+      else
+        lwall = ind_loop(5)-1
+      endif
 
       exchange =incijk*exchange
 
@@ -133,12 +157,8 @@ C var loc
 
         if (ilaw.eq.0) then  !musker
 
-           DO k = ind_loop(5), ind_loop(6)
-           DO j = ind_loop(3), ind_loop(4)
-           DO i = ind_loop(1), ind_loop(2)
+#include "FastS/Compute/loop_ijk_begin.for" 
 
-            l     = inddm(  i, j, k)
-            lt    = indmtr( i, j, k)
             lven  = indven( i, j, k)
 
             iadrf = l  - incijk
@@ -146,117 +166,7 @@ C var loc
             m     = l  - exchange
             mvent = lven  - shiftvent
 
-            tcx = tijk(lt +vmtr*ic)*ci_mtr !surface normal x
-            tcy = tijk(lt +vmtr*jc)*cj_mtr !surface normal y
-            tcz = tijk(lt +vmtr*kc)*ck_mtr !surface normal z
-
-            surf = sqrt(tcx*tcx+tcy*tcy+tcz*tcz) ! magnitude of surface normal
-            surf = max(surf,1e-30)
-
-            nx = tcx/surf ! normalized surface normal x
-            ny = tcy/surf ! normalized surface normal y
-            nz = tcz/surf ! normalized surface normal z
-
-            ventx= ventijk(lven              )*c_ale*mobile_coef          ! rotational/translational velocity
-            venty= ventijk(lven +vven        )*c_ale*mobile_coef          ! rotational/translational velocity 
-            ventz= ventijk(lven +vven*kc_vent)*ck_vent*c_ale*mobile_coef  ! rotational/translational velocity       
-
-          qen =(  ventijk(lven              )*tcx
-     &           +ventijk(lven +vven        )*tcy
-     &           +ventijk(lven +vven*kc_vent)*tcz*ck_vent
-     &         )*c_ale     ! vent (dot) surface normal
-
-            ! Calculate tangential velocity and its norm
-            u = rop(m+v2) 
-            v = rop(m+v3) 
-            w = rop(m+v4) 
-
-            u_int = nx*u + ny*v + nz*w ! normal velocity
-
-            un = u_int*nx ! wall normal velocity x
-            vn = u_int*ny ! wall normal velocity y
-            wn = u_int*nz ! wall normal velocity z
-
-            wall_int = nx*ventx + ny*venty + nz*ventz ! normal rotational/translationvelocity
-
-            wall_ut = ventx-wall_int*nx
-            wall_vt = venty-wall_int*ny
-            wall_wt = ventz-wall_int*nz
-
-            !Modif Ivan
-            ut = u-u_int*nx - wall_ut ! wall tangential (relative) velocity x
-            vt = v-u_int*ny - wall_vt ! wall tangential (relative) velocity y
-            wt = w-u_int*nz - wall_wt ! wall tangential (relative) velocity z
-
-            unorm = sqrt(ut*ut+vt*vt+wt*wt)
-
-            r     = 0.5*(rop(l+v1)+rop(iadrf+v1))
-
-            p =0.5*(rop(l+v5)*rop(l+v1)+rop(iadrf+v5)*rop(iadrf+v1))*rgp
-
-            dist = xmut(m+param_int(NDIMDX)) !wall distance
-
-            ! Wall function for the velocity proposed in
-            ! "Explicit expression for the smooth wall velocity
-            ! distribution in a turbulent boundary layer"
-            ! AIAA Journal. Musker (1979)
-
-            ! Initial prediction based on linear profile (u+=y+)
-            if(sampling.eq.1) then
-              utau = sqrt( (xmut(l)*unorm)/(rop(m+v1)*dist) ) 
-            else
-              utau=((unorm**7)*xmut(l)/(rop(m+v1)*dist)/(8.3**7))**0.125
-            endif
-
-            ! Newton method to determine utau using Musker's wall law
-            iter = 0 
-            !aa    = rop(m+v1)*dist/xmut(m)
-            aa    = rop(m+v1)*dist/xmut(l)
-            yplus = aa*utau
-            l1    = (yplus+10.6)**9.6
-            l2    = yplus*(yplus-8.15) + 86
-            l3    = (2*yplus-8.15)/16.7
-            f = 5.424*atan(l3) + log10(l1/(l2*l2)) - unorm/utau - 3.52
-
-            do while (abs(f).gt.1e-6.and.iter.le.50)
- 
-             iter = iter + 1
- 
-             !aa    = rop(m+v1)*dist/xmut(m)
-             aa    = rop(m+v1)*dist/xmut(l)
-             yplus = aa*utau
-             l1    = (yplus+10.6)**9.6
-             l2    = yplus*(yplus-8.15) + 86
-             l3    = (2*yplus-8.15)/16.7
- 
-             tp =aa*(9.6*((yplus + 10.6)**8.6)- l1/l2*( 4*yplus-16.30) )
- 
-             fp = 0.649580838323*aa/(1 + l3*l3 )  +  tp/(l1*2.302585093)
-     &        + unorm/(utau*utau)
- 
-             !blinder fp
-             utau = abs(utau - f/fp)
-
-             !aa    = rop(m+v1)*dist/xmut(m)
-             aa    = rop(m+v1)*dist/xmut(l)
-             yplus = aa*utau
-             l1    = (yplus+10.6)**9.6
-             l2    = yplus*(yplus-8.15) + 86
-             l3    = (2*yplus-8.15)/16.7
-
-             f = 5.424*atan(l3) + log10(l1/(l2*l2)) - unorm/utau - 3.52
-            end do
-
-            utau2 = utau**2
-            tauw = r*utau2
-
-            u     = 0.5*(rop(l+v2)+rop(iadrf+v2))
-            v     = 0.5*(rop(l+v3)+rop(iadrf+v3))
-            w     = 0.5*(rop(l+v4)+rop(iadrf+v4))
-
-            ! determination vitesse normale interface
-            ! relative for rotational/translational
-            u_int= tcx*u +tcy*v +tcz*w -qen 
+#include "FastS/BC/BFWALLMODEL.for"
 
             qwall = 0.
             flu1= 0.
@@ -274,18 +184,12 @@ C var loc
             flu5= p*qen  + fv5  - qwall*surf*sens
 
 #include  "FastS/Compute/assemble_drodm_corr.for"
-           enddo
-           enddo
-           enddo
+#include "FastS/Compute/loop_end.for"
 
         elseif(ilaw.eq.1) then !powerlaw
  
-           DO k = ind_loop(5), ind_loop(6)
-           DO j = ind_loop(3), ind_loop(4)
-           DO i = ind_loop(1), ind_loop(2)
+#include "FastS/Compute/loop_ijk_begin.for" 
 
-            l     = inddm(  i, j, k)
-            lt    = indmtr( i, j, k)
             lven  = indven( i, j, k)
 
             iadrf = l  - incijk
@@ -383,12 +287,79 @@ C var loc
             flu5= p*qen  + fv5  - qwall*surf*sens
 
 #include  "FastS/Compute/assemble_drodm_corr.for"
-           enddo
-           enddo
-           enddo
+#include "FastS/Compute/loop_end.for"
 
         endif
 
+      ELSE
+
+        ilaw = param_int(WM_FUNCTION)
+
+        if (ilaw.eq.0) then  !musker
+
+#include "FastS/Compute/loop_ijk_begin.for" 
+
+            lven  = indven( i, j, k)
+            
+            if(idir.le.2) then  !
+              ldjr  = inddm( lwall , j, k )
+            elseif(idir.le.4) then  !
+              ldjr  = inddm(  i, lwall , k )
+            else
+              ldjr  = inddm(  i, j, lwall )
+            endif
+
+            iadrf = l  - incijk
+            l0    = l  - shift
+            m     = l  - exchange
+            mvent = lven  - shiftvent
+
+
+#include "FastS/BC/BFWALLMODEL.for"
+ 
+c          if(j.eq.94.and.i.eq.1.and.k.eq.1) then
+c            write(*,*)'surf',unorm, utau
+c           endif 
+
+            dtdn= (rop(l+v5)-rop(iadrf+v5))*0.5/xmut(l +v2)
+
+            xmulam = sqrt(rop(l+v5))*rop(l+v5)
+     &              /(cmus1+rop(l+v5))
+            xmulam =sqrt(rop(iadrf +v5))*rop(iadrf+v5)
+     &              /(cmus1+rop(iadrf +v5)) 
+     &             + xmulam
+            xmulam = coesut*xmulam*0.5
+
+            xmutot = (xmut(l)+xmut(iadrf))*0.5
+            xmutur = xmutot - xmulam
+            xktvol = ( xmulam*gam3 + xmutur*gam4)
+
+            !!0.95 coef a optimiser en fonction coeff recouvrement Twall
+            !dans bvbs_wallmodel
+            qwall = dtdn*xktvol*1.35*sens
+            !qwall = dtdn*xktvol*1*sens
+            !qwall = 0 
+            flu1= 0.
+            fv  = - (tauw*ut/unorm)*surf*sens
+            flu2= tcx*p  + u_int*u*r + fv
+            fv5 = fv*u
+            fv  = - (tauw*vt/unorm)*surf*sens
+            flu3= tcy*p  + u_int*v*r + fv
+            fv5 = fv5 + fv*v
+            fv  = - (tauw*wt/unorm)*surf*sens
+            flu4= tcz*p  + u_int*w*r + fv
+            fv5 = fv5*0. + fv*w*0.
+            flu5= p*qen  + fv5  - qwall*surf*sens
+
+#include  "FastS/Compute/assemble_drodm_corr.for"
+
+c            if(i.eq.110)write(*,*)'fluCorr',flu5, drodm(l0 +v5)
+
+#include "FastS/Compute/loop_end.for"
+
+        elseif(ilaw.eq.1) then !powerlaw
+          if(ithread.eq.1) write(*,*)'WARN: powerlaw pas codee' 
+        endif
 
       ENDIF
 
