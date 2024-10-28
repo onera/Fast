@@ -168,7 +168,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       c1     = 0.02*uref         ! modif suite chant metrique et suppression tc dans flux final
       c2     = 0.02/(uref*roref) ! modif suite chant metrique et suppression tc dans flux final
       c3     = -2.
-      opt0   = param_int(SENSORTYPE)
+      opt0   = float(param_int(SENSORTYPE))
 
       !    roff MUSCL
       c6     = 1./6.
@@ -377,10 +377,10 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
         inc_x1 = 1                                         !(i+1,j  , k)
         inc_x2 = param_int(NIJK_XYZ)                       !(i  ,j+1, k)
         inc_x3 = inc_x1 + inc_x2
-        DO k = ind_loop(5), ind_loop(6)
-         DO j = ind_loop(3), ind_loop(4)
+        DO k = ind_loop(5), ind_loop(6)                   !3D only
+         DO j = ind_loop(3), ind_loop(4)                  !3D only
 
-#include  "FastS/Compute/loopI_eff_begin.for"
+#include  "FastS/Compute/loopI_eff_begin.for"             !3D only
 
 #include    "FastS/Compute/FLUX_CONV/fluFaceEuler_k.for"  !3D only
 #include    "FastS/Compute/FLUX_CONV/fluFaceRans_k.for"   !3D only
@@ -388,54 +388,54 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 #include    "FastS/Compute/fluViscRans_k.for"             !3D only
 
 
-             flu(lf         )=flu1*sens1
-             flu(lf+v2flu   )=(flu2-param_real(PINF)*tcx*flagi)*sens
-             flu(lf+v2flu*2 )=(flu3-param_real(PINF)*tcy*flagj)*sens
-             flu(lf+v2flu*3 )=(flu4-param_real(PINF)*tcz      )*sens 
-             flu(lf+v2flu*4 )=flu5*sens
+             flu(lf         )=flu1*sens1                   !3D only
+             flu(lf+v2flu   )=(flu2-param_real(PINF)*tcx*flagi)*sens  !3D only
+             flu(lf+v2flu*2 )=(flu3-param_real(PINF)*tcy*flagj)*sens  !3D only
+             flu(lf+v2flu*3 )=(flu4-param_real(PINF)*tcz      )*sens  !3D only
+             flu(lf+v2flu*4 )=flu5*sens                               !3D only
 
-             flu(lf+v2flu*5 )= gradU_nx*2.*volinv 
-             flu(lf+v2flu*6 )= gradU_ny*2.*volinv 
+             flu(lf+v2flu*5 )= gradU_nx*2.*volinv      !3D only
+             flu(lf+v2flu*6 )= gradU_ny*2.*volinv      !3D only
              flu(lf+v2flu*7 )= gradU_nz*2.*volinv      !3D only
-             flu(lf+v2flu*8 )= gradV_nx*2.*volinv 
-             flu(lf+v2flu*9 )= gradV_ny*2.*volinv 
+             flu(lf+v2flu*8 )= gradV_nx*2.*volinv      !3D only
+             flu(lf+v2flu*9 )= gradV_ny*2.*volinv      !3D only
              flu(lf+v2flu*10)= gradV_nz*2.*volinv      !3D only
              flu(lf+v2flu*11)= gradW_nx*2.*volinv      !3D only
              flu(lf+v2flu*12)= gradW_ny*2.*volinv      !3D only
              flu(lf+v2flu*13)= gradW_nz*2.*volinv      !3D only
-             flu(lf+v2flu*14)= gradT_nx*2.*volinv 
-             flu(lf+v2flu*15)= gradT_ny*2.*volinv 
+             flu(lf+v2flu*14)= gradT_nx*2.*volinv      !3D only
+             flu(lf+v2flu*15)= gradT_ny*2.*volinv      !3D only
              flu(lf+v2flu*16)= gradT_nz*2.*volinv      !3D only
-             flu(lf+v2flu*17)= (0.5*(p1+p2)-param_real(PINF))*norm
-             flu(lf+v2flu*18)= 0.5*(xmut(ir)+xmut(il))
-             flu(lf+v2flu*19)= 0.5*(qm1+qp1)
-             flu(lf+v2flu*20)= 0.5*(p1+p2)
+             flu(lf+v2flu*17)= (0.5*(p1+p2)-param_real(PINF))*norm  !3D only
+             flu(lf+v2flu*18)= 0.5*(xmut(ir)+xmut(il)) !3D only
+             flu(lf+v2flu*19)= 0.5*(qm1+qp1)           !3D only
+             flu(lf+v2flu*20)= 0.5*(p1+p2)             !3D only
 
-             f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
-             f5 =0.25*(y(lx)+ y(lx+inc_x1)+ y(lx+inc_x2)+ y(lx+inc_x3))
-             f6 =0.25*(z(lx)+ z(lx+inc_x1)+ z(lx+inc_x2)+ z(lx+inc_x3))
+             f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3)) !3D only
+             f5 =0.25*(y(lx)+ y(lx+inc_x1)+ y(lx+inc_x2)+ y(lx+inc_x3)) !3D only
+             f6 =0.25*(z(lx)+ z(lx+inc_x1)+ z(lx+inc_x2)+ z(lx+inc_x3)) !3D only
 
-             f1=flu(lf+v2flu*3)*(f5-pos(2)) -flu(lf+v2flu*2)*(f6-pos(3))
-             f2=flu(lf+v2flu  )*(f6-pos(3)) -flu(lf+v2flu*3)*(f4-pos(1))
-             f3=flu(lf+v2flu*2)*(f4-pos(1)) -flu(lf+v2flu  )*(f5-pos(2))
+             f1=flu(lf+v2flu*3)*(f5-pos(2)) -flu(lf+v2flu*2)*(f6-pos(3))!3D only
+             f2=flu(lf+v2flu  )*(f6-pos(3)) -flu(lf+v2flu*3)*(f4-pos(1))!3D only
+             f3=flu(lf+v2flu*2)*(f4-pos(1)) -flu(lf+v2flu  )*(f5-pos(2))!3D only
 
-             effort(1) = effort(1) + flu(lf+v2flu  )
-             effort(2) = effort(2) + flu(lf+v2flu*2)
-             effort(3) = effort(3) + flu(lf+v2flu*3)
-             effort(4) = effort(4) + f1
-             effort(5) = effort(5) + f2
-             effort(6) = effort(6) + f3
-             effort(7) = effort(7) + sk
-             effort(8) = effort(8) + flu(lf)
-             effort(9) = effort(9)   + flu2*sens1
-             effort(10) = effort(10) + flu3*sens1
-             effort(11) = effort(11) + flu4*sens1
-             effort(12) = effort(12) + flu5*sens1
-           enddo
+             effort(1) = effort(1) + flu(lf+v2flu  )  !3D only
+             effort(2) = effort(2) + flu(lf+v2flu*2)  !3D only
+             effort(3) = effort(3) + flu(lf+v2flu*3)  !3D only
+             effort(4) = effort(4) + f1               !3D only
+             effort(5) = effort(5) + f2               !3D only
+             effort(6) = effort(6) + f3               !3D only
+             effort(7) = effort(7) + sk               !3D only 
+             effort(8) = effort(8) + flu(lf)          !3D only
+             effort(9) = effort(9)   + flu2*sens1     !3D only
+             effort(10) = effort(10) + flu3*sens1     !3D only
+             effort(11) = effort(11) + flu4*sens1     !3D only 
+             effort(12) = effort(12) + flu5*sens1     !3D only
+           enddo                                      !3D only
 
-         ENDDO
-        ENDDO
-                
+         ENDDO                                        !3D only
+        ENDDO                                         !3D only
+                 
       Endif
       end
 
