@@ -2076,7 +2076,6 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbo
 
     neq_max = 6
 
-    cvg_numpy = numpy.empty((nzones,4*neq_max), dtype=numpy.float64)
     # sortie sur stdout "simple precision"
     lft = 1
     # sortie sur stdout "double precision"
@@ -2090,7 +2089,7 @@ def display_temporal_criteria(t, metrics, nitrun, format=None, gmres=None, verbo
 
     iverb = 0
     if verbose != 'firstlast': iverb=2
-    residu = fasts.display_ss_iteration(zones, metrics, cvg_numpy, nitrun, nssiter, lft, iverb)
+    residu = fasts.display_ss_iteration(zones, metrics, nitrun, nssiter, lft, iverb)
 
     if stopAtNan:
         finite = Cmpi.isFinite(t, var='centers:Density')

@@ -32,9 +32,9 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
   E_Int nitrun; E_Int lft; E_Int nssiter;  E_Int iverb;
 
 #if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOOllll", &zones, &metrics, &cvg_numpy, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOllll", &zones, &metrics, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
 #else 
-  if (!PyArg_ParseTuple(args, "OOOiiii", &zones, &metrics, &cvg_numpy, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
+  if (!PyArg_ParseTuple(args, "OOiiii", &zones, &metrics, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
 #endif
   
   // tableau residu Newton de la zone
@@ -50,6 +50,7 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
   iptrdm          = new  E_Float*[2*nidom];
   ipt_param_real  = iptrdm    + nidom;
 
+  FldArrayF cvg(neq_max*4*nidom); E_Float* ipt_cvg = cvg.begin(); 
   vector<PyArrayObject*> hook;
 
   E_Float resLi[2]; resLi[0]=0.; resLi[1]=-1.e15; 
@@ -68,12 +69,15 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
 
     E_Int neq = ipt_param_int[nd][ NEQ ];
  
+    E_Float* cvg_zone = ipt_cvg + 4*neq*nd;
 
-    E_Float* cvg_ptr; E_Int cvg_size; E_Int cvg_nfld;
-    K_NUMPY::getFromNumpyArray(cvg_numpy, cvg_ptr, cvg_size, cvg_nfld, true); 
+    //E_Float* cvg_ptr; E_Int cvg_size; E_Int cvg_nfld;
+    //K_NUMPY::getFromNumpyArray(cvg_numpy, cvg_ptr, cvg_size, cvg_nfld, true); 
  
+    //printf(" cvg_size %d %d \n",cvg_size,cvg_nfld);
+
     if (lft >= 0)
-	  {
+         {
 	    PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
 
 	    // get metric
@@ -99,57 +103,56 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
 
 	    PyObject* t2 = K_PYTREE::getNodeFromName1(numerics, "CFL_minmaxmoy");
 	    if (t2 != NULL) 
-      { 
-        E_Float* cfl = K_PYTREE::getValueAF(t2, hook);
+            { 
+              E_Float* cfl = K_PYTREE::getValueAF(t2, hook);
 	      if (lft < 3) printf("CFL_MOY_MAX_MIN(Zone= %32.32s, nitrun=%d) %f    %f    %f \n", name, nitrun, cfl[2], cfl[0],cfl[1]); 
 	    }
 
-      //if(ipt_param_int[nd][ ITYPCP ] <= 2)
 	    if (ipt_param_int[nd][ ITYPCP ] <= 1 || (ipt_param_int[nd][ ITYPCP ] == 2 && ipt_param_int[nd][ DTLOC ]==1))
 	    {
 	      if (it_bloc_loc*neq > niter_max*neq_max) printf("Display manometre: tableau trop petit");
 
 	      //assemblage norme Loo et L2
 	      for (E_Int ne= 0; ne < neq; ne++)
-		    { 
-          for (E_Int i= 0; i < it_bloc_loc; i++)
-		      {
-		        E_Float rmax= 0.;
-		        E_Float rmoy= 0.;
-		        E_Int no_rdm;
+		{ 
+                 for (E_Int i= 0; i < it_bloc_loc; i++)
+		   {
+		      E_Float rmax= 0.;
+		      E_Float rmoy= 0.;
+		      E_Int no_rdm;
             
-		        for (E_Int k_lu= 0; k_lu < ijkv_lu[2]; k_lu++) 
-            {
-			        for (E_Int j_lu= 0; j_lu < ijkv_lu[1]; j_lu++) 
-              {
-			          for (E_Int i_lu= 0; i_lu < ijkv_lu[0]; i_lu++) 
-                {
-			            no_rdm = i_lu + j_lu*ijkv_lu[0] + k_lu*ijkv_lu[0]*ijkv_lu[1];
+		      for (E_Int k_lu= 0; k_lu < ijkv_lu[2]; k_lu++) 
+                        {
+		         for (E_Int j_lu= 0; j_lu < ijkv_lu[1]; j_lu++) 
+                           {
+			    for (E_Int i_lu= 0; i_lu < ijkv_lu[0]; i_lu++) 
+                              {
+			       no_rdm = i_lu + j_lu*ijkv_lu[0] + k_lu*ijkv_lu[0]*ijkv_lu[1];
 
-			            E_Int ind1   = i +       ne*nssiter +  no_rdm*neq*2*nssiter;
-			            E_Int ind2   = i + (ne+neq)*nssiter +  no_rdm*neq*2*nssiter;
+                               E_Int ind1   = i +       ne*nssiter +  no_rdm*neq*2*nssiter;
+			       E_Int ind2   = i + (ne+neq)*nssiter +  no_rdm*neq*2*nssiter;
 
-			            rmax   = max(rmax, iptrdm[nd][ind2] ); 
-			            rmoy   =    rmoy + iptrdm[nd][ind1];
-			          }
-			        }
+			       rmax   = max(rmax, iptrdm[nd][ind2] ); 
+			       rmoy   =    rmoy + iptrdm[nd][ind1];
+			      }
+			   }
 		        }
               
-		        E_Int ind1 =  it_bloc_loc*ne       + i;
-		        E_Int ind2 =  it_bloc_loc*(ne+neq) + i;
+		      E_Int ind1 =  it_bloc_loc*ne       + i;
+		      E_Int ind2 =  it_bloc_loc*(ne+neq) + i;
 
-		        rdm_glob[ind1] = sqrt(rmoy*xpt_1)/ipt_param_real[nd][ DTC ];
-		        rdm_glob[ind2] = rmax/ipt_param_real[nd][ DTC ];
+		      rdm_glob[ind1] = sqrt(rmoy*xpt_1)/ipt_param_real[nd][ DTC ];
+		      rdm_glob[ind2] = rmax/ipt_param_real[nd][ DTC ];
 
-		        resLi[0] += rdm_glob[ind1];
-		        if (rdm_glob[ind2] > resLi[1]) resLi[1] =  rdm_glob[ind2];
-		      } //iteration
-		    }   // neq
+		      resLi[0] += rdm_glob[ind1];
+		      if (rdm_glob[ind2] > resLi[1]) resLi[1] =  rdm_glob[ind2];
+		   } //iteration
+		 }   // neq
 
 
-	      dpssiter_(nitrun, neq,it_bloc_loc, ipt_param_int[nd][ IFLOW ], ipt_param_int[nd][ ILES ], lft, iverb, name, size_name, iptrdm_glob, cvg_ptr+4*neq*nd);
+	      dpssiter_(nitrun, neq,it_bloc_loc, nssiter, ipt_param_int[nd][ IFLOW ], ipt_param_int[nd][ ILES ], lft, iverb, name, size_name, iptrdm_glob, cvg_zone );
 	    } // if zone implicit ou explicit+pdtloc
-	  } // if lft > 0
+         } // if lft > 0
 
 
     /* Convergence History from zone */
@@ -174,7 +177,7 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
       ipt_Res_oo_diff =  K_PYTREE::getValueAF(Res_oo_diff, hook) ;
 
       //printf("display_ss_iteration : lft= %d nrec= %d\n",lft,nrec); fflush(stdout) ;
-      conv2pytree_(cvg_ptr+4*neq*nd, nitrun, neq, ipt_LastRec, name, size_name, lft, nrec, nd,ipt_Itnum, ipt_Res_L2, ipt_Res_oo,ipt_Res_L2_diff, ipt_Res_oo_diff);
+      conv2pytree_(cvg_zone, nitrun, neq, ipt_LastRec, name, size_name, lft, nrec, nd,ipt_Itnum, ipt_Res_L2, ipt_Res_oo,ipt_Res_L2_diff, ipt_Res_oo_diff);
     }  
   }// loop zone
   

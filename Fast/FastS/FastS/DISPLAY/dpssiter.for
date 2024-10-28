@@ -3,8 +3,9 @@ c     $Date: 2014-03-19 20:08:08 +0100 (mer. 19 mars 2014) $
 c     $Revision: 59 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine dpssiter(nitrun, neq, nssiter_loc, iflw, iles, lft,
-     &   iverb, zone_name, size_name, rdm, cvg_ptr)
+      subroutine dpssiter(nitrun, neq, nssiter_loc, nssiter, 
+     &                    iflw, iles, lft,
+     &                    iverb, zone_name, size_name, rdm, cvg_ptr)
 c***********************************************************************
 c_U   USER : PECHIER
 c
@@ -22,13 +23,15 @@ c UTILISATION
 c                    display ss_iteration +ndoms
 c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       implicit none
-      INTEGER_E nitrun, neq,nssiter_loc,lft,iles,iflw,size_name,iverb
+      INTEGER_E nitrun, neq, nssiter_loc, nssiter, 
+     & lft,iles,iflw,size_name,iverb
       REAL_E rdm(nssiter_loc,neq,2), cvg_ptr(4*neq)
 
       character(len=size_name) zone_name 
 c Var loc
       INTEGER_E ndm,i,ne,last_it,iverbs_loc,it_reelle(nssiter_loc),
      &     nitcfg,ndsdm,i_loc,itest,ii,ipass,inds
+      INTEGER_E iskip_lu(nssiter,2)
       REAL_E xro,xrou,xrov,xrow,xroe,xro1,xrou1,xrov1,xrow1,xroe1,
      &     xnut,xnut1,test,test1, cut0x
       cut0x = 1.e-30
@@ -46,24 +49,28 @@ c-----Boucle sur les domaines :
          if (rdm(last_it,ii,2).gt.rdm(1,ii,2)) iverbs_loc = 2
       enddo
 
-c        i_loc = 1
-c        do ii = 1, Niter_max - 1
+        call skip_lu(nssiter-1, nssiter, iskip_lu )
+
+        i_loc = 1
+        do ii = 1, nssiter - 1
+            it_reelle(ii)=-1
 c
-c            itest = iskip_lu(Niter_max - 1, ii) + 3
-cc         
-c            if(itest.le. last_it - 1 ) then
+            itest = iskip_lu(ii, 2) + 3
+cc          
+           
+            if(itest.le. last_it - 1 ) then
 cc 
-c              it_reelle(i_loc) = ii
-c              i_loc            = i_loc + 1
-c            endif
-c        enddo
-c        it_reelle(last_it) = Niter_max
+              it_reelle(i_loc) = ii
+              i_loc            = i_loc + 1
+            endif
+        enddo
+        it_reelle(last_it) = nssiter
 
       if(lft.lt.3)then
       do 2 i=1,last_it
          
-            nitcfg = i
-              !nitcfg = it_reelle(i)
+            !nitcfg = i
+              nitcfg = it_reelle(i)
 
                !souci procedure merge sous-bloc LU
 c               if(nidom_loc(nitcfg).lt.1) 
@@ -93,24 +100,28 @@ c          !Norme Loo
                 xnut  = LOG10(max(rdm(i,6,1),cut0x)) !Norme L2
                 xnut1 = LOG10(max(rdm(i,6,2),cut0x)) !Norme Loo
                 if(lft.eq.0) then
-                 write(*,3011)zone_name,i,xro,xrou,xrov,xrow,xroe,xnut
-c     &                       ,it_reelle(i)
-                 write(*,4011)zone_name,i,xro1,xrou1,xrov1,xrow1,xroe1,
-     &                        xnut1!, it_reelle(i)
+                 write(*,3011)zone_name,it_reelle(i), i,
+     &                        xro,xrou,xrov,xrow,xroe,xnut
+                 write(*,4011)zone_name,it_reelle(i), i,
+     &                        xro1,xrou1,xrov1,xrow1,xroe1, xnut1
                 else
-                 write(*,3311)zone_name,i,xro,xrou,xrov,xrow,xroe ,xnut
-c     &                       ,it_reelle(i)
-                 write(*,4311)zone_name,i,xro1,xrou1,xrov1,xrow1,xroe1,
-     &                        xnut1!, it_reelle(i)
+                 write(*,3311)zone_name,it_reelle(i), i,
+     &                         xro,xrou,xrov,xrow,xroe ,xnut
+                 write(*,4311)zone_name,it_reelle(i), i,
+     &                        xro1,xrou1,xrov1,xrow1,xroe1,xnut1
                 endif
               else
 
                if(lft.eq.0) then
-                write(*,3010)zone_name,i, xro ,xrou ,xrov ,xrow ,xroe 
-                write(*,4010)zone_name,i, xro1,xrou1,xrov1,xrow1,xroe1
+                write(*,3010)zone_name,it_reelle(i),i,
+     &                       xro ,xrou ,xrov ,xrow ,xroe 
+                write(*,4010)zone_name,it_reelle(i),i,
+     &                       xro1,xrou1,xrov1,xrow1,xroe1
                else
-                write(*,3310)zone_name,i, xro ,xrou ,xrov ,xrow ,xroe 
-                write(*,4310)zone_name,i, xro1,xrou1,xrov1,xrow1,xroe1
+                write(*,3310)zone_name,it_reelle(i),i,
+     &                       xro ,xrou ,xrov ,xrow ,xroe 
+                write(*,4310)zone_name,it_reelle(i),i,
+     &                       xro1,xrou1,xrov1,xrow1,xroe1
                endif  !format
 
               endif!5/6 eq
@@ -207,9 +218,7 @@ C
             cvg_ptr(2*neq+ne) = LOG10(max(rdm(last_it,ne,1),cut0x))
      &                        - LOG10(max(rdm(      1,ne,1),cut0x)) 
             cvg_ptr(3*neq+ne) = LOG10(max(rdm(last_it,ne,2),cut0x))
-     &                        - LOG10(max(rdm(      1,ne,2),cut0x))         
- 
-
+     &                        - LOG10(max(rdm(      1,ne,2),cut0x))
       enddo
 C
 
@@ -218,14 +227,14 @@ C
 2000  format('  Zone  =',a,' / Ss-Iteration',i3)
 2001  format('  Zone  =',a,' / Diff SsI 1 -',i3)
 
-3010  format(' Res_L2 (zone=',a,', ssiter =   ',i3,')',5(2x,f14.9)) 
-4010  format(' Res_Loo(zone=',a,', ssiter =   ',i3,')',5(2x,f14.9))
-3011  format(' Res_L2 (zone=',a,', ssiter =   ',i3,')',6(2x,f14.9))
-4011  format(' Res_Loo(zone=',a,', ssiter =   ',i3,')',6(2x,f14.9))
-3310  format(' Res_L2 (zone=',a,', ssiter =   ',i3,')',5(2x,f7.2))
-4310  format(' Res_Loo(zone=',a,', ssiter =   ',i3,')',5(2x,f7.2))
-3311  format(' Res_L2 (zone=',a,', ssiter =   ',i3,')',6(2x,f7.2))
-4311  format(' Res_Loo(zone=',a,', ssiter =   ',i3,')',6(2x,f7.2))
+3010  format(' Res_L2 (zone=',a,', ssiter=',i3,' ',i3,')',5(2x,f14.9))
+4010  format(' Res_Loo(zone=',a,', ssiter=',i3,' ',i3,')',5(2x,f14.9))
+3011  format(' Res_L2 (zone=',a,', ssiter=',i3,' ',i3,')',6(2x,f14.9))
+4011  format(' Res_Loo(zone=',a,', ssiter=',i3,' ',i3,')',6(2x,f14.9))
+3310  format(' Res_L2 (zone=',a,', ssiter=',i3,' ',i3,')',5(2x,f7.2))
+4310  format(' Res_Loo(zone=',a,', ssiter=',i3,' ',i3,')',5(2x,f7.2))
+3311  format(' Res_L2 (zone=',a,', ssiter=',i3,' ',i3,')',6(2x,f7.2))
+4311  format(' Res_Loo(zone=',a,', ssiter=',i3,' ',i3,')',6(2x,f7.2))
 
 3020  format(' Res_L2 (zone=',a,', Diff Ssi 1-',i3,')',5(2x,f14.9))
 4020  format(' Res_Loo(zone=',a,', Diff Ssi 1-',i3,')',5(2x,f14.9))
