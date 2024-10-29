@@ -46,24 +46,9 @@ c Var loc
       if(ind_loop(3).gt.ind_loop(4)) return 
       if(ind_loop(5).gt.ind_loop(6)) return 
 
-#ifndef E_SCALAR_COMPUTER
-CDIR$ IVDEP
-!CDIR NODEP
-CVD$  NODEPCHK
-       do l=1,param_int(NDIMDX)
-#else
-       do k = ind_loop(5), ind_loop(6)
-       do j = ind_loop(3), ind_loop(4)
-#endif
 
-#include   "FastS/Compute/loopI_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
              xmut(l)= xmut(l) * corr_factor(l)
-#ifndef E_SCALAR_COMPUTER
-       enddo
-#else
-       enddo
-       enddo
-       enddo
-#endif
+#include   "FastC/HPC_LAYER/loop_end.for"
 
       end

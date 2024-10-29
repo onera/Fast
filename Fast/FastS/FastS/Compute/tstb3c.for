@@ -39,11 +39,12 @@ c***********************************************************************
       REAL_E  param_real(0:*)
 C Var loc
       INTEGER_E  inci_mtr,incj_mtr,inck_mtr,li,lj,lk,l,i,j,k,lij,
-     &   lt, ltij,lvij,lv,v2ven,v3ven,inci_ven, lvo
+     &   lt, ltij,lvij,lv,v2ven,v3ven,inci_ven, lvo, lx,lxij
       REAL_E tcxi,tcyi,tczi,tc2i,tcxj,tcyj,tczj,tc2j,tcxk,tcyk,tczk,
      & tc2k,vmu,volu,xmvis,r,u,v,w,c,xid,qni,vmi,cni,qnj,cnj,vmj,qnk,
      & cnk,vmk,ue,ve,we,gam1,gam2,detj, gamma, prandt,Cut0x,rgp,ck_vent
 
+#include "FastS/formule_xyz_param.h"
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_vent_param.h"
 #include "FastS/formule_param.h" 
@@ -76,7 +77,7 @@ C Var loc
          if(param_int(ITYPZONE).eq.0) then !domaine 3d general
 
 CDIR$ VECTOR NONTEMPORAL (coe)
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
                li = lt + inci_mtr
                lj = lt + incj_mtr
                lk = lt + inck_mtr
@@ -169,17 +170,17 @@ CDIR$ VECTOR NONTEMPORAL (coe)
                !Id+Partie convective precedente+Partie visqueuse
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
 
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
           if(param_int(SRC).eq.2) then
-#include     "FastS/Compute/loop_begin.for"
+#include     "FastC/HPC_LAYER/loop_begin.for"
                coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
-#include     "FastS/Compute/loop_end.for"
+#include     "FastC/HPC_LAYER/loop_end.for"
           endif
 
          elseif(param_int(ITYPZONE).eq.1) then !maillage 3d k homogene:
 
 CDIR$ VECTOR NONTEMPORAL (coe)
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
                li = lt + inci_mtr
                lj = lt + incj_mtr
                lk = lt + inck_mtr
@@ -252,11 +253,11 @@ CDIR$ VECTOR NONTEMPORAL (coe)
               !Evaluation de la diagonale princi_mtrpale scalaire (5*5) pour la cellule l
               !Id+Partie convective precedente+Partie visqueuse
               coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
           if(param_int(SRC).eq.2) then
-#include     "FastS/Compute/loop_begin.for"
+#include     "FastC/HPC_LAYER/loop_begin.for"
                coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
-#include     "FastS/Compute/loop_end.for"
+#include     "FastC/HPC_LAYER/loop_end.for"
           endif
 
          elseif(param_int(ITYPZONE).eq.2) then !maillage 3d cartesien:
@@ -271,22 +272,11 @@ CDIR$ VECTOR NONTEMPORAL (coe)
            tc2j = sqrt( tcyj*tcyj )
            tc2k = sqrt( tczk*tczk )
  
-           do k = ind_loop(5), ind_loop(6)
-           do j = ind_loop(3), ind_loop(4)
-
-            lij  = inddm(ind_loop(1) , j, k)
-
 CDIR$ VECTOR NONTEMPORAL (coe)
-CDIR$ IVDEP
-            do l = lij,  lij + ind_loop(2) - ind_loop(1)
+#include     "FastC/HPC_LAYER/loop3dcart_begin.for"
 
-#ifndef E_SCALAR_COMPUTER
-               r   = max(rop(l ,1),cut0x)
-               detj= max(vol(lvo),cut0x)
-#else
                r   = rop(l ,1)
                detj= max(vol(lvo),cut0x)
-#endif
                u=rop(l,2)
                v=rop(l,3)
                w=rop(l,4)
@@ -320,22 +310,18 @@ CDIR$ IVDEP
                !Id+Partie convective precedente+Partie visqueuse
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
 
-c               coe(l,5)= xid + coe(l,1)*( vmi + vmj + vmk 
-c     &                     + 2.*xmvis*(tc2i*tc2i+tc2j*tc2j+tc2k*tc2k))
+#include     "FastC/HPC_LAYER/loop_end.for"
 
-         enddo
-         enddo
-         enddo
           if(param_int(SRC).eq.2) then
-#include     "FastS/Compute/loop_begin.for"
+#include     "FastC/HPC_LAYER/loop_begin.for"
                coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
-#include     "FastS/Compute/loop_end.for"
+#include     "FastC/HPC_LAYER/loop_end.for"
           endif
 
          else !maillage fixe, 2d
 
 CDIR$ VECTOR NONTEMPORAL (coe)
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
                li = lt + inci_mtr
                lj = lt + incj_mtr
 
@@ -391,11 +377,11 @@ CDIR$ VECTOR NONTEMPORAL (coe)
                !Evaluation de la diagonale princi_mtrpale scalaire (5*5) pour la cellule l
                !Id+Partie convective precedente+Partie visqueuse
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3))*0.5
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
           if(param_int(SRC).eq.2) then
-#include     "FastS/Compute/loop_begin.for"
+#include     "FastC/HPC_LAYER/loop_begin.for"
                coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
-#include     "FastS/Compute/loop_end.for"
+#include     "FastC/HPC_LAYER/loop_end.for"
           endif
 
        endif !maillage fixe, 2d ou 3d ou 3d homogene
@@ -415,7 +401,7 @@ CDIR$ VECTOR NONTEMPORAL (coe)
          if(param_int(ITYPZONE).eq.0) then !domaine 3d general
 
 CDIR$ VECTOR NONTEMPORAL (coe)
-#include   "FastS/Compute/loop_ale_begin.for"
+#include   "FastC/HPC_LAYER/loop_ale_begin.for"
                li = lt + inci_mtr
                lj = lt + incj_mtr
                lk = lt + inck_mtr
@@ -506,17 +492,17 @@ CDIR$ VECTOR NONTEMPORAL (coe)
                !Evaluation de la diagonale princi_mtrpale scalaire (5*5) pour la cellule l
                !Id+Partie convective precedente+Partie visqueuse
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
           if(param_int(SRC).eq.2) then
-#include     "FastS/Compute/loop_begin.for"
+#include     "FastC/HPC_LAYER/loop_begin.for"
                coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
-#include     "FastS/Compute/loop_end.for"
+#include     "FastC/HPC_LAYER/loop_end.for"
           endif
 
          elseif(param_int(ITYPZONE).eq.1) then !maillage 3d k homogene:
 
 CDIR$ VECTOR NONTEMPORAL (coe)
-#include   "FastS/Compute/loop_ale_begin.for"
+#include   "FastC/HPC_LAYER/loop_ale_begin.for"
                li = lt + inci_mtr
                lj = lt + incj_mtr
                lk = lt + inck_mtr
@@ -594,11 +580,11 @@ CDIR$ VECTOR NONTEMPORAL (coe)
               !Evaluation de la diagonale princi_mtrpale scalaire (5*5) pour la cellule l
               !Id+Partie convective precedente+Partie visqueuse
               coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
           if(param_int(SRC).eq.2) then
-#include     "FastS/Compute/loop_begin.for"
+#include     "FastC/HPC_LAYER/loop_begin.for"
                coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
-#include     "FastS/Compute/loop_end.for"
+#include     "FastC/HPC_LAYER/loop_end.for"
           endif
 
          elseif(param_int(ITYPZONE).eq.2) then !maillage 3d cartesien:
@@ -613,16 +599,8 @@ CDIR$ VECTOR NONTEMPORAL (coe)
            tc2j = sqrt( tcyj*tcyj )
            tc2k = sqrt( tczk*tczk )
  
-           do k = ind_loop(5), ind_loop(6)
-           do j = ind_loop(3), ind_loop(4)
+#include     "FastC/HPC_LAYER/loop3dcart_ale_begin.for"
 
-            lij   =       inddm(ind_loop(1) , j, k)
-            lvij  = lij - indven(ind_loop(1) , j, k)
-
-CDIR$ IVDEP
-            do l = lij,  lij + ind_loop(2) - ind_loop(1)
-
-               lv = l-lvij
                !-Vitesse entrainement moyenne au centre de la cellule (maillage indeformable)
                ue=.5*(venti(lv      )+venti(lv+inci_ven      ))
                ve=.5*(venti(lv+v2ven)+venti(lv+inci_ven+v2ven))
@@ -667,21 +645,19 @@ CDIR$ IVDEP
                !Evaluation de la diagonale princi_mtrpale scalaire (5*5) pour la cellule l
                !Id+Partie convective precedente+Partie visqueuse
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3)+coe(l,4))*0.5
+#include     "FastC/HPC_LAYER/loop_end.for"
 
-              enddo
-             enddo
-             enddo
           if(param_int(SRC).eq.2) then
-#include     "FastS/Compute/loop_begin.for"
+#include     "FastC/HPC_LAYER/loop_begin.for"
                coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
-#include     "FastS/Compute/loop_end.for"
+#include     "FastC/HPC_LAYER/loop_end.for"
           endif
 
          else !maillage mobile, 2d
 
 
 CDIR$ VECTOR NONTEMPORAL (coe)
-#include   "FastS/Compute/loop_ale_begin.for"
+#include   "FastC/HPC_LAYER/loop_ale_begin.for"
                li = lt + inci_mtr
                lj = lt + incj_mtr
 
@@ -742,11 +718,11 @@ CDIR$ VECTOR NONTEMPORAL (coe)
                !Evaluation de la diagonale princi_mtrpale scalaire (5*5) pour la cellule l
                !Id+Partie convective precedente+Partie visqueuse
                coe(l,5)=xid + coe(l,1)*(coe(l,2)+coe(l,3))*0.5
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
           if(param_int(SRC).eq.2) then
-#include     "FastS/Compute/loop_begin.for"
+#include     "FastC/HPC_LAYER/loop_begin.for"
                coe(l,5)=coe(l,5) + ro_src(l,6)*param_real(NUDGING_EQ2)
-#include     "FastS/Compute/loop_end.for"
+#include     "FastC/HPC_LAYER/loop_end.for"
           endif
 
        endif!2d/3d/3d homogene
