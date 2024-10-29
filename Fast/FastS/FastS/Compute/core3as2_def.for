@@ -51,7 +51,7 @@ C Var loc
       IF(param_int(NEQ).eq.6) THEN
 
          if (param_int(ITYPZONE).ne.3) then
-#include  "FastS/Compute/loop_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             volinv  = 1./vol(lvo)
             drodm(l,1)= coe(l,1)*drodm(l,1) 
      &                     + c1*rop   (l,1)
@@ -95,11 +95,11 @@ C Var loc
      &                     + c1*rop   (l,6)*rop   (l,1)
      &                     + c2*rop_n (l,6)*rop_n (l,1)*voln(lvo)*volinv
      &                     + c3*rop_n1(l,6)*rop_n1(l,1)*volm(lvo)*volinv
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
         else !dom 2d
 
-#include  "FastS/Compute/loop_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             volinv  = 1./vol(lvo)
             drodm(l,1)= coe(l,1)*drodm(l,1) 
      &                     + c1*rop   (l,1)
@@ -133,14 +133,14 @@ C Var loc
      &                     + c1*rop   (l,6)*rop   (l,1)
      &                     + c2*rop_n (l,6)*rop_n (l,1)*voln(lvo)*volinv
      &                     + c3*rop_n1(l,6)*rop_n1(l,1)*volm(lvo)*volinv
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
         endif !2d/3d
       
       ELSE !neq=5
 
          if (param_int(ITYPZONE).ne.3) then
-#include  "FastS/Compute/loop_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             volinv  = 1./vol(lvo)
             drodm(l,1)= coe(l,1)*drodm(l,1) 
      &                     + c1*rop   (l,1)
@@ -178,10 +178,10 @@ C Var loc
      &                                  +rop_n1(l,4)*rop_n1(l,4)))
 
             drodm(l,5)= coe(l,1)*drodm(l,5)+ c1*roe +c2*roe_n +c3*roe_n1
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
         else !dom 2d
-#include  "FastS/Compute/loop_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             volinv  = 1./vol(lvo)
             drodm(l,1)= coe(l,1)*drodm(l,1) 
      &                     + c1*rop   (l,1)
@@ -210,7 +210,7 @@ C Var loc
      &                                  +rop_n1(l,3)*rop_n1(l,3)))
 
             drodm(l,5)= coe(l,1)*drodm(l,5)+ c1*roe +c2*roe_n +c3*roe_n1
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
         endif
 
       ENDIF!neq

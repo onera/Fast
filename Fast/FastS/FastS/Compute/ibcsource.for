@@ -58,9 +58,7 @@ C Var loc
 
       IF(param_int(NEQ).eq.5) THEN
 
-        do  k = ind_loop(5), ind_loop(6)
-          do  j = ind_loop(3), ind_loop(4)
-#include    "FastS/Compute/loopI_begin.for"
+#include "FastC/HPC_LAYER/loop_begin.for"
 
              rho  = rop(l + v1)
              vu   = rop(l + v2)
@@ -79,17 +77,11 @@ C Var loc
              drodm(l +v3) = drodm(l +v3)+ vv*ampli
              drodm(l +v4) = drodm(l +v4)+ vw*ampli
              drodm(l +v5) = drodm(l +v5)+  q*ampli
-             
-            enddo
-          enddo
-        enddo
+#include "FastC/HPC_LAYER/loop_end.for"
 
       ELSE
 
-        do  k = ind_loop(5), ind_loop(6)
-          do  j = ind_loop(3), ind_loop(4)
-#include    "FastS/Compute/loopI_begin.for"
-
+#include "FastC/HPC_LAYER/loop_begin.for"
              rho  = rop(l + v1)
              vu   = rop(l + v2)
              vv   = rop(l + v3)
@@ -108,11 +100,7 @@ C Var loc
              drodm(l +v4) = drodm(l +v4)+ vw*ampli
              drodm(l +v5) = drodm(l +v5)+  q*ampli
              drodm(l +v6) = drodm(l +v6)+ rop(l + v6)*ampli
-
-            enddo
-          enddo
-        enddo
-
+#include "FastC/HPC_LAYER/loop_end.for"
       ENDIF
 
       end

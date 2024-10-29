@@ -54,26 +54,11 @@ c Var loc
 
       !write(*,*)'visc',  param_real(VISCO+2), cmus1,temp01
 
-#ifndef E_SCALAR_COMPUTER
-CDIR$ IVDEP
-!CDIR NODEP
-CVD$  NODEPCHK
-       do l=1,param_int(NDIMDX)
-#else
-       do k = ind_loop(5), ind_loop(6)
-       do j = ind_loop(3), ind_loop(4)
-#endif
+#include "FastC/HPC_LAYER/loop_begin.for"
 
-#include   "FastS/Compute/loopI_begin.for"
              t1     = rop(l + v5)
 
              xmut(l)= coesut * sqrt(t1)*t1/(t1+cmus1)
-#ifndef E_SCALAR_COMPUTER
-       enddo
-#else
-       enddo
-       enddo
-       enddo
-#endif
 
+#include "FastC/HPC_LAYER/loop_end.for"
       end

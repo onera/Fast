@@ -77,10 +77,8 @@ c Var loc
 
 
       IF(param_int(ITYPZONE).eq.0)  THEN 
-        DO k = ind_loop(5), ind_loop(6)
-         DO j = ind_loop(3), ind_loop(4)
 
-#include "FastS/Compute/loopI_begin.for"                  
+#include "FastC/HPC_LAYER/loop_begin.for"                  
 #include     "FastS/Compute/SA/metric_3dfull.for"
 #include     "FastS/Compute/SA/div_rot_3dfull.for" 
               w_tg   = wigi
@@ -95,53 +93,46 @@ c Var loc
               tc_tg  = tck
               inc_tg = inck
 #include     "FastS/Compute/SENSOR/shock_sensor.for" 
-          enddo    
-          if(icorr.eq.1) then !flux manquant en I
+#include "FastC/HPC_LAYER/loop_end.for"                  
+
+         If(icorr.eq.1) then !flux manquant en I
              i   = ind_loop(2) + 1
-             l   = inddm(  i, j, k)
-#include     "FastS/Compute/SA/metric_3dfull.for"
-#include     "FastS/Compute/SA/div_rot_3dfull.for" 
-              w_tg   = wigi
-              tc_tg  = tci
-              inc_tg = inci
-#include     "FastS/Compute/SENSOR/shock_sensor.for" 
-          endif !
-         ENDDO
-         !complement jmax
-         If(jcorr.eq.1) then
+#include     "FastC/HPC_LAYER/loopPlanI_begin.for"                  
+#include       "FastS/Compute/SA/metric_3dfull.for"
+#include       "FastS/Compute/SA/div_rot_3dfull.for" 
+                w_tg   = wigi
+                tc_tg  = tci
+                inc_tg = inci
+#include       "FastS/Compute/SENSOR/shock_sensor.for" 
+#include     "FastC/HPC_LAYER/loopPlan_end.for"                  
+         Endif !
+         If(jcorr.eq.1) then !complement jmax
            j    = ind_loop(4)+1
-#include   "FastS/Compute/loopI_begin.for"
+#include   "FastC/HPC_LAYER/loopPlanJ_begin.for"                  
 #include     "FastS/Compute/SA/metric_3dfull.for"
 #include     "FastS/Compute/SA/div_rot_3dfull.for" 
               w_tg   = wigj
               tc_tg  = tcj
               inc_tg = incj
 #include     "FastS/Compute/SENSOR/shock_sensor.for" 
-            enddo
+#include   "FastC/HPC_LAYER/loopPlan_end.for"                  
          Endif
-        ENDDO
-        !complement kmax
-        If(kcorr.eq.1) then
-          k    = ind_loop(6)+1               
-          do j = ind_loop(3),ind_loop(4)     
-#include    "FastS/Compute/loopI_begin.for"
+         If(kcorr.eq.1) then !complement kmax
+           k    = ind_loop(6)+1               
+#include   "FastC/HPC_LAYER/loopPlanK_begin.for"                  
 #include     "FastS/Compute/SA/metric_3dfull.for"
 #include     "FastS/Compute/SA/div_rot_3dfull.for" 
               w_tg   = wigk
               tc_tg  = tck
               inc_tg = inck
 #include     "FastS/Compute/SENSOR/shock_sensor.for"  
-            enddo                    
-          enddo                      
-        Endif
+#include   "FastC/HPC_LAYER/loopPlan_end.for"                  
+         Endif
 
 
       ELSEIF(param_int(ITYPZONE).eq.1)  THEN
 
-        DO k = ind_loop(5), ind_loop(6)
-         DO j = ind_loop(3), ind_loop(4)
-
-#include "FastS/Compute/loopI_begin.for"                  
+#include "FastC/HPC_LAYER/loop_begin.for"                  
 #include     "FastS/Compute/SA/metric_3dhomo.for"
 #include     "FastS/Compute/SA/div_rot_3dhomo.for" 
               w_tg   = wigi
@@ -156,46 +147,41 @@ c Var loc
               tc_tg  = tck
               inc_tg = inck
 #include     "FastS/Compute/SENSOR/shock_sensor.for" 
-          enddo    
-          if(icorr.eq.1) then !flux manquant en I
+#include "FastC/HPC_LAYER/loop_end.for"
+
+         If(icorr.eq.1) then !flux manquant en I
              i   = ind_loop(2) + 1
-             l   = inddm(  i, j, k)
-#include     "FastS/Compute/SA/metric_3dhomo.for"
-#include     "FastS/Compute/SA/div_rot_3dhomo.for" 
-              w_tg   = wigi
-              tc_tg  = tci
-              inc_tg = inci
-#include     "FastS/Compute/SENSOR/shock_sensor.for" 
-          endif !
-         ENDDO
-         !complement jmax
-         If(jcorr.eq.1) then
+#include     "FastC/HPC_LAYER/loopPlanI_begin.for"                  
+#include       "FastS/Compute/SA/metric_3dhomo.for"
+#include       "FastS/Compute/SA/div_rot_3dhomo.for" 
+                w_tg   = wigi
+                tc_tg  = tci
+                inc_tg = inci
+#include       "FastS/Compute/SENSOR/shock_sensor.for" 
+#include     "FastC/HPC_LAYER/loopPlan_end.for"                  
+         Endif !
+         If(jcorr.eq.1) then !complement jmax
            j    = ind_loop(4)+1
-#include   "FastS/Compute/loopI_begin.for"
+#include   "FastC/HPC_LAYER/loopPlanJ_begin.for"                  
 #include     "FastS/Compute/SA/metric_3dhomo.for"
 #include     "FastS/Compute/SA/div_rot_3dhomo.for" 
               w_tg   = wigj
               tc_tg  = tcj
               inc_tg = incj
 #include     "FastS/Compute/SENSOR/shock_sensor.for" 
-            enddo
+#include   "FastC/HPC_LAYER/loopPlan_end.for"                  
          Endif
-        ENDDO
-        !complement kmax
-        If(kcorr.eq.1) then
-          k    = ind_loop(6)+1               
-          do j = ind_loop(3),ind_loop(4)     
-#include    "FastS/Compute/loopI_begin.for"
+         If(kcorr.eq.1) then !complement kmax
+           k    = ind_loop(6)+1               
+#include   "FastC/HPC_LAYER/loopPlanK_begin.for"                  
 #include     "FastS/Compute/SA/metric_3dhomo.for"
 #include     "FastS/Compute/SA/div_rot_3dhomo.for" 
               w_tg   = wigk
               tc_tg  = tck
               inc_tg = inck
 #include     "FastS/Compute/SENSOR/shock_sensor.for"  
-            enddo                    
-          enddo                      
-        Endif
-
+#include   "FastC/HPC_LAYER/loopPlan_end.for"                  
+         Endif
 
       ELSEIF(param_int(ITYPZONE).eq.2)  THEN
       !metric
@@ -212,10 +198,7 @@ c Var loc
       dz      = vol(lvo)/tck
       xvol    = 0.5/vol(lvo)
 
-      DO k = ind_loop(5), ind_loop(6)
-        DO j = ind_loop(3), ind_loop(4)
-
-#include "FastS/Compute/loopI3dcart_begin.for"
+#include "FastC/HPC_LAYER/loop3dcart_begin.for"
 #include     "FastS/Compute/SA/div_rot_3dcart.for" 
               w_tg   = wigi
               tc_tg  = tci
@@ -229,49 +212,42 @@ c Var loc
               tc_tg  = tck
               inc_tg = inck
 #include     "FastS/Compute/SENSOR/shock_sensor.for" 
-          enddo    
-          if(icorr.eq.1) then !flux manquant en I
+#include "FastC/HPC_LAYER/loop_end.for"
+
+         If(icorr.eq.1) then !flux manquant en I
              i   = ind_loop(2) + 1
-             l   = inddm(  i, j, k)
-#include     "FastS/Compute/SA/div_rot_3dcart.for" 
-              w_tg   = wigi
-              tc_tg  = tci
-              inc_tg = inci
-#include     "FastS/Compute/SENSOR/shock_sensor.for" 
-          endif !
-         ENDDO
-         !complement jmax
-         If(jcorr.eq.1) then
+#include     "FastC/HPC_LAYER/loopPlanI3dcart_begin.for"                  
+#include       "FastS/Compute/SA/div_rot_3dcart.for" 
+                w_tg   = wigi
+                tc_tg  = tci
+                inc_tg = inci
+#include       "FastS/Compute/SENSOR/shock_sensor.for" 
+#include     "FastC/HPC_LAYER/loopPlan_end.for"                  
+         Endif !
+         If(jcorr.eq.1) then !complement jmax
            j    = ind_loop(4)+1
-#include   "FastS/Compute/loopI3dcart_begin.for"
+#include   "FastC/HPC_LAYER/loopPlanJ3dcart_begin.for"                  
 #include     "FastS/Compute/SA/div_rot_3dcart.for" 
               w_tg   = wigj
               tc_tg  = tcj
               inc_tg = incj
 #include     "FastS/Compute/SENSOR/shock_sensor.for" 
-            enddo
+#include   "FastC/HPC_LAYER/loopPlan_end.for"                  
          Endif
-        ENDDO
-        !complement kmax
-        If(kcorr.eq.1) then
-          k    = ind_loop(6)+1               
-          do j = ind_loop(3),ind_loop(4)     
-#include    "FastS/Compute/loopI3dcart_begin.for"
+         If(kcorr.eq.1) then !complement kmax
+           k    = ind_loop(6)+1               
+#include   "FastC/HPC_LAYER/loopPlanK3dcart_begin.for"                  
 #include     "FastS/Compute/SA/div_rot_3dcart.for" 
               w_tg   = wigk
               tc_tg  = tck
               inc_tg = inck
 #include     "FastS/Compute/SENSOR/shock_sensor.for"  
-            enddo                    
-          enddo                      
-        Endif
+#include   "FastC/HPC_LAYER/loopPlan_end.for"                  
+         Endif
 
       ELSE
 
-        DO k = ind_loop(5), ind_loop(6)
-         DO j = ind_loop(3), ind_loop(4)
-
-#include "FastS/Compute/loopI_begin.for"                  
+#include "FastC/HPC_LAYER/loop_begin.for"                  
 #include     "FastS/Compute/SA/metric_2d.for"
 #include     "FastS/Compute/SA/div_rot_2d.for" 
               w_tg   = wigi
@@ -282,31 +258,30 @@ c Var loc
               tc_tg  = tcj
               inc_tg = incj
 #include     "FastS/Compute/SENSOR/shock_sensor.for" 
-          enddo    
-          if(icorr.eq.1) then !flux manquant en I
+#include "FastC/HPC_LAYER/loop_end.for"
+              
+          If(icorr.eq.1) then !flux manquant en I
              i   = ind_loop(2) + 1
-             l   = inddm(  i, j, k)
-#include     "FastS/Compute/SA/metric_2d.for"
-#include     "FastS/Compute/SA/div_rot_2d.for" 
-              w_tg   = wigi
-              tc_tg  = tci
-              inc_tg = inci
-#include     "FastS/Compute/SENSOR/shock_sensor.for" 
-          endif !
-         ENDDO
-         !complement jmax
-         If(jcorr.eq.1) then
-           j    = ind_loop(4)+1
-#include   "FastS/Compute/loopI_begin.for"
-#include     "FastS/Compute/SA/metric_2d.for"
-#include     "FastS/Compute/SA/div_rot_2d.for" 
-              w_tg   = wigj
-              tc_tg  = tcj
-              inc_tg = incj
-#include     "FastS/Compute/SENSOR/shock_sensor.for" 
-            enddo
-         Endif
-        ENDDO
+#include     "FastC/HPC_LAYER/loopPlanI_begin.for"                  
+#include       "FastS/Compute/SA/metric_2d.for"
+#include       "FastS/Compute/SA/div_rot_2d.for" 
+                w_tg   = wigi
+                tc_tg  = tci
+                inc_tg = inci
+#include       "FastS/Compute/SENSOR/shock_sensor.for" 
+#include     "FastC/HPC_LAYER/loopPlan_end.for"                  
+          Endif !
+          If(jcorr.eq.1) then !complement jmax
+             j  = ind_loop(4)+1
+#include     "FastC/HPC_LAYER/loopPlanJ_begin.for"                  
+#include       "FastS/Compute/SA/metric_2d.for"
+#include       "FastS/Compute/SA/div_rot_2d.for" 
+                w_tg   = wigj
+                tc_tg  = tcj
+                inc_tg = incj
+#include       "FastS/Compute/SENSOR/shock_sensor.for" 
+#include     "FastC/HPC_LAYER/loopPlan_end.for"                  
+          Endif
 
       ENDIF
       end

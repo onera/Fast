@@ -40,13 +40,14 @@ c**********************************************************************
       REAL_E  cfl(3), param_real(0:*)
 C var local
       INTEGER_E l,ll,i,j,k,inci,incj,inck,lt,lij,ltij,
-     & lvij,lv,v2ven,v3ven,inci_ven, lvo
+     & lvij,lv,v2ven,v3ven,inci_ven, lvo, lx,lxij
 
       REAL_E xinvkt, u,v,w,r,ue,ve,we,
      &      ur,vr,wr,ur2,ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,rgp,gam2,
      &      sp,c, xinvspc, vis, conv,comp, cfloc, u2,gam1,
      &      ddi,ddj,ddk,surf,dt
  
+#include "FastS/formule_xyz_param.h"
 #include "FastS/formule_mtr_param.h"
 #include "FastS/formule_vent_param.h"
 #include "FastS/formule_param.h" 
@@ -86,7 +87,7 @@ c******* NS unsteady *****
 
         if(param_int(ITYPZONE).eq.0) then
 
-#include   "FastS/Compute/loop_ale_begin.for"
+#include   "FastC/HPC_LAYER/loop_ale_begin.for"
  
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2)
@@ -136,11 +137,11 @@ c******* NS unsteady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.1) then
 
-#include   "FastS/Compute/loop_ale_begin.for"
+#include   "FastC/HPC_LAYER/loop_ale_begin.for"
  
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2) )
@@ -183,7 +184,7 @@ c******* NS unsteady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.2) then
 
@@ -191,16 +192,9 @@ c******* NS unsteady *****
           ddj = 2.*sqrt( tj(1,1)*tj(1,1) )
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
+          lvo = 1
 
-          do k = ind_loop(5), ind_loop(6)
-          do j = ind_loop(3), ind_loop(4)
-             lij  =         inddm( ind_loop(1) , j, k)
-             lvij =  lij-  indven( ind_loop(1) , j, k)
-             lt   = 1
-             do l = lij,  lij + ind_loop(2) - ind_loop(1)
-
-              lv = l - lvij
-              lvo = 1
+#include  "FastC/HPC_LAYER/loop3dcart_ale_begin.for"
 
               u = rop(l,2)
               v = rop(l,3)
@@ -230,12 +224,11 @@ c******* NS unsteady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-             enddo
-          enddo
-          enddo
+#include "FastC/HPC_LAYER/loop_end.for"
+
        else
 
-#include   "FastS/Compute/loop_ale_begin.for"
+#include   "FastC/HPC_LAYER/loop_ale_begin.for"
  
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2) )
@@ -273,7 +266,7 @@ c******* NS unsteady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
        endif
 
@@ -285,7 +278,7 @@ c******* NS steady *****
 
         if(param_int(ITYPZONE).eq.0) then
 
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2)
      &                  +ti(lt+inci,3)*ti(lt+inci,3) )
@@ -327,13 +320,13 @@ c******* NS steady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
 
        elseif(param_int(ITYPZONE).eq.1) then
 
 
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
 
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2) )
@@ -371,7 +364,7 @@ c******* NS steady *****
               cfl(2) = min(cfl(2),cfloc)
               !cfl(2) = min(cfl(2),vis/conv)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
         ! print*, 'cfl(3)= ', cfl(3)
 
        elseif(param_int(ITYPZONE).eq.2) then
@@ -380,13 +373,9 @@ c******* NS steady *****
           ddj = 2.*sqrt( tj(1,1)*tj(1,1) )
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
+          lvo  = 1
 
-          do k = ind_loop(5), ind_loop(6)
-          do j = ind_loop(3), ind_loop(4)
-             lij  =        inddm( ind_loop(1) , j, k)
-             lt   = 1
-             lvo  = 1
-             do l = lij,  lij + ind_loop(2) - ind_loop(1)
+#include   "FastC/HPC_LAYER/loop3dcart_begin.for"
 
               u = rop(l,2)
               v = rop(l,3)
@@ -415,7 +404,7 @@ c******* NS steady *****
 
        else
 
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2) )
               ddi =ddi+ sqrt( ti(lt,1)*ti(lt,1)+ti(lt,2)*ti(lt,2) )
@@ -446,7 +435,7 @@ c******* NS steady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
        endif
 
@@ -469,7 +458,7 @@ c******* Euler unsteady *****
         if(param_int(ITYPZONE).eq.0) then
 
 
-#include   "FastS/Compute/loop_ale_begin.for"
+#include   "FastC/HPC_LAYER/loop_ale_begin.for"
 
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2)
@@ -516,12 +505,12 @@ c******* Euler unsteady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.1) then
 
 
-#include   "FastS/Compute/loop_ale_begin.for"
+#include   "FastC/HPC_LAYER/loop_ale_begin.for"
  
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2) )
@@ -561,7 +550,7 @@ c******* Euler unsteady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.2) then
 
@@ -569,12 +558,9 @@ c******* Euler unsteady *****
           ddj = 2.*sqrt( tj(1,1)*tj(1,1) )
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
+          lvo = 1
 
-          do k = ind_loop(5), ind_loop(6)
-          do j = ind_loop(3), ind_loop(4)
-             lij  =        inddm( ind_loop(1) , j, k)
-             lt   = 1
-             do l = lij,  lij + ind_loop(2) - ind_loop(1)
+#include   "FastC/HPC_LAYER/loop3dcart_ale_begin.for"
 
               u = rop(l,2)
               v = rop(l,3)
@@ -601,12 +587,11 @@ c******* Euler unsteady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-             enddo
-          enddo
-          enddo
+#include "FastC/HPC_LAYER/loop_end.for"
+
        else
 
-#include   "FastS/Compute/loop_ale_begin.for"
+#include   "FastC/HPC_LAYER/loop_ale_begin.for"
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2) )
               ddi =ddi+ sqrt( ti(lt,1)*ti(lt,1)+ti(lt,2)*ti(lt,2) )
@@ -641,7 +626,7 @@ c******* Euler unsteady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
        endif
 
@@ -653,7 +638,7 @@ c******* Euler steady *****
 
         if(param_int(ITYPZONE).eq.0) then
 
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2)
      &                  +ti(lt+inci,3)*ti(lt+inci,3) )
@@ -692,10 +677,10 @@ c******* Euler steady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.1) then
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
  
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2) )
@@ -728,7 +713,7 @@ c******* Euler steady *****
               cfl(1) = max(cfl(1),cfloc)
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
        elseif(param_int(ITYPZONE).eq.2) then
 
@@ -736,13 +721,10 @@ c******* Euler steady *****
           ddj = 2.*sqrt( tj(1,1)*tj(1,1) )
           ddk = 2.*sqrt( tk(1,1)*tk(1,1) )
           surf= 1./max(ddi,ddj,ddk)
+          lt  = 1
+          lvo = 1
 
-          do k = ind_loop(5), ind_loop(6)
-          do j = ind_loop(3), ind_loop(4)
-             lij  = inddm( ind_loop(1) , j, k)
-             lt   = 1
-             lvo  = 1
-             do l = lij,  lij + ind_loop(2) - ind_loop(1)
+#include   "FastC/HPC_LAYER/loop3dcart_begin.for"
 
               u = rop(l,2)
               v = rop(l,3)
@@ -763,13 +745,11 @@ c******* Euler steady *****
               cfl(2) = min(cfl(2),cfloc)
               cfl(3) = cfl(3) + cfloc
 
-             enddo
-          enddo
-          enddo
+#include   "FastC/HPC_LAYER/loop_end.for"
 
        else
 
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
               ddi =sqrt( ti(lt+inci,1)*ti(lt+inci,1)
      &                  +ti(lt+inci,2)*ti(lt+inci,2) )
               ddi =ddi+ sqrt( ti(lt,1)*ti(lt,1)+ti(lt,2)*ti(lt,2) )
@@ -802,7 +782,7 @@ c******* Euler steady *****
               cfl(3) = cfl(3) + cfloc
 
               !print*, cfloc
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
 
               !print*, cfl(1), cfl(2), cfl(3)

@@ -31,10 +31,11 @@ c***********************************************************************
       REAL_E param_real(0:*),norm_kry
  
 C Var loc
-      INTEGER_E incmax,l,i,j,k,lij
+      INTEGER_E incmax,l,i,j,k,lij,ltij,lt,lvo
       REAL_E c1,c2,c3,c4,roe,roe_n,roe_n1,cv,amor
 
 #include "FastS/formule_param.h"
+#include "FastS/formule_mtr_param.h"
 
       cv = param_real( CVINF )
 
@@ -58,7 +59,7 @@ C Var loc
          if (param_int(ITYPZONE).ne.3) then
 
            if(param_int(DTLOC).eq.1) then
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             drodm(l,1)= coe(l,1)*drodm(l,1) 
             drodm(l,2)= coe(l,1)*drodm(l,2) 
             drodm(l,3)= coe(l,1)*drodm(l,3) 
@@ -78,11 +79,11 @@ C Var loc
             norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
             norm_kry = norm_kry + kry(l,6)*kry(l,6)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
            else
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             amor      = MIN(cellN(l),2.-cellN(l))
 
             drodm(l,1)= coe(l,1)*drodm(l,1) 
@@ -128,13 +129,13 @@ C Var loc
             norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
             norm_kry = norm_kry + kry(l,6)*kry(l,6)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
            endif !optim bdf1 
 
         else !dom 2d
 
            if(param_int(DTLOC).eq.1) then
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             drodm(l,1)= coe(l,1)*drodm(l,1) 
             drodm(l,2)= coe(l,1)*drodm(l,2) 
             drodm(l,3)= coe(l,1)*drodm(l,3) 
@@ -152,11 +153,11 @@ C Var loc
             norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
             norm_kry = norm_kry + kry(l,6)*kry(l,6)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
            else
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             amor      = MIN(cellN(l),2.-cellN(l))
 
             drodm(l,1)= coe(l,1)*drodm(l,1) 
@@ -196,7 +197,7 @@ C Var loc
             norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
             norm_kry = norm_kry + kry(l,6)*kry(l,6)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
            endif !optim bdf1 
 
         endif!2d/3d
@@ -204,7 +205,7 @@ C Var loc
        Else  !nitcfg > 1
 
          if (param_int(ITYPZONE).ne.3) then
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             amor      = MIN(cellN(l),2.-cellN(l))
 
             drodm(l,1)= coe(l,1)*drodm(l,1) 
@@ -261,11 +262,11 @@ C Var loc
             norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
             norm_kry = norm_kry + kry(l,6)*kry(l,6)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
         else !dom 2d
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             amor      = MIN(cellN(l),2.-cellN(l))
 
             drodm(l,1)= coe(l,1)*drodm(l,1) 
@@ -313,7 +314,7 @@ C Var loc
             norm_kry = norm_kry + kry(l,5)*kry(l,5)
             kry(l,6) = drodm(l,6)
             norm_kry = norm_kry + kry(l,6)*kry(l,6)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
         endif !2d/3d
        Endif  !nitcfg=1 ou >1
@@ -326,7 +327,7 @@ C Var loc
 
          if (param_int(ITYPZONE).ne.3) then
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             amor      = MIN(cellN(l),2.-cellN(l))
 
             drodm(l,1)= coe(l,1)*drodm(l,1) 
@@ -366,11 +367,11 @@ C Var loc
             norm_kry = norm_kry + kry(l,4)*kry(l,4)
             kry(l,5) = drodm(l,5)
             norm_kry = norm_kry + kry(l,5)*kry(l,5)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
         else !dom 2d
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             amor      = MIN(cellN(l),2.-cellN(l))
 
 
@@ -406,7 +407,7 @@ C Var loc
             kry(l,4) = 0.
             kry(l,5) = drodm(l,5)
             norm_kry = norm_kry + kry(l,5)*kry(l,5)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
  
         endif!2d/3d
 
@@ -414,7 +415,7 @@ C Var loc
 
          if (param_int(ITYPZONE).ne.3) then
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             amor      = MIN(cellN(l),2.-cellN(l))
 
             drodm(l,1)= coe(l,1)*drodm(l,1) 
@@ -465,11 +466,11 @@ C Var loc
             norm_kry = norm_kry + kry(l,4)*kry(l,4)
             kry(l,5) = drodm(l,5)
             norm_kry = norm_kry + kry(l,5)*kry(l,5)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
         else !dom 2d
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
             amor      = MIN(cellN(l),2.-cellN(l))
 
             drodm(l,1)= coe(l,1)*drodm(l,1) 
@@ -510,7 +511,7 @@ C Var loc
             kry(l,4) = 0.
             kry(l,5) = drodm(l,5)
             norm_kry = norm_kry + kry(l,5)*kry(l,5)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
         endif
 
       ENDIF!nitcfg
