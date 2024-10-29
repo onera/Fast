@@ -95,11 +95,7 @@ c      c0 = (12.-rap**2)/12.
       !angle = mcmangle(ndom) * pi / 180.
       !angle = mcmangle(ndom) * pi / 360.
 
-      DO k = ind_loop(5), ind_loop(6)
-       DO j = ind_loop(3), ind_loop(4)
-
-#include "FastS/Compute/loopI_begin.for"
-
+#include "FastC/HPC_LAYER/loop_begin.for"
 
              !Srate du funk calculer dans cp_rot_sij.for
              xmut(l) =   xmut(l)**0.25
@@ -189,8 +185,6 @@ c     &             xmut(l),fs,vort,vortmoy,vortflu,l-lij,j,k
 c     &             xmut(l),fs,r1,r2,vortflu,l-lij,j,k
 c             endif
 
-          enddo
-       ENDDO !do j
-      ENDDO !do k
+#include "FastC/HPC_LAYER/loop_end.for"
 
       end

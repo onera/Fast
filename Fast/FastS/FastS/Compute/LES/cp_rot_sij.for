@@ -84,10 +84,10 @@ c Var loc
 
       IF(param_int(ITYPZONE).eq.0) THEN  !domaine 3d:
 
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
 #include       "FastS/Compute/LES/metric_3dfull.for"
 #include       "FastS/Compute/LES/rot_3dfull.for" 
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
       !!!!!
       !!!!!
@@ -95,10 +95,10 @@ c Var loc
       !3dhomo
       ELSEIF(param_int(ITYPZONE).eq.1)  THEN 
 
-#include   "FastS/Compute/loop_begin.for"
+#include   "FastC/HPC_LAYER/loop_begin.for"
 #include       "FastS/Compute/LES/metric_3dhomo.for"
 #include       "FastS/Compute/LES/rot_3dhomo.for" 
-#include   "FastS/Compute/loop_end.for"
+#include   "FastC/HPC_LAYER/loop_end.for"
 
       !!!!!
       !!!!!
@@ -116,16 +116,9 @@ c Var loc
           tkz = tk(lt)
           xvol    = 0.5/vol(lvo)
 
-
-           do k = ind_loop(5), ind_loop(6)
-            do j = ind_loop(3), ind_loop(4)
-             lij  =       inddm( ind_loop(1) , j, k)
-!DEC$ IVDEP
-             do l = lij, lij +  ind_loop(2)- ind_loop(1)
+#include   "FastC/HPC_LAYER/loop3dcart_begin.for"
 #include       "FastS/Compute/LES/rot_3dcart.for" 
-             enddo
-            enddo
-           enddo
+#include   "FastC/HPC_LAYER/loop_end.for"
       !!!!!
       !!!!!
       !!!!!
