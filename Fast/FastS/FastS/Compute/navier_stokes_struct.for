@@ -10,7 +10,7 @@ c***********************************************************************
      &        nptpsi, nitcfg, nssiter, nitrun, first_it,
      &        nb_pulse, flagCellN,
      &        param_int, param_real,
-     &        temps, tot,
+     &        temps,
      &        ijkv_sdm,
      &        ind_dm_zone, ind_dm_socket, ind_dm_omp,
      &        socket_topology, lok , topo_s, timer_omp,
@@ -106,7 +106,7 @@ c      REAL_E drodmstk(20000,param_int(NEQ)), rostk(20000,param_int(NEQ))
 C Var loc
 #include "FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
-      INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
+      INTEGER_E totf(6), glob(4), 
      & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2,
      & flag_wait,cells, it_dtloc, flag_NSLBM,lcomput,shift_vol,
      & shift_vol_n,shift_vol_m

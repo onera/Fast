@@ -272,18 +272,6 @@ PyObject* K_FASTC::init_metric(PyObject* self, PyObject* args)
           E_Int nd = ipt_omp[ pttask ];
 #         include "Metric/indice_omp1.h" 
           cp_vol_(  param_int[nd], iptx[nd], ipty[nd], iptz[nd], ipti[nd], iptj[nd], iptk[nd], ipti0[nd], iptj0[nd], iptk0[nd], iptvol[nd], ind_mtr);
-
-          for (E_Int k = ind_mtr[4]; k <= ind_mtr[5]; k++){ 
-           for (E_Int j = ind_mtr[2]; j <= ind_mtr[3]; j++){ 
-            for (E_Int i = ind_mtr[0]; i <= ind_mtr[1]; i++){ 
-
-              E_Int l =  (i+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR]
-                       + (j+ param_int[nd][NIJK_MTR+3]-1)*param_int[nd][NIJK_MTR+1]
-                       + (k+ param_int[nd][NIJK_MTR+4]-1)*param_int[nd][NIJK_MTR+2];
-              iptvol[nd][l] = K_FUNC::E_max(iptvol[nd][l], 1.e-30);
-            }
-           }
-          }
         }
 
        	 #pragma omp barrier
@@ -327,7 +315,7 @@ PyObject* K_FASTC::init_metric(PyObject* self, PyObject* args)
             E_Int* ipt_nijk_mtr = param_int[nd]+ NIJK_MTR;
             E_Int* ipt_nijk     = param_int[nd]+ NIJK;
 
-            tijk_extrap_( param_int[nd][ NDIMDX_MTR ], param_int[nd][ NDIMDX_XYZ ] , ipt_nijk_xyz, ipt_nijk_mtr,
+            tijk_extrap_( param_int[nd][ NDIMDX_MTR ], param_int[nd][ NDIMDX_XYZ ] , ipt_nijk_xyz, ipt_nijk_mtr, ipt_nijk,
                           param_int[nd][ NEQ_IJ ]    , param_int[nd][ NEQ_K ],
                           ipt_ind_dm_loc,
                           ipt_degen[nd] ,

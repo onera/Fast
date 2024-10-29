@@ -16,7 +16,7 @@ c***********************************************************************
 C_LOCAL
       INTEGER_E npass,i,j,k,imin,jmin,kmin,imax,jmax,kmax,lmtr,lmtr0,
      & lmtri,lmtrj,lmtr0i,lmtr0j,lmtrk,lmtr0k,ind_loop(6),ne,ind0,ind1,
-     & ind3
+     & ind3,l
 
 #include "FastC/formule.h"
 #include "FastC/formule_xyz.h"
@@ -43,8 +43,7 @@ C_LOCAL
          !!
          !!
          do k= 0        , ind_dm(5)-nijk(5), -1
-         do j= ind_loop(3), ind_loop(4)
-         do i= ind_loop(1), ind_loop(2)
+#include "FastC/HPC_LAYER/loopPlanK_begin.for"
 
              ind0 = indcg(i   ,j  ,k)
 
@@ -55,8 +54,7 @@ C_LOCAL
 
                dist(lmtr) = dist(lmtr0)
             endif
-         enddo
-         enddo
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
 
          !!
@@ -65,8 +63,7 @@ C_LOCAL
          !!
          !!
          do k= ind_dm(6)+1          , ind_dm(6)+nijk(5) 
-         do j= ind_loop(3), ind_loop(4)
-         do i= ind_loop(1), ind_loop(2)
+#include "FastC/HPC_LAYER/loopPlanK_begin.for"
 
              ind0 = indcg(i   ,j  ,k)
 
@@ -77,10 +74,8 @@ C_LOCAL
 
                dist(lmtr) = dist(lmtr0)
             endif
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
-         enddo
-         enddo
-
 
       endif
 
@@ -89,9 +84,8 @@ C_LOCAL
        !  Correction metrique plan JMIN fictif
        !!
        !!
-         do k= ind_loop(5), ind_loop(6)
          do j= 0        , ind_dm(3)-nijk(4), -1
-         do i= ind_loop(1), ind_loop(2)
+#include "FastC/HPC_LAYER/loopPlanJ_begin.for"
 
             ind0 = indcg(i   ,j  ,k)
 
@@ -102,8 +96,7 @@ C_LOCAL
 
                dist(lmtr) = dist(lmtr0)
             endif
-         enddo
-         enddo
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
 
        !!
@@ -111,9 +104,8 @@ C_LOCAL
        !  Correction metrique plan JMAX fictif
        !!
        !!
-         do k= ind_loop(5), ind_loop(6)
          do j= ind_dm(4)+1          , ind_dm(4)+nijk(4)
-         do i= ind_loop(1), ind_loop(2)
+#include "FastC/HPC_LAYER/loopPlanJ_begin.for"
 
              ind0 = indcg(i   ,j  ,k)
 
@@ -124,8 +116,7 @@ C_LOCAL
 
                dist(lmtr) = dist(lmtr0)
             endif
-         enddo
-         enddo
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
 
        !!
@@ -133,9 +124,8 @@ C_LOCAL
        !  Correction metrique plan IMIN fictif
        !!
        !!
-         do k= ind_loop(5), ind_loop(6)
-         do j= ind_loop(3), ind_loop(4)
          do i= 0        , ind_dm(1)-nijk(4), -1
+#include "FastC/HPC_LAYER/loopPlanI_begin.for"
 
              ind0 = indcg(i, j , k)
 
@@ -146,8 +136,7 @@ C_LOCAL
 
                dist(lmtr) = dist(lmtr0)
             endif
-         enddo
-         enddo
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
 
        !!
@@ -155,9 +144,8 @@ C_LOCAL
        !  Correction metrique plan IMAX fictif
        !!
        !!
-         do k= ind_loop(5), ind_loop(6)
-         do j= ind_loop(3), ind_loop(4)
          do i= ind_dm(2)+1 , ind_dm(2)+nijk(4)
+#include "FastC/HPC_LAYER/loopPlanI_begin.for"
 
              ind0 = indcg(i, j , k)
 
@@ -168,8 +156,7 @@ C_LOCAL
 
                dist(lmtr) = dist(lmtr0)
             endif
-         enddo
-         enddo
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
 
       enddo !npass

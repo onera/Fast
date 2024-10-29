@@ -44,7 +44,7 @@
             navier_stokes_struct_( ndo,    Nbre_thread_actif_loc, ithread_loc, ithread, omp_mode, layer_mode, Nbre_socket, socket, mx_synchro , 
                                    lssiter_verif, lexit_lu             ,nptpsi      , nitcfg , nssiter , nitrun    , first_it   , nb_pulse  , flagCellN,
                                   param_int[nd] , param_real[nd] ,
-                                  temps               , ipt_tot       ,
+                                  temps               ,
                                   ipt_ijkv_sdm_thread , ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_inddm_omp, ipt_topology_socket, ipt_lok_thread, ipt_topo_omp, timer_omp_th,
                                   iptkrylov[nd]       , ipt_norm_kry[ithread-1],
                                   ipt_cfl_thread      ,
