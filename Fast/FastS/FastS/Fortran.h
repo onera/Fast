@@ -226,7 +226,7 @@ extern "C"
                               E_Int& ithread        , E_Int& ithread_io       , E_Int& omp_mode, E_Int& layer_mode, E_Int& Nbre_socket, E_Int& socket     , E_Int& mx_synchro   , 
                               E_Int& lssiter_verif  , E_Int& lexit_lu, E_Int& nptpsi           , E_Int& nitcfg  , E_Int& nssiter   , E_Int& nitrun    , E_Int& first_it   , E_Int& nb_pulse   , E_Int&   flagCellN  ,
                               E_Int* ipt_param_int  , E_Float* ipt_param_real ,
-                              E_Float& temps        , E_Int* ipt_tot,   
+                              E_Float& temps        ,
                               E_Int* ipt_ijkv_sdm       ,
                               E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_ind_dm_omp  , E_Int* ipt_topo_thread  , E_Int* ipt_lok,  E_Int* ipt_topo_omp, E_Float* timer_omp,
                               E_Float* krylov           , E_Float& norm_kry,
@@ -450,7 +450,7 @@ extern "C"
 				E_Int& lssiter_verif  , E_Int& nptpsi            , E_Int& nitcfg  , E_Int& nitrun     ,
 				E_Int& first_it   ,  E_Int& nb_pulse  , E_Int&   flagCellN  , E_Int& mjr_dt,
 				E_Int* ipt_param_int  , E_Float* ipt_param_real  ,
-				E_Float& temps        , E_Int* ipt_tot,   
+				E_Float& temps        ,
 				E_Int* ipt_ijkv_sdm       ,
 				E_Int* ipt_ind_dm_int     , E_Int* ipt_ind_dm_sock, E_Int* ipt_inddm_omp   , E_Int* ipt_topo_thread  , E_Int* ipt_lok         ,
 				E_Int* ipt_topo_omp,
@@ -483,23 +483,6 @@ extern "C"
                         E_Int* ind_CL , E_Int* ind_CL119);
 
    void     correct_coins_( E_Int& ndo ,  E_Int* param_int, E_Int* ind_loop, E_Float* iptro);
-
-   void     cp_tijk_( E_Int* param_int, E_Float* iptx , E_Float* ipty , E_Float* iptz,
-                      E_Float* ipti   , E_Float* iptj , E_Float* iptk ,
-                      E_Float* iptx0  , E_Float* ipty0, E_Float* iptz0, E_Int* ind_loop );
-
-   void     cp_vol_( E_Int* param_int, E_Float* iptx , E_Float* ipty , E_Float* iptz,
-                     E_Float* ipti   , E_Float* iptj , E_Float* iptk ,
-                     E_Float* iptx0  , E_Float* ipty0, E_Float* iptz0, E_Float* iptvol,  E_Int* ind_loop );
-
-   void     tijk_extrap_( E_Int& ndimdx_mtr, E_Int& ndimdx_xyz, E_Int* nijk_xyz,  E_Int* nijk_mtr, E_Int& neq_ij , E_Int& neq_k,
-                          E_Int* ind_zone , E_Int*  degen   , 
-                          E_Float* ipti   , E_Float* iptj , E_Float* iptk ,
-                          E_Float* iptx0  , E_Float* ipty0, E_Float* iptz0,  E_Float* iptvol);
-
-   void     dist_extrap_( E_Int& ndimdx   , E_Int& ndimdx_xyz, E_Int* nijk,  E_Int* nijk_xyz,
-                          E_Int* ind_zone , E_Int*  degen    , E_Float* iptdist);
-
 
    void     move_domx_( E_Int& ndo ,  E_Int* param_int, E_Float* param_real, E_Int* ind_loop, 
                         E_Float* iptx  , E_Float* ipty , E_Float* iptz, 

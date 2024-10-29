@@ -4,7 +4,7 @@ c     $Revision: 58 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine tijk_extrap(ndimdx_mtr,ndimt_xyz,
-     &                      nijk_xyz, nijk_mtr,
+     &                      nijk_xyz, nijk_mtr, nijk,
      &                      neq_ij,neq_k,
      &                      ind_dm,
      &                      degener,
@@ -13,7 +13,7 @@ c***********************************************************************
       implicit none
 
       INTEGER_E ndimdx_mtr,ndimt_xyz,neq_ij,neq_k,
-     &   ind_dm(6),nijk_xyz(5),nijk_mtr(5), degener(ndimt_xyz)
+     &   ind_dm(6),nijk_xyz(5),nijk_mtr(5),nijk(5), degener(ndimt_xyz)
 
       REAL_E ti(ndimdx_mtr,neq_ij), ti0(ndimdx_mtr,neq_ij)   ! metric
       REAL_E tj(ndimdx_mtr,neq_ij), tj0(ndimdx_mtr,neq_ij)
@@ -21,10 +21,11 @@ c***********************************************************************
       REAL_E vol(ndimdx_mtr)
 
 C_LOCAL
-      INTEGER_E npass,i,j,k,imin,jmin,kmin,imax,jmax,kmax,lmtr,lmtr0,
+      INTEGER_E npass,i,j,k,l,imin,jmin,kmin,imax,jmax,kmax,lmtr,lmtr0,
      & lmtri,lmtrj,lmtr0i,lmtr0j,lmtrk,lmtr0k,ind_loop(6),ne,ind0,ind1,
      & ind3
 
+#include "FastC/formule.h"
 #include "FastC/formule_mtr.h"
 #include "FastC/formule_xyz.h"
 
@@ -50,8 +51,7 @@ C_LOCAL
          !!
          !!
          do k= 0        , ind_dm(5)-nijk_mtr(5), -1
-         do j= ind_loop(3), ind_loop(4)
-         do i= ind_loop(1), ind_loop(2)
+#include "FastC/HPC_LAYER/loopPlanK_begin.for"
 
              imin = max( ind_dm(1)-nijk_mtr(4) , i-1 )
              jmin = max( ind_dm(3)-nijk_mtr(4) , j-1 )
@@ -125,8 +125,7 @@ C_LOCAL
                vol(lmtr) = vol(lmtr0)
 
              endif
-         enddo
-         enddo
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
 
          !!
@@ -135,8 +134,7 @@ C_LOCAL
          !!
          !!
          do k= ind_dm(6)+1          , ind_dm(6)+nijk_mtr(5) 
-         do j= ind_loop(3), ind_loop(4)
-         do i= ind_loop(1), ind_loop(2)
+#include "FastC/HPC_LAYER/loopPlanK_begin.for"
 
              imin = max( ind_dm(1)-nijk_mtr(4) , i-1 )
              jmin = max( ind_dm(3)-nijk_mtr(4) , j-1 )
@@ -209,10 +207,8 @@ C_LOCAL
                vol(lmtr) = vol(lmtr0)
 
              endif
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
-         enddo
-         enddo
-
 
       endif
 
@@ -221,9 +217,8 @@ C_LOCAL
        !  Correction metrique plan JMIN fictif
        !!
        !!
-         do k= ind_loop(5), ind_loop(6)
          do j= 0        , ind_dm(3)-nijk_mtr(4), -1
-         do i= ind_loop(1), ind_loop(2)
+#include "FastC/HPC_LAYER/loopPlanJ_begin.for"
 
              imin = max( ind_dm(1)-nijk_mtr(4) , i-1 )
              kmin = max( ind_dm(5)-nijk_mtr(5) , k-1 )
@@ -300,8 +295,7 @@ C_LOCAL
                vol(lmtr) = vol(lmtr0)
 
              endif
-         enddo
-         enddo
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
 
        !!
@@ -309,9 +303,8 @@ C_LOCAL
        !  Correction metrique plan JMAX fictif
        !!
        !!
-         do k= ind_loop(5), ind_loop(6)
          do j= ind_dm(4)+1          , ind_dm(4)+nijk_mtr(4)
-         do i= ind_loop(1), ind_loop(2)
+#include "FastC/HPC_LAYER/loopPlanJ_begin.for"
 
              imin = max( ind_dm(1)-nijk_mtr(4) , i-1 )
              kmin = max( ind_dm(5)-nijk_mtr(5) , k-1 )
@@ -388,8 +381,7 @@ C_LOCAL
                vol(lmtr) = vol(lmtr0)
 
              endif
-         enddo
-         enddo
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
 
        !!
@@ -397,9 +389,8 @@ C_LOCAL
        !  Correction metrique plan IMIN fictif
        !!
        !!
-         do k= ind_loop(5), ind_loop(6)
-         do j= ind_loop(3), ind_loop(4)
          do i= 0        , ind_dm(1)-nijk_mtr(4), -1
+#include "FastC/HPC_LAYER/loopPlanI_begin.for"
 
 
              jmin = max( ind_dm(3)-nijk_mtr(4) , j-1 )
@@ -475,8 +466,7 @@ C_LOCAL
                vol(lmtr) = vol(lmtr0)
 
              endif
-         enddo
-         enddo
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
 
        !!
@@ -484,9 +474,8 @@ C_LOCAL
        !  Correction metrique plan IMAX fictif
        !!
        !!
-         do k= ind_loop(5), ind_loop(6)
-         do j= ind_loop(3), ind_loop(4)
          do i= ind_dm(2)+1 , ind_dm(2)+nijk_mtr(4)
+#include "FastC/HPC_LAYER/loopPlanI_begin.for"
 
              jmin = max( ind_dm(3)-nijk_mtr(4) , j-1 )
              kmin = max( ind_dm(5)-nijk_mtr(5) , k-1 )
@@ -561,9 +550,7 @@ C_LOCAL
               vol(lmtr) = vol(lmtr0)
 
              endif
-
-         enddo
-         enddo
+#include "FastC/HPC_LAYER/loopPlan_end.for"
          enddo
 
       enddo !npass

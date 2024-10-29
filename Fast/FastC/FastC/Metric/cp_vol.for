@@ -41,7 +41,8 @@ C_OUT
 c Var loc 
       INTEGER_E k,j,i,l0,l1,l5,l4,l2,l3,l7,l6,incmax,
      & lip,ljp,lkp,l,inci,incj,inck,ne,i1,i2,j1,j2,k1,k2,lmax,
-     & inci_mtr,incj_mtr,inck_mtr,iv,jv,kv
+     & inci_mtr,incj_mtr,inck_mtr,iv,jv,kv,lij, lv,lvij,
+     & lxij, lx, ltij, lt, lvo
 
       REAL_E ax,ay,az,tk1,tk2,dz,
      & tix10,tix11,tiy10,tiy11,tiz10,tiz11,
@@ -52,6 +53,8 @@ c Var loc
      & tkx20,tkx21,tky20,tky21,tkz20,tkz21
 
 
+#include "FastC/formule_param.h"
+#include "FastC/formule_vent_param.h"
 #include "FastC/formule_mtr_param.h"
 #include "FastC/formule_xyz_param.h"
 
@@ -71,153 +74,132 @@ c-----le nbr de metrique varie selon le type de domaine
       IF(param_int( ITYPZONE ).eq.0) THEN !Domaine 3D quelconque
 
         !calcul volume
-        do k=ind_loop(5),ind_loop(6)
-        do j=ind_loop(3),ind_loop(4)
-        do i=ind_loop(1),ind_loop(2)
+#include "FastC/HPC_LAYER/loop_ale_begin.for"
+          l0= lx                ! x(i  , j  , k  )
+          l1= l0 + incj         ! x(i  , j+1, k  )
+          l2= l0 + inck         ! x(i  , j  , k+1)
+          l3= l1 + inck         ! x(i  , j+1, k+1)
+          l4= l0 + inci         ! x(i+1, j  , k  )
+          l5= l1 + inci         ! x(i+1, j+1, k  )
+          l6= l2 + inci         ! x(i+1, j  , k+1)
+          l7= l3 + inci         ! x(i+1, j+1, k+1)
 
-          l = indmtr(i  ,j  ,k  )
-          l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
-          l1= l0 + incj               ! x(i  , j+1, k  )
-          l2= l0 + inck               ! x(i  , j  , k+1)
-          l3= l1 + inck               ! x(i  , j+1, k+1)
-          l4= l0 + inci               ! x(i+1, j  , k  )
-          l5= l1 + inci               ! x(i+1, j+1, k  )
-          l6= l2 + inci               ! x(i+1, j  , k+1)
-          l7= l3 + inci               ! x(i+1, j+1, k+1)
-
-          lip = l + inci_mtr              
-          ljp = l + incj_mtr
-          lkp = l + inck_mtr
+          lip = lt + inci_mtr              
+          ljp = lt + incj_mtr
+          lkp = lt + inck_mtr
 
           ax = .25*( ( x(l4) + x(l5) + x(l7) +x(l6))*ti(lip,1)
-     &              -( x(l0) + x(l1) + x(l3) +x(l2))*ti(l  ,1)
+     &              -( x(l0) + x(l1) + x(l3) +x(l2))*ti(lt ,1)
      &              +( x(l1) + x(l3) + x(l5) +x(l7))*tj(ljp,1)
-     &              -( x(l0) + x(l2) + x(l4) +x(l6))*tj(l  ,1)
+     &              -( x(l0) + x(l2) + x(l4) +x(l6))*tj(lt ,1)
      &              +( x(l2) + x(l3) + x(l6) +x(l7))*tk(lkp,1)
-     &              -( x(l0) + x(l1) + x(l4) +x(l5))*tk(l  ,1))
+     &              -( x(l0) + x(l1) + x(l4) +x(l5))*tk(lt ,1))
 
           ay = .25*( ( y(l4) + y(l5) + y(l7) +y(l6))*ti(lip,2)
-     &              -( y(l0) + y(l1) + y(l3) +y(l2))*ti(l  ,2)
+     &              -( y(l0) + y(l1) + y(l3) +y(l2))*ti(lt ,2)
      &              +( y(l1) + y(l3) + y(l5) +y(l7))*tj(ljp,2)
-     &              -( y(l0) + y(l2) + y(l4) +y(l6))*tj(l  ,2)
+     &              -( y(l0) + y(l2) + y(l4) +y(l6))*tj(lt ,2)
      &              +( y(l2) + y(l3) + y(l6) +y(l7))*tk(lkp,2)
-     &              -( y(l0) + y(l1) + y(l4) +y(l5))*tk(l  ,2))
+     &              -( y(l0) + y(l1) + y(l4) +y(l5))*tk(lt ,2))
 
           az = .25*( ( z(l4) + z(l5) + z(l7) +z(l6))*ti(lip,3)
-     &              -( z(l0) + z(l1) + z(l3) +z(l2))*ti(l  ,3)
+     &              -( z(l0) + z(l1) + z(l3) +z(l2))*ti(lt ,3)
      &              +( z(l1) + z(l3) + z(l5) +z(l7))*tj(ljp,3)
-     &              -( z(l0) + z(l2) + z(l4) +z(l6))*tj(l  ,3)
+     &              -( z(l0) + z(l2) + z(l4) +z(l6))*tj(lt ,3)
      &              +( z(l2) + z(l3) + z(l6) +z(l7))*tk(lkp,3)
-     &              -( z(l0) + z(l1) + z(l4) +z(l5))*tk(l  ,3))
+     &              -( z(l0) + z(l1) + z(l4) +z(l5))*tk(lt ,3))
 
-          vol(l) = (ax+ay+az)/3.
-        enddo
-        enddo
-        enddo
+          vol(lt) = max( (ax+ay+az)/3., 1.e-30)
+#include "FastC/HPC_LAYER/loop_end.for"
 
       ELSEIF(param_int( ITYPZONE ).eq.1) THEN !Domaine 3D avec une direction homogene k: traitement facette i et j
 
         !calcul volume
-        do k=ind_loop(5),ind_loop(6)
-        do j=ind_loop(3),ind_loop(4)
-        do i=ind_loop(1),ind_loop(2)
+#include "FastC/HPC_LAYER/loop_ale_begin.for"
+          l0= lx                 ! x(i  , j  , k  )
+          l1= l0 + incj          ! x(i  , j+1, k  )
+          l2= l0 + inck          ! x(i  , j  , k+1)
+          l3= l1 + inck          ! x(i  , j+1, k+1)
+          l4= l0 + inci          ! x(i+1, j  , k  )
+          l5= l1 + inci          ! x(i+1, j+1, k  )
+          l6= l2 + inci          ! x(i+1, j  , k+1)
+          l7= l3 + inci          ! x(i+1, j+1, k+1)
 
-          l = indmtr(i  ,j  ,k  )
-          l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
-          l1= l0 + incj               ! x(i  , j+1, k  )
-          l2= l0 + inck               ! x(i  , j  , k+1)
-          l3= l1 + inck               ! x(i  , j+1, k+1)
-          l4= l0 + inci               ! x(i+1, j  , k  )
-          l5= l1 + inci               ! x(i+1, j+1, k  )
-          l6= l2 + inci               ! x(i+1, j  , k+1)
-          l7= l3 + inci               ! x(i+1, j+1, k+1)
-
-          lip = l + inci_mtr              
-          ljp = l + incj_mtr
-          lkp = l + inck_mtr
+          lip = lt + inci_mtr              
+          ljp = lt + incj_mtr
+          lkp = lt + inck_mtr
 
           ax = .25*( ( x(l4) + x(l5) + x(l7) +x(l6))*ti(lip,1)
-     &              -( x(l0) + x(l1) + x(l3) +x(l2))*ti(l  ,1)
+     &              -( x(l0) + x(l1) + x(l3) +x(l2))*ti(lt ,1)
      &              +( x(l1) + x(l3) + x(l5) +x(l7))*tj(ljp,1)
-     &              -( x(l0) + x(l2) + x(l4) +x(l6))*tj(l  ,1))
+     &              -( x(l0) + x(l2) + x(l4) +x(l6))*tj(lt ,1))
 
           ay = .25*( ( y(l4) + y(l5) + y(l7) +y(l6))*ti(lip,2)
-     &              -( y(l0) + y(l1) + y(l3) +y(l2))*ti(l  ,2)
+     &              -( y(l0) + y(l1) + y(l3) +y(l2))*ti(lt ,2)
      &              +( y(l1) + y(l3) + y(l5) +y(l7))*tj(ljp,2)
-     &              -( y(l0) + y(l2) + y(l4) +y(l6))*tj(l  ,2))
+     &              -( y(l0) + y(l2) + y(l4) +y(l6))*tj(lt ,2))
 
           az = .25*( ( z(l2) + z(l3) + z(l6) +z(l7))*tk(lkp,1)
-     &              -( z(l0) + z(l1) + z(l4) +z(l5))*tk(l  ,1))
+     &              -( z(l0) + z(l1) + z(l4) +z(l5))*tk(lt ,1))
 
-          vol(l) = (ax+ay+az)/3.
-        enddo
-        enddo
-        enddo
+          vol(lt) = max( (ax+ay+az)/3., 1.e-30)
+#include "FastC/HPC_LAYER/loop_end.for"
 
       ELSEIF(param_int( ITYPZONE ).eq.2) THEN !Domaine 3D cartesien
 
         !calcul volume
-        do k=ind_loop(5),ind_loop(6)
-        do j=ind_loop(3),ind_loop(4)
-        do i=ind_loop(1),ind_loop(2)
+#include "FastC/HPC_LAYER/loop3dcart_ale_begin.for"
+          l0= lx                 ! x(i  , j  , k  )
+          l1= l0 + incj          ! x(i  , j+1, k  )
+          l2= l0 + inck          ! x(i  , j  , k+1)
+          l3= l1 + inck          ! x(i  , j+1, k+1)
+          l4= l0 + inci          ! x(i+1, j  , k  )
+          l5= l1 + inci          ! x(i+1, j+1, k  )
+          l6= l2 + inci          ! x(i+1, j  , k+1)
+          l7= l3 + inci          ! x(i+1, j+1, k+1)
 
-          l = indmtr(i  ,j  ,k  )
-          l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
-          l1= l0 + incj               ! x(i  , j+1, k  )
-          l2= l0 + inck               ! x(i  , j  , k+1)
-          l3= l1 + inck               ! x(i  , j+1, k+1)
-          l4= l0 + inci               ! x(i+1, j  , k  )
-          l5= l1 + inci               ! x(i+1, j+1, k  )
-          l6= l2 + inci               ! x(i+1, j  , k+1)
-          l7= l3 + inci               ! x(i+1, j+1, k+1)
-
-          lip = l + inci_mtr              
-          ljp = l + incj_mtr
-          lkp = l + inck_mtr
+          lip = lt + inci_mtr              
+          ljp = lt + incj_mtr
+          lkp = lt + inck_mtr
 
           ax = .25*( ( x(l4) + x(l5) + x(l7) +x(l6))*ti(lip,1)
-     &              -( x(l0) + x(l1) + x(l3) +x(l2))*ti(l  ,1))
+     &              -( x(l0) + x(l1) + x(l3) +x(l2))*ti(lt ,1))
 
           ay = .25*( ( y(l1) + y(l3) + y(l5) +y(l7))*tj(ljp,1)
-     &              -( y(l0) + y(l2) + y(l4) +y(l6))*tj(l  ,1))
+     &              -( y(l0) + y(l2) + y(l4) +y(l6))*tj(lt ,1))
 
           az = .25*( ( z(l2) + z(l3) + z(l6) +z(l7))*tk(lkp,1)
-     &              -( z(l0) + z(l1) + z(l4) +z(l5))*tk(l  ,1))
+     &              -( z(l0) + z(l1) + z(l4) +z(l5))*tk(lt ,1))
 
-          vol(l) = (ax+ay+az)/3.
-        enddo
-        enddo
-        enddo
+          vol(lt) = max( (ax+ay+az)/3., 1.e-30)
+#include "FastC/HPC_LAYER/loop_end.for"
+
       ELSE !Domaine 2D: neq_k=0
 
         !calcul volume
-        do k=ind_loop(5),ind_loop(6)
-        do j=ind_loop(3),ind_loop(4)
-        do i=ind_loop(1),ind_loop(2)
+#include "FastC/HPC_LAYER/loop_ale_begin.for"
+          l0= lx                 ! x(i  , j  , k  )
+          l1= l0 + incj          ! x(i  , j+1, k  )
+          l2= l0 + inck          ! x(i  , j  , k+1)
+          l3= l1 + inck          ! x(i  , j+1, k+1)
+          l4= l0 + inci          ! x(i+1, j  , k  )
+          l5= l1 + inci          ! x(i+1, j+1, k  )
+          l6= l2 + inci          ! x(i+1, j  , k+1)
+          l7= l3 + inci          ! x(i+1, j+1, k+1)
 
-          l = indmtr(i  ,j  ,k  )
-          l0= indcg(i  ,j  ,k  ) ! x(i  , j  , k  )
-          l1= l0 + incj               ! x(i  , j+1, k  )
-          l2= l0 + inck               ! x(i  , j  , k+1)
-          l3= l1 + inck               ! x(i  , j+1, k+1)
-          l4= l0 + inci               ! x(i+1, j  , k  )
-          l5= l1 + inci               ! x(i+1, j+1, k  )
-          l6= l2 + inci               ! x(i+1, j  , k+1)
-          l7= l3 + inci               ! x(i+1, j+1, k+1)
-
-          lip = l + inci_mtr              
-          ljp = l + incj_mtr
-          lkp = l + inck_mtr
+          lip = lt + inci_mtr              
+          ljp = lt + incj_mtr
+          lkp = lt + inck_mtr
 
           ax = .25*( ( x(l4) + x(l5) + x(l7) +x(l6))*ti(lip,1)
-     &              -( x(l0) + x(l1) + x(l3) +x(l2))*ti(l  ,1)
+     &              -( x(l0) + x(l1) + x(l3) +x(l2))*ti(lt ,1)
      &              +( x(l1) + x(l3) + x(l5) +x(l7))*tj(ljp,1)
-     &              -( x(l0) + x(l2) + x(l4) +x(l6))*tj(l  ,1))
+     &              -( x(l0) + x(l2) + x(l4) +x(l6))*tj(lt ,1))
 
           ay = .25*( ( y(l4) + y(l5) + y(l7) +y(l6))*ti(lip,2)
-     &              -( y(l0) + y(l1) + y(l3) +y(l2))*ti(l  ,2)
+     &              -( y(l0) + y(l1) + y(l3) +y(l2))*ti(lt ,2)
      &              +( y(l1) + y(l3) + y(l5) +y(l7))*tj(ljp,2)
-     &              -( y(l0) + y(l2) + y(l4) +y(l6))*tj(l  ,2))
+     &              -( y(l0) + y(l2) + y(l4) +y(l6))*tj(lt ,2))
 
           tkz10=(x(l4)-x(l0))*(y(l5)-y(l4))-(y(l4)-y(l0))*(x(l5)-x(l4))
           tkz11=(x(l1)-x(l5))*(y(l0)-y(l1))-(y(l1)-y(l5))*(x(l0)-x(l1))
@@ -225,10 +207,8 @@ c-----le nbr de metrique varie selon le type de domaine
  
           az = .25*(z(l2)+z(l3)+z(l6)+z(l7)-z(l0)-z(l1)-z(l4)-z(l5))*tk1
 
-          vol(l) = (ax+ay+az)/3.
-        enddo
-        enddo
-        enddo
+          vol(lt) = max( (ax+ay+az)/3., 1.e-30)
+#include "FastC/HPC_LAYER/loop_end.for"
 
       ENDIF!neq_k
 

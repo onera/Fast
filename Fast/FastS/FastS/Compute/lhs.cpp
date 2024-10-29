@@ -129,6 +129,8 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
 		 E_Int lrhs=1; E_Int lcorner=1; E_Int mjrnewton=1;
                  if(ithread_loc != -1)
                   {
+                    E_Int* ipt_shift_lu   = shift_lu + 6*nd*Nbre_thread_actif + (ithread-1)*6;
+
                     K_FASTS::BCzone( nd, lrhs, nitcfg, lcorner, 
                                     param_int[nd], param_real[nd],
                                     npass,
@@ -177,6 +179,8 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
                  if(lexit_lu == 0 )
                   { 
 #include "FastS/Compute/LU/prep_lussor.h"
+
+                    E_Int* ipt_shift_lu   = shift_lu + 6*nd*Nbre_thread_actif + (ithread-1)*6;
 
                     E_Float* iptdrodm_out = iptdrodm + shift_zone;
                     if(param_int[nd][LU_MATCH]==1 || param_int[nd][NB_RELAX]>1) iptdrodm_out = ipt_ssortmp_shift;

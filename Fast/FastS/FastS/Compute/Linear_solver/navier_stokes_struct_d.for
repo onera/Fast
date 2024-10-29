@@ -11,7 +11,7 @@ c***********************************************************************
      &                   socket , mx_synchro, lssiter_verif, nptpsi, 
      &                   nitcfg , nitrun    , first_it     , nb_pulse, 
      &                   flagcelln, mjr_dt, param_int, param_real,
-     &                   temps, tot, ijkv_sdm, 
+     &                   temps, ijkv_sdm, 
      &                   ind_dm_zone, ind_dm_socket, ind_dm_omp,
      &                   socket_topology, lok, topo_s,
      &                   cfl, x, y, z, celln, rop_ssiter,
@@ -57,8 +57,7 @@ c
 C Var loc
 #include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
-      INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
-     & ind_loop(6),neq_rot,depth,nb_bc
+      INTEGER_E ind_loop(6),neq_rot,depth,nb_bc
 
 
 #include "FastS/formule_param.h"
