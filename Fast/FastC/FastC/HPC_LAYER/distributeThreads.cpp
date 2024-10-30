@@ -204,8 +204,8 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
    FldArrayI newtab_nozone(mxzone);   E_Int* ipt_nozone_new  = newtab_nozone.begin();
    FldArrayI newtab_nosszone(mxzone); E_Int* ipt_nosszone_new= newtab_nosszone.begin();
 
-   FldArrayF    tab_HPC_CUPS(mxzone); E_Float* ipt_HPC_CUPS    = tab_HPC_CUPS.begin();
-   FldArrayF newtab_HPC_CUPS(mxzone); E_Float* ipt_HPC_CUPS_new= newtab_HPC_CUPS.begin();
+   FldArrayF    tab_hpccups(mxzone); E_Float* ipt_hpccups    = tab_hpccups.begin();
+   FldArrayF newtab_hpccups(mxzone); E_Float* ipt_hpccups_new= newtab_hpccups.begin();
 
    E_Int c = 0;
    E_Int ndimt=0;
@@ -228,8 +228,8 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
             E_Int* nozone   = ipt_nozone   +   c;
             E_Int* nosszone = ipt_nosszone +   c;
 
-            ipt_HPC_CUPS[c] = param_real[nd][HPC_CUPS];
-            if (ipt_HPC_CUPS[c] > CupsMax) CupsMax =  ipt_HPC_CUPS[c];
+            ipt_hpccups[c] = param_real[nd][HPC_CUPS];
+            if (ipt_hpccups[c] > CupsMax) CupsMax =  ipt_hpccups[c];
 
 
             ijk_start[0]= ipt_ind_dm[nd][0+shift];
@@ -274,13 +274,12 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
        {  
             E_Int* ndimdx = ipt_ndimdx  + c1;
 
-            E_Float* hpc_cups = ipt_HPC_CUPS+   c1;
+            E_Float* hpc_cups = ipt_hpccups+   c1;
 
             //if(ndimdx[0] > ndimdx_max) { ndimdx_max= ndimdx[0]; c_tg = c1;}
             if( float(ndimdx[0])/hpc_cups[0] > ndimdx_max) { ndimdx_max= float(ndimdx[0])/hpc_cups[0]; c_tg = c1;}
        }// loop recherche plus grosse zone
-
-       
+    
        E_Int* nijk     = ipt_nijk     + 3*c_tg;
        E_Int* ijk_start= ipt_nijk     + 3*c_tg +3*mxzone;
        E_Int* ndimdx   = ipt_ndimdx   +   c_tg;
@@ -288,9 +287,7 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
        E_Int* nozone   = ipt_nozone   +   c_tg;
        E_Int* nosszone = ipt_nosszone +   c_tg;
 
-       E_Float* hpc_cups = ipt_HPC_CUPS+   c_tg;
-
-       //printf("zone %d %d %d %d %d \n", c, ndimdx_max, c_tg, nozone[0],  nosszone[0]);
+       E_Float* hpc_cups = ipt_hpccups+   c_tg;
 
        E_Int* nijk_new     = ipt_nijk_new     + 3*c;
        E_Int* ijk_startnew = ipt_nijk_new     + 3*c +3*mxzone;
@@ -298,7 +295,7 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
        E_Int* nozone_new   = ipt_nozone_new   +   c;
        E_Int* nosszone_new = ipt_nosszone_new +   c;
 
-       E_Float* hpc_cups_new = ipt_HPC_CUPS_new +   c;
+       E_Float* hpc_cups_new = ipt_hpccups_new +   c;
 
        nijk_new[0]     = nijk[0];
        nijk_new[1]     = nijk[1];
@@ -337,7 +334,7 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
         E_Int* nozone_new   = ipt_nozone_new   +   c;
         //E_Int  No_zone      = nozone_new[0];
 
-        E_Float* hpc_cups = ipt_HPC_CUPS_new +   c;
+        E_Float* hpc_cups = ipt_hpccups_new +   c;
 
         ind_dm[0]= ijk_start[0];
         ind_dm[2]= ijk_start[1];
@@ -353,8 +350,6 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
 	E_Int size_k = 0;
         if(nijk[2] != 1) size_k = (nijk[2]+1)*nijk[0]*nijk[1];
 
-        //poids = cupsmoy/ipt_HPC_CUPS[c];
-        //poids = cupsmoy/ipt_HPC_CUPS[No_zone];
         poids = cupsmoy/hpc_cups[0];
         //if(nstep==1) printf("poids %f %f %f %d %d \n", poids, cupsmoy,ipt_HPC_CUPS[No_zone], c, No_zone);
 
@@ -411,7 +406,7 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
         E_Int  No_sszone    = nosszone_new[0];
         //E_Int* ndimdx       = ipt_ndimdx_new   +   c;
 
-        E_Float* hpc_cups = ipt_HPC_CUPS_new +   c;
+        E_Float* hpc_cups = ipt_hpccups_new +   c;
 
         E_Int* ipt_nidom_loc = ipt_ind_dm[No_zone] + param_int[No_zone][ MXSSDOM_LU ]*6*nssiter + nssiter;     //nidom_loc(nssiter)
         E_Int nb_subzone     = ipt_nidom_loc [nstep-1];   
@@ -433,8 +428,8 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
         if(nstep==1) { for (E_Int socket = 0; socket < NBR_SOCKET; socket++) { numa_socket[socket] = 0;} }
  
         poids = cupsmoy/hpc_cups[0];
-        //poids = cupsmoy/ipt_HPC_CUPS[c];
-        //poids = cupsmoy/ipt_HPC_CUPS[No_zone];
+        //poids = cupsmoy/ipt_hpccups[c];
+        //poids = cupsmoy/ipt_hpccups[No_zone];
         //printf("Nozone %d %d %f %d \n",c, No_zone, hpc_cups[0], nstep); 
 
         E_Int size_c = nijk[0]*nijk[1]*nijk[2]*poids;
@@ -639,9 +634,9 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
                   }
                 */
 
-                //poids = cupsmoy/ipt_HPC_CUPS[No_zone];
+                //poids = cupsmoy/ipt_hpccups[No_zone];
                 poids = cupsmoy/hpc_cups[0];
-                //poids = cupsmoy/ipt_HPC_CUPS[c];
+                //poids = cupsmoy/ipt_hpccups[c];
 
                 E_Int res = (cc*dim_i[0]*dim_j[0]*dim_k[0] + ci*dim_i[0]*dim_j[0]*dim_k[0] + cj*dim_j[0]*dim_i[0]*dim_k[0] + ck*dim_k[0]*dim_i[0]*dim_j[0] )*poids - cells_tg_loc;
                 E_Float sign = 1.;
@@ -894,9 +889,9 @@ void K_FASTC::distributeThreads_c( E_Int**& param_int, E_Float**& param_real, E_
               { list_affected[th]=-1; 
                 ipt_omp[PtTask + 2 + th] = -2;} //Thread inactif
 
-            //poids = cupsmoy/ipt_HPC_CUPS[No_zone];
+            //poids = cupsmoy/ipt_hpccups[No_zone];
             poids = cupsmoy/hpc_cups[0];
-            //poids = cupsmoy/ipt_HPC_CUPS[c];
+            //poids = cupsmoy/ipt_hpccups[c];
             //Recherche thread disponible
             E_Int th = 0;
             for (E_Int k = 0; k < topo_lu[2]; k++){

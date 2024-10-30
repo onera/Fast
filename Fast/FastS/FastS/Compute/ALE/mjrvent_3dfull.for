@@ -5,10 +5,8 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine mjrvent_3dfull(ndom, ithread,
      &                 param_int, param_real,
-     &                 ind_dm, ind_loop1, ijkv_bloc, ijkv_cache,
-     &                 synchro_send_sock, synchro_send_th,
-     &                 synchro_receive_sock, synchro_receive_th,
-     &                 ibloc , jbloc , kbloc ,
+     &                 ind_dm, ind_loop1, ijkv_cache,
+     &                 synchro_send_th, synchro_receive_th,
      &                 icache, jcache, kcache,
      &                 vtrans, rot, x,y,z, venti,ventj,ventk )
 c***********************************************************************
@@ -31,10 +29,8 @@ c***********************************************************************
 
       INTEGER_E ndom, ithread, nptpsi,
      & icache, jcache, kcache,
-     & ibloc, jbloc, kbloc, 
-     & ijkv_bloc(3), ijkv_cache(3),ind_loop1(6),ind_dm(6),
-     & synchro_send_sock(3),synchro_send_th(3),
-     & synchro_receive_sock(3), synchro_receive_th(3), param_int(0:*)
+     & ijkv_cache(3),ind_loop1(6),ind_dm(6),
+     & synchro_send_th(3), synchro_receive_th(3), param_int(0:*)
 
       REAL_E x(param_int(NDIMDX_XYZ)),y(param_int(NDIMDX_XYZ)),
      &       z(param_int(NDIMDX_XYZ))
@@ -60,12 +56,9 @@ C Var loc
       icorr = 0 !correction indice boucle i pour traiter l'interface ind_loop(2)+1 si necessaire
       jcorr = 0 
       kcorr = 0 
-      If(ibloc .eq.ijkv_bloc(1) .and.synchro_receive_sock(1).eq.0.and.
-     &   icache.eq.ijkv_cache(1).and.synchro_receive_th(1).eq.0) icorr=1
-      If(jbloc.eq.ijkv_bloc(2).and.synchro_receive_sock(2).eq.0.and.
-     &   jcache.eq.ijkv_cache(2).and.synchro_receive_th(2).eq.0) jcorr=1
-      If( kbloc.eq.ijkv_bloc(3).and.synchro_receive_sock(3).eq.0.and.
-     &   kcache.eq.ijkv_cache(3).and.synchro_receive_th(3).eq.0) kcorr=1
+      If(icache.eq.ijkv_cache(1).and.synchro_receive_th(1).eq.0) icorr=1
+      If(jcache.eq.ijkv_cache(2).and.synchro_receive_th(2).eq.0) jcorr=1
+      If(kcache.eq.ijkv_cache(3).and.synchro_receive_th(3).eq.0) kcorr=1
 
       ind_loop = ind_loop1
 

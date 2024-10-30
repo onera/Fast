@@ -134,6 +134,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       c1     = 0.02*uref         ! modif suite chant metrique et suppression tc dans flux final
       c2     = 0.02/(uref*roref) ! modif suite chant metrique et suppression tc dans flux final
       c3     = -2.
+      opt0   = float(param_int(SENSORTYPE))
 
       !    roff MUSCL
       c6     = 1./6.
@@ -193,7 +194,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift
 #include    "FastS/Compute/ROE/3dfull/fluFaceEuler_o3sc_3dfull_i.for"
 #include    "FastS/Compute/ROE/3dfull/fluFaceSA_o3sc_3dfull_i.for"
-#include    "FastS/Compute/fluvisq_3dfull_i.for"          
+#include    "FastS/Compute/SA/fluvisq_3dfull_i.for"          
 #include    "FastS/Compute/SA/fluvisq_SA_3dfull_i.for"            
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
@@ -211,7 +212,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift
 #include    "FastS/Compute/ROE/3dfull/fluFaceEuler_o3sc_3dfull_j.for"
 #include    "FastS/Compute/ROE/3dfull/fluFaceSA_o3sc_3dfull_j.for"
-#include    "FastS/Compute/fluvisq_3dfull_j.for"         
+#include    "FastS/Compute/SA/fluvisq_3dfull_j.for"         
 #include    "FastS/Compute/SA/fluvisq_SA_3dfull_j.for"           
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
@@ -229,7 +230,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift                        
 #include    "FastS/Compute/ROE/3dfull/fluFaceEuler_o3sc_3dfull_k.for"    
 #include    "FastS/Compute/ROE/3dfull/fluFaceSA_o3sc_3dfull_k.for"     
-#include    "FastS/Compute/fluvisq_3dfull_k.for"            
+#include    "FastS/Compute/SA/fluvisq_3dfull_k.for"            
 #include    "FastS/Compute/SA/fluvisq_SA_3dfull_k.for"               
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"         
            enddo                                  

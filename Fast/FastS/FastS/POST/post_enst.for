@@ -47,7 +47,7 @@ c***********************************************************************
 
 C Var loc 
       INTEGER_E nitrun
-#include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
+#include "FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
       REAL_E c1,c2
 
       REAL_E dvardc(dim_grad*3*3)
@@ -67,21 +67,19 @@ C Var loc
 
       nitrun = -2
 
-#include "../FastC/FastC/HPC_LAYER/SIZE_MIN.for"
-#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+#include "FastC/HPC_LAYER/SIZE_MIN.for"
+#include "FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
       if(c1.eq.1.) extended_range = 1
-#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
-#include "../FastC/FastC/HPC_LAYER/INDICE_RANGE.for"
+#include "FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
+#include "FastC/HPC_LAYER/INDICE_RANGE.for"
 
             if(param_int(ITYPZONE).eq.0) then
 
                call cp_enst_3dfull(ndo, ithread, dim_grad,
      &                        param_int, c1,c2,
      &                        ind_grad,
-     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        dvardc,
      &                        rop, enst,ti,tj,tk, vol)
@@ -92,10 +90,8 @@ C Var loc
                call cp_enst_3dhomo(ndo, ithread, dim_grad,
      &                        param_int, c1,c2,
      &                        ind_grad,
-     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        dvardc,
      &                        rop, enst,ti,tj,tk, vol)
@@ -105,10 +101,8 @@ C Var loc
                call cp_enst_3dcart(ndo, ithread,  dim_grad,
      &                        param_int, c1,c2,
      &                        ind_grad,
-     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        dvardc,
      &                        rop, enst,ti,tj,tk, vol)
@@ -117,16 +111,14 @@ C Var loc
                call cp_enst_2d(ndo, ithread,  dim_grad,
      &                        param_int, c1,c2,
      &                        ind_grad,
-     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        dvardc,
      &                        rop, enst,ti,tj,tk, vol)
             endif
 
-#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_END.for"
-#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+#include "FastC/HPC_LAYER/LOOP_CACHE_END.for"
+CC#include "FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
       end

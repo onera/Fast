@@ -5,10 +5,8 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine mjr_ale(ndom, nitcfg, ithread,
      &                        param_int, param_real,
-     &                        ind_dm, ind_loop,ijkv_thread, ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm, ind_loop, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        x,y,z,ti,ti0,tj,tj0,tk,tk0, vol,
      &                        venti, ventj, ventk)
@@ -40,7 +38,7 @@ c***********************************************************************
 
       INTEGER_E ndom, nitcfg,ithread,
      & icache, jcache, kcache,ibloc, jbloc, kbloc,
-     & ijkv_thread(3), ijkv_sdm(3), ind_loop(6),ind_dm(6),
+     & ijkv_sdm(3), ind_loop(6),ind_dm(6),
      & synchro_send_sock(3),synchro_send_th(3),
      & synchro_receive_sock(3), synchro_receive_th(3), param_int(0:*)
 
@@ -67,10 +65,8 @@ C Var loc
 
           call mjrtijk_3dfull(ndom, ithread,
      &                        param_int, param_real,
-     &                    ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
-     &                    synchro_send_sock, synchro_send_th,
-     &                    synchro_receive_sock, synchro_receive_th,
-     &                    ibloc , jbloc , kbloc ,
+     &                    ind_dm, ind_loop, ijkv_sdm,
+     &                    synchro_send_th, synchro_receive_th,
      &                    icache, jcache, kcache,
      &                    rot, ti0,tj0,tk0,ti,tj,tk )
 
@@ -78,10 +74,8 @@ C Var loc
 
           call mjrtijk_2d(ndom, ithread,
      &                    param_int, param_real,
-     &                    ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
-     &                    synchro_send_sock, synchro_send_th,
-     &                    synchro_receive_sock, synchro_receive_th,
-     &                    ibloc , jbloc , kbloc ,
+     &                    ind_dm, ind_loop, ijkv_sdm,
+     &                    synchro_send_th, synchro_receive_th,
      &                    icache, jcache, kcache,
      &                    rot, ti0,tj0,tk0,ti,tj,tk )
        else   !mvt metric traite avant zone paralel open, car shape metric imcompatible avec cache bloking: race....
@@ -92,10 +86,8 @@ C Var loc
 
           call mjrvent_3dfull(ndom, ithread,
      &                        param_int, param_real,
-     &                    ind_dm, ind_loop, ijkv_thread, ijkv_sdm, 
-     &                    synchro_send_sock, synchro_send_th,
-     &                    synchro_receive_sock, synchro_receive_th,
-     &                    ibloc , jbloc , kbloc ,
+     &                    ind_dm, ind_loop, ijkv_sdm, 
+     &                    synchro_send_th, synchro_receive_th,
      &                    icache, jcache, kcache,
      &                    vtrans, rot, x,y,z,venti,ventj,ventk )
 
@@ -103,10 +95,8 @@ C Var loc
 
           call mjrvent_2d(ndom, ithread,
      &                    param_int, param_real,
-     &                    ind_dm, ind_loop, ijkv_thread, ijkv_sdm,
-     &                    synchro_send_sock, synchro_send_th,
-     &                    synchro_receive_sock, synchro_receive_th,
-     &                    ibloc , jbloc , kbloc ,
+     &                    ind_dm, ind_loop, ijkv_sdm,
+     &                    synchro_send_th, synchro_receive_th,
      &                    icache, jcache, kcache,
      &                    vtrans, rot, x,y,z,venti,ventj,ventk )
 
