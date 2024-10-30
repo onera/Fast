@@ -56,7 +56,7 @@ void compute_sij( E_Float**& ipt_ro      , E_Float**& iptS     , E_Float**& ipt_
 	      E_Int& layer_mode          , E_Int& mpi                  , E_Int& nisdom_lu_max        ,
 	      E_Int& mx_nidom            , E_Int& ndimt_flt            , E_Int& threadmax_sdm       , E_Int& mx_synchro           ,
 	      E_Int& nb_pulse            , E_Float& temps              , E_Int* ipt_ijkv_sdm        , E_Int* ipt_ind_dm_omp       , E_Int* iptdtloc,
-	      E_Int* ipt_topology        , E_Int* ipt_ind_CL           , E_Int* ipt_lok             , E_Int* verrou_lhs           ,
+	      E_Int* ipt_topology        , E_Int* ipt_ind_CL           , E_Int* ipt_shift_lu        , E_Int* ipt_lok              , E_Int* verrou_lhs           ,
 	      E_Int& vartype             , E_Float* timer_omp          , E_Int* iptludic            , E_Int* iptlumax             ,
 	      E_Int** ipt_ind_dm         , E_Int** ipt_it_lu_ssdom     , E_Int** ipt_ng_pe          , E_Int** ipt_nfconn          ,
 	      E_Int** ipt_nfindex        , E_Float* ipt_VectG          , E_Float* ipt_VectY         , E_Float** ipt_ssor          ,
