@@ -88,8 +88,8 @@ def _reorder(t, tc=None):
 
     if tc is not None: 
        #reordone les bases, sinon souci potentiel en MPi si ordre base != entre proc
-       #Internal._sortByName(tc,recursive=False)
-       #Internal._sortByName(t, recursive=False)
+       Internal._sortByName(tc,recursive=False)
+       Internal._sortByName(t, recursive=False)
 
        #reordone les zones de tc par taille decroissante dans chaque base pour optim openmp
        bases_tc = Internal.getNodesFromType1(tc, 'CGNSBase_t')
