@@ -57,10 +57,11 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
         procDict  = graph['procDict']
         graphID   = graph['graphID']
         graphIBCD = graph['graphIBCD']
+        graphInvIBCD_WM  = None
         if tc2 is not None:
           graphIBCD2 = graph2['graphIBCD']
           graphInvIBCD = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
-        graphInvIBCD_WM  = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
+          graphInvIBCD_WM  = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
     else: 
         procDict=None; graphID=None; graphIBCD=None; graphInvIBCD_WM=None
 
@@ -83,13 +84,22 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
     rk     = param_int_firstZone[52]
     exploc = param_int_firstZone[54]
     #### a blinder...
+    if nitrun == 1: print('Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode))
+
+    #determine layer pour transfert et sous-iteration
+    if          "Python" == layer: layer_mode= 0
+    elif "Python_ucdata" == layer: layer_mode= 2
+    else                         : layer_mode= 1
+
+    if layer_mode>=1: FastC.HOOK["mpi"] = 1
 
     timelevel_target = int(dtloc[4])
     tps_cp = Time.time(); tps_cp = tps_cp-tps_cp     
-    tps_tr = Time.time(); tps_tr = tps_tr-tps_tr     
-    if layer == "Python": 
+    tps_tr = Time.time(); tps_tr = tps_tr-tps_tr
+    tps_tr1= Time.time(); tps_tr1= tps_tr1-tps_tr1
+    if layer_mode==0 or layer_mode==2:
 
-      if exploc==1 and tc is not None:
+      if exploc==1 and tc is not None and layer_mode==0:
          tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
          if tc_compact is not None:
                 param_real_tc= tc_compact[1]
@@ -103,26 +113,26 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                 dest        = param_int_tc[pt_ech]
 
       hookTransfer = []
+      hook1        = FastC.HOOK.copy()
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
-         hook1 = FastC.HOOK.copy()
-         hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, 0) )
-
-         skip = 0
-         if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
+         skip      = 0
+         if layer_mode==0:
+           hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, 0) )
+           if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
 
          # calcul Navier Stokes + appli CL
          if skip == 0:
-            # Navier-Stokes
             nstep_deb = nstep
             nstep_fin = nstep
-            layer_mode= 0
             nit_c     = 1
             tic = Time.time()
-            fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
-            tps_cp += Time.time()-tic  
+
+            tps_trIt  = fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
+            tps_cp += Time.time()-tic - tps_trIt  
+            tps_tr += tps_trIt  
 
             # dtloc GJeanmasson
-            if exploc==1 and tc is not None:
+            if exploc==1 and tc is not None and layer_mode==0:
 
                no_transfert = 1#comm_P2P
                process = Cmpi.rank
@@ -177,7 +187,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                tic=Time.time()
 
                if not tc2:
-                _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE, isWireModel=isWireModel, graphInvIBCD_WM=graphInvIBCD_WM)
+                  if layer_mode==0:
+                     _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE, isWireModel=isWireModel, graphInvIBCD_WM=graphInvIBCD_WM)
                else:
                 _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE, graphInvIBCD=graphInvIBCD, graphIBCD2=graphIBCD2)
 
@@ -199,29 +210,31 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                    C._cpVars(t, "centers:cellN", tc, "cellN")
 
                    if nstep == nitmax or nstep%tfreq == 0:
-                    Xmpi._transfer2(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
-                                    dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                                    dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-                                    dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
-                                    time=time, absFrame=True,
-                                    procDict=procDict, cellNName='cellN#Motion', 
-                                    interpInDnrFrame=interpInDnrFrame, order=order, 
-                                    hook=hookTransfer, verbose=verbose)
-               tps_tr += Time.time()-tic  
+                     Xmpi._transfer2(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
+                                     dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                                     dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+                                     dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
+                                     time=time, absFrame=True,
+                                     procDict=procDict, cellNName='cellN#Motion', 
+                                     interpInDnrFrame=interpInDnrFrame, order=order, 
+                                     hook=hookTransfer, verbose=verbose)
+
+                     _applyBC(t,metrics, hook1, nstep, var=VARS[0])
+
+               tps_tr1+= Time.time()-tic  
 
     else: 
       nstep_deb = 1
       nstep_fin = nitmax
       layer_mode= 1
       nit_c     = NIT
-      FastC.HOOK["mpi"] = 1
       tic = Time.time()
-      tps_tr = fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
+      tps_tr  = fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
       tps_cp += Time.time()-tic - tps_tr  
-
+      tps_tr1 =0
     #switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None:
-         if layer == 'Python': FastC.switchPointers__(zones, 1, 3)
+         if layer_mode == 0: FastC.switchPointers__(zones, 1, 3)
          else: FastC.switchPointers3__(zones, nitmax)
     else:
          case = NIT%3
@@ -235,7 +248,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
     if vtune is None:
       return None
     else:
-      return tps_cp,tps_tr
+      return tps_cp,tps_tr,tps_tr1
 
 #==============================================================================
 def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, isWireModel=False, graphInvIBCD_WM=None):

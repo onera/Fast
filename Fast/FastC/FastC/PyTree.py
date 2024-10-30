@@ -282,8 +282,8 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                for v in vars_p:
                  fields2compact.append('centers:'+v+level)
                vars.append(fields2compact)
-            if source == 1:                   #terme source volumique
-               fields2compact=[]
+            if source == 1:          #terme source volumique
+               fields2compact =[]
                for v in vars_c:
                  fields2compact.append('centers:'+v+'_src')
                vars.append(fields2compact)
@@ -1226,7 +1226,7 @@ def _buildOwnData(t, Padding):
             model    = "Euler"
             ransmodel= 'SA'
             sgsmodel = "Miles"
-            wallmodel= "power"
+            wallmodel= "musker"
             wallmodel_sample= 4  # position du point (en maille )par rapport paroi pour calcul utau
             des      = "none"
             implicit_solver = "lussor"
@@ -1268,7 +1268,7 @@ def _buildOwnData(t, Padding):
             extract_res     = 0
             ibc             = numpy.zeros( 7, dtype=Internal.E_NpyInt)
             source          = 0
-            cups            = [1.,1.]
+            cups            = [1.,1.,1.]
             ratiom          = 10000.
             meshtype        = 1  #structured
             senseurtype     = 1  #version celia laurent du schema senseur
@@ -1457,7 +1457,10 @@ def _buildOwnData(t, Padding):
                 a = Internal.getNodeFromName1(d, 'source')
                 if a is not None: source = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'Cups')
-                if a is not None: cups = Internal.getValue(a)  
+                cupsLen = 3
+                if a is not None:
+                     cups = Internal.getValue(a)
+                     cupsLen = numpy.size(cups)
                 a = Internal.getNodeFromName1(d, 'ratiom')
                 if a is not None: ratiom = Internal.getValue(a)  
                 a = Internal.getNodeFromName1(d, 'senseurType')
@@ -1934,7 +1937,8 @@ def _buildOwnData(t, Padding):
             datap[37]=  epsi_inflow
             datap[38]=  prandtltb
             datap[39]=  epsi_linear
-            datap[40]=  cups[1] # on garde la valeur max, pas la moyenne
+            if cupsLen < 3: datap[40]=  cups[1] # on garde la valeur max, pas la moyenne
+            else: datap[40]=  cups[2]           # on garde la valeur min, pas la moyenne
 
             datap[55]=  coef_hyper[0] 
             datap[56]=  coef_hyper[1] 
@@ -2781,7 +2785,8 @@ def _BCcompact(t):
                 shift =1
                 if '2couche' in bc[0]: shift=2
                 if '3couche' in bc[0]: shift=3
-                Ntg= 101 #nbr echant pour calcul moyenne temporelle
+                #Ntg= 101 #nbr echant pour calcul moyenne temporelle
+                Ntg= 5 #nbr echant pour calcul moyenne temporelle
                 print ('nb couche loi de paroi',shift,'Nb echant pour moyenne:',Ntg)
                   
                 Prop = Internal.getNodeFromName(bc,'.Solver#Property')
@@ -2822,34 +2827,34 @@ def _BCcompact(t):
                 if numpy.shape(cellN)[2]==1:
                   kmin=0;kmax=1
                 else:
-                  kmin= rg[2][0]-1; kmax = rg[2][1]
+                  kmin= rg[2][0]-1; kmax = rg[2][1]-1
                 #CL I
                 if rg[0][1] - rg[0][0]==0:
                      if rg[0][1]==1: ijk_tg =2;          sens = 1
                      else:           ijk_tg =rg[0][1]-4; sens =-1
 
                      for k in range(kmin,kmax):
-                        for j in range(rg[1][0]-1,rg[1][1]):
-                          for s in range(shift):
-                            cellN[ijk_tg+ s*sens, j , k]=2.
+                       for j in range(rg[1][0]-1,rg[1][1]-1):
+                         for s in range(shift):
+                            if cellN[ijk_tg+ s*sens, j, k] !=0: cellN[ijk_tg+ s*sens, j, k]=2.
                 #CL J
                 if rg[1][1] - rg[1][0]==0:
                      if rg[1][1]==1: ijk_tg =2;          sens = 1
                      else:           ijk_tg = rg[1][1]-4;sens =-1
 
                      for k in range(kmin,kmax):
-                        for i in range(rg[0][0]-1,rg[0][1]):
-                          for s in range(shift):
-                             cellN[i, ijk_tg+ s*sens  , k]=2.
+                       for i in range(rg[0][0]-1,rg[0][1]-1):
+                         for s in range(shift):
+                           if cellN[i, ijk_tg+ s*sens, k] !=0: cellN[i, ijk_tg+ s*sens, k]=2.
                 #CL K
                 if numpy.shape(cellN)[2]!=1:
                     if rg[2][1] - rg[2][0]==0:
                        if rg[2][1]==1: ijk_tg =2;           sens = 1
                        else:           ijk_tg = rg[2][1]-4; sens =-1
-                       for j in range(rg[1][0]-1,rg[1][1]):
-                         for i in range(rg[0][0]-1,rg[0][1]):
-                           for s in range(shift):
-                              cellN[i, j, ijk_tg+ s*sens ]=2.
+                       for j in range(rg[1][0]-1,rg[1][1]-1):
+                         for i in range(rg[0][0]-1,rg[0][1]-1):
+                          for s in range(shift):
+                            if  cellN[i, j, ijk_tg+ s*sens] !=0: cellN[i, j, ijk_tg+ s*sens]=2.
               
             bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
             Nb_data = len(bcdata)
@@ -3915,13 +3920,17 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
             #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
             FILE = '%s/%s%d.cgns'%(directory, fileName, rank)
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else: t = None
+            else: 
+               #t = None
+               raise ValueError("File "+FILE+" not found")
 
     else: # sequential run
         if split == 'single':
             FILE = directory+'/'+fileName+'.cgns'
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else: t = None
+            else: 
+               #t = None
+               raise ValueError("File "+FILE+" not found")
         else: # multiple
             # Load connectivity (tc)
             ret = 1; no = 0; tc = []
@@ -3931,9 +3940,10 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
                 if not os.access(FILE, os.F_OK): ret = 0
                 if ret == 1: tc.append(C.convertFile2PyTree(FILE))
                 no += 1
-            #if no == NP and t != []: t = Internal.merge(t)
             if  t != []: t = Internal.merge(t)
-            else: t = None
+            else:
+               # t = None
+               raise ValueError("File "+FILE+" not found")
 
     if graph: return t, graphN
     else:     return t
@@ -4090,8 +4100,7 @@ def calc_post_stats(t, iskeeporig=False, mode=None, cartesian=True):
         pres2    = Internal.getNodeFromName1(flowsol,'Pressure^2')
         if iskeeporig: Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
         pres2[0] = pres[0]+'_RMS'
-        pres2[1] = numpy.sqrt(numpy.abs(pres2[1]-pres[1]**2)) # is abs necessary? reponse IM: Oui
-        
+        pres2[1] = numpy.sqrt( numpy.abs(pres2[1]-pres[1]**2))
 
         #Velocity RMS
         for i in dict_var:
@@ -4099,7 +4108,7 @@ def calc_post_stats(t, iskeeporig=False, mode=None, cartesian=True):
             pres2    = Internal.getNodeFromName1(flowsol,dict_var[i])
             if iskeeporig: Internal.addChild(flowsol, Internal.copyNode(pres2), pos=-1)
             pres2[0] = pres[0]+'_RMS'
-            pres2[1] = numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )  # is abs necessary?
+            pres2[1] = numpy.sqrt( numpy.abs(pres2[1]/dens[1] - pres[1]**2) )
 
         #Reynolds Stress
         for i in list_var:

@@ -94,11 +94,16 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
     #### a blinder...
     if nitrun == 1: print('Info: using layer trans=%s (ompmode=%d)'%(layer, ompmode))
 
+    #determine layer pour transfert et sous-iteration
+    if          "Python" == layer: layer_mode= 0
+    elif "Python_ucdata" == layer: layer_mode= 2
+    else                         : layer_mode= 1
+
     tps_cp=  Time.time(); tps_cp=  tps_cp-tps_cp     
     tps_tr=  Time.time(); tps_tr=  tps_tr-tps_tr  
-    if layer == "Python":
+    if layer_mode==0 or layer_mode==2:
         
-      if exploc==1 and tc is not None:        
+      if exploc==1 and tc is not None and layer_mode==0:        
          tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
          if tc_compact is not None:
                 param_real_tc= tc_compact[1]
@@ -112,31 +117,29 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                 dest        = param_int_tc[pt_ech]
 
       hookTransfer = []        
+      hook1        = FastC.HOOK.copy()
 
       for nstep in range(1, nitmax+1): # pas RK ou ssiterations
-         hook1 = FastC.HOOK.copy()
-         hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, 0) )
-
-         skip = 0
-         if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
+         skip      = 0
+         if layer_mode==0:
+           hook1.update(  FastC.fastc.souszones_list(zones, metrics, FastC.HOOK, nitrun, nstep, 0) )
+           if hook1["lssiter_verif"] == 0 and nstep == nitmax and itypcp ==1: skip = 1
 
          # calcul Navier_stokes + appli CL
          if skip == 0:
             nstep_deb = nstep
             nstep_fin = nstep
-            layer_mode= 0
             nit_c     = 1
-            #t0=Time.time()
             tic=Time.time()
 
             fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
             tps_cp +=Time.time()-tic 
-            #print('t_compute = %f'%(Time.time() - t0))
+            #print('t_compute = ', tps_cp, layer_mode, nstep )
 
             timelevel_target = int(dtloc[4])
 
             # dtloc GJeanmasson
-            if exploc==1 and tc is not None:
+            if exploc==1 and tc is not None and layer_mode==0:
                fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
                
                if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
@@ -168,7 +171,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
               tic=Time.time()
 
               if not tc2:
-                _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP, isWireModel=isWireModel)
+                 if layer_mode==0:
+                    _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP,isWireModel=isWireModel)
               else:
                 _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, ompmode, hook1, TBLE=TBLE, gradP=gradP)
                 
@@ -200,6 +204,9 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                                     procDict=procDict, cellNName='cellN#Motion', 
                                     interpInDnrFrame=interpInDnrFrame, order=order, 
                                     hook=hookTransfer, verbose=verbose)
+
+                    #_applyBC(t,metrics, hook1, nstep, var=VARS[0])
+
                     #print('t_transfert = ',  Time.time() - t0 ,'nstep =', nstep)
               #print('t_transferts = %f'%(Time.time() - t0)
               tps_tr += Time.time()-tic
@@ -221,7 +228,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
       tps_cp +=Time.time()-tic - tps_tr 
     # switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None:
-         if layer == 'Python': FastC.switchPointers__(zones, 1, 3)
+         if layer_mode == 0: FastC.switchPointers__(zones, 1, 3)
          else: FastC.switchPointers3__(zones, nitmax)
     else:
          case = NIT%3
@@ -1239,13 +1246,14 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
               type_transfert  = 2  # 0= ID uniquement, 1= IBC uniquement, 2= All
               no_transfert    = 1  # dans la list des transfert point a point
               isWireModel_int = 0
+
               Connector.connector.___setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, timelevel_target, varType, type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, isWireModel_int)#,timecount)
-                  
+        
        #apply BC
-       #t0=timeit.default_timer()
+       #t0=Time.time()
        if exploc != 1:
           _applyBC(zones, metrics, hook1, nstep, var=vars[0])
-       #t1=timeit.default_timer()
+       #t1=Time.time()
        #print("Time BC",(t1-t0))
 
    return None
@@ -2363,7 +2371,7 @@ def createStressNodes(t, BC=None, windows=None):
                             if familyBCDict[familyName] in BC: selectBC = True
                     else: # name is a type
                         if name in BC: selectBC = True
-                    #print('selection', name, selectBC)
+                    #print('selection', name, selectBC, BC)
                 else: name = v[0] 
 
                 if windows is None: windows = [None]
@@ -2729,6 +2737,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
     z = zones[nd]
     ADR = OMP_NUM_THREADS*2*ss_iteration + nd*(OMP_NUM_THREADS*2+1)
     echant    =  timer_omp[ ADR ]
+
     param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
     solver_def= Internal.getNodeFromName1(z, '.Solver#define')
 
@@ -2753,7 +2762,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
              if timer_omp[ ADR + 1+i*2 ] > tps_zone_percell_max: 
                   tps_zone_percell_max = timer_omp[ ADR + 1+i*2 ]
                   ithread_max          = ithread
-             if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min: 
+             if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min:
                   tps_zone_percell_min = timer_omp[ ADR + 1+i*2 ]
                   ithread_min          = ithread
       
@@ -2764,7 +2773,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       cout            += cout_zone
       data[ z[0] ]   = [ tps_zone_percell/echant/NbreThreads, cout_zone]
 
-      f1.write('cpumoy/cell=  '+str(tps_zone_percell/echant/NbreThreads)+"  cpumaxmin= "+str(tps_zone_percell_max/echant)+str(tps_zone_percell_min/echant) +" th lent/rap= "+str(ithread_max)+str(ithread_min)+"  Nthtread actif="+str(NbreThreads)+" dim zone="+str(ijkv)+" dim tot="+str(cells_tot)+"  "+z[0]+'\n')
+      f1.write('cpumoy/cell=  '+str(tps_zone_percell/echant/NbreThreads)+"  cpumaxmin= "+str(tps_zone_percell_max/echant)+' '+str(tps_zone_percell_min/echant) +" th lent/rap= "+str(ithread_max)+' '+str(ithread_min)+"  Nthtread actif="+str(NbreThreads)+" dim zone="+str(ijkv)+" dim tot="+str(cells_tot)+"  "+z[0]+'\n')
 
       cells_tot   += ijkv
 
@@ -2775,9 +2784,10 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
       tps_zone_percell = max(tps_zone_percell, 1.e-11)
       tps_zone_percell_max = max(tps_zone_percell_max, 1.e-11)
 
-      perfo = numpy.empty(2, dtype=numpy.float64)
+      perfo = numpy.empty(3, dtype=numpy.float64)
       perfo[0]= int(echant*NbreThreads/tps_zone_percell)
       perfo[1]= int(echant/tps_zone_percell_max)
+      perfo[2]= int(echant/tps_zone_percell_min)
       ## CUPS  : [0] MEAN VALUE [1] MIN VALUE
       ## 1/CUPS=mus/iter(time * sub-iter)/cellspercore
 
