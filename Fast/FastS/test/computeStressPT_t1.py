@@ -5,6 +5,7 @@ import Connector.PyTree as X
 import FastS.PyTree as FastS
 import FastC.PyTree as FastC
 import Initiator.PyTree as I
+import Converter.Internal as Internal
 import KCore.test as test
 
 ni = 155 ; dx = 100./(ni-1) ; dz = 1.
@@ -31,5 +32,8 @@ for nitrun in range(1,200):
     FastS._compute(t, metrics, nitrun)
 
 effort = FastS._computeStress(t, teff, metrics)
+
+Internal._rmNodesByName(teff, '.Solver#Param')
+Internal._rmNodesByName(teff, '.Solver#ownData')
 
 test.testT(teff, 1)

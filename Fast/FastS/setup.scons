@@ -75,7 +75,7 @@ def addSourceScannerToTargets(target, source, env):
    return (target, source)
 
 
-f77CppArgs = '-D_OPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'+" -I\""+fastcIncDir+"\""
+f77CppArgs = '-D_OPENMP4 -D_OPENMP -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'+" -I\""+fastcIncDir+"\""
 #f77CppArgs = '-D_NOOPENMP4 -DE_SCALAR_COMPUTER -DE_OMP_SOUS_DOMAIN'
 
 cacheLine = Dist.getCacheLine()
