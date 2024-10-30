@@ -1,6 +1,6 @@
             ldjr = inddm(  i, jr        , k )
-            ldl  = inddm(  i, jr +sens  , k )
-            ldnp = inddm(  i, jr +sens*2, k )
+            ldl  = inddm(  i, jr +sens_int  , k )
+            ldnp = inddm(  i, jr +sens_int*2, k )
             ldnm = ldjr
  
             m    = ldjr  - exchange

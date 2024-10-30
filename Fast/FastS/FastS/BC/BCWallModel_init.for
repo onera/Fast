@@ -3,7 +3,7 @@
       exchange = 1 - sampling  ! index correction for identifying the correct cell
 
       sens     = 1.
-      sens_int = 1.
+      sens_int = 1
       shift = 0
       if(mod(idir,2).eq.0) then
         sens      = -1.
