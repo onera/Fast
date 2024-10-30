@@ -6,10 +6,8 @@ c***********************************************************************
       subroutine cp_qprime_1rot_3dfull(ndom, ithread, dim_grad,vr1,vr2,
      &                         param_int, param_real, c1,c2,
      &                         ind_loop,
-     &                         ind_dm, ijkv_bloc, ijkv_cache,
-     &                         synchro_send_sock, synchro_send_th,
-     &                         synchro_receive_sock, synchro_receive_th,
-     &                         ibloc , jbloc , kbloc ,
+     &                         ind_dm, ijkv_cache,
+     &                         synchro_send_th, synchro_receive_th,
      &                         icache, jcache, kcache,
      &                         dvardc,
      &                         rop, rop_m1, Q, rot1,
@@ -41,10 +39,9 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E ndom,neq_grad,ndimdx,ind_loop(6),dim_grad,vr1,vr2,
-     & ithread, icache, jcache, kcache, ibloc, jbloc, kbloc, 
-     & ijkv_bloc(3), ijkv_cache(3),ind_dm(6),
-     & synchro_send_sock(3),synchro_send_th(3),
-     & synchro_receive_sock(3), synchro_receive_th(3), param_int(0:*)
+     & ithread, icache, jcache, kcache,
+     & ijkv_cache(3),ind_dm(6),
+     & synchro_send_th(3), synchro_receive_th(3), param_int(0:*)
 
       REAL_E    rop( param_int(NDIMDX) * param_int(NEQ) )
       REAL_E rop_m1( param_int(NDIMDX) * param_int(NEQ) )

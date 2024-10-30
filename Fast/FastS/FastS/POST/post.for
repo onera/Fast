@@ -81,10 +81,8 @@ C Var loc
             call cp_gradu(ndo, ithread, neq_grad,
      &                    param_int, c1,c2,
      &                    ind_sdm,ind_mjr,
-     &                    ind_dm_zone, ijkv_thread, ijkv_sdm,
-     &                    synchro_send_sock, synchro_send_th,
-     &                    synchro_receive_sock, synchro_receive_th,
-     &                    ibloc , jbloc , kbloc ,
+     &                    ind_dm_zone, ijkv_sdm,
+     &                    synchro_send_th,synchro_receive_th,
      &                    icache, jcache, kcache,
      &                    rop, grad,ti,tj,tk,vol)
 

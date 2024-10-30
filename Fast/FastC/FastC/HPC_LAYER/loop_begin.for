@@ -1,5 +1,5 @@
 #ifndef E_SCALAR_COMPUTER
-#include   "FastC/HPC/loopGpu_begin.for"
+#include   "FastS/Compute/loopGpu_begin.for"
 #else
              do k = ind_loop(5), ind_loop(6)
              do j = ind_loop(3), ind_loop(4)

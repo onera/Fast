@@ -3,9 +3,15 @@ import sys
 
 #  python generate_flu.py  repertoire_flux
 n = len(sys.argv)
-if n != 2:
-    print('Error: Flux name folder is required as argument: python generate_flu.py  fluxFolder')
-    sys.exit()
+print(n)
+if n >= 1:
+   templateFile='template_FluxAndBalance.for'
+   if len(sys.argv) ==3 and sys.argv[2]=='GPU': templateFile='template_FluxAndBalance_gpu.for'
+
+else:
+   print('Error: Flux name folder is required as argument: python generate_flu.py  fluxFolder (GPU optional)')
+   sys.exit()
+
 
 dico= {}
 dico["SENSOR_INIT"] = { 'name':'flusenseur_init', 'model':['lamin','SA','euler'], 'TypeMotion':['','ale'], 'TypeMesh':['3dfull','3dhomo','3dcart','2d'], 'TypeSlope':['o3']}
@@ -69,7 +75,7 @@ for ale in TypeMotion:
                 option =  1000*opt_ale[ ale]  +  100*opt_slp[slope] +  10*opt_mod[eq] + opt_mesh[ typezone]
 
                 # ouvrir le fichier input
-                f     = open('template_FluxAndBalance.for','r')
+                f     = open(templateFile,'r')
                 lines = f.readlines()
 
                 fout = rep+'/'+typezone+'/'+flux+ale1+eq+'_'+slope+'_'+typezone+'.for'
@@ -268,10 +274,8 @@ for ale in TypeMotion:
                     select_out.append('                                               \n')
                     select_out.append('           call '+ name_routine+'(ndom, ithread,\n')
                     select_out.append('     &                 param_int, param_real,\n')
-                    select_out.append('     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,\n')
-                    select_out.append('     &                 synchro_send_sock, synchro_send_th,\n')
-                    select_out.append('     &                 synchro_receive_sock, synchro_receive_th,\n')
-                    select_out.append('     &                 ibloc , jbloc , kbloc ,\n')
+                    select_out.append('     &                 ind_dm, ind_loop, ijkv_sdm,\n')
+                    select_out.append('     &                 synchro_send_th, synchro_receive_th,\n')
                     select_out.append('     &                 icache, jcache, kcache,\n')
                     select_out.append('     &                 rop, drodm, wig,\n')
                     select_out.append('     &                 venti, ventj, ventk,\n')

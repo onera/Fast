@@ -4,15 +4,13 @@ c     $Revision: 64 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine indice_boucle_ssdom(ndo, extended_range,
-     &                              ith,jth,kth, ic,jc,kc,kfludom,
-     &                               topo_th, ithread, thread_pos,
+     &                               ic,jc,kc,
+     &                               topo_th, thread_pos,
      &                               size_cache,
-     &                               synchro_receive_sock,
      &                               synchro_receive_th,
-     &                               synchro_send_sock,
      &                               synchro_send_th,
      &                               nijk, ijkv,
-     &                               ind_dm_zone, ind_dm_sock,
+     &                               ind_dm_zone,
      &                               ind_dm_thread,ijkv_sdm,
      &                               ind_sdm, ind_coe,
      &                               ind_grad, ind_rhs,
@@ -34,11 +32,11 @@ c_/    OUT: ind_sdm,ind_coe,ind_grad,....,ind_flt
 c***********************************************************************
       implicit none
 
-      INTEGER_E ndo, extended_range,ith,jth,kth, ic,jc,kc, ithread,
+      INTEGER_E ndo, extended_range, ic,jc,kc,
      & topo_th(3), size_cache(3), thread_pos(3),
-     & synchro_receive_sock(3), synchro_receive_th(3), ijkv(3),
-     & synchro_send_sock(3), synchro_send_th(3),
-     & nijk(5), ind_dm_zone(6), ind_dm_sock(6),ind_dm_thread(6),
+     & synchro_receive_th(3), ijkv(3),
+     & synchro_send_th(3),
+     & nijk(5), ind_dm_zone(6), ind_dm_thread(6),
      & ijkv_sdm(3),ind_sdm(6),ind_ssa(6),
      & ind_coe(6),ind_grad(6), ind_rhs(6), ind_mjr(6),
      & ind_hrr(6), ind_gcb(6), kfludom
@@ -71,12 +69,9 @@ C     CB: initialisation des shifts
 
 
 c      if(ithread.eq.2) then
-c       write(*,*)'sockS', synchro_send_sock
-c       write(*,*)'sockR', synchro_receive_sock
 c       write(*,*)'threS', synchro_send_th
 c       write(*,*)'threR', synchro_receive_th
 c       write(*,'(a,6i4)')'dm_th',ind_dm_thread
-c       write(*,'(a,6i4)')'dm_sk',ind_dm_sock
 c      endif
 
       !correction eventuelle au bord pour calcul dans 1 rangee maille fictive
@@ -128,10 +123,9 @@ c      endif
              !test pour eventuel optim  du init RHS
              !(suppression debordement a gauche au bord)
              c1 =-inc
-             if(ind_dm_thread(ideb).eq.ind_dm_sock(ideb)) then
+             if(ind_dm_thread(ideb).eq.ind_dm_zone(ideb)) then
 
-               c1 =  -synchro_send_sock(i)*inc
-
+               c1          = 0
                shift_hrr1  = 0
                shift_hrr2  =-inc
                shift_gcb1  =-inc
@@ -145,8 +139,7 @@ c      endif
              if( l.eq.ijkv_sdm(i)) then
 
                !Si  bloc cache recoit des donnee du bloc a droite
-               if(    (synchro_receive_sock(i).eq.1)
-     &            .or.(topo_th(i).ne.thread_pos(i))   )  then
+               if( topo_th(i).ne.thread_pos(i) )  then
                  shift_coe2  =-ific
                  shift_gra2  =-inc
                  shift_rhs2  =-inc
@@ -193,8 +186,7 @@ c      endif
              shift_gcb2  = 0
 
              ! Si on attend des donnes
-             if(   (synchro_receive_sock(i).eq.1)
-     &         .or.(topo_th(i).ne.thread_pos(i) )     )  then
+             if(topo_th(i).ne.thread_pos(i) )  then
                  shift_coe2  =-ific
                  shift_gra2  =-inc
                  shift_rhs2  =-inc
@@ -229,8 +221,7 @@ c      endif
              shift_gcb1  = 0
              shift_gcb2  = 0
 
-             if(   (synchro_receive_sock(i).eq.1)
-     &         .or.(topo_th(i).ne.thread_pos(i) )     )  then
+             if(topo_th(i).ne.thread_pos(i) )  then
 
                  delta       = ind_dm_thread(ifin) - ind_sdm(ifin)
                  if(delta.lt.4) shift_coe2  = delta - ific
@@ -262,14 +253,5 @@ c      endif
         if(ind_hrr(2).gt.ind_dm_zone(2))ind_hrr(2)=ind_dm_zone(2)
         if(ind_hrr(4).gt.ind_dm_zone(4))ind_hrr(4)=ind_dm_zone(4)
         if(ind_hrr(6).gt.ind_dm_zone(6))ind_hrr(6)=ind_dm_zone(6)
-
-         if(kfludom.eq.7)then
-         if(jc.eq.1)          ind_mjr(3)=ind_sdm(3)
-         if(jc.eq.ijkv_sdm(2))ind_mjr(4)=ind_sdm(4)
-         if(kc.eq.1)          ind_mjr(5)=ind_sdm(5)
-         if(kc.eq.ijkv_sdm(3))ind_mjr(6)=ind_sdm(6)
-         endif
-
-
 
       end

@@ -51,4 +51,6 @@ c.....Metrique
         !Calcul du flux total
         p1p2= (p1+p2)*0.5
 
+c      if(ndom.eq.0.and.l0.eq.25788) write(*,*)'flu',opt0,wig(l+wig_i),
+c     &  wig_i
 #include "FastS/Compute/Vit_ent/fluvector_3dcart_i.for"

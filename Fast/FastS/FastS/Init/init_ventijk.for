@@ -74,10 +74,8 @@ C Var loc
 
                 call mjr_ale(ndo,nitcfg, ithread,
      &                        param_int, param_real,
-     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ind_sdm, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        x,y,z,ti,ti_df,tj,tj_df,tk,tk_df,vol,
      &                        venti, ventj, ventk)
