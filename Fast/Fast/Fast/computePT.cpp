@@ -594,7 +594,8 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   //printf("thread =%d\n",threadmax_sdm);
   FldArrayI ijkv_sdm(         3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(         3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
-  FldArrayI ind_CL(          24*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
+  FldArrayI ind_CL(          18*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
+  FldArrayI shift_lu(   nidom*6*threadmax_sdm); E_Int* ipt_shift_lu   =  shift_lu.begin();
   FldArrayI ind_dm_omp(      12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
   FldArrayI tab_verrou_lhs(2*mx_nidom*threadmax_sdm); E_Int* verrou_lhs =  tab_verrou_lhs.begin();
@@ -676,7 +677,7 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
 		    layer_mode         , mpi               , nisdom_lu_max     ,
 		    mx_nidom           , ndimt_flt         , threadmax_sdm      , mx_synchro        ,
 		    nb_pulse           , temps             , ipt_ijkv_sdm       , ipt_ind_dm_omp    , iptdtloc ,
-		    ipt_topology       , ipt_ind_CL        , ipt_lok            , verrou_lhs        ,
+		    ipt_topology       , ipt_ind_CL        , ipt_shift_lu       , ipt_lok            , verrou_lhs        ,
 		    vartype            , timer_omp         , iptludic           , iptlumax          ,
 		    ipt_ind_dm         , ipt_it_lu_ssdom   , ipt_ng_pe          , ipt_nfconn        ,
 		    ipt_nfindex        , ipt_VectG         , ipt_VectY          , iptssor           ,

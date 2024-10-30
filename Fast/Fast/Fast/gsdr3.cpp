@@ -36,18 +36,18 @@ E_Float time_init;
 //E_Float time_COM=0.0;
 //E_Float time_init;
 
-E_Int K_FAST::gsdr3(E_Int**& param_int  , E_Float**& param_real       , E_Int& nidom                , E_Int& nitrun           ,
-            E_Int&  nitcfg              , E_Int&  nitcfg_last         , E_Int&  nssiter             , E_Int& it_target        ,
-            E_Int&  first_it            , E_Int& kimpli               , E_Int& lssiter_verif        , E_Int& lexit_lu         ,
-            E_Int& layer_mode           , E_Int& mpi                  , E_Int& nisdom_lu_max        ,
-            E_Int& mx_nidom             , E_Int& ndimt_flt            , E_Int& threadmax_sdm        , E_Int& mx_synchro       ,
-            E_Int& nb_pulse             , E_Float& temps              , E_Int* ipt_ijkv_sdm         , E_Int* ipt_ind_dm_omp   ,  E_Int* iptdtloc    ,
-            E_Int* ipt_topology         , E_Int* ipt_ind_CL           , E_Int* ipt_lok              , E_Int* verrou_lhs       ,
-            E_Int& vartype              , E_Float* timer_omp          , E_Int*     iptludic         , E_Int*   iptlumax       ,
-            E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom     , E_Int** ipt_ng_pe           , E_Int** ipt_nfconn      ,
-            E_Int** ipt_nfindex         , E_Float* ipt_VectG          , E_Float* ipt_VectY          , E_Float** iptssor       ,
-            E_Float** iptssortmp        , E_Int* ipt_ssor_size        , E_Float* ipt_drodmd         , E_Float* ipt_Hessenberg ,
-            E_Float** iptkrylov         , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry       , E_Float** ipt_gmrestmp  ,
+E_Int K_FAST::gsdr3(E_Int**& param_int          , E_Float**& param_real       , E_Int& nidom                , E_Int& nitrun           ,
+		    E_Int&  nitcfg              , E_Int&  nitcfg_last         , E_Int&  nssiter             , E_Int& it_target        ,
+		    E_Int&  first_it            , E_Int& kimpli               , E_Int& lssiter_verif        , E_Int& lexit_lu         ,
+		    E_Int& layer_mode           , E_Int& mpi                  , E_Int& nisdom_lu_max        ,
+		    E_Int& mx_nidom             , E_Int& ndimt_flt            , E_Int& threadmax_sdm        , E_Int& mx_synchro       ,
+		    E_Int& nb_pulse             , E_Float& temps              , E_Int* ipt_ijkv_sdm         , E_Int* ipt_ind_dm_omp   ,  E_Int* iptdtloc    ,
+		    E_Int* ipt_topology         , E_Int* ipt_ind_CL           , E_Int* shift_lu             , E_Int* ipt_lok          , E_Int* verrou_lhs       ,
+		    E_Int& vartype              , E_Float* timer_omp          , E_Int*     iptludic         , E_Int*   iptlumax       ,
+		    E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom     , E_Int** ipt_ng_pe           , E_Int** ipt_nfconn      ,
+		    E_Int** ipt_nfindex         , E_Float* ipt_VectG          , E_Float* ipt_VectY          , E_Float** iptssor       ,
+		    E_Float** iptssortmp        , E_Int* ipt_ssor_size        , E_Float* ipt_drodmd         , E_Float* ipt_Hessenberg ,
+		    E_Float** iptkrylov         , E_Float** iptkrylov_transfer, E_Float* ipt_norm_kry       , E_Float** ipt_gmrestmp  ,
 		    E_Float* ipt_givens         , E_Float*   ipt_cfl          , E_Float**  iptx             , E_Float**  ipty         ,
 		    E_Float**    iptz           , E_Float**  iptCellN         , E_Float**  iptCellN_IBC     , E_Float** iptFltrN      , E_Float** iptSpongeCoef, E_Int** ipt_degen   ,
 		    E_Float**& iptro            , E_Float**& iptro_m1         , E_Float**&  iptrotmp        , E_Float**& iptrof       , E_Float**& iptS     ,  E_Float**& iptPsiG,
@@ -214,7 +214,6 @@ E_Int rank =0;
    E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
    E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
    E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
-   E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
    E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
    E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
 
