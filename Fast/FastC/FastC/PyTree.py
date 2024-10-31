@@ -88,8 +88,8 @@ def _reorder(t, tc=None):
 
     if tc is not None: 
        #reordone les bases, sinon souci potentiel en MPi si ordre base != entre proc
-       #Internal._sortByName(tc,recursive=False)
-       #Internal._sortByName(t, recursive=False)
+       Internal._sortByName(tc,recursive=False)
+       Internal._sortByName(t, recursive=False)
 
        #reordone les zones de tc par taille decroissante dans chaque base pour optim openmp
        bases_tc = Internal.getNodesFromType1(tc, 'CGNSBase_t')
@@ -3378,12 +3378,8 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             # Load connect (tc)
             FILE = fileNameC+extC
             tc = Cmpi.convertFile2SkeletonTree(FILE)
+            graph = prepGraphs(tc)
             Cmpi._readZones(tc, FILE, rank=rank)
-            graphID = Cmpi.computeGraph(tc, type='ID')
-            graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
-            procDict = D2.getProcDict(tc)
-            procList = D2.getProcList(tc, sort=True)
-            graph = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
             Cmpi._convert2PartialTree(tc, rank=rank)
             # Load data (t)
             FILE = fileName+ext
@@ -3414,8 +3410,8 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             else:
                 FILE = fileNameC+extC
                 tc = Cmpi.convertFile2SkeletonTree(FILE)
-                Cmpi._readZones(tc, FILE, rank=rank)
                 graph = prepGraphs(tc)
+                Cmpi._readZones(tc, FILE, rank=rank)
                 Cmpi._convert2PartialTree(tc)
             # Load data (t)
             FILE = '%s/%s_%d%s'%(fileName, baseName, rank, ext)
@@ -3913,7 +3909,6 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
                           no += 1
                     if no == size and tmp != []:
                         t      = Internal.merge(tmp)
-                        Internal._sortByName(t,recursive=False)
                         graphN = prepGraphs(t)
                     else: print('graph non calculable: manque de fichiers connectivite.')
 
@@ -4659,6 +4654,10 @@ def tcStat_IBC(t,tc,vartTypeIBC=2,bcTypeIB=3):
 # Graph related functions
 #==============================================================================
 def prepGraphs(t, exploc=0):
+
+    #reorder base pour avoir procList consistant avec reorder du warmup. Sinon boom possible miseaplatdonnorTree
+    Internal._sortByName(t,recursive=False)
+
     graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=exploc)
     graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=exploc)
     procDict  = D2.getProcDict(t)
