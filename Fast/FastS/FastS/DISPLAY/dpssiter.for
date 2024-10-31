@@ -53,13 +53,11 @@ c-----Boucle sur les domaines :
 
         i_loc = 1
         do ii = 1, nssiter - 1
-            it_reelle(ii)=-1
-c
+
             itest = iskip_lu(ii, 2) + 3
-cc          
            
             if(itest.le. last_it - 1 ) then
-cc 
+
               it_reelle(i_loc) = ii
               i_loc            = i_loc + 1
             endif
