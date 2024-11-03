@@ -496,7 +496,7 @@ extern "C"
                         E_Float* ipti0 , E_Float* iptj0, E_Float* iptk0, E_Float* iptvol ,E_Float* venti, E_Float* ventj, E_Float* ventk);
 
 
-  void     dpssiter_(  E_Int& nitrun , E_Int& it_loc, E_Int& neq , E_Int& nssiter, E_Int& iflw, E_Int& iles, E_Int& lft, E_Int& iverb,  char*, E_Int& size_name, E_Float* rdm, E_Float* cvg_ptr);
+  void     dpssiter_(  E_Int& nitrun , E_Int& neq , E_Int& it_loc, E_Int& nitmax , E_Int* param_int, E_Int& lft, E_Int& iverb,  char*, E_Int& size_name, E_Float* rdm, E_Float* cvg_ptr);
 
   void     conv2pytree_(E_Float* cvg_pt, E_Int& nitrun, E_Int& neq, E_Int* LastRec, char* name, E_Int& size_name, E_Int& lft, E_Int& nrec, E_Int& nd, E_Int* Itnum, E_Float* Res_L2, E_Float* Res_oo, E_Float* Res_L2_diff, E_Float* Res_oo_diff);
 

@@ -14,14 +14,9 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
     #pragma omp barrier
   }
 
-    //E_Int nbtask = ipt_omp[nitcfg-1]; 
-    //E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
-
     E_Float* ipt_ssor_shift; E_Float* ipt_ssortmp_shift; E_Int ssor_size;
     //calcul residu si necessaire
     E_Int barrier_residu = 0; 
-    if(lssiter_verif ==1 )
-      {
        for (E_Int ntask = 0; ntask < nbtask; ntask++)
         {
          E_Int pttask     = ptiter + ntask*(6+Nbre_thread_actif*7);
@@ -39,45 +34,69 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
            shift_coe  = shift_coe  + param_int[n][ NDIMDX ]*param_int[n][ NEQ_COE ];
           }
 
-          if (param_int[nd][ITYPZONE] != 4 and param_int[nd][IFLOW] != 4)  //on skippe les eventuelles zone non structurees ou LBM
-           {
-             E_Int* ipt_topo_omp; E_Int* ipt_ind_dm_thread;
+         if (param_int[nd][ITYPZONE] != 4 and param_int[nd][IFLOW] != 4)  //on skippe les eventuelles zone non structurees ou LBM
+          {
+#ifdef _OPENMP
+            E_Float lhs_begin = omp_get_wtime();
+#else
+            E_Float lhs_begin = 0.;
+#endif
+            ithread_loc              = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+            Nbre_thread_actif_loc    = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+            E_Int* ipt_ind_dm_thread = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
 
-             ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
-             Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
-             ipt_ind_dm_thread     = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
+            if(nitcfg==1 && ithread_loc != -1) { E_Int size =param_int[nd][NEQ_COE]*param_int[nd][NDIMDX]; flush_real_( size, iptcoe + shift_coe); }
 
-             //verrou rhs
-             E_Int type = 2;
-            //si calcul residu on verifie que toutes les souszones sont pretes
-             if(   nb_subzone > 1 && (param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
-              {
-                E_Int size = param_int[nd][NEQ]*param_int[nd][NDIMDX]; flush_real_( size , iptdrodm + shift_zone);
+            if(ithread_loc != -1)
+             {
+            // CL sur rhs pour implicitation
+            if( kimpli == 1 )
+              {  
 
-                for (E_Int ntask_loc = 0; ntask_loc < nbtask; ntask_loc++)
-                 {
-                  E_Int pttask_loc   = ptiter + ntask_loc*(6+Nbre_thread_actif*7);
+		 E_Int lrhs=1; E_Int lcorner=1;
+                 E_Int* ipt_shift_lu   = shift_lu + 6*ntask*Nbre_thread_actif + (ithread-1)*6;
+                    K_FASTS::BCzone( nd, lrhs, nitcfg, lcorner, 
+                                    param_int[nd], param_real[nd],
+                                    npass,
+                                    ipt_ind_dm_loc         , ipt_ind_dm_thread      ,
+                                    ipt_ind_CL_thread      , ipt_ind_CL119          , ipt_ind_CLgmres, ipt_shift_lu,
+                                    iptdrodm + shift_zone  , ipti[nd]               , iptj[nd]       , iptk[nd]          ,
+                                    iptx[nd]               , ipty[nd]               , iptz[nd]       ,
+                                    iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd], iptmut[nd]);  
 
-                  E_Int nd_loc                 = ipt_omp[ pttask_loc                         ];
-                  E_Int Nbre_thread_actif_loc1 = ipt_omp[ pttask_loc + 2 + Nbre_thread_actif ];
+                      //for (E_Int n = 0; n < 6 ;n++){ ipt_shift_lu[n]= ipt_ind_dm_thread[n];}
+                    if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu , iptdrodm + shift_zone );
+                    //if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_ind_dm_thread , iptdrodm + shift_zone );
 
-                  if(nd == nd_loc)
-                   { for (E_Int th = 0; th < Nbre_thread_actif_loc1; th++) 
-                     { E_Int* verrou_lhs_thread= verrou_lhs + ntask_loc*Nbre_thread_actif + th; verrou_c_( verrou_lhs_thread, type); } 
-                   }
-                 }
-              }
-             else  //on verifie uniquememnt la souszone courante: ntask
-              { for (E_Int th = 0; th < Nbre_thread_actif_loc; th++) 
-                  { E_Int* verrou_lhs_thread= verrou_lhs + ntask*Nbre_thread_actif + th; verrou_c_( verrou_lhs_thread, type); }
-              }
+                 //Wait thread avant attaquer LU ou calcul residu
+                 E_Int type = 2;
+                 for (E_Int th = 0; th < Nbre_thread_actif_loc; th++) 
+                   { E_Int* verrou_lhs_thread= verrou_lhs + ntask*Nbre_thread_actif + th; verrou_c_( verrou_lhs_thread, type); }
 
+                }//kimpli
+             }//ithread_loc
+          }// test skip lbm et unstruct
 
-            //sortie de la carte residu du Newton
-#include    "FastS/Compute/residus_navier.h"
-           }// test lbm/unstructured
+         if(lssiter_verif ==1 )
+          {
+            if( ntask==0 )
+             {
+#pragma omp barrier
+             }
+            if (param_int[nd][ITYPZONE] != 4 and param_int[nd][IFLOW] != 4)  //on skippe les eventuelles zone non structurees ou LBM
+             {
+               E_Int* ipt_topo_omp; E_Int* ipt_ind_dm_thread;
+
+               ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+               Nbre_thread_actif_loc = ipt_omp[ pttask + 2 + Nbre_thread_actif ];
+               ipt_ind_dm_thread     = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
+
+              //sortie de la carte residu du Newton
+#include      "FastS/Compute/residus_navier.h"
+             }// test lbm/unstructured
+          }// test residu
+
         }// loop task residu
-      }// test residu
 
     if(barrier_residu==1)
     {
@@ -117,72 +136,19 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
 
             E_Float* ipt_CL = iptro_CL[nd];
 
-            if(nitcfg==1 && ithread_loc != -1) { E_Int size =param_int[nd][NEQ_COE]*param_int[nd][NDIMDX]; flush_real_( size, iptcoe + shift_coe); }
-
-            E_Int type = 2;
-            for (E_Int th = 0; th < Nbre_thread_actif_loc; th++) 
-              { E_Int* verrou_lhs_thread= verrou_lhs + ntask*Nbre_thread_actif + th; verrou_c_( verrou_lhs_thread, type); }
-
             if( kimpli == 1 )
               {  
-                 // CL sur rhs pour implicitation
 		 E_Int lrhs=1; E_Int lcorner=1; E_Int mjrnewton=1;
-                 if(ithread_loc != -1)
-                  {
-                    E_Int* ipt_shift_lu   = shift_lu + 6*nd*Nbre_thread_actif + (ithread-1)*6;
-
-                    K_FASTS::BCzone( nd, lrhs, nitcfg, lcorner, 
-                                    param_int[nd], param_real[nd],
-                                    npass,
-                                    ipt_ind_dm_loc         , ipt_ind_dm_thread      ,
-                                    ipt_ind_CL_thread      , ipt_ind_CL119          , ipt_ind_CLgmres, ipt_shift_lu,
-                                    iptdrodm + shift_zone  , ipti[nd]               , iptj[nd]       , iptk[nd]          ,
-                                    iptx[nd]               , ipty[nd]               , iptz[nd]       ,
-                                    iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd], iptmut[nd]);  
-
-                      //for (E_Int n = 0; n < 6 ;n++){ ipt_shift_lu[n]= ipt_ind_dm_thread[n];}
-                    if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu , iptdrodm + shift_zone );
-                    //if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_ind_dm_thread , iptdrodm + shift_zone );
-                   }//bc
-
-                  if(lssiter_verif ==1   && ( param_int[nd][ ITYPCP] != 2 || param_int[nd][ DTLOC ]== 1) )
-                   {
-                     E_Int type = 2;
-                     for (E_Int ntask_loc = 0; ntask_loc < nbtask; ntask_loc++)
-                      {
-                        E_Int pttask_loc     = ptiter + ntask_loc*(6+Nbre_thread_actif*7);
-                        E_Int nd_loc         = ipt_omp[ pttask_loc ];
-                        E_Int nd_subzone_loc = ipt_omp[ pttask_loc + 1 ];
-                  
-                        E_Int Nbre_thread_actif_loc1 = ipt_omp[ pttask_loc + 2 + Nbre_thread_actif ];
-                        E_Int ithread_loc1           = ipt_omp[ pttask_loc + 2 + ithread -1 ] +1 ;
-
-                        if(nd == nd_loc &&  nd_subzone_loc == 0 && barrier_residu==0 && (nb_subzone > 1 || ithread_loc1 != -1 ) )
-                        {
-                            if (ithread_loc1 == -1) {ithread_loc1 =1;} // astuce pour verrou pour arreter thread souszone multiple. verrou unique pour souzone=0
-
-                            for (E_Int th = 0; th < Nbre_thread_actif_loc1; th++) 
-                             { 
-                               E_Int shift = (ithread_loc1-1 + th)%Nbre_thread_actif_loc1;
-           
-                               E_Int* verrou_lhs_thread= verrou_lhs + (nbtask + ntask_loc)*Nbre_thread_actif + shift; 
-                               verrou_c_( verrou_lhs_thread, type); 
-                             }
-                        }
-                      }//loop taskloc
-
-
-                   } //sinon residu pas bon en omp_mode=1
-
                  if (ithread_loc == -1) {continue;}
 
                  if(lexit_lu == 0 )
                   { 
 #include "FastS/Compute/LU/prep_lussor.h"
 
-                    E_Int* ipt_shift_lu   = shift_lu + 6*nd*Nbre_thread_actif + (ithread-1)*6;
+                    E_Int* ipt_shift_lu   = shift_lu + 6*ntask*Nbre_thread_actif + (ithread-1)*6;
 
                     E_Float* iptdrodm_out = iptdrodm + shift_zone;
+
                     if(param_int[nd][LU_MATCH]==1 || param_int[nd][NB_RELAX]>1) iptdrodm_out = ipt_ssortmp_shift;
 
 		    invlu_(nd                     , nitcfg                  , nitrun                ,
@@ -203,9 +169,8 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
                         E_Int cpu_perzone   =  nssiter*Nbre_thread_actif*2 + nd*(Nbre_thread_actif*2+1);
                         E_Int cells = (ipt_shift_lu[1]-ipt_shift_lu[0]+1)*(ipt_shift_lu[3]-ipt_shift_lu[2]+1)*(ipt_shift_lu[5]-ipt_shift_lu[4]+1);
                         E_Int ith = ithread;
-                        //if (omp_mode == 1) ith = ithread_loc;
                         timer_omp[ cpu_perzone + 1+ (ith-1)*2 ] +=(lhs_end - lhs_begin)/double(cells);
-         //if(nd==20)printf("cpu1= %g  %g %d %d %d \n",(lhs_end - lhs_begin)/double(cells), timer_omp[ cpu_perzone + 1+ (ith-1)*2 ]/timer_omp[ cpu_perzone], nd, ith, nitcfg );
+
 
                       }
                   }//lexit
