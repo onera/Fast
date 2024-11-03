@@ -150,7 +150,7 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
 		 }   // neq
 
 
-	      dpssiter_(nitrun, neq,it_bloc_loc, nssiter, ipt_param_int[nd][ IFLOW ], ipt_param_int[nd][ ILES ], lft, iverb, name, size_name, iptrdm_glob, cvg_zone );
+	      dpssiter_(nitrun, neq,it_bloc_loc, nssiter, ipt_param_int[nd], lft, iverb, name, size_name, iptrdm_glob, cvg_zone );
 	    } // if zone implicit ou explicit+pdtloc
          } // if lft > 0
 

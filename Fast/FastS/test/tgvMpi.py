@@ -29,7 +29,7 @@ N = 33
 rank = Cmpi.rank; size = Cmpi.size
 NP =size
 
-mpi_i = 2
+mpi_i = 1
 mpi_j = 2
 mpi_k = 2
 
@@ -282,7 +282,7 @@ nit = 5000; time = 0.
 for it in range(nit):
     FastSmpi._compute(t, metrics, it, tc, graph)
     #FastSmpi._compute(t, metrics, it)
-    if rank == 0 and it%50 == 0:
+    if it%5 == 0:
         print('- %d - %f -'%(it, time)); sys.stdout.flush()
         FastS.display_temporal_criteria(t, metrics, it)
     #time += numz['time_step']

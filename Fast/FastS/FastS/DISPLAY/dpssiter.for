@@ -4,7 +4,7 @@ c     $Revision: 59 $
 c     $Author: IvanMary $
 c***********************************************************************
       subroutine dpssiter(nitrun, neq, nssiter_loc, nssiter, 
-     &                    iflw, iles, lft,
+     &                    param_int, lft,
      &                    iverb, zone_name, size_name, rdm, cvg_ptr)
 c***********************************************************************
 c_U   USER : PECHIER
@@ -24,18 +24,22 @@ c                    display ss_iteration +ndoms
 c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       implicit none
       INTEGER_E nitrun, neq, nssiter_loc, nssiter, 
-     & lft,iles,iflw,size_name,iverb
+     & lft,size_name,iverb, param_int(0:*)
       REAL_E rdm(nssiter_loc,neq,2), cvg_ptr(4*neq)
 
       character(len=size_name) zone_name 
 c Var loc
       INTEGER_E ndm,i,ne,last_it,iverbs_loc,it_reelle(nssiter_loc),
-     &     nitcfg,ndsdm,i_loc,itest,ii,ipass,inds
+     &     nitcfg,ndsdm,i_loc,itest,ii,ipass,inds, iflw, iles
       INTEGER_E iskip_lu(nssiter,2)
       REAL_E xro,xrou,xrov,xrow,xroe,xro1,xrou1,xrov1,xrow1,xroe1,
      &     xnut,xnut1,test,test1, cut0x
       cut0x = 1.e-30
 
+#include "FastS/param_solver.h"
+
+      iflw = param_int(IFLOW)
+      iles = param_int(ILES)
 c-----Affichage de l'iteration N+1 :
 c      write(*,*) " "
 c      write(*,1000) nitrun,temps
@@ -49,10 +53,11 @@ c-----Boucle sur les domaines :
          if (rdm(last_it,ii,2).gt.rdm(1,ii,2)) iverbs_loc = 2
       enddo
 
-        call skip_lu(nssiter-1, nssiter, iskip_lu )
+      if (nssiter.ne.2) then
+         call skip_lu(nssiter-1, nssiter, iskip_lu )
 
-        i_loc = 1
-        do ii = 1, nssiter - 1
+         i_loc = 1
+         do ii = 1, nssiter - 1
 
             itest = iskip_lu(ii, 2) + 3
            
@@ -61,8 +66,12 @@ c-----Boucle sur les domaines :
               it_reelle(i_loc) = ii
               i_loc            = i_loc + 1
             endif
-        enddo
-        it_reelle(last_it) = nssiter
+         enddo
+         it_reelle(last_it) = nssiter
+      else
+         it_reelle(1) = 1
+         it_reelle(last_it) = nssiter
+      endif
 
       if(lft.lt.3)then
       do 2 i=1,last_it

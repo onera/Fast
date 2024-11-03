@@ -507,7 +507,7 @@ else
   FldArrayI ijkv_sdm(         3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(         3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
   FldArrayI ind_CL(          18*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
-  FldArrayI shift_lu(   nidom*6*threadmax_sdm); E_Int* ipt_shift_lu   =  shift_lu.begin();
+  FldArrayI shift_lu(mx_nidom*6*threadmax_sdm); E_Int* ipt_shift_lu   =  shift_lu.begin();
   FldArrayI ind_dm_omp(      12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
   FldArrayI tab_verrou_lhs(2*mx_nidom*threadmax_sdm); E_Int* verrou_lhs = tab_verrou_lhs.begin();

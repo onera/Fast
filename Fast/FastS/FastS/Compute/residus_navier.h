@@ -27,7 +27,8 @@
 
 
          //protection pour effet de bord OMP quand grand nombre de thread test souvent le meme verrou
-         if(ndim_rdm < Nbre_thread_actif_loc){barrier_residu=1;}
+         barrier_residu=1;
+
          
          if (ithread_loc != -1)
          { 
@@ -47,8 +48,5 @@
            //rhs_end = omp_get_wtime();
            //if(ithread_loc == 1) {printf(" time residu= %g  %d  %d \n",(rhs_end - rhs_begin), nitcfg, ithread);}
 
-           //Go verrou residu pour chaque sous zone et chaque thread actif pour ne pas attaquer LU avant fin calcul residu en mode1: 
-           E_Int type   = 1;
-           if(ithread_loc != -1){E_Int* verrou_lhs_thread= verrou_lhs +(nbtask + ntask)*Nbre_thread_actif + ithread_loc -1; verrou_c_( verrou_lhs_thread, type );}
          }// test ithread_loc =-1
        }
