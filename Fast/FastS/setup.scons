@@ -171,8 +171,9 @@ parentFolder = os.path.join(os.path.dirname(fastcIncDir), "FastS")
 deps = Dist.findImmediateDeps(parentFolder=parentFolder, searchFolder="FastS",
                               depPattern=r'^#include\s*["\'](.+?)["\']',
                               fileExtensions=['.f', '.f90', '.for'])
-# Split list of fortran files into chunks
-ppf = Dist.createFortranFiles(env, srcs, chunkSize=100, deps=deps)
+ppf = Dist.createFortranFiles(env, srcs, deps=deps)
+# Split list of fortran object files
+ppf = Dist.chunkObjectFiles(ppf, chunkSize=100)
 nchunks = len(ppf)
 
 env.Command('merge.l', 'merge.ar', "sed -e s/ELSAPROD/%s/g merge.ar > merge.l"%ELSAPROD)
