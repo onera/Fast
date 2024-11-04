@@ -165,82 +165,25 @@ fortran_builder = Builder(action='$FORTRANCOM',
                           suffix='.o', src_suffix='.f')
 
 env.Append(BUILDERS={'Fortran' : fortran_builder})
-for_srcs1 = srcs.for_srcs[0:100]
-for_srcs2 = srcs.for_srcs[100:200]
-for_srcs3 = srcs.for_srcs[200:300]
-for_srcs4 = srcs.for_srcs[300:400]
-for_srcs5 = srcs.for_srcs[400:500]
-for_srcs6 = srcs.for_srcs[500:600]
-for_srcs7 = srcs.for_srcs[600:700]
-for_srcs8 = srcs.for_srcs[700:800]
-for_srcs9 = srcs.for_srcs[800:900]
-for_srcs10 = srcs.for_srcs[900:]
 
-ppf1 = []
-for f in for_srcs1:
-    ffile = env.FPROC(target=f)
-    ofile = env.Fortran(target=ffile)
-    ppf1.append(ofile[0])
-ppf2 = []
-for f in for_srcs2:
-    ffile = env.FPROC(target=f)
-    ofile = env.Fortran(target=ffile)
-    ppf2.append(ofile[0])
-ppf3 = []
-for f in for_srcs3:
-    ffile = env.FPROC(target=f)
-    ofile = env.Fortran(target=ffile)
-    ppf3.append(ofile[0])
-ppf4 = []
-for f in for_srcs4:
-    ffile = env.FPROC(target=f)
-    ofile = env.Fortran(target=ffile)
-    ppf4.append(ofile[0])
-ppf5 = []
-for f in for_srcs5:
-    ffile = env.FPROC(target=f)
-    ofile = env.Fortran(target=ffile)
-    ppf5.append(ofile[0])
-ppf6 = []
-for f in for_srcs6:
-    ffile = env.FPROC(target=f)
-    ofile = env.Fortran(target=ffile)
-    ppf6.append(ofile[0])
-ppf7 = []
-for f in for_srcs7:
-    ffile = env.FPROC(target=f)
-    ofile = env.Fortran(target=ffile)
-    ppf7.append(ofile[0])
-ppf8 = []
-for f in for_srcs8:
-    ffile = env.FPROC(target=f)
-    ofile = env.Fortran(target=ffile)
-    ppf8.append(ofile[0])
-ppf9 = []
-for f in for_srcs9:
-    ffile = env.FPROC(target=f)
-    ofile = env.Fortran(target=ffile)
-    ppf9.append(ofile[0])
-ppf10 = []
-for f in for_srcs10:
-    ffile = env.FPROC(target=f)
-    ofile = env.Fortran(target=ffile)
-    ppf10.append(ofile[0])
+# Scan fortran files and store dependencies
+parentFolder = os.path.join(os.path.dirname(fastcIncDir), "FastS")
+deps = Dist.findImmediateDeps(parentFolder=parentFolder, searchFolder="FastS",
+                              depPattern=r'^#include\s*["\'](.+?)["\']',
+                              fileExtensions=['.f', '.f90', '.for'])
+ppf = Dist.createFortranFiles(env, srcs, deps=deps)
+# Split list of fortran object files
+ppf = Dist.chunkObjectFiles(ppf, chunkSize=100)
+nchunks = len(ppf)
 
 env.Command('merge.l', 'merge.ar', "sed -e s/ELSAPROD/%s/g merge.ar > merge.l"%ELSAPROD)
-env.Command('libfasts.a', ['libfastS1.a', 'libfastS2.a', 'libfastS3.a', 'libfastS4.a', 'libfastS5.a', 'libfastS6.a', 'libfastS7.a', 'libfastS8.a', 'libfastS9.a', 'libfastS10.a', 'merge.l'], "ar -M < merge.l")
+env.Command('libfasts.a',
+            ['libfastS{:d}.a'.format(c+1) for c in range(nchunks)] + ['merge.l'],
+            "ar -M < merge.l")
 
 #==============================================================================
-myMod1 = env.StaticLibrary('fastS1', srcs.cpp_srcs+ppf1)
-myMod2 = env.StaticLibrary('fastS2', ppf2)
-myMod3 = env.StaticLibrary('fastS3', ppf3)
-myMod4 = env.StaticLibrary('fastS4', ppf4)
-myMod5 = env.StaticLibrary('fastS5', ppf5)
-myMod6 = env.StaticLibrary('fastS6', ppf6)
-myMod7 = env.StaticLibrary('fastS7', ppf7)
-myMod8 = env.StaticLibrary('fastS8', ppf8)
-myMod9 = env.StaticLibrary('fastS9', ppf9)
-myMod10 = env.StaticLibrary('fastS10', ppf10)
+env.StaticLibrary('fastS1', srcs.cpp_srcs + ppf[0])
+for c in range(1, nchunks): env.StaticLibrary('fastS{:d}'.format(c+1), ppf[c])
 
 myMod = 'libfasts.a'
 modDir = installPath+'/FastS/'
