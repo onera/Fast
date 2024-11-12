@@ -2224,61 +2224,62 @@ def _motionlaw(t, teta, tetap):
 # Retourne un tag suivant bcname
 #==============================================================================
 def tagBC(bcname):
-  if   bcname == "BCExtrapolate":           tag = 0
-  elif bcname == "BCDegenerateLine":        tag = 0
-  elif bcname == "BCFarfield":              tag = 1
-  elif bcname == "BCInflowSupersonic":      tag = 2
-  elif bcname == "BCWallInviscid":          tag = 3
-  elif bcname == "BCSymmetryPlane":         tag = 3
-  elif bcname == "BCWall":                  tag = 4
-  elif bcname == "FamilySpecified":         tag = 5
-  elif bcname == "BCWallViscous":           tag = 6
-  elif bcname == "BCWallViscous_isot_fich": tag = 7
-  elif bcname == "BC_fich":                 tag = 8
-  elif bcname == "Nearmatch":               tag = 9
-  elif bcname == "BCOutflow":               tag =10
-  elif bcname == "BCautoperiod":            tag =11
-  elif bcname == "BCWallViscous_transition":tag =12
-  elif bcname == "BCInflow":                tag =13
-  elif bcname == "BCExtrapolateRANS":       tag =14
-  elif bcname == "BCPeriodic":              tag =15
-  elif bcname == "BCOutpres":               tag =16
-  elif bcname == "BCInj1":                  tag =17
-  elif bcname == "BCRacinf":                tag =18
-  elif bcname == "BCInflowLund":            tag =19
-  elif bcname == "BCInjMFR":                tag =20
-  elif bcname == "BCOutMFR":                tag =21
-  elif bcname == "BCOverlap":               tag =22
-  elif bcname == "BCReconsLBM":             tag =23#LBM 
-  elif bcname == "BCdimNS":                 tag =24#LBM
-  elif bcname == "BCadimcoins":             tag =25#LBM
-  elif bcname == "BCOversetLBM":            tag =26#LBM
-  elif bcname == "BCEquilibrium":           tag =27
-  elif bcname == "BCWallModel":             tag =30
-  elif bcname == "BCWallExchange":          tag =31
-  elif bcname == "BCWallViscousIsothermal": tag =32
-  elif bcname == "BCTDIBC":                 tag =90;#LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen (copy of BCEquilibrium)
-  elif bcname == "BCTDIBCNSCBC":            tag =91;#LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen (copy of BCFarfield w/ NSCBC)
+  tagBCDict = {
+      "BCExtrapolate": 0,
+      "BCDegenerateLine": 0,
+      "BCFarfield": 1,
+      "BCInflowSupersonic": 2,
+      "BCWallInviscid": 3,
+      "BCSymmetryPlane": 3,
+      "BCWall": 4,
+      "FamilySpecified": 5,
+      "BCWallViscous": 6,
+      "BCWallViscous_isot_fich": 7,
+      "BC_fich": 8,
+      "Nearmatch": 9,
+      "BCOutflow": 10,
+      "BCautoperiod": 11,
+      "BCWallViscous_transition": 12,
+      "BCInflow": 13,
+      "BCExtrapolateRANS": 14,
+      "BCPeriodic": 15,
+      "BCOutpres": 16,
+      "BCInj1": 17,
+      "BCRacinf": 18,
+      "BCInflowLund": 19,
+      "BCInjMFR": 20,
+      "BCOutMFR": 21,
+      "BCOverlap": 22,
+      "BCReconsLBM": 23, #LBM 
+      "BCdimNS": 24, #LBM
+      "BCadimcoins": 25, #LBM
+      "BCOversetLBM": 26, #LBM
+      "BCEquilibrium": 27,
+      "BCWallModel": 30,
+      "BCWallExchange": 31,
+      "BCWallViscousIsothermal": 32,
+      "BCTDIBC": 90, #LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen (copy of BCEquilibrium)
+      "BCTDIBCNSCBC": 91, #LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen (copy of BCFarfield w/ NSCBC)
+      
+      "LBM_BCPeriodic": 100, #ok
+      "LBM_BCSymmetryPlane": 101, #ok
+      "LBM_BCSlip": 101, #ok
+      "LBM_BCWall": 102, #ok
+      "LBM_BCInflow": 103, #ok
+      "LBM_BCPressureAntiBB": 105, #ok
+      "LBM_BCPML": 108, #NOT FULLY IMPLEMENTED
+      "LBM_BCCBC_UBB": 109, #work needs to be done (DO NOT USE)
+      "LBM_BCCBC_PABB": 110, #work needs to be done (BUG)
+      "LBM_BCZerothExtrapol": 111, #ok
+      "LBM_BCLinearExtrapol": 112, #ok
+      "LBM_BCNeumannCentralDir": 113, #ok
+      "LBM_BCExtrapolJunk": 114, #ok
+
+      "LBM_Sponge": 150,
+  }
   
-  elif bcname == "LBM_BCPeriodic":           tag =100;#ok
-  elif bcname == "LBM_BCSymmetryPlane":      tag =101;#ok
-  elif bcname == "LBM_BCSlip":               tag =101;#ok
-  elif bcname == "LBM_BCWall":               tag =102;#ok
-  elif bcname == "LBM_BCInflow":             tag =103;#ok
-  elif bcname == "LBM_BCPressureAntiBB":     tag =105;#ok
-  elif bcname == "LBM_BCPML":                tag =108;#NOT FULLY IMPLEMENTED
-  elif bcname == "LBM_BCCBC_UBB":            tag =109;#work needs to be done (DO NOT USE)
-  elif bcname == "LBM_BCCBC_PABB":           tag =110;#work needs to be done (BUG)
-  elif bcname == "LBM_BCZerothExtrapol":     tag =111;#ok
-  elif bcname == "LBM_BCLinearExtrapol":     tag =112;#ok
-  elif bcname == "LBM_BCNeumannCentralDir":  tag =113;#ok
-  elif bcname == "LBM_BCExtrapolJunk":       tag =114;#ok
-
-  elif bcname == "LBM_Sponge":               tag =150;
-
-  else:
-    tag = -1
-    print("Warning: Fast: unknown BC type %s."%bcname)
+  tag = tagBCDict.get(bcname, -1)
+  if tag == -1: print("Warning: Fast: unknown BC type %s."%bcname)
   return tag
 
 #==============================================================================
