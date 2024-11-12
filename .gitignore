@@ -6,13 +6,13 @@ __pycache__
 *.egg-info
 core.*
 setup.cfg
+merge.l
 
 docs/doc/Examples
 docs/doc/*.pdf
 docs/doc/documents
 docs/Download
 Fast/FastC/installPath.py
-Fast/FastS/merge.l
 Fast/FastC/doc/source/FastS.rst
 Fast/FastC/doc/source/Fast.rst
 tools/MigrationSVN

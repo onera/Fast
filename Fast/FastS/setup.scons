@@ -167,27 +167,17 @@ fortran_builder = Builder(action='$FORTRANCOM',
 env.Append(BUILDERS={'Fortran' : fortran_builder})
 
 # Scan fortran files and store dependencies
-parentFolder = os.path.join(os.path.dirname(fastcIncDir), "FastS")
+parentFolder = os.path.dirname(os.path.dirname(os.getcwd()))
 deps = Dist.findImmediateDeps(parentFolder=parentFolder, searchFolder="FastS",
                               depPattern=r'^#include\s*["\'](.+?)["\']',
                               fileExtensions=['.f', '.f90', '.for'])
 ppf = Dist.createFortranFiles(env, srcs, deps=deps)
-# Split list of fortran object files
+ppf = srcs.cpp_srcs + ppf
+
+# Split list of pre-processed object files
 ppf = Dist.chunkObjectFiles(ppf, chunkSize=100)
-nchunks = len(ppf)
 
-env.Command('merge.l', 'merge.ar', "sed -e s/ELSAPROD/%s/g merge.ar > merge.l"%ELSAPROD)
-env.Command('libfasts.a',
-            ['libfastS{:d}.a'.format(c+1) for c in range(nchunks)] + ['merge.l'],
-            "ar -M < merge.l")
-
-#==============================================================================
-env.StaticLibrary('fastS1', srcs.cpp_srcs + ppf[0])
-for c in range(1, nchunks): env.StaticLibrary('fastS{:d}'.format(c+1), ppf[c])
-
-myMod = 'libfasts.a'
-modDir = installPath+'/FastS/'
-dp1 = env.Install(modDir, myMod)
-dp2 = env.Install(modDir, Glob('FastS/*.py'))
-
-env.Alias(target="install", source=[dp1,dp2])
+# Create a static library and copy built files to the install folder
+staticLib = Dist.createStaticLibrary(env, ppf, parentFolder=parentFolder,
+                                     moduleName="FastS")
+Dist.copyBuiltFiles(env, staticLib, moduleName="FastS", installPath=installPath)
