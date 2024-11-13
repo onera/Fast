@@ -55,8 +55,8 @@ c***********************************************************************
       REAL_E param_real(0:*), mobile_coef
 
 C var loc
-      INTEGER_E im,jm,km,ijkm,l,l0,iadrf,i,j,k,lj,ic,jc,kc,
-     & kc_vent,v1,v2,v3,v4,v5,v6,vmtr,vven,shift,lt,lven,lij,ltij,lvij
+      INTEGER_E im,jm,km,ijkm,l,l0,iadrf,i,j,k,lj,ic,jc,kc,lvo,
+     & kc_vent,v1,v2,v3,v4,v5,v6,vmtr,vven,shift,lt,lv,lij,ltij,lvij
 
       REAL_E p,r,u,v,w,qen,ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,
      & ck_mtr_vent, u_int,sens,rgp,flu1,flu2,flu3,flu4,flu5,flu6,
@@ -103,13 +103,9 @@ C var loc
 
       IF(param_int(NEQ).eq.5) THEN
 
-         DO k = ind_loop(5), ind_loop(6)
-         DO j = ind_loop(3), ind_loop(4)
-         DO i = ind_loop(1), ind_loop(2)
+#include "FastS/Compute/loop_ijk_begin.for" 
 
-          l     = inddm(  i, j, k)
-          lt    = indmtr( i, j, k)
-          lven  = indven( i, j, k)
+          lv =  indven(i, j, k)
 
           iadrf = l  - incijk
           l0    = l  - shift
@@ -118,9 +114,9 @@ C var loc
           tcy = tijk(lt +vmtr*jc)*cj_mtr
           tcz = tijk(lt +vmtr*kc)*ck_mtr
 
-          qen =(  ventijk(lven              )*tcx
-     &           +ventijk(lven +vven        )*tcy
-     &           +ventijk(lven +vven*kc_vent)*tcz*ck_vent
+          qen =(  ventijk(lv              )*tcx
+     &           +ventijk(lv +vven        )*tcy
+     &           +ventijk(lv +vven*kc_vent)*tcz*ck_vent
      &         )*c_ale
 
           r     = 0.5*(rop(l+v1)+rop(iadrf+v1))
@@ -138,18 +134,13 @@ C var loc
           flu4= tcz * p  + u_int*w*r
           flu5= p*qen
 #include  "FastS/Compute/assemble_drodm_corr.for"
-       enddo
-       enddo
-       enddo
+#include "FastS/Compute/loop_end.for" 
 
       ELSE
-         DO k = ind_loop(5), ind_loop(6)
-         DO j = ind_loop(3), ind_loop(4)
-         DO i = ind_loop(1), ind_loop(2)
 
-          l     = inddm(  i, j, k)
-          lt    = indmtr( i, j, k)
-          lven  = indven( i, j, k)
+#include "FastS/Compute/loop_ijk_begin.for" 
+
+          lv =  indven(i, j, k)
 
           iadrf = l  - incijk
           l0    = l  - shift
@@ -158,9 +149,9 @@ C var loc
           tcy = tijk(lt +vmtr*jc)*cj_mtr
           tcz = tijk(lt +vmtr*kc)*ck_mtr
 
-          qen =(  ventijk(lven              )*tcx
-     &           +ventijk(lven +vven        )*tcy
-     &           +ventijk(lven +vven*kc_vent)*tcz*ck_vent
+          qen =(  ventijk(lv              )*tcx
+     &           +ventijk(lv +vven        )*tcy
+     &           +ventijk(lv +vven*kc_vent)*tcz*ck_vent
      &         )*c_ale
 
           r     = 0.5*(rop(l+v1)+rop(iadrf+v1))
@@ -181,9 +172,8 @@ C var loc
           flu5= p*qen
           flu6= 0.
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
-       enddo
-       enddo
-       enddo
+#include "FastS/Compute/loop_end.for" 
+ 
       ENDIF
 
       end

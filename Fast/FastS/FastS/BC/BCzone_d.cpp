@@ -24,17 +24,18 @@
 
 #define DEFAULT_STATE( string )                                                                   \
     FldArrayF data( 6 );                                                                          \
+    E_Float* ipt_data_loc  = data.begin( );                                                       \
     if ( nbdata == 0 ) {                                                                          \
-        ipt_data    = data.begin( );                                                              \
-        ipt_data[0] = param_real[ROINF];                                                          \
-        ipt_data[1] = param_real[VXINF] * param_real[ROINF];                                      \
-        ipt_data[2] = param_real[VYINF] * param_real[ROINF];                                      \
-        ipt_data[3] = param_real[VZINF] * param_real[ROINF];                                      \
-        ipt_data[4] = param_real[PINF] / ( param_real[GAMMA] - 1. ) +                             \
-                      0.5 * ( param_real[VXINF] * ipt_data[1] + param_real[VYINF] * ipt_data[2] + \
-                              param_real[VZINF] * ipt_data[3] );                                  \
-        ipt_data[5] = param_real[RONUTILDEINF];                                                   \
-    }
+        ipt_data_loc[0] = param_real[ROINF];                                                      \
+        ipt_data_loc[1] = param_real[VXINF] * param_real[ROINF];                                  \
+        ipt_data_loc[2] = param_real[VYINF] * param_real[ROINF];                                  \
+        ipt_data_loc[3] = param_real[VZINF] * param_real[ROINF];                                  \
+        ipt_data_loc[4] = param_real[PINF] / ( param_real[GAMMA] - 1. ) +                         \
+                      0.5 * ( param_real[VXINF] * ipt_data_loc[1] +                               \
+                              param_real[VYINF] * ipt_data_loc[2] +                               \
+                              param_real[VZINF] * ipt_data_loc[3] );                              \
+        ipt_data_loc[5] = param_real[RONUTILDEINF];                                               \
+    }  
 
 using namespace std;
 using namespace K_FLD;
@@ -75,6 +76,7 @@ E_Int K_FASTS::BCzone_d(
     for ( E_Int ndf = 0; ndf < nb_bc; ndf++ ) {
         E_Int pt_bc = param_int[ pt_bcs + 1 + ndf];
         E_Int idir  = param_int[pt_bc + BC_IDIR];
+        E_Int nbdata= param_int[pt_bc + BC_NBDATA];
 
         E_Int ipara = idir - 1;
         // on test si le sous domaine touche le bord du domaine et si la CL est bonne candidate a implicitation
@@ -133,8 +135,19 @@ E_Int K_FASTS::BCzone_d(
 
                 E_Int eq_deb = 1;
                 if ( lskip_loc == 0 )
-                    bvbs_extrapolate_( idir_loc, lrhs_loc, eq_deb, param_int, ipt_ind_CL119, param_real[RONUTILDEINF],
-                                       iptrop );
+                  {
+                    E_Float mobile_coef  = 1.; E_Float* iptmut; E_Int nbdata = 0;
+                    DEFAULT_STATE( "BCFarfield" )
+                    // MUSCL
+                    E_Float c4, c5, c6;
+                    c4 = 5. / 6.; c5 = 2. / 6.; c6 = -1. / 6.;
+
+                    bvbs_extrapolate_( idir_loc, lrhs_loc, nstep, 
+                                       neq_mtr, mobile_coef,
+                                       param_int, ipt_ind_CL119,
+                                       param_real, c4, c5, c6,
+                                       iptx, ipty, iptz, ipventijk, iptijk, iptrop, iptmut, ipt_data_loc);
+                  }
             }
         }
     }

@@ -128,7 +128,7 @@ namespace K_FASTS
     E_Int& nb_pulse     ,
     E_Float& temps,  E_Float& time_trans,
     E_Int* ipt_ijkv_sdm , 
-    E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int& vartype, E_Float* timer_omp,
+    E_Int* ipt_ind_dm_omp       , E_Int* ipt_topology, E_Int* ipt_ind_CL, E_Int* ipt_shift_lu, E_Int* ipt_lok, E_Int* verrou_lhs, E_Int& vartype, E_Float* timer_omp,
     E_Int* iptludic             , E_Int* iptlumax, 
     E_Int** ipt_ind_dm          , E_Int** ipt_it_lu_ssdom, E_Int* ipt_dtloc            ,
     E_Float* ipt_VectG          , E_Float* ipt_VectY     , E_Float** ipt_ssor          , E_Float** ipt_ssortmp, E_Int* ipt_ssor_size, E_Float* ipt_drodmd,

@@ -142,6 +142,7 @@ c.....formulation originelle
           adelta1 = (voldes)**(1./3.)
           adelta2 = max(sph2,1.e-27)
 
+          !Verif
 #include  "FastS/Compute/loop_begin.for" 
 
 #include      "FastS/Compute/mulam.for" 
@@ -179,6 +180,7 @@ c.....formulation originelle
               ad1     = max(dlng(l), 1.e-27)  
 #include      "FastS/Compute/SA/delta1.for" 
 #include      "FastS/Compute/SA/delta2_3d.for" 
+              !attention provisoire cas particulier PP avec normale en y
 #include      "FastS/Compute/SA/delta3.for" 
               adelta1= adelta3 
 #include      "FastS/Compute/SA/fvv1_izgris0.for" 
@@ -195,6 +197,7 @@ c.....formulation originelle
               ad1     = max(dlng(l), 1.e-27)  
 #include      "FastS/Compute/SA/delta1.for" 
 #include      "FastS/Compute/SA/delta2_3dhomo.for" 
+              !attention provisoire cas particulier PP avec normale en y
 #include      "FastS/Compute/SA/delta3.for" 
               adelta1= adelta3 
 #include      "FastS/Compute/SA/fvv1_izgris0.for" 
@@ -220,11 +223,15 @@ c.....formulation originelle
           adelta1 = (voldes)**(1./3.)
           adelta2 = max(sph2,1.e-27)
 
+          !attention provisoire cas particulier PP avec normale en y
+          tcj=sj
+
 #include  "FastS/Compute/loop_begin.for" 
 
 #include      "FastS/Compute/mulam.for" 
 #include      "FastS/Compute/SA/chi.for" 
               ad1     = max(dlng(l), 1.e-27)  
+              !attention provisoire cas particulier PP avec normale en y
 #include      "FastS/Compute/SA/delta3.for" 
               adelta1= adelta3 
 #include      "FastS/Compute/SA/fvv1_izgris0.for" 
@@ -240,6 +247,7 @@ c.....formulation originelle
               ad1     = max(dlng(l), 1.e-27)  
 #include      "FastS/Compute/SA/delta1.for" 
 #include      "FastS/Compute/SA/delta2_2d.for" 
+              !attention provisoire cas particulier PP avec normale en y
 #include      "FastS/Compute/SA/delta3.for" 
               adelta1= adelta3 
 #include      "FastS/Compute/SA/fvv1_izgris0.for" 

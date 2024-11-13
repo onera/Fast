@@ -59,6 +59,8 @@ lhs_beg = omp_get_wtime();
 
              // CL sur rhs pour implicitation
 		 E_Int lrhs=1; E_Int lcorner=1;
+                 E_Int* ipt_shift_lu   = shift_lu + 6*nd*Nbre_thread_actif + (ithread-1)*6;
+
                    BCzone( nd, lrhs, nitcfg, lcorner,
                            param_int[nd], param_real[nd],
                            npass,
@@ -149,9 +151,10 @@ if (ithread==1) printf("transfert              %g \n", lhs_end-lhs_beg);
     E_Int lrhs = 2; E_Int lcorner = 0; E_Int npass = 0; 
        E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
        E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
-       E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
-       E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
+       E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
 #include  "FastC/HPC_LAYER/OMP_MODE_BEGIN.h"
+
+           E_Int* ipt_shift_lu   = shift_lu + 6*nd*Nbre_thread_actif + (ithread-1)*6;
 
            E_Int ierr = BCzone_d(nd, lrhs , nitcfg, lcorner, param_int[nd], param_real[nd], npass,
 	           		 ipt_ind_dm_loc, ipt_ind_dm_thread, 
@@ -485,6 +488,8 @@ lhs_beg = omp_get_wtime();
             if(param_int[nd][LU_MATCH]==1 || param_int[nd][NB_RELAX]>1) iptdrodm_out = ipt_ssortmp_shift;
 	    mjrnewton = 1;
             E_Int lcorner=1; E_Int lrhs=1;
+
+            E_Int* ipt_shift_lu   = shift_lu + 6*nd*Nbre_thread_actif + (ithread-1)*6;
 
             BCzone( nd, lrhs, nitcfg, lcorner,
                    param_int[nd], param_real[nd],

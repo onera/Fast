@@ -197,29 +197,24 @@ c.....formulation originelle
 
         If(param_int(ITYPCP).le.1) then !calcul implicite, on stocke coe pour ssor SA
 
-
-          do k = ind_loop(5), ind_loop(6)
-           do j = ind_loop(3), ind_loop(4)
-#include     "FastS/Compute/loopI3dcart_begin.for"
+#include   "FastS/Compute/loop3dcart_begin.for"
 
 #include       "FastS/Compute/SA/rot_3dcart.for" 
 #include       "FastS/Compute/SA/delta_rot_3dcart.for"
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
 #include       "FastS/Compute/SA/sourceSA_LU.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-#include    "FastS/Compute/loop_end.for"
+#include   "FastS/Compute/loop_end.for"
 
         Else  !calcul explicit, Stockage terme source inutile
 
-          do k = ind_loop(5), ind_loop(6)
-           do j = ind_loop(3), ind_loop(4)
-#include     "FastS/Compute/loopI3dcart_begin.for"
+#include   "FastS/Compute/loop3dcart_begin.for"
 
 #include       "FastS/Compute/SA/rot_3dcart.for" 
 #include       "FastS/Compute/SA/delta_rot_3dcart.for"
 #include       "FastS/Compute/SA/sourceZDES2_prod_dest.for"
                drodm(l,6)= drodm(l,6) + vol(lvo)*tsource
-#include    "FastS/Compute/loop_end.for"
+#include   "FastS/Compute/loop_end.for"
 
        endif!explicite/implicite 3dcart
 

@@ -99,7 +99,7 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
  lssiter_verif = 0; // par defaut, pas de calcul cfl , ni residu Newton
  if (nitrun % iptdtloc[1] == 0 || nitrun == 1) lcfl =1;
 
- if (layer_mode == 1)
+ if (layer_mode >= 1)
  {
     pyParam_int_tc = PyDict_GetItemString(work,"param_int_tc");
     pyParam_real_tc= PyDict_GetItemString(work,"param_real_tc"); 
@@ -420,7 +420,7 @@ else
 
   FldArrayF gmrestmp(size_tot); E_Float* iptgmrestmp = gmrestmp.begin();
 
-  if (ipt_param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1 )
+  if (ipt_param_int[0][IMPLICITSOLVER] == 1 && layer_mode >= 1 )
     { 
       num_max_vect = ipt_param_int[0][NB_KRYLOV];
       size_hessenb = num_max_vect*(num_max_vect-1);
@@ -475,7 +475,7 @@ else
   FldArrayF* stk; E_Float* iptstk=NULL; E_Float* iptdrodmstk=NULL; E_Float* iptcstk=NULL;
   E_Int stk_size=1; E_Int taille_tabs=1; E_Int flag_dtloc=0;
 
-  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==1 and layer_mode ==1)  
+  if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==1 and layer_mode >=1)  
   //if (ipt_param_int[0][ITYPCP]==2 and ipt_param_int[0][EXPLOC]==2 and ipt_param_int[0][RK]==3 and layer_mode ==1)
   {
     dtloc_stk = PyDict_GetItemString(work,"tab_dtloc"); 
@@ -506,7 +506,8 @@ else
   //printf("threadmax = %d  , mx_nidom= %d \n",threadmax_sdm, mx_nidom );
   FldArrayI ijkv_sdm(         3*threadmax_sdm); E_Int* ipt_ijkv_sdm   =  ijkv_sdm.begin();
   FldArrayI topology(         3*threadmax_sdm); E_Int* ipt_topology   =  topology.begin();
-  FldArrayI ind_CL(          24*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
+  FldArrayI ind_CL(          18*threadmax_sdm); E_Int* ipt_ind_CL     =  ind_CL.begin();
+  FldArrayI shift_lu(mx_nidom*6*threadmax_sdm); E_Int* ipt_shift_lu   =  shift_lu.begin();
   FldArrayI ind_dm_omp(      12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
   FldArrayI tab_verrou_lhs(2*mx_nidom*threadmax_sdm); E_Int* verrou_lhs = tab_verrou_lhs.begin();
@@ -547,7 +548,7 @@ else
    for (E_Int nstep = nstep_deb; nstep < nstep_fin+1; ++nstep)
    {
      //printf("nstep= %d %d \n", nstep, omp_mode);
-     if (layer_mode == 1)
+     if (layer_mode >= 1)
      {
        E_Int init_exit =0;
        if( nitrun_loc%iptdtloc[1] == 0 )
@@ -591,7 +592,7 @@ else
             nb_pulse           ,                
             temps              , time_trans       ,
             ipt_ijkv_sdm       , 
-            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_lok, verrou_lhs, vartype, timer_omp,
+            ipt_ind_dm_omp     , ipt_topology     , ipt_ind_CL        , ipt_shift_lu  , ipt_lok, verrou_lhs, vartype, timer_omp,
             iptludic           , iptlumax         ,
             ipt_ind_dm         , ipt_it_lu_ssdom  , iptdtloc          ,
             ipt_VectG          , ipt_VectY        , iptssor           , iptssortmp    , ipt_ssor_size , ipt_drodmd,
@@ -689,7 +690,7 @@ else
  
   if(flag_dtloc==1) { RELEASESHAREDN( dtloc_stk     , stk);}
 
-  if(layer_mode==1)
+  if(layer_mode>=1)
   {
     if(pyParam_int_tc  != Py_None ) { RELEASESHAREDN( pyParam_int_tc, param_int_tc);  }
     if(pyParam_real_tc != Py_None ) { RELEASESHAREDN( pyParam_real_tc, param_real_tc);}
@@ -712,16 +713,7 @@ else
 #endif
 #endif
 
-
-  if(layer_mode==1)
-    {
-     PyObject* tmp = Py_BuildValue("d", time_trans);
-     return tmp;
-    }
-  else
-    {
-      Py_INCREF(Py_None);
-      return Py_None;
-    }
+  tmp = Py_BuildValue("d", time_trans);
+  return tmp;
  
 }

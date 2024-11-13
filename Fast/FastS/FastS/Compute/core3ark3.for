@@ -35,13 +35,13 @@ c***********************************************************************
 
       REAL_E param_real(0:*)
 C Var loc
-      INTEGER_E incmax,l,i,j,k,lij,v1,v2,v3,v4,v5,v6,b,ind
+      INTEGER_E incmax,l,i,j,k,lij,v1,v2,v3,v4,v5,v6,b,ind,ltij,lt,lvo
       REAL_E coefW,ro_old,u_old,v_old,w_old,t_old,nu_old,r_1,cvinv,
      &  roe_old, cv, cvinv2, tab1,tab2,tab3,tab4,tab5,tab6,
      & rho,rhou,rhov,rhoe,anulam,temp01,cmus1,coesut,t1
 
 #include "FastS/formule_param.h"
-
+#include "FastS/formule_mtr_param.h"
       
       cv     = param_real( CVINF)   ! Cv
       cvinv  = 1./cv   
@@ -109,7 +109,7 @@ c---------------------------------------------------------------------
 
          If (param_int(ITYPZONE).ne.3) then
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
           r_1    = coefW*coe(l +v1)
 
           tab1 =  drodm(l +v1)*r_1
@@ -125,6 +125,11 @@ c
           t_old       = rop(l +v5)
 
           rop_1(l +v1)     = rop(l +v1) + tab1
+
+
+c      if(ndom.eq.0.and.l.eq.25788)
+c     & write(*,*)'mjr',drodm(l +v1),r_1,rop_1(l +v1),rop(l +v1)
+
 
           r_1            = 1./rop_1(l +v1)
 
@@ -146,11 +151,11 @@ c
      &                    - cvinv2*( rop_1(l +v2)*rop_1(l +v2)
      &                              +rop_1(l +v3)*rop_1(l +v3)
      &                              +rop_1(l +v4)*rop_1(l +v4))
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
          Else
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
           r_1    = coefW*coe(l +v1)
 
           tab1 =  drodm(l +v1)*r_1
@@ -177,7 +182,7 @@ c
           rop_1(l +v5)     = ( roe_old + tab5 )*r_1*cvinv
      &                    - cvinv2*( rop_1(l +v2)*rop_1(l +v2)
      &                              +rop_1(l +v3)*rop_1(l +v3))
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
          Endif
       
       ELSE
@@ -188,7 +193,7 @@ c
 
          If (param_int(ITYPZONE).ne.3) then
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
           r_1    = coefW*coe(l +v1)
 
           tab1 =  drodm(l +v1)*r_1
@@ -229,10 +234,10 @@ c
           t_old        = (ro_old*nu_old + tab6)*r_1
           t_old        = min(t_old,anulam)
           rop_1(l +v6) = max(t_old,0.)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
          Else
 
-#include  "FastS/Compute/loop_core_begin.for"
+#include  "FastC/HPC_LAYER/loop_begin.for"
           r_1    = coefW*coe(l +v1)
 
           tab1 =  drodm(l +v1)*r_1
@@ -269,7 +274,7 @@ c
           t_old        = min(t_old,anulam)
           !rop_1(l +v6) = t_old
           rop_1(l +v6) = max(t_old,0.)
-#include  "FastS/Compute/loop_end.for"
+#include  "FastC/HPC_LAYER/loop_end.for"
 
         Endif! typezone
       ENDIF! neq

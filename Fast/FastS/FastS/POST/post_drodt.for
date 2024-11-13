@@ -45,7 +45,7 @@ c***********************************************************************
       REAL_E param_real(0:*)
 
 C Var loc 
-      INTEGER_E nitrun,l,j,k,lij
+      INTEGER_E nitrun,j,k,lij
 #include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
       REAL_E c1,c2,c3, dtinv

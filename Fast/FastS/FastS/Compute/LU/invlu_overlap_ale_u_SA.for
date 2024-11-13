@@ -157,6 +157,7 @@ c Var loc
           l      =   inddm(i,jdeb,kdeb)
           lt     =  indmtr(i,jdeb,kdeb)
           ls     = indssor(i,jdeb,kdeb)
+          lv     = indven(i,jdeb,kdeb)
   
           xal    = coe(l,1)*signe
 
@@ -172,6 +173,7 @@ c Var loc
           l      =   inddm(ideb,j,kdeb)
           lt     =  indmtr(ideb,j,kdeb)
           ls     = indssor(ideb,j,kdeb)
+          lv     = indven(ideb,j,kdeb)
 
           xal    = coe(l,1)*signe
 
@@ -184,6 +186,7 @@ c Var loc
             l      =   inddm(i,j,kdeb)
             lt     =  indmtr(i,j,kdeb)
             ls     = indssor(i,j,kdeb)
+            lv     = indven(i,j,kdeb)
 
             xal    = coe(l,1)*signe
 
@@ -205,6 +208,7 @@ C     DIR$ IVDEP
 
                  l  =   inddm(i, j, kdeb)
                  ls = indssor(i, j, kdeb)
+                 lv = indven(i, j, kdeb)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
               enddo
            enddo
@@ -218,6 +222,7 @@ C     DIR$ IVDEP
 
              l  =   inddm(i, j, k)
              ls = indssor(i, j, k)
+             lv = indven(i, j, k)
 #include     "FastS/Compute/LU/lu_d_SA.for"
            enddo
           enddo
@@ -225,6 +230,7 @@ C     DIR$ IVDEP
           l      =   inddm(ideb,jdeb,k)
           lt     =  indmtr(ideb,jdeb,k)
           ls     = indssor(ideb,jdeb,k)
+          lv     = indven(ideb,jdeb,k)
 
           xal    = coe(l,1)*signe
 
@@ -238,6 +244,7 @@ C     DIR$ IVDEP
              l      =   inddm(i,jdeb,k)
              lt     =  indmtr(i,jdeb,k)
              ls     = indssor(i,jdeb,k)
+             lv     = indven(i,jdeb,k)
 
              xal    = coe(l,1)*signe
 
@@ -252,6 +259,7 @@ C     DIR$ IVDEP
              l      =   inddm(ideb,j,k)
              lt     =  indmtr(ideb,j,k)
              ls     = indssor(ideb,j,k)
+             lv     = indven(ideb,j,k)
 
              xal    = coe(l,1)*signe
 
@@ -266,6 +274,7 @@ C     DIR$ IVDEP
                l      =   inddm(i,j,k)
                lt     =  indmtr(i,j,k)
                ls     = indssor(i,j,k)
+               lv     = indven(i,j,k)
 
                xal    = coe(l,1)*signe
 
@@ -288,6 +297,7 @@ C     DIR$ IVDEP
 
                    l  =   inddm(i, j, k)
                    ls = indssor(i, j, k)
+                   lv = indven(i, j, k)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
                 enddo
              enddo
@@ -305,6 +315,7 @@ C     DIR$ IVDEP
 
              l  =   inddm(i, j, kdeb)
              ls = indssor(i, j, kdeb)
+             lv = indven(i, j, kdeb)
 #include     "FastS/Compute/LU/lu_d_SA.for"
            enddo
         enddo
@@ -323,6 +334,7 @@ C     DIR$ IVDEP
           l      =   inddm(i,jdeb,kdeb)
           lt     =  indmtr(i,jdeb,kdeb)
           ls     = indssor(i,jdeb,kdeb)
+          lv     = indven(i,jdeb,kdeb)
   
           xal    = coe(l,1)*signe
 
@@ -338,6 +350,7 @@ C     DIR$ IVDEP
           l      =   inddm(ideb,j,kdeb)
           lt     =  indmtr(ideb,j,kdeb)
           ls     = indssor(ideb,j,kdeb)
+          lv     = indven(ideb,j,kdeb)
 
           xal    = coe(l,1)*signe
 
@@ -350,6 +363,7 @@ C     DIR$ IVDEP
             l      =   inddm(i,j,kdeb)
             lt     =  indmtr(i,j,kdeb)
             ls     = indssor(i,j,kdeb)
+            lv     = indven(i,j,kdeb)
 
             xal    = coe(l,1)*signe
 
@@ -371,6 +385,7 @@ C     DIR$ IVDEP
 
                  l  =   inddm(i, j, kdeb)
                  ls = indssor(i, j, kdeb)
+                 lv = indven(i, j, kdeb)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
               enddo
            enddo
@@ -384,6 +399,7 @@ C     DIR$ IVDEP
 
              l  =   inddm(i, j, k)
              ls = indssor(i, j, k)
+             lv = indven(i, j, k)
 #include     "FastS/Compute/LU/lu_d.for"
            enddo
           enddo
@@ -391,6 +407,7 @@ C     DIR$ IVDEP
           l      =   inddm(ideb,jdeb,k)
           lt     =  indmtr(ideb,jdeb,k)
           ls     = indssor(ideb,jdeb,k)
+          lv     = indven(ideb,jdeb,k)
 
           xal    = coe(l,1)*signe
 
@@ -404,6 +421,7 @@ C     DIR$ IVDEP
              l      =   inddm(i,jdeb,k)
              lt     =  indmtr(i,jdeb,k)
              ls     = indssor(i,jdeb,k)
+             lv     = indven(i,jdeb,k)
 
              xal    = coe(l,1)*signe
 
@@ -418,6 +436,7 @@ C     DIR$ IVDEP
              l      =   inddm(ideb,j,k)
              lt     =  indmtr(ideb,j,k)
              ls     = indssor(ideb,j,k)
+             lv     = indven(ideb,j,k)
 
              xal    = coe(l,1)*signe
 
@@ -432,6 +451,7 @@ C     DIR$ IVDEP
                l      =   inddm(i,j,k)
                lt     =  indmtr(i,j,k)
                ls     = indssor(i,j,k)
+               lv     = indven(i,j,k)
 
                 xal   = coe(l,1)*signe
 
@@ -454,6 +474,7 @@ C     DIR$ IVDEP
 
                    l  =   inddm(i, j, k)
                    ls = indssor(i, j, k)
+                   lv = indven(i, j, k)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
                 enddo
              enddo
@@ -492,6 +513,7 @@ C     DIR$ IVDEP
 
           l      =   inddm(i,jdeb,kdeb)
           ls     = indssor(i,jdeb,kdeb)
+          lv     = indven(i,jdeb,kdeb)
 
           xal    = coe(l,1)*signe
 
@@ -507,6 +529,7 @@ C     DIR$ IVDEP
           !!! ligne (ideb,kdeb) dans le plan kdeb
           l      =   inddm(ideb,j,kdeb)
           ls     = indssor(ideb,j,kdeb)
+          lv     = indven(ideb,j,kdeb)
 
           xal    = coe(l,1)*signe
 
@@ -518,6 +541,7 @@ C     DIR$ IVDEP
 
             l      =   inddm(i,j,kdeb)
             ls     = indssor(i,j,kdeb)
+            lv     = indven(i,j,kdeb)
 
             xal    = coe(l,1)*signe
 
@@ -539,6 +563,7 @@ C     DIR$ IVDEP
 
                  l  =   inddm(i, j, kdeb)
                  ls = indssor(i, j, kdeb)
+                 lv = indven(i, j, kdeb)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
               enddo
            enddo
@@ -553,12 +578,14 @@ C     DIR$ IVDEP
 
              l  =   inddm(i, j, k)
              ls = indssor(i, j, k)
+             lv = indven(i, j, k)
 #include     "FastS/Compute/LU/lu_d_SA.for"
            enddo
           enddo
 
           l      =   inddm(ideb,jdeb,k)
           ls     = indssor(ideb,jdeb,k)
+          lv     = indven(ideb,jdeb,k)
 
           xal    = coe(l,1)*signe
 
@@ -571,6 +598,7 @@ C     DIR$ IVDEP
 
              l      =   inddm(i,jdeb,k)
              ls     = indssor(i,jdeb,k)
+             lv     = indven(i,jdeb,k)
 
              xal    = coe(l,1)*signe
 
@@ -584,6 +612,7 @@ C     DIR$ IVDEP
 
              l      =   inddm(ideb,j,k)
              ls     = indssor(ideb,j,k)
+             lv     = indven(ideb,j,k)
 
              xal    = coe(l,1)*signe
 
@@ -597,6 +626,7 @@ C     DIR$ IVDEP
       
                l      =   inddm(i,j,k)
                ls     = indssor(i,j,k)
+               lv     = indven(i,j,k)
 
                xal    = coe(l,1)*signe
 
@@ -619,6 +649,7 @@ C     DIR$ IVDEP
 
                    l  =   inddm(i, j, k)
                    ls = indssor(i, j, k)
+                   lv = indven(i, j, k)
 #include     "FastS/Compute/LU/mjr_newton_SA.for"
                 enddo
              enddo
@@ -650,6 +681,7 @@ C     DIR$ IVDEP
           l      =   inddm(i,jdeb,1)
           lt     =  indmtr(i,jdeb,1)
           ls     = indssor(i,jdeb,1)
+          lv     = indven(i,jdeb,1)
 
           xal    = coe(l,1)*signe
 
@@ -663,6 +695,7 @@ C     DIR$ IVDEP
           l      =   inddm(ideb,j,1)
           lt     =  indmtr(ideb,j,1)
           ls     = indssor(ideb,j,1)
+          lv     = indven(ideb,j,1)
 
           xal    = coe(l,1)*signe
 
@@ -674,6 +707,7 @@ C     DIR$ IVDEP
             l      =   inddm(i,j,1)
             lt     =  indmtr(i,j,1)
             ls     = indssor(i,j,1)
+            lv     = indven(i,j,1)
 
             xal    = coe(l,1)*signe
 

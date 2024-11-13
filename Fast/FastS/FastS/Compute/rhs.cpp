@@ -23,8 +23,8 @@
             E_Int type = 4;
             E_Int* verrou_lhs_thread= verrou_lhs +             ntask*Nbre_thread_actif + ithread_loc -1; 
             verrou_c_( verrou_lhs_thread, type);
-            verrou_lhs_thread       = verrou_lhs + (nbtask + ntask)*Nbre_thread_actif + ithread_loc -1; //pour calcul residu avant LU
-            verrou_c_( verrou_lhs_thread, type );
+            //verrou_lhs_thread       = verrou_lhs + (nbtask + ntask)*Nbre_thread_actif + ithread_loc -1; //pour calcul residu avant LU
+            //verrou_c_( verrou_lhs_thread, type );
 
             //  Revoir cet adressage si scater et  socket>1 et ou nidom >1
             E_Int* ipt_lok_thread   = ipt_lok   + ntask*mx_synchro*Nbre_thread_actif;
@@ -44,7 +44,7 @@
             navier_stokes_struct_( ndo,    Nbre_thread_actif_loc, ithread_loc, ithread, omp_mode, layer_mode, Nbre_socket, socket, mx_synchro , 
                                    lssiter_verif, lexit_lu             ,nptpsi      , nitcfg , nssiter , nitrun    , first_it   , nb_pulse  , flagCellN,
                                   param_int[nd] , param_real[nd] ,
-                                  temps               , ipt_tot       ,
+                                  temps               ,
                                   ipt_ijkv_sdm_thread , ipt_ind_dm_loc, ipt_ind_dm_socket, ipt_inddm_omp, ipt_topology_socket, ipt_lok_thread, ipt_topo_omp, timer_omp_th,
                                   iptkrylov[nd]       , ipt_norm_kry[ithread-1],
                                   ipt_cfl_thread      ,

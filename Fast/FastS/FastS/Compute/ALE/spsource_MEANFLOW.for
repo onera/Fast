@@ -202,9 +202,11 @@ c Var loc
           do k = ind_loop(5), ind_loop(6)
            do j = ind_loop(3), ind_loop(4)
                 lij  =       inddm( ind_loop(1) , j, k)
+                ltij = lij - indmtr(ind_loop(1) , j, k)
 !DEC$ IVDEP
              do l = lij, lij +  ind_loop(2)- ind_loop(1)
 
+               lvo = l  - ltij
 #include       "FastS/Compute/ALE/source_centrifuge_2d.for"
 #include       "FastS/Compute/ALE/source_centrifuge_LU.for"
                drodm(l,2)= drodm(l,2) + vol(lvo)*tsource(1)
@@ -219,9 +221,11 @@ c Var loc
           do k = ind_loop(5), ind_loop(6)
            do j = ind_loop(3), ind_loop(4)
                 lij  =       inddm( ind_loop(1) , j, k)
+                ltij = lij - indmtr(ind_loop(1) , j, k)
 !DEC$ IVDEP
              do l = lij, lij +  ind_loop(2)- ind_loop(1)
 
+               lvo = l  - ltij
 #include       "FastS/Compute/ALE/source_centrifuge_2d.for"
                drodm(l,2)= drodm(l,2) + vol(lvo)*tsource(1)
                drodm(l,3)= drodm(l,3) + vol(lvo)*tsource(2)

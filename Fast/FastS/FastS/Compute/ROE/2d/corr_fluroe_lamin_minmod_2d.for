@@ -133,6 +133,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       c1     = 0.02*uref         ! modif suite chant metrique et suppression tc dans flux final
       c2     = 0.02/(uref*roref) ! modif suite chant metrique et suppression tc dans flux final
       c3     = -2.
+      opt0   = float(param_int(SENSORTYPE))
 
       !    roff MUSCL
       c6     = 1./6.

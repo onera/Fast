@@ -10,7 +10,7 @@ c***********************************************************************
      &        nptpsi, nitcfg, nssiter, nitrun, first_it,
      &        nb_pulse, flagCellN,
      &        param_int, param_real,
-     &        temps, tot,
+     &        temps,
      &        ijkv_sdm,
      &        ind_dm_zone, ind_dm_socket, ind_dm_omp,
      &        socket_topology, lok , topo_s, timer_omp,
@@ -88,7 +88,7 @@ c***********************************************************************
 c
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6), topo_s(3),
      & ind_dm_omp(6), ind_dm_socket(6), socket_topology(3),
-     & param_int(0:*), lok(*), cycl, visco_type, ierr,l
+     & param_int(0:*), lok(*), cycl, visco_type, ierr
 
       REAL_E rop(*),rop_m1(*),rop_tmp(*),rop_ssiter(*),xmut(*),drodm(*),
      & coe(*), ti(*),tj(*),tk(*),vol(*),x(*),y(*),z(*),
@@ -106,8 +106,7 @@ c      REAL_E drodmstk(20000,param_int(NEQ)), rostk(20000,param_int(NEQ))
 C Var loc
 #include "FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
-      INTEGER_E tot(6,Nbre_thread_actif), totf(6), glob(4), 
-     & ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2,
+      INTEGER_E ind_loop(6),neq_rot,depth,nb_bc,thmax,th,shift1,shift2,
      & flag_wait,cells, it_dtloc, flag_NSLBM,lcomput,shift_vol,
      & shift_vol_n,shift_vol_m
 
@@ -125,6 +124,7 @@ C Var loc
       
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
+
 
       include 'omp_lib.h'
 
@@ -147,6 +147,7 @@ C Var loc
 #include "FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
 #include "FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastC/HPC_LAYER/INDICE_RANGE.for"
+
 
           flag_wait = 0
 
@@ -201,10 +202,8 @@ c       endif
               if(param_int(LALE).eq.1) then ! mise a jour Vent et tijk si mvt corps solide
                 call mjr_ale(ndo,nitcfg, ithread,
      &                        param_int, param_real,
-     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ind_sdm, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        x,y,z,ti,ti_df,tj,tj_df,tk,tk_df,vol,
      &                        venti, ventj, ventk)
@@ -293,7 +292,8 @@ c       endif
 !         STEP III: RHS init + source term S
           ! - Ajout d'un eventuel terme source au second membre
           ! - initialisation drodm
-          call src_term(ndo, nitcfg, nb_pulse, param_int, param_real,
+          call src_term(ndo, ithread, nitcfg, nb_pulse,
+     &                  param_int, param_real,
      &                  ind_sdm, ind_rhs, ind_ssa, ind_grad,
      &                  temps, nitrun, cycl,
      &                  rop_ssiter, xmut, drodm, coe, x,y,z,cellN_IBC,
@@ -311,10 +311,8 @@ c       endif
 
                 call fluausm_select(ndo,nitcfg, ithread,nptpsi,
      &                        param_int, param_real,
-     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ind_sdm, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        psi,wig,stat_wig, rop_ssiter, drodm,
      &                        ti,ti_df,tj,tj_df,tk,tk_df,
@@ -325,10 +323,8 @@ c       endif
    
                 call flusenseur_select(ndo,nitcfg,ithread, nptpsi,
      &                        param_int, param_real,
-     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ind_sdm, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        psi,wig,stat_wig, rop_ssiter, drodm,
      &                        ti,ti_df,tj,tj_df,tk,tk_df,
@@ -339,10 +335,8 @@ c       endif
 
                 call fluroe_select(ndo,nitcfg,ithread, nptpsi,
      &                        param_int, param_real,
-     &                        ind_dm_zone, ind_sdm,ijkv_thread,ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ind_sdm, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        psi,wig,stat_wig, rop_ssiter, drodm,
      &                        ti,ti_df,tj,tj_df,tk,tk_df,
@@ -370,7 +364,8 @@ c       endif
           endif
 
           !boundary flux correction for LES wall model
-          if(param_int(NEQ).eq.5.and.nb_bc.ne.0) then
+          !if(param_int(NEQ).eq.5.and.nb_bc.ne.0) then
+          if(nb_bc.ne.0) then
               call wall_model_flux(ndo,ithread, param_int, param_real,
      &                  ind_dm_zone, ind_sdm, nitcfg, nitrun, cycl,
      &                  psi,wig,stat_wig, rop_ssiter, drodm,x,y,z,
@@ -390,7 +385,7 @@ c       endif
  
           !! implicit krylov             
           if(param_int(ITYPCP).le.1.and.
-     &        (param_int(IMPLICITSOLVER).eq.1.and.layer_mode.eq.1)) then
+     &        (param_int(IMPLICITSOLVER).eq.1.and.layer_mode.ge.1)) then
               !Assemble Residu Newton; 3q(n+1)-4Q(n)+q(n-1)) + dt (flu(i+1)-(flu(i)) =0
               if(flagCellN.eq.0) then
                call core3as2_kry(ndo,nitcfg, first_it,
@@ -493,7 +488,7 @@ c       endif
           end if
 
 #include "FastC/HPC_LAYER/LOOP_CACHE_END.for"
-#include "FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+CCC#include "FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
 
            !!! omp barriere

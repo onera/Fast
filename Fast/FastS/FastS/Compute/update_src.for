@@ -60,9 +60,7 @@ C Var loc
       IF(param_int(SRC).eq.1) THEN
         If(param_int(NEQ).eq.6) Then
 
-          do  k = ind_loop(5), ind_loop(6)
-          do  j = ind_loop(3), ind_loop(4)
-#include    "FastS/Compute/loopI_begin.for"
+#include "FastC/HPC_LAYER/loop_begin.for"
 
             !vol_dt     = 1./max(coe(l+v1),1.e-15)
             !vol_dt     = vol(lvo)
@@ -74,22 +72,15 @@ C Var loc
             drodm(l+v4)= drodm( l +v4) + ro_src( l +v4) *vol_dt
             drodm(l+v5)= drodm( l +v5) + ro_src( l +v5) *vol_dt
             drodm(l+v6)= drodm( l +v6) + ro_src( l +v6) *vol_dt
-          enddo
-          enddo
-          enddo
+#include "FastC/HPC_LAYER/loop_end.for"
         Else
-          do  k = ind_loop(5), ind_loop(6)
-          do  j = ind_loop(3), ind_loop(4)
-#include    "FastS/Compute/loopI_begin.for"
-
-           drodm(l +v1)=  drodm(l +v1) + ro_src(l +v1)
-           drodm(l +v2)=  drodm(l +v2) + ro_src(l +v2)
-           drodm(l +v3)=  drodm(l +v3) + ro_src(l +v3)
-           drodm(l +v4)=  drodm(l +v4) + ro_src(l +v4)
-           drodm(l +v5)=  drodm(l +v5) + ro_src(l +v5)
-          enddo
-          enddo
-          enddo
+#include "FastC/HPC_LAYER/loop_begin.for"
+            drodm(l +v1)=  drodm(l +v1) + ro_src(l +v1)
+            drodm(l +v2)=  drodm(l +v2) + ro_src(l +v2)
+            drodm(l +v3)=  drodm(l +v3) + ro_src(l +v3)
+            drodm(l +v4)=  drodm(l +v4) + ro_src(l +v4)
+            drodm(l +v5)=  drodm(l +v5) + ro_src(l +v5)
+#include "FastC/HPC_LAYER/loop_end.for"
         Endif
 
       ELSE
@@ -100,9 +91,7 @@ C Var loc
           !ro_src( l +v2): VelocityX_target
           !ro_src( l +v5): Temperature_target
           !ro_src( l +v6): nutildeSA_target
-          do  k = ind_loop(5), ind_loop(6)
-          do  j = ind_loop(3), ind_loop(4)
-#include    "FastS/Compute/loopI_begin.for"
+#include "FastC/HPC_LAYER/loop_begin.for"
 
             vol_dt     = 1./max(coe(l+v1),1.e-15)
             !vol_dt     = vol(lvo)
@@ -136,13 +125,9 @@ C Var loc
      &                                 *(ro_src( l +v6)-rop(l+v6) )
      &                                 *param_real(NUDGING_EQ6)
      &                                 *rop(l+v1)
-          enddo
-          enddo
-          enddo
+#include "FastC/HPC_LAYER/loop_end.for"
         Else
-          do  k = ind_loop(5), ind_loop(6)
-          do  j = ind_loop(3), ind_loop(4)
-#include    "FastS/Compute/loopI_begin.for"
+#include "FastC/HPC_LAYER/loop_begin.for"
 
             vol_dt     = 1./max(coe(l+v1),1.e-15)
             !vol_dt     = param_real(NUDGING_AMPLI)/max(coe(l+v1),1.e-15)
@@ -173,9 +158,8 @@ C Var loc
      &                                 *(ec_tg-ec)
      &                                 *param_real(NUDGING_EQ5)
      &                                 *rop(l+v1)
-          enddo
-          enddo
-          enddo
+#include "FastC/HPC_LAYER/loop_end.for"
+
         Endif!Neq
       ENDIF! source =1 ou 2
 

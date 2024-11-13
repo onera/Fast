@@ -1,18 +1,18 @@
-      enddo
-      enddo
-      enddo  !boucle patern bloc
+c      enddo
+c      enddo
+c      enddo  !boucle patern bloc
 
 
- 9999 continue
+c 9999 continue
 
-#if CHECK_SPLIT > 0
-#include "../FastC/FastC/HPC_LAYER/check_split1.for"
-#endif
+c#if CHECK_SPLIT > 0
+c#include "../FastC/FastC/HPC_LAYER/check_split1.for"
+c#endif
 
-      enddo
-      enddo
-      enddo  !boucle bloc_thread
+c      enddo
+c      enddo
+c      enddo  !boucle bloc_thread
 
-#if CHECK_SPLIT > 0
-#include "../FastC/FastC/HPC_LAYER/check_split2.for"
-#endif
+c#if CHECK_SPLIT > 0
+c#include "../FastC/FastC/HPC_LAYER/check_split2.for"
+c#endif

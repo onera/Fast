@@ -55,7 +55,7 @@ c***********************************************************************
       REAL_E param_real(0:*), mobile_coef
 
 C var loc
-      INTEGER_E im,jm,km,ijkm,l,l0,iadrf,i,j,k,lj,ic,jc,kc,
+      INTEGER_E im,jm,km,ijkm,l,l0,iadrf,i,j,k,lj,ic,jc,kc,lvo,
      & kc_vent,v1,v2,v3,v4,v5,v6,vmtr,vven,shift,lt,lven,lij,ltij,lvij
 
       REAL_E p,r,u,v,w,qen,ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,
@@ -104,12 +104,8 @@ C var loc
 
       IF(param_int(NEQ).eq.5) THEN
 
-         DO k = ind_loop(5), ind_loop(6)
-         DO j = ind_loop(3), ind_loop(4)
-         DO i = ind_loop(1), ind_loop(2)
-
-          l     = inddm(  i, j, k)
-          lt    = indmtr( i, j, k)
+#include "FastS/Compute/loop_ijk_begin.for" 
+ 
           lven  = indven( i, j, k)
 
           iadrf = l  - incijk
@@ -150,19 +146,11 @@ C var loc
           flu4= tcz * p  + u_int*r*w
           flu5=            u_int*h    + p*qen
 #include  "FastS/Compute/assemble_drodm_corr.for"
-       enddo
-       enddo
-       enddo
+#include "FastS/Compute/loop_end.for" 
 
       ELSE
 
-         !write(*,*)'loop',ind_loop(1),incijk,shift
-         DO k = ind_loop(5), ind_loop(6)
-         DO j = ind_loop(3), ind_loop(4)
-         DO i = ind_loop(1), ind_loop(2)
-
-          l     = inddm(  i, j, k)
-          lt    = indmtr( i, j, k)
+#include "FastS/Compute/loop_ijk_begin.for" 
           lven  = indven( i, j, k)
 
           iadrf = l  - incijk
@@ -203,9 +191,7 @@ C var loc
           flu5=            u_int*h    + p*qen
           flu6=            u_int*r*rop(iadrf+v6)
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
-       enddo
-       enddo
-       enddo
+#include "FastS/Compute/loop_end.for" 
       ENDIF
 
       end

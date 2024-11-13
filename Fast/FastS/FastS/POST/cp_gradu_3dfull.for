@@ -6,10 +6,8 @@ c***********************************************************************
       subroutine cp_gradu_3dfull(ndom, ithread, neq_grad,
      &                         param_int, c1,c2,
      &                         ind_loop,
-     &                         ind_dm, ijkv_bloc, ijkv_cache,
-     &                         synchro_send_sock, synchro_send_th,
-     &                         synchro_receive_sock, synchro_receive_th,
-     &                         ibloc , jbloc , kbloc ,
+     &                         ind_dm, ijkv_cache,
+     &                         synchro_send_th, synchro_receive_th,
      &                         icache, jcache, kcache,
      &                         rop, dvardc,
      &                         ti, tj, tk)
@@ -40,10 +38,9 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E ndom,neq_grad,ndimdx,ind_loop(6),
-     & ithread, icache, jcache, kcache, ibloc, jbloc, kbloc, 
-     & ijkv_bloc(3), ijkv_cache(3),ind_dm(6),
-     & synchro_send_sock(3),synchro_send_th(3),
-     & synchro_receive_sock(3), synchro_receive_th(3), param_int(0:*)
+     & ithread, icache, jcache, kcache,
+     & ijkv_cache(3),ind_dm(6),
+     & synchro_send_th(3), synchro_receive_th(3), param_int(0:*)
 
       REAL_E    rop( param_int(NDIMDX) * param_int(NEQ) )
       REAL_E dvardc( param_int(NDIMDX) * neq_grad*3 )
@@ -96,10 +93,8 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 
       icorr = 0 !correction indice boucle i pour traiter l'interface ind_loop(2)+1 si necessaire
       jcorr = 0 
-      If(ibloc .eq.ijkv_bloc(1) .and.synchro_receive_sock(1).eq.0.and.
-     &   icache.eq.ijkv_cache(1).and.synchro_receive_th(1).eq.0) icorr=1
-      If(jbloc.eq.ijkv_bloc(2).and.synchro_receive_sock(2).eq.0.and.
-     &   jcache.eq.ijkv_cache(2).and.synchro_receive_th(2).eq.0) jcorr=1
+      If(icache.eq.ijkv_cache(1).and.synchro_receive_th(1).eq.0) icorr=1
+      If(jcache.eq.ijkv_cache(2).and.synchro_receive_th(2).eq.0) jcorr=1
 
       v1 = 0
       v2 =   param_int(NDIMDX)
@@ -169,8 +164,7 @@ c        Endif  !Kmin ou pas
 
 
       !Complement fluk en Kmax
-      If( kbloc.eq.ijkv_bloc(3).and.synchro_receive_sock(3).eq.0.and.
-     &   kcache.eq.ijkv_cache(3).and.synchro_receive_th(3).eq.0) then
+      If(kcache.eq.ijkv_cache(3).and.synchro_receive_th(3).eq.0) then
 
            k    = ind_loop(6)+1
            do j = ind_loop(3),ind_loop(4)

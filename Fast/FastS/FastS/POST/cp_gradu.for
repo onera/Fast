@@ -6,10 +6,8 @@ c***********************************************************************
       subroutine cp_gradu(ndom, ithread, neq_grad,
      &                    param_int, c1,c2,
      &                    ind_sdm, ind_loop,
-     &                    ind_dm, ijkv_bloc, ijkv_cache,
-     &                    synchro_send_sock, synchro_send_th,
-     &                    synchro_receive_sock, synchro_receive_th,
-     &                    ibloc , jbloc , kbloc ,
+     &                    ind_dm, ijkv_cache,
+     &                    synchro_send_th, synchro_receive_th,
      &                    icache, jcache, kcache,
      &                    rop, dvardc,
      &                    ti, tj, tk, vol)
@@ -40,10 +38,9 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E ndom,neq_grad,ndimdx,ind_loop(6),ind_sdm(6),
-     & ithread, icache, jcache, kcache, ibloc, jbloc, kbloc, 
-     & ijkv_bloc(3), ijkv_cache(3),ind_dm(6),
-     & synchro_send_sock(3),synchro_send_th(3),
-     & synchro_receive_sock(3), synchro_receive_th(3), param_int(0:*)
+     & ithread, icache, jcache, kcache,
+     & ijkv_cache(3),ind_dm(6),
+     & synchro_send_th(3), synchro_receive_th(3), param_int(0:*)
 
       REAL_E    rop( param_int(NDIMDX) * param_int(NEQ) )
       REAL_E dvardc( param_int(NDIMDX) * neq_grad*3 )
@@ -73,10 +70,8 @@ C Var loc
                call cp_gradu_3dfull(ndom, ithread, neq_grad,
      &                        param_int, c1,c2,
      &                        ind_sdm,
-     &                        ind_dm, ijkv_bloc, ijkv_cache,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm, ijkv_cache,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        rop, dvardc,ti,tj,tk)
             
@@ -85,10 +80,8 @@ C Var loc
                call cp_gradu_3dhomo(ndom, ithread, neq_grad,
      &                        param_int, c1,c2,
      &                        ind_sdm,
-     &                        ind_dm, ijkv_bloc, ijkv_cache,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm, ijkv_cache,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        rop, dvardc,ti,tj,tk)
               
@@ -98,10 +91,8 @@ C Var loc
                call cp_gradu_3dcart(ndom, ithread, neq_grad,
      &                        param_int, c1,c2,
      &                        ind_sdm,
-     &                        ind_dm, ijkv_bloc, ijkv_cache,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm, ijkv_cache,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        rop, dvardc,ti,tj,tk)
 
@@ -109,10 +100,8 @@ C Var loc
                call cp_gradu_2d(ndom, ithread, neq_grad,
      &                        param_int, c1,c2,
      &                        ind_sdm,
-     &                        ind_dm, ijkv_bloc, ijkv_cache,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm, ijkv_cache,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        rop, dvardc,ti,tj,tk)
             endif

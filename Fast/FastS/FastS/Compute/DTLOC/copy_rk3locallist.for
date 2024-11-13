@@ -27,10 +27,10 @@ c***********************************************************************
       REAL_E stock(nbpts,param_int(NEQ))     
  
 C Var local
-      INTEGER_E neq, i, indDnr, ne
+      INTEGER_E i, indDnr, ne
 
         
-         do  ne=1,neq
+         do  ne=1,param_int(NEQ)
              do  i = 1, nbpts
                               
                 indDnr = listDnr(i)

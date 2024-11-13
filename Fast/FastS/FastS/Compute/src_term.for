@@ -3,7 +3,8 @@ c     $Date: 2013-08-26 16:00:23 +0200 (lun. 26 août 2013) $
 c     $Revision: 58 $
 c     $Author: IvanMary $
 c***********************************************************************
-      subroutine src_term(ndom, nitcfg, nb_pulse, param_int, param_real,
+      subroutine src_term(ndom, ithread, nitcfg, nb_pulse,
+     &                    param_int, param_real,
      &                    ind_sdm, ind_rhs, ind_ssa, ind_grad,
      &                    temps, nitrun,cycl,
      &                    rop, xmut, drodm, coe, x,y,z,cellN_IBC,
@@ -27,7 +28,7 @@ C-----------------------------------------------------------------------
       implicit  none
 
       INTEGER_E ndom,nitcfg,nb_pulse,ind_sdm(6),ind_rhs(6),ind_ssa(6),
-     & ind_grad(6),param_int(0:*), nitrun,cycl
+     & ind_grad(6),param_int(0:*), nitrun,cycl, ithread
 c
 
       REAL_E rop(*),xmut(*),drodm(*),coe(*)
@@ -261,7 +262,9 @@ c**    Proto senseur de choc Sciacovelli directionnel
       IF(param_int(KFLUDOM).eq.2.and.iwig.eq.1) THEN
 
        if(param_int(SLOPE).ne.5.and.param_int(SLOPE).ne.7) then
-         call wiggle2001(ndom, param_int, param_real, ind_sdm, rop, wig)
+         !call wiggle2001(ndom, ithread, param_int, param_real,
+         call wiggle2001(ndom, param_int, param_real,
+     & ind_sdm, rop, wig)
 
        else !!wiggle pour o5 ou o5sc
          call wiggle2023(ndom, param_int, param_real,

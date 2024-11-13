@@ -44,7 +44,7 @@ E_Int K_FASTS::gsdr3(
   E_Int& nb_pulse     , 
   E_Float& temps      , E_Float& time_trans,
   E_Int* ipt_ijkv_sdm ,
-  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int& vartype, E_Float* timer_omp,
+  E_Int* ipt_ind_dm_omp, E_Int* ipt_topology    , E_Int* ipt_ind_CL    , E_Int* shift_lu,  E_Int* ipt_lok,  E_Int* verrou_lhs,  E_Int& vartype, E_Float* timer_omp,
   E_Int*     iptludic  , E_Int*   iptlumax      ,
   E_Int** ipt_ind_dm   , E_Int** ipt_it_lu_ssdom, E_Int* iptdtloc, 
   E_Float* ipt_VectG   , E_Float* ipt_VectY     , E_Float** iptssor    , E_Float** iptssortmp    , E_Int* ipt_ssor_size, E_Float* ipt_drodmd,
@@ -98,13 +98,7 @@ E_Int K_FASTS::gsdr3(
       E_Int nptpsi        = 1;
       E_Int balance       = 0;
 
-   //if(nitcfg > 1) return ibord_ale;
-
       E_Int mx_sszone = mx_nidom/nidom;
-
-      FldArrayI tot( 6*threadmax_sdm); E_Int* ipt_tot  =  tot.begin();
-
-
 
       //
       // choix du tableau de travail en fonction du schema et sous-iteration
@@ -194,7 +188,6 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
    E_Int* ipt_ind_CL_thread      = ipt_ind_CL         + (ithread-1)*6;
    E_Int* ipt_ind_CL119          = ipt_ind_CL         + (ithread-1)*6 +  6*Nbre_thread_actif;
    E_Int* ipt_ind_CLgmres        = ipt_ind_CL         + (ithread-1)*6 + 12*Nbre_thread_actif;
-   E_Int* ipt_shift_lu           = ipt_ind_CL         + (ithread-1)*6 + 18*Nbre_thread_actif;
    E_Int* ipt_ind_dm_socket      = ipt_ind_dm_omp     + (ithread-1)*12;
    E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
 
@@ -239,7 +232,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
         E_Int shift_zone=0; E_Int shift_wig=0; E_Int shift_coe=0; E_Int shift_mu=0; E_Int nd_current=0;
         E_Float rhs_end=0; E_Int ncells=0;
 
-        if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1) { ipt_norm_kry[ithread-1]=0.; }
+        if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode >= 1) { ipt_norm_kry[ithread-1]=0.; }
 
 
         for (E_Int ntask = 0; ntask < nbtask; ntask++)
@@ -268,6 +261,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 #ifdef _WIN32
 #pragma omp barrier
 #endif
+
           //
           //timer pour omp "dynamique"
           //
@@ -280,7 +274,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 	  //if(ithread==1) printf("========= \n");
           //if(ithread==1) printf(" time rhs= %g %g  %d %d  \n",timer_omp[ cpu_perthread], rhs_end - rhs_begin , cpu_perthread, nitcfg);
 
-          if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode == 1)
+          if (param_int[0][IMPLICITSOLVER] == 1 && layer_mode >= 1)
 	  {
 #include   "FastS/Compute/Linear_solver/lhs.cpp"
           }
@@ -333,7 +327,7 @@ E_Int autorisation_bc[nidom];
 for (E_Int nd = 0; nd < nidom; nd++) { autorisation_bc[nd]=1;}
 
 E_Int nitcfg_stk = nitcfg;
-if(lexit_lu ==0 && layer_mode==1)
+if(lexit_lu ==0 && layer_mode>=1)
 {   
   //remplissage ghost transfert
   for (E_Int ipass = 0; ipass < 1; ipass++)
@@ -407,7 +401,7 @@ E_Int lrhs=0; E_Int lcorner=0;
    //
    //Apply BC (parcour Zones) + reinitialisation verrou pour calcul rhs
    //
-   if(lexit_lu ==0 && layer_mode==1)
+   if(lexit_lu ==0 && layer_mode>=1)
    { 
     #include   "FastS/Compute/bcs.cpp"
    }

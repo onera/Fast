@@ -46,8 +46,8 @@ c***********************************************************************
 
       REAL_E param_real(0:*)
 C Var loc 
-      INTEGER_E nitrun,V1,V2,V3, l,lij,j,k,ind_loop(6),ltij,lt,lvo
-#include "../FastC/FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
+      INTEGER_E nitrun,V1,V2,V3, lij,j,k,ind_loop(6),ltij,lt,lvo
+#include "FastC/HPC_LAYER/LOC_VAR_DECLARATION.for"
 
       REAL_E c1,c2,volinv, val
 
@@ -71,28 +71,26 @@ C Var loc
       V2 =   param_int(NDIMDX)
       V3 = 2*param_int(NDIMDX)
 
-#include "../FastC/FastC/HPC_LAYER/SIZE_MIN.for"
-#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+#include "FastC/HPC_LAYER/SIZE_MIN.for"
+#include "FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
       if(c1.eq.1.) extended_range = 1
-#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
-#include "../FastC/FastC/HPC_LAYER/INDICE_RANGE.for"
+#include "FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
+#include "FastC/HPC_LAYER/INDICE_RANGE.for"
 
            !Initilalisation systematique de grad
            val =0.
            call init_tab(ndo, val, param_int, param_int(NDIMDX),
      &                   neq_grad, ind_rhs, grad )
 
-#include "../FastC/FastC/HPC_LAYER/SYNCHRO_WAIT.for"
+#include "FastC/HPC_LAYER/SYNCHRO_WAIT.for"
 
             if(param_int(ITYPZONE).eq.0) then
 
                call cp_gradvar_3dfull(ndo, ithread, neq_grad,
      &                        param_int, c1,c2,
      &                        ind_sdm,
-     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        rop, grad,ti,tj,tk)
             
@@ -109,10 +107,8 @@ C Var loc
                call cp_gradvar_3dhomo(ndo, ithread, neq_grad,
      &                        param_int, c1,c2,
      &                        ind_sdm,
-     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        rop, grad,ti,tj,tk)
               
@@ -130,10 +126,8 @@ C Var loc
                call cp_gradvar_3dcart(ndo, ithread, neq_grad,
      &                        param_int, c1,c2,
      &                        ind_sdm,
-     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        rop, grad,ti,tj,tk)
 
@@ -150,10 +144,8 @@ C Var loc
                call cp_gradvar_2d(ndo, ithread, neq_grad,
      &                        param_int, c1,c2,
      &                        ind_sdm,
-     &                        ind_dm_zone, ijkv_thread, ijkv_sdm,
-     &                        synchro_send_sock, synchro_send_th,
-     &                        synchro_receive_sock, synchro_receive_th,
-     &                        ibloc , jbloc , kbloc ,
+     &                        ind_dm_zone, ijkv_sdm,
+     &                        synchro_send_th, synchro_receive_th,
      &                        icache, jcache, kcache,
      &                        rop, grad,ti,tj,tk)
 
@@ -171,8 +163,8 @@ C Var loc
             if(param_int(ITYPZONE).ne.3) 
      &      call extrap(ndo,param_int,c1,ind_sdm,ind_dm_zone,grad(1+V3))
                
-#include "../FastC/FastC/HPC_LAYER/SYNCHRO_GO.for"
-#include "../FastC/FastC/HPC_LAYER/LOOP_CACHE_END.for"
-#include "../FastC/FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
+#include "FastC/HPC_LAYER/SYNCHRO_GO.for"
+#include "FastC/HPC_LAYER/LOOP_CACHE_END.for"
+CC#include "FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
 
       end

@@ -1,16 +1,26 @@
          !calcul wiggle
          qm1  = (rop(nm +v1)-rop(nm2 +v1))*(rop(l  +v1)-rop(nm +v1))
          qp1  = (rop(l  +v1)-rop(nm  +v1))*(rop(np +v1)-rop(l  +v1))
+         !if (abs(qm1*roref2_inv).le.cutoff) qm1 = 1
+         !if (abs(qp1*roref2_inv).le.cutoff) qp1 = 1
          f1   = sign(1.,qm1 )+sign(1.,qp1)
          qm2  = (rop(nm +v2)-rop(nm2 +v2))*(rop(l  +v2)-rop(nm +v2))
          qp2  = (rop(l  +v2)-rop(nm  +v2))*(rop(np +v2)-rop(l  +v2))
+         !if (abs(qm2*vref2_inv).le.cutoff) qm2 = 1
+         !if (abs(qp2*vref2_inv).le.cutoff) qp2 = 1
          f2   = sign(1.,qm2 )+sign(1.,qp2)
          qm3  = (rop(nm +v3)-rop(nm2 +v3))*(rop(l  +v3)-rop(nm +v3))
          qp3  = (rop(l  +v3)-rop(nm  +v3))*(rop(np +v3)-rop(l  +v3))
+         !if (abs(qm3*vref2_inv).le.cutoff) qm3 = 1
+         !if (abs(qp3*vref2_inv).le.cutoff) qp3 = 1
          f3   = sign(1.,qm3 )+sign(1.,qp3)
          qm4  = (rop(nm +v4)-rop(nm2 +v4))*(rop(l  +v4)-rop(nm +v4))
          qp4  = (rop(l  +v4)-rop(nm  +v4))*(rop(np +v4)-rop(l  +v4))
+         !if (abs(qm4*vref2_inv).le.cutoff) qm4 = 1
+         !if (abs(qp4*vref2_inv).le.cutoff) qp4 = 1
          f4   = sign(1.,qm4 )+sign(1.,qp4)
          qm5  = (rop(nm +v5)-rop(nm2 +v5))*(rop(l  +v5)-rop(nm +v5))
          qp5  = (rop(l  +v5)-rop(nm  +v5))*(rop(np +v5)-rop(l  +v5))
+         !if (abs(qm5*tref2_inv).le.cutoff) qm5 = 1
+         !if (abs(qp5*tref2_inv).le.cutoff) qp5 = 1
          f5   = sign(1.,qm5 )+sign(1.,qp5)
