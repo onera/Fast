@@ -27,10 +27,7 @@ try:
 except:
     raise ImportError("FastS: requires Converter, Connector, RigidMotion, FastC, Fast modules.")
 
-try:
-    OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
-    OMP_NUM_THREADS = int(OMP_NUM_THREADS)
-except: OMP_NUM_THREADS = 1
+OMP_NUM_THREADS = int(os.environ.get('OMP_NUM_THREADS', 1))
 
 try: range = xrange
 except: pass
@@ -656,34 +653,17 @@ def _createTBLESA(tc, h0, hn, nbpts_linelets=45):
                                     valyW = Internal.getValue(yW)
                                     xW = Internal.getNodeFromName1(s,'CoordinateX_PW')
                                     valxW = Internal.getValue(xW)
-
-                                    if Nbpts_D > 1:
-
-                                        for noind in range(0, Nbpts_D):
-
-                                            b0 = valxI[noind]-valxW[noind]
-                                            b1 = valyI[noind]-valyW[noind]
-                                            b2 = valzI[noind]-valzW[noind]
-                                            normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
-
-                                            if hn < 0:
-                                                hn = 0.6*normb
-
-                                            # _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
-                                            _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
-                                    else:
-
-                                        b0 = valxI-valxW
-                                        b1 = valyI-valyW
-                                        b2 = valzI-valzW
-                                        normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
-
-                                        if hn < 0:
-                                            hn = 0.6*normb
-
-                                        # _stretch(linelets[shift : shift + nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
-                                        _stretch(linelets[shift : shift + nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
-
+                                    
+                                    b0 = valxI[:Nbpts_D] - valxW[:Nbpts_D]
+                                    b1 = valyI[:Nbpts_D] - valyW[:Nbpts_D]
+                                    b2 = valzI[:Nbpts_D] - valzW[:Nbpts_D]
+                                    normb = numpy.sqrt(np.power(b0, 2) + np.power(b1, 2) + np.power(b2, 2))
+                                    if hn < 0: hn = 0.6*normb
+                                    else: hn = numpy.ones_like(normb)*hn
+                                    for noind in range(Nbpts_D):
+                                        i0 = shift + noind*nbpts_linelets
+                                        i1 = shift + (noind + 1)*nbpts_linelets
+                                        _stretch(linelets[i0:i1], nbpts_linelets, 0.0, normb[noind], h0, hn[noind], 2)
 
                                     #Internal.createUniqueChild(s, 'CoordinateN_ODE', 'DataArray_t',
                                     #                           linelets[shift : shift + Nbpts_D*nbpts_linelets])
@@ -759,12 +739,8 @@ def computeLineletsInfo(tc, Re=6.e6, Cf_law='ANSYS', Lref=1., q=1.2):
                     zW = Internal.getNodeFromName1(s,'CoordinateZ_PW')[1]
                     yW = Internal.getNodeFromName1(s,'CoordinateY_PW')[1]
                     xW = Internal.getNodeFromName1(s,'CoordinateX_PW')[1]
-                    pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
-                    Nbpts_D       = numpy.shape(pointlistD[1])[0]
-
-                    for i in range(Nbpts_D):
-                        hmod = max(hmod, math.sqrt( (xI[i]-xW[i])**2 + (yI[i]-yW[i])**2 + (zI[i]-zW[i])**2 ))
-
+                    hmodSubRegion = numpy.max(numpy.sqrt(np.power(xI-xW, 2) + np.power(yI-yW, 2) + np.power(zI-zW, 2)))
+                    hmod = max(hmod, hmodSubRegion)
 
     h0 = (Lref*math.sqrt(2))/(Re*math.sqrt(compute_Cf(Re)))
     # hmod = sum(0,n) h0*q**n
@@ -779,9 +755,7 @@ def computeLineletsInfo(tc, Re=6.e6, Cf_law='ANSYS', Lref=1., q=1.2):
 #==============================================================================
 def computeLineletsInfo2(tc, q=1.2):
     hmod = 0.
-
     zones_tc = Internal.getZones(tc)
-
     for z in zones_tc:
         subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
         if subRegions is not None:
@@ -795,15 +769,17 @@ def computeLineletsInfo2(tc, q=1.2):
                     zW = Internal.getNodeFromName1(s,'CoordinateZ_PW')[1]
                     yW = Internal.getNodeFromName1(s,'CoordinateY_PW')[1]
                     xW = Internal.getNodeFromName1(s,'CoordinateX_PW')[1]
-                    pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
-                    Nbpts_D       = numpy.shape(pointlistD[1])[0]
-
-                    for i in range(Nbpts_D):
-                        hmod = max(hmod, math.sqrt( (xI[i]-xW[i])**2 + (yI[i]-yW[i])**2 + (zI[i]-zW[i])**2 ))
+                    pointlistD = Internal.getNodeFromName1(s, 'PointListDonor')
+                    Nbpts_D = numpy.shape(pointlistD[1])[0]
+                    hmodSubRegion = numpy.max(numpy.sqrt(
+                        np.power(xI[:Nbpts_D] - xW[:Nbpts_D], 2) +
+                        np.power(yI[:Nbpts_D] - yW[:Nbpts_D], 2) +
+                        np.power(zI[:Nbpts_D] - zW[:Nbpts_D], 2))
+                    )
+                    hmod = max(hmod, hmodSubRegion)
 
     h0 = 1.e-6
     n = int(math.ceil(math.log(1-((hmod/h0)*(1-q)))/(math.log(q)))) - 1
-
     return (h0, h0*q**n, n+2)   
 
 
@@ -922,34 +898,17 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                                     valyW = Internal.getValue(yW)
                                     xW = Internal.getNodeFromName1(s,'CoordinateX_PW')
                                     valxW = Internal.getValue(xW)
-
-                                    if Nbpts_D > 1:
-
-                                        for noind in range(0,Nbpts_D):
-
-                                            b0 = valxI[noind]-valxW[noind]
-                                            b1 = valyI[noind]-valyW[noind]
-                                            b2 = valzI[noind]-valzW[noind]
-                                            normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
-
-                                            if hn < 0:
-                                                hn = 0.6*normb
-
-                                            # _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
-                                            _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
-                                    else:
-
-                                        b0 = valxI-valxW
-                                        b1 = valyI-valyW
-                                        b2 = valzI-valzW
-                                        normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
-
-                                        if hn < 0:
-                                            hn = 0.6*normb
-
-                                        # _stretch(linelets[shift : shift + nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
-                                        _stretch(linelets[shift : shift + nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
-
+                                    
+                                    b0 = valxI[:Nbpts_D] - valxW[:Nbpts_D]
+                                    b1 = valyI[:Nbpts_D] - valyW[:Nbpts_D]
+                                    b2 = valzI[:Nbpts_D] - valzW[:Nbpts_D]
+                                    normb = numpy.sqrt(np.power(b0, 2) + np.power(b1, 2) + np.power(b2, 2))
+                                    if hn < 0: hn = 0.6*normb
+                                    else: hn = numpy.ones_like(normb)*hn
+                                    for noind in range(Nbpts_D):
+                                        i0 = shift + noind*nbpts_linelets
+                                        i1 = shift + (noind + 1)*nbpts_linelets
+                                        _stretch(linelets[i0:i1], nbpts_linelets, 0.0, normb[noind], h0, hn[noind], 2)
 
                                     Internal.createUniqueChild(s, 'CoordinateN_ODE', 'DataArray_t',
                                                                linelets[shift : shift + Nbpts_D*nbpts_linelets])
@@ -3862,8 +3821,8 @@ def add2previous(var_list,zone_save,zone_current,it0):
 
         shift_local=0
         if var_local == 'IterationNumber': shift_local = it0
-        for i in range(sh): local_val[i]=RSD_sv[i]
-        for i in range(sh_tmp): local_val[i+sh]=RSD_tmp[i]+shift_local    
+        local_val[:sh] = RSD_sv[:sh]
+        local_val[sh:sh+sh_tmp] = RSD_tmp[:sh_tmp] + shift_local    
         Internal.createUniqueChild(zone_save,var_local,'DataArray_t',value=local_val)
     Internal.setValue(zone_save,new_value_node)
     return None
@@ -3980,19 +3939,18 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
         for z2 in listzones_rm:
             Internal._rmNode(z,z2)
 
-    ##Check to see if I need to write the file or append    
+    # Check to see if I need to write the file or append    
     if t_conv_hist is None:
-        if it0>0:
-            shift_local    = it0
+        if it0 > 0:
+            shift_local = it0
             for z in Internal.getZones(t):
-                RSD       = Internal.getNodeByName(z,'IterationNumber')[1]
-                sh_local  = numpy.shape(RSD)[0]                
-                for i in range(sh_local):
-                    RSD[i]=RSD[i]+shift_local
-            RSD       = Internal.getNodeByName(Internal.getNodeByName(t,'GlobalConvergenceHistory'),'IterationNumber')[1]
-            sh_local  = numpy.shape(RSD)[0]                
-            for i in range(sh_local):
-                RSD[i]=RSD[i]+shift_local
+                RSD = Internal.getNodeByName(z, 'IterationNumber')[1]
+                RSD[:] += shift_local
+            RSD = Internal.getNodeByName(
+                Internal.getNodeByName(t, 'GlobalConvergenceHistory'),
+                'IterationNumber'
+            )[1]
+            RSD[:] += shift_local
         return t    
     else:
         for z in Internal.getZones(t_conv_hist):
@@ -4016,9 +3974,8 @@ def _stretch(coord, nbp, x1, x2, dx1, dx2, ityp):
     fasts._stretch(coord, nbp, x1, x2, dx1, dx2, ityp)
     return None
 
-##[AJ] 
-##needed for wmm validation test case
-def _change_bc(t,up_lim):
+#needed for wmm validation test case
+def _change_bc(t, up_lim):
     for z in Internal.getZones(t):
         sol  = Internal.getNodeByName(z,'FlowSolution#Centers')
         dens = Internal.getNodeByName(sol,'Density')[1]
@@ -4027,14 +3984,16 @@ def _change_bc(t,up_lim):
         velz = Internal.getNodeByName(sol,'VelocityZ')[1]
         temp = Internal.getNodeByName(sol,'Temperature')[1]
         nutilde = Internal.getNodeByName(sol,'TurbulentSANuTilde')[1]
+
         sh   = numpy.shape(dens)
-        for k in range(sh[2]):
-            for j in range(up_lim):
-                for i in range(2,sh[0]-2):
-                    dens[i,j,k] = dens[i,up_lim+up_lim-1-j,k]
-                    velx[i,j,k] =-velx[i,up_lim+up_lim-1-j,k]
-                    vely[i,j,k] =-vely[i,up_lim+up_lim-1-j,k]
-                    velz[i,j,k] =-velz[i,up_lim+up_lim-1-j,k]
-                    temp[i,j,k] = temp[i,up_lim+up_lim-1-j,k]
-                    nutilde[i,j,k] = -nutilde[i,up_lim+up_lim-1-j,k]
+        iRange = np.arange(2, sh[0] - 2)[:,None]
+        jRangeL = np.arange(up_lim)
+        jRangeR = 2*up_lim - 1 - jRange
+
+        dens[iRange,jRangeL,:] = dens[iRange,jRangeR,:]
+        velx[iRange,jRangeL,:] = -velx[iRange,jRangeR,:]
+        vely[iRange,jRangeL,:] = -vely[iRange,jRangeR,:]
+        velz[iRange,jRangeL,:] = -velz[iRange,jRangeR,:]
+        temp[iRange,jRangeL,:] = temp[iRange,jRangeR,:]
+        nutilde[iRange,jRangeL,:] = -nutilde[iRange,jRangeR,:]
     return None
