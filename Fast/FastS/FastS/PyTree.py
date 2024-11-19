@@ -653,7 +653,7 @@ def _createTBLESA(tc, h0, hn, nbpts_linelets=45):
                                     valyW = Internal.getValue(yW)
                                     xW = Internal.getNodeFromName1(s,'CoordinateX_PW')
                                     valxW = Internal.getValue(xW)
-                                    
+
                                     b0 = valxI[:Nbpts_D] - valxW[:Nbpts_D]
                                     b1 = valyI[:Nbpts_D] - valyW[:Nbpts_D]
                                     b2 = valzI[:Nbpts_D] - valzW[:Nbpts_D]
@@ -898,7 +898,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                                     valyW = Internal.getValue(yW)
                                     xW = Internal.getNodeFromName1(s,'CoordinateX_PW')
                                     valxW = Internal.getValue(xW)
-                                    
+
                                     b0 = valxI[:Nbpts_D] - valxW[:Nbpts_D]
                                     b1 = valyI[:Nbpts_D] - valyW[:Nbpts_D]
                                     b2 = valzI[:Nbpts_D] - valzW[:Nbpts_D]
@@ -2154,26 +2154,26 @@ def _createConvergenceHistory(t, nrecs):
         # Global convergence history
         n_gch = Internal.createUniqueChild(b, 'GlobalConvergenceHistory',
                                            'ConvergenceHistory_t', value=0)
-        
+
         tmp = numpy.zeros((nrecs), dtype=Internal.E_NpyInt)
         Internal.createChild(n_gch, 'IterationNumber', 'DataArray_t', tmp)
-        
+
         for var in varRsdL2:
             tmp = numpy.zeros((nrecs*neqs), dtype=numpy.float64)
             Internal.createChild(n_gch, var, 'DataArray_t', tmp) 
         for var in varRsdLoo:
             tmp = numpy.full((nrecs*neqs), -numpy.inf, dtype=numpy.float64)
             Internal.createChild(n_gch, var, 'DataArray_t', tmp)
-        
+
         # Zonal convergence history
         for z in Internal.getZones(b):
             n_zch = Internal.createUniqueChild(z, 'ZoneConvergenceHistory',
                                                'ConvergenceHistory_t',
                                                value=0)
-            
+
             tmp = numpy.zeros((nrecs), dtype=Internal.E_NpyInt)
             Internal.createChild(n_zch, 'IterationNumber', 'DataArray_t', tmp)
-            
+
             for var in varRsdL2 + varRsdLoo:
                 tmp = numpy.zeros((nrecs*neqs), dtype=numpy.float64)
                 Internal.createChild(n_zch, var, 'DataArray_t', tmp)
@@ -3849,7 +3849,7 @@ def _calc_global_convergence(t, nrec=None):
     n_model = Internal.getNodeFromType(t, 'GoverningEquations_t')
     if n_model is not None and Internal.getValue(n_model) in ['NSTurbulent', 'nsspalart']:
         neqs = 6
-        
+
     if nrec is None: ib = None; ie = None
     else: nrec = int(nrec); ib = neqs*nrec; ie = neqs*(nrec + 1)
 
@@ -3868,7 +3868,7 @@ def _calc_global_convergence(t, nrec=None):
         else:
             nrecs2Date[0] += 1
             nItNumBase[nrec] = nItNumZone0[nrec]
-        
+
         for z in zones:
             n_zch = Internal.getNodeByName1(z, 'ZoneConvergenceHistory')
             n_isCalc = Internal.getNodeByName1(z, 'isCalc')
@@ -3878,13 +3878,13 @@ def _calc_global_convergence(t, nrec=None):
                 nz = Internal.getValue(z)[2][0]
                 nCellsZone = nx*ny*nz
                 nCellsBase += nCellsZone
-            
+
                 # Loo per base
                 for var in varRsdLoo:
                     zonalRsd = Internal.getNodeByName1(n_zch, var)[1]
                     baseRsd = Internal.getNodeByName1(n_gch, var)[1]
                     baseRsd[ib:ie] = numpy.maximum(baseRsd[ib:ie], zonalRsd[ib:ie])
-                
+
                 # L2 per base
                 for var in varRsdL2:
                     zonalRsd = Internal.getNodeByName1(n_zch, var)[1]

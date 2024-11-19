@@ -26,12 +26,12 @@ t = X.connectMatch(t)
 #duplication raccord match en BC classique  (pour implicitation)
 zones = Internal.getZones(t)
 for z in zones:
-  connect =  Internal.getNodeFromName3(z, 'ZoneGridConnectivity')
-  matchs  =  Internal.getNodesFromType1(connect, 'GridConnectivity1to1_t')
-  for match in matchs:
-     rg =  Internal.getNodeFromName1(match, 'PointRange')[1]
-     win=[rg[0,0],rg[0,1],rg[1,0],rg[1,1], rg[2,0],rg[2,1] ] 
-     C._addBC2Zone(z, 'racinf', 'BCRacinf', win)
+    connect =  Internal.getNodeFromName3(z, 'ZoneGridConnectivity')
+    matchs  =  Internal.getNodesFromType1(connect, 'GridConnectivity1to1_t')
+    for match in matchs:
+        rg =  Internal.getNodeFromName1(match, 'PointRange')[1]
+        win=[rg[0,0],rg[0,1],rg[1,0],rg[1,1], rg[2,0],rg[2,1] ] 
+        C._addBC2Zone(z, 'racinf', 'BCRacinf', win)
 
 C._addBC2Zone(t,'wall','BCWall','jmin')
 C._fillEmptyBCWith(t, 'far', 'BCFarfield', dim=3)
@@ -78,8 +78,8 @@ FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 # Compute
 for it in range(1,40): 
-   FastS._compute(t, metrics, it, tc)
-   if it%modulo_verif == 0:
+    FastS._compute(t, metrics, it, tc)
+    if it%modulo_verif == 0:
         print('it=%d'%it)
         FastS.display_temporal_criteria(t, metrics, it, format='double')
 

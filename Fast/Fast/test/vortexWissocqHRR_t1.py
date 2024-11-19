@@ -140,8 +140,8 @@ for z in Internal.getZones(t):
     GridCoordinates = numpy.zeros((Nx,Ny,2))
     gridcoord = Internal.getNodeFromName(z,'FlowSolution#Centers')
     for j,msh in enumerate(MESH):
-         c = Internal.getNodeFromName(gridcoord,msh)[1]
-         GridCoordinates[:,:,j] = c[2:-2,2:-2,0]
+        c = Internal.getNodeFromName(gridcoord,msh)[1]
+        GridCoordinates[:,:,j] = c[2:-2,2:-2,0]
 
 #test.testT(t,3)
 #test.testT(tc,4)

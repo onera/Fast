@@ -58,14 +58,14 @@ Fast._setNum2Base(t, numb)
 Fast._setNum2Zones(t, numz)
 
 for z in Internal.getZones(t):
-  if z[0]=='cyl2':
-    numz["scheme"]= "senseur"
-    numz["slope"] = "o3"
-    Fast._setNum2Zones(z, numz)
-  elif z[0]=='cyl3':
-    numz["scheme"]= "senseur"
-    numz["slope"] = "o3sc"
-    Fast._setNum2Zones(z, numz)
+    if z[0]=='cyl2':
+        numz["scheme"]= "senseur"
+        numz["slope"] = "o3"
+        Fast._setNum2Zones(z, numz)
+    elif z[0]=='cyl3':
+        numz["scheme"]= "senseur"
+        numz["slope"] = "o3sc"
+        Fast._setNum2Zones(z, numz)
 
 # Prim vars, solver tag, compact, metrics
 (t, tc, metrics) = FastS.warmup(t, tc)
@@ -75,7 +75,7 @@ for z in Internal.getZones(t):
 teff = FastS.createStressNodes(t, BC=['BCWall'])
 
 for it in range(1, 100):
-   FastS._compute(t, metrics, it, tc)
+    FastS._compute(t, metrics, it, tc)
 
 effort = FastS._computeStress(t, teff, metrics)
 #on supprime ghost de l'arbre effort car valeur non initialisee

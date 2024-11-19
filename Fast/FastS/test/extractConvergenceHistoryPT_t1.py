@@ -15,7 +15,7 @@ I._initConst(a1, MInf=0.4, loc='centers')
 C._addState(a1, 'GoverningEquations', 'Euler')
 C._addState(a1, MInf=0.4)
 t = C.newPyTree(['Base', a1])
-    
+
 # Numerics
 modulo_verif = 20
 numb = {}
@@ -47,7 +47,7 @@ time_step = Internal.getValue(time_step)
 for it in range(nit):
     FastS._compute(t, metrics, it, tc)
     if it%modulo_verif == 0:
-    	FastS._displayTemporalCriteria(t, metrics, it, format='store')
+        	FastS._displayTemporalCriteria(t, metrics, it, format='store')
     time += time_step
 
 # extraction des residus et creation du fichier "residus.dat"
