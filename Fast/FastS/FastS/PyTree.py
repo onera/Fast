@@ -2751,6 +2751,7 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
                 tape = tps_zone_percell/echant/NbreThreads
 
             tps_zone_percell = max(tps_zone_percell, 1.e-11)
+            tps_zone_percell_min = max(tps_zone_percell_min, 1.e-11)
             tps_zone_percell_max = max(tps_zone_percell_max, 1.e-11)
 
             perfo = numpy.empty(3, dtype=numpy.float64)
