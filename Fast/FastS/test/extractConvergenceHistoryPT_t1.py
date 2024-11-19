@@ -50,6 +50,8 @@ for it in range(nit):
         	FastS._displayTemporalCriteria(t, metrics, it, format='store')
     time += time_step
 
+# Compute global residuals
+FastS._calc_global_convergence(t)
 # extraction des residus et creation du fichier "residus.dat"
 FastS._extractConvergenceHistory(t, LOCAL+"/residus.dat")
 test.testF(LOCAL+'/residus.dat', 1)
