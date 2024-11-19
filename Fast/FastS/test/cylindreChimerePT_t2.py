@@ -76,7 +76,7 @@ for b in Internal.getBases(t):
         if node is not None:
             val = float(node[1][0])
             C._initVars(b, 'centers:'+v, val)
-            
+
 for b in Internal.getBases(t):
     Model = Internal.getNodeFromName(b, 'GoverningEquations')
     Model = Internal.getValue(Model)
@@ -167,7 +167,7 @@ for it in range(500):
     FastS._compute(t, metrics, it, tc, None, layer="Python", ucData=ucData)
 
     if it%modulo_verif==0:
-      FastS.display_temporal_criteria(t, metrics, it)
+        FastS.display_temporal_criteria(t, metrics, it)
 
 for adt in dictOfADT.values():
     if adt is not None: C.freeHook(adt)

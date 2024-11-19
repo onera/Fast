@@ -28,22 +28,22 @@ coordy[:,1,:]=coordy[:,2,:]
 coordy[:,0,:]=coordy[:,2,:]
 
 for tree in [t]:
-   Internal._rmNodesByName(tree, 'ReferenceState')
-   Internal._rmNodesByName(tree, 'GoverningEquations')
-   for b in Internal.getBases(tree):
-     C._addState(b, 'EquationDimension', 2)
-     C._addState(b, 'GoverningEquations', 'NSTurbulent')
-     C._addState(b, UInf=100, RoInf=1.225, PInf=101325.64, LInf=1, alphaZ=0., adim='dim3')
-     for z in Internal.getZones(b):
-       sol = Internal.getNodeFromName1(z,'FlowSolution#Centers')
-       C._initVars(z,"{centers:ViscosityEddy}=0.000001")
-       for sub in ['','_M1','_P1']:
-         C._initVars(z,"{centers:Density"+sub+"}=1.225")
-         C._initVars(z,"{centers:VelocityX"+sub+"}=100.0")
-         C._initVars(z,"{centers:VelocityY"+sub+"}=0")
-         C._initVars(z,"{centers:VelocityZ"+sub+"}=0")
-         C._initVars(z,"{centers:Temperature"+sub+"}=288.05")
-         C._initVars(z,"{centers:TurbulentSANuTilde"+sub+"}=0.000001")
+    Internal._rmNodesByName(tree, 'ReferenceState')
+    Internal._rmNodesByName(tree, 'GoverningEquations')
+    for b in Internal.getBases(tree):
+        C._addState(b, 'EquationDimension', 2)
+        C._addState(b, 'GoverningEquations', 'NSTurbulent')
+        C._addState(b, UInf=100, RoInf=1.225, PInf=101325.64, LInf=1, alphaZ=0., adim='dim3')
+        for z in Internal.getZones(b):
+            sol = Internal.getNodeFromName1(z,'FlowSolution#Centers')
+            C._initVars(z,"{centers:ViscosityEddy}=0.000001")
+            for sub in ['','_M1','_P1']:
+                C._initVars(z,"{centers:Density"+sub+"}=1.225")
+                C._initVars(z,"{centers:VelocityX"+sub+"}=100.0")
+                C._initVars(z,"{centers:VelocityY"+sub+"}=0")
+                C._initVars(z,"{centers:VelocityZ"+sub+"}=0")
+                C._initVars(z,"{centers:Temperature"+sub+"}=288.05")
+                C._initVars(z,"{centers:TurbulentSANuTilde"+sub+"}=0.000001")
 
 #C.convertPyTree2File(t, 'verif.cgns')
 #stop

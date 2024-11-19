@@ -66,7 +66,7 @@ for it in range(NIT):
     if it%display_probe_freq == 0:
         print('- %d / %d - %f'%(it+it0, NIT+it0, time0))
         FastS.display_temporal_criteria(t, metrics, it, format='double')
-        
+
     time0 += time_step
 
 # time stamp
@@ -80,6 +80,6 @@ shutil.rmtree(LOCAL+"/cgns_lts")
 
 
 
- 
+
 
 

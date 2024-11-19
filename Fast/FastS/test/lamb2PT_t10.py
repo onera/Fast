@@ -28,7 +28,7 @@ t = C.newPyTree(['Base']); t[2][1][2] += [a1,a2]
 
 #Ajout rind pour 3 ghost
 for z in Internal.getZones(t):
-  Internal.newRind([3,3,3,3,3,3], parent=z)
+    Internal.newRind([3,3,3,3,3,3], parent=z)
 
 # Chimera
 t = X.applyBCOverlaps(t, depth=3)

@@ -30,7 +30,7 @@ try: range = xrange
 except: pass
 
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=False):
+def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=False, graphInvIBCD_WM=None):
     gradP      =False
     TBLE       =False
     isWireModel=False
@@ -57,13 +57,13 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
         procDict  = graph['procDict']
         graphID   = graph['graphID']
         graphIBCD = graph['graphIBCD']
-        graphInvIBCD_WM  = None
         if tc2 is not None:
             graphIBCD2 = graph2['graphIBCD']
             graphInvIBCD = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
-            graphInvIBCD_WM  = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
+        if graphInvIBCD_WM is None:
+            graphInvIBCD_WM = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
     else: 
-        procDict=None; graphID=None; graphIBCD=None; graphInvIBCD_WM=None
+        procDict=None; graphID=None; graphIBCD=None
 
     own  = Internal.getNodeFromName1(t, '.Solver#ownData')  
     dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')
@@ -186,7 +186,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
                     tic=Time.time()
 
-                    if not tc2:
+                    if tc2 is None:
                         if layer_mode==0:
                             _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE, isWireModel=isWireModel, graphInvIBCD_WM=graphInvIBCD_WM)
                     else:
@@ -444,9 +444,7 @@ def computeLineletsInfo(tc, Re=6.e6, Cf_law='ANSYS', Lref=1., q=1.2):
             return 1.46*Re**(-0.5)
 
     hmod = 0.
-
     zones_tc = Internal.getZones(tc)
-
     for z in zones_tc:
         subRegions =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
         if subRegions is not None:
@@ -460,11 +458,14 @@ def computeLineletsInfo(tc, Re=6.e6, Cf_law='ANSYS', Lref=1., q=1.2):
                     zW = Internal.getNodeFromName1(s,'CoordinateZ_PW')[1]
                     yW = Internal.getNodeFromName1(s,'CoordinateY_PW')[1]
                     xW = Internal.getNodeFromName1(s,'CoordinateX_PW')[1]
-                    pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
-                    Nbpts_D       = numpy.shape(pointlistD[1])[0]
-
-                    for i in range(Nbpts_D):
-                        hmod = max(hmod, math.sqrt( (xI[i]-xW[i])**2 + (yI[i]-yW[i])**2 + (zI[i]-zW[i])**2 ))
+                    pointlistD = Internal.getNodeFromName1(s, 'PointListDonor')
+                    Nbpts_D = numpy.shape(pointlistD[1])[0]
+                    hmodSubRegion = numpy.max(numpy.sqrt(
+                        np.power(xI[:Nbpts_D] - xW[:Nbpts_D], 2) +
+                        np.power(yI[:Nbpts_D] - yW[:Nbpts_D], 2) +
+                        np.power(zI[:Nbpts_D] - zW[:Nbpts_D], 2)
+                    ))
+                    hmod = max(hmod, hmodSubRegion)
 
     if Cmpi.KCOMM is not None:
         hmod = numpy.array([hmod])
@@ -503,11 +504,14 @@ def computeLineletsInfo2(tc, q=1.2):
                     zW = Internal.getNodeFromName1(s,'CoordinateZ_PW')[1]
                     yW = Internal.getNodeFromName1(s,'CoordinateY_PW')[1]
                     xW = Internal.getNodeFromName1(s,'CoordinateX_PW')[1]
-                    pointlistD    = Internal.getNodeFromName1(s, 'PointListDonor')
-                    Nbpts_D       = numpy.shape(pointlistD[1])[0]
-
-                    for i in range(Nbpts_D):
-                        hmod = max(hmod, math.sqrt( (xI[i]-xW[i])**2 + (yI[i]-yW[i])**2 + (zI[i]-zW[i])**2 ))
+                    pointlistD = Internal.getNodeFromName1(s, 'PointListDonor')
+                    Nbpts_D = numpy.shape(pointlistD[1])[0]
+                    hmodSubRegion = numpy.max(numpy.sqrt(
+                        np.power(xI[:Nbpts_D] - xW[:Nbpts_D], 2) +
+                        np.power(yI[:Nbpts_D] - yW[:Nbpts_D], 2) +
+                        np.power(zI[:Nbpts_D] - zW[:Nbpts_D], 2)
+                    ))
+                    hmod = max(hmod, hmodSubRegion)
 
     if Cmpi.KCOMM is not None:
         hmod = numpy.array([hmod])
@@ -517,7 +521,6 @@ def computeLineletsInfo2(tc, q=1.2):
 
     h0 = 1.e-6
     n = int(math.ceil(math.log(1-((hmod/h0)*(1-q)))/(math.log(q)))) - 1
-
     return (h0, h0*q**n, n+2)   
 
 
@@ -623,7 +626,6 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                                         Internal.createUniqueChild(s, 'gradzPressure', 'DataArray_t',
                                                                 numpy.zeros(Nbpts_D, numpy.float64))
 
-
                                     zI = Internal.getNodeFromName1(s,'CoordinateZ_PI')
                                     valzI = Internal.getValue(zI)
                                     yI = Internal.getNodeFromName1(s,'CoordinateY_PI')
@@ -637,31 +639,16 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                                     xW = Internal.getNodeFromName1(s,'CoordinateX_PW')
                                     valxW = Internal.getValue(xW)
 
-                                    if Nbpts_D > 1:
-
-                                        for noind in range(0, Nbpts_D):
-
-                                            b0 = valxI[noind]-valxW[noind]
-                                            b1 = valyI[noind]-valyW[noind]
-                                            b2 = valzI[noind]-valzW[noind]
-                                            normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
-
-                                            if hn < 0:
-                                                hn = 0.6*normb
-
-                                            # _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
-                                            _stretch(linelets[shift + noind*nbpts_linelets: shift + (noind+1)*nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
-                                    else:
-
-                                        b0 = valxI-valxW
-                                        b1 = valyI-valyW
-                                        b2 = valzI-valzW
-                                        normb = numpy.sqrt(b0*b0+b1*b1+b2*b2)
-
-                                        if hn < 0: hn = 0.6*normb
-
-                                        # _stretch(linelets[shift : shift + nbpts_linelets],nbpts_linelets,0.0,normb, 1.0e-6, 0.6*normb, 2)
-                                        _stretch(linelets[shift : shift + nbpts_linelets], nbpts_linelets, 0.0, normb, h0, hn, 2)
+                                    b0 = valxI[:Nbpts_D] - valxW[:Nbpts_D]
+                                    b1 = valyI[:Nbpts_D] - valyW[:Nbpts_D]
+                                    b2 = valzI[:Nbpts_D] - valzW[:Nbpts_D]
+                                    normb = numpy.sqrt(np.power(b0, 2) + np.power(b1, 2) + np.power(b2, 2))
+                                    if hn < 0: hn = 0.6*normb
+                                    else: hn = numpy.ones_like(normb)*hn
+                                    for noind in range(Nbpts_D):
+                                        i0 = shift + noind*nbpts_linelets
+                                        i1 = shift + (noind + 1)*nbpts_linelets
+                                        _stretch(linelets[i0:i1], nbpts_linelets, 0.0, normb[noind], h0, hn[noind], 2)
 
 
                                     Internal.createUniqueChild(s, 'CoordinateN_ODE', 'DataArray_t',

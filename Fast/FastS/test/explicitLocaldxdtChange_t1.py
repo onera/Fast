@@ -110,7 +110,7 @@ if explicit_select == 'explicit_local':
 else:
     numb["temporal_scheme"]= "explicit"   
     numz["niveaux_temps"]  = 1 # Explicit local : nbre niveaux en temps (=1 si explicit global)
-    
+
 internal._setNum2Zones(t, numz) 
 internal._setNum2Base(t, numb)
 
@@ -122,7 +122,7 @@ if explicit_select == 'explicit_local':
         dtloc = Internal.getNodeFromName1(z, '.Solver#define')  # noeud
         level = Internal.getNodeFromName1(dtloc, 'niveaux_temps')  # noeud
         Internal.setValue(level,int(niveau))
-            
+
 (t,tc,metrics) = FastS.warmup(t,tc)
 
 nit=NIT; times = 0.

@@ -1,0 +1,48 @@
+name: autopep8 formatter
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  autopep8:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install autopep8
+        run: pip install autopep8
+
+      - name: Run autopep8
+        run: |
+          autopep8 --in-place --indent-size=4 --select=E101 \
+            Fast/FastC/FastC/PyTree.py \
+            Fast/FastC/test/*.py \
+            Fast/FastS/FastS/PyTree.py \
+            Fast/FastS/FastS/Mpi.py \
+            Fast/FastS/test/*.py \
+            Fast/Fast/Fast/PyTree.py \
+            Fast/Fast/test/*.py
+
+      - name: Commit changes
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Apply autopep8 formatting"
+
+      - name: Push changes
+        run: git push origin ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

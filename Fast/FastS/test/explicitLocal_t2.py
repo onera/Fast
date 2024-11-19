@@ -85,11 +85,11 @@ internal._setNum2Base(t, numb)
 zones = Internal.getNodesFromType2(t, 'Zone_t')
 
 for z in zones:   
-      solcenter = Internal.getNodeFromName1(z, 'FlowSolution#Centers') 
-      niveau = Internal.getNodeFromName(solcenter, 'niveaux_temps')[1][0][0][0]
-      dtloc = Internal.getNodeFromName1(z, '.Solver#define')  # noeud
-      level = Internal.getNodeFromName1(dtloc, 'niveaux_temps')  # noeud
-      Internal.setValue(level,int(niveau))
+    solcenter = Internal.getNodeFromName1(z, 'FlowSolution#Centers') 
+    niveau = Internal.getNodeFromName(solcenter, 'niveaux_temps')[1][0][0][0]
+    dtloc = Internal.getNodeFromName1(z, '.Solver#define')  # noeud
+    level = Internal.getNodeFromName1(dtloc, 'niveaux_temps')  # noeud
+    Internal.setValue(level,int(niveau))
 
 (t,tc,metrics) = FastS.warmup(t,tc)
 
