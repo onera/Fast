@@ -25,6 +25,61 @@ varsS	 = ['Sxx']
 varsPSI  = ['corr_xx']
 varsMacro= ['Density']
 
+# Boundary condition tags in Fast
+tagBCDict = {
+    "BCExtrapolate": 0,
+    "BCDegenerateLine": 0,
+    "BCFarfield": 1,
+    "BCInflowSupersonic": 2,
+    "BCWallInviscid": 3,
+    "BCSymmetryPlane": 3,
+    "BCWall": 4,
+    "FamilySpecified": 5,
+    "BCWallViscous": 6,
+    "BCWallViscous_isot_fich": 7,
+    "BC_fich": 8,
+    "Nearmatch": 9,
+    "BCOutflow": 10,
+    "BCautoperiod": 11,
+    "BCWallViscous_transition": 12,
+    "BCInflow": 13,
+    "BCExtrapolateRANS": 14,
+    "BCPeriodic": 15,
+    "BCOutpres": 16,
+    "BCInj1": 17,
+    "BCRacinf": 18,
+    "BCInflowLund": 19,
+    "BCInjMFR": 20,
+    "BCOutMFR": 21,
+    "BCOverlap": 22,
+    "BCReconsLBM": 23, #LBM 
+    "BCdimNS": 24, #LBM
+    "BCadimcoins": 25, #LBM
+    "BCOversetLBM": 26, #LBM
+    "BCEquilibrium": 27,
+    "BCWallModel": 30,
+    "BCWallExchange": 31,
+    "BCWallViscousIsothermal": 32,
+    "BCTDIBC": 90, #LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen (copy of BCEquilibrium)
+    "BCTDIBCNSCBC": 91, #LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen (copy of BCFarfield w/ NSCBC)
+
+    "LBM_BCPeriodic": 100, #ok
+    "LBM_BCSymmetryPlane": 101, #ok
+    "LBM_BCSlip": 101, #ok
+    "LBM_BCWall": 102, #ok
+    "LBM_BCInflow": 103, #ok
+    "LBM_BCPressureAntiBB": 105, #ok
+    "LBM_BCPML": 108, #NOT FULLY IMPLEMENTED
+    "LBM_BCCBC_UBB": 109, #work needs to be done (DO NOT USE)
+    "LBM_BCCBC_PABB": 110, #work needs to be done (BUG)
+    "LBM_BCZerothExtrapol": 111, #ok
+    "LBM_BCLinearExtrapol": 112, #ok
+    "LBM_BCNeumannCentralDir": 113, #ok
+    "LBM_BCExtrapolJunk": 114, #ok
+
+    "LBM_Sponge": 150,
+}
+
 try:
     import Converter.PyTree as C
     import Converter.Internal as Internal
@@ -36,10 +91,7 @@ try:
 except:
     raise ImportError("FastC.PyTree: requires Converter, Post and RigidMotion module.")
 
-try:
-    OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
-    OMP_NUM_THREADS = int(OMP_NUM_THREADS)
-except: OMP_NUM_THREADS = 1
+OMP_NUM_THREADS = int(os.environ.get('OMP_NUM_THREADS', 1))
 
 import Converter.Mpi as Cmpi
 import Distributor2.PyTree as D2
@@ -549,40 +601,41 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
                 moy  = Internal.getNodeFromName1(Prop, "AvgPlane-Primitive" )[1]
                 shift=0
                 for var in vars:
-                    inst = Internal.getNodeFromName1(sol, var )[1]
+                    inst = Internal.getNodeFromName1(sol, var)[1]
                     #CL I
-                    if rg[0][1] - rg[0][0]==0:
-                        if rg[0][1]==1: ijk_tg =5;     
-                        else:           ijk_tg =rg[0][1]-7
+                    if rg[0][1] - rg[0][0] == 0:
+                        if rg[0][1] == 1: ijk_tg = 5;     
+                        else: ijk_tg = rg[0][1]-7
                         l = shift
-                        for k in range(rg[2][0]-1,rg[2][1]):
-                            for j in range(rg[1][0]-1,rg[1][1]):
-                                moy[l]    = inst[ijk_tg ,j,k]   #moyenne
-                                moy[l+sz] = inst[ijk_tg ,j,k]   #echant 1
-                                l+=1
+                        j0, j1 = rg[1][0] - 1, rg[1][1]
+                        k0, k1 = rg[2][0] - 1, rg[2][1]
+                        slicedInst = inst[ijk_tg, j0:j1, k0:k1].flatten('F')
+                        sliceSize = slicedInst.size
+                        moy[l:l+sliceSize] = slicedInst  # moyenne
+                        moy[l+sz:l+sz+sliceSize] = slicedInst  # echant 1
                     #CL J
-                    if rg[1][1] - rg[1][0]==0:
-                        if rg[1][1]==1: ijk_tg =5
-                        else:           ijk_tg = rg[1][1]-7
+                    if rg[1][1] - rg[1][0] == 0:
+                        if rg[1][1] == 1: ijk_tg = 5
+                        else: ijk_tg = rg[1][1]-7
                         l = shift
-                        #print("shift",shift, sz*5, var, rg[2][0]-1,rg[2][1]-1 )
-                        for k in range(rg[2][0]-1,rg[2][1]-1):
-                            for i in range(rg[0][0]-1,rg[0][1]-1):
-                                moy[l]      = inst[i, ijk_tg ,k]   #moyenne
-                                moy[l+sz*5] = inst[i, ijk_tg ,k]   #echant 1
-                                #if zone[0]=='cart.0' and var== "Temperature": print l+sz*5,i 
-                                l+=1
+                        i0, i1 = rg[0][0] - 1, rg[0][1] - 1
+                        k0, k1 = rg[2][0] - 1, rg[2][1] - 1
+                        slicedInst = inst[i0:i1, ijk_tg, k0:k1].flatten('F')
+                        sliceSize = slicedInst.size
+                        moy[l:l+sliceSize] = slicedInst  # moyenne
+                        moy[l+sz*5:l+sz*5+sliceSize] = slicedInst  # echant 1
                     #CL K
-                    if numpy.shape(inst)[2]!=1:
-                        if rg[2][1] - rg[2][0]==0:
-                            if rg[2][1]==1: ijk_tg =5
-                            else:           ijk_tg = rg[2][1]-7
+                    if numpy.shape(inst)[2] != 1:
+                        if rg[2][1] - rg[2][0] == 0:
+                            if rg[2][1] == 1: ijk_tg = 5
+                            else: ijk_tg = rg[2][1]-7
                             l = shift
-                            for j in range(rg[1][0]-1,rg[1][1]):
-                                for i in range(rg[0][0]-1,rg[0][1]):
-                                    moy[l]    = inst[i,j, ijk_tg ]   #moyenne
-                                    moy[l+sz] = inst[i,j, ijk_tg ]   #echant 1
-                                    l+=1
+                            i0, i1 = rg[0][0] - 1, rg[0][1]
+                            j0, j1 = rg[1][0] - 1, rg[1][1]
+                            slicedInst = inst[i0:i1, j0:j1, ijk_tg].flatten('F')
+                            sliceSize = slicedInst.size
+                            moy[l:l+sliceSize] = slicedInst  # moyenne
+                            moy[l+sz:l+sz+sliceSize] = slicedInst  # echant 1
                     shift+=sz
 
 
@@ -800,7 +853,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     return sa, lbm, neq_lbm, FIRST_IT
 
 #==============================================================================
-# Construit les donnees compactees pour traiter les verrou et plage omp
+# Construit les donnees compactees pour traiter les verrous et plage omp
 #==============================================================================
 def _build_omp(t):
     # Data for each Base
@@ -811,7 +864,6 @@ def _build_omp(t):
     for b in bases:
         zones = Internal.getZones(b)
         for z in zones:
-
             o    = Internal.getNodeFromName1( z, '.Solver#ownData')
             dims = Internal.getZoneDim(z)
 
@@ -830,31 +882,21 @@ def _build_omp(t):
 
             #print("SIZE int", size_int,"c=", c,"size_sched=",  size_scheduler)
             datap = numpy.zeros(size_int + c + size_scheduler, Internal.E_NpyInt)
-
-            datap[0:c]   = param_int[1][0:c]
-            datap[69]    = c                   # debut tableau omp dans param_int
-            datap[VSHARE.SCHEDULER] = c + size_int        # debut cellscheduler omp dans param_int
+            datap[:c] = param_int[1][:c]
+            datap[69] = c  # debut tableau omp dans param_int
+            datap[VSHARE.SCHEDULER] = c + size_int  # debut cellscheduler omp dans param_int
             param_int[1] = datap
 
             if dims[3] == 'NGON':
                 deb = param_int[1][VSHARE.SCHEDULER] 
-                size = numpy.size(Nbr_BlkIntra)
-                for l in range(size):
-                    param_int[1][ deb +l ]=Nbr_BlkIntra [l]
-                Nbr_BlkIntra = param_int[1][ deb:deb+size ]
+                size = Nbr_BlkIntra.size
+                param_int[1][deb:deb+size] = Nbr_BlkIntra[:size]
+                Nbr_BlkIntra = param_int[1][deb:deb+size]
 
-                deb  += size
-                shap          = numpy.shape(CellScheduler)
-                size_scheduler= numpy.size(CellScheduler)
-                c = 0
-                for l in range(shap[3]):
-                    for k in range(shap[2]):
-                        for j in range(shap[1]):
-                            for i in range(shap[0]):
-                                #print("deb+c", deb+c, c, l,k,j,i,param_int[1][VSHARE.SCHEDULER] )
-                                param_int[1][ deb +c ]= CellScheduler[ i, j, k, l]
-                                c +=1
-                CellScheduler = param_int[1][ deb:deb+size_scheduler ]
+                deb += size
+                size_scheduler = CellScheduler.size
+                param_int[1][deb:deb+size_scheduler] = CellScheduler.flatten('F')
+                CellScheduler = param_int[1][deb:deb+size_scheduler]
 
     return None
 
@@ -871,101 +913,101 @@ def _buildOwnData(t, Padding):
     # 3: requires array/list of ints, 4: requires array/list of floats,
     # []: requires given strings
     keys4Base = {
-    'temporal_scheme':['explicit', 'implicit', 'implicit_local', 'explicit_local'],
-    'ss_iteration':0,
-    'rk':0, 
-    'modulo_verif':0,
-    'exp_local':0,
-    'time_begin_ale':1,
-    'omp_mode':0,
-    'explicit_local_type':0    ## 0:explicit local non conservatif,  1:explicit local conservatif (correction du bilan de flux aux interface)  
+        'temporal_scheme':['explicit', 'implicit', 'implicit_local', 'explicit_local'],
+        'ss_iteration':0,
+        'rk':0, 
+        'modulo_verif':0,
+        'exp_local':0,
+        'time_begin_ale':1,
+        'omp_mode':0,
+        'explicit_local_type':0    ## 0:explicit local non conservatif,  1:explicit local conservatif (correction du bilan de flux aux interface)  
     }
 
     keys4Zone = {
-    'scheme':['ausmpred', 'senseur', 'roe_min', 'roe', 'roe_nul', 'roe_kap', 'senseur_hyper'],
-    'implicit_solver':['lussor', 'gmres'],
-    'nb_relax':0,
-    'nb_krylov':0,
-    'nb_restart':0,
-    'motion':['none', 'rigid', 'rigid_ext', 'deformation'],
-    'rotation':4,
-    'time_step':1,
-    'io_thread':0,
-    'sgsmodel': ['smsm','msm','Miles'],
-    'wallmodel': ['musker','power'],
-    'wallmodel_sample': 0,
-    'ransmodel': ['SA', 'SA_comp', 'SA_diff'],
-    'cache_blocking_I':0,
-    'cache_blocking_J':0,
-    'cache_blocking_K':0,
-    'shiftvar':0,
-    'time_step_nature':['local', 'global'],
-    'ssdom_IJK':3,
-    'lu_match':1,
-    'epsi_newton':1,
-    'epsi_linear':1,
-    'inj1_newton_tol':1,
-    'inj1_newton_nit':0,
-    'cfl':1, 
-    'niveaux_temps':0, 
-    'psiroe':1, 
-    'coef_hyper':4, 
-    'prandtltb':1, 
-    'sfd':0, 
-    'sfd_chi':1, 
-    'sfd_delta':1, 
-    'sfd_init_iter':0, 
-    'nudging_ampli':1, 
-    'nudging_vector':4, 
-    'slope':["o1", "o3","o5", "minmod","o3sc","o5sc"],
-    'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3", "zdes3_w"],
-    'SA_add_LowRe': 0,
-    'SA_add_RotCorr': 0,
-    'snear': 1, # ignored
-    'DES_debug':['none','active'],
-    'extract_res':0,
-    'IBC':3,
-    'source':0,
-    'Cups':4,
-    'senseurType':0,
-    'ratiom':1, 
-    #=========================================================
-    # LBM specific keywords
-    #=========================================================
-    'LBM_velocity_set':['D3Q19','D3Q27'],
-    'LBM_coll_model':['BGK', 'BGK+', 'RR', 'HRR', 'TRT'], #Remarque : TRT uniquement pour FastLBM (AJ)
-    'LBM_relax_time':1,
-    'LBM_hrr_sigma':1,
-    'LBM_compressible':0,
-    'LBM_sponge':0,
-    'lbm_ns':0,
-    'lbm_c0':1,
-    'lbm_gamma_precon':1,    
-    'lbm_dif_coef':1,
-    'lbm_selective_filter':0,
-    'lbm_selective_filter_size':0,
-    'lbm_selective_filter_sigma':1,
-    'lbm_adaptive_filter_chi':1,
-    'lbm_chi_spongetypeII':1,
-    'lbm_sponge_size':0,
-    'lbm_spng_xmin':1,
-    'lbm_spng_xmax':0,
-    'lbm_spng_ymin':0,
-    'lbm_spng_ymax':0,
-    'lbm_spng_zmin':0,
-    'lbm_spng_zmax':0,
-    'lbm_ibm':0,
-    'lbm_isforce':0,
-    'lbm_zlim':1,
-    'lbm_ibm_connector':0,
-    'LBM_overset':0,
-    'LBM_dx':1,
-    'LBM_NS':0,
-    #=========================================================
-    #========================================================= 
-    'KWire_p':1,
-    'DiameterWire_p':1,
-    'CtWire_p':1    
+        'scheme':['ausmpred', 'senseur', 'roe_min', 'roe', 'roe_nul', 'roe_kap', 'senseur_hyper'],
+        'implicit_solver':['lussor', 'gmres'],
+        'nb_relax':0,
+        'nb_krylov':0,
+        'nb_restart':0,
+        'motion':['none', 'rigid', 'rigid_ext', 'deformation'],
+        'rotation':4,
+        'time_step':1,
+        'io_thread':0,
+        'sgsmodel': ['smsm','msm','Miles'],
+        'wallmodel': ['musker','power'],
+        'wallmodel_sample': 0,
+        'ransmodel': ['SA', 'SA_comp', 'SA_diff'],
+        'cache_blocking_I':0,
+        'cache_blocking_J':0,
+        'cache_blocking_K':0,
+        'shiftvar':0,
+        'time_step_nature':['local', 'global'],
+        'ssdom_IJK':3,
+        'lu_match':1,
+        'epsi_newton':1,
+        'epsi_linear':1,
+        'inj1_newton_tol':1,
+        'inj1_newton_nit':0,
+        'cfl':1, 
+        'niveaux_temps':0, 
+        'psiroe':1, 
+        'coef_hyper':4, 
+        'prandtltb':1, 
+        'sfd':0, 
+        'sfd_chi':1, 
+        'sfd_delta':1, 
+        'sfd_init_iter':0, 
+        'nudging_ampli':1, 
+        'nudging_vector':4, 
+        'slope':["o1", "o3","o5", "minmod","o3sc","o5sc"],
+        'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3", "zdes3_w"],
+        'SA_add_LowRe': 0,
+        'SA_add_RotCorr': 0,
+        'snear': 1, # ignored
+        'DES_debug':['none','active'],
+        'extract_res':0,
+        'IBC':3,
+        'source':0,
+        'Cups':4,
+        'senseurType':0,
+        'ratiom':1, 
+        #=========================================================
+        # LBM specific keywords
+        #=========================================================
+        'LBM_velocity_set':['D3Q19','D3Q27'],
+        'LBM_coll_model':['BGK', 'BGK+', 'RR', 'HRR', 'TRT'], #Remarque : TRT uniquement pour FastLBM (AJ)
+        'LBM_relax_time':1,
+        'LBM_hrr_sigma':1,
+        'LBM_compressible':0,
+        'LBM_sponge':0,
+        'lbm_ns':0,
+        'lbm_c0':1,
+        'lbm_gamma_precon':1,    
+        'lbm_dif_coef':1,
+        'lbm_selective_filter':0,
+        'lbm_selective_filter_size':0,
+        'lbm_selective_filter_sigma':1,
+        'lbm_adaptive_filter_chi':1,
+        'lbm_chi_spongetypeII':1,
+        'lbm_sponge_size':0,
+        'lbm_spng_xmin':1,
+        'lbm_spng_xmax':0,
+        'lbm_spng_ymin':0,
+        'lbm_spng_ymax':0,
+        'lbm_spng_zmin':0,
+        'lbm_spng_zmax':0,
+        'lbm_ibm':0,
+        'lbm_isforce':0,
+        'lbm_zlim':1,
+        'lbm_ibm_connector':0,
+        'LBM_overset':0,
+        'LBM_dx':1,
+        'LBM_NS':0,
+        #=========================================================
+        #========================================================= 
+        'KWire_p':1,
+        'DiameterWire_p':1,
+        'CtWire_p':1    
     }
 
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')  # noeud
@@ -1152,8 +1194,7 @@ def _buildOwnData(t, Padding):
                 #print('Nblevel',datap[12+it],'itCycl=',it )
                 break
 
-    for it in range(nssiter):
-        datap[dtdim  + it  ] = -1   #on initialise a -1 le nbre de "zone" a traiter pour forcer l'init dans warmup
+    datap[dtdim:dtdim+nssiter] = -1   #on initialise a -1 le nbre de "zone" a traiter pour forcer l'init dans warmup
     Internal.createUniqueChild(o, '.Solver#dtloc', 'DataArray_t', datap)
 
     dtloc = Internal.getNodeFromName1(o, '.Solver#dtloc')[1]
@@ -2224,60 +2265,6 @@ def _motionlaw(t, teta, tetap):
 # Retourne un tag suivant bcname
 #==============================================================================
 def tagBC(bcname):
-    tagBCDict = {
-        "BCExtrapolate": 0,
-        "BCDegenerateLine": 0,
-        "BCFarfield": 1,
-        "BCInflowSupersonic": 2,
-        "BCWallInviscid": 3,
-        "BCSymmetryPlane": 3,
-        "BCWall": 4,
-        "FamilySpecified": 5,
-        "BCWallViscous": 6,
-        "BCWallViscous_isot_fich": 7,
-        "BC_fich": 8,
-        "Nearmatch": 9,
-        "BCOutflow": 10,
-        "BCautoperiod": 11,
-        "BCWallViscous_transition": 12,
-        "BCInflow": 13,
-        "BCExtrapolateRANS": 14,
-        "BCPeriodic": 15,
-        "BCOutpres": 16,
-        "BCInj1": 17,
-        "BCRacinf": 18,
-        "BCInflowLund": 19,
-        "BCInjMFR": 20,
-        "BCOutMFR": 21,
-        "BCOverlap": 22,
-        "BCReconsLBM": 23, #LBM 
-        "BCdimNS": 24, #LBM
-        "BCadimcoins": 25, #LBM
-        "BCOversetLBM": 26, #LBM
-        "BCEquilibrium": 27,
-        "BCWallModel": 30,
-        "BCWallExchange": 31,
-        "BCWallViscousIsothermal": 32,
-        "BCTDIBC": 90, #LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen (copy of BCEquilibrium)
-        "BCTDIBCNSCBC": 91, #LBM - TDIBC for PR ALBATOR - DMPE/STAT R.Roncen (copy of BCFarfield w/ NSCBC)
-
-        "LBM_BCPeriodic": 100, #ok
-        "LBM_BCSymmetryPlane": 101, #ok
-        "LBM_BCSlip": 101, #ok
-        "LBM_BCWall": 102, #ok
-        "LBM_BCInflow": 103, #ok
-        "LBM_BCPressureAntiBB": 105, #ok
-        "LBM_BCPML": 108, #NOT FULLY IMPLEMENTED
-        "LBM_BCCBC_UBB": 109, #work needs to be done (DO NOT USE)
-        "LBM_BCCBC_PABB": 110, #work needs to be done (BUG)
-        "LBM_BCZerothExtrapol": 111, #ok
-        "LBM_BCLinearExtrapol": 112, #ok
-        "LBM_BCNeumannCentralDir": 113, #ok
-        "LBM_BCExtrapolJunk": 114, #ok
-
-        "LBM_Sponge": 150,
-    }
-
     tag = tagBCDict.get(bcname, -1)
     if tag == -1: print("Warning: Fast: unknown BC type %s."%bcname)
     return tag
@@ -2723,20 +2710,10 @@ def _BCcompactNG(t):
         param_int[70]=  pt_bcs_int
         no           += 1
 
-        size = numpy.shape(FaceScheduler)
-        size_scheduler = 1
-        for s in size: size_scheduler=size_scheduler*s
-
         deb = pt_bcs_int
-        c   = 0
-        for l in range(size[3]):
-            for k in range(size[2]):
-                for j in range(size[1]):
-                    for i in range(size[0]):
-                        param_int[ deb +c ]= FaceScheduler[ i, j, k, l]
-                        #print("verif fsched=",FaceScheduler[ i, j, k, l],l,k,j,i, "deb=",deb,"c=",c)
-                        c +=1
-        FaceScheduler = param_int[ deb:deb+size_scheduler ] # wrong shape?
+        size_scheduler = FaceScheduler.size
+        param_int[deb:deb+size_scheduler] = FaceScheduler.flatten('F')
+        FaceScheduler = param_int[deb:deb+size_scheduler]
 
 #==============================================================================
 # Construit les donnees compactees pour traiter les BC
@@ -3037,9 +3014,8 @@ def _InterpTemporelcompact(t,tc):
 
                     #actualisation pointeur des raccord au cas ou les tailles du param_int/real soit different a la reprise
                     nrac = temporal_int[1][0]
-                    for i in range(1,nrac+1):
-                        temporal_int[1][ i      ] = temporal_int[1][ i      ] - adresse[ 0 ] + size_param_int 
-                        temporal_int[1][ i +nrac] = temporal_int[1][ i +nrac] - adresse[ 1 ] + size_param_real
+                    temporal_int[1][1:nrac+1] += -adresse[0] + size_param_int
+                    temporal_int[1][nrac+1:2*nrac+1] += -adresse[1] + size_param_real
 
                     adresse[0] = size_param_int
                     adresse[1] = size_param_real
@@ -3099,15 +3075,15 @@ def _InterpTemporelcompact(t,tc):
                 imd = dims[1]-1; imdjmd =imd*(dims[2]-1)
                 #print('dims',dims)
                 #print('imd',imd,dims[2]-1, imdjmd )
-                for l in range(numpy.size(ptlist)):
+                for l in range(ptlist.size):
                     typ = interptyp[l]
 
                     k   = ptlist[l]//imdjmd;
                     j   = (ptlist[l]-k*imdjmd)//imd;
                     i   = (ptlist[l]-j*imd-k*imdjmd);
-                    if i < imin: imin =i
-                    if j < jmin: jmin =j
-                    if k < kmin: kmin =k
+                    if i < imin: imin = i
+                    if j < jmin: jmin = j
+                    if k < kmin: kmin = k
                     molecule = typ -1 
                     if   typ == 22 or type ==0:
                         print("ERROR: interpolation leastsquare ou 2d pas prise en compte pour lbm multi dt")
@@ -3203,11 +3179,11 @@ def _InterpTemporelcompact(t,tc):
         param_int  = param_int[1]
         param_real = param_real[1]
 
-        pt_bcs_int   =  size_param_int
-        param_int[VSHARE.PT_INTERP]=  pt_bcs_int
+        pt_bcs_int = size_param_int
+        param_int[VSHARE.PT_INTERP] = pt_bcs_int
 
-        pt_bcs_real=  size_param_real 
-        param_int[ pt_bcs_int ] = nrac
+        pt_bcs_real = size_param_real 
+        param_int[pt_bcs_int] = nrac
 
         size_int  = 1 + 2*nrac  # shift pour nrac et pointeur BC_int et BC_real
         size_real = 0
@@ -4520,17 +4496,13 @@ def add2inst(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3,mode=None):
                 varout = Internal.getNodeFromName(zout, v)[1]
                 varin  = Internal.getNodeFromName(zin , v)[1]
 
-                sh  = numpy.shape(varout)
-
-                if direction_copy2Dto3D==3:
-                    for k in range( sh[direction_copy2Dto3D-1]):
-                        varout[:,:,k]  = varin[:,:]
-                elif direction_copy2Dto3D==2:
-                    for k in range( sh[direction_copy2Dto3D-1]):
-                        varout[:,k,:]  = varin[:,:]
+                iend = varout.shape[direction_copy2Dto3D-1]
+                if direction_copy2Dto3D == 3:
+                    varout[:,:,:iend]  = varin[:,:]
+                elif direction_copy2Dto3D == 2:
+                    varout[:,:iend,:]  = varin[:,:]
                 else:
-                    for k in range( sh[direction_copy2Dto3D-1]):
-                        varout[k,:,:]  = varin[:,:]
+                    varout[:iend,:,:]  = varin[:,:]
     return tout
 
 def get_wall_values(t,isRANS=False,wallType='BCWall',mode=None):
