@@ -84,6 +84,6 @@ for it in range(nit):
     print('it=' ,it)
     FastS._compute(t, metrics, it, tc)
     if it%14==0:
-       FastS.displayTemporalCriteria(t, metrics, it)
+        FastS.displayTemporalCriteria(t, metrics, it)
 
 C.convertPyTree2File(t, 'out.cgns')

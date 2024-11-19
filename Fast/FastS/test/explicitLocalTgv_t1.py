@@ -42,11 +42,11 @@ if explicit_select == 'explicit_local':
     a1 = G.cart((-math.pi*L0   ,-math.pi*L0,-math.pi*L0),(dx  ,dx,dx), (  M+1+4  ,N+1,N+1))
     a2 = G.cart((-math.pi*L0/3.,-math.pi*L0,-math.pi*L0),(dx/2,dx,dx), (2*M+1+2*4,N+1,N+1))
     a3 = G.cart(( math.pi*L0/3.,-math.pi*L0,-math.pi*L0),(dx  ,dx,dx), (  M+1    ,N+1,N+1))
-    
+
     a1 = C.addVars(a1, 'centers:niveaux_temps')
     a1 = C.initVars(a1, 'centers:niveaux_temps',1)
     a1 = C.addBC2Zone(a1, 'ovmax', 'BCOverlap', 'imax')
-    
+
     a2 = C.addVars(a2, 'centers:niveaux_temps')
     a2 = C.initVars(a2, 'centers:niveaux_temps',2)
     a2 = C.addBC2Zone(a2, 'ovmin', 'BCOverlap', 'imin')
@@ -88,7 +88,7 @@ C._initVars(t, '{centers:VelocityX}= %g*sin({centers:CoordinateX}/%g)*cos({cente
 C._initVars(t, '{centers:VelocityY}= -%g*cos({centers:CoordinateX}/%g)*sin({centers:CoordinateY}/%g)*cos({centers:CoordinateZ}/%g)'%(U0,L0,L0,L0))
 C._initVars(t, '{centers:VelocityZ} = 0.')
 C._initVars(t, '{centers:Temperature} = %g'%T0)
-  
+
 if explicit_select != 'explicit_local':
     t = X.connectMatch(t, tol=1.e-6, dim=3)
 dist = 2*math.pi*L0 
@@ -139,7 +139,7 @@ if explicit_select == 'explicit_local':
         dtloc = Internal.getNodeFromName1(z, '.Solver#define')  # noeud
         level = Internal.getNodeFromName1(dtloc, 'niveaux_temps')  # noeud
         Internal.setValue(level,int(niveau))
-            
+
 (t, tc, metrics)  = FastS.warmup(t, tc)
 
 t1 = Internal.copyRef(t)
@@ -160,7 +160,7 @@ if isPrintAnalysis:
         C.convertPyTree2File(t,"postwarmup_tgv_explicit_local.cgns")
     else:
         C.convertPyTree2File(t,"postwarmup_tgv_explicit_global.cgns")
-        
+
 for it in range(nit):
     FastS._compute(t, metrics, it, tc,layer='Python')
     times += timeStep

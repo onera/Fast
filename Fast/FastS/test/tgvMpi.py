@@ -64,14 +64,14 @@ t = C.addState(t, MInf=0.1, ReInf=1600, adim='adim2funk')
 
 #periodicite par BC si pas de decoupe MPI dans une direction
 if mpi_k ==1 :
-   t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period kmin', 'BCautoperiod', 'kmin')
-   t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period kmax', 'BCautoperiod', 'kmax')
+    t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period kmin', 'BCautoperiod', 'kmin')
+    t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period kmax', 'BCautoperiod', 'kmax')
 if mpi_j ==1 :
-   t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period jmin', 'BCautoperiod', 'jmin')
-   t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period jmax', 'BCautoperiod', 'jmax')
+    t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period jmin', 'BCautoperiod', 'jmin')
+    t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period jmax', 'BCautoperiod', 'jmax')
 if mpi_i ==1 :
-   t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period imin', 'BCautoperiod', 'imin')
-   t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period imax', 'BCautoperiod', 'imax')
+    t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period imin', 'BCautoperiod', 'imin')
+    t[2][1][2][0] = C.addBC2Zone(t[2][1][2][0], 'period imax', 'BCautoperiod', 'imax')
 
 tc = C.node2Center(t)
 z = tc[2][1][2][0]
@@ -79,121 +79,121 @@ C._rmVars(z, 'FlowSolution')
 
 racs =[]
 if mpi_i != 1:
-   #Imin
-   mpi_rac = rank -1
-   if ipos ==0: mpi_rac = rank + mpi_i-1
-   racs.append(['imin', mpi_rac ])
-   #Imax
-   mpi_rac = rank +1
-   if ipos == mpi_i-1: mpi_rac = rank - mpi_i +1
-   racs.append(['imax', mpi_rac ])
+    #Imin
+    mpi_rac = rank -1
+    if ipos ==0: mpi_rac = rank + mpi_i-1
+    racs.append(['imin', mpi_rac ])
+    #Imax
+    mpi_rac = rank +1
+    if ipos == mpi_i-1: mpi_rac = rank - mpi_i +1
+    racs.append(['imax', mpi_rac ])
 
 if mpi_j != 1:
-   #Jmin
-   mpi_rac = rank - mpi_i
-   if jpos ==0: mpi_rac = rank + (mpi_j-1)*mpi_i
-   racs.append(['jmin', mpi_rac ])
-   #Jmax
-   mpi_rac = rank + mpi_i
-   if jpos == mpi_j-1: mpi_rac = rank - (mpi_j -1)*mpi_i
-   racs.append(['jmax', mpi_rac ])
+    #Jmin
+    mpi_rac = rank - mpi_i
+    if jpos ==0: mpi_rac = rank + (mpi_j-1)*mpi_i
+    racs.append(['jmin', mpi_rac ])
+    #Jmax
+    mpi_rac = rank + mpi_i
+    if jpos == mpi_j-1: mpi_rac = rank - (mpi_j -1)*mpi_i
+    racs.append(['jmax', mpi_rac ])
 
 if mpi_k != 1:
-   #Kmin
-   mpi_rac = rank - mpi_i*mpi_j
-   if kpos ==0: mpi_rac = rank + (mpi_k-1)*mpi_i*mpi_j
-   racs.append(['kmin', mpi_rac ])
-   #Kmax
-   mpi_rac = rank + mpi_i*mpi_j
-   if kpos == mpi_k-1: mpi_rac = rank - (mpi_k -1)*mpi_i*mpi_j
-   racs.append(['kmax', mpi_rac ])
+    #Kmin
+    mpi_rac = rank - mpi_i*mpi_j
+    if kpos ==0: mpi_rac = rank + (mpi_k-1)*mpi_i*mpi_j
+    racs.append(['kmin', mpi_rac ])
+    #Kmax
+    mpi_rac = rank + mpi_i*mpi_j
+    if kpos == mpi_k-1: mpi_rac = rank - (mpi_k -1)*mpi_i*mpi_j
+    racs.append(['kmax', mpi_rac ])
 
 
 
 #if rank == 0: print "racs", racs, ipos, rank
 proc ={}
 for rac in racs:
-   if str(rac[1]) in proc.keys():
-       tmp = proc[ str(rac[1]) ]
-       proc[ str(rac[1]) ]= tmp+ [rac[0]]
-       tmp = proc[ str(rac[1]) ]
-   else:
-       proc[ str(rac[1]) ]= [rac[0]]
+    if str(rac[1]) in proc.keys():
+        tmp = proc[ str(rac[1]) ]
+        proc[ str(rac[1]) ]= tmp+ [rac[0]]
+        tmp = proc[ str(rac[1]) ]
+    else:
+        proc[ str(rac[1]) ]= [rac[0]]
 
 #if rank == 0:  print "proc", proc
 #size fenetre raccor sous hypothese domaine cubique
 size_fen = 2*((N-1)**2)
 c= 0
 for key in proc.keys():
-   dirs= proc[key]
-   nfen= len(dirs)
-   #print "dirs", dirs,nfen, rank
-   if rank == 0:  print("dirs", dirs,nfen, rank)
-   o = Internal.createUniqueChild( z , 'ID_cart'+key, 'ZoneSubRegion_t', 'cart'+key  )
-   subRegion = Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
-   o = Internal.createChild( subRegion[c] , 'ZoneRole', 'DataArray_t', 'Donor')
-   o = Internal.createChild( subRegion[c] , 'GridLocation', 'GridLocation_t', 'CellCenter')
-   datap = numpy.ones( size_fen*nfen , numpy.float64)
-   Internal.createUniqueChild(subRegion[c], 'InterpolantsDonor', 'DataArray_t', datap)
-   datap = numpy.ones(size_fen*nfen, dtype=Internal.E_NpyInt)
-   Internal.createUniqueChild(subRegion[c], 'InterpolantsType', 'DataArray_t', datap)
+    dirs= proc[key]
+    nfen= len(dirs)
+    #print "dirs", dirs,nfen, rank
+    if rank == 0:  print("dirs", dirs,nfen, rank)
+    o = Internal.createUniqueChild( z , 'ID_cart'+key, 'ZoneSubRegion_t', 'cart'+key  )
+    subRegion = Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+    o = Internal.createChild( subRegion[c] , 'ZoneRole', 'DataArray_t', 'Donor')
+    o = Internal.createChild( subRegion[c] , 'GridLocation', 'GridLocation_t', 'CellCenter')
+    datap = numpy.ones( size_fen*nfen , numpy.float64)
+    Internal.createUniqueChild(subRegion[c], 'InterpolantsDonor', 'DataArray_t', datap)
+    datap = numpy.ones(size_fen*nfen, dtype=Internal.E_NpyInt)
+    Internal.createUniqueChild(subRegion[c], 'InterpolantsType', 'DataArray_t', datap)
 
-   #pointlistreceveur
-   datar = numpy.zeros(size_fen*nfen, dtype=Internal.E_NpyInt)
-   datad = numpy.zeros(size_fen*nfen, dtype=Internal.E_NpyInt)
-   l = 0
-   ni   = (N-1+4)
-   ninj = ni*ni
-   for  dir in dirs:
+    #pointlistreceveur
+    datar = numpy.zeros(size_fen*nfen, dtype=Internal.E_NpyInt)
+    datad = numpy.zeros(size_fen*nfen, dtype=Internal.E_NpyInt)
+    l = 0
+    ni   = (N-1+4)
+    ninj = ni*ni
+    for  dir in dirs:
 
-     if dir == 'imin':
-      for k in range(1,N):
-       for j in range(1,N):
-         for i in range(-1,1):
-               datar[l]= 0 + (i+1) + (j+1)*ni + (k+1)*ninj
-               datad[l]= 0 + (i+N) + (j+1)*ni + (k+1)*ninj
-               l +=1
-     elif dir == 'imax':
-       for k in range(1,N):
-          for j in range(1,N):
-            for i in range(N,N+2):
-               datar[l]= 0 + (i+1) + (j+1)*ni + (k+1)*ninj
-               datad[l]= 0 + (i-N+2) + (j+1)*ni + (k+1)*ninj
-               l +=1
+        if dir == 'imin':
+            for k in range(1,N):
+                for j in range(1,N):
+                    for i in range(-1,1):
+                        datar[l]= 0 + (i+1) + (j+1)*ni + (k+1)*ninj
+                        datad[l]= 0 + (i+N) + (j+1)*ni + (k+1)*ninj
+                        l +=1
+        elif dir == 'imax':
+            for k in range(1,N):
+                for j in range(1,N):
+                    for i in range(N,N+2):
+                        datar[l]= 0 + (i+1) + (j+1)*ni + (k+1)*ninj
+                        datad[l]= 0 + (i-N+2) + (j+1)*ni + (k+1)*ninj
+                        l +=1
 
 
-     elif dir == 'jmin':
-        for j in range(-1,1):
-          for k in range(1,N):
-            for i in range(1,N):
-               datar[l]=  0 + (i+1) + (j  +1)*ni + (k+1)*ninj
-               datad[l]=  0 + (i+1) + (j+N  )*ni + (k+1)*ninj
-               l +=1
-     elif dir == 'jmax':
-        for j in range(N,N+2):
-          for k in range(1,N):
-            for i in range(1,N):
-               datar[l]=  0 + (i+1) + (j  +1)*ni + (k+1)*ninj
-               datad[l]=  0 + (i+1) + (j-N+2)*ni + (k+1)*ninj
-               l +=1
-     elif dir == 'kmin':
-       for k in range(-1,1):
-          for j in range(1,N):
-            for i in range(1,N):
-               datar[l]=  0 + (i+1) + (j+1)*ni + (k  +1)*ninj
-               datad[l]=  0 + (i+1) + (j+1)*ni + (k+N  )*ninj
-               l +=1
-     elif dir == 'kmax':
-        for k in range(N,N+2):
-          for j in range(1,N):
-            for i in range(1,N):
-               datar[l]=  0 + (i+1) + (j+1)*ni + (k  +1)*ninj
-               datad[l]=  0 + (i+1) + (j+1)*ni + (k-N+2)*ninj
-               l +=1
+        elif dir == 'jmin':
+            for j in range(-1,1):
+                for k in range(1,N):
+                    for i in range(1,N):
+                        datar[l]=  0 + (i+1) + (j  +1)*ni + (k+1)*ninj
+                        datad[l]=  0 + (i+1) + (j+N  )*ni + (k+1)*ninj
+                        l +=1
+        elif dir == 'jmax':
+            for j in range(N,N+2):
+                for k in range(1,N):
+                    for i in range(1,N):
+                        datar[l]=  0 + (i+1) + (j  +1)*ni + (k+1)*ninj
+                        datad[l]=  0 + (i+1) + (j-N+2)*ni + (k+1)*ninj
+                        l +=1
+        elif dir == 'kmin':
+            for k in range(-1,1):
+                for j in range(1,N):
+                    for i in range(1,N):
+                        datar[l]=  0 + (i+1) + (j+1)*ni + (k  +1)*ninj
+                        datad[l]=  0 + (i+1) + (j+1)*ni + (k+N  )*ninj
+                        l +=1
+        elif dir == 'kmax':
+            for k in range(N,N+2):
+                for j in range(1,N):
+                    for i in range(1,N):
+                        datar[l]=  0 + (i+1) + (j+1)*ni + (k  +1)*ninj
+                        datad[l]=  0 + (i+1) + (j+1)*ni + (k-N+2)*ninj
+                        l +=1
 
-   Internal.createUniqueChild(subRegion[c], 'PointListDonor', 'DataArray_t', datar)
-   Internal.createUniqueChild(subRegion[c], 'PointList', 'DataArray_t', datad)
-   c +=1
+    Internal.createUniqueChild(subRegion[c], 'PointListDonor', 'DataArray_t', datar)
+    Internal.createUniqueChild(subRegion[c], 'PointList', 'DataArray_t', datad)
+    c +=1
 
 #graph
 procList=[]
@@ -201,54 +201,54 @@ procDict={}
 graphID ={}
 procs={}
 for i in range(size):
-  proc ={}
-  procDict['cart'+str(i)]= i
-  procList.append(['cart'+str(i)])
-  rank =i
-  
-  ipos = int(rank%mpi_i)
-  jpos = int((rank-ipos)/mpi_i%mpi_j)
-  kpos = int((rank-ipos-jpos*mpi_i)/(mpi_i*mpi_j))
-  
-  racs =[]
-  if mpi_i != 1:
-     #Imin
-     mpi_rac = rank -1
-     if ipos ==0: mpi_rac = rank + mpi_i-1
-     racs.append(['imin', mpi_rac ])
-     #Imax
-     mpi_rac = rank +1
-     if ipos == mpi_i-1: mpi_rac = rank - mpi_i +1
-     racs.append(['imax', mpi_rac ])
+    proc ={}
+    procDict['cart'+str(i)]= i
+    procList.append(['cart'+str(i)])
+    rank =i
 
-  if mpi_j != 1:
-     #Jmin
-     mpi_rac = rank - mpi_i
-     if jpos ==0: mpi_rac = rank + (mpi_j-1)*mpi_i
-     racs.append(['jmin', mpi_rac ])
-     #Jmax
-     mpi_rac = rank + mpi_i
-     if jpos == mpi_j-1: mpi_rac = rank - (mpi_j -1)*mpi_i
-     racs.append(['jmax', mpi_rac ])
+    ipos = int(rank%mpi_i)
+    jpos = int((rank-ipos)/mpi_i%mpi_j)
+    kpos = int((rank-ipos-jpos*mpi_i)/(mpi_i*mpi_j))
 
-  if mpi_k != 1:
-     #Kmin
-     mpi_rac = rank - mpi_i*mpi_j
-     if kpos ==0: mpi_rac = rank + (mpi_k-1)*mpi_i*mpi_j
-     racs.append(['kmin', mpi_rac ])
-     #Kmax
-     mpi_rac = rank + mpi_i*mpi_j
-     if kpos == mpi_k-1: mpi_rac = rank - (mpi_k -1)*mpi_i*mpi_j
-     racs.append(['kmax', mpi_rac ])
+    racs =[]
+    if mpi_i != 1:
+        #Imin
+        mpi_rac = rank -1
+        if ipos ==0: mpi_rac = rank + mpi_i-1
+        racs.append(['imin', mpi_rac ])
+        #Imax
+        mpi_rac = rank +1
+        if ipos == mpi_i-1: mpi_rac = rank - mpi_i +1
+        racs.append(['imax', mpi_rac ])
 
-  for rac in racs:
-     if rac[1] not in proc.keys():
-       proc[ rac[1] ]= [ 'cart'+str(rac[1]) ]
+    if mpi_j != 1:
+        #Jmin
+        mpi_rac = rank - mpi_i
+        if jpos ==0: mpi_rac = rank + (mpi_j-1)*mpi_i
+        racs.append(['jmin', mpi_rac ])
+        #Jmax
+        mpi_rac = rank + mpi_i
+        if jpos == mpi_j-1: mpi_rac = rank - (mpi_j -1)*mpi_i
+        racs.append(['jmax', mpi_rac ])
+
+    if mpi_k != 1:
+        #Kmin
+        mpi_rac = rank - mpi_i*mpi_j
+        if kpos ==0: mpi_rac = rank + (mpi_k-1)*mpi_i*mpi_j
+        racs.append(['kmin', mpi_rac ])
+        #Kmax
+        mpi_rac = rank + mpi_i*mpi_j
+        if kpos == mpi_k-1: mpi_rac = rank - (mpi_k -1)*mpi_i*mpi_j
+        racs.append(['kmax', mpi_rac ])
+
+    for rac in racs:
+        if rac[1] not in proc.keys():
+            proc[ rac[1] ]= [ 'cart'+str(rac[1]) ]
 
 
-  procs[i]= proc
- 
- 
+    procs[i]= proc
+
+
 graph={}
 graph['graphID']=procs
 graph['graphIBCD']={}

@@ -14,7 +14,7 @@ a1 = I.initConst(a1, MInf=0.4, loc='centers')
 a1 = C.addState(a1, 'GoverningEquations', 'Euler')
 a1 = C.addState(a1, MInf=0.4)
 t = C.newPyTree(['Base', a1])
-    
+
 # Numerics
 modulo_verif = 20
 numb = {}

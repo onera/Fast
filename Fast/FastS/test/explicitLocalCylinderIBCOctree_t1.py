@@ -54,22 +54,22 @@ list_lvl2=['cart3','cart4','cart6','cart8']
 if explicit_select == "explicit_local":
     zones = Internal.getNodesFromType(t, 'Zone_t')
     for z in zones:
-       if z[0]=="cart5":
-           z = C._initVars(z,'centers:CFL',3)
-       elif z[0] in list_lvl2:
-           z = C._initVars(z,'centers:CFL',2)
-       else:
-           z = C._initVars(z,'centers:CFL',1)
+        if z[0]=="cart5":
+            z = C._initVars(z,'centers:CFL',3)
+        elif z[0] in list_lvl2:
+            z = C._initVars(z,'centers:CFL',2)
+        else:
+            z = C._initVars(z,'centers:CFL',1)
     for z in zones:
-       dim        = Internal.getZoneDim(z)
-       zp         = T.subzone(z, (3,3,1), (dim[1]-2,dim[2]-2,1))
-       cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
-       niveauTps  = pow(2,(cflmax_loc-1))
-       z          = C._initVars(z,'centers:niveaux_temps',float(niveauTps))
-       if niveauTps > time_lvl_max: time_lvl_max = niveauTps
+        dim        = Internal.getZoneDim(z)
+        zp         = T.subzone(z, (3,3,1), (dim[1]-2,dim[2]-2,1))
+        cflmax_loc = C.getMaxValue(zp, 'centers:CFL')
+        niveauTps  = pow(2,(cflmax_loc-1))
+        z          = C._initVars(z,'centers:niveaux_temps',float(niveauTps))
+        if niveauTps > time_lvl_max: time_lvl_max = niveauTps
     dt = dt * time_lvl_max
     tc = X.setInterpData3 (t, tc, nature=1, loc='centers', storage='inverse',sameName=1, method='lagrangian',dim=2)
-     
+
 t1c= Internal.copyRef(tc)
 test.testT(t1c, 5)
 
@@ -125,7 +125,7 @@ if explicit_select == "explicit_local":
                 Internal.addChild(z2, node, pos=-1)
                 node = Internal.createNode('DnrZoneName', 'IndexArray_t', value=[Internal.getValue(z2)], children=[])
                 Internal.addChild(z2, node, pos=-1)
-                
+
                 t_zone     = Internal.getNodesFromName(t, Internal.getValue(z2))
                 time_level = C.getMaxValue(t_zone, 'centers:niveaux_temps')
 
@@ -147,7 +147,7 @@ else:
 
 FastC._setNum2Zones(t, numz)
 FastC._setNum2Base(t, numb)
-    
+
 #C.convertPyTree2File(tc, "tc.cgns")
 #C.convertPyTree2File(t ,"mesh.cgns")
 

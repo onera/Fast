@@ -13,7 +13,7 @@ if Cmpi.rank == 0:
     b = G.cart((10,0,0),(1,1,1),(11,11,11))
     b = Cmpi.setProc(b,1)
     t = C.newPyTree(['Base',a,b])
-    
+
     t = X.connectMatch(t, dim=3)
     t = Internal.addGhostCells(t,t,2,adaptBCs=0)
     C.convertPyTree2File(t, 't.cgns')
