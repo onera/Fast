@@ -2227,7 +2227,7 @@ def write_plt_format(t, i, FileCvg, nd, it=[], RSD_L2=[], RSD_oo=[], RSD_L2_diff
 
 
 # IN: t: tree with ConvergenceHistory ()
-# IN: fileout: fileName for output of residuas in tp format
+# IN: fileout: fileName for output of residuals in tp format
 # IN: perZones: write ConvergenceHistory for each zones
 # IN: perBases: write ConvergenceHistory for each base
 def extractConvergenceHistory(t, fileout, perZones=True, perBases=True):

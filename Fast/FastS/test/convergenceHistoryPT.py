@@ -38,7 +38,7 @@ nrec = 100//modulo_verif
 C._rmNodes(t, "ZoneConvergenceHistory")
 
 #Convergence history with nrec records
-FastS.createConvergenceHistory(t, nrec)
+FastS._createConvergenceHistory(t, nrec)
 
 nit = 100; time = 0
 time_step = Internal.getNodeFromName(t, 'time_step')
