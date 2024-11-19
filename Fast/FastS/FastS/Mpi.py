@@ -30,7 +30,7 @@ try: range = xrange
 except: pass
 
 #==============================================================================
-def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=False):
+def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, layer="c", NIT=1, ucData=None, vtune=False, graphInvIBCD_WM=None):
     gradP      =False
     TBLE       =False
     isWireModel=False
@@ -57,13 +57,13 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
         procDict  = graph['procDict']
         graphID   = graph['graphID']
         graphIBCD = graph['graphIBCD']
-        graphInvIBCD_WM  = None
         if tc2 is not None:
             graphIBCD2 = graph2['graphIBCD']
             graphInvIBCD = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
-            graphInvIBCD_WM  = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
+        if graphInvIBCD_WM is None:
+            graphInvIBCD_WM = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
     else: 
-        procDict=None; graphID=None; graphIBCD=None; graphInvIBCD_WM=None
+        procDict=None; graphID=None; graphIBCD=None
 
     own  = Internal.getNodeFromName1(t, '.Solver#ownData')  
     dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')
@@ -186,7 +186,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
                     tic=Time.time()
 
-                    if not tc2:
+                    if tc2 is None:
                         if layer_mode==0:
                             _fillGhostcells(zones, tc, metrics, timelevel_target , vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, gradP=gradP, TBLE=TBLE, isWireModel=isWireModel, graphInvIBCD_WM=graphInvIBCD_WM)
                     else:
