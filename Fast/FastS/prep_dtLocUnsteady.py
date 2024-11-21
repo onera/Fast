@@ -48,7 +48,7 @@ if (dim == 2):
     t = T.makeDirect(t)
 
 
-    
+
 ### Met la CFL en chaque cellule dans l arbre t ###
 t, exposant_max = FastS.computeCFL_dtlocal(t)
 ###################################################
@@ -79,6 +79,6 @@ tc = C.rmVars(tc, 'CellN')
 C.convertPyTree2File(t, 't.cgns')
 C.convertPyTree2File(tc, 'tc.cgns')
 
- 
+
 
 

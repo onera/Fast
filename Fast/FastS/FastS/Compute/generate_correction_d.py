@@ -28,7 +28,7 @@ TypeMotion = dico[ rep ]['TypeMotion']
 TypeMesh   = dico[ rep ]['TypeMesh']
 TypeSlope  = dico[ rep ]['TypeSlope']
 flux       = dico[ rep ]['name']
- 
+
 opt_ale = {'ale':1, '':0}
 opt_flu = {'flu_ausm':1, 'flu_senseur':2, 'flu_roe':5 }
 opt_mod = {'euler':1, 'lamin':2, 'SA':3 }
@@ -48,8 +48,8 @@ srcs= open('../../srcs.py','w')
 
 c = 0
 for l in lines_select: 
-   if 'ELSE' in l: c_index = c
-   c+=1
+    if 'ELSE' in l: c_index = c
+    c+=1
 
 lines_select_beg = lines_select[0:c_index]
 lines_select_end = lines_select[c_index:c_index+8]
@@ -58,99 +58,99 @@ fselecto = open(rep+'/correction_'+flux+'_select_d.for',"w")                  # 
 
 for ale in TypeMotion:
 
-   ale1 = '_'+ale+'_'
-   if ale =='': ale1='_'
+    ale1 = '_'+ale+'_'
+    if ale =='': ale1='_'
 
-   for eq in Model:
-      for slope in TypeSlope:
-         for typezone in TypeMesh:
-                        option =  1000*opt_ale[ ale]  +  100*opt_slp[slope] +  10*opt_mod[eq] + opt_mesh[ typezone]
+    for eq in Model:
+        for slope in TypeSlope:
+            for typezone in TypeMesh:
+                option =  1000*opt_ale[ ale]  +  100*opt_slp[slope] +  10*opt_mod[eq] + opt_mesh[ typezone]
 
-                        input_file  = rep_build+'/'+typezone+'/corr_'+flux+ale1+eq+'_'+slope+'_'+typezone+'.f'
-                        output_file = 'corr_'+flux+ale1+eq+'_'+slope+'_'+typezone
-                        output_rep  = rep+'/'+typezone
-                        print('input  file', input_file)
-                        print('output file', output_file)
-                        print('output file', output_file)
+                input_file  = rep_build+'/'+typezone+'/corr_'+flux+ale1+eq+'_'+slope+'_'+typezone+'.f'
+                output_file = 'corr_'+flux+ale1+eq+'_'+slope+'_'+typezone
+                output_rep  = rep+'/'+typezone
+                print('input  file', input_file)
+                print('output file', output_file)
+                print('output file', output_file)
 
-                        var_in  = 'rop'
-                        var_out = 'drodm'
+                var_in  = 'rop'
+                var_out = 'drodm'
 
-                        subprocess.call(shlex.split('./tapenade.sh '+ input_file+' "'+output_file+'('+var_out+')/('+var_in+')" '+output_file+ ' '+ output_rep ))
-                        subprocess.call(shlex.split('mv '+ output_rep+'/'+output_file+'_d.f '+output_rep+'/'+output_file+'_d.for' ))
-                        subprocess.call(shlex.split('rm '+ output_rep+'/'+output_file+'_d.msg' ))
+                subprocess.call(shlex.split('./tapenade.sh '+ input_file+' "'+output_file+'('+var_out+')/('+var_in+')" '+output_file+ ' '+ output_rep ))
+                subprocess.call(shlex.split('mv '+ output_rep+'/'+output_file+'_d.f '+output_rep+'/'+output_file+'_d.for' ))
+                subprocess.call(shlex.split('rm '+ output_rep+'/'+output_file+'_d.msg' ))
 
-                        #nettoyage fichier generer par tapenade
-                        #
-                        tapenade_file = output_rep+'/'+output_file+'_d.for'
-                        fi= open(tapenade_file,'r')
-                        lines = fi.readlines()
-                        fi.close()
-                        #supression operation sur drodm
-                        c = 0
-                        for l in lines:
-                           if 'drodm(l' in l: lines = lines[:c] + lines[c+1:]; c-=1
-                           c+=1
-                        c = 0
-                        for l in lines:
-                           if 'drodmd(' in l and '= 0.0' in l: lines = lines[:c] + lines[c+1:]; c-=1
-                           c+=1
-                        c = 0
-                        for l in lines:
-                          if 'DO ii1=1,param_int' in l: 
-                              c1=0
-                              while ' ENDDO' not in lines[c+c1]: c1+=1
-                              c1+=1
-                              lines = lines[:c] + lines[c+c1:]; c-=c1
-                          c+=1
-                   
-                        fo = open(tapenade_file,'w')
-                        for l in lines: fo.write(l)
-                        fo.close()
+                #nettoyage fichier generer par tapenade
+                #
+                tapenade_file = output_rep+'/'+output_file+'_d.for'
+                fi= open(tapenade_file,'r')
+                lines = fi.readlines()
+                fi.close()
+                #supression operation sur drodm
+                c = 0
+                for l in lines:
+                    if 'drodm(l' in l: lines = lines[:c] + lines[c+1:]; c-=1
+                    c+=1
+                c = 0
+                for l in lines:
+                    if 'drodmd(' in l and '= 0.0' in l: lines = lines[:c] + lines[c+1:]; c-=1
+                    c+=1
+                c = 0
+                for l in lines:
+                    if 'DO ii1=1,param_int' in l: 
+                        c1=0
+                        while ' ENDDO' not in lines[c+c1]: c1+=1
+                        c1+=1
+                        lines = lines[:c] + lines[c+c1:]; c-=c1
+                    c+=1
 
-                        #flux selection function
-                        target = 'option.eq.'+str(option)+') THEN'
-                        include = True
-                        c = 0
-                        for l in lines_select: 
-                              if target in l: include = False
-                              if 'ELSE' in l: c_index = c
-                              c+=1
+                fo = open(tapenade_file,'w')
+                for l in lines: fo.write(l)
+                fo.close()
 
-                        name_routine = 'corr_'+flux+ale1+eq+'_'+slope+'_'+typezone+'_d'
-                        select_out=[]
-                        if include == True:
-                           select_out.append('       ELSEIF (option.eq.'+str(option)+') THEN\n')
-                           select_out.append('                                               \n') 
-                           select_out.append('         call '+ name_routine+'(ndom, ithread, idir,\n') 
-                           select_out.append('     &                 param_int, param_real,\n') 
-                           select_out.append('     &                 ind_loop,\n') 
-                           select_out.append('     &                 rop, ropd, drodm, drodmd, wig,\n') 
-                           select_out.append('     &                 venti, ventj, ventk,\n') 
-                           select_out.append('     &                 ti, tj, tk, vol)\n') 
-                           select_out.append('                                               \n') 
+                #flux selection function
+                target = 'option.eq.'+str(option)+') THEN'
+                include = True
+                c = 0
+                for l in lines_select: 
+                    if target in l: include = False
+                    if 'ELSE' in l: c_index = c
+                    c+=1
 
-                        lines_select_beg = lines_select_beg +   select_out 
+                name_routine = 'corr_'+flux+ale1+eq+'_'+slope+'_'+typezone+'_d'
+                select_out=[]
+                if include == True:
+                    select_out.append('       ELSEIF (option.eq.'+str(option)+') THEN\n')
+                    select_out.append('                                               \n') 
+                    select_out.append('         call '+ name_routine+'(ndom, ithread, idir,\n') 
+                    select_out.append('     &                 param_int, param_real,\n') 
+                    select_out.append('     &                 ind_loop,\n') 
+                    select_out.append('     &                 rop, ropd, drodm, drodmd, wig,\n') 
+                    select_out.append('     &                 venti, ventj, ventk,\n') 
+                    select_out.append('     &                 ti, tj, tk, vol)\n') 
+                    select_out.append('                                               \n') 
 
-                        #modif makefile
-                        target = tapenade_file
-                        include = True
-                        for l in lines_srcs: 
-                              if target in l: include = False
-                        srcs_out=[]
-                        if include == True: 
-                           #recherche la fonction originelle avant passage tapenade
-                           input_file  = rep+'/'+typezone+'/corr_'+flux+ale1+eq+'_'+slope+'_'+typezone+'.for'
-                           c = 0
-                           for l in lines_srcs: 
-                             if 'FastS/Compute/'+input_file in l: c_index = c
-                             c+=1
-                           c_index +=1
-                           #print 'c_index flu', c_index, len(lines_srcs)
-                           lines_srcs_beg = lines_srcs[0:c_index]
-                           lines_srcs_end = lines_srcs[c_index:]
-                           b = lines_srcs_beg + ["            'FastS/Compute/"+tapenade_file+"',\n"] + lines_srcs_end
-                           lines_srcs  = b
+                lines_select_beg = lines_select_beg +   select_out 
+
+                #modif makefile
+                target = tapenade_file
+                include = True
+                for l in lines_srcs: 
+                    if target in l: include = False
+                srcs_out=[]
+                if include == True: 
+                    #recherche la fonction originelle avant passage tapenade
+                    input_file  = rep+'/'+typezone+'/corr_'+flux+ale1+eq+'_'+slope+'_'+typezone+'.for'
+                    c = 0
+                    for l in lines_srcs: 
+                        if 'FastS/Compute/'+input_file in l: c_index = c
+                        c+=1
+                    c_index +=1
+                    #print 'c_index flu', c_index, len(lines_srcs)
+                    lines_srcs_beg = lines_srcs[0:c_index]
+                    lines_srcs_end = lines_srcs[c_index:]
+                    b = lines_srcs_beg + ["            'FastS/Compute/"+tapenade_file+"',\n"] + lines_srcs_end
+                    lines_srcs  = b
 
 c       =0
 c_index =0
@@ -160,7 +160,7 @@ for i in range( len(lines_select_beg) ):
         c_index = c
     c+=1
 lines_select_beg[c_index]=lines_select_beg[c_index].replace("ELSEIF"                ,'IF ' )
- 
+
 #write of srcs.py file for makefile  
 target = rep+'/correction_'+flux+"_select_d.for',"
 include = True
@@ -168,18 +168,18 @@ c = 0
 for l in lines_srcs: 
     if target in l: include = False
 if include == True: 
-  lines_srcs_beg.append("            'FastS/Compute/"+target+"\n")
-  input_file  = rep+'/correction_'+flux+"_select.for',"
-  c = 0
-  for l in lines_srcs: 
-    if 'FastS/Compute/'+input_file in l: c_index = c
-    c+=1
-  c_index +=1
-  #print 'c_index sel', c_index, len(lines_srcs)
-  lines_srcs_beg = lines_srcs[0:c_index]
-  lines_srcs_end = lines_srcs[c_index:]
-  b = lines_srcs_beg + ["            'FastS/Compute/"+target+"\n"] + lines_srcs_end
-  lines_srcs  = b
+    lines_srcs_beg.append("            'FastS/Compute/"+target+"\n")
+    input_file  = rep+'/correction_'+flux+"_select.for',"
+    c = 0
+    for l in lines_srcs: 
+        if 'FastS/Compute/'+input_file in l: c_index = c
+        c+=1
+    c_index +=1
+    #print 'c_index sel', c_index, len(lines_srcs)
+    lines_srcs_beg = lines_srcs[0:c_index]
+    lines_srcs_end = lines_srcs[c_index:]
+    b = lines_srcs_beg + ["            'FastS/Compute/"+target+"\n"] + lines_srcs_end
+    lines_srcs  = b
 
 
 #write of srcs.py

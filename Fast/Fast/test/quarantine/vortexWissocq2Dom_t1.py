@@ -80,20 +80,20 @@ C._rmVars(t,['centers:r2'])
 
 for i,z in enumerate(Internal.getZones(t)):
     if SOLVER_TYPE[i]==0:
-       C._initVars(z,"{centers:r2}=({centers:CoordinateX}-%20.16g)**2+({centers:CoordinateY}-%20.16g)**2"%(x_0,y_0))
-       C._initVars(z,'{centers:Density}= %20.16g*exp(-%20.16g/(2.*%20.16g**2)*exp(-{centers:r2}*%20.16g))'%(Rhoref,eps_2,c0[0],R0_2Inv))
-       C._initVars(z,'{centers:VelocityX}=%20.16g-%20.16g*(({centers:CoordinateY}-%20.16g)*%20.16g)*exp(-0.5*{centers:r2}*%20.16g)'%(u0,epsilon,y_0,1./R0,R0_2Inv))
-       C._initVars(z,'{centers:VelocityY}=%20.16g*(({centers:CoordinateX}-%20.16g)*%20.16g)*exp(-0.5*{centers:r2}*%20.16g)'%(epsilon,x_0,1./R0,R0_2Inv))
-       C._initVars(z,'{centers:VelocityZ}=0.')
-       C._initVars(z,'{centers:Temperature}=1.')
+        C._initVars(z,"{centers:r2}=({centers:CoordinateX}-%20.16g)**2+({centers:CoordinateY}-%20.16g)**2"%(x_0,y_0))
+        C._initVars(z,'{centers:Density}= %20.16g*exp(-%20.16g/(2.*%20.16g**2)*exp(-{centers:r2}*%20.16g))'%(Rhoref,eps_2,c0[0],R0_2Inv))
+        C._initVars(z,'{centers:VelocityX}=%20.16g-%20.16g*(({centers:CoordinateY}-%20.16g)*%20.16g)*exp(-0.5*{centers:r2}*%20.16g)'%(u0,epsilon,y_0,1./R0,R0_2Inv))
+        C._initVars(z,'{centers:VelocityY}=%20.16g*(({centers:CoordinateX}-%20.16g)*%20.16g)*exp(-0.5*{centers:r2}*%20.16g)'%(epsilon,x_0,1./R0,R0_2Inv))
+        C._initVars(z,'{centers:VelocityZ}=0.')
+        C._initVars(z,'{centers:Temperature}=1.')
 
-       #ADIMENSIONNEMENT DE LA LBM
-       C._initVars(z,'{centers:Density}={centers:Density}*%20.16g'%(1./Rhoref))
-       C._initVars(z,'{centers:VelocityX}={centers:VelocityX}*%20.16g'%v_adim[0])
-       C._initVars(z,'{centers:VelocityY}={centers:VelocityY}*%20.16g'%v_adim[0])
-       C._initVars(z,'{centers:Sxx} = {centers:Sxx}*%20.16g'%dt)
-       C._initVars(z,'{centers:Sxy} = {centers:Sxy}*%20.16g'%dt)
-       C._initVars(z,'{centers:Syy} = {centers:Syy}*%20.16g'%dt)
+        #ADIMENSIONNEMENT DE LA LBM
+        C._initVars(z,'{centers:Density}={centers:Density}*%20.16g'%(1./Rhoref))
+        C._initVars(z,'{centers:VelocityX}={centers:VelocityX}*%20.16g'%v_adim[0])
+        C._initVars(z,'{centers:VelocityY}={centers:VelocityY}*%20.16g'%v_adim[0])
+        C._initVars(z,'{centers:Sxx} = {centers:Sxx}*%20.16g'%dt)
+        C._initVars(z,'{centers:Sxy} = {centers:Sxy}*%20.16g'%dt)
+        C._initVars(z,'{centers:Syy} = {centers:Syy}*%20.16g'%dt)
 
     else:
         I._initWissocq(z, position=(x_0,y_0), Gamma=0.07, MInf=0.1, loc='centers')
@@ -173,8 +173,8 @@ tab_cons_LBM = []
 
 #C.convertPyTree2File(t, 'tin.cgns')
 for it in range(1, nit+1):
-   print('--------- iteration %d ---------'%it)
-   Fast._compute(t, metrics, it, tc, layer='Python')
+    print('--------- iteration %d ---------'%it)
+    Fast._compute(t, metrics, it, tc, layer='Python')
 
 #C.convertPyTree2File(t, 'tout.cgns')
 #import sys; sys.exit()
@@ -210,16 +210,16 @@ tempVar = ['Density_M1','VelocityX_M1','VelocityY_M1','VelocityZ_M1','Temperatur
 C._rmVars(t, tempVar)
 
 for i,z in enumerate(Internal.getZones(t)):
-   if SOLVER_TYPE[i]==0:
-      C._initVars(z,'{centers:Density}={centers:Density}*%20.16g'%(Rhoref))
-      C._initVars(z,'{centers:VelocityX} = {centers:VelocityX}*%20.16g'%(v_adiminv[0]))
-      C._initVars(z,'{centers:VelocityY} = {centers:VelocityY}*%20.16g'%(v_adiminv[0]))
-      C._initVars(z,'{centers:VelocityZ} = {centers:VelocityZ}*%20.16g'%(v_adiminv[0]))
-      C._initVars(z,'{centers:Temperature} = {centers:Temperature}*%20.16g'%(Tref))
-      C._initVars(z,'{centers:Sxx} = {centers:Sxx}*%20.16g'%(1./dt))
-      C._initVars(z,'{centers:Sxy} = {centers:Sxy}*%20.16g'%(1./dt))
-      C._initVars(z,'{centers:Syy} = {centers:Syy}*%20.16g'%(1./dt))
-   i = i+1
+    if SOLVER_TYPE[i]==0:
+        C._initVars(z,'{centers:Density}={centers:Density}*%20.16g'%(Rhoref))
+        C._initVars(z,'{centers:VelocityX} = {centers:VelocityX}*%20.16g'%(v_adiminv[0]))
+        C._initVars(z,'{centers:VelocityY} = {centers:VelocityY}*%20.16g'%(v_adiminv[0]))
+        C._initVars(z,'{centers:VelocityZ} = {centers:VelocityZ}*%20.16g'%(v_adiminv[0]))
+        C._initVars(z,'{centers:Temperature} = {centers:Temperature}*%20.16g'%(Tref))
+        C._initVars(z,'{centers:Sxx} = {centers:Sxx}*%20.16g'%(1./dt))
+        C._initVars(z,'{centers:Sxy} = {centers:Sxy}*%20.16g'%(1./dt))
+        C._initVars(z,'{centers:Syy} = {centers:Syy}*%20.16g'%(1./dt))
+    i = i+1
 
 for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
 X._setInterpTransfers(t,tc,variables=VARSMACRO,storage=1)

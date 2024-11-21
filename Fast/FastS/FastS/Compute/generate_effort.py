@@ -22,7 +22,7 @@ TypeMotion = dico[ rep ]['TypeMotion']
 TypeMesh   = dico[ rep ]['TypeMesh']
 TypeSlope  = dico[ rep ]['TypeSlope']
 flux       = dico[ rep ]['name']
- 
+
 opt_ale = {'ale':1, '':0}
 opt_flu = {'flu_ausm':1, 'flu_senseur':2, 'flu_roe':5 }
 opt_mod = {'euler':1, 'lamin':2, 'SA':3 }
@@ -118,7 +118,7 @@ for ale in TypeMotion:
                         c += 1
                     for i in range( len(lines) ):
                         lines[i]=lines[i].replace("psiroe,avmin", 'psiroe')
-                          
+
                 # suppression Vitesse entrainement si ale=faux
                 if ale == '':
                     c = 0
@@ -128,7 +128,7 @@ for ale in TypeMotion:
                     #lines = lines[:71] + lines[72:92] + lines[93:178] + lines[183:]
                     for i in range( len(lines) ):
                         lines[i]=lines[i].replace("lven= indven( i, j, k)","")
-                
+
                 eq2=''
                 # Viscous flux suppression for Euler
                 if eq == 'euler': 
@@ -174,7 +174,7 @@ for ale in TypeMotion:
 
                 for l in lines: fo.write(l)
                 fo.close()                               # fermer le fichier output global
-                        
+
                 #modif makefile
                 target = fout
                 include = True
@@ -220,7 +220,7 @@ for i in range( len(lines_select_beg) ):
         c_index = c
     c += 1
 lines_select_beg[c_index]=lines_select_beg[c_index].replace("ELSEIF"                ,'IF ' )
- 
+
 #write of srcs.py file for makefile  
 target = rep+'/effort_'+flux+"_select.for',"
 include = True

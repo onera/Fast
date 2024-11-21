@@ -32,4 +32,4 @@ def initVars(ro, varName, val):
 #     ro[1]    = ro_P1[1]
 #     ro_P1[1] = t
 #     return [ro, ro_M1, ro_P1]
-    
+

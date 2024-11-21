@@ -26,14 +26,9 @@ jobs:
 
       - name: Run autopep8
         run: |
+          pythonFiles=`find Fast/ -type f -not -path "*/build/*" -name "*.py"`
           autopep8 --in-place --indent-size=4 --select=E101 \
-            Fast/FastC/FastC/PyTree.py \
-            Fast/FastC/test/*.py \
-            Fast/FastS/FastS/PyTree.py \
-            Fast/FastS/FastS/Mpi.py \
-            Fast/FastS/test/*.py \
-            Fast/Fast/Fast/PyTree.py \
-            Fast/Fast/test/*.py
+            $pythonFiles
 
       - name: Commit changes
         run: |

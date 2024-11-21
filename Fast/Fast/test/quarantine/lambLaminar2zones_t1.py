@@ -53,15 +53,15 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 zones = Internal.getZones(t)
 znew=[]
 for z in zones:
-   nfaceElt = Internal.getNodeFromName1(z, 'NFaceElements')
-   Elt0     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][0]
-   Elt1     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][1]
-   Elt2     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][2]
-   Elt3     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][3]
-   Elt4     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][4]
-   print('nb elt 0  1  2 3 4= ', Elt0, Elt1, Elt2, Elt3,Elt4, z[0])
-   Index = list(range(Elt0+Elt1)) + list(range(Elt0+Elt1+Elt3,Elt0+Elt1+Elt3+ Elt2 ))
-   znew.append( T.subzone(z, Index , type='elements'))
+    nfaceElt = Internal.getNodeFromName1(z, 'NFaceElements')
+    Elt0     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][0]
+    Elt1     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][1]
+    Elt2     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][2]
+    Elt3     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][3]
+    Elt4     = Internal.getNodeFromName1(nfaceElt, 'IntExt')[1][4]
+    print('nb elt 0  1  2 3 4= ', Elt0, Elt1, Elt2, Elt3,Elt4, z[0])
+    Index = list(range(Elt0+Elt1)) + list(range(Elt0+Elt1+Elt3,Elt0+Elt1+Elt3+ Elt2 ))
+    znew.append( T.subzone(z, Index , type='elements'))
 
 
 #(t, tc, metrics) = FastP.warmup(t, tc)
@@ -83,7 +83,7 @@ for it in range(nit):
     Fast._compute(t, metrics,  nit, tc,layer='C')
 
     if it%5==0:
-       Fast.display_temporal_criteria(t, metrics, it)
+        Fast.display_temporal_criteria(t, metrics, it)
 
 C.convertPyTree2File(t, 'out.cgns')
 #sys.exit()

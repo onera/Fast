@@ -19,7 +19,7 @@ BC.append("BCPeriodic")
 
 
 for bc in BC:
-   cmd='python generate_bc.py'+' '+bc
-   print(cmd)
-   os.system(cmd)
+    cmd='python generate_bc.py'+' '+bc
+    print(cmd)
+    os.system(cmd)
 

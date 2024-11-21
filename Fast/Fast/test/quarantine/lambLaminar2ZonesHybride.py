@@ -47,18 +47,18 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 zones = Internal.getZones(t)
 for z in zones:
- sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
- dens= Internal.getNodeFromName1(sol, 'Density')[1]
- dens[:]=dens[:]-0.10387
+    sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+    dens= Internal.getNodeFromName1(sol, 'Density')[1]
+    dens[:]=dens[:]-0.10387
 
 # Time Steps
 nit = 300  ; time = 0.
 for it in range(nit): 
     Fast._compute(t, metrics, it, tc)
-    
+
     if it%1==0:
-       Fast.display_temporal_criteria(t, metrics, it)
-    
+        Fast.display_temporal_criteria(t, metrics, it)
+
 C.convertPyTree2File(t, 'out.cgns')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')

@@ -5,12 +5,12 @@ import sys
 n = len(sys.argv)
 print(n)
 if n >= 1:
-   templateFile='template_FluxAndBalance.for'
-   if len(sys.argv) ==3 and sys.argv[2]=='GPU': templateFile='template_FluxAndBalance_gpu.for'
+    templateFile='template_FluxAndBalance.for'
+    if len(sys.argv) ==3 and sys.argv[2]=='GPU': templateFile='template_FluxAndBalance_gpu.for'
 
 else:
-   print('Error: Flux name folder is required as argument: python generate_flu.py  fluxFolder (GPU optional)')
-   sys.exit()
+    print('Error: Flux name folder is required as argument: python generate_flu.py  fluxFolder (GPU optional)')
+    sys.exit()
 
 
 dico= {}
@@ -184,10 +184,10 @@ for ale in TypeMotion:
 
                     # suppression slope shock capturing
                     if slope!='o5sc' and slope!='o3sc':
-                       c=0
-                       for l in lines_euler:
-                           if 'SC only' in l:  lines_euler = lines_euler[:c] + lines_euler[c+1:]; c-=1
-                           c+=1
+                        c=0
+                        for l in lines_euler:
+                            if 'SC only' in l:  lines_euler = lines_euler[:c] + lines_euler[c+1:]; c-=1
+                            c+=1
 
 
                     for i in range( len(lines_euler) ):
@@ -199,9 +199,9 @@ for ale in TypeMotion:
                         lines_euler[i]=lines_euler[i].replace("si"                , 's'  +dir)
                         lines_euler[i]=lines_euler[i].replace("normale_3dfull_i"  , 'normale_'+typezone+'_'+dir)
                         if slope=='o5' or slope=='o5sc' :
-                           lines_euler[i]=lines_euler[i].replace("wiggle_i"       , 'wiggle5_'+dir)
+                            lines_euler[i]=lines_euler[i].replace("wiggle_i"       , 'wiggle5_'+dir)
                         else :
-                           lines_euler[i]=lines_euler[i].replace("wiggle_i"       , 'wiggle_'+dir)
+                            lines_euler[i]=lines_euler[i].replace("wiggle_i"       , 'wiggle_'+dir)
                         lines_euler[i]=lines_euler[i].replace("wig_i"             , 'wig_'   +dir)
                         lines_euler[i]=lines_euler[i].replace("sl_i"              , 'sl_'   +dir)
                         lines_euler[i]=lines_euler[i].replace("fluvector_3dfull_i", 'fluvector'+ale1 +typezone+'_'+dir)
