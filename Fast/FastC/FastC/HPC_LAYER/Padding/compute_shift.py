@@ -95,7 +95,7 @@ for sizeI in xrange(Imin,Imax,1):
             nit =     1; time = 0.
             time20=ny.empty(nit, dtype=float)    
             timeStep = numz['time_step']
-        
+
             t00=timeit.default_timer()
 
 # Compute 
@@ -113,7 +113,7 @@ for sizeI in xrange(Imin,Imax,1):
             del(t,metrics,numz,numb)
             t11=timeit.default_timer()
             print("Compute time all",(t11-t00)/40)
-           
+
             for a in FastS.HOOK: del(a)
             FastS.FIRST_IT = 0
             FastS.HOOK = None

@@ -150,11 +150,11 @@ if(Iplt+Jplt==0):
             ax.xaxis.set_major_locator(majorLocator)
             ax.xaxis.set_major_formatter(majorFormatter)
             ax.xaxis.set_minor_locator(minorLocator)
-        
+
             ax.yaxis.set_major_locator(majorLocator)
             ax.yaxis.set_major_formatter(majorFormatter)
             ax.yaxis.set_minor_locator(minorLocator)
-        
+
             ax.tick_params('both', length=10, width=1, which='major',direction='out')
             ax.tick_params('both', length=5, width=1, which='minor',direction='out')
             plt.savefig('effectivesize_2D_noshift_'+k+'.png')

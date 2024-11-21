@@ -10,7 +10,7 @@
 # FILES must be t.cgns, tc.cgns and restart.cgns
 # prefix='restart' : sort restart.cgns
 def loadData(split='single',filedir='.', prefix='restart'):
-    
+
     outprefix = filedir+'/'+prefix
     import os
     import Converter.PyTree as C
@@ -97,7 +97,7 @@ def getArgs():
         if (argc > 3): display = int(sys.argv[3])
         if (argc > 4): np = int(sys.argv[4])
     except: pass
-    
+
     return (mode, gfx, display, np)
 
 #==============================================================================
@@ -112,4 +112,4 @@ def getArgs1():
         if (argc > 1): np = int(sys.argv[1])
     except: pass
     return np
-                             
+

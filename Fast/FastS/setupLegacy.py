@@ -61,7 +61,7 @@ listExtensions.append(
               extra_compile_args=Dist.getCppArgs(),
               extra_link_args=Dist.getLinkArgs()
               ) )
-    
+
 # setup ======================================================================
 setup(
     name="FastS",

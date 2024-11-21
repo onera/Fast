@@ -39,10 +39,10 @@ t = Cmpi.convertFile2SkeletonTree(FILE)
 ZoneTarget=['interface','intarface']
 ZoneNames = []
 for b in Internal.getBases(t):
-  for z in Internal.getZones(b):
+    for z in Internal.getZones(b):
         for target in ZoneTarget:
-           if target in z[0]:
-              ZoneNames.append(b[0]+'/'+z[0])
+            if target in z[0]:
+                ZoneNames.append(b[0]+'/'+z[0])
 Cmpi._readZones(t, FILE, zoneNames=ZoneNames)
 t = Cmpi.convert2PartialTree(t)
 #sys.exit()
@@ -69,14 +69,14 @@ info_PtlistRebuild={}
 
 
 for etage in etages: 
-  tmp     = Internal.newCGNSBase(etage) 
-  base    = Internal.getNodeFromName(t, etage)
-  zones   = TBX.ZonePrecond( base , NGhostCells, info_PtlistRebuild ) 
-  tmp[2] += zones
-  T._cart2Cyl(tmp,(XC0,YC0,ZC0),(AXISX,AXISY,AXISZ))
-  tcyl_RS[etage]= tmp 
-  tc            = C.node2Center(tmp)
-  tc_RS[etage]  = tc
+    tmp     = Internal.newCGNSBase(etage) 
+    base    = Internal.getNodeFromName(t, etage)
+    zones   = TBX.ZonePrecond( base , NGhostCells, info_PtlistRebuild ) 
+    tmp[2] += zones
+    T._cart2Cyl(tmp,(XC0,YC0,ZC0),(AXISX,AXISY,AXISZ))
+    tcyl_RS[etage]= tmp 
+    tc            = C.node2Center(tmp)
+    tc_RS[etage]  = tc
 
 del t
 
@@ -85,7 +85,7 @@ print('----------------')
 print('Plan chimere instationnaire', etages)
 print('Nbre de pas de temps a calculer: ', TimeLevelPerio)
 print('Calcul des raccord', etages, ' entre les pas de temps ', IT_DEB,' et ', IT_FIN)
- 
+
 THETARAD= THETADEG*math.pi/180.
 DTHETA  = THETARAD/float(TimeLevelPerio) 
 

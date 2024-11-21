@@ -62,28 +62,28 @@ zones = Internal.getZones(t)
 
 for z in  zones:
 
-   xx = Internal.getNodeFromName2( z, "CoordinateX" )[1]
-   yy = Internal.getNodeFromName2( z, "CoordinateY" )[1]
-   zz = Internal.getNodeFromName2( z, "CoordinateZ" )[1]
+    xx = Internal.getNodeFromName2( z, "CoordinateX" )[1]
+    yy = Internal.getNodeFromName2( z, "CoordinateY" )[1]
+    zz = Internal.getNodeFromName2( z, "CoordinateZ" )[1]
 
-   sol = Internal.getNodeFromName1( z, "FlowSolution#Centers" )
-   vx = Internal.getNodeFromName1( sol, "VelocityX" )[1]
-   vy = Internal.getNodeFromName1( sol, "VelocityY" )[1]
-   vz = Internal.getNodeFromName1( sol, "VelocityZ" )[1]
-   
-   #for k in range( xx.shape[2] ):
-   #  xx[10,10,k]=  xx[10,10,k]+0.000001
+    sol = Internal.getNodeFromName1( z, "FlowSolution#Centers" )
+    vx = Internal.getNodeFromName1( sol, "VelocityX" )[1]
+    vy = Internal.getNodeFromName1( sol, "VelocityY" )[1]
+    vz = Internal.getNodeFromName1( sol, "VelocityZ" )[1]
 
-   for k in range( vx.shape[2] ):
-     for j in range( vx.shape[1] ):
-       for i in range( vx.shape[0] ):
-          x1 =  xx[i,j,k]
-          y1 =  yy[i,j,k]
-          z1 =  zz[i,j,k]
+    #for k in range( xx.shape[2] ):
+    #  xx[10,10,k]=  xx[10,10,k]+0.000001
 
-          vx[i,j,k]= 10.*math.cos(x1)*math.sin(y1)*math.sin(z1)
-          vy[i,j,k]= 10.*math.sin(x1)*math.cos(y1)*math.sin(z1)
-          vz[i,j,k]= 10.*math.cos(x1)*math.sin(y1)*math.cos(z1)
+    for k in range( vx.shape[2] ):
+        for j in range( vx.shape[1] ):
+            for i in range( vx.shape[0] ):
+                x1 =  xx[i,j,k]
+                y1 =  yy[i,j,k]
+                z1 =  zz[i,j,k]
+
+                vx[i,j,k]= 10.*math.cos(x1)*math.sin(y1)*math.sin(z1)
+                vy[i,j,k]= 10.*math.sin(x1)*math.cos(y1)*math.sin(z1)
+                vz[i,j,k]= 10.*math.cos(x1)*math.sin(y1)*math.cos(z1)
 
 
 '''   k=21
@@ -138,10 +138,10 @@ i=10
 j=82
 #for j in range( 78, ro.shape[1]-10 ):
 for k in range( ro.shape[2] ):
-             #print i-1,j-1,k-1, ro_ref[i,j,k] - ro[i,j,k]
-             print(k-1, j-1, ro[i,j,k])
-      
-             #ro[i,j,k] = ro[i,j,k] - ro_ref[i,j,k]
+    #print i-1,j-1,k-1, ro_ref[i,j,k] - ro[i,j,k]
+    print(k-1, j-1, ro[i,j,k])
+
+    #ro[i,j,k] = ro[i,j,k] - ro_ref[i,j,k]
 C.convertPyTree2File(t, "bug.cgns")
 import sys;sys.exit()
 
