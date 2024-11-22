@@ -52,7 +52,7 @@ tagBCDict = {
     "BCInjMFR": 20,
     "BCOutMFR": 21,
     "BCOverlap": 22,
-    "BCReconsLBM": 23, #LBM 
+    "BCReconsLBM": 23, #LBM
     "BCdimNS": 24, #LBM
     "BCadimcoins": 25, #LBM
     "BCOversetLBM": 26, #LBM
@@ -98,7 +98,7 @@ import Distributor2.PyTree as D2
 
 MX_SYNCHRO = 1000
 MX_SSZONE  = 10
-MX_OMP_SIZE_INT = -1 # set in warmup    
+MX_OMP_SIZE_INT = -1 # set in warmup
 
 #==============================================================================
 # Met un dictionnaire de numerics dans une/des zones
@@ -113,7 +113,7 @@ def _setNum2Zones(a, num):
     """Set numeric data dictionary  in zones."""
     zones = Internal.getNodesFromType2(a, 'Zone_t')
     for z in zones:
-        cont = Internal.createUniqueChild(z, '.Solver#define', 
+        cont = Internal.createUniqueChild(z, '.Solver#define',
                                           'UserDefinedData_t')
         for k in num: # some checks?
             Internal.createUniqueChild(cont, k, 'DataArray_t', num[k])
@@ -129,23 +129,23 @@ def setNum2Base(a, num):
 def _setNum2Base(a, num):
     """Set numeric data dictionary in bases."""
     cont = Internal.createUniqueChild(a, '.Solver#define', 'UserDefinedData_t')
-    for k in num: 
+    for k in num:
         Internal.createUniqueChild(cont, k, 'DataArray_t', num[k])
     return None
 
 #==============================================================================
-# Reorder zone pour // omp 
+# Reorder zone pour // omp
 #==============================================================================
 def _reorder(t, tc=None):
 
-    if tc is not None: 
+    if tc is not None:
         #reordone les bases, sinon souci potentiel en MPi si ordre base != entre proc
         Internal._sortByName(tc,recursive=False)
         Internal._sortByName(t, recursive=False)
 
         #reordone les zones de tc par taille decroissante dans chaque base pour optim openmp
         bases_tc = Internal.getNodesFromType1(tc, 'CGNSBase_t')
-        for base_tc in bases_tc: 
+        for base_tc in bases_tc:
             zones = Internal.getNodesFromType1(base_tc, 'Zone_t')
             # calcul taille de la zone
             size_zone = []
@@ -154,7 +154,7 @@ def _reorder(t, tc=None):
                 if dim[0] == 'Structured':
                     if dim[3] == 1: kfic = 0
                     else          : kfic = 2
-                    ndimdx = (dim[1]-4)*(dim[2]-4)*(dim[3]-kfic) 
+                    ndimdx = (dim[1]-4)*(dim[2]-4)*(dim[3]-kfic)
                 else: ndimdx = dim[2]
                 size_zone.append(ndimdx)
 
@@ -164,8 +164,8 @@ def _reorder(t, tc=None):
                 vmax    = max( size_zone )
                 pos_max = size_zone.index( vmax )
                 new_zones.append( zones[pos_max] )
-                size_zone.pop( pos_max ) 
-                zones.pop( pos_max ) 
+                size_zone.pop( pos_max )
+                zones.pop( pos_max )
 
             l = base_tc[2]
             orig = []
@@ -175,21 +175,21 @@ def _reorder(t, tc=None):
 
         # reordone les zones de t pour garantir meme ordre entre t et tc
         bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
-        for base in bases: 
+        for base in bases:
 
             zones = Internal.getNodesFromType1(base,'Zone_t')
 
             #on cherche le matching entre base t et tc
             c  =0
             ctg=0
-            for base_tc in bases_tc: 
+            for base_tc in bases_tc:
                 if base[0] == base_tc[0]: ctg=c
-                c+=1  
+                c+=1
 
             zones_tc  = Internal.getNodesFromType1(bases_tc[ctg], 'Zone_t')
 
             zname = []
-            for zc in zones: 
+            for zc in zones:
                 zname.append( zc[0] )
 
             new_zones = []
@@ -222,7 +222,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
     vars_zones=[]
     flag_NSLBM = 0
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
-    for b in bases:  
+    for b in bases:
         # On regarde si b est une simulation couplee NS-LBM
         model="Unknown"
         a = Internal.getNodeFromName2(b, 'GoverningEquations')
@@ -249,14 +249,14 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             if a is not None: model_loc = Internal.getValue(a)
             if model_loc == 'Unknown':
                 if model != "Unknown" and model != 'CouplageNSLBM': model_loc = model
-                else: 
+                else:
                     model_loc = 'Euler'; print("WARNING: definition model: nothing found in base or zone: Euler imposed.")
 
             sa, lbmflag, neq_lbm, FIRST_IT = _createVarsFast(b, z, omp_mode, rmConsVars, Adjoint, gradP=gradP, isWireModel=isWireModel, flag_coupNSLBM=flag_NSLBM, lbmAJ=lbmAJ)
 
             if FA_intext is not None:
-                Internal.getNodeFromPath(z, 'NFaceElements')[2] +=[FA_indx, FA_intext] 
-                Internal.getNodeFromPath(z, 'NGonElements' )[2] +=[NG_pe, NG_indx, NG_intext] 
+                Internal.getNodeFromPath(z, 'NFaceElements')[2] +=[FA_indx, FA_intext]
+                Internal.getNodeFromPath(z, 'NGonElements' )[2] +=[NG_pe, NG_indx, NG_intext]
 
             #recuperation option de calcul
             define = Internal.getNodeFromName1(z, '.Solver#define')
@@ -272,7 +272,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             extract_res = 0
             a = Internal.getNodeFromName1(define, 'extract_res')
             if a is not None: extract_res = Internal.getValue(a)
-            motion = None 
+            motion = None
             a = Internal.getNodeFromName1(define, 'motion')
             if a is not None: motion = Internal.getValue(a)
             show_senseur = 0
@@ -285,7 +285,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             vars_psi=['xx','yy','zz','x','y','z']
             vars_showsenseur = ['senseur_i','senseur_j','senseur_k']
 
-            if sa: 
+            if sa:
                 vars_p.append('TurbulentSANuTilde')
                 vars_c.append('TurbulentSANuTildeDensity')
 
@@ -390,14 +390,14 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                     fields.append(loc+'drodm'+sufix+'_'+str(i))
 
             fields2compact = []
-            for field in fields: 
+            for field in fields:
                 if C.isNamePresent(z, field) == 1:fields2compact.append(field)
             if len(fields2compact) != 0: vars.append(fields2compact)
 
             # on compacte les variables SA debug
             fields         = [loc+'delta',loc+'fd']
             fields2compact = []
-            for field in fields: 
+            for field in fields:
                 if C.isNamePresent(z, field) == 1: fields2compact.append(field)
             if len(fields2compact) != 0: vars.append(fields2compact)
 
@@ -416,8 +416,8 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             if  C.isNamePresent(z, loc+'cellN_IBC') == 1: fields2compact.append(loc+'cellN_IBC')
             if len(fields2compact) != 0: vars.append(fields2compact)
 
-            #  adjoint 
-            if  C.isNamePresent(z, 'centers:dpCLp_dpDensity') == 1: 
+            #  adjoint
+            if  C.isNamePresent(z, 'centers:dpCLp_dpDensity') == 1:
                 fields =['dpCDp_dp', 'dpCLp_dp', 'rhsIterAdjCLp_R', 'rhsIterAdjCDp_R','AdjCLp_R', 'AdjCDp_R','incAdj_R']
 
                 for field in fields:
@@ -426,7 +426,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                         fields2compact.append('centers:'+field+v)
                     vars.append(fields2compact)
 
-                vars.append(['dpCLp_dpX','dpCLp_dpY','dpCLp_dpZ','dpCDp_dpX','dpCDp_dpY','dpCDp_dpZ']) 
+                vars.append(['dpCLp_dpX','dpCLp_dpY','dpCLp_dpZ','dpCDp_dpX','dpCDp_dpY','dpCDp_dpZ'])
 
             ##on stocke zone et variable car fonction compact specific fastS ou FastP: ne peut peut etre appelee ici
             vars_zones.append( [z, vars] )
@@ -434,7 +434,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
     return FIRST_IT, vars_zones
 
 #==============================================================================
-# Init/create primitive Variable 
+# Init/create primitive Variable
 #==============================================================================
 def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=False,isWireModel=False, flag_coupNSLBM=0, lbmAJ=True):
     import timeit
@@ -442,7 +442,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     model = "Euler"
     a = Internal.getNodeFromName2(zone, 'GoverningEquations')
     if a is not None: model = Internal.getValue(a)
-    else: 
+    else:
         a = Internal.getNodeFromName2(base, 'GoverningEquations')
         if a is not None: model = Internal.getValue(a)
 
@@ -456,13 +456,13 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     if adim is None: raise ValueError("createPrimVars: ReferenceState is missing in t.")
 
     if not (model == 'Euler' or model == 'euler'):
-        if C.isNamePresent(zone, 'centers:ViscosityEddy') != 1: 
+        if C.isNamePresent(zone, 'centers:ViscosityEddy') != 1:
             C._initVars(zone, 'centers:ViscosityEddy', 1e-15)
 
     if not (model == 'NSTurbulent' or model == 'nsspalart'): sa = False
-    else: 
+    else:
         sa = True
-        if C.isNamePresent(zone, 'centers:TurbulentDistance') != 1: 
+        if C.isNamePresent(zone, 'centers:TurbulentDistance') != 1:
             raise ValueError("createPrimVars: TurbulentDistance field required at cell centers for RANS computations.")
 
     if not (model == 'LBMLaminar' or model == 'lbmlaminar'): lbm = False
@@ -477,7 +477,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     if C.isNamePresent(zone, 'centers:VelocityZ'  ) != 1: P._computeVariables(zone, ['centers:VelocityZ'  ], rgp=rgp)
     if C.isNamePresent(zone, 'centers:Temperature') != 1: P._computeVariables(zone, ['centers:Temperature'], rgp=rgp, gamma=gamma)
 
-    if sa and C.isNamePresent(zone, 'centers:TurbulentSANuTilde') != 1: 
+    if sa and C.isNamePresent(zone, 'centers:TurbulentSANuTilde') != 1:
         if C.isNamePresent(zone, 'centers:TurbulentSANuTildeDensity') != 1: C._initVars(zone, '{centers:TurbulentSANuTilde}= %20.16g/{centers:Density}'%adim[14])
         else: C._initVars(zone, '{centers:TurbulentSANuTilde}= {centers:TurbulentSANuTildeDensity}/{centers:Density}')
 
@@ -503,7 +503,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
         if C.isNamePresent(zone, 'centers:Temperature_M1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_M1'); FIRST_IT=0
         if sa and C.isNamePresent(zone, 'centers:TurbulentSANuTilde_M1') != 1: C._cpVars(zone, 'centers:TurbulentSANuTilde', zone, 'centers:TurbulentSANuTilde_M1'); FIRST_IT=0
 
-        if C.isNamePresent(zone, 'centers:Density_P1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_P1')  
+        if C.isNamePresent(zone, 'centers:Density_P1')   != 1: C._cpVars(zone, 'centers:Density'  , zone, 'centers:Density_P1')
         if C.isNamePresent(zone, 'centers:VelocityX_P1') != 1: C._cpVars(zone, 'centers:VelocityX', zone, 'centers:VelocityX_P1')
         if C.isNamePresent(zone, 'centers:VelocityY_P1') != 1: C._cpVars(zone, 'centers:VelocityY', zone, 'centers:VelocityY_P1')
         if C.isNamePresent(zone, 'centers:VelocityZ_P1') != 1: C._cpVars(zone, 'centers:VelocityZ', zone, 'centers:VelocityZ_P1')
@@ -593,7 +593,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
             Prop    = Internal.getNodeFromName(bc,'.Solver#Property')
             wmles   = Internal.getNodeFromName(Prop,'WMLES_parameter')[1]
             Nechant = wmles[1]
-            print('Nechant',Nechant) 
+            print('Nechant',Nechant)
             vars=['Density','VelocityX','VelocityY','VelocityZ','Temperature']
             if Nechant==0:
                 wmles[1]=1  #nb echantillon initialise
@@ -604,7 +604,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
                     inst = Internal.getNodeFromName1(sol, var)[1]
                     #CL I
                     if rg[0][1] - rg[0][0] == 0:
-                        if rg[0][1] == 1: ijk_tg = 5;     
+                        if rg[0][1] == 1: ijk_tg = 5;
                         else: ijk_tg = rg[0][1]-7
                         l = shift
                         j0, j1 = rg[1][0] - 1, rg[1][1]
@@ -649,11 +649,11 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
             vx = None
             if Motion is not None: vx = Internal.getNodeFromName1(Motion, 'VelocityX')
             else:
-                Internal.createNode('Motion', 'ArbitraryGridMotion_t', value=None, children=[], parent=zone) 
+                Internal.createNode('Motion', 'ArbitraryGridMotion_t', value=None, children=[], parent=zone)
                 Motion   = Internal.getNodeFromType1(zone, 'ArbitraryGridMotion_t')
-                Internal.createNode('ArbitraryGridMotion', 'ArbitraryGridMotionType_t', value='DeformingGrid', children=[], parent=Motion) 
+                Internal.createNode('ArbitraryGridMotion', 'ArbitraryGridMotionType_t', value='DeformingGrid', children=[], parent=Motion)
 
-            if vx is None: 
+            if vx is None:
                 a             = Internal.getNodeFromName1(zone, 'GridCoordinates')
                 size_velocity = numpy.size( Internal.getNodeFromName1(a, 'CoordinateX')[1])
                 datax = numpy.zeros(size_velocity, numpy.float64)
@@ -696,9 +696,9 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
         elif des == "ZDES2_w" or des == "zdes2_w": ides = 5
         elif des == "ZDES3"   or des == "zdes3":   ides = 6
         elif des == "ZDES3_w" or des == "zdes3_w": ides = 7
-        if ides >= 2 and DES_debug != "none": 
+        if ides >= 2 and DES_debug != "none":
             if C.isNamePresent(zone, 'centers:delta')!= 1: C._initVars(zone, 'centers:delta', 0.)
-        if (ides == 4 or ides == 5) and DES_debug != "none":  
+        if (ides == 4 or ides == 5) and DES_debug != "none":
             if C.isNamePresent(zone, 'centers:fd')   != 1: C._initVars(zone, 'centers:fd', 0.)
 
         if (ides == 6 or ides == 7) and C.isNamePresent(zone, 'centers:zgris') != 1:
@@ -766,7 +766,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
                 shift += ndimdx
 
     # TEST PYTHON CONTEXTE ADJOINT ? (dpCLp, dpCDp)  -----------------------------
-    if adjoint: 
+    if adjoint:
         if C.isNamePresent(zone, 'centers:dpCLp_dpDensity') != 1: C._initVars(zone, 'centers:dpCLp_dpDensity', 0.)
         if C.isNamePresent(zone, 'centers:dpCLp_dpMomentumX') != 1: C._initVars(zone, 'centers:dpCLp_dpMomentumX', 0.)
         if C.isNamePresent(zone, 'centers:dpCLp_dpMomentumY') != 1: C._initVars(zone, 'centers:dpCLp_dpMomentumY', 0.)
@@ -778,7 +778,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
         if C.isNamePresent(zone, 'centers:dpCDp_dpMomentumY') != 1: C._initVars(zone, 'centers:dpCDp_dpMomentumY', 0.)
         if C.isNamePresent(zone, 'centers:dpCDp_dpMomentumZ') != 1: C._initVars(zone, 'centers:dpCDp_dpMomentumZ', 0.)
         if C.isNamePresent(zone, 'centers:dpCDp_dpEnergyStagDens') != 1: C._initVars(zone, 'centers:dpCDp_dpEnergyStagDens', 0.)
-        # 
+        #
         # On a fait passer rhs en variable locale (inutile ici)
         if C.isNamePresent(zone, 'centers:rhsIterAdjCLp_RDensity') != 1: C._initVars(zone, 'centers:rhsAdjCLp_RDensity', 0.)
         if C.isNamePresent(zone, 'centers:rhsIterAdjCLp_RMomentumX') != 1: C._initVars(zone, 'centers:rhsAdjCLp_RMomentumX', 0.)
@@ -888,7 +888,7 @@ def _build_omp(t):
             param_int[1] = datap
 
             if dims[3] == 'NGON':
-                deb = param_int[1][VSHARE.SCHEDULER] 
+                deb = param_int[1][VSHARE.SCHEDULER]
                 size = Nbr_BlkIntra.size
                 param_int[1][deb:deb+size] = Nbr_BlkIntra[:size]
                 Nbr_BlkIntra = param_int[1][deb:deb+size]
@@ -909,18 +909,18 @@ def _buildOwnData(t, Padding):
     # Data for each Base
 
     # Available keys for bases and zones
-    # 0: requires an int, 1: requires a float, 2: requires any string, 
+    # 0: requires an int, 1: requires a float, 2: requires any string,
     # 3: requires array/list of ints, 4: requires array/list of floats,
     # []: requires given strings
     keys4Base = {
         'temporal_scheme':['explicit', 'implicit', 'implicit_local', 'explicit_local'],
         'ss_iteration':0,
-        'rk':0, 
+        'rk':0,
         'modulo_verif':0,
         'exp_local':0,
         'time_begin_ale':1,
         'omp_mode':0,
-        'explicit_local_type':0    ## 0:explicit local non conservatif,  1:explicit local conservatif (correction du bilan de flux aux interface)  
+        'explicit_local_type':0    ## 0:explicit local non conservatif,  1:explicit local conservatif (correction du bilan de flux aux interface)
     }
 
     keys4Zone = {
@@ -948,17 +948,17 @@ def _buildOwnData(t, Padding):
         'epsi_linear':1,
         'inj1_newton_tol':1,
         'inj1_newton_nit':0,
-        'cfl':1, 
-        'niveaux_temps':0, 
-        'psiroe':1, 
-        'coef_hyper':4, 
-        'prandtltb':1, 
-        'sfd':0, 
-        'sfd_chi':1, 
-        'sfd_delta':1, 
-        'sfd_init_iter':0, 
-        'nudging_ampli':1, 
-        'nudging_vector':4, 
+        'cfl':1,
+        'niveaux_temps':0,
+        'psiroe':1,
+        'coef_hyper':4,
+        'prandtltb':1,
+        'sfd':0,
+        'sfd_chi':1,
+        'sfd_delta':1,
+        'sfd_init_iter':0,
+        'nudging_ampli':1,
+        'nudging_vector':4,
         'slope':["o1", "o3","o5", "minmod","o3sc","o5sc"],
         'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3", "zdes3_w"],
         'SA_add_LowRe': 0,
@@ -970,7 +970,7 @@ def _buildOwnData(t, Padding):
         'source':0,
         'Cups':4,
         'senseurType':0,
-        'ratiom':1, 
+        'ratiom':1,
         #=========================================================
         # LBM specific keywords
         #=========================================================
@@ -982,7 +982,7 @@ def _buildOwnData(t, Padding):
         'LBM_sponge':0,
         'lbm_ns':0,
         'lbm_c0':1,
-        'lbm_gamma_precon':1,    
+        'lbm_gamma_precon':1,
         'lbm_dif_coef':1,
         'lbm_selective_filter':0,
         'lbm_selective_filter_size':0,
@@ -1004,10 +1004,10 @@ def _buildOwnData(t, Padding):
         'LBM_dx':1,
         'LBM_NS':0,
         #=========================================================
-        #========================================================= 
+        #=========================================================
         'KWire_p':1,
         'DiameterWire_p':1,
-        'CtWire_p':1    
+        'CtWire_p':1
     }
 
     bases = Internal.getNodesFromType1(t, 'CGNSBase_t')  # noeud
@@ -1019,7 +1019,7 @@ def _buildOwnData(t, Padding):
         model    = 'NSLaminar'
         a        = Internal.getNodeFromName2(base, 'GoverningEquations')
         if a is not None: model = Internal.getValue(a)
-        if model == 'LBMLaminar': 
+        if model == 'LBMLaminar':
             flaglbm = True
             break
         # Then check at zone level
@@ -1028,7 +1028,7 @@ def _buildOwnData(t, Padding):
             model_z = None
             a = Internal.getNodeFromName2(z, 'GoverningEquations')
             if a is not None: model_z = Internal.getValue(a)
-            if model_z == 'LBMLaminar': 
+            if model_z == 'LBMLaminar':
                 flaglbm = True
                 break
 
@@ -1062,7 +1062,7 @@ def _buildOwnData(t, Padding):
     zones = Internal.getZones(t)
 
     val=1; i=0
-    veclevel = []; mod=""; posg=[] 
+    veclevel = []; mod=""; posg=[]
 
     # Recherche des niveaux en temps des differentes zones
     d = Internal.getNodeFromName1(t, '.Solver#define')
@@ -1076,7 +1076,7 @@ def _buildOwnData(t, Padding):
                 level = C.getValue(z, 'centers:niveaux_temps', (i,j,k))
                 veclevel.append(int(level))
         else:
-            for z in zones: 
+            for z in zones:
                 d = Internal.getNodeFromName1(z, '.Solver#define')
                 if d is not None:
                     checkKeys(d, keys4Zone)
@@ -1084,7 +1084,7 @@ def _buildOwnData(t, Padding):
                     if a is not None: veclevel.append( Internal.getValue(a) )
                     else: veclevel.append(1)
     else:
-        for z in zones: 
+        for z in zones:
             d = Internal.getNodeFromName1(z, '.Solver#define')
             if d is not None:
                 checkKeys(d, keys4Zone)
@@ -1132,7 +1132,7 @@ def _buildOwnData(t, Padding):
         a = Internal.getNodeFromName1(d, 'exp_local')
         if a is not None: exploc = Internal.getValue(a)
         if temporal_scheme == "implicit" or temporal_scheme == "implicit_local": exploc=0
-        a = Internal.getNodeFromName1(d, 'explicit_local_type')         
+        a = Internal.getNodeFromName1(d, 'explicit_local_type')
         if a is not None: exploctype = Internal.getValue(a)
         a = Internal.getNodeFromName1(d, 'time_begin_ale')
         if a is not None: t_init_ale = Internal.getValue(a)
@@ -1147,7 +1147,7 @@ def _buildOwnData(t, Padding):
     elif temporal_scheme == "implicit": nssiter = ss_iteration+1
     elif temporal_scheme == "implicit_local": nssiter = ss_iteration+1
     elif temporal_scheme == "explicit_local": # explicit local instationnaire ordre 3
-        nssiter = 4*maxlevel 
+        nssiter = 4*maxlevel
         rk = 3
         exploc = 1
     else: print('Warning: Fast: invalid value %s for key temporal_scheme.'%temporal_scheme)
@@ -1161,7 +1161,7 @@ def _buildOwnData(t, Padding):
 
     if MX_OMP_SIZE_INT == -1:
         #print("resize MX_OMP_SIZE_INT dans buildOwndata")
-        ntask = len(zones)*2  # 4 sous-zones max par zone en moyenne 
+        ntask = len(zones)*2  # 4 sous-zones max par zone en moyenne
         size_task =  (6 + 7*OMP_NUM_THREADS)*ntask
         size_omp  =  1 + nssiter*(2 + size_task)
         MX_OMP_SIZE_INT = size_omp
@@ -1172,11 +1172,11 @@ def _buildOwnData(t, Padding):
     #print('ncycl_LBM', nitCyclLBM, maxlevel)
 
     datap = numpy.zeros((dtdim+ size_omp), Internal.E_NpyInt)
-    datap[0] = nssiter 
+    datap[0] = nssiter
     datap[1] = modulo_verif
     datap[2] = restart_fields-1
     datap[3] = timelevel_motion
-    datap[4] = timelevel_target 
+    datap[4] = timelevel_target
     datap[5] = timelevel_prfile
     datap[6] = rk
     datap[7] = it0
@@ -1188,8 +1188,8 @@ def _buildOwnData(t, Padding):
     # level max pour chaque it du cycle LBM
     for it in range(nitCyclLBM):
         for level in range(maxlevel,0,-1):
-            it_tg = 2**(level-1) 
-            if it%it_tg == 0: 
+            it_tg = 2**(level-1)
+            if it%it_tg == 0:
                 datap[12+it] = level
                 #print('Nblevel',datap[12+it],'itCycl=',it )
                 break
@@ -1220,7 +1220,7 @@ def _buildOwnData(t, Padding):
         except IOError:
             print('Warning: Fast: Padding file not found, using default values.')
             pad   = False
-        if pad: 
+        if pad:
             lines_f = f.readlines()
 
             sizeIJK=[]
@@ -1241,20 +1241,20 @@ def _buildOwnData(t, Padding):
         nzones=len(zones)
         #print("Bases", b[0], nzones)
         for z in zones:
-                #print("ZONES", b[0], z[0])
+            #print("ZONES", b[0], z[0])
             shiftvar   = 0
             #=== check for a padding file  (cache associativity issue)
             dims = Internal.getZoneDim(z)
             if dims[3] == 'NGON':
                 ngon=True
-            else: 
+            else:
                 ngon = False
                 iv = dims[1]-5
                 jv = dims[2]-5
                 kv = dims[3]-5
                 #kv = dims[3]-3 #[AJ] Hard coded for LBM and 1 ghost point
                 if kv == -3: kv =1
-                if pad: 
+                if pad:
                     target = [iv,jv,kv]
                     if target in sizeIJK:
                         l        = sizeIJK.index( target)
@@ -1287,8 +1287,8 @@ def _buildOwnData(t, Padding):
             cacheblckK      = 7
             dtnature        = "global"
             dtc             = -0.000001
-            epsi_newton     = 0.1 
-            epsi_linear     = 0.01 
+            epsi_newton     = 0.1
+            epsi_linear     = 0.01
             psiroe          = 0.1
             cfl             = 1.
             rotation        = [ 0.,0.,0., 0.,0.,0.,0.,0.]
@@ -1299,9 +1299,9 @@ def _buildOwnData(t, Padding):
             sfd_init_iter   = 1
             nudging_ampli   = 1.
             nudging_vector  = numpy.ones( 6, dtype=numpy.float64)
-            nudging_vector[0]=0 
-            nudging_vector[4]=0 
-            nudging_vector[5]=0  #pas de rappel sur continuite, energie et SA par defaut 
+            nudging_vector[0]=0
+            nudging_vector[4]=0
+            nudging_vector[5]=0  #pas de rappel sur continuite, energie et SA par defaut
             nit_inflow      = 10
             epsi_inflow     = 1.e-5
             DES_debug       = 0
@@ -1338,7 +1338,7 @@ def _buildOwnData(t, Padding):
             lbm_collision_operator = 1
 
             # Selective Filter
-            ## S-M-C   :: streaming - macro - collision 
+            ## S-M-C   :: streaming - macro - collision
             ## M-C-B-S :: macro - collision - BCs - streaming
             lbm_selective_filter       = 0               # -1 M-C-B-S || 0 S-M-C   || 1 - Macro props || 2 - f's || 3 - collision operator
             lbm_selective_filter_size  = 9               # Filter size
@@ -1369,8 +1369,8 @@ def _buildOwnData(t, Padding):
             dist = Internal.getNodeFromName1(sol, 'TurbulentDistance')
             if dist is not None: sa_dist =1
 
-            KWire_p=0.1 
-            DiameterWire_p=0.1 
+            KWire_p=0.1
+            DiameterWire_p=0.1
             CtWire_p=0.1
 
             a = Internal.getNodeFromName1(z, 'ZoneType')
@@ -1402,10 +1402,10 @@ def _buildOwnData(t, Padding):
                 a = Internal.getNodeFromName1(b, 'ReferenceState')
                 if a is not None: ref = a
             adim = None
-            if ref is not None: 
+            if ref is not None:
                 adim      = C.getState(ref)
-                prandtltb = adim[18]        #prandtl laminar 
-            else: 
+                prandtltb = adim[18]        #prandtl laminar
+            else:
                 print('Warning: Fast: can not find a refState.')
                 print('Warning: Fast: Prandtl turb by default= 1.')
                 prandtltb = 1.
@@ -1446,9 +1446,9 @@ def _buildOwnData(t, Padding):
                 a = Internal.getNodeFromName1(d, 'cache_blocking_K')
                 if a is not None: cacheblckK = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'shiftvar')
-                if a is not None: shiftvar = Internal.getValue(a)                
-                a = Internal.getNodeFromName1(d, 'time_step_nature')            
-                if a is not None: dtnature = Internal.getValue(a)                
+                if a is not None: shiftvar = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'time_step_nature')
+                if a is not None: dtnature = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'sgsmodel')
                 if a is not None: sgsmodel = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'wallmodel')
@@ -1488,7 +1488,7 @@ def _buildOwnData(t, Padding):
                 a = Internal.getNodeFromName1(d, 'ransmodel')
                 if a is not None: ransmodel = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'DES_debug')
-                if a is not None: 
+                if a is not None:
                     tmp = Internal.getValue(a)
                     if tmp == 'active': DES_debug =1
                 a = Internal.getNodeFromName1(d, 'extract_res')
@@ -1503,7 +1503,7 @@ def _buildOwnData(t, Padding):
                     cups = Internal.getValue(a)
                     cupsLen = numpy.size(cups)
                 a = Internal.getNodeFromName1(d, 'ratiom')
-                if a is not None: ratiom = Internal.getValue(a)  
+                if a is not None: ratiom = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'senseurType')
                 if a is not None: senseurtype = Internal.getValue(a)
 
@@ -1515,7 +1515,7 @@ def _buildOwnData(t, Padding):
                 if a is not None: CtWire_p = Internal.getValue(a)
 
                 #==========================================================
-                ##LBM                 
+                ##LBM
                 #==========================================================
                 a = Internal.getNodeFromName1(d, 'LBM_velocity_set')
                 if a is not None:
@@ -1530,7 +1530,7 @@ def _buildOwnData(t, Padding):
                         print(lattice_name+' lattice cannot be used on a 2D mesh.')
                         import sys; sys.exit()
                 # if kv == 1: lbm_neq=9  # over-ride to default value of 9 for 2d
-                else: lbm_neq = 19                  
+                else: lbm_neq = 19
                 if ngon: lbm_neq=0
 
                 a = Internal.getNodeFromName1(d, 'lbm_c0')
@@ -1610,10 +1610,10 @@ def _buildOwnData(t, Padding):
                 a = Internal.getNodeFromName1(d, 'lbm_force')
                 if a is not None: lbm_forcex = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'lbm_zlim')
-                if a is not None: lbm_zlim = Internal.getValue(a) 
+                if a is not None: lbm_zlim = Internal.getValue(a)
 
 
-                # Determination de level et (levelgd obsolete) pour dt local (NS jeanmasson et LBM)            
+                # Determination de level et (levelgd obsolete) pour dt local (NS jeanmasson et LBM)
                 level =1; levelg=0; leveld=0
                 #a = Internal.getNodeFromName1(d, 'niveaux_temps')
                 #if a is not None: level =Internal.getValue(a)
@@ -1626,7 +1626,7 @@ def _buildOwnData(t, Padding):
             elif model == "NSLaminar" or model == "nslaminar": iflow = 2
             elif model == "NSLes"     or model == "nsles":     iflow = 2
 
-            elif model == "nsspalart" or model == "NSTurbulent": 
+            elif model == "nsspalart" or model == "NSTurbulent":
                 iflow = 3
                 if   ransmodel == 'SA_comp':
                     ides = 1
@@ -1641,7 +1641,7 @@ def _buildOwnData(t, Padding):
                     elif des == "ZDES3"   or des == "zdes3":   ides = 6
                     elif des == "ZDES3_w" or des == "zdes3_w": ides = 7
 
-            elif model == "LBMLaminar" or model == "lbmlaminar": 
+            elif model == "LBMLaminar" or model == "lbmlaminar":
                 iflow   = 4
             else:
                 print('Warning: Fast: model %s is invalid.'%model)
@@ -1667,11 +1667,11 @@ def _buildOwnData(t, Padding):
             if temporal_scheme == "explicit" or temporal_scheme == "explicit_local": itypcp = 2
             else: itypcp = 1
 
-            if temporal_scheme == "implicit_local": 
+            if temporal_scheme == "implicit_local":
                 itypcp = 1
                 #ssdom_IJK = [80,15,80]
                 a = Internal.getNodeFromName1(d, 'ssdom_IJK')
-                if a is not None: 
+                if a is not None:
                     ssdom_IJK = Internal.getValue(a)
                 size_ssdom_I = ssdom_IJK[0]
                 size_ssdom_J = ssdom_IJK[1]
@@ -1693,17 +1693,17 @@ def _buildOwnData(t, Padding):
             elif scheme == "roe_kap"  :
                 kfludom = 5
                 islope  = 2
-            elif scheme == "roe_min": 
+            elif scheme == "roe_min":
                 kfludom = 5
                 islope  = 3
-            elif scheme == "roe_nul": 
+            elif scheme == "roe_nul":
                 kfludom = 5
                 islope  = 1
-            elif scheme == "roe": 
+            elif scheme == "roe":
                 kfludom = 5
-            elif scheme == "ausmpred_pattern":  
+            elif scheme == "ausmpred_pattern":
                 kfludom = 7
-            elif scheme == "senseur_hyper": 
+            elif scheme == "senseur_hyper":
                 kfludom = 8
                 islope  = 2
 
@@ -1811,10 +1811,10 @@ def _buildOwnData(t, Padding):
                 datap[42:45]= -1
             else:
                 datap[36:45]= -1
-            datap[45]  = io_th    
+            datap[45]  = io_th
             datap[46]  = dtloc
-            datap[47]  = ides  
-            datap[48]  = idist 
+            datap[47]  = ides
+            datap[48]  = idist
             datap[49]  = ispax
             datap[50]  = izgris
             datap[51]  = iprod
@@ -1842,7 +1842,7 @@ def _buildOwnData(t, Padding):
             datap[72]   = nbr_restart
             datap[73]   = nbr_krylov
             datap[74]   = ImplicitSolverNum
-            datap[75]   = lu_match          
+            datap[75]   = lu_match
             datap[76:83]= ibc[0:7]
             datap[83]   = source
             datap[84]   = meshtype
@@ -1877,7 +1877,7 @@ def _buildOwnData(t, Padding):
             datap[VSHARE.LBM_NS]            = flag_nslbm
 
             datap[VSHARE.LBM_IBC]          = lbm_ibm
-            datap[VSHARE.LBM_IBC_NUM]      = 0 
+            datap[VSHARE.LBM_IBC_NUM]      = 0
             datap[VSHARE.LBM_IBC_PREP]     = 0
             datap[VSHARE.LBM_IBC_CONNECTOR]= lbm_ibm_connector
 
@@ -1911,11 +1911,11 @@ def _buildOwnData(t, Padding):
             datap[VSHARE.SA_ROT_CORR] = 0 # active Rotation correction
             if d is not None:
                 a = Internal.getNodeFromName1(d, 'SA_add_LowRe')
-                if a is not None: 
+                if a is not None:
                     val = Internal.getValue(a)
                     if val == 1 or val == 'active' or val == True: datap[VSHARE.SA_LOW_RE] = 1
                 a = Internal.getNodeFromName1(d, 'SA_add_RotCorr')
-                if a is not None: 
+                if a is not None:
                     val = Internal.getValue(a)
                     if val == 1 or val == 'active' or val == True: datap[VSHARE.SA_ROT_CORR] = 1
 
@@ -1926,12 +1926,12 @@ def _buildOwnData(t, Padding):
             Internal.createUniqueChild(o, 'Parameter_int', 'DataArray_t', datap)
 
             #=====================================================================
-            # creation noeud parametre real 
+            # creation noeud parametre real
             #=====================================================================
             number_of_defines_param_real = 71                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
-            if dtc < 0: 
+            if dtc < 0:
                 print('Warning: Fast: time_step set to default value (0.0001).')
                 dtc = 0.0001
             datap[0] = dtc
@@ -1958,13 +1958,13 @@ def _buildOwnData(t, Padding):
             else: datap[1:14] = 0. ; datap[19:22] = 0.
 
             datap[14]=  epsi_newton
-            datap[15]=  cfl        
+            datap[15]=  cfl
             datap[16]=  azgris
             datap[17]=  addes
             datap[18]=  ratiom
             datap[22]=  temps
 
-            if lale == 1: 
+            if lale == 1:
                 datap[23:31]=  rotation[0:8]
                 datap[29]   = datap[29]*2.  *math.pi
                 datap[30]   = datap[30]/180.*math.pi
@@ -1981,8 +1981,8 @@ def _buildOwnData(t, Padding):
             if cupsLen < 3: datap[40]=  cups[1] # on garde la valeur max, pas la moyenne
             else: datap[40]=  cups[2]           # on garde la valeur min, pas la moyenne
 
-            datap[55]=  coef_hyper[0] 
-            datap[56]=  coef_hyper[1] 
+            datap[55]=  coef_hyper[0]
+            datap[56]=  coef_hyper[1]
 
             # Ben's WM
             datap[57] = MafzalMode
@@ -1995,7 +1995,7 @@ def _buildOwnData(t, Padding):
             datap[62] = DiameterWire_p
             datap[63] = CtWire_p
 
-            ## Rotation IBM            
+            ## Rotation IBM
             datap[64]=0
             timemotion = Internal.getNodesFromName(z,'TimeMotion')
             if timemotion:
@@ -2018,7 +2018,7 @@ def _buildOwnData(t, Padding):
             datap[VSHARE.LBM_adaptive_filter_chi] = lbm_adaptive_filter_chi
             datap[VSHARE.LBM_chi_spongetypeII]    = lbm_chi_spongetypeII
             datap[VSHARE.LBM_gamma_precon]        = lbm_gamma_precon
-            datap[VSHARE.LBM_zlim]                = lbm_zlim            
+            datap[VSHARE.LBM_zlim]                = lbm_zlim
             datap[VSHARE.LBM_DX]                  = lbm_dx
 
             Internal.createUniqueChild(o, 'Parameter_real', 'DataArray_t', datap)
@@ -2056,7 +2056,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 
     lssiter_loc = 0
     if scheme == 'implicit_local':  lssiter_loc = 1  # sous-iteration local
-    if exploc == 1:                 lssiter_loc = 2  # dtloc G Jeanmasson   
+    if exploc == 1:                 lssiter_loc = 2  # dtloc G Jeanmasson
 
     neq_max = 0
     for z in zones:
@@ -2068,7 +2068,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
         param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
         if model == 'LBMLaminar':
             neq = param_int[VSHARE.NEQ_LBM]
-        if scheme == 'implicit' or scheme == 'implicit_local':   neq_coe = neq     
+        if scheme == 'implicit' or scheme == 'implicit_local':   neq_coe = neq
         else:                                                    neq_coe = 1    # explicit
 
         neq_max = max(neq, neq_max)
@@ -2079,11 +2079,11 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
             shiftvar = 100
             print('shiftVar=%d'%shiftvar)
             print('create workarray')
-            print('Danger sur optimisation cache shiftVar')      
+            print('Danger sur optimisation cache shiftVar')
 
         # dim from getZoneDim
         dims = Internal.getZoneDim(z)
-        if dims[0] == 'Structured': 
+        if dims[0] == 'Structured':
             nijk = (dims[1]-1)*(dims[2]-1)*(dims[3]-1)+shiftvar
             dimJK    = (dims[2]-1)*(dims[3]-1); dimIK = (dims[1]-1)*(dims[3]-1); dimIJ=(dims[1]-1)*(dims[2]-1)
             ndimplan = max( ndimplan, dimIJ)
@@ -2091,7 +2091,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
             ndimplan = max( ndimplan, dimJK)
 
             ndimFlu  =0
-        else: 
+        else:
             nijk = dims[2]+shiftvar
             print('dtloc fastP: revoir dim tab jeanmasson')
             ndimplan = 10     ### a revoir
@@ -2142,7 +2142,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     elif rk==5 and exploc==0: size_drodm = 5*ndimt
     else                    : size_drodm =   ndimt
     #print('taille tab drodm=%d'%ndimt)
-    drodm     = numpy.empty(ndimt   , dtype=numpy.float64)        
+    drodm     = numpy.empty(ndimt   , dtype=numpy.float64)
     tab_dtloc = numpy.empty(ndimface, dtype=numpy.float64)
 
     tab_a1pr  = numpy.empty(ndima1, dtype=numpy.float64)
@@ -2155,7 +2155,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
 
 #    for z in zones:
 #         param_int = Internal.getNodeFromName2(z, 'Parameter_int')  # noeud
-#    
+#
 #    ptr = drodm1.reshape((nijk*5), order='Fortran') # no copy I hope
 #    for c in range(5):
 #        print'c=',c
@@ -2194,7 +2194,7 @@ def createWorkArrays__(zones, dtloc, FIRST_IT):
     hook['neq_max']        = neq_max
     hook['param_int_tc']   = None
     hook['param_real_tc']  = None
-    hook['mpi']            = 0     
+    hook['mpi']            = 0
     hook['linelets_int']   = None
     hook['linelets_real']  = None
     hook['hors_eq']        = drodm2
@@ -2254,7 +2254,7 @@ def _compact(t, containers=[Internal.__FlowSolutionNodes__, Internal.__FlowSolut
     return None
 
 #==============================================================================
-# loi horaire (ALE) 
+# loi horaire (ALE)
 #==============================================================================
 def _motionlaw(t, teta, tetap):
     zones = Internal.getZones(t)
@@ -2290,10 +2290,10 @@ def switchPointers__(zones, case, order=3):
                 caP1 = Internal.getNodeFromName1(sol, v+'_P1')
 
                 if case == 1:
-                #sauvegarde M1   #M1 <- current    # current <- P1   # P1 <- temp 
-                    ta = caM1[1];    caM1[1] = ca[1];  ca[1] = caP1[1];  caP1[1] = ta  
+                    #sauvegarde M1   #M1 <- current    # current <- P1   # P1 <- temp
+                    ta = caM1[1];    caM1[1] = ca[1];  ca[1] = caP1[1];  caP1[1] = ta
                 elif case == 2:
-                    #sauvegarde P1   #P1 <- current    # current <- M1   # M1 <- temp 
+                    #sauvegarde P1   #P1 <- current    # current <- M1   # M1 <- temp
                     ta = caP1[1];    caP1[1] = ca[1];  ca[1] = caM1[1];  caM1[1] = ta
     return None
 
@@ -2302,13 +2302,13 @@ def switchPointers__(zones, case, order=3):
 #==============================================================================
 def getField2Compact__(z, field):
     field = field.split(':')
-    if len(field) == 1: 
+    if len(field) == 1:
         container = Internal.__FlowSolutionNodes__ ; name = field[0]
-    elif field[0] == 'nodes': 
+    elif field[0] == 'nodes':
         container = Internal.__FlowSolutionNodes__ ; name = field[1]
-    elif field[0] == 'Motion': 
+    elif field[0] == 'Motion':
         container = 'Motion' ; name = field[1]
-    else: 
+    else:
         container = Internal.__FlowSolutionCenters__ ; name = field[1]
     conts = Internal.getNodesFromName(z, container)
     for c in conts:
@@ -2474,7 +2474,7 @@ def switchPointers2__(zones,nitmax,nstep):
         cycle = nitmax/niveau
         if nstep%cycle==0 and nstep != nitmax:
 
-                    #print('switch zone= ', z[0])
+            #print('switch zone= ', z[0])
 
             sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
             own =  Internal.getNodeFromName1(z, '.Solver#ownData')
@@ -2513,7 +2513,7 @@ def switchPointers2__(zones,nitmax,nstep):
             model  = Internal.getNodeFromName1(own, 'model')
             model  = Internal.getValue(model)
 
-            if model == 'nsspalart' or model == 'NSTurbulent': 
+            if model == 'nsspalart' or model == 'NSTurbulent':
                 cf   =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde')
                 cfM1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_M1')
                 cfP1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_P1')
@@ -2571,7 +2571,7 @@ def switchPointers3__(zones,nitmax):
             model  = Internal.getNodeFromName1(own, 'model')
             model  = Internal.getValue(model)
 
-            if model == 'nsspalart' or model == 'NSTurbulent': 
+            if model == 'nsspalart' or model == 'NSTurbulent':
                 cf   =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde')
                 cfM1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_M1')
                 cfP1 =  Internal.getNodeFromName1(sol, 'TurbulentSANuTilde_P1')
@@ -2662,7 +2662,7 @@ def _BCcompactNG(t):
         for bc in bcs:
             bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
             Nb_data = len(bcdata)
-            #size_int= size_int  + Nb_data 
+            #size_int= size_int  + Nb_data
             for data in bcdata:
                 print("Data in BC not implemented in FastP")
                 import sys; sys.exit()
@@ -2890,7 +2890,7 @@ def _BCcompact(t):
         pt_bcs_int   =  size_param_int[no]
         param_int[70]=  pt_bcs_int
 
-        pt_bcs_real=  size_param_real[no] 
+        pt_bcs_real=  size_param_real[no]
         param_int[ pt_bcs_int ] = Nb_bc
         i         = 1
         size_int  = 1 + 2*Nb_bc  # shift pour nb_bc et pointeur BC_int et BC_real
@@ -2900,7 +2900,7 @@ def _BCcompact(t):
             param_int[ pt_bcs_int +i       ] = size_int  + pt_bcs_int
             param_int[ pt_bcs_int +i +Nb_bc] = size_real + pt_bcs_real
 
-            pt_bc                            =  param_int[ pt_bcs_int +i ] 
+            pt_bc                            =  param_int[ pt_bcs_int +i ]
 
             btype = Internal.getValue(bc)
             if btype == 'FamilySpecified':
@@ -2964,10 +2964,10 @@ def _InterpTemporelcompact(t,tc):
             break
 
     # 1er cas de figure :il s'agit d'une reprise.
-    # Dans ce cas, on a pas besoin de tout recreer, il suffit de mettre a jour 
+    # Dans ce cas, on a pas besoin de tout recreer, il suffit de mettre a jour
     # les pointeurs d'adresse dans param_int et param_real pour prendre en compte
     # un eventuel changement de taille des tableaux pour le nouveau calcul
-    if lout: 
+    if lout:
         for z in zones:
             # zone ownData (generated)
             o = Internal.getNodeFromName1(z, 'Temporal_Interpolation')
@@ -2998,7 +2998,7 @@ def _InterpTemporelcompact(t,tc):
 
                 if size_temporal_real != 0:
 
-                #traitement real
+                    #traitement real
                     new_size = size_temporal_real+size_param_real
                     datap = numpy.empty(new_size, numpy.float64)
                     datap[0:size_param_real]        =    param_real[1][0:size_param_real]
@@ -3043,7 +3043,7 @@ def _InterpTemporelcompact(t,tc):
     # Fin premier cas de figure
 
     # 2eme cas de figure :il s'agit d'un nouveau calcul
-    # Dans ce cas, il faut creer les tableaux de stockage, les donnees pour 
+    # Dans ce cas, il faut creer les tableaux de stockage, les donnees pour
     # param_int et param_real, et creer les noeuds Temporal_Interpolation
     # pour les zones concernees.
 
@@ -3084,7 +3084,7 @@ def _InterpTemporelcompact(t,tc):
                     if i < imin: imin = i
                     if j < jmin: jmin = j
                     if k < kmin: kmin = k
-                    molecule = typ -1 
+                    molecule = typ -1
                     if   typ == 22 or type ==0:
                         print("ERROR: interpolation leastsquare ou 2d pas prise en compte pour lbm multi dt")
                         import sys; sys.exit()
@@ -3108,7 +3108,7 @@ def _InterpTemporelcompact(t,tc):
                     typR = sizeRac[ zD[0]][2]; typR = typR + [typRac]
                     sizeRac[zD[0]]= [nrac , Swin ,  typR ]
                 else:
-                    sizeRac[zD[0]]= [1 , [[sizeWindow, imin,imax, jmin,jmax,kmin,kmax]] , [typRac]] 
+                    sizeRac[zD[0]]= [1 , [[sizeWindow, imin,imax, jmin,jmax,kmin,kmax]] , [typRac]]
 
     #print (sizeRac)
 
@@ -3182,7 +3182,7 @@ def _InterpTemporelcompact(t,tc):
         pt_bcs_int = size_param_int
         param_int[VSHARE.PT_INTERP] = pt_bcs_int
 
-        pt_bcs_real = size_param_real 
+        pt_bcs_real = size_param_real
         param_int[pt_bcs_int] = nrac
 
         size_int  = 1 + 2*nrac  # shift pour nrac et pointeur BC_int et BC_real
@@ -3192,7 +3192,7 @@ def _InterpTemporelcompact(t,tc):
             param_int[ pt_bcs_int +i      ] = size_int  + pt_bcs_int
             param_int[ pt_bcs_int +i +nrac] = size_real + pt_bcs_real
 
-            pt_bc                           =  param_int[ pt_bcs_int +i ] 
+            pt_bc                           =  param_int[ pt_bcs_int +i ]
 
             param_int[pt_bc  ] = typRac[i-1]
             param_int[pt_bc+1] = 0 # position stockage niveau tn+1
@@ -3202,7 +3202,7 @@ def _InterpTemporelcompact(t,tc):
                 neq = param_int[VSHARE.NEQ_LBM] + 5
                 if param_int[VSHARE.LBM_OVERSET]==1: neq +=12 # LBM-LBM
             else: neq=param_int[VSHARE.NEQ]                  # couplage NS/NS ou NS/LBM
-            param_int[pt_bc+2] = neq 
+            param_int[pt_bc+2] = neq
 
             #pointRange  au sens fortran :  i=1  1ere cellule calculee
             ific = param_int[VSHARE.NIJK+3]
@@ -3306,7 +3306,7 @@ def _Fluxcompact(t):
                         param_int[1][ deb1:deb1+size ]= f[1][:]
                         f[1]                          = param_int[1][ deb1:deb1+size ]
 
-                        deb   += 1   
+                        deb   += 1
                         deb1  += size
 
     return None
@@ -3316,7 +3316,7 @@ def _Fluxcompact(t):
 # si split='single': load t.cgns
 # si split='multiple': read t.cgns ou t/t_1.cgns
 # autorestart possible
-# return a partial tree t, a donor partial tree tc, 
+# return a partial tree t, a donor partial tree tc,
 # a stat partial tree,
 # the communication graph for Chimera and abutting transfers
 # the communication graph for IBM transfers
@@ -3424,7 +3424,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
                 if ret == 1: tc.append(C.convertFile2PyTree(FILE))
                 no += 1
             if tc != []: tc = Internal.merge(tc)
-            else: 
+            else:
                 FILE = fileNameC+extC
                 if os.access(FILE, os.F_OK): tc = C.convertFile2PyTree(FILE)
                 else: tc = None
@@ -3433,7 +3433,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             while ret == 1:
                 FILEIN = '%s/%s_%d%s'%(fileName, baseName, no, ext)
                 if os.access(FILEIN, os.F_OK): FILE = FILEIN
-                elif restart and os.access('restart/restart_%d%s'%(no, ext), os.F_OK): 
+                elif restart and os.access('restart/restart_%d%s'%(no, ext), os.F_OK):
                     FILE = 'restart/restart_%d%s'%(no,ext)
                 else: ret = 0
                 if ret == 1: t.append(C.convertFile2PyTree(FILE))
@@ -3444,7 +3444,7 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
             ret = 1; no = 0; ts = []
             while ret == 1:
                 FILE = '%s/%s_%d%s'%(fileNameS, baseNameS, no, extS)
-                if not os.access(FILEIN, os.F_OK): ret = 0 
+                if not os.access(FILEIN, os.F_OK): ret = 0
                 if ret == 1: ts.append(C.convertFile2PyTree(FILE))
                 no += 1
             if ts != []: ts = Internal.merge(ts)
@@ -3491,7 +3491,7 @@ def save(t, fileName='restart', split='single', NP=0, compress=0):
     zones = Internal.getZones(t2)
     for z in zones:
         Internal._rmNodeByPath(z, '.Solver#ownData')
-    if compress > 0: 
+    if compress > 0:
         import Compressor.PyTree as Compressor
         if compress >= 1: Compressor._compressCartesian(t2)
         if compress >= 2: Compressor._compressAll(t2)
@@ -3575,7 +3575,7 @@ def getMaxProc(t):
 # return the communication graph for Chimera and abutting transfers
 # and the communication graph for IBM transfers
 #==============================================================================
-def loadFile(fileName='t.cgns', split='single', graph=False, 
+def loadFile(fileName='t.cgns', split='single', graph=False,
              mpirun=False, exploc=0):
     """Load tree and connectivity tree."""
     import os.path
@@ -3616,7 +3616,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                     while ret == 1:
                         FILE = '%s_%d.cgns'%(fileName, no)
                         if not os.access(FILE, os.F_OK): ret = 0
-                        if ret == 1: 
+                        if ret == 1:
                             t.append(Cmpi.convertFile2SkeletonTree(FILE))
                         no += 1
                     if t != []:
@@ -3640,7 +3640,7 @@ def loadFile(fileName='t.cgns', split='single', graph=False,
                     while ret == 1:
                         FILE = '%s_%d.cgns'%(fileName, no)
                         if not os.access(FILE, os.F_OK): ret = 0
-                        if ret == 1: 
+                        if ret == 1:
                             t.append(Cmpi.convertFile2SkeletonTree(FILE))
                         no += 1
                     if t != []:
@@ -3697,8 +3697,8 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
 
             mp = getMaxProc(t)
 
-            if mp+1 != size: 
-                raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d)'%(mp+1,size)) 
+            if mp+1 != size:
+                raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d)'%(mp+1,size))
             if graph:
                 graphN = prepGraphs(t, exploc=0)
                 graphN_= prepGraphs(t, exploc=1)
@@ -3721,7 +3721,7 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
                     while ret == 1:
                         FILE = '%s_%d.cgns'%(fileName, no)
                         if not os.access(FILE, os.F_OK): ret = 0
-                        if ret == 1: 
+                        if ret == 1:
                             t.append(Cmpi.convertFile2SkeletonTree(FILE))
                         no += 1
                     if t != []:
@@ -3757,13 +3757,13 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
 # si split='single': load t.cgns
 # si split='multiple': read t.cgns ou t/t_1.cgns
 # autorestart possible
-# return a partial tree t, a donor partial tree tc, 
+# return a partial tree t, a donor partial tree tc,
 # a stat partial tree,
 # the communication graph for Chimera and abutting transfers
 # the communication graph for IBM transfers
 #==============================================================================
-def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0, 
-    mpirun=False, compress=0):
+def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
+             mpirun=False, compress=0):
     """Save tree in file."""
     import os.path
     baseName = os.path.basename(fileName)
@@ -3806,7 +3806,7 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
             Cmpi.convertPyTree2File(t2, FILE)
         else:
             rank = Cmpi.rank
-            if rank == 0: 
+            if rank == 0:
                 if not os.path.exists(fileName): os.makedirs(fileName)
             Cmpi.barrier()
             FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
@@ -3836,11 +3836,11 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
 # si split='single': load t.cgns
 # si split='multiple': read t.cgns ou t/t_1.cgns
 # autorestart possible
-# return a partial tree t, a donor partial tree tc, 
+# return a partial tree t, a donor partial tree tc,
 # a stat partial tree,
 # the communication graph for Chimera and abutting transfers
 # the communication graph for IBM transfers
-# dir is the directory containing files to be read 
+# dir is the directory containing files to be read
 #==============================================================================
 def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpirun=False):
     """Load tree and connectivity tree."""
@@ -3849,7 +3849,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
 
     fileName = os.path.splitext(fileName)[0] # full path without extension
     if len(directory) > 0 and directory[-1] == '/': directory = directory[:-1]
-    if fileName[0] == '/': fileName = fileName[1:]      
+    if fileName[0] == '/': fileName = fileName[1:]
 
     graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
     if mpirun: # mpi run
@@ -3881,7 +3881,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
                         #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, no)
                         FILE = '%s/%s%d.cgns'%(directory, fileName, no)
                         if not os.access(FILE, os.F_OK): ret = 0
-                        if ret == 1: 
+                        if ret == 1:
                             tmp.append(Cmpi.convertFile2SkeletonTree(FILE))
                             no += 1
                     if no == size and tmp != []:
@@ -3892,7 +3892,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
             #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
             FILE = '%s/%s%d.cgns'%(directory, fileName, rank)
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else: 
+            else:
                 #t = None
                 raise ValueError("File "+FILE+" not found")
 
@@ -3900,7 +3900,7 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
         if split == 'single':
             FILE = directory+'/'+fileName+'.cgns'
             if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else: 
+            else:
                 #t = None
                 raise ValueError("File "+FILE+" not found")
         else: # multiple
@@ -3925,11 +3925,11 @@ def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpir
 # si split='single': save t.cgns
 # si split='multiple': save t.cgns or t/t_1.cgns
 # autorestart possible
-# return a partial tree t, a donor partial tree tc, 
+# return a partial tree t, a donor partial tree tc,
 # a stat partial tree,
 # the communication graph for Chimera and abutting transfers
 # the communication graph for IBM transfers
-# dir is the directory containing files to be read 
+# dir is the directory containing files to be read
 #==============================================================================
 def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=False, mpirun=False):
     """Save tree and connectivity tree."""
@@ -4035,7 +4035,7 @@ def calc_post_stats(t, iskeeporig=False, mode=None, cartesian=True):
 
     elif mode == 'cylx':
         vars=['Density','MomentumX','Momentum_t','Momentum_r','Pressure','Pressure^2',
-          'ViscosityEddy','rou^2', 'roU_t^2','roU_r^2','rouU_t','rouU_r','roU_tU_r']
+              'ViscosityEddy','rou^2', 'roU_t^2','roU_r^2','rouU_t','rouU_r','roU_tU_r']
         dict_var={'Velocityt':'roU_t^2','Velocityr':'roU_r^2','VelocityX':'rou^2'}
         list_var=[['Velocityt','Velocityr','roU_tU_r',"rho_U_t'U_r'"],
                   ['Velocityt','VelocityX','rouU_t',"rho_U_t'u'"],
@@ -4102,9 +4102,9 @@ def calc_post_stats(t, iskeeporig=False, mode=None, cartesian=True):
             C._initVars(z, "{centers:VelocityY_RMS} = {centers:Velocityr_RMS}*{centers:si}**2 + {centers:Velocityt_RMS}*{centers:co}**2 + 2*{centers:si}*{centers:co}*{centers:rho_U_t'U_r'}/{centers:Density}")
             # C._initVars(z,"{centers:rho_U_rp^2} = {centers:roU_r^2} -{centers:Density}*{centers:Velocityr}**2 ")
             # C._initVars(z,"{centers:rho_U_tp^2} = {centers:roU_t^2} -{centers:Density}*{centers:Velocityt}**2 ")
-            # C._initVars(z,"{centers:rho_u'v'} = {centers:rho_U_rp^2} *%20.16g + {centers:rho_U_t'U_r'}*%20.16g -{centers:rho_U_tp^2}*%20.16g "%(cteta*steta , cteta**2 -steta**2,cteta*steta )) 
-            C._initVars(z,"{centers:rho_u'w'} = {centers:rho_U_r'w'}*{centers:co} - {centers:rho_U_t'w'}*{centers:si}")       
-            C._initVars(z,"{centers:rho_v'w'} = {centers:rho_U_r'w'}*{centers:si} + {centers:rho_U_t'w'}*{centers:co}")   
+            # C._initVars(z,"{centers:rho_u'v'} = {centers:rho_U_rp^2} *%20.16g + {centers:rho_U_t'U_r'}*%20.16g -{centers:rho_U_tp^2}*%20.16g "%(cteta*steta , cteta**2 -steta**2,cteta*steta ))
+            C._initVars(z,"{centers:rho_u'w'} = {centers:rho_U_r'w'}*{centers:co} - {centers:rho_U_t'w'}*{centers:si}")
+            C._initVars(z,"{centers:rho_v'w'} = {centers:rho_U_r'w'}*{centers:si} + {centers:rho_U_t'w'}*{centers:co}")
             C._rmVars(z, ['centers:Velocityr_RMS', 'centers:Velocityt_RMS' ,'centers:Velocityr', 'centers:Velocityt' ,"centers:rho_U_r'w'","centers:rho_U_t'w'","centers:rho_U_t'U_r'",'centers:co','centers:si','centers:Radius'])
         elif mode == "cylx" and cartesian:
             C._initVars(z,"{centers:Radius} = ( {centers:CoordinateY}**2 +{centers:CoordinateZ}**2 )**0.5")
@@ -4179,21 +4179,21 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
                 if ompmode == 1:
                     ithread = param_int[ PtZoneomp  +  i ]
                     if ithread != -2:
-                #print "check", z[0],timer_omp[ ADR + 1+i*2 ]/echant, timer_omp[ ADR + 2+i*2 ], i,"echant=",echant,ijkv
-                #tps_zone_percell += timer_omp[ ADR + 1+ithread ]
+                        #print "check", z[0],timer_omp[ ADR + 1+i*2 ]/echant, timer_omp[ ADR + 2+i*2 ], i,"echant=",echant,ijkv
+                        #tps_zone_percell += timer_omp[ ADR + 1+ithread ]
                         tps_zone_percell += timer_omp[ ADR + 1+i*2 ]*timer_omp[ ADR + 2+i*2 ]/float(ijkv)*NbreThreads   #tps * Nb cell
-                        if timer_omp[ ADR + 1+i*2 ] > tps_zone_percell_max: 
+                        if timer_omp[ ADR + 1+i*2 ] > tps_zone_percell_max:
                             tps_zone_percell_max = timer_omp[ ADR + 1+i*2 ]
                             ithread_max          = ithread
-                        if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min: 
+                        if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min:
                             tps_zone_percell_min = timer_omp[ ADR + 1+i*2 ]
                             ithread_min          = ithread
                 else:
                     tps_zone_percell += timer_omp[ ADR + 1+i*2 ]*timer_omp[ ADR + 2+i*2 ]/float(ijkv)*NbreThreads
-                    if timer_omp[ ADR + 1+i*2 ] > tps_zone_percell_max: 
+                    if timer_omp[ ADR + 1+i*2 ] > tps_zone_percell_max:
                         tps_zone_percell_max = timer_omp[ ADR + 1+i*2 ]
                         ithread_max          = i
-                    if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min: 
+                    if timer_omp[ ADR + 1+i*2 ] < tps_zone_percell_min:
                         tps_zone_percell_min = timer_omp[ ADR + 1+i*2 ]
                         ithread_min          = i
 
@@ -4278,7 +4278,7 @@ def getDictOfNobNozOfRcvZones(t, intersectionDict):
             for noz in range(len(t[2][nob][2])):
                 z = t[2][nob][2][noz]
                 if Internal.getType(z) == 'Zone_t':
-                    zname = Internal.getName(z)                
+                    zname = Internal.getName(z)
                     if zname in intersectionDict and intersectionDict[zname] != []:
                         dictOfNobOfRcvZones[zname]=nob
                         dictOfNozOfRcvZones[zname]=noz
@@ -4298,7 +4298,7 @@ def _addPair(idic, z1, z2):
 # Retourne le nob noz des zones donneuses et remplit le dictOfAdt
 # center et axis servent dans le cas d'adt cylindrique
 # Filter = 'Base' or '*' or 'Base/*toto' or '*/cart*'
-def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT, 
+def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT,
                               cartFilter='CARTESIAN', cylFilter='CYLINDER*', center=(0,0,0), axis=(0,0,1), depth=2, thetaShift=0.,isIbmAle=False):
     """Fill dictOfAdt."""
     cartFilter = cartFilter.split('/')
@@ -4326,15 +4326,15 @@ def getDictOfNobNozOfDnrZones(tc, intersectionDict, dictOfADT,
                 zc = tc[2][nob][2][nozc]
                 if Internal.getType(zc) == 'Zone_t':
                     zdnrname = Internal.getName(zc)
-                    if zdnrname in dnrnames and zdnrname not in dictOfADT:              
-                        if fnmatch.fnmatch(baseNameSelect, cartBaseFilter) and fnmatch.fnmatch(zdnrname, cartZoneFilter): 
+                    if zdnrname in dnrnames and zdnrname not in dictOfADT:
+                        if fnmatch.fnmatch(baseNameSelect, cartBaseFilter) and fnmatch.fnmatch(zdnrname, cartZoneFilter):
                             print('INFO: Creating adt cart for %s.'%zdnrname)
                             adt = None
-                        elif fnmatch.fnmatch(baseNameSelect, cylBaseFilter) and fnmatch.fnmatch(zdnrname, cylZoneFilter): 
+                        elif fnmatch.fnmatch(baseNameSelect, cylBaseFilter) and fnmatch.fnmatch(zdnrname, cylZoneFilter):
                             print('INFO: Creating adt cyl for %s.'%zdnrname)
                             adt = C.createHookAdtCyl(zc, center, axis, depth=depth, thetaShift=thetaShift)
                         else:
-                            print('INFO: Creating standard adt for %s.'%zdnrname) 
+                            print('INFO: Creating standard adt for %s.'%zdnrname)
                             adt = C.createHook(zc, 'adt')
                         dictOfADT[zdnrname] = adt
                         dictOfNobOfDnrZones[zdnrname] = nob
@@ -4392,8 +4392,8 @@ def _setTimeStep(t, dt):
     for z in zones:
         n = Internal.getNodeFromName2(z, 'Parameter_real')[1]
         n[0] = dt
-        time_step = Internal.getNodeFromName1(z, '.Solver#define') 
-        time_step = Internal.getNodeFromName1(time_step, 'time_step') 
+        time_step = Internal.getNodeFromName1(z, '.Solver#define')
+        time_step = Internal.getNodeFromName1(time_step, 'time_step')
         Internal.setValue(time_step, dt)
     return None
 
@@ -4411,8 +4411,8 @@ def _setCFL(t, cfl):
     for z in zones:
         n = Internal.getNodeFromName2(z, 'Parameter_real')[1]
         n[15] = cfl
-        cfl_value = Internal.getNodeFromName1(z, '.Solver#define') 
-        cfl_value = Internal.getNodeFromName1(cfl_value, 'cfl') 
+        cfl_value = Internal.getNodeFromName1(z, '.Solver#define')
+        cfl_value = Internal.getNodeFromName1(cfl_value, 'cfl')
         Internal.setValue(cfl_value, cfl)
     return None
 
@@ -4487,10 +4487,10 @@ def add2inst(tin,tout,dim_in=3,dim_out=3,direction_copy2Dto3D=3,mode=None):
         for z in Internal.getZones(tout):
             zin = Internal.getNodesFromName(tin, z[0])
             for v in VARSMACRO: C._cpVars(zin,'centers:'+v,z,'centers:'+v)
-    else:       
+    else:
         for z in Internal.getZones(tout):
             for v in VARSMACRO:
-                zout   = Internal.getNodeFromName(z,'FlowSolution#Centers')        
+                zout   = Internal.getNodeFromName(z,'FlowSolution#Centers')
                 zin    = Internal.getNodeFromName(Internal.getNodesFromName(tin, z[0]), 'FlowSolution#Centers')
 
                 varout = Internal.getNodeFromName(zout, v)[1]
@@ -4572,7 +4572,7 @@ def get_wall_values(t,isRANS=False,wallType='BCWall',mode=None):
     w = C.extractBCOfType(t, 'BCWall')
     w = C.node2Center(w, 'FlowSolution')
     Internal._rmNodesByName(w, 'FlowSolution')
-    if mode is None:       
+    if mode is None:
         PE._extractShearStress(w)
         PE._extractFrictionVector(w)
         PE._extractFrictionMagnitude(w)
@@ -4700,18 +4700,18 @@ def convertPointwise2Fast(FILEIN):
     for fam in Internal.getNodesFromType(t, 'Family_t'):
         if fam[0] == "Unspecified": Internal.rmNode(t,fam)
 
-    dicofambc={}                                                  
-    for fam in Internal.getNodesFromType(t, 'Family_t'):                                   
-        fambc = Internal.getValue(Internal.getNodeFromType(fam, 'FamilyBC_t'))                       
-        dicofambc[fam[0]] = fambc                                                             
+    dicofambc={}
+    for fam in Internal.getNodesFromType(t, 'Family_t'):
+        fambc = Internal.getValue(Internal.getNodeFromType(fam, 'FamilyBC_t'))
+        dicofambc[fam[0]] = fambc
 
-    for bc in Internal.getNodesFromType(t, 'BC_t'):                                              
-        if Internal.getValue(bc) == 'FamilySpecified':                                                 
-            famname = Internal.getNodeFromType(bc, 'FamilyName_t')                                    
-            valbc = dicofambc[Internal.getValue(famname)]                                              
+    for bc in Internal.getNodesFromType(t, 'BC_t'):
+        if Internal.getValue(bc) == 'FamilySpecified':
+            famname = Internal.getNodeFromType(bc, 'FamilyName_t')
+            valbc = dicofambc[Internal.getValue(famname)]
             Internal.setValue(bc, valbc)
-            Internal.rmNode(bc, famname)                                                        
-    Internal._rmNodesByType(t, 'Family_t')                                                         
+            Internal.rmNode(bc, famname)
+    Internal._rmNodesByType(t, 'Family_t')
 
     ## Remove further unneccesary information
     ## output is bare bones for FastS
@@ -4755,7 +4755,7 @@ def _pointwise2D2Fast(t):
             Internal.setValue(zbc[2][2],s2)
 
         zonegrid = Internal.getNodesFromType(z, 'GridCoordinates_t')
-        for zgrid in zonegrid:            
+        for zgrid in zonegrid:
             if Internal.getNodeFromName(zgrid, 'CoordinateZ') is None:
                 coordz=Internal.copyNode(Internal.getNodeFromName(zgrid, 'CoordinateX'))
                 Internal.setName(coordz, 'CoordinateZ')
@@ -4766,10 +4766,10 @@ def _pointwise2D2Fast(t):
 # cassiopee2Pointwise
 def cassiopee2Pointwise(fileName):
     t = C.convertFile2PyTree(fileName)
-    t = C.rmBCOfType(t, 'BC*')         
-    t = C.rmBCOfType(t, 'BCMatch')     
-    t = C.rmBCOfType(t, 'BCOverlap')   
-    t = C.rmBCOfType(t, 'UserDefined') 
+    t = C.rmBCOfType(t, 'BC*')
+    t = C.rmBCOfType(t, 'BCMatch')
+    t = C.rmBCOfType(t, 'BCOverlap')
+    t = C.rmBCOfType(t, 'UserDefined')
     t = Internal.rmNodesByName(t, 'FlowSolution#Init')
     baseName = os.path.basename(fileName)
     baseName = os.path.splitext(baseName)[0] # name without extension

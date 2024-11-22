@@ -42,7 +42,7 @@ select= open('template_flu_select_d.for','r')
 lines_select = select.readlines()
 
 c = 0
-for l in lines_select: 
+for l in lines_select:
     if 'ELSE' in l: c_index = c
     c+=1
 
@@ -54,7 +54,7 @@ fselecto = open(rep+'/'+flux+'_select_d.for',"w")                  # ouvrir le f
 #open file for sources compilation
 srcs= open('../../srcs.py','r')
 lines_srcs = srcs.readlines()
-srcs.close() 
+srcs.close()
 srcs= open('../../srcs.py','w')
 
 for ale in TypeMotion:
@@ -101,7 +101,7 @@ for ale in TypeMotion:
                     c+=1
                 c = 0
                 for l in lines:
-                    if 'DO ii1=1,param_int' in l: 
+                    if 'DO ii1=1,param_int' in l:
                         c1=0
                         while ' ENDDO' not in lines[c+c1]: c1+=1
                         c1+=1
@@ -117,7 +117,7 @@ for ale in TypeMotion:
                 target = 'option.eq.'+str(option)+') THEN'
                 include = True
                 c = 0
-                for l in lines_select: 
+                for l in lines_select:
                     if target in l: include = False
                     if 'ELSE' in l: c_index = c
                     c+=1
@@ -127,35 +127,35 @@ for ale in TypeMotion:
                 select_out=[]
                 if include == True:
                     select_out.append('       ELSEIF (option.eq.'+str(option)+') THEN\n')
-                    select_out.append('                                               \n') 
-                    select_out.append('           call '+ name_routine+'(ndom, ithread,\n') 
-                    select_out.append('     &                 param_int, param_real,\n') 
-                    select_out.append('     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,\n') 
-                    select_out.append('     &                 synchro_send_sock, synchro_send_th,\n') 
-                    select_out.append('     &                 synchro_receive_sock, synchro_receive_th,\n') 
-                    select_out.append('     &                 ibloc , jbloc , kbloc ,\n') 
-                    select_out.append('     &                 icache, jcache, kcache,\n') 
-                    select_out.append('     &                 rop, ropd, drodm, drodmd, wig,\n') 
-                    select_out.append('     &                 venti, ventj, ventk,\n') 
+                    select_out.append('                                               \n')
+                    select_out.append('           call '+ name_routine+'(ndom, ithread,\n')
+                    select_out.append('     &                 param_int, param_real,\n')
+                    select_out.append('     &                 ind_dm, ind_loop, ijkv_thread, ijkv_sdm,\n')
+                    select_out.append('     &                 synchro_send_sock, synchro_send_th,\n')
+                    select_out.append('     &                 synchro_receive_sock, synchro_receive_th,\n')
+                    select_out.append('     &                 ibloc , jbloc , kbloc ,\n')
+                    select_out.append('     &                 icache, jcache, kcache,\n')
+                    select_out.append('     &                 rop, ropd, drodm, drodmd, wig,\n')
+                    select_out.append('     &                 venti, ventj, ventk,\n')
                     if eq == 'SA':
-                        select_out.append('     &                 ti, tj, tk, vol, xmut, xmutd)\n') 
+                        select_out.append('     &                 ti, tj, tk, vol, xmut, xmutd)\n')
                     else:
-                        select_out.append('     &                 ti, tj, tk, vol, xmut)\n') 
-                    select_out.append('                                               \n') 
+                        select_out.append('     &                 ti, tj, tk, vol, xmut)\n')
+                    select_out.append('                                               \n')
 
-                lines_select_beg = lines_select_beg +   select_out 
+                lines_select_beg = lines_select_beg +   select_out
 
                 #modif makefile
                 target = tapenade_file
                 include = True
-                for l in lines_srcs: 
+                for l in lines_srcs:
                     if target in l: include = False
                 srcs_out=[]
-                if include == True: 
+                if include == True:
                     #recherche la fonction originelle avant passage tapenade
                     input_file  = rep+'/'+typezone+'/'+flux+ale1+eq+'_'+slope+'_'+typezone+'.for'
                     c = 0
-                    for l in lines_srcs: 
+                    for l in lines_srcs:
                         if 'FastS/Compute/'+input_file in l: c_index = c
                         c+=1
                     c_index +=1
@@ -168,22 +168,22 @@ c       =0
 c_index =0
 for i in range( len(lines_select_beg) ):
     lines_select_beg[i]=lines_select_beg[i].replace("template_flu_select_d"                ,flux+'_select_d' )
-    if 'ELSEIF ' in lines_select_beg[i] and c_index ==0: 
+    if 'ELSEIF ' in lines_select_beg[i] and c_index ==0:
         c_index = c
     c+=1
 lines_select_beg[c_index]=lines_select_beg[c_index].replace("ELSEIF"                ,'IF ' )
 
-#write of srcs.py file for makefile  
+#write of srcs.py file for makefile
 target = rep+'/'+flux+"_select_d.for',"
 include = True
 c = 0
-for l in lines_srcs: 
+for l in lines_srcs:
     if target in l: include = False
-if include == True: 
+if include == True:
     lines_srcs_beg.append("            'FastS/Compute/"+target+"\n")
     input_file  = rep+'/'+flux+"_select.for',"
     c = 0
-    for l in lines_srcs: 
+    for l in lines_srcs:
         if 'FastS/Compute/'+input_file in l: c_index = c
         c+=1
     c_index +=1
@@ -194,11 +194,10 @@ if include == True:
 
 #write of srcs.py
 for l in lines_srcs: srcs.write(l)
-srcs.close()   
+srcs.close()
 
 
 #write of rep/flux_select.for
 for l in lines_select_beg: fselecto.write(l)
 for l in lines_select_end: fselecto.write(l)
 fselecto.close()                               # fermer le fichier output global
-

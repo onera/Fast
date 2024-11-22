@@ -45,7 +45,7 @@ if first is not None: time0 = Internal.getValue(first)
 # Numerics
 FastC._setNum2Base(t, numb)
 FastC._setNum2Zones(t, numz)
-(t, tc, metrics) = FastS.warmup(t, tc) 
+(t, tc, metrics) = FastS.warmup(t, tc)
 
 time_step = Internal.getNodeFromName(t, 'time_step')
 time_step = Internal.getValue(time_step)
@@ -65,6 +65,3 @@ Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)
 shutil.rmtree(LOCAL+"/cgns_lts")
 #C.convertPyTree2File(t, "out.cgns")
-
-
-

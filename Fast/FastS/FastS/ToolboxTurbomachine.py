@@ -9,9 +9,9 @@ import Converter   as CV
 
 #from scipy import interpolate
 #~ ====================
-#~ from etc.post  import AzimutalAverage2D, AzimutalAverage3D 
-#~ from   mpi4py import MPI 
-#~ import etc.toolbox.internal  as tgi 
+#~ from etc.post  import AzimutalAverage2D, AzimutalAverage3D
+#~ from   mpi4py import MPI
+#~ import etc.toolbox.internal  as tgi
 #~ import Converter.Array3D as CA
 #~ ====================
 
@@ -186,11 +186,11 @@ def getDataFiles(nbBlock, rootFileName):
         fileName = rootFileName + str(i+1)
         dataFiles.append(fileName)
 
-    return dataFiles        
+    return dataFiles
 
-def getArrayAndReshapeF(tree, data2extract):                       
+def getArrayAndReshapeF(tree, data2extract):
     node  = CI.getNodeFromName(tree, data2extract)               #we get the node
-    array = CI.getValue(node)                                   #we get the array associated 
+    array = CI.getValue(node)                                   #we get the array associated
     #~ size = array.size
     #~ array = numpy.reshape(array, size, order='F')               #we reshape the array with a Fortran like order
     return array
@@ -206,12 +206,12 @@ def createFlowSolution(data):
 
 # XXX COMPLETE
 def addFlowSolution2FastS(data, nbBlock, rootDataFileName):
-#This function creates a flowSolution node with concervative variable and set the data (at the center of the cells) with restart files  
+    #This function creates a flowSolution node with concervative variable and set the data (at the center of the cells) with restart files
 
-#DATA
-# t                 : input          [CGNS tree] FastS
-# nbBlock           : input userData [int] total number of blocks
-# rootDataFileName  : input userData [str] root name of the restart data files
+    #DATA
+    # t                 : input          [CGNS tree] FastS
+    # nbBlock           : input userData [int] total number of blocks
+    # rootDataFileName  : input userData [str] root name of the restart data files
 
     bases=CI.getByType(data,'Zone_t')[2]
     for base in bases:
@@ -230,7 +230,7 @@ def addFlowSolution2FastS(data, nbBlock, rootDataFileName):
 
         Prop=CI.getNodeFromName(base, 'FlowSolution#Centers')     #we get the flowSol node
         for d in data2setList:                                                                    #we set the value
-            value2set = getArrayAndReshapeF(tdata2set, d)         
+            value2set = getArrayAndReshapeF(tdata2set, d)
             CI.createChild(Prop,d,'DataArray_t',value=value2set,pos=-1)
 
         p += 1
@@ -259,11 +259,11 @@ def addUniformFlowSolution2FastS(t, Model = 'NSTurbulent'):
                     val = float(node[1][0])
                     CP._initVars(t, 'centers:'+v, val)
 
-def getArray(tree, data2extract):                       
+def getArray(tree, data2extract):
     node  = CI.getNodeFromName(tree, data2extract )             #we get the node
-    array = CI.getValue(node)                                   #we get the array associated 
+    array = CI.getValue(node)                                   #we get the array associated
 
-    return array    
+    return array
 
 def getMeshBlocks(tree, nbBlock):
     blockMesh = []
@@ -301,7 +301,7 @@ def closestSearch(myList, nbDef):
         nbLTnbDef = list(takewhile( g, myList)) #we store all the numbers that are lower than the user defined number
         nbGTnbDef = list(dropwhile( g, myList)) #we store all the numbers that are larger than the user defined number
 
-        nbMax     = max(nbLTnbDef) #the closest from the left   
+        nbMax     = max(nbLTnbDef) #the closest from the left
         nbMin     = min(nbGTnbDef) #the closest from the right
 
         difMax = abs(nbDef - nbMax)
@@ -318,13 +318,13 @@ def closestSearch(myList, nbDef):
             print('==================================')
 
 def pivSearch(radiusList, rad_def, zone='inside'):
-#There are 3 options for zone ; 'inside', 'shaft', 'casing'
-#depending on the data given by the user
+    #There are 3 options for zone ; 'inside', 'shaft', 'casing'
+    #depending on the data given by the user
 
-    try : 
+    try :
 
         #The data are chosen inside the radius distribution
-        if zone == 'inside': 
+        if zone == 'inside':
             rpiv, indpiv = closestSearch(radiusList, rad_def)
             return rpiv, indpiv
 
@@ -341,7 +341,7 @@ def pivSearch(radiusList, rad_def, zone='inside'):
             rpiv   = radiusList[indpiv]
             return rpiv, indpiv
 
-    except : 
+    except :
         print('===============================ERROR ===============================')
         print('Option not understood: select "casing", "shaft", or default:"inside"')
         print('====================================================================')
@@ -374,7 +374,7 @@ def cleanGhostCells(data, nbBlock, nbGhostRank):
             for q in range(1, nbBlock+1):
                 if str(q) in zone:
                     blockMesh.append(zone)
-        return blockMesh        
+        return blockMesh
 
     def getNode(tree, block, nodeName):
         base        = CI.getNodesFromType(tree,'CGNSBase_t')
@@ -383,26 +383,26 @@ def cleanGhostCells(data, nbBlock, nbGhostRank):
 
         flowSolNode = CI.getNodeFromPath(tree, nodePath)
 
-        return flowSolNode              
+        return flowSolNode
 
-    def getArray(tree, data2extract):                       
+    def getArray(tree, data2extract):
         node  = CI.getNodeFromName(tree, data2extract )             #we get the node
-        array = CI.getValue(node)                                   #we get the array associated 
+        array = CI.getValue(node)                                   #we get the array associated
 
         return array
 
     def getChildrenDict(tree, nodeName):
 
-        childrenNodeList = CI.getChildren(nodeName) #we get all the children nodes of the nodes  
+        childrenNodeList = CI.getChildren(nodeName) #we get all the children nodes of the nodes
         nbChildren       = len(childrenNodeList)
         childrenDict     = OrderedDict()            #we create a dictionary with key: the name of the node, value: the node
 
-        for p in range(nbChildren):        
+        for p in range(nbChildren):
             childNode                = childrenNodeList[p]
             childnName               = CI.getName(childNode)
-            childrenDict[childnName] = childNode                    
+            childrenDict[childnName] = childNode
 
-        return childrenDict             
+        return childrenDict
 
     def getIndexOfBlock(tree, block):
         node  = CI.getNodeFromName(tree, block)
@@ -440,7 +440,7 @@ def cleanGhostCells(data, nbBlock, nbGhostRank):
 
         chilDictCoordinates = getChildrenDict(data, coordinateNode)  #we create a dict with = key : the children nodes' name/ value = the corresponding node
         chilDictCoordinates2 = getChildrenDict(data, coordinateNode2)  #we create a dict with = key : the children nodes' name/ value = the corresponding node
-        chilDictFlowSol     = getChildrenDict(data, flowSolNode)   
+        chilDictFlowSol     = getChildrenDict(data, flowSolNode)
 
         i = 0
         j = 0
@@ -464,7 +464,7 @@ def cleanGhostCells(data, nbBlock, nbGhostRank):
 
 
 
-#~ For the coordinate nodes                             
+#~ For the coordinate nodes
         for q in range(nb2setCoordinates):
             CoordinateNode  = Data2setCoordinatesList[q]
             CoordinateArray = getArray(data, CoordinateNode)     #we extract the corresponding array for each children node
@@ -496,11 +496,11 @@ def getFlowSolNode(tree, block):
 
 # XXX
 def convertRelative2Absolute(data, nbBlock, omega, gamma ):
-# This function convert the data from   
+    # This function convert the data from
 
 
 
-# Definition of the functions needed to convert our data
+    # Definition of the functions needed to convert our data
     def norm3D(x,y,z)                                 : return math.sqrt(x**2 + y**2 + z**2)
     def atan2(x,y)                                    : return math.atan2(x,y)
 
@@ -522,13 +522,13 @@ def convertRelative2Absolute(data, nbBlock, omega, gamma ):
         zone = CP.node2Center(zone)                    #we change the coordinates (ONLY) to have them at the center of the cell
 
         #we add what is needed to convert our data
-        zone = CP.initVars(zone, 'omg', omega)       
+        zone = CP.initVars(zone, 'omg', omega)
         zone = CP.initVars(zone, 'gamma', gamma)
         zone = CP.initVars(zone, 'teta', atan2, ['CoordinateY', 'CoordinateZ'])
 
         #relative velocity
-        zone = CP.initVars(zone, '{Urel}={MomentumX}/{Density}')   
-        zone = CP.initVars(zone, '{Vrel}={MomentumY}/{Density}')        
+        zone = CP.initVars(zone, '{Urel}={MomentumX}/{Density}')
+        zone = CP.initVars(zone, '{Vrel}={MomentumY}/{Density}')
         zone = CP.initVars(zone, '{Wrel}={MomentumZ}/{Density}')
 
 
@@ -538,31 +538,31 @@ def convertRelative2Absolute(data, nbBlock, omega, gamma ):
 
         #absolute velocity
         zone = CP.initVars(zone, '{Uabs}={Urel}')
-        zone = CP.initVars(zone, 'Vabs', Vabs, ['Vrel', 'omg', 'CoordinateZ']) 
+        zone = CP.initVars(zone, 'Vabs', Vabs, ['Vrel', 'omg', 'CoordinateZ'])
         zone = CP.initVars(zone, 'Wabs', Wabs, ['Wrel', 'omg', 'CoordinateY'])
 
         #reconstruction of absolute conservative variables
-        zone = CP.initVars(zone, '{MomentumX}={Uabs}*{Density}') 
-        zone = CP.initVars(zone, '{MomentumY}={Vabs}*{Density}') 
+        zone = CP.initVars(zone, '{MomentumX}={Uabs}*{Density}')
+        zone = CP.initVars(zone, '{MomentumY}={Vabs}*{Density}')
         zone = CP.initVars(zone, '{MomentumZ}={Wabs}*{Density}')
         zone = CP.initVars(zone, 'EnergyStagnationDensity', roE_abs, ['Ps', 'gamma', 'Density', 'Uabs', 'Vabs', 'Wabs'])
 
         #we get the FlowSolution node to set the data
-        zone = CI.renameNode(zone, 'FlowSolution', 'FlowSolution#Centers') 
+        zone = CI.renameNode(zone, 'FlowSolution', 'FlowSolution#Centers')
         flowSol = getFlowSolNode(data, blockMesh)
 
 
         ConsVariables    = ['MomentumX', 'MomentumY', 'MomentumZ', 'EnergyStagnationDensity']
 
-        for i in range(len(ConsVariables)): 
+        for i in range(len(ConsVariables)):
             ConsVariable = ConsVariables[i]
 
             #we delete the previous nodes
             relativeNode   = CI.getNodeFromName(flowSol, ConsVariable)
-            CI.rmNode(flowSol, relativeNode) 
+            CI.rmNode(flowSol, relativeNode)
             #we add what we want on the node
             absoluteNode  = CI.getNodeFromName(zone, ConsVariable)
-            CI.addChild(flowSol, absoluteNode) 
+            CI.addChild(flowSol, absoluteNode)
 
 def addReferenceState2FastS(data):
     VelocityX                 = rou_ini/ro_ini
@@ -591,7 +591,7 @@ def addReferenceState2FastS(data):
     dict_reference_state['MomentumX']=                  MomentumX,
     dict_reference_state['MomentumY']=                  MomentumY,
     dict_reference_state['MomentumZ']=                  MomentumZ,
-    dict_reference_state['EnergyStagnationDensity']=    EnergyStagnationDensity,  
+    dict_reference_state['EnergyStagnationDensity']=    EnergyStagnationDensity,
     dict_reference_state['Pressure']=                   Pressure,
     dict_reference_state['Temperature']=                Temperature,
     dict_reference_state['Cv']=                         Cv,
@@ -637,7 +637,7 @@ def addOutletData2FastS(data,Name):
         Prop=CI.createChild(bc,'.Solver#Property','UserDefinedData_t')
         for d in dict_press: CI.createChild(Prop,d,'DataArray_t',value=dict_press[d])
 
-# XXX  
+# XXX
 def addUniformOutletData2FastS(data,Name,Pressure):
     dict_pres = OrderedDict()
 
@@ -656,15 +656,15 @@ def addUniformOutletData2FastS(data,Name,Pressure):
 
         # Important : Ordre des boucles = ordre FastS
         if (i1 == im):
-            for k in range(km-1) :     
+            for k in range(km-1) :
                 for j in range(jm-1) :
                     pres.append(Pressure)
         if (j1 == jm):
-            for k in range(km-1) :     
+            for k in range(km-1) :
                 for i in range(im-1) :
                     pres.append(Pressure)
         if (k1 == km):
-            for j in range(jm-1) :     
+            for j in range(jm-1) :
                 for i in range(im-1) :
                     pres.append(Pressure)
 
@@ -717,13 +717,13 @@ def addNonUniformOutletData2FastS(data,Name,DataFile, kpiv):
                     data_out.append(data_extracted)
                     p += 1
         if (j1 == jm):
-            for k in range(km-1) :     
+            for k in range(km-1) :
                 for i in range(im-1) :
                     data_extracted = data_array2extract[p]
                     data_out.append(data_extracted)
-                    p += 1                    
+                    p += 1
         if (k1 == km):
-            for j in range(jm-1) :     
+            for j in range(jm-1) :
                 for i in range(im-1) :
                     data_extracted = data_array2extract[p]
                     data_out.append(data_extracted)
@@ -753,7 +753,7 @@ def addInletData2FastS(data,Name):
         for d in inletDict: CI.createChild(Prop,d,'DataArray_t',value=inletDict[d])
 
 # XXX
-def addUniformInletData2FastS2(data,Name,d0x,d0y,d0z,pa,ha,turb1):    
+def addUniformInletData2FastS2(data,Name,d0x,d0y,d0z,pa,ha,turb1):
     inletDict = OrderedDict()
 
     for bc in CI.getNodesFromName(data,Name):
@@ -777,7 +777,7 @@ def addUniformInletData2FastS2(data,Name,d0x,d0y,d0z,pa,ha,turb1):
 
         # Important : Ordre des boucles = ordre FastS
         if (i1 == im):
-            for k in range(km-1) :     
+            for k in range(km-1) :
                 for j in range(jm-1) :
                     inj_d0x.append(d0x)
                     inj_d0y.append(d0y)
@@ -787,7 +787,7 @@ def addUniformInletData2FastS2(data,Name,d0x,d0y,d0z,pa,ha,turb1):
                     inj_turb1.append(turb1)
 
         if (j1 == jm):
-            for k in range(km-1) :     
+            for k in range(km-1) :
                 for i in range(im-1) :
                     inj_d0x.append(d0x)
                     inj_d0y.append(d0y)
@@ -797,7 +797,7 @@ def addUniformInletData2FastS2(data,Name,d0x,d0y,d0z,pa,ha,turb1):
                     inj_turb1.append(turb1)
 
         if (k1 == km):
-            for j in range(jm-1) :     
+            for j in range(jm-1) :
                 for i in range(im-1) :
                     inj_d0x.append(d0x)
                     inj_d0y.append(d0y)
@@ -818,7 +818,7 @@ def addUniformInletData2FastS2(data,Name,d0x,d0y,d0z,pa,ha,turb1):
             for d in inletDict: CI.createChild(Prop,d,'DataArray_t',value=inletDict[d])
 
 # XXX
-def addUniformInletData2FastS(data,Name,d0x,d0y,d0z,pa,ha,turb1):    
+def addUniformInletData2FastS(data,Name,d0x,d0y,d0z,pa,ha,turb1):
     inletDict = OrderedDict()
 
     for bc in CI.getNodesFromName(data,Name):
@@ -842,7 +842,7 @@ def addUniformInletData2FastS(data,Name,d0x,d0y,d0z,pa,ha,turb1):
 
         # Important : Ordre des boucles = ordre FastS
         if (i1 == im):
-            for k in range(km-1) :     
+            for k in range(km-1) :
                 for j in range(jm-1) :
                     inj_d0x.append(d0x)
                     inj_d0y.append(d0y)
@@ -852,7 +852,7 @@ def addUniformInletData2FastS(data,Name,d0x,d0y,d0z,pa,ha,turb1):
                     inj_turb1.append(turb1)
 
         if (j1 == jm):
-            for k in range(km-1) :     
+            for k in range(km-1) :
                 for i in range(im-1) :
                     inj_d0x.append(d0x)
                     inj_d0y.append(d0y)
@@ -862,7 +862,7 @@ def addUniformInletData2FastS(data,Name,d0x,d0y,d0z,pa,ha,turb1):
                     inj_turb1.append(turb1)
 
         if (k1 == km):
-            for j in range(jm-1) :     
+            for j in range(jm-1) :
                 for i in range(im-1) :
                     inj_d0x.append(d0x)
                     inj_d0y.append(d0y)
@@ -912,9 +912,9 @@ def addNonUniformInletData2FastS(t, Name, DataFile):
 
     return None
 
-### 
-### 
-### 
+###
+###
+###
 def addNonUniformBCData(t, BCName, BCValue, DataFile):
 
     data_carto   = CP.convertFile2PyTree(DataFile)
@@ -941,7 +941,7 @@ def addNonUniformBCData(t, BCName, BCValue, DataFile):
 
 def addWallData2FastS(data,Name):
     for bc in CI.getNodesFromName(data,Name):
-        if Governing_Equation == 'Euler': 
+        if Governing_Equation == 'Euler':
             CI.setValue(bc,'BCWallInviscid')
         else:
             CI.setValue(bc,'BCWallViscous')
@@ -952,13 +952,13 @@ def addMobileCoef2FastS(data, famNameHub, famNameCasing):
 
     for bc in CI.getNodesFromName(data, 'FamilyName'):
         if CI.getValue(bc) == famNameHub:
-            (parent, c) = CI.getParentOfNode(data, bc) 
+            (parent, c) = CI.getParentOfNode(data, bc)
             CI.setValue(parent,'BCWallViscous')
             Prop=CI.createChild(parent,'.Solver#Property','UserDefinedData_t')
             for d in dict_wall_hub: CI.createChild(Prop,d,'DataArray_t',value=dict_wall_hub[d])
 
         if CI.getValue(bc) == famNameCasing:
-            (parent, c) = CI.getParentOfNode(data, bc) 
+            (parent, c) = CI.getParentOfNode(data, bc)
             CI.setValue(parent,'BCWallViscous')
             Prop=CI.createChild(parent,'.Solver#Property','UserDefinedData_t')
             for d in dict_wall_casing: CI.createChild(Prop,d,'DataArray_t',value=dict_wall_casing[d])
@@ -968,14 +968,14 @@ def addPeriodicData2FastS(data):
     for base in bases:
         zones=CI.getByType(base,'Zone_t')[2]
         j = 1
-        for zone in zones:      
+        for zone in zones:
             zonebc = CI.getNodeFromName(zone, 'ZoneBC')
             connectivity1to1_t = CI.getNodesFromType(zone, 'GridConnectivity1to1_t')
             i = 0
             # Recherche des noeuds de raccord periodique
             for node in connectivity1to1_t :
                 children1to1 = CI.getChildren(node)
-                if children1to1 != [] : 
+                if children1to1 != [] :
                     connect_name = CI.getNodesFromName(children1to1, 'GridConnectivityProperty')
                     if connect_name != [] :
                         periodic = CI.getNodesFromName(children1to1, 'Periodic')
@@ -1008,7 +1008,7 @@ def addPeriodicData2FastS(data):
                             translationV     = CI.getValue(translation[0])
 
                             # Creation de la condition aux limites BCPeriodic. Si le noeud zoneBC n existe pas, il faut le creer.
-                            if zonebc == None : 
+                            if zonebc == None :
                                 CI.newZoneBC(parent=zone)
                                 zonebc = CI.getNodeFromName(zone, 'ZoneBC')
 
@@ -1032,14 +1032,14 @@ def cleanPeriodicData2FastS(data):
     bases=CI.getByType(data,'CGNSBase_t')[2]
     for base in bases:
         zones=CI.getByType(base,'Zone_t')[2]
-        for zone in zones:      
+        for zone in zones:
             zonebc = CI.getNodeFromName(zone, 'ZoneBC')
             connectivity1to1_t = CI.getNodesFromType(zone, 'GridConnectivity1to1_t')
             # Recherche des noeuds de raccord periodique
             for node in connectivity1to1_t :
                 data = CI._rmNodesByName(node,'.Solver#Property')
                 children1to1 = CI.getChildren(node)
-                if children1to1 != [] : 
+                if children1to1 != [] :
                     connect_name = CI.getNodesFromName(children1to1, 'GridConnectivityProperty')
                     if connect_name != [] :
                         periodic = CI.getNodesFromName(children1to1, 'Periodic')
@@ -1059,7 +1059,7 @@ def cleanPeriodicData2FastS(data):
                             CI.setValue(rotation_angle[0],numpy.array(rotation_angleV))
 
 def prepareDebit2Fast(t_debit):
-    zones      = CI.getNodesFromType2(t_debit, 'Zone_t') 
+    zones      = CI.getNodesFromType2(t_debit, 'Zone_t')
     tmp        = CI.getNodesFromName1(zones,'FlowSolution#Centers')
     node_debit = CI.getNodesFromName1(tmp,'Density')
 
@@ -1084,51 +1084,51 @@ def cleanUpByValue2FastS(data,Value):
 
 #~ =====================================================================
 #~ RADIAL EQUILIBRIUM
-#~ =====================================================================    
+#~ =====================================================================
 #~ Initialization of radial equilibrium
 
-# XXX 
+# XXX
 def printStep(step):
 
     print('#################################################')
-    print(step) 
+    print(step)
     print('#################################################')
 
 # XXX COMPLETE
 def rhoVtheta(t, outBlock):
-#This function creates the nodes and calculates the value of 'Vt_abs', 'rhoVt_abs', 'theta', 'Radius' 
-# at the cell center (FlowSolution#Centers) in the outflow block, and set the value at 0 for the other blocks
+    #This function creates the nodes and calculates the value of 'Vt_abs', 'rhoVt_abs', 'theta', 'Radius'
+    # at the cell center (FlowSolution#Centers) in the outflow block, and set the value at 0 for the other blocks
 
-#DATA   
-# t             : input          [CGNS tree] FastS
-# outBlock      : input userData [int] name of the upstream block
+    #DATA
+    # t             : input          [CGNS tree] FastS
+    # outBlock      : input userData [int] name of the upstream block
 
-    def atan2(x,y)                                     : return math.atan2(x,y)     
+    def atan2(x,y)                                     : return math.atan2(x,y)
     #def Vt_abs(Vabs, Wabs, theta)                      : return Vabs*math.cos(theta) - Wabs*math.sin(theta)
 
     zones = CI.getZones(t)                                                  #we get a list of all the blocks in the input file
     for z in zones :
 
-        if z[0] == outBlock:                                            #for each block (block by block)        
+        if z[0] == outBlock:                                            #for each block (block by block)
             print('init rhoVtheta Processing=== for zone:', outBlock)
 
             zc = CP.node2Center(z)                                                  #we change the coordinates (ONLY) to have them at the center of the cell
 
-                                                                                                                                    #we add what is needed to convert our data
+            #we add what is needed to convert our data
             zc = CP.initVars(zc, 'theta', atan2, ['CoordinateY', 'CoordinateZ'])
             zc = CP.initVars(zc,'{Radius}=numpy.sqrt({CoordinateY}**2+{CoordinateZ}**2)')
             zc = CP.initVars(zc,'Vt_abs'   , 0.)
 
             #zone = CP.initVars(zone, 'omg', omega)
-            #zone = CP.initVars(zone, '{Vabs}={MomentumY}/{Density}')       
+            #zone = CP.initVars(zone, '{Vabs}={MomentumY}/{Density}')
             #zone = CP.initVars(zone, '{Wabs}={MomentumZ}/{Density}')
-            #zone = CP.initVars(zone, 'Vt_abs', Vt_abs, ['Vabs', 'Wabs', 'theta']) 
-                                                                                                                                    #absolute velocity theta component
-            #z = CP.initVars(z, '{rhoVt_abs}', Vt_abs, ['MomentumY', 'MomentumZ', 'theta']) 
+            #zone = CP.initVars(zone, 'Vt_abs', Vt_abs, ['Vabs', 'Wabs', 'theta'])
+            #absolute velocity theta component
+            #z = CP.initVars(z, '{rhoVt_abs}', Vt_abs, ['MomentumY', 'MomentumZ', 'theta'])
             #z = CP.initVars(z, '{Vt_abs}={Vt_abs}/{Density}')
 
-                                                                                                                                    #we get the FlowSolution node to set the data
-            zc = CI.renameNode(zc, 'FlowSolution', 'FlowSolution#Centers') 
+            #we get the FlowSolution node to set the data
+            zc = CI.renameNode(zc, 'FlowSolution', 'FlowSolution#Centers')
             flowSol = CI.getNodeFromName(z,'FlowSolution#Centers')
             if flowSol == None:
                 node =['FlowSolution#Centers', None, [], 'FlowSolution_t' ]
@@ -1142,7 +1142,7 @@ def rhoVtheta(t, outBlock):
                 node = CI.getNodeFromName(zc, v)
                 CI.addChild(flowSol, node)
 
-# XXX ALMOST, c                         
+# XXX ALMOST, c
 '''
 def azimAverage2D(t, nbband, c):
 #This function calculates the 2D density, rhoVt(absolute), Vt(absolute) and Radius azimutale average at the exit of the outflow block
@@ -1246,17 +1246,17 @@ def interpolationAzim(t, tinit, interpolation):
         return bc_1d
 '''
 
-# XXX COMPLETE  
+# XXX COMPLETE
 def RadEq(t, ppiv_def, rpiv_def, zone = 'inside' ):
-#This function calculates the 1D radial pressure distribution according to radial equilibrium (recurrence)
+    #This function calculates the 1D radial pressure distribution according to radial equilibrium (recurrence)
 
-#DATA
-# t             : input          [CGNS tree] tree with 1D distribution of the pressure derivative with respect to the radius and radius distribution
-# ppiv_def      : input userData [int] pivot pressure 
-# rpiv_def      : input userData [int] pivot radius 
-# zone          : input userData [str] casing/shaft/inside for the starting point of the reccurence algorithm for the static pressure
+    #DATA
+    # t             : input          [CGNS tree] tree with 1D distribution of the pressure derivative with respect to the radius and radius distribution
+    # ppiv_def      : input userData [int] pivot pressure
+    # rpiv_def      : input userData [int] pivot radius
+    # zone          : input userData [str] casing/shaft/inside for the starting point of the reccurence algorithm for the static pressure
 
-# tree          : return          [CGNS tree] tree with 1D distribution of the pressure derivative with respect to the radius and radius distribution
+    # tree          : return          [CGNS tree] tree with 1D distribution of the pressure derivative with respect to the radius and radius distribution
 
     radius   = getArray(t, 'radius_c')
     dpsdr    = getArray(t, 'dpdr_c')
@@ -1290,7 +1290,7 @@ def RadEq(t, ppiv_def, rpiv_def, zone = 'inside' ):
 
         for i in range(nb_rad-indPiv-1):  #from piv to the casing
 
-            ind = indPiv + i  
+            ind = indPiv + i
             p_next = p[i] + 0.5*(dpsdr[ind] + dpsdr[ind+1])*(radius[ind+1]-radius[ind])
             p.append(p_next)
 
@@ -1308,7 +1308,7 @@ def RadEq(t, ppiv_def, rpiv_def, zone = 'inside' ):
     #plt.ylabel('Pressure (Pa)', fontsize=18)
 
     #plt.plot(radius, pArray ,marker="*", label=zone)
-    #plt.legend(loc = 'best', prop={'size':20}) 
+    #plt.legend(loc = 'best', prop={'size':20})
     #plt.show()
     #~ #------------------------------------------------------
 
@@ -1325,18 +1325,18 @@ def RadEq(t, ppiv_def, rpiv_def, zone = 'inside' ):
 
     return tree
 
-# XXX COMPLETE 
+# XXX COMPLETE
 def outradeqExtension(t, tdata, outBlock):
-#This function transforms p(r) in p(r,theta) , from 1D to 2D
+    #This function transforms p(r) in p(r,theta) , from 1D to 2D
 
-#DATA
-# t             : input          [CGNS tree] initial tree with the outflow bloc
-# tdata         : input          [CGNS tree] tree with 1D distribution of the pressure derivative with respect to the radius and radius distribution
-# outBlock      : input userData [int] name of the upstream block
+    #DATA
+    # t             : input          [CGNS tree] initial tree with the outflow bloc
+    # tdata         : input          [CGNS tree] tree with 1D distribution of the pressure derivative with respect to the radius and radius distribution
+    # outBlock      : input userData [int] name of the upstream block
 
-# data          : return         [2D numpy arrays] ['r', 'theta', 'p']
+    # data          : return         [2D numpy arrays] ['r', 'theta', 'p']
 
-#~ ====================
+    #~ ====================
     import Converter.Array3D as CA
 #~ ====================
 
@@ -1346,23 +1346,23 @@ def outradeqExtension(t, tdata, outBlock):
     #1D data distribution to extend in 2D
     # ####################################################################
 
-    ra = CI.getValue(CI.getNodeFromName(tdata, 'radius'))                                           #array of radius 1D 
+    ra = CI.getValue(CI.getNodeFromName(tdata, 'radius'))                                           #array of radius 1D
     pa = CI.getValue(CI.getNodeFromName(tdata, 'p'))                                                        #array of p 1D
 
     nr = km-1                                                                                                                                       # nb of points in  radial direction (-1 because cell centered)
-    nt = jm-1                       
-                                                                                                                    # nb of points in  azimutal direction (-1 because cell centered)
+    nt = jm-1
+    # nb of points in  azimutal direction (-1 because cell centered)
     # ####################################################################
     #1D angular distribution
     # ####################################################################
 
-    #~ def atan2(x,y)  : return math.atan2(x,y)*180/math.pi 
+    #~ def atan2(x,y)  : return math.atan2(x,y)*180/math.pi
     zone = CI.getNodeFromName(t, outBlock)
     zone = CP.node2Center(zone)                                                                             #from vertex to cell centered
     zone = CP.initVars(zone, 'theta', lambda x,y: math.atan2(x,y)*180/math.pi , ['CoordinateY', 'CoordinateZ'])
     thetaNode = CI.getNodeFromName(zone, 'theta')                               #3D
     theta = CI.getValue(thetaNode)
-    theta2D = theta[im-2, :, :].transpose()                                                                         #extraction 2D slice : at imax = outflow  
+    theta2D = theta[im-2, :, :].transpose()                                                                         #extraction 2D slice : at imax = outflow
 
     # ####################################################################
     # Transforms p(r) in p(r,theta)
@@ -1390,38 +1390,38 @@ def outradeqExtension(t, tdata, outBlock):
 
 # XXX ALMOST, c
 def addOutradeq2FastS(t, nbBlock,  outBlock, omega,  nbband, c, ppiv_def, rpiv_def = 0, location ='inside', interpolation = 'linear' ):
-#This function calculates the 2D pressure field of the outflow block (.Solver#Property) according to the radial equilibrium
-#it creates the nodes needed to update the solution while running computation. It saves the pressure fields on 'outradeq.dat' 
+    #This function calculates the 2D pressure field of the outflow block (.Solver#Property) according to the radial equilibrium
+    #it creates the nodes needed to update the solution while running computation. It saves the pressure fields on 'outradeq.dat'
 
-#DATA   
-#~ There are 3 options : casing (requires only the pressure at the casing, the radius is calculated)
-#~                                           shaft(requires only the pressure at the shaft, the radius is calculated)
-#~                                           inside(requires the pressure ans the radius)  in any case, the value of radius is set at 0 if not given
+    #DATA
+    #~ There are 3 options : casing (requires only the pressure at the casing, the radius is calculated)
+    #~                                           shaft(requires only the pressure at the shaft, the radius is calculated)
+    #~                                           inside(requires the pressure ans the radius)  in any case, the value of radius is set at 0 if not given
 
-# t             : input          [CGNS tree] FastS
-# nbBlock       : input userData [int] total number of blocks
-# outBlock      : input userData [int] name of the upstream block
-# omega         : input userData [int] rotational speed in rad/s 
-# nbband        : input userData [int] number of slices of azimutal average 
-# c             : input userData [int] ?????
-# ppiv_def      : input userData [int] pivot pressure 
-# rpiv_def      : input userData [int] pivot radius 
-# location      : input userData [str] casing/shaft/inside for the starting point of the reccurence algorithm for the static pressure
-# interpolation : input userData [str] option for interpolation between computed azimutal radius and real radius of the outBlock mesh
+    # t             : input          [CGNS tree] FastS
+    # nbBlock       : input userData [int] total number of blocks
+    # outBlock      : input userData [int] name of the upstream block
+    # omega         : input userData [int] rotational speed in rad/s
+    # nbband        : input userData [int] number of slices of azimutal average
+    # c             : input userData [int] ?????
+    # ppiv_def      : input userData [int] pivot pressure
+    # rpiv_def      : input userData [int] pivot radius
+    # location      : input userData [str] casing/shaft/inside for the starting point of the reccurence algorithm for the static pressure
+    # interpolation : input userData [str] option for interpolation between computed azimutal radius and real radius of the outBlock mesh
 
-#~ ====================
+    #~ ====================
     #from etc.post  import AzimutalAverage2D, AzimutalAverage3D
-#~ ====================
+    #~ ====================
 
     tinit = t
 
 # ====================================================================================================
-#  STEP1 = rhoVtheta calculus 
+#  STEP1 = rhoVtheta calculus
 # ====================================================================================================
     rhoVtheta(t, nbBlock, outBlock, omega)                                                          #3D calculates rhoVtheta and creates the node
     printStep('STEP1 = rhoVtheta calculus DONE' )
 # =====================================================================================================
-#  STEP2 = azimutal average calculus = * 
+#  STEP2 = azimutal average calculus = *
 # =====================================================================================================
     #t2average = azimAverage2D(t, nbband, c)                                                                #2D azim average
 
@@ -1430,37 +1430,37 @@ def addOutradeq2FastS(t, nbBlock,  outBlock, omega,  nbband, c, ppiv_def, rpiv_d
 
     printStep('STEP2 = azimutal average calculus = * DONE' )
 # ======================================================================================================
-#  STEP3 =  interpolation from azim average * 
+#  STEP3 =  interpolation from azim average *
 # =======================================================================================================
-    #t3 = interpolationAzim(t2average, tinit, interpolation)                
+    #t3 = interpolationAzim(t2average, tinit, interpolation)
     printStep('STEP3 =  interpolation from azim average * DONE' )
 # ========================================================================================================
-#  STEP4 =  Radial equilibrium 
-# ========================================================================================================                                                      
+#  STEP4 =  Radial equilibrium
+# ========================================================================================================
     t4 = RadEq(t3, ppiv_def, rpiv_def, zone = location)                             #1D
     printStep('STEP4 =  Radial equilibrium DONE' )
 # ========================================================================================================
-#  STEP5 =  azimutal extension/carto creation                            
+#  STEP5 =  azimutal extension/carto creation
 # ========================================================================================================
     data = outradeqExtension(tinit, t4, outBlock)                                           #2D
     CV.convertArrays2File(data,'outradeq.plt','bin_tp')
     CV.convertArrays2File(data,'outradeq.dat')
-    printStep('STEP5 =  azimutal extension DONE' )          
+    printStep('STEP5 =  azimutal extension DONE' )
 
 # ====================================================================================================
 #~ RADIAL EQUILIBRIUM
-# ====================================================================================================          
+# ====================================================================================================
 #~ Update of radial equilibrium
 
 # XXX COMPLETE
 def realRadius1D(t, outBlock):
-#This function calculates the real radius distribution along the span of the outflow block exit
+    #This function calculates the real radius distribution along the span of the outflow block exit
 
-#DATA
-# t         : input          [CGNS tree] FastS  
-# outBlock  : input userData [int] name of the upstream block
+    #DATA
+    # t         : input          [CGNS tree] FastS
+    # outBlock  : input userData [int] name of the upstream block
 
-# radius_1D : return         [1D numpy array] real radial distribution along the span of the outflow block exit
+    # radius_1D : return         [1D numpy array] real radial distribution along the span of the outflow block exit
 
     # Radius at the cell center
     blk_aval = CI.getNodeFromName(t,outBlock)
@@ -1516,14 +1516,14 @@ def avgRadius1D(t, outBlock, nbband, c):
 '''
 # XXX COMPLETE
 def adaptRadius(radius_real, radius_star):
-#we can't interpolate if the data range of r is not include in the r* one => 
-#if rmin <r*min we replace rmin by r*0, #if rmax > r*max we replace rmin by r*max
+    #we can't interpolate if the data range of r is not include in the r* one =>
+    #if rmin <r*min we replace rmin by r*0, #if rmax > r*max we replace rmin by r*max
 
-#DATA
-# radius_real : input  [1D numpy array] real radial distribution along the span of the outflow block exit
-# radius_star : input  [1D numpy array] azimutale averaged radial distribution along the span of the outflow block exit
+    #DATA
+    # radius_real : input  [1D numpy array] real radial distribution along the span of the outflow block exit
+    # radius_star : input  [1D numpy array] azimutale averaged radial distribution along the span of the outflow block exit
 
-# radius_real : return  [1D numpy array] real radial distribution included in  azimutale averaged radial distribution
+    # radius_real : return  [1D numpy array] real radial distribution included in  azimutale averaged radial distribution
 
     nbRad = len(radius_real)
 
@@ -1541,12 +1541,12 @@ def adaptRadius(radius_real, radius_star):
 
 #~ COMPLETE
 def _rhoVthetaUpdate(t, outBlock):
-#This function updates the value of Vt_abs and rhoVt_abs (FlowSolution#Centers) in the outflow block
+    #This function updates the value of Vt_abs and rhoVt_abs (FlowSolution#Centers) in the outflow block
 
-#DATA   
-# t             : input [CGNS tree] FastS
-# nbBlock       : input userData [int] total number of blocks
-# outBlock      : input userData [int] name of the upstream block
+    #DATA
+    # t             : input [CGNS tree] FastS
+    # nbBlock       : input userData [int] total number of blocks
+    # outBlock      : input userData [int] name of the upstream block
 
     zones = CI.getZones(t)
     for zone in zones :
@@ -1607,18 +1607,18 @@ def azimAverage2DUpdate_(t, varlist, dir_avg, outBlock, bctype):
                         else:                 ind_bc[3]= ind_bc[3]-3
                         ind_bc[2]= ind_bc[3]
                         idir = 2
-                    else: 
+                    else:
                         if    ind_bc[5] == 0: ind_bc[5]=           2
                         else:                 ind_bc[5]= ind_bc[3]-3
                         ind_bc[4]= ind_bc[5]
                         idir = 3
 
-                    if   dir_avg==1: 
+                    if   dir_avg==1:
                         size = max(1,(ind_bc[3]-ind_bc[2]))*max(1,(ind_bc[5]-ind_bc[4]))
 
-                    elif dir_avg==2: 
+                    elif dir_avg==2:
                         size = max(1,(ind_bc[1]-ind_bc[0]))*max(1,(ind_bc[5]-ind_bc[4]))
-                    else           : 
+                    else           :
                         size = max(1,(ind_bc[1]-ind_bc[0]))*max(1,(ind_bc[3]-ind_bc[2]))
 
                     if   idir ==1: ind_bc[1] = ind_bc[1] + 1
@@ -1631,7 +1631,7 @@ def azimAverage2DUpdate_(t, varlist, dir_avg, outBlock, bctype):
                         var = CI.getNodeFromName(sol, v)[1]
 
 
-                        if   dir_avg==1: 
+                        if   dir_avg==1:
                             c = 0
                             for k in range(ind_bc[4],ind_bc[5]):
                                 for j in range(ind_bc[2],ind_bc[3]):
@@ -1672,37 +1672,37 @@ def azimAverage2DUpdate_(t, varlist, dir_avg, outBlock, bctype):
 
 # XXX ALMOST c
 def azimAverage2DUpdate(t, nbband, c, radius_star):
-#This function calculates the 2D density and rhoVt absolute azimutale average at the exit of the outflow block
+    #This function calculates the 2D density and rhoVt absolute azimutale average at the exit of the outflow block
 
-#DATA
-# t             : input          [CGNS tree] FastS
-# nbband        : input userData [int] number of slices of azimutal average 
-# c             : input userData [int] ?????
-# radius_star   : input          [1D numpy array] radial repartition of the azimutale averaged radius distribution
+    #DATA
+    # t             : input          [CGNS tree] FastS
+    # nbband        : input userData [int] number of slices of azimutal average
+    # c             : input userData [int] ?????
+    # radius_star   : input          [1D numpy array] radial repartition of the azimutale averaged radius distribution
 
-# tree          : return         [CGNS tree] new tree with the azimutale average of rho and rhoVt absolute
+    # tree          : return         [CGNS tree] new tree with the azimutale average of rho and rhoVt absolute
 
-#~ ====================
+    #~ ====================
     from etc.post  import AzimutalAverage2D, AzimutalAverage3D
-    from   mpi4py import MPI 
-    import etc.toolbox.internal  as tgi 
+    from   mpi4py import MPI
+    import etc.toolbox.internal  as tgi
     import Converter.Array3D as CA
 #~ ====================
 
-    variables    = ["Density", "rhoVt_abs"]         
+    variables    = ["Density", "rhoVt_abs"]
 
 #~ -------------------------------------------------------------------------------
     # Azimean 2D extraction from 3D to 2D only the outblow block
     CellCenter   = CI.__FlowSolutionCenters__ = 'FlowSolution#Centers'
-    bc           = tgi.renameBC(CP.extractBCOfName(t, 'FamilySpecified:Aval'))  
+    bc           = tgi.renameBC(CP.extractBCOfName(t, 'FamilySpecified:Aval'))
     bc           = tgi.keepNodesByNameAndType(bc, [CellCenter], 'FlowSolution_t')
-#~ -------------------------------------------------------------------------------      
+#~ -------------------------------------------------------------------------------
 
     azm          = AzimutalAverage2D(bc)
     wbsum, sbsum = azm.compute(variables, fsname=CellCenter, nbband=nbband, c=c)
 
 
-    # Creation of the tree 
+    # Creation of the tree
     tree    = CI.newCGNSTree()
     base    = CI.newCGNSBase('Base', 3, 3, parent=tree)
     zone    = CI.newZone('Zone',[[wbsum.shape[0]],[0],[0]],  'Structured', parent=base)
@@ -1714,18 +1714,18 @@ def azimAverage2DUpdate(t, nbband, c, radius_star):
         node = CI.createNode(v,'DataArray_t',value=wbsum[:,variables.index(v)])
         CI.addChild(flowSol,node)
 
-    radius_starNode = CI.createNode('radius_star','DataArray_t',value=radius_star) 
+    radius_starNode = CI.createNode('radius_star','DataArray_t',value=radius_star)
     CI.addChild(flowSol,radius_starNode)
 
     return tree
 
 # XXX COMPLETE
 def dpdr_starCalculus(tAverage):
-# This function calculates the 1D azimutale averaged derivative of the pressure with respect to the averaged radius
+    # This function calculates the 1D azimutale averaged derivative of the pressure with respect to the averaged radius
 
-#DATA
-# tAverag    : input  [CGNS tree] tree with the azimutale average of rho and rhoVt absolute
-# dpdr_star  : return [1D numpy array] azimutale averaged derivative of the pressure with respect to the averaged radius
+    #DATA
+    # tAverag    : input  [CGNS tree] tree with the azimutale average of rho and rhoVt absolute
+    # dpdr_star  : return [1D numpy array] azimutale averaged derivative of the pressure with respect to the averaged radius
 
     def dpdr(rhoVtheta, density, radius):   return (rhoVtheta**2)/(radius*density)
 
@@ -1735,37 +1735,37 @@ def dpdr_starCalculus(tAverage):
     return dpdr_star
 
 # XXX COMPLETE
-def interpolationAzimUpdate(radius_star, dpdr_star, radius_real, interpolation='linear'): 
-#This function interpolates the azimutale averaged derivative of the pressure from an azimutale averaged radius repartition 
-#to the real derivative of the pressure with respect to the real radius distribution
+def interpolationAzimUpdate(radius_star, dpdr_star, radius_real, interpolation='linear'):
+    #This function interpolates the azimutale averaged derivative of the pressure from an azimutale averaged radius repartition
+    #to the real derivative of the pressure with respect to the real radius distribution
 
-#DATA
-# radius_star   : input          [1D numpy array] azimutale averaged radial distribution along the span of the outflow block exit
-# dpdr_star     : input          [1D numpy array] azimutale averaged derivative of the pressure with respect to the averaged radius
-# radius_real   : input          [1D numpy array] real radial distribution along the span of the outflow block exit
-# interpolation : input userData [str] option for interpolation between computed azimutal radius and real radius of the outBlock mesh
+    #DATA
+    # radius_star   : input          [1D numpy array] azimutale averaged radial distribution along the span of the outflow block exit
+    # dpdr_star     : input          [1D numpy array] azimutale averaged derivative of the pressure with respect to the averaged radius
+    # radius_real   : input          [1D numpy array] real radial distribution along the span of the outflow block exit
+    # interpolation : input userData [str] option for interpolation between computed azimutal radius and real radius of the outBlock mesh
 
-# dpdr          : return         [1D numpy array] real derivative of the pressure with respect to the real radius distribution
+    # dpdr          : return         [1D numpy array] real derivative of the pressure with respect to the real radius distribution
 
     print('interpolate not available')
     #f_dpdr = interpolate.interp1d(radius_star, dpdr_star, kind=interpolation) #interpolation function generator
     #dpdr   = f_dpdr(radius_real)
     dpdr   = 0
 
-    return dpdr     
+    return dpdr
 
 # XXX COMPLETE
-def RadEqUpdateUpdate(dpdr1D, radius_real1D, ppiv_def, rpiv_def, zone = 'inside' ):     
-#This function calculates the radial pressure distribution according to radial equilibrium (recurrence)
+def RadEqUpdateUpdate(dpdr1D, radius_real1D, ppiv_def, rpiv_def, zone = 'inside' ):
+    #This function calculates the radial pressure distribution according to radial equilibrium (recurrence)
 
-#DATA
-# dpdr1D        : input          [1D numpy array] real derivative of the pressure with respect to the real radius distribution
-# radius_real   : input          [1D numpy array] real radial distribution 
-# ppiv_def      : input userData [int] pivot pressure 
-# rpiv_def      : input userData [int] pivot radius 
-# zone          : input userData [str] casing/shaft/inside for the starting point of the reccurence algorithm for the static pressure
+    #DATA
+    # dpdr1D        : input          [1D numpy array] real derivative of the pressure with respect to the real radius distribution
+    # radius_real   : input          [1D numpy array] real radial distribution
+    # ppiv_def      : input userData [int] pivot pressure
+    # rpiv_def      : input userData [int] pivot radius
+    # zone          : input userData [str] casing/shaft/inside for the starting point of the reccurence algorithm for the static pressure
 
-# pArray        : return         [1D numpy array] presure distribution along the span
+    # pArray        : return         [1D numpy array] presure distribution along the span
 
     radius   = radius_real1D
     dpsdr    = dpdr1D
@@ -1799,7 +1799,7 @@ def RadEqUpdateUpdate(dpdr1D, radius_real1D, ppiv_def, rpiv_def, zone = 'inside'
 
         for i in range(nb_rad-indPiv-1):  #from piv to the casing
 
-            ind = indPiv + i  
+            ind = indPiv + i
             p_next = p[i] + 0.5*(dpsdr[ind] + dpsdr[ind+1])*(radius[ind+1]-radius[ind])
             p.append(p_next)
 
@@ -1838,17 +1838,17 @@ def outradeqExtensionUpdate_(t, outBlock, press1D, dir, nb_avg, iteration, displ
 
 # XXX COMPLETE
 def outradeqExtensionUpdate(tinit, outBlock,  radius1D, press1D, iteration, display = 100000000):
-#This function transforms p(r) in p(r,theta) , from 1D to 2D and save the results every "display"
+    #This function transforms p(r) in p(r,theta) , from 1D to 2D and save the results every "display"
 
-#DATA
-# tinit         : input          [CGNS tree] initial tree with the outflow block
-# outBlock      : input userData [int] name of the upstream block
-# radius1D      : input          [1D numpy array] real radial distribution 
-# press1D       : input          [1D numpy array] 1D presure distribution along the span
-# iteration     : input          [int] number of iteration
-# display       : input userData [int] data save parameter, save the 2D pressure field every "display"
+    #DATA
+    # tinit         : input          [CGNS tree] initial tree with the outflow block
+    # outBlock      : input userData [int] name of the upstream block
+    # radius1D      : input          [1D numpy array] real radial distribution
+    # press1D       : input          [1D numpy array] 1D presure distribution along the span
+    # iteration     : input          [int] number of iteration
+    # display       : input userData [int] data save parameter, save the 2D pressure field every "display"
 
-# prt           : return         [2D numpy array] 2D presure distribution along the span
+    # prt           : return         [2D numpy array] 2D presure distribution along the span
 
 
     import Converter.Array3D as CA
@@ -1858,8 +1858,8 @@ def outradeqExtensionUpdate(tinit, outBlock,  radius1D, press1D, iteration, disp
     #1D data distribution to extend in 2D
     # ####################################################################
 
-    ra = radius1D                                   
-    pa = press1D                                                    
+    ra = radius1D
+    pa = press1D
 
     nr = km-5                                                                                               # nb of points in  radial direction (-1 because cell centered)
     nt = jm-5                                                                                               # nb of points in  azimutal direction (-1 because cell centered)
@@ -1874,7 +1874,7 @@ def outradeqExtensionUpdate(tinit, outBlock,  radius1D, press1D, iteration, disp
     thetaNode = CI.getNodeFromName(zone, 'theta')            #3D
 
     theta = CI.getValue(thetaNode)
-    theta2D = theta[im-2, :, :].transpose()                          #extraction 2D slice : at imax = outflow  
+    theta2D = theta[im-2, :, :].transpose()                          #extraction 2D slice : at imax = outflow
 
     # ####################################################################
     # Transforms p(r) in p(r,theta)
@@ -1908,50 +1908,50 @@ def outradeqExtensionUpdate(tinit, outBlock,  radius1D, press1D, iteration, disp
 
 #~ XXX ALMOST c
 def _updateOutradeq2FastS(iteration, t, rad_real1D, rad_star1D,  nbBlock,  outBlock, omega,   nbband, c, ppiv_def, rpiv_def, location ='inside', interpolation = 'linear', display=100000000 ):
-#This function updates the 2D pressure field of the outflow block (.Solver#Property) according to the radial equilibrium
+    #This function updates the 2D pressure field of the outflow block (.Solver#Property) according to the radial equilibrium
 
-#DATA   
-#~ There are 3 options : casing (requires only the pressure at the casing, the radius is calculated)
-#~                                           shaft(requires only the pressure at the shaft, the radius is calculated)
-#~                                           inside(requires the pressure ans the radius)  in any case, the value of radius is set at 0 if not given
+    #DATA
+    #~ There are 3 options : casing (requires only the pressure at the casing, the radius is calculated)
+    #~                                           shaft(requires only the pressure at the shaft, the radius is calculated)
+    #~                                           inside(requires the pressure ans the radius)  in any case, the value of radius is set at 0 if not given
 
-# iteration     : input userData [int] ????
-# t             : input          [CGNS tree] FastS
-# rad_real1D    : input              [1D numpy array] real radial distribution along the span of the outflow block exit
-# radius_star   : input          [1D numpy array] azimutale averaged radial distribution along the span of the outflow block exit
-# nbBlock       : input userData [int] total number of blocks
-# outBlock      : input userData [int] name of the upstream block
-# omega         : input userData [int] rotational speed in rad/s 
-# nbband        : input userData [int] number of slices of azimutal average 
-# c             : input userData [int] ?????
-# ppiv_def      : input userData [int] pivot pressure 
-# rpiv_def      : input userData [int] pivot radius 
-# location      : input userData [str] casing/shaft/inside for the starting point of the reccurence algorithm for the static pressure
-# interpolation : input userData [str] option for interpolation between computed azimutal radius and real radius of the outBlock mesh
-# display       : input userData [int] data save parameter, save the 2D pressure field every "display"
+    # iteration     : input userData [int] ????
+    # t             : input          [CGNS tree] FastS
+    # rad_real1D    : input              [1D numpy array] real radial distribution along the span of the outflow block exit
+    # radius_star   : input          [1D numpy array] azimutale averaged radial distribution along the span of the outflow block exit
+    # nbBlock       : input userData [int] total number of blocks
+    # outBlock      : input userData [int] name of the upstream block
+    # omega         : input userData [int] rotational speed in rad/s
+    # nbband        : input userData [int] number of slices of azimutal average
+    # c             : input userData [int] ?????
+    # ppiv_def      : input userData [int] pivot pressure
+    # rpiv_def      : input userData [int] pivot radius
+    # location      : input userData [str] casing/shaft/inside for the starting point of the reccurence algorithm for the static pressure
+    # interpolation : input userData [str] option for interpolation between computed azimutal radius and real radius of the outBlock mesh
+    # display       : input userData [int] data save parameter, save the 2D pressure field every "display"
 
-# t             : return [CGNS tree] the starting tree with the updated pressure field at the exit 
+    # t             : return [CGNS tree] the starting tree with the updated pressure field at the exit
 
     #tinit = t
 
 
-# ====================================================================================================
-#  STEP1 = rhoVtheta calculus 
-# ====================================================================================================
+    # ====================================================================================================
+    #  STEP1 = rhoVtheta calculus
+    # ====================================================================================================
     #printStep('STEP1 = rhoVtheta calculus Processing' )
     _rhoVthetaUpdate(t, outBlock)                                                                                      #3D
     #printStep('STEP1 = rhoVtheta calculus DONE' )
 # =====================================================================================================
-#  STEP2 = azimutal average calculus = * 
+#  STEP2 = azimutal average calculus = *
 # =====================================================================================================
     #tAverage = azimAverage2DUpdate(t, nbband, c, rad_star1D)       #2D azim average
     dir = 2    # on moyenne suivant l'indice j
     bctype = 'BCOutpres'
     varlist=['Vt_abs','Density','Radius']
 
-    var_avg = azimAverage2DUpdate_(t, varlist, dir, outBlock, bctype )      
+    var_avg = azimAverage2DUpdate_(t, varlist, dir, outBlock, bctype )
 
-    #print 'Variable moyennee',var_avg                              
+    #print 'Variable moyennee',var_avg
     #CI.printTree(tAverage)
 
     #printStep('STEP2 = azimutal average calculus = * DONE' )
@@ -1968,23 +1968,23 @@ def _updateOutradeq2FastS(iteration, t, rad_real1D, rad_star1D,  nbBlock,  outBl
     dpdr_real1D = numpy.empty(vt_abs.size, numpy.float64)
     dpdr_real1D[0:]= vt_abs[0:]*vt_abs[0:]*density[0:]/radius[0:]
 
-    #printStep('STEP3 =  interpolation from azim average * DONE' )                
+    #printStep('STEP3 =  interpolation from azim average * DONE' )
 # ======================================================================================================
-#  STEP4 = radial equilibrium 
-# ======================================================================================================                                                        
+#  STEP4 = radial equilibrium
+# ======================================================================================================
     #press1D = RadEqUpdateUpdate(dpdr_real1D, rad_real1D, ppiv_def, rpiv_def, zone = location )      #1D
     press1D = RadEqUpdateUpdate(dpdr_real1D, radius, ppiv_def, rpiv_def, zone = location )      #1D
-        #print('press_carter=',press1D[87])
+    #print('press_carter=',press1D[87])
     #printStep('STEP4 =  Radial equilibrium DONE' )
 # ======================================================================================================
-#  STEP5 =  azimutal extension/carto creation                            
+#  STEP5 =  azimutal extension/carto creation
 # ======================================================================================================
     #press2D = outradeqExtensionUpdate(tinit, outBlock,  rad_real1D, press1D, iteration)                                      #2D
     press2D = outradeqExtensionUpdate_(t, outBlock, press1D, dir, var_avg[0][3], iteration)                                   #2D
-        #print press2D.size
+    #print press2D.size
     #printStep('STEP5 =  azimutal extension DONE' )
 # ======================================================================================================
-#  STEP6 =  2D pressure setting                           
+#  STEP6 =  2D pressure setting
 # ======================================================================================================
     zones = CI.getZones(t)
     for zone in zones:
@@ -2005,4 +2005,3 @@ def _updateOutradeq2FastS(iteration, t, rad_real1D, rad_star1D,  nbBlock,  outBl
     #printStep('STEP6 =  2D pressure setting DONE' )
 
     return None
-

@@ -31,7 +31,7 @@ I._initConst(t, MInf=MInf, loc='centers')
 C._addState(t, 'GoverningEquations', 'Euler')
 C._addState(t, MInf=MInf)
 
-numb = {'temporal_scheme':'explicit', 'ss_iteration':20} 
+numb = {'temporal_scheme':'explicit', 'ss_iteration':20}
 numz = {'time_step':0.0007*2., 'scheme':'ausmpred'}
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 

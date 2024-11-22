@@ -67,7 +67,7 @@ linsert=False
 outline0='     &  ,'
 c=0
 for var in vars:
-    #outline0+=var+' ,' 
+    #outline0+=var+' ,'
     outline0='     &                        ,'+var+' \n'
     lines.insert(c_insert0,outline0)
     c_insert0+=1
@@ -91,7 +91,7 @@ if Init =='yes':
     include ='#include       "FastS/BC/'+bcname+'_init.for"  \n'
     lines.insert(c_insert2, include)
 
-fout = dico[ bcname ]['name']+'.for' 
+fout = dico[ bcname ]['name']+'.for'
 fo = open(fout,"w")                  # ouvrir le fichier de sortie
 print(bcname,' Scheme: file',fout, 'generated')
 
@@ -101,7 +101,7 @@ for i in range( len(lines) ):
         new_bc = bcname
         if 'next rank' in lines[i] and nextrank !='vide': new_bc=nextrank
         lines[i]=lines[i].replace("BCTarget", new_bc)
-        if new_bc !='vide': 
+        if new_bc !='vide':
             lines[i]=lines[i].replace(" !next rank", '')
             #lines_del.append(i-2)
             #lines_del.append(i-1)
@@ -116,4 +116,3 @@ for i in lines_del:
 
 for l in lines: fo.write(l)
 fo.close()                               # fermer le fichier output global
-

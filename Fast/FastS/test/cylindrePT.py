@@ -9,7 +9,7 @@ import FastS.PyTree as FastS
 import Connector.PyTree as X
 import Converter.Internal as Internal
 import Transform.PyTree as T
-import KCore.Adim as Adim 
+import KCore.Adim as Adim
 
 varsN = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
 
@@ -26,7 +26,7 @@ t = T.addkplane(t)
 # Chimera
 t = X.applyBCOverlaps(t, depth=2)
 tc = C.node2Center(t)
-tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse', 
+tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse',
                      sameName=1, penalty=1, method='leastsquares', dim=2)
 C._rmVars(tc, 'cellN') # tres important pour l'instant
 #C.convertPyTree2File(tc, 'centers.cgns')

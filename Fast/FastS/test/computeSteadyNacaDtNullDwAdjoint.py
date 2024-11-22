@@ -94,16 +94,16 @@ for it in range(NIT):
     if it%modulo_verif == 0:
         print('- %d / %d '%(it+it0, NIT+it0))
         surfinv = 1/(corde*span)
-        FastS.display_temporal_criteria(t_m129, metrics, it, format='double')	
+        FastS.display_temporal_criteria(t_m129, metrics, it, format='double')
         eff      = FastS._computeStress(t_m129, t_eff, metrics)
 #        eff      = FastS._computeStress(t_m129, t_eff, metrics,cosAoA,sinAoA,surfinv,0)
         drag = (eff[0]*cosAoA+eff[1]*sinAoA)/(corde*span)
-        lift = (eff[1]*cosAoA-eff[0]*sinAoA)/(corde*span)        
+        lift = (eff[1]*cosAoA-eff[0]*sinAoA)/(corde*span)
         print('it, lift, drag:', it+it0, lift, drag)
         line="{0} {1} {2} \n".format(it+it0,lift,drag)
         f.write(line)
         f.flush()
-#eff2 = FastS._computeStress(t_m129, t_eff, metrics,1)		
+#eff2 = FastS._computeStress(t_m129, t_eff, metrics,1)
 #eff2 = FastS._computeStress(t_m129, t_eff, metrics,cosAoA,sinAoA,surfinv,1)
 eff2 = FastS._compute_dpJ_dpW(t_m129, t_eff, metrics, cosAoA, sinAoA, surfinv)
 #eff2 = FastS._computeAdjoint(t_m129, t_eff, metrics, cosAoA, sinAoA, surfinv, 1)
@@ -124,9 +124,9 @@ print('Q2Inf = %f , Href = %f'%(Q2Inf,Href))
 #%f(C.isNamePresent(t_eff,'centers:CoefPressure')):
 #        print C.getValue( t_eff, 'centers:CoefPressure', 0 )
 #      	 C._initVars(t_eff,'{centers:errh}=abs({centers:CoefPressure}-%f)/%f'%(Href,Href))
-#	 errtot = P.integ(t_eff,'centers:errh') 
+#	 errtot = P.integ(t_eff,'centers:errh')
 #	 print 'erreur relative sur enthalpie totale :', errtot[0]/span
-#	 Internal.createUniqueChild(t_eff, 'ErreurEnthalpie', 'DataArray_t', value=errtot[0])       
+#	 Internal.createUniqueChild(t_eff, 'ErreurEnthalpie', 'DataArray_t', value=errtot[0])
 
 #===================================================================================
 

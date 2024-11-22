@@ -15,7 +15,7 @@ angley = angle
 anglez = 0.
 
 #grille cylindrique d'axe Z
-a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5)) 
+a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5))
 
 #rotation: grille cylindrique d'axe Y
 b = T.rotate(a, (0.,0.,0.), (1.,0.,0.), 90.); b[0] = 'cart'

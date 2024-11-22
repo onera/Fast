@@ -34,11 +34,11 @@ models  = [ 'bvbs_extrapolate',
             'bvbs_inflow_newton']
 
 
-# 
+#
 #open file for sources compilation
 srcs= open('../../srcs.py','r')
 lines_srcs = srcs.readlines()
-srcs.close() 
+srcs.close()
 srcs= open('../../srcs.py','w')
 
 for model  in models:
@@ -69,13 +69,13 @@ for model  in models:
     #supression operation sur drodm
     c = 0
     for l in lines:
-        if var_out+'(l' in l: 
+        if var_out+'(l' in l:
             test_line = l.split('=')
             if var_out+'(l' in test_line[0] and '=' in l:
                 c1=0
                 c2 = min ( len(lines)-1, c+c1+1)
                 col =min ( len(lines[c2])-1, 5 )
-                while '+' == lines[c2][col]: 
+                while '+' == lines[c2][col]:
                     c1+=1
                     c2 = min ( len(lines)-1, c+c1+1)
                     col =min ( len(lines[c2])-1, 5 )
@@ -91,15 +91,15 @@ for model  in models:
     #modif makefile
     target = tapenade_file
     include = True
-    for l in lines_srcs: 
+    for l in lines_srcs:
         if target in l: include = False
     srcs_out=[]
-    if include == True: 
+    if include == True:
         #recherche la fonction originelle avant passage tapenade
         input_file  = model+'.for'
         c_index =0
         c = 0
-        for l in lines_srcs: 
+        for l in lines_srcs:
             if 'FastS/BC/'+input_file in l: c_index = c
             c+=1
         c_index +=1
@@ -112,5 +112,4 @@ for model  in models:
 
 #write of srcs.py
 for l in lines_srcs: srcs.write(l)
-srcs.close() 
-
+srcs.close()

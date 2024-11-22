@@ -30,7 +30,7 @@ for z in zones:
     matchs  =  Internal.getNodesFromType1(connect, 'GridConnectivity1to1_t')
     for match in matchs:
         rg =  Internal.getNodeFromName1(match, 'PointRange')[1]
-        win=[rg[0,0],rg[0,1],rg[1,0],rg[1,1], rg[2,0],rg[2,1] ] 
+        win=[rg[0,0],rg[0,1],rg[1,0],rg[1,1], rg[2,0],rg[2,1] ]
         C._addBC2Zone(z, 'racinf', 'BCRacinf', win)
 
 C._addBC2Zone(t,'wall','BCWall','jmin')
@@ -77,7 +77,7 @@ FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 (t,  tc, metrics) = FastS.warmup(t, tc )
 
 # Compute
-for it in range(1,40): 
+for it in range(1,40):
     FastS._compute(t, metrics, it, tc)
     if it%modulo_verif == 0:
         print('it=%d'%it)

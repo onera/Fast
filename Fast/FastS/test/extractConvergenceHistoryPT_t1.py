@@ -32,10 +32,10 @@ FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
-# Number or records to store residuals 
+# Number or records to store residuals
 nrec = 100//modulo_verif
 
-#To remove old ConvergenceHistory nodes 
+#To remove old ConvergenceHistory nodes
 C._rmNodes(t, "ZoneConvergenceHistory")
 
 #Convergence history with nrec records
@@ -47,7 +47,7 @@ time_step = Internal.getValue(time_step)
 for it in range(nit):
     FastS._compute(t, metrics, it, tc)
     if it%modulo_verif == 0:
-        	FastS._displayTemporalCriteria(t, metrics, it, format='store')
+       	FastS._displayTemporalCriteria(t, metrics, it, format='store')
     time += time_step
 
 # Compute global residuals

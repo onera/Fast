@@ -97,9 +97,9 @@ X={}
 Y={}
 map2d={}
 
-for k in data.keys():   
-#   ni       = data[k].shape[2]
-#   nj       = data[k].shape[3]
+for k in data.keys():
+    #   ni       = data[k].shape[2]
+    #   nj       = data[k].shape[3]
     ni       = data[k].shape[1]
     nj       = data[k].shape[2]
     X[k]     = np.empty([ni,nj],dtype=float)
@@ -113,7 +113,7 @@ lev=np.arange(1.0,maxval,0.01)
 for k in data.keys():
     for i in xrange(0,data[k].shape[1]):
         for j in xrange(0,data[k].shape[2]):
-#            map2d[k][i,j]=data[k][1,0,i,j,0]/ref*10**6*data[k][2,0,i,j,0]
+            #            map2d[k][i,j]=data[k][1,0,i,j,0]/ref*10**6*data[k][2,0,i,j,0]
             map2d[k][i,j]=data[k][4,i,j]/ref*10**6
             if(map2d[k][i,j]>=lev[-1]):map2d[k][i,j]=lev[-1]
             X[k][i,j]    =data[k][1,i,j]
@@ -164,42 +164,42 @@ if(Iplt+Jplt==0):
 
 else:
     kcolors = 5
-    if(Iplt!=0):        
+    if(Iplt!=0):
         for k,value in sorted(data.items()):
             kcolors = kcolors + 20
             ipos = np.argwhere(X[k][:,0]==Iplt)
-            if len(ipos) == 0: 
+            if len(ipos) == 0:
                 print("I position not found for case "+k+", X is ",X[k][:,0])
-                sys.exit()                
+                sys.exit()
             ipos = np.squeeze(ipos)
             print(map2d[k][ipos,:])
-            plt.plot(Y[k][ipos,:],map2d[k][ipos,:],                                                                                                             
-                 marker='o',                                                                                                                    
-                 markersize=10,                                                                                                                 
-                 linewidth=2,                                                                                                                    
-                 linestyle='-',     
-                 label=k+", Constant Size I ="+str(Iplt),
-                 color=scalarMap.to_rgba(kcolors)[0:3])  
+            plt.plot(Y[k][ipos,:],map2d[k][ipos,:],
+                     marker='o',
+                     markersize=10,
+                     linewidth=2,
+                     linestyle='-',
+                     label=k+", Constant Size I ="+str(Iplt),
+                     color=scalarMap.to_rgba(kcolors)[0:3])
         plt.xlabel('Size J',fontsize=25)
     else:
         for k,value in sorted(data.items()):
             kcolors = kcolors + 20
             jpos = np.argwhere(Y[k][0,:]==Jplt)
-            if len(jpos) == 0: 
+            if len(jpos) == 0:
                 print("J position not found for case "+k+", Y is ",Y[k][0,:])
-                sys.exit()                
+                sys.exit()
             jpos = np.squeeze(jpos)
-            plt.plot(X[k][:,jpos],map2d[k][:,jpos],                                                                                                             
-                     marker='o',                                                                                                                    
-                     markersize=10,                                                                                                                 
-                     linewidth=2,                                                                                                                    
-                     linestyle='-',     
+            plt.plot(X[k][:,jpos],map2d[k][:,jpos],
+                     marker='o',
+                     markersize=10,
+                     linewidth=2,
+                     linestyle='-',
                      label=k+", Constant Size J ="+str(Jplt),
-                     color=scalarMap.to_rgba(kcolors)[0:3])          
+                     color=scalarMap.to_rgba(kcolors)[0:3])
         plt.xlabel('Size I',fontsize=25)
     axes = plt.gca()
 #    axes.set_ylim([1,maxval])
-#    axes.set_xlim([6,505])       
+#    axes.set_xlim([6,505])
 
     plt.ylabel("Performance ratio / "+str(ref)+"$\mu s$",fontsize=25)
 

@@ -11,10 +11,10 @@ import KCore.test as test
 
 angle = 20.
 anglex = angle
-angley = 0.    
+angley = 0.
 anglez = 0.
 
-a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5)) 
+a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5))
 b = T.rotate(a, (0.,0.,0.), (0.,1.,0.), 90.); b[0] = 'cart'
 t = C.newPyTree(['Base',b])
 C._addState(t, 'GoverningEquations', 'NSLaminar')

@@ -24,11 +24,11 @@ t = T.splitNParts(t, 2)
 
 t = X.connectMatch(t,dim=3)
 
-Internal._adaptNFace2PE(t, remove=False) 
+Internal._adaptNFace2PE(t, remove=False)
 
 #
 ncouche =2
-t = GC.addGhostCellsNG(t, nlayers=ncouche) 
+t = GC.addGhostCellsNG(t, nlayers=ncouche)
 
 mach = 0.7
 C._addState(t, 'GoverningEquations', 'NSLaminar')
@@ -79,7 +79,7 @@ C._initVars(t, '{centers:VelocityY} = {centers:VelocityY} + 1.')
 
 # Time Steps
 nit =  25  ; time = 0.
-for it in range(nit): 
+for it in range(nit):
     Fast._compute(t, metrics,  nit, tc,layer='C')
 
     if it%5==0:
@@ -91,4 +91,3 @@ C.convertPyTree2File(t, 'out.cgns')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)
-

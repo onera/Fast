@@ -1,6 +1,6 @@
-# Entree: 
+# Entree:
 # - un maillage 2D (un seul plan) multibloc
-# - ou un maillage 3D multibloc 
+# - ou un maillage 3D multibloc
 # avec BCs + raccords + (solution initiale et/ou Reference State)
 # Sortie: t.cgns et tc.cgns pour compute.py
 
@@ -49,7 +49,7 @@ t = Cmpi.convert2PartialTree(t)
 
 t = Internal.addGhostCells(t, t, NGhostCells, adaptBCs=1, fillCorner=0)
 dim =3
-if dim == 2: 
+if dim == 2:
     t = T.addkplane(t)
     t = T.contract(t, (0,0,0), (1,0,0), (0,1,0), 0.01)
     t = T.makeDirect(t)
@@ -68,13 +68,13 @@ tcyl_RS  ={}
 info_PtlistRebuild={}
 
 
-for etage in etages: 
-    tmp     = Internal.newCGNSBase(etage) 
+for etage in etages:
+    tmp     = Internal.newCGNSBase(etage)
     base    = Internal.getNodeFromName(t, etage)
-    zones   = TBX.ZonePrecond( base , NGhostCells, info_PtlistRebuild ) 
+    zones   = TBX.ZonePrecond( base , NGhostCells, info_PtlistRebuild )
     tmp[2] += zones
     T._cart2Cyl(tmp,(XC0,YC0,ZC0),(AXISX,AXISY,AXISZ))
-    tcyl_RS[etage]= tmp 
+    tcyl_RS[etage]= tmp
     tc            = C.node2Center(tmp)
     tc_RS[etage]  = tc
 
@@ -87,7 +87,7 @@ print('Nbre de pas de temps a calculer: ', TimeLevelPerio)
 print('Calcul des raccord', etages, ' entre les pas de temps ', IT_DEB,' et ', IT_FIN)
 
 THETARAD= THETADEG*math.pi/180.
-DTHETA  = THETARAD/float(TimeLevelPerio) 
+DTHETA  = THETARAD/float(TimeLevelPerio)
 
 tc_out= TBX.setInterpDataRS( tcyl_RS , tc_RS, THETARAD, DTHETA, IT_DEB, IT_FIN, info_PtlistRebuild,  (XC0,YC0,ZC0), (AXISX,AXISY,AXISZ) )
 
@@ -95,7 +95,7 @@ tc_out= TBX.setInterpDataRS( tcyl_RS , tc_RS, THETARAD, DTHETA, IT_DEB, IT_FIN, 
 #ajout du noeud State pour RANS/LES
 U0= 140.001
 P0= 89280.81
-L0=1.  
+L0=1.
 R0=1.111711
 T0=279.15
 Model = 'NSTurbulent'

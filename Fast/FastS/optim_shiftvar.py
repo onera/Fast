@@ -26,7 +26,7 @@ else:
     import FastS.PyTree as FastS
     rank=0
 
-runs         =  5   
+runs         =  5
 NIT_internal = 10
 
 CacheI       =128
@@ -81,9 +81,9 @@ sample = len(shifttab)
 
 for size in sizeIJK:
 
-    sizeI= size[0]+5 
-    sizeJ= size[1]+5 
-    sizeK= size[2]+5 
+    sizeI= size[0]+5
+    sizeJ= size[1]+5
+    sizeK= size[2]+5
     if size[2] == 1:
         sizeK= 2
 
@@ -95,7 +95,7 @@ for size in sizeIJK:
     f.close
 
 
-    timeshift=ny.zeros(len(shifttab), ny.float64) 
+    timeshift=ny.zeros(len(shifttab), ny.float64)
 
 
     print("#########################"+'\n')
@@ -121,7 +121,7 @@ for size in sizeIJK:
             for k in range(shape[2]):
                 x[4,4,k]+=0.00001
 
-    time20   = ny.empty(sample*runs, ny.float64 )    
+    time20   = ny.empty(sample*runs, ny.float64 )
     for run in range(runs):
         itshift=0
         for shift in shifttab:
@@ -158,7 +158,7 @@ for size in sizeIJK:
             (t,tc, metrics)  = FastS.warmup(t,tc=None)
 
             scale=1.0/(sizeK-5)/(sizeI-5)/(sizeJ-5)/ss_iteration*int(Nbthread)
-            # Compute 
+            # Compute
             t0=timeit.default_timer()
             FastS._compute(t, metrics,  0, tc=None, NIT=NIT_internal)
             t1=timeit.default_timer()
@@ -177,7 +177,7 @@ for size in sizeIJK:
 
             timeshift[itshift]+=time20[ itshift + run*sample       ]/float(runs)
 
-            itshift=itshift+1            
+            itshift=itshift+1
 
     filename='scanPadding_'+str(sizeI-5)+'_'+str(sizeJ-5)+'_'+str(sizeK-5)+'.dat'
     f = open(filename, 'w')
@@ -188,7 +188,7 @@ for size in sizeIJK:
             line =line +'  '+ str( time20[itshift+sample*r ] )
         line =line + '  '+ str( timeshift[itshift] )
         f.write(line+'\n')
-        itshift+=1            
+        itshift+=1
     f.close()
 
     f = open('Padding.dat', 'a')

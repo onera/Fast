@@ -47,7 +47,7 @@ libraries = ["MetricF", "ComputeF", "kcore", "fastc"]
 (ok, libs, paths) = Dist.checkFortranLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
-libraryDirs += paths; libraries += libs    
+libraryDirs += paths; libraries += libs
 
 # Extensions ==================================================================
 import srcs
@@ -71,7 +71,7 @@ setup(
     package_dir={"":"."},
     packages=['FastS'],
     ext_modules=listExtensions
-    )
+)
 
 # Check PYTHONPATH ===========================================================
 Dist.checkPythonPath(); Dist.checkLdLibraryPath()

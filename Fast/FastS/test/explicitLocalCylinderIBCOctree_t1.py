@@ -120,7 +120,7 @@ if explicit_select == "explicit_local":
                 node = Internal.createNode('PointPivot', 'IndexArray_t', value=[0,0,0], children=[])
                 Internal.addChild(z2, node, pos=-1)
                 node = Internal.createNode('Profondeur', 'IndexArray_t', value=[2], children=[])
-                Internal.addChild(z2, node, pos=-1)                
+                Internal.addChild(z2, node, pos=-1)
                 node = Internal.createNode('NMratio', 'IndexArray_t', value=[1,1,1], children=[])
                 Internal.addChild(z2, node, pos=-1)
                 node = Internal.createNode('DnrZoneName', 'IndexArray_t', value=[Internal.getValue(z2)], children=[])
@@ -143,7 +143,7 @@ numz["time_step"]          = dt
 if explicit_select == 'explicit_local':
     numb["temporal_scheme"]= "explicit_local"
 else:
-    numb["temporal_scheme"]= "explicit"   
+    numb["temporal_scheme"]= "explicit"
 
 FastC._setNum2Zones(t, numz)
 FastC._setNum2Base(t, numb)
@@ -168,7 +168,7 @@ nit = 100
 for it in range(nit):
     FastS._compute(t, metrics, nit, tc,layer="Python")
     if it%100 == 0:
-        print('- %d -'%it); 
+        print('- %d -'%it);
         FastS.displayTemporalCriteria(t, metrics, it)
 
 Internal._rmNodesFromName(t, 'Parameter_int')

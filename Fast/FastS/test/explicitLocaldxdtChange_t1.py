@@ -105,19 +105,19 @@ numz["time_step"]          = dt
 if explicit_select == 'explicit_local':
     numb["temporal_scheme"]= "explicit_local"
     numb["rk"]        	   = 3
-    numb["exp_local"]	   = 2 
+    numb["exp_local"]	   = 2
     numz["niveaux_temps"]  = 2 # Explicit local : nbre niveaux en temps (=1 si explicit global)
 else:
-    numb["temporal_scheme"]= "explicit"   
+    numb["temporal_scheme"]= "explicit"
     numz["niveaux_temps"]  = 1 # Explicit local : nbre niveaux en temps (=1 si explicit global)
 
-internal._setNum2Zones(t, numz) 
+internal._setNum2Zones(t, numz)
 internal._setNum2Base(t, numb)
 
 if explicit_select == 'explicit_local':
     zones = Internal.getNodesFromType2(t, 'Zone_t')
-    for z in zones:   
-        solcenter = Internal.getNodeFromName1(z, 'FlowSolution#Centers') 
+    for z in zones:
+        solcenter = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
         niveau = Internal.getNodeFromName(solcenter, 'niveaux_temps')[1][0][0][0]
         dtloc = Internal.getNodeFromName1(z, '.Solver#define')  # noeud
         level = Internal.getNodeFromName1(dtloc, 'niveaux_temps')  # noeud
@@ -152,4 +152,3 @@ test.testT(t, 1)
 ##    #Uncomment below to compare curve in Visit
 ##    t=FastS.rmGhostCells(t,2)
 ##    C.convertPyTree2File(t,"restart_explicit_global.plt")
-

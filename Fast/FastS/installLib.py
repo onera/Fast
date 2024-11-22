@@ -26,6 +26,6 @@ else: # Essai en dynamique
     a = os.access(installPathLocal+"/fasts"+__EXTMODULE__, os.F_OK)
     if a:
         shutil.copyfile(installPathLocal+"/fasts"+__EXTMODULE__,
-                        libPath+"/libfasts"+__EXTSHARED__) 
+                        libPath+"/libfasts"+__EXTSHARED__)
     else:
         print("Error: fasts"+__EXTMODULE__+" can not be found.")

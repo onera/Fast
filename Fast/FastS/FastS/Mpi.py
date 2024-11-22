@@ -62,10 +62,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
             graphInvIBCD = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
         if graphInvIBCD_WM is None:
             graphInvIBCD_WM = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
-    else: 
+    else:
         procDict=None; graphID=None; graphIBCD=None
 
-    own  = Internal.getNodeFromName1(t, '.Solver#ownData')  
+    own  = Internal.getNodeFromName1(t, '.Solver#ownData')
     dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')
 
     zones= Internal.getZones(t)
@@ -94,7 +94,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
     if layer_mode>=1: FastC.HOOK["mpi"] = 1
 
     timelevel_target = int(dtloc[4])
-    tps_cp = Time.time(); tps_cp = tps_cp-tps_cp     
+    tps_cp = Time.time(); tps_cp = tps_cp-tps_cp
     tps_tr = Time.time(); tps_tr = tps_tr-tps_tr
     tps_tr1= Time.time(); tps_tr1= tps_tr1-tps_tr1
     if layer_mode==0 or layer_mode==2:
@@ -128,8 +128,8 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                 tic = Time.time()
 
                 tps_trIt  = fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, hook1)
-                tps_cp += Time.time()-tic - tps_trIt  
-                tps_tr += tps_trIt  
+                tps_cp += Time.time()-tic - tps_trIt
+                tps_tr += tps_trIt
 
                 # dtloc GJeanmasson
                 if exploc==1 and tc is not None and layer_mode==0:
@@ -141,10 +141,10 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
                     fasts.dtlocal2para_mpi(zones,zonesD,param_int_tc,param_real_tc,hook1,0,nstep,ompmode,no_transfert,process)
 
-                    if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
-                    elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
+                    if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
+                    elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
 
-                    _applyBC(zones,metrics, hook1, nstep, var=vars[0])    
+                    _applyBC(zones,metrics, hook1, nstep, var=vars[0])
 
                     FastC.switchPointers2__(zones,nitmax,nstep)
                     # Ghostcell
@@ -156,13 +156,13 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                         procDict  = graph[nstep-1]['procDict']
                         graphID   = graph[nstep-1]['graphID']
                         graphIBCD = graph[nstep-1]['graphIBCD']
-                    else: 
-                        procDict=None; graphID=None; graphIBCD=None          
+                    else:
+                        procDict=None; graphID=None; graphIBCD=None
                     _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc, isWireModel=isWireModel)
 
-                    no_transfert = 1#comm_P2P      
+                    no_transfert = 1#comm_P2P
 
-                    fasts.recup3para_mpi(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1) 
+                    fasts.recup3para_mpi(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1)
 
                     if nstep%2 == 0:
                         vars = ['Density']
@@ -170,12 +170,12 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                             procDict  = graph[nitmax+nstep-1]['procDict']
                             graphID   = graph[nitmax+nstep-1]['graphID']
                             graphIBCD = graph[nitmax+nstep-1]['graphIBCD']
-                        else: 
-                            procDict=None; graphID=None; graphIBCD=None   
+                        else:
+                            procDict=None; graphID=None; graphIBCD=None
                         _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc, num_passage=2, isWireModel=isWireModel)
 
-                    if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ] 
-                    elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1'] 
+                    if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
+                    elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
                     _applyBC(zones,metrics, hook1, nstep, var=vars[0])
 
 
@@ -194,13 +194,13 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
                     # add unsteady Chimera transfers (motion) here
                     if ucData is not None:
-                        (graphX, intersectionDict, dictOfADT, 
-                        dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                        dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-                        dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
-                        time, procDict, interpInDnrFrame, varType, tfreq, order, verbose) = ucData
+                        (graphX, intersectionDict, dictOfADT,
+                         dictOfNobOfRcvZones, dictOfNozOfRcvZones,
+                         dictOfNobOfDnrZones, dictOfNozOfDnrZones,
+                         dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
+                         time, procDict, interpInDnrFrame, varType, tfreq, order, verbose) = ucData
 
-                        if nstep%2 == 0 and itypcp == 2: 
+                        if nstep%2 == 0 and itypcp == 2:
                             VARS = ['Density', 'VelocityX', 'VelocityY', 'VelocityZ', 'Temperature']
                             if varType == 1: VARS += ['TurbulentSANuTilde']
                         else:
@@ -210,27 +210,27 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                         C._cpVars(t, "centers:cellN", tc, "cellN")
 
                         if nstep == nitmax or nstep%tfreq == 0:
-                            Xmpi._transfer2(t, tc, VARS, graphX, intersectionDict, dictOfADT, 
+                            Xmpi._transfer2(t, tc, VARS, graphX, intersectionDict, dictOfADT,
                                             dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-                                            dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
-                                            dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC, 
+                                            dictOfNobOfDnrZones, dictOfNozOfDnrZones,
+                                            dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
                                             time=time, absFrame=True,
-                                            procDict=procDict, cellNName='cellN#Motion', 
-                                            interpInDnrFrame=interpInDnrFrame, order=order, 
+                                            procDict=procDict, cellNName='cellN#Motion',
+                                            interpInDnrFrame=interpInDnrFrame, order=order,
                                             hook=hookTransfer, verbose=verbose)
 
                             _applyBC(t,metrics, hook1, nstep, var=VARS[0])
 
-                    tps_tr1+= Time.time()-tic  
+                    tps_tr1+= Time.time()-tic
 
-    else: 
+    else:
         nstep_deb = 1
         nstep_fin = nitmax
         layer_mode= 1
         nit_c     = NIT
         tic = Time.time()
         tps_tr  = fasts._computePT(zones, metrics, nitrun, nstep_deb, nstep_fin, layer_mode, nit_c, FastC.HOOK)
-        tps_cp += Time.time()-tic - tps_tr  
+        tps_cp += Time.time()-tic - tps_tr
         tps_tr1 =0
     #switch pointer a la fin du pas de temps
     if exploc==1 and tc is not None:
@@ -262,7 +262,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
         if tc is not None:
             tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
             if tc_compact is not None:
-                param_real= tc_compact[1]              
+                param_real= tc_compact[1]
                 param_int = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
                 zonesD    = Internal.getZones(tc)
 
@@ -273,7 +273,7 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
                 for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
-                if gradP: 
+                if gradP:
                     varsGrad = ['Density', 'gradxDensity']
                     varType = 22
                     # varType 22 means that there is 6 variables and 6 gradVariables to transfers
@@ -281,27 +281,27 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
                     for v in varsGrad: C._cpVars(zones, 'centers:'+v, zonesD,  v)
                     type_transfert = 1
                     Xmpi.__setInterpTransfers4GradP(zones , zonesD, varsGrad, param_int, param_real, type_transfert, timelevel_target,
-                                          nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict)
+                                                    nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict)
                     varType = 21
 
                 #if Cmpi.rank == 0: print('fillGC: timeleveltarget= ', timelevel_target)
-                if isWireModel:                  
-                        ##The approach is the following
-                        ##1) interpolate the values at the additional points for WM
-                        ##2) copy these interpolated values into the tc
-                        ##3) perfom the ibc & id interpolation as normal, excluding the additional points for WM
+                if isWireModel:
+                    ##The approach is the following
+                    ##1) interpolate the values at the additional points for WM
+                    ##2) copy these interpolated values into the tc
+                    ##3) perfom the ibc & id interpolation as normal, excluding the additional points for WM
 
 
-                        ##1) Interpolate the values at the additional interpolated points for WM
+                    ##1) Interpolate the values at the additional interpolated points for WM
                     C._cpVars(zones, 'centers:Density_WM', zonesD, 'Density_WM')
                     nvars_local     = hook1['neq_max']
-                    type_transfert  = 1  
+                    type_transfert  = 1
 
                     Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                               nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict,
                                               isWireModel_int=1)
 
-                    ##2) Transfers info at target points from flow field to the tc 
+                    ##2) Transfers info at target points from flow field to the tc
                     Xmpi.__setInterpTransfers_WireModel(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,
                                                         nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict,
                                                         graphIBCD=graphIBCD, graphInvIBCD_WM=graphInvIBCD_WM, nvars=nvars_local)
@@ -310,23 +310,23 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
 
                     ##3)
                     isWireModel_int = -1  # is a local flag for Xmpi.__setInterpTransfers
-                    type_transfert  =  1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
+                    type_transfert  =  1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All
                     Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                               nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
                                               isWireModel_int=isWireModel_int)
 
                     isWireModel_int = 0
-                    type_transfert  = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
+                    type_transfert  = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All
                     Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                               nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
                                               isWireModel_int=isWireModel_int)
                 else:
                     #recuperation Nb pas instationnaire dans tc
-                    type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
+                    type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All
                     Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                               nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict,
                                               isWireModel_int=int(isWireModel))
-                    type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
+                    type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All
                     Xmpi.__setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                               nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
                                               isWireModel_int=int(isWireModel))
@@ -350,9 +350,9 @@ def _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, omp_mode,
     return None
 
 #==============================================================================
-# modified _fillGhostCells for two image points (tc + tc2) for gradP 
+# modified _fillGhostCells for two image points (tc + tc2) for gradP
 #==============================================================================
-def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, graphInvIBCD=None, graphIBCD2=None): 
+def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp_mode, hook1, graphID, graphIBCD, procDict, nitmax=1, rk=1, exploc=0, num_passage=1, gradP=False, TBLE=False, graphInvIBCD=None, graphIBCD2=None):
 
     #timecount = numpy.zeros(4, dtype=numpy.float64)
     timecount = []
@@ -363,7 +363,7 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
         if tc is not None:
             tc_compact = Internal.getNodeFromName1(tc, 'Parameter_real')
             if tc_compact is not None:
-                param_real= tc_compact[1]              
+                param_real= tc_compact[1]
                 param_int = Internal.getNodeFromName1( tc, 'Parameter_int' )[1]
                 zonesD    = Internal.getZones(tc)
                 zonesD2   = Internal.getZones(tc2)
@@ -375,32 +375,32 @@ def _fillGhostcells2(zones, tc, tc2, metrics, timelevel_target, vars, nstep, omp
 
                 for v in vars: C._cpVars(zones, 'centers:'+v, zonesD, v)
 
-                if gradP: 
+                if gradP:
                     tc2_compact = Internal.getNodeFromName1( tc2, 'Parameter_real')
                     param_real2= tc2_compact[1]
                     param_int2 = Internal.getNodeFromName1(tc2, 'Parameter_int' )[1]
                     varsGrad = ['Density', 'gradxDensity']
-                    for v in varsGrad: 
+                    for v in varsGrad:
                         C._cpVars(zones, 'centers:'+v, zonesD,  v)
                         C._cpVars(zones, 'centers:'+v, zonesD2,  v)
                     #tc2 -> RCV ZONES IBCD
                     type_transfert = 1; varType = 23
                     Xmpi.__setInterpTransfers4GradP(zones , zonesD2, varsGrad, param_int2, param_real2, type_transfert, timelevel_target,
-                                          nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD2, procDict=procDict)
+                                                    nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD2, procDict=procDict)
                     #RCV ZONES -> tc when RCV ZONES are on the same proc as IBCD ZONES
                     type_transfert = 1; varType = 24
                     Xmpi.__setInterpTransfers4GradP(zones , zonesD, varsGrad, param_int, param_real, type_transfert, timelevel_target,
-                                         nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict)
+                                                    nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphIBCD, procDict=procDict)
                     #RCV ZONES -> tc when RCV ZONES are NOT on the same proc as IBCD ZONES
                     X._setIBCTransfers4GradP3(zones, zonesD, graphInvIBCD, graphIBCD, procDict, variablesIBC=varsGrad, alpha=Internal.getNodeFromName(zones, 'Parameter_real')[1][57])
                     varType = 21
 
                 # #recuperation Nb pas instationnaire dans tc
-                type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
+                type_transfert = 1  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All
                 Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                           nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1,
                                           graph=graphIBCD, procDict=procDict, isWireModel=False)
-                type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All 
+                type_transfert = 0  # 0= ID uniquememnt, 1= IBC uniquememnt, 2= All
                 Xmpi.__setInterpTransfers(zones , zonesD, vars, dtloc, param_int, param_real, type_transfert, timelevel_target,#timecount,
                                           nstep, nitmax, rk, exploc, num_passage, varType=varType, compact=1, graph=graphID, procDict=procDict,
                                           isWireModel=False)
@@ -478,7 +478,7 @@ def computeLineletsInfo(tc, Re=6.e6, Cf_law='ANSYS', Lref=1., q=1.2):
     n = int(math.ceil(math.log(1-((hmod/h0)*(1-q)))/(math.log(q)))) - 1
     # (n+1) intervalles / (n+2) points
 
-    return (h0, h0*q**n, n+2)   
+    return (h0, h0*q**n, n+2)
 
 
 #==============================================================================
@@ -521,7 +521,7 @@ def computeLineletsInfo2(tc, q=1.2):
 
     h0 = 1.e-6
     n = int(math.ceil(math.log(1-((hmod/h0)*(1-q)))/(math.log(q)))) - 1
-    return (h0, h0*q**n, n+2)   
+    return (h0, h0*q**n, n+2)
 
 
 #==============================================================================
@@ -592,7 +592,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
         if not isODEDataPresent:   # No ODE Data in tc
             print('ODE data missing in tc, they will be built...')
 
-            if Internal.getNodeFromName1(t, 'nbpts_linelets') is None: 
+            if Internal.getNodeFromName1(t, 'nbpts_linelets') is None:
                 Internal.createUniqueChild(t, 'nbpts_linelets', 'DataArray_t', value=nbpts_linelets)
 
             # Nbpts_Dtot = size_IBC/(nbpts_linelets*nfields_lin)
@@ -620,11 +620,11 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
                                     gradxP = Internal.getNodeFromName1(s, 'gradxPressure')
                                     if gradxP is None:
                                         Internal.createUniqueChild(s, 'gradxPressure', 'DataArray_t',
-                                                                numpy.zeros(Nbpts_D, numpy.float64))
+                                                                   numpy.zeros(Nbpts_D, numpy.float64))
                                         Internal.createUniqueChild(s, 'gradyPressure', 'DataArray_t',
-                                                                numpy.zeros(Nbpts_D, numpy.float64))
+                                                                   numpy.zeros(Nbpts_D, numpy.float64))
                                         Internal.createUniqueChild(s, 'gradzPressure', 'DataArray_t',
-                                                                numpy.zeros(Nbpts_D, numpy.float64))
+                                                                   numpy.zeros(Nbpts_D, numpy.float64))
 
                                     zI = Internal.getNodeFromName1(s,'CoordinateZ_PI')
                                     valzI = Internal.getValue(zI)
@@ -692,7 +692,7 @@ def _createTBLESA2(t, tc, h0, hn, nbpts_linelets=45):
     return None
 
 #==============================================================================
-def _updateGradPInfo(t, tc, metrics, type='IBCD'): 
+def _updateGradPInfo(t, tc, metrics, type='IBCD'):
 
     varGrad = ['Density', 'Temperature']
     variablesIBC = ["Density", "Temperature", "gradxDensity", "gradyDensity", "gradzDensity", "gradxTemperature", "gradyTemperature", "gradzTemperature"]
@@ -743,7 +743,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         graphID   = graph[0]['graphID']
         graphIBCD = graph[0]['graphIBCD']
         if isWireModel: graphInvIBCD_WM = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
-    else: 
+    else:
         procDict=None; graphID=None; graphIBCD=None; graphInvIBCD_WM=None
 
     if isWireModel and graphInvIBCD_WM is None:
@@ -755,7 +755,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     if tc is not None:
         if Re > 0: #Adaptive method
             h0, hn, nbpts_linelets = computeLineletsInfo(tc, Re=Re, Lref=Lref, q=1.1)
-        elif Re == 0: 
+        elif Re == 0:
             h0, hn, nbpts_linelets = computeLineletsInfo2(tc, q=1.1)
         else: #Alferez' og method
             h0, nbpts_linelets = 1.e-6, 45
@@ -784,7 +784,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     tmp   = Internal.getNodeFromName1(t  , '.Solver#ownData')
     dtlocPy = Internal.getNodeFromName1(tmp, '.Solver#dtloc')  # noeud
     dtloc   = Internal.getValue(dtlocPy)# tab numpy
-    nssiter = dtloc[0]   
+    nssiter = dtloc[0]
 
     if isinstance(graph, list):
         #test pour savoir si graph est une liste de dictionnaires (explicite local)
@@ -803,24 +803,24 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         graphID   = graph[nssiter-2]['graphID']    ### sont faits pour le schema a pas de temps local
         graphIBCD = graph[nssiter-2]['graphIBCD']
         if isWireModel: graphInvIBCD_WM  = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
-    else: 
+    else:
         procDict=None; graphID=None; graphIBCD=None; graphInvIBCD_WM = None
     zones = Internal.getZones(t)
     f_it = FastC.FIRST_IT
     if FastC.HOOK is None: FastC.HOOK = FastC.createWorkArrays__(zones, dtloc, f_it ); FastC.FIRST_IT = f_it
 
     # allocation d espace dans param_int pour stockage info openmp
-    FastC._build_omp(t) 
+    FastC._build_omp(t)
 
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
     metrics = allocate_metric(t)
 
     # Contruction BC_int et BC_real pour CL
-    FastC._BCcompact(t) 
+    FastC._BCcompact(t)
 
     # Contruction Conservative_int
-    FastC._Fluxcompact(t) 
+    FastC._Fluxcompact(t)
 
     #determination taille des zones a integrer (implicit ou explicit local)
     #evite probleme si boucle en temps ne commence pas a it=0 ou it=1. ex: range(22,1000)
@@ -839,9 +839,9 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     t, FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP, isWireModel)
     FastC.HOOK['FIRST_IT']= FIRST_IT
 
-    #compactage des champs en fonction option de calcul  
+    #compactage des champs en fonction option de calcul
     count = -1
-    if ompmode == 1: count = 0          
+    if ompmode == 1: count = 0
     for data in zones2compact:
         if ompmode == 1: count += 1
         zone    = data[0]
@@ -883,13 +883,13 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     #
     # Compactage arbre transfert
     #
-    if tc is not None:      
+    if tc is not None:
         nbpts_linelets = 0
         if Re > 0: #Adaptive method
-        # h0, hn, nbpts_linelets = computeLineletsInfo(tc, Re=Re, Lref=Lref, q=1.1)
-        # print(h0, hn, nbpts_linelets)
+            # h0, hn, nbpts_linelets = computeLineletsInfo(tc, Re=Re, Lref=Lref, q=1.1)
+            # print(h0, hn, nbpts_linelets)
             _createTBLESA2(t, tc, h0=h0, hn=hn, nbpts_linelets=nbpts_linelets)
-        elif Re == 0: 
+        elif Re == 0:
             # h0, hn, nbpts_linelets = computeLineletsInfo2(tc, q=1.1)
             # print(h0, hn, nbpts_linelets)
             _createTBLESA2(t, tc, h0=h0, hn=hn, nbpts_linelets=nbpts_linelets)
@@ -905,7 +905,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         if param_real_tc is not None: FastC.HOOK['param_real_tc']= param_real_tc[1]
     else:
         FastC.HOOK['param_real_tc'] = None
-        FastC.HOOK['param_int_tc']  = None 
+        FastC.HOOK['param_int_tc']  = None
 
 
     if ssors is not []:
@@ -942,10 +942,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     return (t, tc, metrics)
 
 #==============================================================================
-# computeStress avec reduction 
+# computeStress avec reduction
 #==============================================================================
 def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
-    """Compute efforts in teff.""" 
+    """Compute efforts in teff."""
     ret = PyTree._computeStress(t, teff, metrics, xyz_ref)
     ret = numpy.array(ret, dtype=numpy.float64)
     #ret1 = numpy.empty(ret.shape, dtype=numpy.float64)
@@ -965,14 +965,14 @@ def display_cpu_efficiency(t, mask_cpu=0.08, mask_cell=0.01, diag='compact', FIL
     names1   = FILEOUT1.split('.')
     fileout1 = names1[0]+str(rank)+'.'+names1[1]
 
-    if RECORD is not None: 
+    if RECORD is not None:
         tape = PyTree.display_cpu_efficiency(t, mask_cpu=mask_cpu, mask_cell=mask_cell, diag=diag, FILEOUT=fileout, FILEOUT1=fileout1, RECORD=RECORD)
         return tape
-    else: 
+    else:
         PyTree.display_cpu_efficiency(t, mask_cpu=mask_cpu, mask_cell=mask_cell, diag=diag, FILEOUT=fileout, FILEOUT1=fileout1, RECORD=RECORD)
         return None
 
-# For periodic unsteady chimera join, parameter must be updated peridicaly 
+# For periodic unsteady chimera join, parameter must be updated peridicaly
 #==============================================================================
 def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split='single',root_steady='tc_steady', root_unsteady='tc_', dir_steady='.', dir_unsteady='.', init=False, layer='Python', Rotors=['Base02','Base04','Base06'], Stators=['Base01','Base03','Base05','Base07']):
 
@@ -980,8 +980,8 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
     if graph =={} or graph is None:
         graph= {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
 
-    #on cree les noeud infos insta pour chimere perio s'il n'existe pas 
-    TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget','Iteration'] 
+    #on cree les noeud infos insta pour chimere perio s'il n'existe pas
+    TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget','Iteration']
     for opt in TimeLevelOpts:
         tmp = Internal.getNodeFromName1(t, opt)
         if tmp is None: Internal.createUniqueChild(t, opt, 'DataArray_t', value=0)
@@ -1001,12 +1001,12 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
     timelevel_perfile= timelevelInfos["TimeLevelPerFile"]
     timelevel_axeRot = timelevelInfos["TimeLevelRotationAxis"]
 
-    No_period = timelevel_motion//timelevel_period 
+    No_period = timelevel_motion//timelevel_period
     #
     #target in no more in tc; need need data in a new file
     #
 
-    if timelevel_target == timelevel_perfile or tc is None or timelevel_motion%timelevel_period == 0: 
+    if timelevel_target == timelevel_perfile or tc is None or timelevel_motion%timelevel_period == 0:
 
         graph= {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
         tc =None; tc_skel =None
@@ -1018,9 +1018,9 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
 
         if split == 'single':
 
-                # steady part
+            # steady part
             FILE = dir_steady +'/'+ root_steady + '.cgns'
-            if os.access(FILE, os.F_OK): 
+            if os.access(FILE, os.F_OK):
                 t0 = timeit.default_timer()
                 tc = Cmpi.convertFile2SkeletonTree(FILE)
                 tc_skel= Internal.copyRef(tc)
@@ -1032,7 +1032,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
             # unsteady part
             FILE = dir_unsteady +'/'+root_unsteady+str(root)+'.cgns'
             if rank==0: print('chargement tc: timelevel_target=',timelevel_target, 'file=',FILE, root)
-            if os.access(FILE, os.F_OK): 
+            if os.access(FILE, os.F_OK):
                 t0=timeit.default_timer()
                 tc_inst = Cmpi.convertFile2SkeletonTree(FILE)
                 tc_inst_skel= Internal.copyRef(tc_inst)
@@ -1046,7 +1046,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
             # steady part
             t0=timeit.default_timer()
             FILE_Skeleton = dir_steady +'/'+ root_steady + 'skeleton.cgns'
-            if os.access(FILE_Skeleton, os.F_OK): 
+            if os.access(FILE_Skeleton, os.F_OK):
                 tc_skel = C.convertFile2PyTree(FILE_Skeleton)
 
             t1=timeit.default_timer()
@@ -1054,7 +1054,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
             t0=t1
 
             FILE = dir_steady +'/'+ root_steady + str(rank) +'.cgns'
-            if os.access(FILE, os.F_OK): 
+            if os.access(FILE, os.F_OK):
                 tc = C.convertFile2PyTree(FILE)
             t1=timeit.default_timer()
             cpu_S = t1 -t0
@@ -1065,7 +1065,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
             # unsteady part: toto_Nit_skeleton.cgns
             t0=timeit.default_timer()
             FILE_Skeleton = dir_unsteady +'_'+str(root) +'/'+ root_unsteady +str(root) + '_skeleton.cgns'
-            if os.access(FILE_Skeleton, os.F_OK): 
+            if os.access(FILE_Skeleton, os.F_OK):
                 tc_inst_skel = C.convertFile2PyTree(FILE_Skeleton)
 
             t1=timeit.default_timer()
@@ -1073,7 +1073,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
             t0=t1
             # toto_Nit_proc.cgns
             FILE = dir_unsteady+'_'+str(root) +'/'+root_unsteady+str(root)+'_'+str(rank)+'.cgns'
-            if os.access(FILE, os.F_OK): 
+            if os.access(FILE, os.F_OK):
                 tc_inst = C.convertFile2PyTree(FILE)
 
             t1=timeit.default_timer()
@@ -1095,7 +1095,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
         if timelevel_motion >= timelevel_period:
 
             No_period     = timelevel_motion//timelevel_period
-            iteration_loc = timelevel_motion - No_period*timelevel_period 
+            iteration_loc = timelevel_motion - No_period*timelevel_period
 
             bases  = Internal.getNodesFromType1(tc_inst , 'CGNSBase_t')       # noeud
 
@@ -1144,13 +1144,13 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
 
         #print("steady",graph['graphID'] )
 
-        # 
+        #
         # Reordone les zones pour garantir meme ordre entre t et tc
         FastC._reorder(t, tc)
 
         # Compactage arbre transfert. Si init, compactage dans warmup plus tard
         #
-        if not init: 
+        if not init:
 
             zones = Internal.getZones(t)
 
@@ -1172,7 +1172,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
 
             if timelevel_motion >= timelevel_period:
                 No_period = timelevel_motion//timelevel_period
-                iteration_loc = timelevel_motion - No_period*timelevel_period 
+                iteration_loc = timelevel_motion - No_period*timelevel_period
             else:
                 iteration_loc = timelevel_motion
 
@@ -1192,7 +1192,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
         Internal.getNodeFromName1(t, 'TimeLevelMotion')[1][0] = timelevel_motion
 
     own  = Internal.getNodeFromName1(t, '.Solver#ownData')
-    if own is not None: 
+    if own is not None:
         dtloc= Internal.getNodeFromName1(own , '.Solver#dtloc')[1]
         dtloc[3]=timelevel_motion
         dtloc[4]=timelevel_target
@@ -1233,8 +1233,8 @@ def _sortByName(t):
 def computeCFL_dtlocal(t):
 
     import math
-    import Transform.PyTree as T        
-    from mpi4py import MPI  
+    import Transform.PyTree as T
+    from mpi4py import MPI
 
     t = C.initVars(t,'centers:CFL', 0.)
 
@@ -1289,7 +1289,7 @@ def computeCFL_dtlocal(t):
     """
 
     cflmax_glob = 0.0
-    cflmin_glob = 1.0e15 
+    cflmin_glob = 1.0e15
 
     for z in zones:
         dim = Internal.getZoneDim(z)
@@ -1329,7 +1329,7 @@ def _decoupe2(t, niveauMax, dtmin):
 
     dtmin = 100000.
     taille_bloc = 25
-    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t') 
+    bases  = Internal.getNodesFromType1(t     , 'CGNSBase_t')
     zones = []
     zones_decoupe = []
 
@@ -1353,7 +1353,7 @@ def _decoupe2(t, niveauMax, dtmin):
                  liste_BCPeriodiques.append(list1)
          
     print(liste_BCPeriodiques)
-    """     
+    """
 
     for b in bases:
         zones += Internal.getNodesFromType1(b, 'Zone_t')

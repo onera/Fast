@@ -18,7 +18,7 @@ t = C.addState(t, MInf=mach)
 numb = {}
 numb["temporal_scheme"]    = "implicit"
 numb["ss_iteration"]       = 4
-numb["modulo_verif"]       = 10 
+numb["modulo_verif"]       = 10
 numz = {}
 numz["time_step"]           = 0.01
 numz["scheme"]             = "ausmpred"

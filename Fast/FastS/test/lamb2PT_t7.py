@@ -21,7 +21,7 @@ t = C.newPyTree(['Base']); t[2][1][2] += [a1,a2]
 # Chimera
 t = X.applyBCOverlaps(t, depth=2)
 tc = C.node2Center(t)
-tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse', 
+tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse',
                      sameName=1, method='leastsquares', dim=2)
 
 t = I.initLamb(t, position=(45.,25.), Gamma=2., MInf=0.7, loc='centers')

@@ -1,4 +1,4 @@
-# - compute (pyTree) - 
+# - compute (pyTree) -
 import Converter.PyTree as C
 import Generator.PyTree as G
 import FastS.PyTree as FastS

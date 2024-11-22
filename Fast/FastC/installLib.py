@@ -26,7 +26,7 @@ else: # Essai en dynamique
     a = os.access(installPathLocal+"/fastc"+__EXTMODULE__, os.F_OK)
     if a:
         shutil.copyfile(installPathLocal+"/fastc"+__EXTMODULE__,
-                        libPath+"/libfastc"+__EXTSHARED__) 
+                        libPath+"/libfastc"+__EXTSHARED__)
     else:
         print("Error: fastc" +__EXTMODULE__+" can not be found.")
 

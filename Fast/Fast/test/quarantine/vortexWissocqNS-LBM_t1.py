@@ -176,10 +176,10 @@ tab_cons_LBM = []
 for it in range(1, nit+1):
     print('--------- iteration %d ---------'%it)
     #t2 = Internal.copyTree(t)
-    #test.testT(t2, 6) 
+    #test.testT(t2, 6)
     Fast._compute(t, metrics, it, tc, layer='Python')
     #t2 = Internal.copyTree(t)
-    #test.testT(t2, 1000+it) 
+    #test.testT(t2, 1000+it)
 
 #import sys; sys.exit()
 

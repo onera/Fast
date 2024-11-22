@@ -18,12 +18,12 @@ def blankByBodies(t, tb, loc, dim, gridType='single'):
     bodies = []
     for b in Internal.getBases(tb):
         wallsl = Internal.getNodesFromType1(b, 'Zone_t')
-        if wallsl != []: 
+        if wallsl != []:
             wallsl = C.convertArray2Tetra(wallsl)
             wallsl = T.join(wallsl)
             wallsl = G.close(wallsl)
             if DIM ==3:
-                try: P.exteriorFaces(wallsl) 
+                try: P.exteriorFaces(wallsl)
                 except: bodies.append([wallsl])
             else: bodies.append([wallsl])
 
@@ -55,13 +55,13 @@ def _blankCellsInRange(z, win, NGhostCells):
     nic=ni-1; njc=nj-1; nicnjc=(ni-1)*(nj-1)
     cellN = C.getField("centers:cellN",z)[0]
     il1=max(1,i1-1); il2=max(1,i2-1); jl1=max(1,j1-1); jl2=max(1,j2-1); kl1=max(1,k1-1); kl2=max(1,k2-1)
-    dir1 = il2-il1; dir2 = jl2-jl1; 
+    dir1 = il2-il1; dir2 = jl2-jl1;
     dir3 = kl2-kl1
     il3 = il1+NGhostCells-1; il4 = il2-NGhostCells
     jl3 = jl1+NGhostCells-1; jl4 = jl2-NGhostCells
     kl3 = kl1+NGhostCells-1; kl4 = kl2-NGhostCells
 
-    if dir1==0: 
+    if dir1==0:
         if il1 == 1: il1 = 0; il2 = il1+NGhostCells; il4 = il3+NGhostCells
         else: il1 = il1-NGhostCells; il3 = il1-NGhostCells
 
@@ -133,7 +133,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
 
 
     baseRole = []
-    name = basenames[0] 
+    name = basenames[0]
     if int(name[-1])%2 == 0:
         baseRole=['Rotor','Stator']
     else:
@@ -171,21 +171,21 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
                 zonesPerioD[c][0]=  zones[c][0]+'_PeriodicD'
                 zonesPerioG[c][0]=  zones[c][0]+'_PeriodicG'
                 tmp=[]
-                for i in  bbox[ zones[c][0] ]: 
+                for i in  bbox[ zones[c][0] ]:
                     tmp.append(i)
-                bbox[ zonesPerioD[c][0] ] = tmp 
+                bbox[ zonesPerioD[c][0] ] = tmp
                 bbox[ zonesPerioD[c][0] ][2]= bbox[ zonesPerioD[c][0] ][2] + theta_abs
                 bbox[ zonesPerioD[c][0] ][5]= bbox[ zonesPerioD[c][0] ][5] + theta_abs
 
-                tmp1=[] 
-                for i in  bbox[ zones[c][0] ]: 
+                tmp1=[]
+                for i in  bbox[ zones[c][0] ]:
                     tmp1.append(i)
-                bbox[ zonesPerioG[c][0] ] = tmp1  
+                bbox[ zonesPerioG[c][0] ] = tmp1
                 bbox[ zonesPerioG[c][0] ][2]= bbox[ zonesPerioG[c][0] ][2] - theta_abs
                 bbox[ zonesPerioG[c][0] ][5]= bbox[ zonesPerioG[c][0] ][5] - theta_abs
 
 
-        elif AXISY > 0.: 
+        elif AXISY > 0.:
             thetameanD = C.getMeanValue(zones, 'CoordinateX')
             zonesPerioD= T.translate(zones,( theta_abs, 0, 0))
             zonesPerioG= T.translate(zones,(-theta_abs, 0, 0))
@@ -193,15 +193,15 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
                 zonesPerioD[c][0]=  zones[c][0]+'_PeriodicD'
                 zonesPerioG[c][0]=  zones[c][0]+'_PeriodicG'
                 tmp=[]
-                for i in  bbox[ zones[c][0] ]: 
+                for i in  bbox[ zones[c][0] ]:
                     tmp.append(i)
-                bbox[ zonesPerioD[c][0] ] = tmp 
+                bbox[ zonesPerioD[c][0] ] = tmp
                 bbox[ zonesPerioD[c][0] ][0]= bbox[ zonesPerioD[c][0] ][0] + theta_abs
                 bbox[ zonesPerioD[c][0] ][3]= bbox[ zonesPerioD[c][0] ][3] + theta_abs
-                tmp1=[] 
-                for i in  bbox[ zones[c][0] ]: 
+                tmp1=[]
+                for i in  bbox[ zones[c][0] ]:
                     tmp1.append(i)
-                bbox[ zonesPerioG[c][0] ] = tmp1  
+                bbox[ zonesPerioG[c][0] ] = tmp1
                 bbox[ zonesPerioG[c][0] ][0]= bbox[ zonesPerioG[c][0] ][0] - theta_abs
                 bbox[ zonesPerioG[c][0] ][3]= bbox[ zonesPerioG[c][0] ][3] - theta_abs
 
@@ -228,22 +228,22 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
         base   = Internal.getNodeFromName(tcyl[name], name)
         zones  = Internal.getZones(base)
         thetameanR= C.getMeanValue(zones, 'CoordinateZ')
-        theta_meanRecept[name] = [thetameanR] 
+        theta_meanRecept[name] = [thetameanR]
         print(name, ' is Recept. <angle>= ', thetameanR/math.pi*180)
 
     #rotation parameter
     THETADEG  = THETA/math.pi*180
     RotCenter = numpy.zeros((3), numpy.float64)
-    RotCenter[0] = XC0 
+    RotCenter[0] = XC0
     RotCenter[1] = YC0
     RotCenter[2] = ZC0
 
     for name in basenames:
         i = basenames.index(name)
-        if (baseRole[i]=='Rotor'): 
+        if (baseRole[i]=='Rotor'):
             if AXISX > 0. or AXISZ > 0.:
                 T._translate( tcyl[etage_names[i]]       ,  (0, 0, (IT_DEB-1)*DTHETA))
-                T._translate( donorBases[etage_names[i]] ,  (0, 0, (IT_DEB-1)*DTHETA))  
+                T._translate( donorBases[etage_names[i]] ,  (0, 0, (IT_DEB-1)*DTHETA))
                 for z in Internal.getZones(donorBases[etage_names[i]]):
                     bbox[ z[0] ][2]= bbox[ z[0] ][2] + (IT_DEB-1)*DTHETA
                     bbox[ z[0] ][5]= bbox[ z[0] ][5] + (IT_DEB-1)*DTHETA
@@ -282,7 +282,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
 
             #if rcpt == 'Rotor':
             i = basenames.index(rcpt)
-            if (baseRole[i]=='Rotor'): 
+            if (baseRole[i]=='Rotor'):
 
                 #zones2translateR =  ReceptCyl['Rotor']
                 #donor            = 'Stator'
@@ -317,11 +317,11 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
                 #mjr bbox
                 for z in Internal.getZones(zones2translateR):
                     if choice_tree==0:
-                        bboxR[ z[0] ][2]= bboxR[ z[0] ][2] + DTHETA 
-                        bboxR[ z[0] ][5]= bboxR[ z[0] ][5] + DTHETA 
+                        bboxR[ z[0] ][2]= bboxR[ z[0] ][2] + DTHETA
+                        bboxR[ z[0] ][5]= bboxR[ z[0] ][5] + DTHETA
                     else:
-                        bbox[ z[0] ][2]= bbox[ z[0] ][2] + DTHETA 
-                        bbox[ z[0] ][5]= bbox[ z[0] ][5] + DTHETA 
+                        bbox[ z[0] ][2]= bbox[ z[0] ][2] + DTHETA
+                        bbox[ z[0] ][5]= bbox[ z[0] ][5] + DTHETA
 
                 print('theta_meanR= ',theta_meanR*180/math.pi , 'theta_meanDonorD= ', theta_meanDonorD*180/math.pi)
 
@@ -381,7 +381,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
 
                     print('Donor_G du ', rcpt, ' moved by', 3*theta_abs*180/3.1415,'. <Angle> receveur + perio=', (theta_meanR+theta_abs)*180/math.pi,'. <Angle> donor G=',theta_meanDonor[donor][0]*180/math.pi)
 
-            elif AXISY > 0.: 
+            elif AXISY > 0.:
 
                 #C._initVars(  zones2translateR , 'CoordinateX={CoordinateX0}')
                 #T._translate( zones2translateR , (it*DTHETA, 0, 0))
@@ -472,13 +472,13 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
                     donor_filtre  = C.newPyTree(namebaseD)
                     cpt=1
                     for base in baseD:
-                        zDout=[] 
+                        zDout=[]
                         for zd in Internal.getZones(base ):
                             rminD= bbox[ zd[0] ][1]; rmaxD= bbox[ zd[0] ][4]; tminD= bbox[ zd[0] ][2]; tmaxD= bbox[ zd[0] ][5]
                             #bbox[ zd[0] ] = G.bbox(zd)
                             #print('doneuseCC', zd[0],  rminD,rmaxD, tminD, tmaxD)
                             if rmaxD >= rminR and rminD <= rmaxR and tmaxD >= tminR and tminD <= tmaxR:
-                        #print('doneuse', zd[0],  rminD - bbox[ zd[0] ][1],  rmaxD- bbox[ zd[0] ][4], tminD- bbox[ zd[0] ][2], tmaxD- bbox[ zd[0] ][5])
+                                #print('doneuse', zd[0],  rminD - bbox[ zd[0] ][1],  rmaxD- bbox[ zd[0] ][4], tminD- bbox[ zd[0] ][2], tmaxD- bbox[ zd[0] ][5])
                                 zDout.append(zd)
 
                         donor_filtre[2][cpt][2]+= zDout
@@ -516,10 +516,10 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
             #C.convertPyTree2File( RD[0],'recept'+str(it)+'.cgns')
             #C.convertPyTree2File( RD[1],'donors'+str(it)+'.cgns')
 
-            # bloc perio Droite =RD[1][2] 
-            # bloc original     =RD[1][1] 
+            # bloc perio Droite =RD[1][2]
+            # bloc original     =RD[1][1]
             # bloc perio Gauche =RD[1][0]
-            # bloc donneur periodiques -> remise dans le bloc original +  ajout des infos de periodicite 
+            # bloc donneur periodiques -> remise dans le bloc original +  ajout des infos de periodicite
             c = 0
             for bloc_Perio in RD[1][0:]:
 
@@ -542,10 +542,10 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
                             zsr[0] = 'IDPER'+source+'#%d_%s'%(it,srname)
                             #print('zoneD=',zdperio[0],'zoneR=',srname,'subRegionName=', zsr[0],'. teta_perio=', theta_perioDonor[donor][c], 'present sur bloc', c)
                             #modif pointlist pour calcul sur zone reduite
-                            _adaptRange(zname, zsr, infos_PtlistRebuild ) 
+                            _adaptRange(zname, zsr, infos_PtlistRebuild )
 
                             Internal.createChild(zsr,'RotationAngle' ,'DataArray_t',value=RotAngleDG[c])
-                            Internal.createChild(zsr,'RotationCenter','DataArray_t',value=RotCenter)   
+                            Internal.createChild(zsr,'RotationCenter','DataArray_t',value=RotCenter)
                             zdorig[2].append(zsr)
 
                         ### efface les noeuds sinon perte HPC
@@ -570,7 +570,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
         Internal._rmNodesByName(tc[rcpt],'GridCoordinates')
 
     tc_out =  C.newPyTree(['Base'])
-    for name in basenames:  tc_out[2].append( tc[name] ) 
+    for name in basenames:  tc_out[2].append( tc[name] )
     Internal._rmNodesByName(tc_out,'Base')
 
     vars= ['FlowSolution','CoordinateX','CoordinateY','CoordinateZ']
@@ -581,7 +581,7 @@ def setInterpDataRS(tcyl,tc,THETA,DTHETA, IT_DEB, IT_FIN, infos_PtlistRebuild, t
     for z in zones:
         nijk    = infos_PtlistRebuild[ z[0]  ] [2]
         z[1][0:4,0] = nijk[0:4]
-        z[1][0:4,1] = nijk[0:4]-1 
+        z[1][0:4,1] = nijk[0:4]-1
 
     return tc_out
 
@@ -665,7 +665,7 @@ def ZonePrecond( base, NGhostCells, info_PtlistRebuild, etages, idir_tg, depth_t
         conns   =Internal.getNodesFromType1(connect ,'GridConnectivity_t')
         for conn in conns:
             contype =Internal.getNodeFromType(conn ,'GridConnectivityType_t')
-            if Internal.getValue(contype) == 'Overset':        
+            if Internal.getValue(contype) == 'Overset':
                 ptrange =Internal.getNodeFromType(conn ,'IndexRange_t')
                 #dir=0,...5
                 idir = Ghost.getDirection__(dim, [ptrange])
@@ -678,7 +678,7 @@ def ZonePrecond( base, NGhostCells, info_PtlistRebuild, etages, idir_tg, depth_t
                 if idir_tg[ z[0] ]== "kmax": dir_tg = 5
 
                 depth = depth_tg[ z[0] ]
-                #print("Verif",base[0],etages[0],etages[1],idir) 
+                #print("Verif",base[0],etages[0],etages[1],idir)
 
                 if idir== dir_tg:
                     rg = Internal.getValue(ptrange)
@@ -689,7 +689,7 @@ def ZonePrecond( base, NGhostCells, info_PtlistRebuild, etages, idir_tg, depth_t
                     nijk[0:3]= dimzone[1:4]
                     nijk[ :] -=1  #vertex2center
 
-                    #print("indice", rg[0,0],rg[0,1], rg[1,0],rg[1,1], rg[2,0],rg[2,1] )          
+                    #print("indice", rg[0,0],rg[0,1], rg[1,0],rg[1,1], rg[2,0],rg[2,1] )
                     if idir == 0:
                         zp = T.subzone(z, (rg[0,0]+NGhostCells,rg[1,0],rg[2,0]), (rg[0,0]+depth,rg[1,1],rg[2,1]))
                     elif idir == 1:

@@ -37,10 +37,10 @@ lines_select = select.readlines()
 #open file for sources compilation
 srcs= open('../../srcs.py','r')
 lines_srcs = srcs.readlines()
-srcs.close() 
+srcs.close()
 srcs= open('../../srcs.py','w')
 c = 0
-for l in lines_srcs: 
+for l in lines_srcs:
     if 'FastS/Compute/src_term.for' in l: c_index = c
     c += 1
 c_index +=1
@@ -49,7 +49,7 @@ lines_srcs_end = lines_srcs[c_index:]
 
 
 c = 0
-for l in lines_select: 
+for l in lines_select:
     if 'ELSE' in l: c_index = c
     c += 1
 
@@ -93,7 +93,7 @@ for ale in TypeMotion:
                 #        lines[i]=lines[i].replace("", "0.5*p1p2")
 
                 # suppression fluk en 2d et metrique k (pour que mode debug soit OK)
-                if typezone == '2d': 
+                if typezone == '2d':
                     c = 0
                     for l in lines:
                         if '3D only' in l: lines = lines[:c] + lines[c+1:]; c-=1
@@ -111,7 +111,7 @@ for ale in TypeMotion:
                         lines[i]=lines[i].replace("flu(lf+v2flu*3 )=(flu4-param_real(PINF)*tcz*flagk)*sens","flu(lf+v2flu*3 )=0.")
 
                 # suppression minmod
-                if slope != 'minmod': 
+                if slope != 'minmod':
                     c = 0
                     for l in lines:
                         if 'avmin(c,r)' in l: lines = lines[:c] + lines[c+1:]; c-=1
@@ -131,7 +131,7 @@ for ale in TypeMotion:
 
                 eq2=''
                 # Viscous flux suppression for Euler
-                if eq == 'euler': 
+                if eq == 'euler':
                     for i in range( len(lines) ):
                         lines[i]=lines[i].replace("= 0.5*(xmut(ir)+xmut(il))","= 0. !mut=0")
 
@@ -179,18 +179,18 @@ for ale in TypeMotion:
                 target = fout
                 include = True
                 c = 0
-                for l in lines_srcs: 
+                for l in lines_srcs:
                     if target in l: include = False
                 srcs_out=[]
                 if include: srcs_out.append("            'FastS/Compute/"+fout+"',\n")
 
-                lines_srcs_beg = lines_srcs_beg +   srcs_out 
+                lines_srcs_beg = lines_srcs_beg +   srcs_out
 
                 #flux selection function
                 target = 'option.eq.'+str(option)+') THEN'
                 include = True
                 c = 0
-                for l in lines_select: 
+                for l in lines_select:
                     if target in l: include = False
                     if 'ELSE' in l: c_index = c
                     c += 1
@@ -198,19 +198,19 @@ for ale in TypeMotion:
                 select_out=[]
                 if include:
                     select_out.append('       ELSEIF (option.eq.'+str(option)+') THEN\n')
-                    select_out.append('                                               \n') 
-                    select_out.append('           call '+ name_routine+'(ndom, ithread, \n') 
-                    select_out.append('     &                 param_int, param_real,param_int_eff,\n') 
-                    select_out.append('     &                 ind_loop, effort, pos,\n') 
-                    select_out.append('     &                 rop, flu , wig,\n') 
-                    select_out.append('     &                 x, y, z,\n') 
-                    select_out.append('     &                 venti, ventj, ventk,\n') 
-                    select_out.append('     &                 ti, tj, tk, vol, xmut)\n') 
-                    select_out.append('                                               \n') 
+                    select_out.append('                                               \n')
+                    select_out.append('           call '+ name_routine+'(ndom, ithread, \n')
+                    select_out.append('     &                 param_int, param_real,param_int_eff,\n')
+                    select_out.append('     &                 ind_loop, effort, pos,\n')
+                    select_out.append('     &                 rop, flu , wig,\n')
+                    select_out.append('     &                 x, y, z,\n')
+                    select_out.append('     &                 venti, ventj, ventk,\n')
+                    select_out.append('     &                 ti, tj, tk, vol, xmut)\n')
+                    select_out.append('                                               \n')
 
-                lines_select_beg = lines_select_beg +   select_out 
+                lines_select_beg = lines_select_beg +   select_out
 
-                f.close() 
+                f.close()
 
 c = 0
 c_index = 0
@@ -221,20 +221,19 @@ for i in range( len(lines_select_beg) ):
     c += 1
 lines_select_beg[c_index]=lines_select_beg[c_index].replace("ELSEIF"                ,'IF ' )
 
-#write of srcs.py file for makefile  
+#write of srcs.py file for makefile
 target = rep+'/effort_'+flux+"_select.for',"
 include = True
 c = 0
-for l in lines_srcs: 
+for l in lines_srcs:
     if target in l: include = False
 if include: lines_srcs_beg.append("            'FastS/Compute/"+target+"\n")
 
 for l in lines_srcs_beg: srcs.write(l)
 for l in lines_srcs_end: srcs.write(l)
-srcs.close()          
+srcs.close()
 
 #write of rep/flux_select.for
 for l in lines_select_beg: fselecto.write(l)
 for l in lines_select_end: fselecto.write(l)
 fselecto.close()                               # fermer le fichier output global
-

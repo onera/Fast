@@ -15,13 +15,13 @@ t = C.addState(t, MInf=0.2, ReInf=25.e6, MutSMuInf=15)
 mycfl = 10.000
 
 numb = { 'temporal_scheme':'implicit', 'ss_iteration':1, 'modulo_verif':1, 'omp_mode':1 }
-numz = {'ssdom_IJK': [600, 30, 20000], 
-        'io_thread': -4, 
-        'time_step':0.0000152280, 
-        'time_step_nature': 'local', 
-        'cfl': mycfl, 
-        'scheme':'roe', 
-        'slope':'o3', 
+numz = {'ssdom_IJK': [600, 30, 20000],
+        'io_thread': -4,
+        'time_step':0.0000152280,
+        'time_step_nature': 'local',
+        'cfl': mycfl,
+        'scheme':'roe',
+        'slope':'o3',
         'epsi_newton': 0.5}
 
 numz["implicit_solver"] = "gmres"
