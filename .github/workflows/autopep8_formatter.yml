@@ -27,7 +27,7 @@ jobs:
       - name: Run autopep8
         run: |
           pythonFiles=`find Fast/ -type f -not -path "*/build/*" -name "*.py"`
-          errorCodes="E101,E11,E121,E122,E123,E124,E125,E126,E127,E128,E129,E131,E133"
+          errorCodes="E101,E11,E121,E122,E123,E124,E125,E126,E127,E128,E129,E131,E133,W291,W293,W391"
           autopep8 --in-place --indent-size=4 --select=$errorCodes $pythonFiles
 
       - name: Commit changes
