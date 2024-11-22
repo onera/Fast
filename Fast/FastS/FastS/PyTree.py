@@ -154,7 +154,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
                     if nstep%2 == 0:
                         vars = ['Density']
-                        _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep,  ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc, num_passage= 2,isWireModel=isWireModel)
+                        _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep,  ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc, num_passage=2,isWireModel=isWireModel)
 
                     if   nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
                     elif nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
@@ -2579,7 +2579,7 @@ def setIBCData_zero(t, surf, dim=None):
 
     C._initVars(t,"{centers:cellN_IBC}=1.")
     #X._blankCells(t, bodies, BM, blankingType="center_in", dim=dim, delta=0., cellNName='cellN_IBC')
-    t = X.blankCells(t, bodies, BM, blankingType="center_in", dim= dim,delta=0., cellNName='cellN_IBC')
+    t = X.blankCells(t, bodies, BM, blankingType="center_in", dim=dim,delta=0., cellNName='cellN_IBC')
 
     numz = {}
     zones = Internal.getZones(t)
@@ -3101,7 +3101,7 @@ def computeCFL_dtlocal(t, isconv=1, isvisc=1, isSound=1):
 ##[TODO] Further testing on _decoupe2 & _decoupe4
 ## NOTE: _decoupe2 destroys all BCs and raccords. It is recommended to check these two
 ##       before proceeding.
-def _decoupe2(t, exposantMax = 2, NP=0):
+def _decoupe2(t, exposantMax=2, NP=0):
 
     import Transform.PyTree as T
 
@@ -3219,7 +3219,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
 
     for perio in liste_BCPeriodiques:
         #print('perio[0]= ', perio[0])
-        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol=1.e-7,dim=dimPb)
 
 
 
@@ -3333,7 +3333,7 @@ def _decoupe2(t, exposantMax = 2, NP=0):
 
     t = X.connectMatch(t, tol=1.e-6, dim=dimPb)
     for perio in liste_BCPeriodiques:
-        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+        t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol=1.e-7,dim=dimPb)
 
     C.convertPyTree2File(t, 'essai.cgns')
 
@@ -3459,7 +3459,7 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
 
         t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
         for perio in liste_BCPeriodiques:
-            t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7,dim=dimPb)
+            t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol=1.e-7,dim=dimPb)
 
     dicoTps = {}
     zones  = Internal.getNodesFromType(t, 'Zone_t')
@@ -3574,7 +3574,7 @@ def _decoupe4(t,tc=None,exposantMax=2,NP=0,taille_bloc=25,isOctree=False):
 
         t = X.connectMatch(t, tol=1.e-7, dim=dimPb)
         for perio in liste_BCPeriodiques:
-            t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol = 1.e-7, dim=dimPb)
+            t = X.connectMatchPeriodic(t, rotationCenter=perio[2],rotationAngle=[perio[1][0],perio[1][1],perio[1][2]], translation=perio[0],tol=1.e-7, dim=dimPb)
 
         C.addState2Node__(t, 'EquationDimension', dimPb)
         t = Internal.addGhostCells(t, t, 2, adaptBCs=1, fillCorner=0)

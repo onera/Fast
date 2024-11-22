@@ -26,7 +26,7 @@ s = G.cylinder((0,0,0), 1., 2.0, 360., 0., 5*0.01, (160,1,1))
 # Grilles cartesiennes
 NI = 501 ; dh = 40./(NI-1); vmin = 31
 snears = [dh*(vmin-1)]
-o      = G.octree([s], snears,dfar = 10., balancing=1)
+o      = G.octree([s], snears,dfar=10., balancing=1)
 res    = G.octree2Struct(o,vmin=vmin,ext=3,optimized=0,merged=1)
 res    = C.fillEmptyBCWith(res, 'far', 'BCFarfield', dim=2)
 res    = T.addkplane(res)

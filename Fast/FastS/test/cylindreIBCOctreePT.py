@@ -30,7 +30,7 @@ if restart == False:
     # Grilles cartesiennes
     NI = 501 ; dh = 40./(NI-1); vmin = 31
     snears = [dh*(vmin-1)]
-    o = G.octree([s], snears,dfar = 100., balancing=1)
+    o = G.octree([s], snears,dfar=100., balancing=1)
     C.convertPyTree2File([o], "octree.cgns")
 
     res = G.octree2Struct(o,vmin=vmin,ext=3,optimized=0,merged=1)

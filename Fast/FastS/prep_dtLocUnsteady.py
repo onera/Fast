@@ -56,7 +56,7 @@ t, exposant_max = FastS.computeCFL_dtlocal(t)
 
 
 ### Decoupe le maillage en zones de niveaux en temps different ###
-t = FastS._decoupe2(t, exposant_max, NP = NP)
+t = FastS._decoupe2(t, exposant_max, NP=NP)
 ##################################################################
 
 
