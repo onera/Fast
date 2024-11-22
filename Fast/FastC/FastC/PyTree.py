@@ -2789,7 +2789,7 @@ def _BCcompact(t):
                     tab[1]= 0
                     tab[2]= 0
                     tab[3]= 0
-                    Internal.createUniqueChild( Prop, 'WMLES_parameter','DataArray_t',value= tab)
+                    Internal.createUniqueChild( Prop, 'WMLES_parameter','DataArray_t',value=tab)
                     wmles  = Internal.getNodeFromName(Prop,'WMLES_parameter')
 
 

@@ -464,7 +464,7 @@ def _fillGhostcells(zones, tc, infos_zones, timelevel_target, vars, nstep, ompmo
 
         #apply BC
         if exploc != 1:
-            _applyBC(infos_zones, hook1, nstep, nitmax, var= vars)
+            _applyBC(infos_zones, hook1, nstep, nitmax, var=vars)
 
         #t3 = C.newPyTree(['Base', zones])
         #t2 = Internal.copyTree(t3)

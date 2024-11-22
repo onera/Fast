@@ -51,7 +51,7 @@ dims = Internal.getZoneDim(ovs2); ni = dims[1]; nj = 1
 ovs2 = T.subzone(ovs2,(1,1,1),(ni,nj,1))
 
 snears = [dh*(vmin-1)]*2
-o = G.octree([ovs1,ovs2], snears,dfar = 100., balancing=1)
+o = G.octree([ovs1,ovs2], snears,dfar=100., balancing=1)
 #C.convertPyTree2File([o,ovs1,ovs2], "octree.cgns")
 
 res = G.octree2Struct(o,vmin=vmin,ext=3,optimized=0,merged=1)

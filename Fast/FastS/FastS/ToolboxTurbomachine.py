@@ -235,7 +235,7 @@ def addFlowSolution2FastS(data, nbBlock, rootDataFileName):
 
         p += 1
 
-def addUniformFlowSolution2FastS(t, Model = 'NSTurbulent'):
+def addUniformFlowSolution2FastS(t, Model='NSTurbulent'):
 
     ret = CP.isNamePresent(t, 'centers:Density')
     if ret != 1: # Density not present
@@ -453,11 +453,11 @@ def cleanGhostCells(data, nbBlock, nbGhostRank):
             for axis in range(3):
                 indexMax = indexList[axis]    #the max index in the "axis" direction (for each axis)
 
-                FlowSolArray = numpy.delete(FlowSolArray, 0,  axis = axis) #we delete the 2 first ranks
-                FlowSolArray = numpy.delete(FlowSolArray, 0,  axis = axis)
+                FlowSolArray = numpy.delete(FlowSolArray, 0,  axis=axis) #we delete the 2 first ranks
+                FlowSolArray = numpy.delete(FlowSolArray, 0,  axis=axis)
 
-                FlowSolArray = numpy.delete(FlowSolArray, indexMax-3, axis = axis) # and the last 2 ranks (we deleted 2 ranks so, there are (indexMax-1)-2 ranks left)
-                FlowSolArray = numpy.delete(FlowSolArray, indexMax-4, axis = axis)
+                FlowSolArray = numpy.delete(FlowSolArray, indexMax-3, axis=axis) # and the last 2 ranks (we deleted 2 ranks so, there are (indexMax-1)-2 ranks left)
+                FlowSolArray = numpy.delete(FlowSolArray, indexMax-4, axis=axis)
 
                 CI.setValue(chilDictFlowSol[FlowSolNode], FlowSolArray) #we replace with the new array without the ghost cells
 
@@ -472,11 +472,11 @@ def cleanGhostCells(data, nbBlock, nbGhostRank):
             for axis in range(3):
                 indexMax = indexList[axis]    #the max index in the "axis" direction (for each axis)
 
-                CoordinateArray = numpy.delete(CoordinateArray, 0,  axis = axis) #we delete the 2 first ranks
-                CoordinateArray = numpy.delete(CoordinateArray, 0,  axis = axis)
+                CoordinateArray = numpy.delete(CoordinateArray, 0,  axis=axis) #we delete the 2 first ranks
+                CoordinateArray = numpy.delete(CoordinateArray, 0,  axis=axis)
 
-                CoordinateArray = numpy.delete(CoordinateArray, indexMax-2, axis = axis) # and the last 2 ranks (we deleted 2 ranks so, there are (indexMax)-2 ranks left)
-                CoordinateArray = numpy.delete(CoordinateArray, indexMax-3, axis = axis) #it's indexMax and not indexMax-1 because the coordinate nodes are note centered (+1)
+                CoordinateArray = numpy.delete(CoordinateArray, indexMax-2, axis=axis) # and the last 2 ranks (we deleted 2 ranks so, there are (indexMax)-2 ranks left)
+                CoordinateArray = numpy.delete(CoordinateArray, indexMax-3, axis=axis) #it's indexMax and not indexMax-1 because the coordinate nodes are note centered (+1)
 
                 CI.setValue(chilDictCoordinates[CoordinateNode], CoordinateArray)
                 CI.setValue(chilDictCoordinates2[CoordinateNode], CoordinateArray)
@@ -934,7 +934,7 @@ def addNonUniformBCData(t, BCName, BCValue, DataFile):
                 for v in vars:
                     varBC = numpy.reshape( v[1], v[1].size, order='F')                 #we reshape the array with a Fortran like order
 
-                    CI.createUniqueChild( Prop, v[0],'DataArray_t',value= varBC)          #we create a child node for each para
+                    CI.createUniqueChild( Prop, v[0],'DataArray_t',value=varBC)          #we create a child node for each para
 
     return None
 
@@ -1247,7 +1247,7 @@ def interpolationAzim(t, tinit, interpolation):
 '''
 
 # XXX COMPLETE
-def RadEq(t, ppiv_def, rpiv_def, zone = 'inside' ):
+def RadEq(t, ppiv_def, rpiv_def, zone='inside' ):
     #This function calculates the 1D radial pressure distribution according to radial equilibrium (recurrence)
 
     #DATA
@@ -1389,7 +1389,7 @@ def outradeqExtension(t, tdata, outBlock):
 
 
 # XXX ALMOST, c
-def addOutradeq2FastS(t, nbBlock,  outBlock, omega,  nbband, c, ppiv_def, rpiv_def = 0, location ='inside', interpolation = 'linear' ):
+def addOutradeq2FastS(t, nbBlock,  outBlock, omega,  nbband, c, ppiv_def, rpiv_def=0, location='inside', interpolation='linear' ):
     #This function calculates the 2D pressure field of the outflow block (.Solver#Property) according to the radial equilibrium
     #it creates the nodes needed to update the solution while running computation. It saves the pressure fields on 'outradeq.dat'
 
@@ -1437,7 +1437,7 @@ def addOutradeq2FastS(t, nbBlock,  outBlock, omega,  nbband, c, ppiv_def, rpiv_d
 # ========================================================================================================
 #  STEP4 =  Radial equilibrium
 # ========================================================================================================
-    t4 = RadEq(t3, ppiv_def, rpiv_def, zone = location)                             #1D
+    t4 = RadEq(t3, ppiv_def, rpiv_def, zone=location)                             #1D
     printStep('STEP4 =  Radial equilibrium DONE' )
 # ========================================================================================================
 #  STEP5 =  azimutal extension/carto creation
@@ -1755,7 +1755,7 @@ def interpolationAzimUpdate(radius_star, dpdr_star, radius_real, interpolation='
     return dpdr
 
 # XXX COMPLETE
-def RadEqUpdateUpdate(dpdr1D, radius_real1D, ppiv_def, rpiv_def, zone = 'inside' ):
+def RadEqUpdateUpdate(dpdr1D, radius_real1D, ppiv_def, rpiv_def, zone='inside' ):
     #This function calculates the radial pressure distribution according to radial equilibrium (recurrence)
 
     #DATA
@@ -1813,7 +1813,7 @@ def RadEqUpdateUpdate(dpdr1D, radius_real1D, ppiv_def, rpiv_def, zone = 'inside'
 
     return pArray
 
-def outradeqExtensionUpdate_(t, outBlock, press1D, dir, nb_avg, iteration, display = 100000000):
+def outradeqExtensionUpdate_(t, outBlock, press1D, dir, nb_avg, iteration, display=100000000):
 
     size    = press1D.size*nb_avg
     press2d = numpy.empty(size, numpy.float64)
@@ -1837,7 +1837,7 @@ def outradeqExtensionUpdate_(t, outBlock, press1D, dir, nb_avg, iteration, displ
     return press2d
 
 # XXX COMPLETE
-def outradeqExtensionUpdate(tinit, outBlock,  radius1D, press1D, iteration, display = 100000000):
+def outradeqExtensionUpdate(tinit, outBlock,  radius1D, press1D, iteration, display=100000000):
     #This function transforms p(r) in p(r,theta) , from 1D to 2D and save the results every "display"
 
     #DATA
@@ -1907,7 +1907,7 @@ def outradeqExtensionUpdate(tinit, outBlock,  radius1D, press1D, iteration, disp
     return press2NoGhost
 
 #~ XXX ALMOST c
-def _updateOutradeq2FastS(iteration, t, rad_real1D, rad_star1D,  nbBlock,  outBlock, omega,   nbband, c, ppiv_def, rpiv_def, location ='inside', interpolation = 'linear', display=100000000 ):
+def _updateOutradeq2FastS(iteration, t, rad_real1D, rad_star1D,  nbBlock,  outBlock, omega,   nbband, c, ppiv_def, rpiv_def, location='inside', interpolation='linear', display=100000000 ):
     #This function updates the 2D pressure field of the outflow block (.Solver#Property) according to the radial equilibrium
 
     #DATA
@@ -1973,7 +1973,7 @@ def _updateOutradeq2FastS(iteration, t, rad_real1D, rad_star1D,  nbBlock,  outBl
 #  STEP4 = radial equilibrium
 # ======================================================================================================
     #press1D = RadEqUpdateUpdate(dpdr_real1D, rad_real1D, ppiv_def, rpiv_def, zone = location )      #1D
-    press1D = RadEqUpdateUpdate(dpdr_real1D, radius, ppiv_def, rpiv_def, zone = location )      #1D
+    press1D = RadEqUpdateUpdate(dpdr_real1D, radius, ppiv_def, rpiv_def, zone=location )      #1D
     #print('press_carter=',press1D[87])
     #printStep('STEP4 =  Radial equilibrium DONE' )
 # ======================================================================================================
