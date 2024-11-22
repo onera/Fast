@@ -8,7 +8,7 @@ import Connector.PyTree as X
 import Transform.PyTree as T
 import KCore.test as test
 import math
-import numpy 
+import numpy
 import Apps.Fast.LBM as App
 
 myApp = App.LBM(format='single')
@@ -25,11 +25,11 @@ c0=343.2
 n = Nx-1
 tree=dict()
 tree['mach']=0.1
-tree['maille']=0.01                     
+tree['maille']=0.01
 tree['timestep']=tree['maille']/(c0*numpy.sqrt(3.))
 tree['reynolds']=100.
 tree['char_length']=L/10. # R0
-tree['rho0']=1.                       
+tree['rho0']=1.
 
 # Fluid
 rho0 = 1.
@@ -89,13 +89,13 @@ numz['cache_blocking_J']=1000000
 numz['cache_blocking_K']=1000000
 numz['cache_blocking_I']=1000000
 numz["time_step"]=dt # pour l instant pas de viscosite
-myApp.set(numb=numb) 
+myApp.set(numb=numb)
 myApp.set(numz=numz)
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 #C.convertPyTree2File(t,"restart.cgns")
 (t, tc, metrics)  = FastLBM.warmup(t, tc)
 
-for it in range(1,nit+1):    
+for it in range(1,nit+1):
     print("--------- iteration %d -------------"%it)
     FastLBM._compute(t, metrics, it, tc,layer='Python',nittotal=nit)
 
@@ -123,4 +123,3 @@ C._initVars(t,'{centers:VelocityZ}={centers:VelocityZ}*%20.16g/{centers:Density}
 # test.testT(t,1)
 #t=FastLBM.rmGhostCells(t,NG)
 #C.convertPyTree2File(t,"restart.cgns")
-

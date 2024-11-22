@@ -64,19 +64,19 @@ for tranche in range(NbTranche):
                 # kmin
                 if rg[2,0] == 1:
                     name2 = str(tranche-1)
-                    if tranche == 0: 
+                    if tranche == 0:
                         name2 = str(NbTranche-1)
                         perio[2][0][2][2][1][2] = perio[2][0][2][2][1][2]*NbTranche
                         print('PERIO', perio[2][0][2][2][1][2])
-                    else:  
-                        Internal._rmNodesFromName(match,'GridConnectivityProperty')    
+                    else:
+                        Internal._rmNodesFromName(match,'GridConnectivityProperty')
                 else: # kmax
                     name2 = str(tranche+1)
-                    if tranche == NbTranche-1: 
+                    if tranche == NbTranche-1:
                         name2 = str('0')
                         perio[2][0][2][2][1][2] = perio[2][0][2][2][1][2]*NbTranche
                         print('PERIO', perio[2][0][2][2][1][2])
-                    else: Internal._rmNodesFromName(match,'GridConnectivityProperty')    
+                    else: Internal._rmNodesFromName(match,'GridConnectivityProperty')
 
             name ='tr'+name2+'_'+name
             Internal.setValue(match,name)
@@ -93,7 +93,7 @@ for tranche in range(NbTranche):
         for z in zones:
             proc = Internal.getNodeFromName2(z,'proc')
             if proc is not None:
-                if pr==proc[1][0]: 
+                if pr==proc[1][0]:
                     zout.append(z)
             else:
                 zout.append(z)

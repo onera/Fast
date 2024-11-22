@@ -53,7 +53,7 @@ for z in zones:
 
 # Time Steps
 nit = 300  ; time = 0.
-for it in range(nit): 
+for it in range(nit):
     Fast._compute(t, metrics, it, tc)
 
     if it%20==0:

@@ -73,7 +73,7 @@ setup(
     packages=['FastC'],
     package_dir={"":"."},
     ext_modules=listExtensions
-    )
+)
 
 # Check PYTHONPATH ===========================================================
 Dist.checkPythonPath(); Dist.checkLdLibraryPath()

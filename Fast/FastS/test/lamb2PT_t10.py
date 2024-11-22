@@ -33,7 +33,7 @@ for z in Internal.getZones(t):
 # Chimera
 t = X.applyBCOverlaps(t, depth=3)
 tc = C.node2Center(t)
-tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse', 
+tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse',
                      sameName=1, method='lagrangian', dim=3)
 
 t = I.initLamb(t, position=(45.,25.), Gamma=2., MInf=0.7, loc='centers')

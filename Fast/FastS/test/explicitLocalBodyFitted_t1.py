@@ -56,13 +56,13 @@ FastC._setNum2Zones(t, numz)
 ## .Solver#define
 
 print('++++ pre-warmup ++++')
-(t, tc, metrics) = FastS.warmup(t, tc) 
+(t, tc, metrics) = FastS.warmup(t, tc)
 print('++++ post-warmup ++++')
 
 time_step = Internal.getNodeFromName(t, 'time_step')
 time_step = Internal.getValue(time_step)
 for it in range(NIT):
-    FastS._compute(t, metrics, it, tc,layer='Python')   
+    FastS._compute(t, metrics, it, tc,layer='Python')
     if it%display_probe_freq == 0:
         print('- %d / %d - %f'%(it+it0, NIT+it0, time0))
         FastS.display_temporal_criteria(t, metrics, it, format='double')
@@ -77,9 +77,3 @@ Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t, 1)
 shutil.rmtree(LOCAL+"/cgns_lts")
 #C.convertPyTree2File(t, "out.cgns")
-
-
-
-
-
-

@@ -13,7 +13,7 @@ import os
 import re
 
 
-# Cree le fichier Shift contenant les infos tailles Pb, tmps cpu et shift. Ce fichier peut etre utiliser pour visualiser (en 2D ou 1D) le tps CPU en fonction des tailles en I,J a l'aide du script plotData.py 
+# Cree le fichier Shift contenant les infos tailles Pb, tmps cpu et shift. Ce fichier peut etre utiliser pour visualiser (en 2D ou 1D) le tps CPU en fonction des tailles en I,J a l'aide du script plotData.py
 
 Imin = 119
 Imax = 200
@@ -36,7 +36,7 @@ f.close
 
 sizeK=80
 shifttab=[0,64,128,256,384,512,640,768]
-timeshift=ny.empty(len(shifttab), dtype=float)    
+timeshift=ny.empty(len(shifttab), dtype=float)
 timeshift[:] = 1000
 
 for sizeI in xrange(Imin,Imax,1):
@@ -59,7 +59,7 @@ for sizeI in xrange(Imin,Imax,1):
             print("#########################"+'\n')
 
             print(shift,(sizeI-5)*(sizeJ-5))
-            if shift >= (sizeI-5)*(sizeJ-5): 
+            if shift >= (sizeI-5)*(sizeJ-5):
                 itshift=itshift+1
                 continue
             if ((sizeI <= 40) or (sizeJ <= 40)):
@@ -72,7 +72,7 @@ for sizeI in xrange(Imin,Imax,1):
             del(a)
             t = C.addState(t, 'GoverningEquations', 'NSLaminar')
             t = C.addState(t, MInf=mach)
-        #  
+        #
 # Numerics
             numb = {}
             numb["temporal_scheme"]    = "explicit"
@@ -93,12 +93,12 @@ for sizeI in xrange(Imin,Imax,1):
             (t,tc, metrics)  = FastS.warmup(t,tc=None)
 
             nit =     1; time = 0.
-            time20=ny.empty(nit, dtype=float)    
+            time20=ny.empty(nit, dtype=float)
             timeStep = numz['time_step']
 
             t00=timeit.default_timer()
 
-# Compute 
+# Compute
             for it in xrange(nit):
                 t0=timeit.default_timer()
                 FastS._compute(t, metrics, 1, tc=None, NIT=40)
@@ -106,7 +106,7 @@ for sizeI in xrange(Imin,Imax,1):
                 print("Compute time",(t1-t0)*scale/40)
                 time20[it]=(t1-t0)*scale/40
 #                if (it%10 == 0):
-#                    FastS.display_temporal_criteria(t, metrics, it)                        
+#                    FastS.display_temporal_criteria(t, metrics, it)
 #                    print('- %d - %f'%(it, time))
 #                    time += timeStep
    #         FastS.itt('pause')
@@ -120,7 +120,7 @@ for sizeI in xrange(Imin,Imax,1):
             FastS.HOOKIBC = None
 
             timeshift[itshift]=time20[0]
-            itshift=itshift+1            
+            itshift=itshift+1
         f = open('Shift', 'a')
         f.write(str(Nbthread)+","+str(sizeI-5)+","+str(sizeJ-5)+","+str(sizeK-5)+","+str(min(timeshift))+","+str(shifttab[ny.argmin(timeshift)])+'\n')
         f.close()

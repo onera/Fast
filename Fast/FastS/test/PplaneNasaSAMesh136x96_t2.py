@@ -10,13 +10,13 @@ t = C.convertFile2PyTree('Pplane_136_96.cgns')
 t = C.addState(t, MInf=0.2, ReInf=25.e6, MutSMuInf=15)
 
 numb = {'temporal_scheme':'explicit', 'ss_iteration':30, 'modulo_verif':1 }
-numz = {'ssdom_IJK': [600, 30, 20000], 
-       'io_thread': -4, 
-       'time_step': 0.00000152280, 
-       'time_step_nature': 'local', 
-       'cfl': 1, 
-       'scheme':'ausmpred', 
-       'epsi_newton': 0.02}
+numz = {'ssdom_IJK': [600, 30, 20000],
+        'io_thread': -4,
+        'time_step': 0.00000152280,
+        'time_step_nature': 'local',
+        'cfl': 1,
+        'scheme':'ausmpred',
+        'epsi_newton': 0.02}
 Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)

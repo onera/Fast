@@ -51,15 +51,15 @@ for tree in [t]:
 sample=3
 modulo_verif=100
 numb = {'temporal_scheme':'implicit', 'ss_iteration':1, 'modulo_verif':modulo_verif }
-numz = {'ssdom_IJK': [600, 30, 20000], 
-       'io_thread': -4, 
-       'time_step': 0.00000152280, 
-       'time_step_nature': 'local', 
-       'cfl': 100, 
-       'scheme':'roe', 
-       'slope':'o3', 
-       'wallmodel_sample':sample,
-       'epsi_newton': 0.02}
+numz = {'ssdom_IJK': [600, 30, 20000],
+        'io_thread': -4,
+        'time_step': 0.00000152280,
+        'time_step_nature': 'local',
+        'cfl': 100,
+        'scheme':'roe',
+        'slope':'o3',
+        'wallmodel_sample':sample,
+        'epsi_newton': 0.02}
 Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)

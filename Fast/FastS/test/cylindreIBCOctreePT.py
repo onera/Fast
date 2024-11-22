@@ -21,7 +21,7 @@ if restart == False:
     adim = Adim.adim1(MInf=MInf)
 
     # Solver settings
-    numb = {'temporal_scheme':'explicit', 'ss_iteration':20} 
+    numb = {'temporal_scheme':'explicit', 'ss_iteration':20}
     numz = {'time_step':0.01, 'scheme':'ausmpred'}
 
     # Cylindre
@@ -34,7 +34,7 @@ if restart == False:
     C.convertPyTree2File([o], "octree.cgns")
 
     res = G.octree2Struct(o,vmin=vmin,ext=3,optimized=0,merged=1)
-    res = C.fillEmptyBCWith(res, 'far', 'BCFarfield', dim=2) 
+    res = C.fillEmptyBCWith(res, 'far', 'BCFarfield', dim=2)
     res = T.addkplane(res)
 
     t = C.newPyTree(['Cart']); t[2][1][2] = res
@@ -43,7 +43,7 @@ if restart == False:
     # Interpolations pour Octree
     t = X.applyBCOverlaps(t, depth=2)
     tc = C.node2Center(t)
-    tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse', 
+    tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse',
                          sameName=1, method='leastsquares',dim=2)
     t = C.initVars(t, 'centers:cellN', 1.) # init pour les IBCs
     # Blanking
@@ -66,7 +66,7 @@ if restart == False:
     tc = X.setIBCData(t, tc, loc='centers', nature=1, storage='inverse', hi=dh, he=dh,
                       method='leastsquares',dim=2)
     t = C.rmVars(t,['centers:gradxTurbulentDistance','centers:gradyTurbulentDistance','centers:gradzTurbulentDistance',\
-                        'TurbulentDistance','centers:TurbulentDistance'])
+                    'TurbulentDistance','centers:TurbulentDistance'])
     tc = C.rmVars(tc, 'cellN') # tres important pour l'instant
 
     # Init

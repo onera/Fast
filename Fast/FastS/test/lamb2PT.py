@@ -16,7 +16,7 @@ t = C.newPyTree(['Base',[a1,a2]])
 # Chimera
 t = X.applyBCOverlaps(t, depth=2)
 tc = C.node2Center(t)
-tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse', 
+tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse',
                      sameName=1, method='leastsquares', dim=2)
 tc = C.rmVars(tc, 'cellN') # tres important pour l'instant
 

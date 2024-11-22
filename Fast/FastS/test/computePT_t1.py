@@ -1,4 +1,4 @@
-# - compute (pyTree) - 
+# - compute (pyTree) -
 import Converter.PyTree as C
 import Converter.Internal as Internal
 import Generator.PyTree as G

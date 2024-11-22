@@ -31,10 +31,10 @@ FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 (t, tc, metrics) = FastS.warmup(t, None)
 
-# Number or records to store residuals 
+# Number or records to store residuals
 nrec = 100//modulo_verif
 
-#To remove old ConvergenceHistory nodes 
+#To remove old ConvergenceHistory nodes
 C._rmNodes(t, "ZoneConvergenceHistory")
 
 #Convergence history with nrec records

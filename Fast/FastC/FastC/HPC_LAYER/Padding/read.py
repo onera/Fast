@@ -12,16 +12,16 @@ def readdata(filename):
     i=0
     with file(filename) as input:
         for count, line in enumerate(input):
-            data[i] = line.strip().split(',')      
+            data[i] = line.strip().split(',')
             i       = i+1
-    i  = 1 
+    i  = 1
     while ((data[i-1][6]==data[i][6]) and (i<data.shape[0]-ishift)):
-        i = i + 1 
+        i = i + 1
     ni=i
 
-    j  = 1 
+    j  = 1
     while ((int(data[j-1][7])==int(data[j][7])-1) and (j<data.shape[0]-ishift)):
-        j = j + 1 
+        j = j + 1
     ni=i
     nj=j
     nij=ni*nj
@@ -39,7 +39,7 @@ def readdata(filename):
                 dataout[4][k][i][j] = float(data[k*nij**2+j*ni+i][0])
                 dataout[5][k][i][j] = float(data[k*nij**2+j*ni+i][6])
                 dataout[6][k][i][j] = float(data[k*nij**2+j*ni+i][7])
-                dataout[7][k][i][j] = float(data[k*nij**2+j*ni+i][8])        
+                dataout[7][k][i][j] = float(data[k*nij**2+j*ni+i][8])
                 dataout[8][k][i][j] = float(data[k*nij**2+j*ni+i][-1])
     return dataout;
 
@@ -52,18 +52,18 @@ def readdatashift(filename):
     i=0
     with file(filename) as input:
         for count, line in enumerate(input):
-            data[i] = line.strip().split(',')      
+            data[i] = line.strip().split(',')
             i       = i+1
 
-    i  = 1 
+    i  = 1
     for n in xrange(1,data.shape[0]-1):
-        if(int(data[n-1][1])==int(data[n][1])-1): 
+        if(int(data[n-1][1])==int(data[n][1])-1):
             i=i+1
     ni=i
 
-    j  = 1 
+    j  = 1
     while ((int(data[j-1][2])==int(data[j][2])-1) and (j<data.shape[0]-1)):
-        j = j + 1 
+        j = j + 1
     ni=i
     nj=j
     nij=ni*nj
@@ -95,34 +95,34 @@ def readdatashifttot(filename,jkstep):
     with file('tempread') as input:
         for count, line in enumerate(input):
             if i>4:
-                data[i-5] = line.strip().split(',')    
+                data[i-5] = line.strip().split(',')
             i       = i+1
 
-    ni  = 1 
-    nj  = 1 
+    ni  = 1
+    nj  = 1
 
     for n in xrange(1,data.shape[0]-1):
-        if(int(data[n-1][6])==int(data[n][6])-ishift): 
+        if(int(data[n-1][6])==int(data[n][6])-ishift):
             ni=ni+1
 
     n=1
     while(n<data.shape[0] and (int(data[n-1][7])<=int(data[n][7]))):
         if(int(data[n-1][7])==int(data[n][7])-ishift):
-            nj=nj+1 
+            nj=nj+1
         n=n+1
 
     n=1
-    nproc=1  
+    nproc=1
     while(n<data.shape[0] and (int(data[n-1][0])<=int(data[n][0]))):
         if(int(data[n-1][0])!=int(data[n][0])):
-            nproc=nproc+1 
+            nproc=nproc+1
         n=n+1
 
     n=1
-    nshift=1  
+    nshift=1
     while(n<data.shape[0] and (int(data[n-1][9])<=int(data[n][9]))):
         if(int(data[n-1][9])!=int(data[n][9])):
-            nshift=nshift+1 
+            nshift=nshift+1
         n=n+1
 
     nij=ni*nj
@@ -131,23 +131,23 @@ def readdatashifttot(filename,jkstep):
 #  print "file length?",data.shape[0]
 #
 #  for n in xrange(1,data.shape[0]-1):
-#    if( (int(data[n-1][6])!=int(data[n][6]))and (int(data[n-1][6])<int(data[n][6])) ): 
+#    if( (int(data[n-1][6])!=int(data[n][6]))and (int(data[n-1][6])<int(data[n][6])) ):
 #      ni=ni+1
 #
 #  njfinal = 1
 #  for n in xrange(1,data.shape[0]-1):
-#    if( (int(data[n-1][7])!=int(data[n][7]))and (int(data[n-1][7])<int(data[n][7])) ): 
+#    if( (int(data[n-1][7])!=int(data[n][7]))and (int(data[n-1][7])<int(data[n][7])) ):
 #      nj=nj+1
 #    if(int(data[n-1][7])>int(data[n][7])):
 #      if(nj>=njfinal):
 #        njfinal=nj
 #        nj=0
-#      
+#
 #
 #  nprocfinal = 1
 #  nproc=1
 #  for n in xrange(1,data.shape[0]-1):
-#    if( (int(data[n-1][0])!=int(data[n][0]))and (int(data[n-1][0])<int(data[n][0])) ): 
+#    if( (int(data[n-1][0])!=int(data[n][0]))and (int(data[n-1][0])<int(data[n][0])) ):
 #      nproc=nproc+1
 #    if(int(data[n-1][0])>int(data[n][0])):
 #      if(nproc>=nprocfinal):
@@ -158,7 +158,7 @@ def readdatashifttot(filename,jkstep):
 #  nshift=1
 #  for n in xrange(1,data.shape[0]-1):
 #    if (int(data[n][9])==0):nshift=1
-#    if( (int(data[n-1][9])<int(data[n][9])) ): 
+#    if( (int(data[n-1][9])<int(data[n][9])) ):
 #      nshift=nshift+1
 #    if(nshift>=nshiftfinal):
 #        nshiftfinal=nshift
@@ -205,19 +205,19 @@ def readdatashift_final(filename):
     i=0
     with file(filename) as input:
         for count, line in enumerate(input):
-            data[i] = line.strip().split(',')    
+            data[i] = line.strip().split(',')
             i       = i+1
 
-    ni  = 1 
-    nj  = 1 
+    ni  = 1
+    nj  = 1
     for n in xrange(1,data.shape[0]-1):
-        if(int(data[n-1][1])==int(data[n][1])-1): 
+        if(int(data[n-1][1])==int(data[n][1])-1):
             ni=ni+1
 
     n=1
     while(n<data.shape[0] and (int(data[n-1][2])<=int(data[n][2]))):
         if(int(data[n-1][2])==int(data[n][2])-1):
-            nj=nj+1 
+            nj=nj+1
         n=n+1
 
     nij=ni*nj

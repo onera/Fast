@@ -12,7 +12,7 @@ def writedatashifttot(filename,jkstep):
     with file(filename) as input:
         for count, line in enumerate(input):
             if i>4:
-                data[i-5] = line.strip().split(',')    
+                data[i-5] = line.strip().split(',')
             i       = i+1
 
     shifttab=np.asarray([0,64,128,256,384,512,640,768])

@@ -77,7 +77,7 @@ setup(
     packages=['FastS'],
     package_dir={"":"."},
     ext_modules=listExtensions
-    )
+)
 
 # Check PYTHONPATH ===========================================================
 Dist.checkPythonPath(); Dist.checkLdLibraryPath()

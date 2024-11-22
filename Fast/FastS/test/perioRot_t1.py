@@ -9,7 +9,7 @@ import Converter.Internal as Internal
 import KCore.test as test
 
 angle = 45.
-a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5)) 
+a = G.cylinder((0.,0.,0.), 0.5, 1., angle , 0., 2., (50,50,5))
 t = C.newPyTree(['Base',a])
 C._addState(t, 'GoverningEquations', 'NSLaminar')
 C._addState(t, MInf=0.1, ReInf=1600., adim='adim2funk')
@@ -61,7 +61,7 @@ C._fillEmptyBCWith(t, 'Extrap', 'BCExtrapolate', dim=3)
 C.addState2Node__(t, 'EquationDimension', dim)
 NGhostCells = 2
 Internal._addGhostCells(t, t, NGhostCells, adaptBCs=1, fillCorner=0)
-if dim == 2: 
+if dim == 2:
     T._addkplane(t)
     T._contract(t, (0,0,0), (1,0,0), (0,1,0), 0.01)
     T._makeDirect(t)

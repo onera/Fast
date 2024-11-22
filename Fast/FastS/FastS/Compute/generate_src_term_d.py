@@ -23,7 +23,7 @@ models      = ['spsource_SA', 'spsource_SA_comp', 'spsource_SA_diff','vispalart'
 #open file for sources compilation
 srcs= open('../../srcs.py','r')
 lines_srcs = srcs.readlines()
-srcs.close() 
+srcs.close()
 srcs= open('../../srcs.py','w')
 
 for model  in models:
@@ -65,7 +65,7 @@ for model  in models:
     #on supprime 4 lignes,; faure gaffe si changememnt de version tapenade
     c = 0
     for l in lines:
-        if 'DO ii2=1,param_int' in l: 
+        if 'DO ii2=1,param_int' in l:
             c1=0
             while ' ENDDO' not in lines[c+c1]: c1+=1
             c1+=1
@@ -73,7 +73,7 @@ for model  in models:
         c+=1
     c = 0
     for l in lines:
-        if 'DO ii1=1,param_int' in l: 
+        if 'DO ii1=1,param_int' in l:
             c1=0
             while ' ENDDO' not in lines[c+c1]: c1+=1
             c1+=1
@@ -92,15 +92,15 @@ for model  in models:
     #modif makefile
     target = tapenade_file
     include = True
-    for l in lines_srcs: 
+    for l in lines_srcs:
         if target in l: include = False
     srcs_out=[]
-    if include == True: 
+    if include == True:
         #recherche la fonction originelle avant passage tapenade
         input_file  = 'SA/'+model+'.for'
         c_index =0
         c = 0
-        for l in lines_srcs: 
+        for l in lines_srcs:
             if 'FastS/Compute/'+input_file in l: c_index = c
             c+=1
         c_index +=1
@@ -113,5 +113,4 @@ for model  in models:
 
 #write of srcs.py
 for l in lines_srcs: srcs.write(l)
-srcs.close() 
-
+srcs.close()

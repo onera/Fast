@@ -14,7 +14,7 @@ t = C.newPyTree(['Base',a])
 
 U0 = 140.67
 P0 = 89280.81
-L0 = 1.  
+L0 = 1.
 R0 = 1.111711
 T0 = 279.15
 t = C.addState(t, 'GoverningEquations', 'NSLaminar')
@@ -155,4 +155,3 @@ for it in range(nit):
 C.convertPyTree2File(t, 'out.cgns')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
-

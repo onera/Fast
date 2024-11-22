@@ -41,11 +41,11 @@ c = C.addBC2Zone(c, 'ov', 'BCOverlap', 'imax')
 # Octree avec grilles cartesiennes
 NI = 501 ; dh = 40./(NI-1)
 vmin = 31
-ovs1 = C.extractBCOfType([b],"BCOverlap")[0] 
+ovs1 = C.extractBCOfType([b],"BCOverlap")[0]
 dims = Internal.getZoneDim(ovs1); ni = dims[1]; nj = 1
 ovs1 = T.subzone(ovs1,(1,1,1),(ni,nj,1))
 
-ovs2 = C.extractBCOfType([c],"BCOverlap")[0] 
+ovs2 = C.extractBCOfType([c],"BCOverlap")[0]
 dims = Internal.getZoneDim(ovs2); ni = dims[1]; nj = 1
 ovs2 = T.subzone(ovs2,(1,1,1),(ni,nj,1))
 
@@ -53,10 +53,10 @@ snears = [dh*(vmin-1)]*2
 o = G.octree([ovs1,ovs2], snears, dfar=100., balancing=1)
 
 res = G.octree2Struct(o,vmin=vmin,ext=3,optimized=0,merged=1)
-res = C.fillEmptyBCWith(res, 'far', 'BCFarfield', dim=2) 
+res = C.fillEmptyBCWith(res, 'far', 'BCFarfield', dim=2)
 res = T.addkplane(res)
 
-t = C.newPyTree(['Cylindre', 'Cart']) 
+t = C.newPyTree(['Cylindre', 'Cart'])
 t[2][1][2] += [b,c] ; t[2][2][2] += res
 t = C.fillMissingVariables(t)
 
@@ -65,9 +65,9 @@ s = D.circle((0,0,0), 1.)
 s = T.addkplane(s, 2) ; s = T.translate(s, (0,0,-0.1))
 s = C.convertArray2Tetra(s) ; s = G.close(s)
 e = P.exteriorFaces(s) ; e = T.splitConnexity(e)
-p = G.fittingPlaster(e[0], bumpFactor=0.) 
+p = G.fittingPlaster(e[0], bumpFactor=0.)
 g1 = G.gapfixer(e[0], p)
-p = G.fittingPlaster(e[1], bumpFactor=0.) 
+p = G.fittingPlaster(e[1], bumpFactor=0.)
 g2 = G.gapfixer(e[1], p)
 s = T.join([s,g1,g2]); s = G.close(s)
 
@@ -80,7 +80,7 @@ t = X.setHoleInterpolatedPoints(t, depth=+2)
 t = X.optimizeOverlap(t,priorities=['Cylindre',0,'Cart',1])
 t = X.maximizeBlankedCells(t,depth=2)
 tc = C.node2Center(t)
-tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse', 
+tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse',
                      sameName=1, method='leastsquares',dim=2)
 # Init
 t = C.addState(t, MInf=MInf, alphaZ=alpha)

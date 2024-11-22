@@ -30,7 +30,7 @@ tfinal = 14.*L0/U0/2.
 dt     = 2.*0.0006*L0/U0
 
 if explicit_select == 'explicit_local':
-    dt     = 2*dt   
+    dt     = 2*dt
 nit    = 100 #int(tfinal/dt)
 
 N      = 66 #Chosen to be a multiple of 3 for the three domains
@@ -64,10 +64,10 @@ else:
     a2 = G.cart((-math.pi*L0/3.,-math.pi*L0,-math.pi*L0),(dx/2,dx,dx), (2*M+1,N+1,N+1))
     a3 = G.cart(( math.pi*L0/3.,-math.pi*L0,-math.pi*L0),(dx  ,dx,dx), (  M+1,N+1,N+1))
     ### Arbre t ####
-    t = C.newPyTree(['Base']) ; t[2][1][2] += [a1,a2,a3]    
+    t = C.newPyTree(['Base']) ; t[2][1][2] += [a1,a2,a3]
 
 #-------------------------
-# State 
+# State
 #-------------------------
 t = C.addState(t, 'GoverningEquations', 'NSLaminar')
 t = C.addState(t, 'EquationDimension' , 3)
@@ -91,7 +91,7 @@ C._initVars(t, '{centers:Temperature} = %g'%T0)
 
 if explicit_select != 'explicit_local':
     t = X.connectMatch(t, tol=1.e-6, dim=3)
-dist = 2*math.pi*L0 
+dist = 2*math.pi*L0
 
 #-------------------------
 # Connections - Raccords
@@ -123,18 +123,18 @@ numz["time_step"]          = dt
 if explicit_select == 'explicit_local':
     numb["temporal_scheme"]= "explicit_local"
     numb["rk"]        	   = 3
-    numb["exp_local"]	   = 2 
+    numb["exp_local"]	   = 2
     numz["niveaux_temps"]  = 2 # Explicit local : nbre niveaux en temps (=1 si explicit global)
 else:
-    numb["temporal_scheme"]= "explicit"   
+    numb["temporal_scheme"]= "explicit"
     numz["niveaux_temps"]  = 1 # Explicit local : nbre niveaux en temps (=1 si explicit global)
 
 Fast._setNum2Zones(t, numz);
 Fast._setNum2Base(t, numb)
 if explicit_select == 'explicit_local':
     zones = Internal.getNodesFromType2(t, 'Zone_t')
-    for z in zones:   
-        solcenter = Internal.getNodeFromName1(z, 'FlowSolution#Centers') 
+    for z in zones:
+        solcenter = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
         niveau = Internal.getNodeFromName(solcenter, 'niveaux_temps')[1][0][0][0]
         dtloc = Internal.getNodeFromName1(z, '.Solver#define')  # noeud
         level = Internal.getNodeFromName1(dtloc, 'niveaux_temps')  # noeud

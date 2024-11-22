@@ -1,4 +1,4 @@
-# - computeVariables (pyTree) - 
+# - computeVariables (pyTree) -
 import Converter.PyTree as C
 import Converter.Internal as Internal
 import Generator.PyTree as G

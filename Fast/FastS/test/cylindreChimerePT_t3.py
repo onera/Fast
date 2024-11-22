@@ -13,7 +13,7 @@ import numpy
 
 # case
 N = 100; h = 1./(N-1)
-a = G.cylinder((0.,0.,0.), 0.5, 1., 360., 0., 10., (2*N,int(0.5*N),1)) 
+a = G.cylinder((0.,0.,0.), 0.5, 1., 360., 0., 10., (2*N,int(0.5*N),1))
 a = X.connectMatch(a, dim=2)
 C._addBC2Zone(a, 'wall', 'BCWall', 'jmin')
 C._fillEmptyBCWith(a, 'overlap', 'BCOverlap')
@@ -27,11 +27,11 @@ t = C.newPyTree(['CYL',a,'FOND',b])
 # prepare
 for name in ['CYL','FOND']:
     C._addState(Internal.getNodeFromName1(t, name),
-                adim='adim1', MInf=0.2, alphaZ=0.0, alphaY=0., ReInf=1.e6, 
+                adim='adim1', MInf=0.2, alphaZ=0.0, alphaY=0., ReInf=1.e6,
                 EquationDimension=2, GoverningEquations='NSTurbulent')
 
 R._setPrescribedMotion3(Internal.getNodeFromName1(t, 'CYL'),
-                'rot', axis_pnt=(-1.5,0.,0.), axis_vct=(0,0,1), omega=0.5)
+                        'rot', axis_pnt=(-1.5,0.,0.), axis_vct=(0,0,1), omega=0.5)
 
 bases = Internal.getBases(t)
 tb = C.newPyTree()
@@ -127,7 +127,7 @@ for z1 in Internal.getZones(Internal.getNodeFromName1(tBB, 'CYL')):
 
 procDict=None; graphX={}
 procDict = Cmpi.getProcDict(tBB)
-graphX = Cmpi.computeGraph(tBB, type='bbox2', t2=None, 
+graphX = Cmpi.computeGraph(tBB, type='bbox2', t2=None,
                            procDict=procDict, reduction=False,
                            intersectionsDict=intersectionDict)
 
@@ -155,16 +155,16 @@ for it in range(100):
     X._setHoleInterpolatedPoints(Internal.getNodeFromName1(t, 'FOND'), depth=2, loc='centers', addGC=False, cellNName='cellN#Motion', dir=0)
     C._initVars(t, "{centers:cellN}=minimum(2,{centers:cellN#Motion})")
 
-    ucData = (graphX, intersectionDict, dictOfADT, 
+    ucData = (graphX, intersectionDict, dictOfADT,
               dictOfNobOfRcvZones, dictOfNozOfRcvZones,
-              dictOfNobOfDnrZones, dictOfNozOfDnrZones, 
+              dictOfNobOfDnrZones, dictOfNozOfDnrZones,
               dictOfNobOfRcvZonesC, dictOfNozOfRcvZonesC,
               time, procDict, True, 0,
               1, 2, 1) # freq, order, verbose
 
     FastS._compute(t, metrics, it, tc, None, layer="Python", ucData=ucData)
 
-    if it%numb["modulo_verif"] == 0: 
+    if it%numb["modulo_verif"] == 0:
         FastS.displayTemporalCriteria(t, metrics, it)
 
 for adt in dictOfADT.values():
@@ -172,6 +172,6 @@ for adt in dictOfADT.values():
 C._rmVars(t, 'centers:cellN#Motion')
 C._rmVars(t, 'centers:cellN#MotionInit')
 Internal._rmNodesByName(t, '.Solver#Param')
-Internal._rmNodesByName(t, '.Solver#ownData') 
+Internal._rmNodesByName(t, '.Solver#ownData')
 
 test.testT(t, 1)

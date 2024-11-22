@@ -2,11 +2,11 @@
 # load a single file t.cgns : split='single'
 #      a file per processor t_proc%d.cgns : split='multi'
 # autorestart possible
-# return a partial tree t, a donor partial tree tc, 
-# the number of processors, 
+# return a partial tree t, a donor partial tree tc,
+# the number of processors,
 # the communication graph for Chimera and abutting transfers
 # the communication graph for IBM transfers
-# dir is the directory containing files to be read 
+# dir is the directory containing files to be read
 # FILES must be t.cgns, tc.cgns and restart.cgns
 # prefix='restart' : sort restart.cgns
 def loadData(split='single',filedir='.', prefix='restart'):
@@ -21,7 +21,7 @@ def loadData(split='single',filedir='.', prefix='restart'):
         import Converter.Mpi as Cmpi
         NP = Cmpi.size
         if NP == 1: NP = 0
-    except: 
+    except:
         NP = 0
     if NP > 0:
         import Converter.Mpi as Cmpi
@@ -34,9 +34,9 @@ def loadData(split='single',filedir='.', prefix='restart'):
         graphIBCD = Cmpi.computeGraph(tc, type='IBCD')
         procDict = D2.getProcDict(tc)
         tc = Cmpi.convert2PartialTree(tc)
-        if split == 'single': 
+        if split == 'single':
             FILEIN = outprefix+'.cgns'
-            # autorestart 
+            # autorestart
             if (os.access(FILEIN, os.F_OK) == True): FILE = FILEIN
             else: FILE = filedir+'/t.cgns'
             t = Cmpi.convertFile2SkeletonTree(FILE)
@@ -52,7 +52,7 @@ def loadData(split='single',filedir='.', prefix='restart'):
     else:
         rank = 0
         tc = C.convertFile2PyTree(FILEC)
-        FILEIN = outprefix+'.cgns'    
+        FILEIN = outprefix+'.cgns'
         if os.access(FILEIN, os.F_OK): FILE = FILEIN
         else: FILE = filedir+'/t.cgns'
         t = C.convertFile2PyTree(FILE)
@@ -72,7 +72,7 @@ def saveData(t, NP=0, split='single',filedir='.', prefix='restart'):
 
     outprefix = filedir+'/'+prefix
     if NP > 0:
-        if split == 'single': 
+        if split == 'single':
             Cmpi.convertPyTree2File(t,outprefix+'.cgns')
         else:
             rank = Cmpi.rank
@@ -106,10 +106,9 @@ def getArgs():
 #==============================================================================
 def getArgs1():
     np = 0
-    try: 
+    try:
         import sys
         argc = len(sys.argv)
         if (argc > 1): np = int(sys.argv[1])
     except: pass
     return np
-

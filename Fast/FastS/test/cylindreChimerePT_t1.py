@@ -15,13 +15,13 @@ import KCore.test as test
 MInf = 0.5; alpha = 0.
 
 # Solver settings
-numb = {'temporal_scheme':'explicit', 'ss_iteration':20} 
+numb = {'temporal_scheme':'explicit', 'ss_iteration':20}
 numz = {'time_step':0.01, 'scheme':'ausmpred'}
 
 # Grille cartesienne
 NI = 501; dh = 40./(NI-1)
 a = G.cart((-20.,-20.,0),(dh,dh,1.),(NI,NI,2))
-a = C.fillEmptyBCWith(a, 'far', 'BCFarfield', dim=2) 
+a = C.fillEmptyBCWith(a, 'far', 'BCFarfield', dim=2)
 
 # Cylindre
 b = G.cylinder((0,0,0), 1., 2.0, 180., 0., 5*0.01, (80,20,1))
@@ -44,7 +44,7 @@ c = C.addBC2Zone(c, 'ov', 'BCOverlap', 'jmax')
 c = C.addBC2Zone(c, 'ov', 'BCOverlap', 'imin')
 c = C.addBC2Zone(c, 'ov', 'BCOverlap', 'imax')
 
-t = C.newPyTree(['Cylindre', 'Cart']) 
+t = C.newPyTree(['Cylindre', 'Cart'])
 t[2][1][2] += [b,c]; t[2][2][2] += [a]
 t = C.fillMissingVariables(t)
 #C.convertPyTree2File(t, 'out.cgns'); sys.exit()
@@ -54,9 +54,9 @@ s = D.circle((0,0,0), 1.)
 s = T.addkplane(s, 2); s = T.translate(s, (0,0,-0.1))
 s = C.convertArray2Tetra(s); s = G.close(s)
 e = P.exteriorFaces(s); e = T.splitConnexity(e)
-p = G.fittingPlaster(e[0], bumpFactor=0.) 
+p = G.fittingPlaster(e[0], bumpFactor=0.)
 g1 = G.gapfixer(e[0], p)
-p = G.fittingPlaster(e[1], bumpFactor=0.) 
+p = G.fittingPlaster(e[1], bumpFactor=0.)
 g2 = G.gapfixer(e[1], p)
 s = T.join([s,g1,g2]); s = G.close(s)
 
@@ -68,7 +68,7 @@ t = X.blankCells(t, bodies, BM, blankingType='cell_intersect')
 t = X.setHoleInterpolatedPoints(t, depth=+2)
 
 tc = C.node2Center(t)
-tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse', 
+tc = X.setInterpData(t, tc, nature=1, loc='centers', storage='inverse',
                      sameName=1, method='leastsquares', dim=2)
 tc = C.rmVars(tc, 'cellN') # tres important pour l'instant
 

@@ -51,7 +51,7 @@ t = T.makeDirect(t)
 
 ### Construction du tc ###
 tc = C.node2Center(t)
-tc = X.setInterpData3(t, tc, nature=1, loc='centers', storage='inverse', 
+tc = X.setInterpData3(t, tc, nature=1, loc='centers', storage='inverse',
                       sameName=1, method='lagrangian',dim=2)
 tc = C.rmVars(tc, 'FlowSolution')
 tc = C.rmVars(tc, 'CellN')
@@ -63,18 +63,18 @@ numb["temporal_scheme"]    = "explicit_local"
 numb["omp_mode"]           = 0
 numb["modulo_verif"]       = 10
 numb["rk"]        	   = 3
-numb["exp_local"]	   = 2 
+numb["exp_local"]	   = 2
 numz = {}
 numz["time_step"]          = 0.01
 numz["scheme"]             = "ausmpred"
 numz["niveaux_temps"]      = 1 # Explicit local : nbre niveaux en temps (=1 si explicit global)
 
-internal._setNum2Zones(t, numz) 
+internal._setNum2Zones(t, numz)
 internal._setNum2Base(t, numb)
 
 zones = Internal.getNodesFromType2(t, 'Zone_t')
 
-for z in zones:   
+for z in zones:
     if z[0] == 'cart.0':
         dtloc = Internal.getNodeFromName1(z, '.Solver#define')  # noeud
         level = Internal.getNodeFromName1(dtloc, 'niveaux_temps')  # noeud
