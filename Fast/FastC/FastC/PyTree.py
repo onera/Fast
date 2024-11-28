@@ -22,6 +22,7 @@ varsPLBM   = ['Q1']
 #varsNEQLBM = ['Qneq_1']
 varsMLBM = ['Q1_M1']
 varsS	 = ['Sxx']
+varsSP	 = ['Sxx_P1']
 varsPSI  = ['corr_xx']
 varsMacro= ['Density']
 
@@ -303,6 +304,9 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                 for i in range(len(vars_s)):
                     fields2compact.append('centers:S'+str(vars_s[i])) #Tenseur S pour HRR
                 vars.append(fields2compact)
+                for i in range(len(vars_s)):
+                    fields2compact.append('centers:S'+str(vars_s[i])+'_P1') #Tenseur S pour HRR
+                vars.append(fields2compact)
                 for i in range(len(vars_psi)):
                     fields2compact.append('centers:corr_'+str(vars_psi[i])) #Gradients PSI pour HRR
                 vars.append(fields2compact)
@@ -322,11 +326,11 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                     fields2compact.append('centers:S'+str(vars_s[i]))
                 vars.append(fields2compact)
 
-            if model_loc == 'Euler' or model_loc == 'NSLaminar' or model_loc == 'NSTurbulent':
+            if model_loc == 'Nada' or model_loc == 'Euler' or model_loc == 'NSLaminar' or model_loc == 'NSTurbulent':
                 timelevel = ['', '_M1','_P1']
             elif model_loc == 'LBMLaminar':
                 if lbmAJ:  timelevel = ['', '_M1']
-                else: timelevel = ['']
+                else: timelevel = ['', '_P1']
             else: raise ValueError('createPrimVars: unknown model %s.'%model_loc)
 
             for level in timelevel:  #champs primitives
@@ -542,7 +546,13 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     #===========================================================================
     else:
         neq_lbm = Internal.getNodeFromName2(zone, 'Parameter_int')[1][VSHARE.NEQ_LBM]
-        sponge = Internal.getNodeFromName2(zone, 'Parameter_int')[1][VSHARE.LBM_SPONGE]
+        sponge  = Internal.getNodeFromName2(zone, 'Parameter_int')[1][VSHARE.LBM_SPONGE]
+
+        if C.isNamePresent(zone, 'centers:Density_P1'    ) != 1: C._cpVars(zone, 'centers:Density'    , zone, 'centers:Density_P1'    ); FIRST_IT=0
+        if C.isNamePresent(zone, 'centers:VelocityX_P1'  ) != 1: C._cpVars(zone, 'centers:VelocityX'  , zone, 'centers:VelocityX_P1'  ); FIRST_IT=0
+        if C.isNamePresent(zone, 'centers:VelocityY_P1'  ) != 1: C._cpVars(zone, 'centers:VelocityY'  , zone, 'centers:VelocityY_P1'  ); FIRST_IT=0
+        if C.isNamePresent(zone, 'centers:VelocityZ_P1'  ) != 1: C._cpVars(zone, 'centers:VelocityZ'  , zone, 'centers:VelocityZ_P1'  ); FIRST_IT=0
+        if C.isNamePresent(zone, 'centers:Temperature_P1') != 1: C._cpVars(zone, 'centers:Temperature', zone, 'centers:Temperature_P1'); FIRST_IT=0
 
         #On cree les fonctions de distribution
         for i in range(1,neq_lbm+1):
@@ -558,10 +568,12 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
         COMPOSANTES_S = ['xx','xy','xz','yy','yz','zz'] #en  3D 9 composantes mais que 6 ici car symetrique (xy=yx, xz=zx et yz=zy)
         for comps in COMPOSANTES_S:
             if C.isNamePresent(zone, 'centers:S'+str(comps)) != 1: C._initVars(zone, 'centers:S'+str(comps), 0.)
+            if C.isNamePresent(zone, 'centers:S'+str(comps)+'_P1') != 1: C._cpVars(zone, 'centers:S'+str(comps), zone, 'centers:S'+str(comps)+'_P1'); FIRST_IT=0
         #Gradiens pour le PSI
         COMPOSANTES_PSI = ['xx','yy','zz','x','y','z']
         for comppsi in COMPOSANTES_PSI:
             if C.isNamePresent(zone, 'centers:corr_'+str(comppsi)) != 1: C._initVars(zone, 'centers:corr_'+str(comppsi), 0.)
+            # if C.isNamePresent(zone, 'centers:corr_'+str(comppsi)+'_P1') != 1: C._cpVars(zone, 'centers:corr_'+str(comppsi), zone, 'centers:corr_'+str(comppsi)+'_P1'); FIRST_IT=0
 
         #Ajout du coef des zones eponges si necessaire
         if sponge == 1:
@@ -570,7 +582,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
         #var AJ
         if lbmAJ:
             for i in range(1,3+1):
-                if C.isNamePresent(zone, 'centers:cellN_IBC_LBM'+str(i)) != 1: C._initVars(zone, 'centers:cellN_IBC_LBM_'+str(i), 0.)
+                if C.isNamePresent(zone, 'centers:cellN_IBC_LBM'    +str(i)      ) != 1: C._initVars(zone, 'centers:cellN_IBC_LBM_'    +str(i)      , 0.)
 
             if C.isNamePresent(zone, 'centers:SpongeCoef')    != 1: C._initVars(zone, 'centers:SpongeCoef'    , 0.)
 
@@ -957,8 +969,6 @@ def _buildOwnData(t, Padding):
         'sfd_chi':1,
         'sfd_delta':1,
         'sfd_init_iter':0,
-        'nudging_ampli':1,
-        'nudging_vector':4,
         'slope':["o1", "o3","o5", "minmod","o3sc","o5sc"],
         'DES':["zdes1", "zdes1_w", "zdes2", "zdes2_w", "zdes3", "zdes3_w"],
         'SA_add_LowRe': 0,
@@ -974,8 +984,8 @@ def _buildOwnData(t, Padding):
         #=========================================================
         # LBM specific keywords
         #=========================================================
-        'LBM_velocity_set':['D3Q19','D3Q27'],
-        'LBM_coll_model':['BGK', 'BGK+', 'RR', 'HRR', 'TRT'], #Remarque : TRT uniquement pour FastLBM (AJ)
+        'LBM_velocity_set':['D3Q19','D3Q19i','D3Q27'],
+        'LBM_coll_model':['BGK', 'BGK+', 'RR', 'RR_HPC', 'HRR', 'TRT'], #Remarque : TRT uniquement pour FastLBM (AJ)
         'LBM_relax_time':1,
         'LBM_hrr_sigma':1,
         'LBM_compressible':0,
@@ -1323,6 +1333,7 @@ def _buildOwnData(t, Padding):
             lbm_taug               = 0.5              # Relaxation time | for BGK this is tau for TRT this is big lambda Par defaut:Viscosite nulle (Euler)
             lbm_hrr_sigma          = 0.985            # Par defaut: Valeur M2P2 pour HRR
             lbm_c0                 = 1./math.sqrt(3.) # Lattice speed of sound
+            lbm_q19i               = 0                # Flag for improved D3Q19
 
             lbm_gamma_precon       = 1.
             lbm_dif_coef           = 0.               # nu_local
@@ -1523,6 +1534,10 @@ def _buildOwnData(t, Padding):
                     if lattice_name =='D3Q19' and kv>=2:
                         lbm_neq = 19
                         lbm_c0 = 1./numpy.sqrt(3.)
+                    elif lattice_name=='D3Q19i' and kv>=2:
+                        lbm_neq = 19
+                        lbm_c0 = 1./numpy.sqrt(3.)
+                        lbm_q19i = 1
                     elif lattice_name=='D3Q27' and kv>=2:
                         lbm_neq = 27
                         lbm_c0 = 1./numpy.sqrt(3.)
@@ -1538,11 +1553,12 @@ def _buildOwnData(t, Padding):
 
                 a = Internal.getNodeFromName1(d, 'LBM_coll_model')
                 if a is not None: lbm_coll_model = Internal.getValue(a)
-                if   lbm_coll_model == "BGK":  lbm_collision_model = 1
-                elif lbm_coll_model == "BGK+": lbm_collision_model = 2
-                elif lbm_coll_model == "RR":   lbm_collision_model = 3
-                elif lbm_coll_model == "HRR":  lbm_collision_model = 4
-                elif lbm_coll_model == 'TRT':  lbm_collision_model = 2 #Works only for FastLBM (AJ)
+                if   lbm_coll_model == "BGK":    lbm_collision_model = 1
+                elif lbm_coll_model == "BGK+":   lbm_collision_model = 2
+                elif lbm_coll_model == "RR":     lbm_collision_model = 3
+                elif lbm_coll_model == "HRR":    lbm_collision_model = 4
+                elif lbm_coll_model == 'TRT':    lbm_collision_model = 2 #Works only for FastLBM (AJ)
+                elif lbm_coll_model == 'RR_HPC': lbm_collision_model = 5
 
                 a = Internal.getNodeFromName1(d, 'LBM_compressible')
                 if a is not None: lbm_compressible = Internal.getValue(a)
@@ -1732,7 +1748,7 @@ def _buildOwnData(t, Padding):
             # creation noeud parametre integer
 
 
-            number_of_defines_param_int = 135                           # Number Param INT
+            number_of_defines_param_int = 136                           # Number Param INT
             size_int                   = number_of_defines_param_int +1 # number of defines + 1
 
 
@@ -1857,6 +1873,7 @@ def _buildOwnData(t, Padding):
             datap[VSHARE.NEQ_LBM]        = lbm_neq
             datap[VSHARE.LBM_COL_OP]     = lbm_collision_model
             datap[VSHARE.LBM_HLBM]       = lbm_compressible
+            datap[VSHARE.LBM_Q19i]       = lbm_q19i
 
             #Unused parameters at the moment
             datap[VSHARE.LBM_FILTER]     = lbm_selective_filter
@@ -2630,17 +2647,68 @@ def switchPointersLBM__(zones, neq_lbm, dtloc):
         #if level==1 or (level >=2 and level <= level_next_it) :
         if level <= level_next_it :
             #print("switch Pt", z[0])
-            sol =  Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+            sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+
+            cro = Internal.getNodeFromName1(sol, 'Density')
+            cux = Internal.getNodeFromName1(sol, 'VelocityX')
+            cuy = Internal.getNodeFromName1(sol, 'VelocityY')
+            cuz = Internal.getNodeFromName1(sol, 'VelocityZ')
+            cT  = Internal.getNodeFromName1(sol, 'Temperature')
+
+            croP1 = Internal.getNodeFromName1(sol, 'Density_P1')
+            cuxP1 = Internal.getNodeFromName1(sol, 'VelocityX_P1')
+            cuyP1 = Internal.getNodeFromName1(sol, 'VelocityY_P1')
+            cuzP1 = Internal.getNodeFromName1(sol, 'VelocityZ_P1')
+            cTP1  = Internal.getNodeFromName1(sol, 'Temperature_P1')
+
+        #    C._cpVars(z, 'centers:Density'    , z, 'centers:Density_M1'    )
+        #    C._cpVars(z, 'centers:VelocityX'  , z, 'centers:VelocityX_M1'  )
+        #    C._cpVars(z, 'centers:VelocityY'  , z, 'centers:VelocityY_M1'  )
+        #    C._cpVars(z, 'centers:VelocityZ'  , z, 'centers:VelocityZ_M1'  )
+        #    C._cpVars(z, 'centers:Temperature', z, 'centers:Temperature_M1')
+            # sauvegarde M1
+            ta = cro[1]; tb = cux[1]; tc = cuy[1]; td = cuz[1]; te = cT[1];
+            # M1 <- current
+            cro[1] = croP1[1]; cux[1] = cuxP1[1]; cuy[1] = cuyP1[1]; cuz[1] = cuzP1[1]; cT[1] = cTP1[1];
+            # current <- P1
+            croP1[1] = ta; cuxP1[1] = tb; cuyP1[1] = tc; cuzP1[1] = td; cTP1[1] = te;
+
+            cxx = Internal.getNodeFromName1(sol, 'Sxx')
+            cxy = Internal.getNodeFromName1(sol, 'Sxy')
+            cxz = Internal.getNodeFromName1(sol, 'Sxz')
+            cyy = Internal.getNodeFromName1(sol, 'Syy')
+            cyz = Internal.getNodeFromName1(sol, 'Syz')
+            czz = Internal.getNodeFromName1(sol, 'Szz')
+
+            cxxP1 = Internal.getNodeFromName1(sol, 'Sxx_P1')
+            cxyP1 = Internal.getNodeFromName1(sol, 'Sxy_P1')
+            cxzP1 = Internal.getNodeFromName1(sol, 'Sxz_P1')
+            cyyP1 = Internal.getNodeFromName1(sol, 'Syy_P1')
+            cyzP1 = Internal.getNodeFromName1(sol, 'Syz_P1')
+            czzP1 = Internal.getNodeFromName1(sol, 'Szz_P1')
+
+        #    C._cpVars(z, 'centers:Sxx'    , z, 'centers:sxx_M1')
+        #    C._cpVars(z, 'centers:Sxy'    , z, 'centers:Sxy_M1')
+        #    C._cpVars(z, 'centers:Sxz'    , z, 'centers:Sxz_M1')
+        #    C._cpVars(z, 'centers:Syy'    , z, 'centers:Syy_M1')
+        #    C._cpVars(z, 'centers:Syz'    , z, 'centers:Syz_M1')
+        #    C._cpVars(z, 'centers:Szz'    , z, 'centers:Szz_M1')
+
+            # sauvegarde M1
+            ta = cxx[1]; tb = cxy[1]; tc = cxz[1]; td = cyy[1]; te = cyz[1];  tf = czz[1]
+            # M1 <- current
+            cxx[1] = cxxP1[1]; cxy[1] = cxyP1[1]; cxz[1] = cxzP1[1]; cyy[1] = cyyP1[1]; cyz[1] = cyzP1[1];  czz[1] = czzP1[1];
+            # current <- P1
+            cxxP1[1] = ta; cxyP1[1] = tb; cxzP1[1] = tc; cyyP1[1] = td; cyzP1[1] = te;  czzP1[1] = tf;
+
             for i in range(1,neq_lbm+1):
                 caM1 = Internal.getNodeFromName1(sol, 'Q'+str(i)+'_M1')
                 ca   = Internal.getNodeFromName1(sol, 'Q'+str(i))
 
                 # sauvegarde M1
                 ta = caM1[1]
-
                 # M1 <- current
                 caM1[1] = ca[1]
-
                 # current <- P1
                 ca[1] = ta
 
