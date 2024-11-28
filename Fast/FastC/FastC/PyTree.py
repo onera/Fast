@@ -275,6 +275,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
               if lbmAJ:  timelevel = ['', '_M1']
               else: timelevel = ['', '_P1']
             else: raise ValueError('createPrimVars: unknown model %s.'%model_loc)
+            
             for level in timelevel:  #champs primitives
                fields2compact =[]
                for v in vars_p:
