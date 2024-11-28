@@ -23,13 +23,13 @@ c***********************************************************************²
 #include "FastS/param_solver.h"
 
       INTEGER_E ind_loop(6), param_int(0:*)
-
       REAL_E vect1( param_int(NDIMDX), param_int(NEQ) )
       REAL_E vect2( param_int(NDIMDX), param_int(NEQ) )
       REAL_E value, normL2
 
 !var loc
       INTEGER_E k, j, lij, l, ltij, lt, lvo
+      INTEGER_E i
       REAL_E tmp1, tmp2, tmp3, tmp4,tmp5,tmp6
 
 #include "FastS/formule_param.h"

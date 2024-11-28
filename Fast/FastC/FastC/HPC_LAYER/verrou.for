@@ -10,8 +10,6 @@ c***********************************************************************
       INTEGER_E lok, ival
       integer*8 compteur
 
-#include "parallelF.h"
-
 C var loc
       INTEGER_E lok_tmp
 
@@ -88,12 +86,9 @@ c***********************************************************************
 
       INTEGER_E lok(1), ival
 
-#include "parallelF.h"
-
 C var loc
       INTEGER_E lok_tmp
-      integer*8 compteur
-
+      
       IF(ival.eq.1) then  !! verrou go
 
   100   continue

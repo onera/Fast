@@ -2,7 +2,7 @@ c***********************************************************************
 c     $Date: 2010-01-28 16:22:02 +0100 (Thu, 28 Jan 2010) 
 c     $ $Revision: 56 $ 
 c     $Author: IvanMary $
-c*****a*****************************************************************
+c***********************************************************************
       subroutine copyflux_rk3local2para(param_int,ind_loop,ind_loop_,
      & drodm,stock,ind,taille)
     
@@ -18,9 +18,7 @@ c
 c     COM
 c***********************************************************************
 
-!#include "parallelF.h"     
       implicit none
-
 
 #include "FastS/param_solver.h"
 

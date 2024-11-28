@@ -16,9 +16,7 @@ c
 c     COM
 c***********************************************************************
 
-!#include "parallelF.h"     
       implicit none
-
 
 #include "FastS/param_solver.h"
 

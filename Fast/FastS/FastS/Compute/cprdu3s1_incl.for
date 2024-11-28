@@ -46,10 +46,10 @@ CVD$  NODEPCHK
 #else
             do k = ind_loop_lu(5), ind_loop_lu(6)
             do j = ind_loop_lu(3), ind_loop_lu(4)
-            do i = ind_loop_lu(1), ind_loop_lu(2)   
-#endif
+            do i = ind_loop_lu(1), ind_loop_lu(2)
               l = inddm(i,j,k)
-   
+#endif
+              
               xp=abs(drodm(l,1))
               if (xp.gt.xinterm(1,2)) xinterm(1,2)=xp
               xinterm(1,1) = xinterm(1,1)+drodm(l,1)*drodm(l,1)

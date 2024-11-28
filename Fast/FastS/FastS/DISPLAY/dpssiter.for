@@ -27,7 +27,7 @@ c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      & lft,size_name,iverb, param_int(0:*)
       REAL_E rdm(nssiter_loc,neq,2), cvg_ptr(4*neq)
 
-      character(len=size_name) zone_name 
+      character(len=size_name) zone_name
 c Var loc
       INTEGER_E ndm,i,ne,last_it,iverbs_loc,it_reelle(nssiter_loc),
      &     nitcfg,ndsdm,i_loc,itest,ii,ipass,inds, iflw, iles

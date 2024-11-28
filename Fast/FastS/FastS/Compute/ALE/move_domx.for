@@ -38,7 +38,7 @@ c***********************************************************************
 
 C var loc  
       INTEGER_E l,inck,k,i,j,incmax,i2save,j2save,k2save
-      INTEGER_E translation_pur
+      INTEGER_E translation_pur, ndimt_xyz
       REAL_E rot(4,3), vtrans(3)
 
 #include "FastS/formule_xyz_param.h"

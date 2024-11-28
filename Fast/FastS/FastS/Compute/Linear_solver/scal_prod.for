@@ -22,13 +22,12 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E ind_loop(6), param_int(0:*)
-
-
+      
       REAL_E vect1( param_int(NDIMDX), param_int(NEQ) )
       REAL_E vect2( param_int(NDIMDX), param_int(NEQ) )
       REAL_E value
 
-      INTEGER_E k, j, lij, l, ltij, lt, lvo
+      INTEGER_E i, k, j, lij, l, ltij, lt, lvo
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"

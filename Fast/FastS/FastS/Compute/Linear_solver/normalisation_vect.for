@@ -8,7 +8,7 @@
       REAL_E normL2, krylov(param_int(NDIMDX), param_int(NEQ))
 
 C Var loc
-      INTEGER_E k, j, lij, l,ltij,lt,lvo
+      INTEGER_E k, j, lij, l,ltij,lt,lvo,i
       REAL_E norm_i
 
 #include "FastS/formule_param.h"

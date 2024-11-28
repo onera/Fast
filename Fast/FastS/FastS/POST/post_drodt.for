@@ -35,7 +35,7 @@ c***********************************************************************
       implicit none
 
       INTEGER_E ndo, Nbre_thread_actif , mx_synchro, flag,
-     & ithread, Nbre_socket, socket , dim_grad
+     & ithread, Nbre_socket, socket , dim_grad, incmax
 
       INTEGER_E  ijkv_sdm(3),ind_dm_zone(6),ind_dm_omp(6),topo_s(3),
      &  ind_dm_socket(6), socket_topology(3), param_int(0:*), lok(*)

@@ -29,14 +29,10 @@ using namespace K_FLD;
 PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
 {
   PyObject* zones; PyObject* metrics; PyObject* cvg_numpy;
-  E_Int nitrun; E_Int lft; E_Int nssiter;  E_Int iverb;
-
-#if defined E_DOUBLEINT
-  if (!PyArg_ParseTuple(args, "OOllll", &zones, &metrics, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
-#else 
-  if (!PyArg_ParseTuple(args, "OOiiii", &zones, &metrics, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
-#endif
+  E_Int nitrun; E_Int lft; E_Int nssiter; E_Int iverb;
   
+  if (!PYPARSETUPLE_(args, OO_ IIII_, &zones, &metrics, &nitrun, &nssiter, &lft, &iverb)) return NULL; 
+
   // tableau residu Newton de la zone
   E_Int neq_max = 7; E_Int niter_max = 100;
   FldArrayF rdm_glob(neq_max*niter_max*2); E_Float* iptrdm_glob = rdm_glob.begin(); 
@@ -57,7 +53,7 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
   for (E_Int nd = 0; nd < nidom; nd++)
   { 
     PyObject* zone = PyList_GetItem(zones, nd);
-    char* name  = K_PYTREE::getNodeName(zone,hook); //nom de la zone
+    char* name  = K_PYTREE::getNodeName(zone, hook); //nom de la zone
     E_Int size_name = strlen(name); // strlen retourne la longueur de la chaine sans le NULL final
 
     /* Get numerics from zone */
@@ -77,90 +73,88 @@ PyObject* K_FASTS::display_ss_iteration(PyObject* self, PyObject* args)
     //printf(" cvg_size %d %d \n",cvg_size,cvg_nfld);
 
     if (lft >= 0)
-         {
-	    PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
+    {
+      PyObject* metric = PyList_GetItem(metrics, nd); // metric du domaine i
 
-	    // get metric
-	    iptrdm[ nd ]          =  K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, METRIC_RDM ) );
-	    ipt_ind_dm[ nd ]      =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
+      // get metric
+      iptrdm[ nd ]          =  K_NUMPY::getNumpyPtrF( PyList_GetItem(metric, METRIC_RDM ) );
+      ipt_ind_dm[ nd ]      =  K_NUMPY::getNumpyPtrI( PyList_GetItem(metric, METRIC_INDM) );
 
-	    //
-	    //
-	    // on check si on a tout pour calculer sur la zone
-	    //
-	    //
-	    E_Int ijkv_lu[3];
+      //
+      //
+      // on check si on a tout pour calculer sur la zone
+      //
+      //
+      E_Int ijkv_lu[3];
 
-	    ijkv_lu[0] = K_FUNC::E_max( 1, ipt_param_int[nd][ IJKV    ]/ipt_param_int[nd][ SIZE_SSDOM   ]);
-	    ijkv_lu[1] = K_FUNC::E_max( 1, ipt_param_int[nd][ IJKV +1 ]/ipt_param_int[nd][ SIZE_SSDOM +1]);
-	    ijkv_lu[2] = K_FUNC::E_max( 1, ipt_param_int[nd][ IJKV +2 ]/ipt_param_int[nd][ SIZE_SSDOM +2]);
+      ijkv_lu[0] = K_FUNC::E_max( 1, ipt_param_int[nd][ IJKV    ]/ipt_param_int[nd][ SIZE_SSDOM   ]);
+      ijkv_lu[1] = K_FUNC::E_max( 1, ipt_param_int[nd][ IJKV +1 ]/ipt_param_int[nd][ SIZE_SSDOM +1]);
+      ijkv_lu[2] = K_FUNC::E_max( 1, ipt_param_int[nd][ IJKV +2 ]/ipt_param_int[nd][ SIZE_SSDOM +2]);
 
-	    //E_Int ndim_rdm= ijkv_lu[0]*ijkv_lu[1]*ijkv_lu[2];
+      //E_Int ndim_rdm= ijkv_lu[0]*ijkv_lu[1]*ijkv_lu[2];
 
-	    E_Int* ipt_it_bloc  = ipt_ind_dm[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter*2;    //it_bloc(nidom)
-	    E_Int  it_bloc_loc  = ipt_it_bloc[0];
-	    E_Float xpt_1       = 1./float( ipt_param_int[nd][ IJKV ]*ipt_param_int[nd][ IJKV +1 ]*ipt_param_int[nd][ IJKV +2 ]);
+      E_Int* ipt_it_bloc  = ipt_ind_dm[nd] + ipt_param_int[nd][ MXSSDOM_LU ]*6*nssiter + nssiter*2;    //it_bloc(nidom)
+      E_Int  it_bloc_loc  = ipt_it_bloc[0];
+      E_Float xpt_1       = 1./float( ipt_param_int[nd][ IJKV ]*ipt_param_int[nd][ IJKV +1 ]*ipt_param_int[nd][ IJKV +2 ]);
 
-	    PyObject* t2 = K_PYTREE::getNodeFromName1(numerics, "CFL_minmaxmoy");
-	    if (t2 != NULL) 
-            { 
-              E_Float* cfl = K_PYTREE::getValueAF(t2, hook);
-	      if (lft < 3) printf("CFL_MOY_MAX_MIN(Zone= %32.32s, nitrun=%d) %f    %f    %f \n", name, nitrun, cfl[2], cfl[0],cfl[1]); 
-	    }
+      PyObject* t2 = K_PYTREE::getNodeFromName1(numerics, "CFL_minmaxmoy");
+      if (t2 != NULL) 
+      { 
+        E_Float* cfl = K_PYTREE::getValueAF(t2, hook);
+        if (lft < 3) printf("CFL_MOY_MAX_MIN(Zone= %32.32s, nitrun=%d) %f    %f    %f \n", name, nitrun, cfl[2], cfl[0],cfl[1]); 
+      }
 
-	    if (ipt_param_int[nd][ ITYPCP ] <= 1 || (ipt_param_int[nd][ ITYPCP ] == 2 && ipt_param_int[nd][ DTLOC ]==1))
-	    {
-	      if (it_bloc_loc*neq > niter_max*neq_max) printf("Display manometre: tableau trop petit");
+      if (ipt_param_int[nd][ ITYPCP ] <= 1 || (ipt_param_int[nd][ ITYPCP ] == 2 && ipt_param_int[nd][ DTLOC ]==1))
+      {
+        if (it_bloc_loc*neq > niter_max*neq_max) printf("Display manometre: tableau trop petit");
 
-	      //assemblage norme Loo et L2
-	      for (E_Int ne= 0; ne < neq; ne++)
-		{ 
-                 for (E_Int i= 0; i < it_bloc_loc; i++)
-		   {
-		      E_Float rmax= 0.;
-		      E_Float rmoy= 0.;
-		      E_Int no_rdm;
+        //assemblage norme Loo et L2
+        for (E_Int ne= 0; ne < neq; ne++)
+        { 
+          for (E_Int i= 0; i < it_bloc_loc; i++)
+          {
+            E_Float rmax= 0.;
+            E_Float rmoy= 0.;
+            E_Int no_rdm;
             
-		      for (E_Int k_lu= 0; k_lu < ijkv_lu[2]; k_lu++) 
-                        {
-		         for (E_Int j_lu= 0; j_lu < ijkv_lu[1]; j_lu++) 
-                           {
-			    for (E_Int i_lu= 0; i_lu < ijkv_lu[0]; i_lu++) 
-                              {
-			       no_rdm = i_lu + j_lu*ijkv_lu[0] + k_lu*ijkv_lu[0]*ijkv_lu[1];
+            for (E_Int k_lu= 0; k_lu < ijkv_lu[2]; k_lu++) 
+            {
+              for (E_Int j_lu= 0; j_lu < ijkv_lu[1]; j_lu++) 
+              {
+                for (E_Int i_lu= 0; i_lu < ijkv_lu[0]; i_lu++) 
+                {
+                  no_rdm = i_lu + j_lu*ijkv_lu[0] + k_lu*ijkv_lu[0]*ijkv_lu[1];
 
-                               E_Int ind1   = i +       ne*nssiter +  no_rdm*neq*2*nssiter;
-			       E_Int ind2   = i + (ne+neq)*nssiter +  no_rdm*neq*2*nssiter;
+                  E_Int ind1   = i + ne*nssiter +  no_rdm*neq*2*nssiter;
+                  E_Int ind2   = i + (ne+neq)*nssiter +  no_rdm*neq*2*nssiter;
 
-			       rmax   = max(rmax, iptrdm[nd][ind2] ); 
-			       rmoy   =    rmoy + iptrdm[nd][ind1];
-			      }
-			   }
-		        }
+                  rmax   = max(rmax, iptrdm[nd][ind2] ); 
+                  rmoy   = rmoy + iptrdm[nd][ind1];
+                }
+              }
+            }
               
-		      E_Int ind1 =  it_bloc_loc*ne       + i;
-		      E_Int ind2 =  it_bloc_loc*(ne+neq) + i;
+            E_Int ind1 =  it_bloc_loc*ne       + i;
+            E_Int ind2 =  it_bloc_loc*(ne+neq) + i;
 
-		      rdm_glob[ind1] = sqrt(rmoy*xpt_1)/ipt_param_real[nd][ DTC ];
-		      rdm_glob[ind2] = rmax/ipt_param_real[nd][ DTC ];
+            rdm_glob[ind1] = sqrt(rmoy*xpt_1)/ipt_param_real[nd][ DTC ];
+            rdm_glob[ind2] = rmax/ipt_param_real[nd][ DTC ];
 
-		      resLi[0] += rdm_glob[ind1];
-		      if (rdm_glob[ind2] > resLi[1]) resLi[1] =  rdm_glob[ind2];
-		   } //iteration
-		 }   // neq
+            resLi[0] += rdm_glob[ind1];
+            if (rdm_glob[ind2] > resLi[1]) resLi[1] =  rdm_glob[ind2];
+          } //iteration
+        } // neq
 
-
-	      dpssiter_(nitrun, neq,it_bloc_loc, nssiter, ipt_param_int[nd], lft, iverb, name, size_name, iptrdm_glob, cvg_zone );
-	    } // if zone implicit ou explicit+pdtloc
-         } // if lft > 0
-
+        dpssiter_(nitrun, neq,it_bloc_loc, nssiter, ipt_param_int[nd], lft, iverb, name, size_name, iptrdm_glob, cvg_zone );
+      } // if zone implicit ou explicit+pdtloc
+    } // if lft > 0
 
     /* Convergence History from zone */
     E_Float* ipt_Res_L2      ; E_Float* ipt_Res_oo      ; E_Int* ipt_Itnum ;
     E_Float* ipt_Res_L2_diff ; E_Float* ipt_Res_oo_diff ;
     E_Int LastRec;  E_Int nrec; E_Int nrec2;
     PyObject* zoneCH = K_PYTREE::getNodeFromName1(zone , "ZoneConvergenceHistory");
-    if (zoneCH != NULL) 
+    if (zoneCH != NULL)
     {
       E_Int* ipt_LastRec = K_PYTREE::getValueAI(zoneCH, hook);
       LastRec = *ipt_LastRec;
