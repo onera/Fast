@@ -21,6 +21,17 @@
      &                              ind_mjr, ind_ssa,
      &                              ind_hrr, ind_gcb)
 
+      !Remplissage de ind_src pour la LBM
+      if(param_int(IFLOW).eq.4) then !lbm
+
+         if (param_int(LBM_COLL_MODEL).eq.4) then !hrr
+            ind_src = ind_hrr
+         else ! autres operateurs de collision
+            ind_src = ind_sdm
+         endif
+
+      endif
+
 #if CHECK_BLOCK > 0
        if(ithread.eq.param_int( IO_THREAD).and.nitrun.eq.0)then
           if(ibloc*jbloc*kbloc.le.1) then
