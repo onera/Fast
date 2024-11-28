@@ -269,12 +269,12 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
                   fields2compact.append('centers:S'+str(vars_s[i]))
                vars.append(fields2compact)
 
-            if model_loc== 'Nada' or model_loc== 'Euler' or model_loc=='NSTurbulent' or model_loc=='NSTurbulent':
+            if model_loc == 'Euler' or model_loc == 'NSLaminar' or model_loc == 'NSTurbulent':
               timelevel = ['', '_M1','_P1']
             elif model_loc == 'LBMLaminar':
-              timelevel = ['', '_P1'] 
-              #if lbmAJ:  timelevel = ['', '_M1']
-              #else: timelevel = ['']
+              if lbmAJ:  timelevel = ['', '_M1']
+              else: timelevel = ['', '_P1']
+            else: raise ValueError('createPrimVars: unknown model %s.'%model_loc)
             for level in timelevel:  #champs primitives
                fields2compact =[]
                for v in vars_p:
