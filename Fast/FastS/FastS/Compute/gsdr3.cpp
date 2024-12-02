@@ -109,6 +109,19 @@ E_Int K_FASTS::gsdr3(
       E_Float** iptro_ssiter;
       E_Float** iptro_CL; 
 
+/*
+      //Modif LECLAIRE
+      if(nitcfg == nssiter) 
+       { 
+         for (E_Int nd = 0; nd < nidom; nd++)
+           { 
+             param_int[nd][IFLOW]=1;
+             param_real[nd][PSIROE]=0;
+           }
+       }
+      //Modif LECLAIRE
+*/   
+
       if (param_int[0][EXPLOC]== 1 && param_int[0][ITYPCP]==2)   //explicit local instationnaire
 	   {
 
@@ -408,6 +421,19 @@ E_Int lrhs=0; E_Int lcorner=0;
 
  }//fin zone omp
 
+/*
+      //Modif LECLAIRE
+      if(nitcfg == nssiter) 
+       { 
+         for (E_Int nd = 0; nd < nidom; nd++)
+           { 
+             param_int[nd][IFLOW]=2;
+             param_real[nd][PSIROE]=0.5;
+           }
+       }
+      //Modif LECLAIRE
+*/     
+      
 #ifdef _OPENMP  
      time_trans = time_trans + omp_get_wtime()-trans_deb;
 #else 

@@ -49,40 +49,35 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
 
             if(ithread_loc != -1)
              {
-            // CL sur rhs pour implicitation
-            if( kimpli == 1 )
-              {  
-
-		 E_Int lrhs=1; E_Int lcorner=1;
+              // CL sur rhs pour implicitation
+              if( kimpli == 1 )
+               {  
+                 E_Int lrhs=1; E_Int lcorner=1;
                  E_Int* ipt_shift_lu   = shift_lu + 6*ntask*Nbre_thread_actif + (ithread-1)*6;
-                    K_FASTS::BCzone( nd, lrhs, nitcfg, lcorner, 
-                                    param_int[nd], param_real[nd],
-                                    npass,
-                                    ipt_ind_dm_loc         , ipt_ind_dm_thread      ,
-                                    ipt_ind_CL_thread      , ipt_ind_CL119          , ipt_ind_CLgmres, ipt_shift_lu,
-                                    iptdrodm + shift_zone  , ipti[nd]               , iptj[nd]       , iptk[nd]          ,
-                                    iptx[nd]               , ipty[nd]               , iptz[nd]       ,
-                                    iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd], iptmut[nd]);  
+                 K_FASTS::BCzone( nd, lrhs, nitcfg, lcorner, 
+                                  param_int[nd], param_real[nd],
+                                  npass,
+                                  ipt_ind_dm_loc         , ipt_ind_dm_thread      ,
+                                  ipt_ind_CL_thread      , ipt_ind_CL119          , ipt_ind_CLgmres, ipt_shift_lu,
+                                  iptdrodm + shift_zone  , ipti[nd]               , iptj[nd]       , iptk[nd]          ,
+                                  iptx[nd]               , ipty[nd]               , iptz[nd]       ,
+                                  iptventi[nd]           , iptventj[nd]           , iptventk[nd]   , iptrotmp[nd], iptmut[nd]);  
 
-                      //for (E_Int n = 0; n < 6 ;n++){ ipt_shift_lu[n]= ipt_ind_dm_thread[n];}
-                    if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu , iptdrodm + shift_zone );
-                    //if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_ind_dm_thread , iptdrodm + shift_zone );
+                 //for (E_Int n = 0; n < 6 ;n++){ ipt_shift_lu[n]= ipt_ind_dm_thread[n];}
+                 if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_shift_lu , iptdrodm + shift_zone );
+                 //if(lcorner  == 0 )correct_coins_(nd, param_int[nd], ipt_ind_dm_thread , iptdrodm + shift_zone );
 
-                 //Wait thread avant attaquer LU ou calcul residu
-                 E_Int type = 2;
-                 for (E_Int th = 0; th < Nbre_thread_actif_loc; th++) 
-                   { E_Int* verrou_lhs_thread= verrou_lhs + ntask*Nbre_thread_actif + th; verrou_c_( verrou_lhs_thread, type); }
-
-                }//kimpli
+               }//kimpli
              }//ithread_loc
           }// test skip lbm et unstruct
 
          if(lssiter_verif ==1 )
           {
-            if( ntask==0 )
-             {
-#pragma omp barrier
-             }
+#include   "FastS/Compute/verrou_residus.h"
+//            if( ntask==0 )
+//             {
+//#pragma omp barrier
+//             }
             if (param_int[nd][ITYPZONE] != 4 and param_int[nd][IFLOW] != 4)  //on skippe les eventuelles zone non structurees ou LBM
              {
                E_Int* ipt_topo_omp; E_Int* ipt_ind_dm_thread;
@@ -102,6 +97,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
     {
      #pragma omp barrier
     }
+    
     for (E_Int ntask = 0; ntask < nbtask; ntask++)
       {
         
@@ -145,6 +141,11 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
                   { 
 #include "FastS/Compute/LU/prep_lussor.h"
 
+                    if(barrier_residu==0)
+                    {
+#include             "FastS/Compute/verrou_lhs.h"
+                    }
+                    
                     E_Int* ipt_shift_lu   = shift_lu + 6*ntask*Nbre_thread_actif + (ithread-1)*6;
 
                     E_Float* iptdrodm_out = iptdrodm + shift_zone;
