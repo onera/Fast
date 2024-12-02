@@ -15,6 +15,8 @@
       lambdaz_transi =  2.
       ampli_transi   =  0.0005
 
+      pi   = 4*atan(1.)
+
       if(zlong_transi.eq.0.0) then
         zlong=abs( z( indcg(ind_loop(1),1,       1              ) )
      &            -z( indcg(ind_loop(1),1, param_int(IJKV+2)+1) ) )

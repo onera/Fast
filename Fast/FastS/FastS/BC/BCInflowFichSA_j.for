@@ -1,3 +1,2 @@
-      li   = indbci(i,  k )
-#include  "FastS/BC/BCInflowFich.for"
+#include  "FastS/BC/BCInflowFich_j.for"
       rop(l,6) = nutilde(li)

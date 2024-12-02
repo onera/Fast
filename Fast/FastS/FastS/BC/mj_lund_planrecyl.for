@@ -89,7 +89,7 @@ c  Var loc
       IF (idir.le.2) THEN
 
          i = ind_loop(2)
-#include "FastS/Compute/loopPlanI_begin.for"
+#include "FastC/HPC_LAYER/loopPlanI_begin.for"
             li   = indbci(j,  k )
 
             rof2(li,1) = rop(l,1)*cn + cnm*rof2(li,1)
@@ -97,11 +97,11 @@ c  Var loc
             rof2(li,3) = rop(l,3)*cn + cnm*rof2(li,3)
             rof2(li,4) = rop(l,4)*cn + cnm*rof2(li,4)
             rof2(li,5) = rop(l,5)*cn + cnm*rof2(li,5)
-#include "FastS/Compute/loopPlan_end.for"
+#include "FastC/HPC_LAYER/loopPlan_end.for"
 
       ELSEIF (idir.le.4) THEN
          j = ind_loop(4)
-#include "FastS/Compute/loopPlanJ_begin.for"
+#include "FastC/HPC_LAYER/loopPlanJ_begin.for"
             li   = indbci(i,  k )
 
             rof2(li,1) = rop(l,1)*cn + cnm*rof2(li,1)
@@ -109,10 +109,10 @@ c  Var loc
             rof2(li,3) = rop(l,3)*cn + cnm*rof2(li,3)
             rof2(li,4) = rop(l,4)*cn + cnm*rof2(li,4)
             rof2(li,5) = rop(l,5)*cn + cnm*rof2(li,5)
-#include "FastS/Compute/loopPlan_end.for"
+#include "FastC/HPC_LAYER/loopPlan_end.for"
       ELSE
          k = ind_loop(6)
-#include "FastS/Compute/loopPlanK_begin.for"
+#include "FastC/HPC_LAYER/loopPlanK_begin.for"
             li   = indbci(i,  j )
 
             rof2(li,1) = rop(l,1)*cn + cnm*rof2(li,1)
@@ -120,7 +120,7 @@ c  Var loc
             rof2(li,3) = rop(l,3)*cn + cnm*rof2(li,3)
             rof2(li,4) = rop(l,4)*cn + cnm*rof2(li,4)
             rof2(li,5) = rop(l,5)*cn + cnm*rof2(li,5)
-#include "FastS/Compute/loopPlan_end.for"
+#include "FastC/HPC_LAYER/loopPlan_end.for"
       ENDIF
 
       end

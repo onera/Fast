@@ -54,7 +54,7 @@ C Var local
      & ventx,venty,ventz,r,u,v,w,ut,vt,wt,ua,va,wa,s_1,qn
       REAL_E ro,t,nut,c6inv,c0,c1,c2,c3,c7,roe,rue,rve,rwe,ete,
      & qref1,qref2,qref3,qref4,qref5,p,c,snorm, nue, gam1,gam2,
-     & gam1_1,gam,cvinv,rho_w,vmax,sens,
+     & gam1_1,gam,cvinv,rho_w,vmax,
      & sni,tn,qen,eigv1,eigv2,eigv3,eigv4,
      & eigv5,qvar1,qvar2,qvar3,qvar4,qvar5,svar1,svar2,svar3,
      & svar4,svar5,rvar1,rvar2,rvar3,rvar4,rvar5,
@@ -93,14 +93,14 @@ c......determine la forme des tableau metrique en fonction de la nature du domai
      &                   ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale)
 
       c_ale = c_ale*mobile_coef
-      if(lrhs.eq.1) c_ale = 0.
+      c_pertu = 1.
+      if(lrhs.eq.1) then
+         c_ale   = 0.
+         c_pertu = 0.
+      endif
 
       snorm =-1.
-      sens  =1
-      if(mod(idir,2).eq.0) then
-       snorm = 1.
-       sens  =-1
-      endif
+      if(mod(idir,2).eq.0) snorm = 1.
       
       gam     = param_real(GAMMA)
       gam1    = param_real(GAMMA) - 1.
@@ -139,6 +139,8 @@ c......determine la forme des tableau metrique en fonction de la nature du domai
       c2   =- c6*c0
       c3   = (2.- c5- c4)*c0
       c7   = (c4-c5)*c0
+
+
 
 C...  Parametre specific a la CL(insert2)
 #include       "FastS/BC/BCWallModel_init.for"  
@@ -268,8 +270,8 @@ C...  Parametre specific a la CL(insert2)
           enddo !k
 
        else
-          do k = ind_loop(5), ind_loop(6)
 
+          do k = ind_loop(5), ind_loop(6)
 
             j    = ind_loop(4)
 !DEC$ IVDEP
@@ -323,7 +325,6 @@ C...  Parametre specific a la CL(insert2)
           enddo !k
 
        else
-
 
           do k = ind_loop(5), ind_loop(6)
 
