@@ -97,6 +97,16 @@ else: addFPPArgs += ' -DCORE_PER_SOCK=%d'%corePerSock
 if f77compiler == 'gfortran' or f77compiler == 'x86_64-w64-mingw32-gfortran':
     addFFlags += ['-fdefault-real-8', '-fdefault-double-8']
 
+elif f77compiler == 'ifort':
+   version = Dist.getForVersion() # A utiliser version=(13,4)
+   floatType = '-r8' if Dist.EDOUBLEINT else '-r8 -i4'
+   addFFlags += [ '-r8', '-fno-alias', '-fno-fnalias', '-ip' ]
+   if Dist.EDOUBLEINT: addFFlags += ['-i8']
+   else: addFFlags += ['-i4']
+   if version[0] >= 17:
+      addFFlags += ['-qopt-report5', '-qopt-report-phase=loop,vec,cg', '-qopt-report-embed',  '-unroll0']
+   else: addFFlags += ['-unroll0']
+ 
 env = Dist.createFortranBuilder(env, dirs=[fastcIncDir, "."], 
    additionalPPArgs=addFPPArgs, additionalFortranArgs=addFFlags)
 
