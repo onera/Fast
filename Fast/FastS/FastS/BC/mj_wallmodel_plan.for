@@ -37,13 +37,13 @@ c  Var loc
       !wmles_param(3): nO du snap courant
 
       wmles_param(2) = wmles_param(2)+1
+      nechant  = int( wmles_param(2))
       c4=1
       if(nechant.le.wmles_param(1) -1) c4=0
       wmles_param(2) = min(wmles_param(2), wmles_param(1) -1)
 
       !wmles_param(2) = min(wmles_param(2)+1, 1.)
       !wmles_param(2) = wmles_param(2)+1
-      nechant  = int( wmles_param(2))
 
       ! coeff pour moyenne glissante temporelle
       ! c1 = nbr echantillon N
@@ -100,11 +100,11 @@ c  Var loc
             l    = inddm( ind_loop(2), j,  k )
             li   = indbci(j,  k )
 
-            moy(li,1) = rop(l,1)*cn + cnm*moy(li,1)
-            moy(li,2) = rop(l,2)*cn + cnm*moy(li,2)
-            moy(li,3) = rop(l,3)*cn + cnm*moy(li,3)
-            moy(li,4) = rop(l,4)*cn + cnm*moy(li,4)
-            moy(li,5) = rop(l,5)*cn + cnm*moy(li,5)
+            moy(li,1) = rop(l,1)*cn + c2*moy(li,1)
+            moy(li,2) = rop(l,2)*cn + c2*moy(li,2)
+            moy(li,3) = rop(l,3)*cn + c2*moy(li,3)
+            moy(li,4) = rop(l,4)*cn + c2*moy(li,4)
+            moy(li,5) = rop(l,5)*cn + c2*moy(li,5)
            enddo
          enddo
 
@@ -252,11 +252,11 @@ c      write(*,'(a,8f20.12)')'verif moy',vmoy/float(ind_loop(2))
             l    = inddm( i, j, ind_loop(6) )
             li   = indbci(i,  j )
 
-            moy(li,1) = rop(l,1)*cn + cnm*moy(li,1)
-            moy(li,2) = rop(l,2)*cn + cnm*moy(li,2)
-            moy(li,3) = rop(l,3)*cn + cnm*moy(li,3)
-            moy(li,4) = rop(l,4)*cn + cnm*moy(li,4)
-            moy(li,5) = rop(l,5)*cn + cnm*moy(li,5)
+            moy(li,1) = rop(l,1)*cn + c2*moy(li,1)
+            moy(li,2) = rop(l,2)*cn + c2*moy(li,2)
+            moy(li,3) = rop(l,3)*cn + c2*moy(li,3)
+            moy(li,4) = rop(l,4)*cn + c2*moy(li,4)
+            moy(li,5) = rop(l,5)*cn + c2*moy(li,5)
            enddo
          enddo
 

@@ -1,3 +1,3 @@
-            ldjr = inddm(  ir          , j, k )
+            ldjr = inddm(  i, j, kr )
 
 

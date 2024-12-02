@@ -1,4 +1,5 @@
       sampling = param_int(WM_SAMPLING)
+      sample   = param_int(WM_SAMPLING)
 
       exchange = 1 - sampling  ! index correction for identifying the correct cell
 

@@ -69,11 +69,13 @@ C...  Valeurs des grandeurs thermo imposees  (insert1)
       REAL_E rho_in(size_data) 
 
 C Var local 
-      INTEGER_E  inc2,inc3,li1,li2,l,iref,jref,kref,lij,lr,lp,
+      INTEGER_E  inc2,inc3,li1,li2,l,iref,jref,kref,lij,lr,lp,sens_int,
      & njf,nkf,ldjr,ic,jc,kc,i,j,k,li3,ldp,kc_vent,ijkplanrec,idirlund,
      & ijk_amor,kshift,jshift, ishift,ci_amor,cj_amor,ck_amor,nijk,
      & iamor,jamor,inci,incj,inck,lmtr,li,l1,l2,l0,nitnwt,newtonmax,
-     & ldx,lx,ldnm,ldnp,ldl,ir,jr,kr,lsample,sample,m,iter,lghost,incp
+     & ldx,lx,ldnm,ldnp,ldl,ir,jr,kr,lsample,sample,m,iter,lghost,incp,
+     & shift_loo,exchange, shift,shiftvent,incijk, sampling,
+     & loo,ltg,iadrf, mvent
 
 
       REAL_E ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale,tcx,tcy,tcz,
@@ -96,7 +98,8 @@ C Var local
      & cv1,tol,cp,ro_state,u_state,v_state,w_state,t_state,nut_state,
      & expy,nutcible,nu,a,q,ap,bp,dp,delta,delta0,delta1,
      & y1,y2,z1,p1,p2,kappa,superdelta,root,b0,cmus1,temp01,coesut,
-     & c0_2,coefa,coefb,coefc,mach,clund, amor
+     & c0_2,coefa,coefb,coefc,mach,clund, amor, text, uext,tt_ext,
+     & cpinv,t1,utau2,tauw,e1,e2,e3,  mu_w
 
 
 #include "FastS/formule_param.h"
@@ -110,6 +113,7 @@ c      write(*,*)'idir=', idir,nijk(4),nijk(5),ndimdx
 c      write(*,*)'nijk=', nijk
 c      write(*,*)'loop vis=', ind_loop
 
+
 c......determine la forme des tableau metrique en fonction de la nature du domaine
       !Seule la valeur de k_vent et ck_vent a un sens dans cet appel
       call shape_tab_mtr(neq_mtr, param_int, idir,
@@ -117,7 +121,11 @@ c......determine la forme des tableau metrique en fonction de la nature du domai
      &                   ci_mtr,cj_mtr,ck_mtr,ck_vent,c_ale)
 
       c_ale = c_ale*mobile_coef
-      if(lrhs.eq.1) c_ale = 0.
+      c_pertu = 1.
+      if(lrhs.eq.1) then
+         c_ale   = 0.
+         c_pertu = 0.
+      endif
 
       snorm =-1.
       if(mod(idir,2).eq.0) snorm = 1.
@@ -129,6 +137,8 @@ c......determine la forme des tableau metrique en fonction de la nature du domai
       rgp     = param_real(CVINF)*gam1
       cv      = param_real( CVINF )
       cvinv   = 1./cv
+      cpinv   = 1./(gam*cv)
+
       prandlt = param_real( PRANDT )
 
       cmus1  =    param_real( CS )
@@ -152,12 +162,13 @@ c......determine la forme des tableau metrique en fonction de la nature du domai
      &             /(ro_state*param_real(CVINF))
       if (param_int(NEQ).eq.6) nut_state = state(6)/state(1)
 
-
       c0   = 1./c6
       c1   =-(c4 + c5)*c0
       c2   =- c6*c0
       c3   = (2.- c5- c4)*c0
       c7   = (c4-c5)*c0
+
+
 #include       "FastS/BC/BCInflowLund_init.for"  
 
 C...  Parametre specific a la CL(insert2)
@@ -168,6 +179,7 @@ C...  Parametre specific a la CL(insert2)
        inci = 1
        incp = param_int(IJKV)*inci
        ir   =   ind_loop(2) + 1
+
 
        if(param_int(NEQ).eq.5) then
 

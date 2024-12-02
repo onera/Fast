@@ -5,6 +5,7 @@ import os
 BC=["BCWallViscous","BCWallViscousIsothermal","BCWallViscous_transition","BCWallInviscid","BCWallModel","BCInj1","BCOutMFR"]
 BC.append("BCInjMFR")
 BC.append("BCWallExchange")
+BC.append("BCWallModelRhs")
 BC.append("BCOutpres")
 BC.append("BCInflowSupersonic")
 BC.append("BCInflowSupersonicFich")
@@ -19,6 +20,6 @@ BC.append("BCPeriodic")
 
 
 for bc in BC:
-    cmd='python generate_bc.py'+' '+bc
+    cmd='python3 generate_bc.py'+' '+bc
     print(cmd)
     os.system(cmd)
