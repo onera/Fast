@@ -9,8 +9,8 @@ if n != 2:
 
 LundVar=[]
 for plan in ['_in','_planlund']:
-  for v in ['rho','u','v','w','t','nut']:
-    LundVar.append(v+plan)
+    for v in ['rho','u','v','w','t','nut']:
+        LundVar.append(v+plan)
 LundVar.append('lund_param')
 
 dico= {}
@@ -46,7 +46,7 @@ name     = dico[ bc ]['name']
 bcname   = dico[ bc ]['BCname']
 nextrank = dico[ bc ]['nextrank']
 Init     = dico[ bc ]['Init']
- 
+
 
 
 # ouvrir le fichier input
@@ -55,65 +55,64 @@ lines = f.readlines()
 
 
 for i in range( len(lines) ):
-   lines[i]=lines[i].replace("bvbs_template", name)
-   if 'insert0' in lines[i]:
-     c_insert0=i+1
-   if 'insert1' in lines[i]:
-     c_insert1=i+1
-   if 'insert2' in lines[i]:
-     c_insert2=i+1
+    lines[i]=lines[i].replace("bvbs_template", name)
+    if 'insert0' in lines[i]:
+        c_insert0=i+1
+    if 'insert1' in lines[i]:
+        c_insert1=i+1
+    if 'insert2' in lines[i]:
+        c_insert2=i+1
 
 linsert=False
 outline0='     &  ,'
 c=0
 for var in vars:
-   #outline0+=var+' ,' 
-   outline0='     &                        ,'+var+' \n'
-   lines.insert(c_insert0,outline0)
-   c_insert0+=1
-   c_insert1+=1
-   c_insert2+=1
-   outline1='      REAL_E '+var+'(size_data) \n'
-   lines.insert(c_insert1,outline1)
-   c_insert2+=1
-   linsert=True
-   c+=1
+    #outline0+=var+' ,'
+    outline0='     &                        ,'+var+' \n'
+    lines.insert(c_insert0,outline0)
+    c_insert0+=1
+    c_insert1+=1
+    c_insert2+=1
+    outline1='      REAL_E '+var+'(size_data) \n'
+    lines.insert(c_insert1,outline1)
+    c_insert2+=1
+    linsert=True
+    c+=1
 
 if linsert:
-   lines.insert(c_insert0,'     &                        ,size_data, inc_bc \n')
-   lines.insert(c_insert1,'      INTEGER_E size_data, indbci, inc_bc(3) \n')
+    lines.insert(c_insert0,'     &                        ,size_data, inc_bc \n')
+    lines.insert(c_insert1,'      INTEGER_E size_data, indbci, inc_bc(3) \n')
 else:
-  for i in range( len(lines) ):
-    if "      indbci(j_1,k_1) = 1 + (j"  in lines[i]:
-      lines[i]=lines[i].replace("      indbci(j_1,k_1) = 1 + (j_1-inc_bc(2)) + (k_1-inc_bc(3))*inc_bc(1)","" )
-   
-if Init =='yes':
-  include ='#include       "FastS/BC/'+bcname+'_init.for"  \n'
-  lines.insert(c_insert2, include)
+    for i in range( len(lines) ):
+        if "      indbci(j_1,k_1) = 1 + (j"  in lines[i]:
+            lines[i]=lines[i].replace("      indbci(j_1,k_1) = 1 + (j_1-inc_bc(2)) + (k_1-inc_bc(3))*inc_bc(1)","" )
 
-fout = dico[ bcname ]['name']+'.for' 
+if Init =='yes':
+    include ='#include       "FastS/BC/'+bcname+'_init.for"  \n'
+    lines.insert(c_insert2, include)
+
+fout = dico[ bcname ]['name']+'.for'
 fo = open(fout,"w")                  # ouvrir le fichier de sortie
 print(bcname,' Scheme: file',fout, 'generated')
 
 lines_del=[]
 for i in range( len(lines) ):
-   if "BCTarget"  in lines[i]:
-     new_bc = bcname
-     if 'next rank' in lines[i] and nextrank !='vide': new_bc=nextrank
-     lines[i]=lines[i].replace("BCTarget", new_bc)
-     if new_bc !='vide': 
-           lines[i]=lines[i].replace(" !next rank", '')
-           #lines_del.append(i-2)
-           #lines_del.append(i-1)
-     else:
-           lines[i]=lines[i].replace(" !next rank", '')
+    if "BCTarget"  in lines[i]:
+        new_bc = bcname
+        if 'next rank' in lines[i] and nextrank !='vide': new_bc=nextrank
+        lines[i]=lines[i].replace("BCTarget", new_bc)
+        if new_bc !='vide':
+            lines[i]=lines[i].replace(" !next rank", '')
+            #lines_del.append(i-2)
+            #lines_del.append(i-1)
+        else:
+            lines[i]=lines[i].replace(" !next rank", '')
 
 c=0
 for i in lines_del:
-  print(i), len(lines)
-  del lines[i-c]
-  c+=1
+    print(i), len(lines)
+    del lines[i-c]
+    c+=1
 
 for l in lines: fo.write(l)
 fo.close()                               # fermer le fichier output global
-                        
