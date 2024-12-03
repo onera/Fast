@@ -194,7 +194,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift
 #include    "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3sc_3dcart_i.for"
 #include    "FastS/Compute/SENSOR/3dcart/fluFaceSA_o3sc_3dcart_i.for"
-#include    "FastS/Compute/fluvisq_3dcart_i.for"          
+#include    "FastS/Compute/SA/fluvisq_3dcart_i.for"          
 #include    "FastS/Compute/SA/fluvisq_SA_3dcart_i.for"            
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
@@ -212,7 +212,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift
 #include    "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3sc_3dcart_j.for"
 #include    "FastS/Compute/SENSOR/3dcart/fluFaceSA_o3sc_3dcart_j.for"
-#include    "FastS/Compute/fluvisq_3dcart_j.for"         
+#include    "FastS/Compute/SA/fluvisq_3dcart_j.for"         
 #include    "FastS/Compute/SA/fluvisq_SA_3dcart_j.for"           
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
@@ -230,7 +230,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift                        
 #include    "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3sc_3dcart_k.for"    
 #include    "FastS/Compute/SENSOR/3dcart/fluFaceSA_o3sc_3dcart_k.for"     
-#include    "FastS/Compute/fluvisq_3dcart_k.for"            
+#include    "FastS/Compute/SA/fluvisq_3dcart_k.for"            
 #include    "FastS/Compute/SA/fluvisq_SA_3dcart_k.for"               
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"         
            enddo                                  
