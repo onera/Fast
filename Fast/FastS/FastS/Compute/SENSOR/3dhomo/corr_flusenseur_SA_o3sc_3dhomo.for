@@ -194,7 +194,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift
 #include    "FastS/Compute/SENSOR/3dhomo/fluFaceEuler_o3sc_3dhomo_i.for"
 #include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3sc_3dhomo_i.for"
-#include    "FastS/Compute/fluvisq_3dhomo_i.for"          
+#include    "FastS/Compute/SA/fluvisq_3dhomo_i.for"          
 #include    "FastS/Compute/SA/fluvisq_SA_3dhomo_i.for"            
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
@@ -212,7 +212,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift
 #include    "FastS/Compute/SENSOR/3dhomo/fluFaceEuler_o3sc_3dhomo_j.for"
 #include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3sc_3dhomo_j.for"
-#include    "FastS/Compute/fluvisq_3dhomo_j.for"         
+#include    "FastS/Compute/SA/fluvisq_3dhomo_j.for"         
 #include    "FastS/Compute/SA/fluvisq_SA_3dhomo_j.for"           
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
@@ -230,7 +230,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift                        
 #include    "FastS/Compute/SENSOR/3dhomo/fluFaceEuler_o3sc_3dhomo_k.for"    
 #include    "FastS/Compute/SENSOR/3dhomo/fluFaceSA_o3sc_3dhomo_k.for"     
-#include    "FastS/Compute/fluvisq_3dhomo_k.for"            
+#include    "FastS/Compute/SA/fluvisq_3dhomo_k.for"            
 #include    "FastS/Compute/SA/fluvisq_SA_3dhomo_k.for"               
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"         
            enddo                                  

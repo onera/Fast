@@ -199,7 +199,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift
 #include    "FastS/Compute/SENSOR/2d/fluFaceEuler_ale_o5sc_2d_i.for"
 #include    "FastS/Compute/SENSOR/2d/fluFaceSA_ale_o5sc_2d_i.for"
-#include    "FastS/Compute/fluvisq_2d_i.for"          
+#include    "FastS/Compute/SA/fluvisq_2d_i.for"          
 #include    "FastS/Compute/SA/fluvisq_SA_2d_i.for"            
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
@@ -217,7 +217,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
             l0= l  - shift
 #include    "FastS/Compute/SENSOR/2d/fluFaceEuler_ale_o5sc_2d_j.for"
 #include    "FastS/Compute/SENSOR/2d/fluFaceSA_ale_o5sc_2d_j.for"
-#include    "FastS/Compute/fluvisq_2d_j.for"         
+#include    "FastS/Compute/SA/fluvisq_2d_j.for"         
 #include    "FastS/Compute/SA/fluvisq_SA_2d_j.for"           
 #include    "FastS/Compute/SA/assemble_drodm_corr.for"
            enddo
