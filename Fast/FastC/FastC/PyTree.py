@@ -2647,7 +2647,7 @@ def switchPointersLBM__(zones, neq_lbm, dtloc):
         #if level==1 or (level >=2 and level <= level_next_it) :
         if level <= level_next_it :
             #print("switch Pt", z[0])
-            
+
             sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
 
             #cro = Internal.getNodeFromName1(sol, 'Density')
