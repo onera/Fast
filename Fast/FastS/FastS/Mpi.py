@@ -60,7 +60,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
         if tc2 is not None:
             graphIBCD2 = graph2['graphIBCD']
             graphInvIBCD = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
-        if graphInvIBCD_WM is None:
+        if isWireModel and graphInvIBCD_WM is None:
             graphInvIBCD_WM = Cmpi.computeGraph(tc, type='INV_IBCD', procDict=procDict)
     else:
         procDict=None; graphID=None; graphIBCD=None
