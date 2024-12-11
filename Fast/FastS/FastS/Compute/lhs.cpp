@@ -73,13 +73,13 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
 
          if(lssiter_verif ==1 )
           {
+            if (param_int[nd][ITYPZONE] != 4 and param_int[nd][IFLOW] != 4) // on skippe les eventuelles zone non structurees ou LBM
+            {
 #include   "FastS/Compute/verrou_residus.h"
 //            if( ntask==0 )
 //             {
 //#pragma omp barrier
 //             }
-            if (param_int[nd][ITYPZONE] != 4 and param_int[nd][IFLOW] != 4)  //on skippe les eventuelles zone non structurees ou LBM
-             {
                E_Int* ipt_topo_omp; E_Int* ipt_ind_dm_thread;
 
                ithread_loc           = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
@@ -88,7 +88,7 @@ if( kimpli == 1  && param_int[0][LU_MATCH]==1 && param_int_tc != NULL)
 
               //sortie de la carte residu du Newton
 #include      "FastS/Compute/residus_navier.h"
-             }// test lbm/unstructured
+            } // test lbm/unstructured
           }// test residu
 
         }// loop task residu
