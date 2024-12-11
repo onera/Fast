@@ -3920,7 +3920,7 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
 
     ##Remove unncessary nodes in the zones
     for z in Internal.getZones(t):
-        listzones_rm=[]        
+        listzones_rm=[]
         CalcNode = Internal.getNodeFromName(z, 'isCalc')
         if CalcNode is None:
             ##CHECK to see if cellN==1 can be found in the zone
@@ -3960,7 +3960,7 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
     zoneConv = Internal.getNodeByName(t, 'GlobalConvergenceHistory')
     for var in var_list:
         localVar = numpy.zeros(dicLen[var])
-        Internal.createUniqueChild(zoneConv, var, 'DataArray_t', value=localVar)        
+        Internal.createUniqueChild(zoneConv, var, 'DataArray_t', value=localVar)
     return t
     ## Check to see if I need to write the file or append
     #if t_conv_hist is None:
