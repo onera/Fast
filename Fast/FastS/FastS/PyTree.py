@@ -3837,6 +3837,9 @@ def add2previous(var_list,zone_save,zone_current,it0):
     Internal.setValue(zone_save,new_value_node)
     return None
 
+def _calcGlobalConvergence(t, nrec=None):
+    return _calc_global_convergence(t, nrec=nrec)
+
 def _calc_global_convergence(t, nrec=None):
     """
     Populate the GlobalConvergenceHistory node for each base
@@ -3882,7 +3885,7 @@ def _calc_global_convergence(t, nrec=None):
                 # Loo per base
                 for var in varRsdLoo:
                     zonalRsd = Internal.getNodeByName1(n_zch, var)[1]
-                    baseRsd = Internal.getNodeByName1(n_gch, var)[1]
+                    baseRsd  = Internal.getNodeByName1(n_gch, var)[1]
                     baseRsd[ib:ie] = numpy.maximum(baseRsd[ib:ie], zonalRsd[ib:ie])
 
                 # L2 per base
@@ -3898,10 +3901,17 @@ def _calc_global_convergence(t, nrec=None):
     return None
 
 ##ADD or CREATE a t_conv_history (tree that stores only the convergence history)
+def createAddTConvergHist(t2,it0=0,t_conv_hist=None):
+    return create_add_t_converg_hist(t2,it0=it0,t_conv_hist=t_conv_hist)
 def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
-    var_list    =['IterationNumber','RSD_oo','RSD_L2','RSD_oo_diff','RSD_L2_diff']
+    var_list    =['IterationNumber','RSD_L2','RSD_oo','RSD_L2_diff','RSD_oo_diff']
     var_list_L2 =['RSD_L2','RSD_L2_diff']
     var_list_Loo=['RSD_oo','RSD_oo_diff']
+
+    neqs = 5
+    n_model = Internal.getNodeFromType(t2, 'GoverningEquations_t')
+    if n_model is not None and Internal.getValue(n_model) in ['NSTurbulent', 'nsspalart']:
+        neqs = 6
 
     ##Create local copy by removing unnecessary stuff
     t = Internal.rmNodesByName(t2,'ReferenceState')
@@ -3910,8 +3920,7 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
 
     ##Remove unncessary nodes in the zones
     for z in Internal.getZones(t):
-        listzones_rm=[]
-
+        listzones_rm=[]        
         CalcNode = Internal.getNodeFromName(z, 'isCalc')
         if CalcNode is None:
             ##CHECK to see if cellN==1 can be found in the zone
@@ -3925,46 +3934,61 @@ def create_add_t_converg_hist(t2,it0=0,t_conv_hist=None):
                     cells_zone_1   = numpy.count_nonzero(celN==1)
                 else:
                     cells_zone_1   = numpy.count_nonzero(Internal.getNodeFromName(sol, 'Density')[1])
-
                 isCalc = 0
                 if cells_zone_1>0: isCalc=1
             else:
                 isCalc = 1
+
             Internal.createUniqueChild(z, 'isCalc', 'DataArray_t', value=isCalc)
 
         for z2 in Internal.getChildren(z):
             if z2[0] != 'ZoneConvergenceHistory' and z2[0] != 'ZoneType' and z2[0] != 'isCalc':
                 listzones_rm.append(z2)
-        for z2 in listzones_rm:
-            Internal._rmNode(z,z2)
+        for z2 in listzones_rm: Internal._rmNode(z,z2)
 
-    # Check to see if I need to write the file or append
-    if t_conv_hist is None:
-        if it0 > 0:
-            shift_local = it0
-            for z in Internal.getZones(t):
-                RSD = Internal.getNodeByName(z, 'IterationNumber')[1]
-                RSD[:] += shift_local
-            RSD = Internal.getNodeByName(
-                Internal.getNodeByName(t, 'GlobalConvergenceHistory'),
-                'IterationNumber'
-            )[1]
-            RSD[:] += shift_local
-        return t
-    else:
-        for z in Internal.getZones(t_conv_hist):
-            zone_save     =Internal.getNodeByName(z,'ZoneConvergenceHistory')
-            zone_current  =Internal.getNodeByName(Internal.getNodeByName(t,z[0]),'ZoneConvergenceHistory')
-            add2previous(var_list,zone_save,zone_current,it0)
+        ##Get rid of trailing 0s
+        dicLen   = {}
+        zoneConv = Internal.getNodeByName(z, 'ZoneConvergenceHistory')
+        for var in var_list:
+            localVar = Internal.getNodeByName(zoneConv, var)[1]
+            if var == 'IterationNumber': localVar = numpy.trim_zeros(localVar,'b')
+            else:                        localVar = numpy.resize(localVar,dicLen['IterationNumber']*neqs)
+            dicLen[var] = len(localVar)
+            Internal.createUniqueChild(zoneConv, var, 'DataArray_t', value=localVar)
 
-        for z in Internal.getBases(t_conv_hist):
-            zone_save    = Internal.getNodeByName(z,'GlobalConvergenceHistory')
-
-            zone_current = Internal.getNodeByName(Internal.getNodeByName(t,z[0]),'GlobalConvergenceHistory')
-            if Internal.getChildren(zone_current) and Internal.getChildren(zone_save):
-                add2previous(var_list,zone_save,zone_current,it0)
-
-        return t_conv_hist
+    ##Redimension global convergence history
+    zoneConv = Internal.getNodeByName(t, 'GlobalConvergenceHistory')
+    for var in var_list:
+        localVar = numpy.zeros(dicLen[var])
+        Internal.createUniqueChild(zoneConv, var, 'DataArray_t', value=localVar)        
+    return t
+    ## Check to see if I need to write the file or append
+    #if t_conv_hist is None:
+    #    if it0 > 0:
+    #        shift_local = it0
+    #        for z in Internal.getZones(t):
+    #            RSD = Internal.getNodeByName(z, 'IterationNumber')[1]
+    #            RSD[:] += shift_local
+    #        RSD = Internal.getNodeByName(
+    #            Internal.getNodeByName(t, 'GlobalConvergenceHistory'),
+    #            'IterationNumber'
+    #        )[1]
+    #        RSD[:] += shift_local
+    #    return t
+    #else:
+    #    for z in Internal.getZones(t_conv_hist):
+    #        zone_save     =Internal.getNodeByName(z,'ZoneConvergenceHistory')
+    #        zone_current  =Internal.getNodeByName(Internal.getNodeByName(t,z[0]),'ZoneConvergenceHistory')
+    #        add2previous(var_list,zone_save,zone_current,it0)
+    #
+    #    for z in Internal.getBases(t_conv_hist):
+    #        zone_save    = Internal.getNodeByName(z,'GlobalConvergenceHistory')
+    #
+    #        zone_current = Internal.getNodeByName(Internal.getNodeByName(t,z[0]),'GlobalConvergenceHistory')
+    #        if Internal.getChildren(zone_current) and Internal.getChildren(zone_save):
+    #            add2previous(var_list,zone_save,zone_current,it0)
+    #
+    #    return t_conv_hist
 
 #==============================================================================
 # generation maillage pour tble
