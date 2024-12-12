@@ -186,6 +186,7 @@ X._setInterpTransfers(t,tc,variables=VARSMACRO)
 
 #Internal._rmGhostCells(t,t,2)
 #C.convertPyTree2File(t,"ASLBM.cgns")
+Internal._rmNodesByName(t, "*_P1")
 test.testT(t,5)
 
 
