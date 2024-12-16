@@ -2634,7 +2634,7 @@ def switchPointersLBM__(zones, dtloc):
 
     for z in zones:
         param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]  # noeud
-        
+
         # Number of discrete velocities
         NQ = param_int[VSHARE.NEQ_LBM]
 
