@@ -76,6 +76,13 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     # Reordone les zones pour garantir meme ordre entre t et tc
     FastC._reorder(t, tc)
 
+    # Si version avec FASTLBM 
+    # Ajout du pas de temps, du temps de relaxation et des niveaux en temps
+    # Necessaire avant _buildOwnData puisque stockes dans param_int/param_real
+    if FASTLBM:
+        FastLBM._setTimeStepAndRelaxTime(t,verbose)
+        FastLBM._setTimeLevels(t, verbose)
+
     # Construction param_int et param_real des zones
     FastC._buildOwnData(t, Padding)
 
@@ -633,7 +640,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, layer="c", NIT=1):
 
     if FASTLBM:
         if  NIT%2 != 0:
-            FastC.switchPointersLBM__(zones_lbm, FastLBM.NQ, dtloc)
+            FastC.switchPointersLBM__(zones_lbm, dtloc)
 
     maxlevel   = dtloc[9]
     nitCyclLBM = 2**(maxlevel-1)

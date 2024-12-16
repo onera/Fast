@@ -2630,79 +2630,71 @@ def switchPointers3__(zones,nitmax):
 #==============================================================================
 # echange M1 <- current, current <- P1, P1 <- M1
 #==============================================================================
-def switchPointersLBM__(zones, neq_lbm, dtloc):
+def switchPointersLBM__(zones, dtloc):
 
     for z in zones:
         param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]  # noeud
+        
+        # Number of discrete velocities
+        NQ = param_int[VSHARE.NEQ_LBM]
+
+        # Local time stepping parameters
         level = param_int[VSHARE.LEVEL]
         maxlevel    = dtloc[ 9]
         it_cycl_lbm = dtloc[10]
         level_tg = dtloc[12 +it_cycl_lbm]
-
         max_it        = 2**( maxlevel-1)
-
         level_next_it =  maxlevel;
         if it_cycl_lbm != max_it -1 : level_next_it = dtloc[12 +it_cycl_lbm +1]
 
         #if level==1 or (level >=2 and level <= level_next_it) :
         if level <= level_next_it :
             #print("switch Pt", z[0])
-
             sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
 
-            #cro = Internal.getNodeFromName1(sol, 'Density')
-            #cux = Internal.getNodeFromName1(sol, 'VelocityX')
-            #cuy = Internal.getNodeFromName1(sol, 'VelocityY')
-            #cuz = Internal.getNodeFromName1(sol, 'VelocityZ')
-            #cT  = Internal.getNodeFromName1(sol, 'Temperature')
+            # SWITCH POINTERS : MACROSCOPIC VARIABLES
+            cro = Internal.getNodeFromName1(sol, 'Density'    )
+            cux = Internal.getNodeFromName1(sol, 'VelocityX'  )
+            cuy = Internal.getNodeFromName1(sol, 'VelocityY'  )
+            cuz = Internal.getNodeFromName1(sol, 'VelocityZ'  )
+            cT  = Internal.getNodeFromName1(sol, 'Temperature')
 
-            #croP1 = Internal.getNodeFromName1(sol, 'Density_P1')
-            #cuxP1 = Internal.getNodeFromName1(sol, 'VelocityX_P1')
-            #cuyP1 = Internal.getNodeFromName1(sol, 'VelocityY_P1')
-            #cuzP1 = Internal.getNodeFromName1(sol, 'VelocityZ_P1')
-            #cTP1  = Internal.getNodeFromName1(sol, 'Temperature_P1')
-
-        #    C._cpVars(z, 'centers:Density'    , z, 'centers:Density_M1'    )
-        #    C._cpVars(z, 'centers:VelocityX'  , z, 'centers:VelocityX_M1'  )
-        #    C._cpVars(z, 'centers:VelocityY'  , z, 'centers:VelocityY_M1'  )
-        #    C._cpVars(z, 'centers:VelocityZ'  , z, 'centers:VelocityZ_M1'  )
-        #    C._cpVars(z, 'centers:Temperature', z, 'centers:Temperature_M1')
-            # sauvegarde M1
-            #ta = cro[1]; tb = cux[1]; tc = cuy[1]; td = cuz[1]; te = cT[1];
-            # M1 <- current
-            #cro[1] = croP1[1]; cux[1] = cuxP1[1]; cuy[1] = cuyP1[1]; cuz[1] = cuzP1[1]; cT[1] = cTP1[1];
-            # current <- P1
-            #croP1[1] = ta; cuxP1[1] = tb; cuyP1[1] = tc; cuzP1[1] = td; cTP1[1] = te;
-
-            #cxx = Internal.getNodeFromName1(sol, 'Sxx')
-            #cxy = Internal.getNodeFromName1(sol, 'Sxy')
-            #cxz = Internal.getNodeFromName1(sol, 'Sxz')
-            #cyy = Internal.getNodeFromName1(sol, 'Syy')
-            #cyz = Internal.getNodeFromName1(sol, 'Syz')
-            #czz = Internal.getNodeFromName1(sol, 'Szz')
-
-            #cxxP1 = Internal.getNodeFromName1(sol, 'Sxx_P1')
-            #cxyP1 = Internal.getNodeFromName1(sol, 'Sxy_P1')
-            #cxzP1 = Internal.getNodeFromName1(sol, 'Sxz_P1')
-            #cyyP1 = Internal.getNodeFromName1(sol, 'Syy_P1')
-            #cyzP1 = Internal.getNodeFromName1(sol, 'Syz_P1')
-            #czzP1 = Internal.getNodeFromName1(sol, 'Szz_P1')
-
-        #    C._cpVars(z, 'centers:Sxx'    , z, 'centers:sxx_M1')
-        #    C._cpVars(z, 'centers:Sxy'    , z, 'centers:Sxy_M1')
-        #    C._cpVars(z, 'centers:Sxz'    , z, 'centers:Sxz_M1')
-        #    C._cpVars(z, 'centers:Syy'    , z, 'centers:Syy_M1')
-        #    C._cpVars(z, 'centers:Syz'    , z, 'centers:Syz_M1')
-        #    C._cpVars(z, 'centers:Szz'    , z, 'centers:Szz_M1')
+            croP1 = Internal.getNodeFromName1(sol, 'Density_P1'    )
+            cuxP1 = Internal.getNodeFromName1(sol, 'VelocityX_P1'  )
+            cuyP1 = Internal.getNodeFromName1(sol, 'VelocityY_P1'  )
+            cuzP1 = Internal.getNodeFromName1(sol, 'VelocityZ_P1'  )
+            cTP1  = Internal.getNodeFromName1(sol, 'Temperature_P1')
 
             # sauvegarde M1
-            #ta = cxx[1]; tb = cxy[1]; tc = cxz[1]; td = cyy[1]; te = cyz[1];  tf = czz[1]
+            ta = cro[1]; tb = cux[1]; tc = cuy[1]; td = cuz[1]; te = cT[1];
             # M1 <- current
-            #cxx[1] = cxxP1[1]; cxy[1] = cxyP1[1]; cxz[1] = cxzP1[1]; cyy[1] = cyyP1[1]; cyz[1] = cyzP1[1];  czz[1] = czzP1[1];
+            cro[1] = croP1[1]; cux[1] = cuxP1[1]; cuy[1] = cuyP1[1]; cuz[1] = cuzP1[1]; cT[1] = cTP1[1];
             # current <- P1
-            #cxxP1[1] = ta; cxyP1[1] = tb; cxzP1[1] = tc; cyyP1[1] = td; cyzP1[1] = te;  czzP1[1] = tf;
+            croP1[1] = ta; cuxP1[1] = tb; cuyP1[1] = tc; cuzP1[1] = td; cTP1[1] = te;
 
-            for i in range(1,neq_lbm+1):
+            # SWITCH POINTERS : SHEAR STRESS TENSOR
+            cxx = Internal.getNodeFromName1(sol, 'Sxx')
+            cxy = Internal.getNodeFromName1(sol, 'Sxy')
+            cxz = Internal.getNodeFromName1(sol, 'Sxz')
+            cyy = Internal.getNodeFromName1(sol, 'Syy')
+            cyz = Internal.getNodeFromName1(sol, 'Syz')
+            czz = Internal.getNodeFromName1(sol, 'Szz')
+
+            cxxP1 = Internal.getNodeFromName1(sol, 'Sxx_P1')
+            cxyP1 = Internal.getNodeFromName1(sol, 'Sxy_P1')
+            cxzP1 = Internal.getNodeFromName1(sol, 'Sxz_P1')
+            cyyP1 = Internal.getNodeFromName1(sol, 'Syy_P1')
+            cyzP1 = Internal.getNodeFromName1(sol, 'Syz_P1')
+            czzP1 = Internal.getNodeFromName1(sol, 'Szz_P1')
+
+            # sauvegarde M1
+            ta = cxx[1]; tb = cxy[1]; tc = cxz[1]; td = cyy[1]; te = cyz[1];  tf = czz[1]
+            # M1 <- current
+            cxx[1] = cxxP1[1]; cxy[1] = cxyP1[1]; cxz[1] = cxzP1[1]; cyy[1] = cyyP1[1]; cyz[1] = cyzP1[1];  czz[1] = czzP1[1];
+            # current <- P1
+            cxxP1[1] = ta; cxyP1[1] = tb; cxzP1[1] = tc; cyyP1[1] = td; cyzP1[1] = te;  czzP1[1] = tf;
+
+            for i in range(1, NQ+1):
                 caM1 = Internal.getNodeFromName1(sol, 'Q'+str(i)+'_M1')
                 ca   = Internal.getNodeFromName1(sol, 'Q'+str(i))
 
