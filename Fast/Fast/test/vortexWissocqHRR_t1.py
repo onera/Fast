@@ -7,6 +7,7 @@ import Converter.PyTree as C
 import Converter.Internal as Internal
 import FastC.PyTree as FastC
 import Fast.PyTree as Fast
+import FastASLBM.PyTree as FastLBM
 import Connector.PyTree as X
 import Apps.Fast.LBM as App
 import KCore.test as test
@@ -33,7 +34,7 @@ test.testT(t,1); test.testT(tc,2)
 #==========================================
 # Initialisation du cas-test
 #==========================================
-Pref = 101320
+Pref = 101320.
 Rhoref = 1.1765
 gamma = 1.4
 Rgp = 287.053
@@ -68,6 +69,8 @@ C._initVars(t,'{centers:Szz} = 0.0')
 C._rmVars(t,['centers:r2'])
 
 C._addState(t, adim='dim3',UInf=u0,PInf=Pref,RoInf=Rhoref,LInf=L); C._addState(t, 'Mus', visco_nu)
+dt_list, tau_list = FastLBM.getTimeStepAndRelaxTime(t); print(dt_list,tau_list)
+FastLBM._convertToLatticeUnits(t,dt_list)
 
 #==========================================
 # Parametres de calcul
@@ -75,23 +78,25 @@ C._addState(t, adim='dim3',UInf=u0,PInf=Pref,RoInf=Rhoref,LInf=L); C._addState(t
 
 # Parametres globaux
 numb = {'temporal_scheme':'explicit', 'ss_iteration':20,'omp_mode':0}
-numz = {}
+numz = {'scheme':'ausmpred'}#,'io_thread':1}
+numz["time_step"]=dt_list[0][0] # pour l instant taug=0.5 (pas de viscosite)
 # Utile pour debug
 # numz['cache_blocking_I']=1000000
 # numz['cache_blocking_J']=1000000
 # numz['cache_blocking_K']=1000000
 
 # Parametres propres a la LBM
-numz["LBM_velocity_set"] = "D3Q19"
+# numz["LBM_velocity_set"] = "D3Q19"
 numz["LBM_coll_model"]   = "HRR"
 numz["LBM_hrr_sigma"]   = 0.98
+numz["LBM_relax_time"]   = tau_list[0][0]
 
 FastC._setNum2Zones(t, numz); FastC._setNum2Base(t, numb)
 
 #==========================================
 # Warmup
 #==========================================
-
+t = C.node2Center(t, ['CoordinateX','CoordinateY'])
 (t, tc, metrics)  = Fast.warmup(t, tc)
 
 #==========================================
@@ -119,12 +124,13 @@ print('')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 Internal._rmNodesByName(t, "*_P1")
+Internal._rmNodesByName(t, "niveaux_temps")
 
 VARSMACRO = ['Density','VelocityX','VelocityY','VelocityZ','Temperature','Sxx','Sxy','Sxz','Syy','Syz','Szz']
 for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
 X._setInterpTransfers(t,tc,variables=VARSMACRO)
 
 #Internal._rmGhostCells(t,t,2)
-#C.convertPyTree2File(t,"ASLBM.cgns")
+# C.convertPyTree2File(t,"ASLBM.cgns")
 Internal._rmNodesByName(t, "*_P1")
 test.testT(t,5)
