@@ -10,15 +10,17 @@ import tarfile
 import shutil
 
 LOCAL = test.getLocal()
+tFileName = LOCAL + '/cgns_lts/t2DLTS_ibm.cgns'
+tcFileName = LOCAL + '/cgns_lts/tc2DLTS_ibm.cgns'
 
-if not os.path.isfile(LOCAL+'/cgns_lts/t2DLTS.cgns'):
+if not os.path.isfile(tFileName):
     if LOCAL != '.': shutil.copy("cgns_lts.tar.gz", LOCAL+'/cgns_lts.tar.gz')
     tar = tarfile.open(LOCAL+'/cgns_lts.tar.gz', "r:gz")
     tar.extractall(path=LOCAL)
     tar.close()
 
-t  = Fast.loadTree('cgns_lts/t2DLTS_ibm.cgns', directory=LOCAL)
-tc = Fast.loadTree('cgns_lts/tc2DLTS_ibm.cgns', directory=LOCAL)
+t  = Fast.loadTree(tFileName)
+tc = Fast.loadTree(tcFileName)
 
 NIT                        = 100   # number of iterations
 display_probe_freq         = 10    # iteration frequency to display modulo_verif
