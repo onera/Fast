@@ -132,7 +132,7 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
                 # Choix du tableau pour application transfer et BC
                 vars = FastC.varsP
-                if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN 
+                if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN
 
                 # dtloc GJeanmasson
                 if exploc==1 and tc is not None and layer_mode==0:

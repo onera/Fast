@@ -3006,16 +3006,16 @@ def _BCcompact(t):
             ind_bc[5] = indrange[2][1]
 
             if 'BCFluxOctree' in btype:
-              if 'imin' == bc[0][-4:]: idir=1
-              if 'imax' == bc[0][-4:]: idir=2
-              if 'jmin' == bc[0][-4:]: idir=3
-              if 'jmax' == bc[0][-4:]: idir=4
-              if 'kmin' == bc[0][-4:]: idir=5
-              if 'kmax' == bc[0][-4:]: idir=6
-              param_int[pt_bc+ 1]=idir
-              param_int[pt_bc+ 2: pt_bc+ 8 ]= ind_bc[0:6]
+                if 'imin' == bc[0][-4:]: idir=1
+                if 'imax' == bc[0][-4:]: idir=2
+                if 'jmin' == bc[0][-4:]: idir=3
+                if 'jmax' == bc[0][-4:]: idir=4
+                if 'kmin' == bc[0][-4:]: idir=5
+                if 'kmax' == bc[0][-4:]: idir=6
+                param_int[pt_bc+ 1]=idir
+                param_int[pt_bc+ 2: pt_bc+ 8 ]= ind_bc[0:6]
             else:
-              fastc.PygetRange(ind_bc,  param_int, pt_bc+ 1)
+                fastc.PygetRange(ind_bc,  param_int, pt_bc+ 1)
 
             bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
             Nb_data = len(bcdata)
