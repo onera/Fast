@@ -66,7 +66,7 @@ C Var local
           do  ne=1,neq
              do  k = ind_loop(5), ind_loop(6)
                 do  j = ind_loop(3), ind_loop(4)
-                   do  i = ind_loop(1), ind_loop(2)                              
+                   do  i = ind_loop(1), ind_loop(2)
                       
                       l  = inddm(i,j,k)
 
@@ -79,18 +79,6 @@ C Var local
                constk(lstk,ne)=coeff1*constk(lstk,ne) + 
      &                         !(coe(l,1)/float(param_int(LEVEL)))*coeff2*drodm(l,ne)
      &                     coeff2*drodm(l,ne) 
-
-               !if (j==1.and.cycl==4.and.ne==1.and. i.ne.0 .or. 
-     & !j==2.and.cycl==4.and.ne==1.and. i.ne.0)then !.or. j==535.and.cycl==4
-     & !.and.ne==1) then
-                !  print*, drodm(l,ne), constk(lstk,ne)
-               !end if
-                   
-
-      !if(mod(nstep,cycl)==cycl-1.and.j==1.and.ne==1)then
-      !   print*, 'bf_stocké= ', constk(lstk,ne), l , cycl
-      !end if
-
 
                    end do
                 end do

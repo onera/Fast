@@ -6,7 +6,7 @@ c*****a*****************************************************************
       subroutine interp_rk3local3para( param_int,param_real,coe,
      &                                 ind_loop, ind_loop_,
      &                                 stock, stock2, rop,
-     &                                 dir,taille, nstep, process)
+     &                                 dir,taille, nstep)
    
 c***********************************************************************
 c_U   USER : PECHIER ********SUBROUTINE FONCTIONNANT SEULE**************
@@ -24,7 +24,7 @@ c***********************************************************************
 #include "FastS/param_solver.h"
 
       INTEGER_E ind_loop(6),ind_loop_(6),param_int(0:*),dir,taille,nstep
-      INTEGER_E taillefenetre, process
+      INTEGER_E taillefenetre
            
       REAL_E param_real(0:*) 
       REAL_E stock(taille,param_int(NEQ))
@@ -34,7 +34,7 @@ c***********************************************************************
       
  
 C Var local
-      INTEGER_E l,ijkm,im,jm,km,ldjr,i,j,k,ne,lij,neq,n,nistk,lstk,ind
+      INTEGER_E l,ijkm,im,jm,km,ldjr,i,j,k,ne,lij,neq,n,nistk,lstk
      &,nistk_,  z(3)
       INTEGER_E inddm2,i_2,j_2,k_2
       INTEGER_E nistk2,nistk3,l2,lstk2,cycl
@@ -44,15 +44,12 @@ C Var local
       
 #include "FastS/formule_param.h"  
                         
-      ind = param_int(NSSITER)/param_int(LEVEL)
-      neq=param_int(NEQ)
+      neq  = param_int(NEQ)
+      cycl = param_int(NSSITER)/param_int(LEVEL)
        
       cv = param_real(CVINF)
       cvinv=1.0/cv
 
-      !print*, cv
-
-      cycl = param_int(NSSITER)/param_int(LEVEL)
 
 
       if (MOD(nstep,cycl)==1) then
@@ -70,23 +67,6 @@ C Var local
       nistk2 = (ind_loop_(4) - ind_loop_(3)) +1
  
       z=0
-
-c$$$      if (dir==1 .and. MOD(nstep,cycl).ne.1) then
-c$$$         z(1)=2
-c$$$         nistk=4
-c$$$      else if (dir==2 .and. MOD(nstep,cycl).ne.1) then
-c$$$         z(2)=2
-c$$$         nistk2=4
-c$$$      else if (dir==3 .and. MOD(nstep,cycl).ne.1) then
-c$$$         z(3)=2
-c$$$       end if
-c$$$
-c$$$      if (dir==-1 .and. MOD(nstep,cycl).ne.1) then
-c$$$         nistk=4
-c$$$      else if (dir==-2 .and. MOD(nstep,cycl).ne.1) then
-c$$$         nistk2=4
-c$$$       end if
-
 
       do  k = ind_loop(5), ind_loop(6)
         do  j = ind_loop(3), ind_loop(4)

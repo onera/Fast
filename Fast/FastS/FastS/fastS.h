@@ -56,15 +56,15 @@ namespace K_FASTS
   PyObject* PygetRange(              PyObject* self, PyObject* args);
   PyObject* display_ss_iteration(    PyObject* self, PyObject* args);
   PyObject* stockrecup(              PyObject* self, PyObject* args);
-  PyObject* recup(                   PyObject* self, PyObject* args);
-  PyObject* recup2(                  PyObject* self, PyObject* args);
-  PyObject* recup3(                  PyObject* self, PyObject* args);
-  PyObject* recup3para(              PyObject* self, PyObject* args);
+  //PyObject* recup(                   PyObject* self, PyObject* args);
+  //PyObject* recup2(                  PyObject* self, PyObject* args);
+  //PyObject* recup3(                  PyObject* self, PyObject* args);
+  //PyObject* recup3para(              PyObject* self, PyObject* args);
   PyObject* recup3para_(             PyObject* self, PyObject* args);
   PyObject* recup3para_mpi(          PyObject* self, PyObject* args);
-  PyObject* dtlocal(                 PyObject* self, PyObject* args);
-  PyObject* dtlocal2(                PyObject* self, PyObject* args);
-  PyObject* dtlocal2para(            PyObject* self, PyObject* args);
+  //PyObject* dtlocal(                 PyObject* self, PyObject* args);
+  //PyObject* dtlocal2(                PyObject* self, PyObject* args);
+  //PyObject* dtlocal2para(            PyObject* self, PyObject* args);
   PyObject* dtlocal2para_(           PyObject* self, PyObject* args);
   PyObject* dtlocal2para_mpi(        PyObject* self, PyObject* args);
   PyObject* prep_cfl(                PyObject* self, PyObject* args);
@@ -266,9 +266,9 @@ namespace K_FASTS
   //		    E_Float*& iptdrodm,  E_Float*& iptdrodmcoe, E_Float*& iptstk, E_Float*& iptdrodmstk,
   //		    E_Float*& iptcstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom, E_Int& mx_sszone, E_Int*& ipt_ssor_size);
 
-void dtlocal2para_c(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int, E_Float*& param_real,  E_Int**& param_intt, E_Float**& param_realt,
+void dtlocal2para_c(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int, E_Int**& param_intt, E_Float**& param_realt,
                       E_Float*& iptdrodm,  E_Float*& iptdrodmcoe, E_Float*& iptstk, E_Float*& iptdrodmstk, E_Float*& iptcstk,  E_Int& nstep, 
-  		      E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom);
+  		      E_Int& taille_tabs, E_Int& nidom);
 
 
 
@@ -281,8 +281,8 @@ void BC_local(E_Float**& iptro, E_Float**& iptro_p1, E_Int*& param_int,
 		    E_Float*& iptcstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom);
 
 void recup3para_c(E_Float**& iptro, E_Int*& param_int,
-		    E_Float*& param_real, E_Int**& param_intt, 
-		    E_Float*& iptstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom);
+		  E_Int**& param_intt, 
+		  E_Float*& iptstk, E_Int& nstep, E_Int& taille_tabs, E_Int& nidom);
 
 
 

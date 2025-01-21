@@ -198,7 +198,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 #include    "FastS/Compute/FLUX_CONV/fluFaceRans_k.for"   !3D only
 #include    "FastS/Compute/fluViscLaminar_k.for"          !3D only
 #include    "FastS/Compute/fluViscRans_k.for"             !3D only
-#include    "FastS/Compute/assemble_drodm.for"            !3D only
+#include    "FastS/Compute/assemble_drodm_mono.for"            !3D only
                                                           !3D only
             l  =  inddm(i,j,k+1)                          !3D only
             lt = indmtr(i,j,k+1)                          !3D only
@@ -209,7 +209,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 #include    "FastS/Compute/fluViscLaminar_k.for"          !3D only
 #include    "FastS/Compute/fluViscRans_k.for"             !3D only
             l  =  inddm(i,j,k)                            !3D only
-#include    "FastS/Compute/assemble_drodm.for"            !3D only
+#include    "FastS/Compute/assemble_drodm_mono.for"            !3D only
         ENDDO                                             !3D only
 !$OMP SIMD 
         DO i = ind_loop(1), ind_loop(2)
@@ -222,7 +222,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 #include    "FastS/Compute/FLUX_CONV/fluFaceRans_j.for"
 #include    "FastS/Compute/fluViscLaminar_j.for"
 #include    "FastS/Compute/fluViscRans_j.for"
-#include    "FastS/Compute/assemble_drodm.for"
+#include    "FastS/Compute/assemble_drodm_mono.for"
 
             l  =  inddm(i,j+1,k)
             lt = indmtr(i,j+1,k)
@@ -233,7 +233,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 #include    "FastS/Compute/fluViscLaminar_j.for"
 #include    "FastS/Compute/fluViscRans_j.for"
             l  =  inddm(i,j,k)
-#include    "FastS/Compute/assemble_drodm.for"
+#include    "FastS/Compute/assemble_drodm_mono.for"
         ENDDO   
 !$OMP SIMD                                         
         DO i = ind_loop(1), ind_loop(2)
@@ -245,7 +245,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 #include    "FastS/Compute/FLUX_CONV/fluFaceRans_i.for"
 #include    "FastS/Compute/fluViscLaminar_i.for"
 #include    "FastS/Compute/fluViscRans_i.for"
-#include    "FastS/Compute/assemble_drodm.for"
+#include    "FastS/Compute/assemble_drodm_mono.for"
         ENDDO !do i
 !$OMP SIMD 
         DO i = ind_loop(1), ind_loop(2)
@@ -258,7 +258,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 #include    "FastS/Compute/fluViscLaminar_i.for"
 #include    "FastS/Compute/fluViscRans_i.for"
             l  =  inddm(i,j,k)
-#include    "FastS/Compute/assemble_drodm.for"
+#include    "FastS/Compute/assemble_drodm_mono.for"
 
         ENDDO !do i
       ENDDO !do j

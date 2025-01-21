@@ -60,6 +60,8 @@
 #define BCPERIODIC               15
 #define BCOUTPRES                16
 #define BCINJ1                   17
+#define BCFluxOctree_F           28
+#define BCFluxOctree_C           29
 #define BCWALLMODEL              30
 #define BCWALLEXCHANGE           31
 

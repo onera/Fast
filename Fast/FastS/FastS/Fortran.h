@@ -81,7 +81,7 @@ extern "C"
 
   void interp_rk3local3_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Float*coe, E_Int* ind_loop, E_Float* stock,E_Float* stock2, E_Float* iptro, E_Int& dir, E_Int& taille,E_Int& nstep);
 
-  void interp_rk3local3para_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Float*coe, E_Int* ind_loop,  E_Int* ind_loop_, E_Float* stock,E_Float* stock2, E_Float* iptro, E_Int& dir, E_Int& taille,E_Int& nstep,E_Int& NoD);
+  void interp_rk3local3para_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Float*coe, E_Int* ind_loop,  E_Int* ind_loop_, E_Float* stock,E_Float* stock2, E_Float* iptro, E_Int& dir, E_Int& taille,E_Int& nstep);
 
   void interp_rk3local3list_(E_Int* ipt_param_int, E_Float* ipt_param_real, E_Int*listRcv,E_Float* stock,E_Float* stock2, E_Float* iptro, E_Int& nbpts,E_Int& nstep);
 

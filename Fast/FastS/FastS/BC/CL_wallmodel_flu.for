@@ -1,9 +1,9 @@
          flag_correct_flu=0
           
          !Wall model boundary condition
-         If(bc_type.eq.BCWALLMODEL.or.bc_type.eq.BCWALLEXCHANGE) then
+c         If(bc_type.eq.BCWALLMODEL) then
             
-            nbdata = param_int(pt_bc + BC_NBDATA)
+c            nbdata = param_int(pt_bc + BC_NBDATA)
 
             if(idir.le.2) THEN
              incijk     =1
@@ -27,6 +27,6 @@
 
             !Mise a jour flag pour calcul correct des efforts
             flag_correct_flu=1
-         Else
-            continue
-         Endif
+c         Else
+c            continue
+c         Endif

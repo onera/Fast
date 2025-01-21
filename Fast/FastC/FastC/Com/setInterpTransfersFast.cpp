@@ -505,6 +505,7 @@ void K_FASTC::setInterpTransfersIntra(
 
   E_Int autorisation_transferts[pass_inst_fin][size_autorisation]; // Pour l explicite local
 
+  E_Int ntab_int    =18;
 
   //E_Int rank=0;
   //MPI_Comm_rank (MPI_COMM_WORLD, &rank);
@@ -537,7 +538,7 @@ void K_FASTC::setInterpTransfersIntra(
       // Si on est en explicit local, on va autoriser les transferts entre certaines zones en fonction de la ss-ite courante
       if(exploc == 1)
 	{
-	  E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
+	  E_Int debut_rac = ech + 4 + timelevel*2 + nrac*ntab_int + 27*irac;
 	  E_Int levelD = param_int_tc[debut_rac + 25];
 	  E_Int levelR = param_int_tc[debut_rac + 24];
 	  E_Int cyclD  = nssiter/levelD;
@@ -573,7 +574,7 @@ void K_FASTC::setInterpTransfersIntra(
 
       if (autorisation_transferts[pass_inst][irac_auto]==1)
 	   { 
-	      E_Int nbRcvPts = param_int_tc[shift_rac + nrac * 10 + 1];
+	      E_Int nbRcvPts = param_int_tc[shift_rac + nrac*10 ];
     
 	      if (nbRcvPts > nbRcvPts_mx) nbRcvPts_mx = nbRcvPts;
 
@@ -647,10 +648,10 @@ void K_FASTC::setInterpTransfersIntra(
           E_Int ibc = 1;
           if (ibcType < 0) ibc = 0;
 
-          E_Int NoD       = param_int_tc[shift_rac + nrac * 5     ];
-          E_Int NoR       = param_int_tc[shift_rac + nrac * 11 + 1];
-          E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 + 1];  // neq fonction raccord rans/LES
-          E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
+          E_Int NoD       = param_int_tc[shift_rac + nrac * 5  ];
+          E_Int NoR       = param_int_tc[shift_rac + nrac * 11 ];
+          E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 ];  // neq fonction raccord rans/LES
+          E_Int rotation  = param_int_tc[shift_rac + nrac * 14 ];  // flag pour periodicite azymuthal
 
           // COUPLAGE NS LBM - Recupere les solveurs des zones R et D
           E_Int solver_D=2; E_Int solver_R=2;
@@ -745,15 +746,15 @@ void K_FASTC::setInterpTransfersIntra(
           ////
           ////
 
-          E_Int nbRcvPts = param_int_tc[shift_rac + nrac * 10 + 1];
+          E_Int nbRcvPts = param_int_tc[shift_rac + nrac*10];
           // E_Int nbDonPts = param_int_tc[ shift_rac                ];
 
           E_Int pos;
-          pos = param_int_tc[shift_rac + nrac * 7];      E_Int* ntype    = param_int_tc  + pos;
-          pos = pos + 1 + ntype[0];                      E_Int* types    = param_int_tc  + pos;
-          pos = param_int_tc[shift_rac + nrac * 6];      E_Int* donorPts = param_int_tc  + pos;
-          pos = param_int_tc[shift_rac + nrac * 12 + 1]; E_Int* rcvPts   = param_int_tc  + pos;  // donor et receveur inverser car storage donor
-          pos = param_int_tc[shift_rac + nrac * 8];    E_Float* ptrCoefs = param_real_tc + pos;
+          pos = param_int_tc[shift_rac + nrac*7 ]; E_Int* ntype    = param_int_tc  + pos;
+          pos = pos + 1 + ntype[0];                E_Int* types    = param_int_tc  + pos;
+          pos = param_int_tc[shift_rac + nrac*6 ]; E_Int* donorPts = param_int_tc  + pos;
+          pos = param_int_tc[shift_rac + nrac*12]; E_Int* rcvPts   = param_int_tc  + pos;  // donor et receveur inverser car storage donor
+          pos = param_int_tc[shift_rac + nrac*8 ]; E_Float* ptrCoefs = param_real_tc + pos;
 
           E_Int nbInterpD = param_int_tc[shift_rac + nrac];
           E_Float* xPC = NULL;
@@ -795,7 +796,7 @@ void K_FASTC::setInterpTransfersIntra(
             // dynamique rame...
             // // *
             //         E_Int size_bc =  ifin-ideb;
-            //         E_Int size_min=   16;
+            //         E_Int size_min=   16      ;
             //         //E_Int chunk = size_bc/Nbre_thread_actif;
             //         //if     (chunk < size_min && size_bc >= size_min) { chunk =
             // size_min;}
@@ -1064,6 +1065,7 @@ void K_FASTC::setInterpTransfersInter(
   E_Int count_rac = 0;
   E_Int nbRcvPts_mx = 0;
   E_Int ibcTypeMax  = 0;
+  E_Int ntab_int    =18;
 
   for  (E_Int pass_inst=pass_inst_deb; pass_inst< pass_inst_fin; pass_inst++)
     {
@@ -1084,7 +1086,7 @@ void K_FASTC::setInterpTransfersInter(
 	  E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
 
           //  si incompatibilite pass et typeTransfert, on skippe le raccord
-          E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
+          E_Int ibcType = param_int_tc[shift_rac + nrac*3];
 
           if (ibcType > ibcTypeMax){ ibcTypeMax= ibcType;}
           E_Int ibc = 1;
@@ -1094,7 +1096,7 @@ void K_FASTC::setInterpTransfersInter(
 
 	  if(exploc == 1)
 	    {
-	      E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
+	      E_Int debut_rac = ech + 4 + timelevel*2 + nrac*ntab_int + 27*irac;
 	      E_Int levelD = param_int_tc[debut_rac + 25];
 	      E_Int levelR = param_int_tc[debut_rac + 24];
 	      E_Int cyclD  = nssiter/levelD;
@@ -1133,7 +1135,7 @@ void K_FASTC::setInterpTransfersInter(
 	  if (autorisation_transferts[pass_inst][irac_auto]==1)
 	   {
 	      E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
-	      E_Int nbRcvPts = param_int_tc[shift_rac + nrac * 10 + 1];
+	      E_Int nbRcvPts = param_int_tc[shift_rac + nrac*10];
 
 	      if (nbRcvPts > nbRcvPts_mx) nbRcvPts_mx = nbRcvPts;
 	      has_data_to_send |= (TypeTransfert == ibc);
@@ -1175,12 +1177,12 @@ if (has_data_to_send)
 	{ 
 	    E_Int shift_rac = ech + 4 + timelevel * 2 + irac;
 
-	    E_Int nbRcvPts  = param_int_tc[shift_rac + nrac * 10 + 1];
-	    E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 + 1];  // flag raccord rans/LES
-	    E_Int Nozone    = param_int_tc[shift_rac + nrac * 11 + 1];
+	    E_Int nbRcvPts  = param_int_tc[shift_rac + nrac*10];
+	    E_Int nvars_loc = param_int_tc[shift_rac + nrac*13];  // flag raccord rans/LES
+	    E_Int Nozone    = param_int_tc[shift_rac + nrac*11];
 
             // on determine un No zone pipeau pour skipper remplissage inutile en implicit local
-            E_Int NoD       = param_int_tc[shift_rac + nrac * 5     ];
+            E_Int NoD       = param_int_tc[shift_rac + nrac*5];
             E_Int Nozone_loc   = Nozone; 
             E_Int nbRcvPts_loc = nbRcvPts;
             if (impli_local[NoD] == 0) {Nozone_loc = -999; nbRcvPts_loc=1;}
@@ -1200,7 +1202,7 @@ if (has_data_to_send)
 	    send_buffer << Nozone_loc;  
 
 	    pck_data.push_back(&send_buffer.push_inplace_array(nvars_loc * nbRcvPts_loc * sizeof(E_Float) ));    
-	    E_Int PtlistDonor  = param_int_tc[shift_rac + nrac * 12 + 1];
+	    E_Int PtlistDonor  = param_int_tc[shift_rac + nrac*12];
 	    E_Int* ipt_listRcv = param_int_tc + PtlistDonor;
 
 	    send_buffer << CMP::vector_view<E_Int>(ipt_listRcv, nbRcvPts_loc);
@@ -1306,8 +1308,8 @@ if (has_data_to_send)
                 {
 
                   E_Int shift_rac = ech + 4 + timelevel*2 + irac;
-                  E_Int NoD       = param_int_tc[shift_rac + nrac * 5 ];
-                  E_Int nvars_loc = param_int_tc[shift_rac + nrac * 13 +1];  // neq fonction raccord rans/LES
+                  E_Int NoD       = param_int_tc[shift_rac + nrac*5 ];
+                  E_Int nvars_loc = param_int_tc[shift_rac + nrac*13];  // neq fonction raccord rans/LES
 
 
 		  E_Int irac_auto = irac-irac_deb;
@@ -1322,15 +1324,14 @@ if (has_data_to_send)
                   if (autorisation_transferts[pass_inst][irac_auto]==1 and impli_local[NoD]==1)
 		   {
 
-                     E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
+                     E_Int ibcType = param_int_tc[shift_rac + nrac*3];
 
                      E_Int ibc = 1;
 	             if (ibcType < 0) ibc = 0;
 
-                     //E_Int loc       = param_int_tc[shift_rac + nrac * 9  + 1];  //+1 a cause du nrac mpi
-                     E_Int nbRcvPts  = param_int_tc[shift_rac + nrac * 10 + 1];
-                     E_Int NoR       = param_int_tc[shift_rac + nrac * 11 + 1];
-                     E_Int rotation  = param_int_tc[shift_rac + nrac * 14 + 1];  // flag pour periodicite azymuthal
+                     E_Int nbRcvPts  = param_int_tc[shift_rac + nrac*10];
+                     E_Int NoR       = param_int_tc[shift_rac + nrac*11];
+                     E_Int rotation  = param_int_tc[shift_rac + nrac*14];  // flag pour periodicite azymuthal
 
                      // COUPLAGE NS LBM - Recupere les solveurs des zones R et D
                      E_Int solver_D=2; E_Int solver_R=2;
@@ -1399,8 +1400,6 @@ if (has_data_to_send)
                      E_Int* donorPts   = param_int_tc + pos;
                      pos               = param_int_tc[shift_rac + nrac * 8];
                      E_Float* ptrCoefs = param_real_tc + pos;
-                     // pos               = param_int_tc[shift_rac + nrac * 12 + 1];
-                     // E_Int* rcvPts     = param_int_tc +  pos;
   
                      E_Int nbInterpD = param_int_tc[shift_rac + nrac];
                      E_Float* xPC = NULL;
@@ -1468,10 +1467,10 @@ if (has_data_to_send)
 
                       noi     = shiftDonor;  // compteur sur le tableau d indices donneur
                       indCoef = ( pt_deb - ideb ) * sizecoefs + shiftCoef;
-                      //E_Int NoR = param_int_tc[shift_rac + nrac * 11 + 1];
+                      //E_Int NoR = param_int_tc[shift_rac + nrac*11 ];
                       //if (param_int_tc[ech]==0) printf("No rac= %d , NoR= %d, NoD= %d, Ntype= %d, ptdeb= %d, ptfin= %d, NptD= %d, neq= %d, skip= %d, rank= %d, dest= %d,  thread= %d\n",
                       //irac, NoR,NoD, ntype[ 1 + ndtyp],pt_deb,pt_fin , 
-                      //param_int_tc[ shift_rac + nrac*10+1  ], param_int_tc[ shift_rac + nrac*13+1  ], param_int_tc[ shift_rac + nrac*15+1  ], 
+                      //param_int_tc[ shift_rac + nrac*10  ], param_int_tc[ shift_rac + nrac*13  ], param_int_tc[ shift_rac + nrac*15  ], 
                       //rank, param_int_tc[ ech  ], ithread );
                       if ( nvars_loc == 5 ) {
 #include "commonInterpTransfersD_reorder_5eq.h"
@@ -1516,7 +1515,7 @@ if (has_data_to_send)
 							      nbptslinelets, linelets, indexlinelets);
                   
                       }  // ibc
-	              E_Int PtlistDonor  = param_int_tc[shift_rac + nrac * 12 + 1];
+	              E_Int PtlistDonor  = param_int_tc[shift_rac + nrac*12];
 	              E_Int* ipt_listRcv = param_int_tc + PtlistDonor;
 
                       //        } //chunk

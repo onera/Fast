@@ -29,6 +29,7 @@ static PyMethodDef Pyfastc [] =
   {"souszones_list"      , K_FASTC::souszones_list      ,  METH_VARARGS},
   {"init_metric"         , K_FASTC::init_metric         ,  METH_VARARGS},
   {"initNuma"            , K_FASTC::initNuma            ,  METH_VARARGS},
+  {"copy2gpu"            , K_FASTC::copy2gpu            ,  METH_VARARGS},
   {"distributeThreads"   , K_FASTC::distributeThreads   ,  METH_VARARGS},
   {NULL, NULL}
 };

@@ -30,15 +30,13 @@ c***********************************************************************
       
  
 C Var local
-      INTEGER_E l,ijkm,im,jm,km,ldjr,i,j,k,ne,lij,neq,n,nistk,lstk,ind
-      INTEGER_E inddm2,i_2,j_2,k_2
-      INTEGER_E nistk2,nistk3,l2,lstk2,posbis
+      INTEGER_E l,ijkm,im,jm,km,ldjr,i,j,k,ne,lij,neq,n,nistk,lstk
+      INTEGER_E nistk2,nistk3,lstk2
       REAL_E c1,roe,cv,cvinv,ro_old,u_old,v_old,w_old,t_old,roe_old
 
       
 #include "FastS/formule_param.h"  
                         
-      ind = param_int(NSSITER)/param_int(LEVEL)
       neq=param_int(NEQ)
        
       cv = param_real(CVINF)
@@ -52,7 +50,6 @@ C Var local
 
 
       !print*, 'ind= ', ind, nzone
-      !print*, 'posbis= ' , posbis , nzone
 
       do  k = ind_loop(5), ind_loop(6)
         do  j = ind_loop(3), ind_loop(4)
@@ -100,27 +97,12 @@ C Var local
 
 
               stock(lstk2,5) = cvinv*( ( roe_old +
-     & coeff*(coe(l,1)/float(param_int(LEVEL)))*drodmstock(lstk,5))/                              
+     & coeff*(coe(l,1)/float(param_int(LEVEL)))*drodmstock(lstk,5))/
      & stock(lstk2,1)  -  0.5*(stock(lstk2,2)*stock(lstk2,2)
      &                + stock(lstk2,3)*stock(lstk2,3)
      &                + stock(lstk2,4)*stock(lstk2,4)))   
-
-
-        !if (j==75.or.j==74) then
-      ! &  j==ind_loop(4)-2.or.j==ind_loop(4)-3) then
-      !   print*, "interpzone dt/2= ",stock(lstk2,1),"  ",j
-        ! print*, "ro_interp= ", stock(lstk2,1),coeff 
-        !end if
-
-
-            !  if (j==295) then
-            !     print*,ro_old,"  ",pos,"  ",i
-            !  endif
-         
               end do                         
             end do
          end do
-
-
 
          end

@@ -32,13 +32,11 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 {
   PyObject *zonesR, *zonesD;
   PyObject *work;
-  PyObject *pyParam_int, *pyParam_real;
-  E_Int nstep, vartype, omp_mode, Notransfert;
+  PyObject *pyParam_int;
+  E_Int nstep;
 
-  if (!PYPARSETUPLE(args,
-                    "OOOOOllll", "OOOOOiiii",
-                    "OOOOOllll", "OOOOOiiii",
-                    &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work,&vartype,&nstep,&omp_mode,&Notransfert))
+  if (!PYPARSETUPLE_(args, OOOO_ I_,
+                    &zonesR, &zonesD, &pyParam_int, &work, &nstep ))
   {
       return NULL;
   }
@@ -46,9 +44,8 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
   vector<PyArrayObject*> hook;
 
   E_Int nidomR   = PyList_Size(zonesR);
-  E_Int nidomD   = PyList_Size(zonesD);
- 
-   
+  E_Int omp_mode=0;
+
   //E_Int NoTransfert = 1;
 
   //// Recuperation du tableau param_int de l'arbre t et des veceurs rop et roptmp
@@ -77,36 +74,12 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
   /// Recuperation du tableau de stockage des valeurs
   PyObject* dtlocArray = PyDict_GetItemString(work,"tab_dtloc"); FldArrayF* stk;
   K_NUMPY::getFromNumpyArray(dtlocArray, stk, true); E_Float* iptstk = stk->begin();
-
-  E_Int stk_size    = stk[0].getSize();
-  E_Int taille_tabs = stk_size/5;
-
-  E_Float* iptdrodmstk = iptstk+ taille_tabs*3;
-  E_Float* iptcstk     = iptstk+ taille_tabs*4;
   /*-------------------------------------*/
   /* Extraction tableau int et real      */
   /*-------------------------------------*/
   FldArrayI* param_int;
-  E_Int res_donor = K_NUMPY::getFromNumpyArray(pyParam_int, param_int, true);
-  E_Int* ipt_param_int = param_int->begin();
-  FldArrayF* param_real;
-  res_donor = K_NUMPY::getFromNumpyArray(pyParam_real, param_real, true);
-  E_Float* ipt_param_real = param_real->begin();
+  K_NUMPY::getFromNumpyArray(pyParam_int, param_int, true); E_Int* ipt_param_int = param_int->begin();
   
-  //E_Int nbcomIBC = ipt_param_int[1];
-  //E_Int nbcomID  = ipt_param_int[2+nbcomIBC];
-  
-  //E_Int shift_graph = nbcomIBC + nbcomID + 2;
-
-  //E_Int threadmax_sdm  = __NUMTHREADS__;
-  //E_Int ech            = ipt_param_int[ NoTransfert +shift_graph];
-
-  //E_Int nrac = ipt_param_int[ ech +1 ];
-  //E_Int timelevel = ipt_param_int[ ech +3 ]; 
-
-  //E_Int taille=taille_tabs/nrac;
-
-
 #pragma omp parallel default(shared) //private(cycle)
   {
 #ifdef _OPENMP
@@ -149,10 +122,8 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 	    E_Int timelevel = ipt_param_int[ ech +3 ];
 	    E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
 
-	    E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
-	    E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
-
-	    E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
+	    E_Int NoD       =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
+	    E_Int debut_rac = ech + 4 + timelevel*2 + nrac*18 + 27*irac;
 
 	    E_Int cycle;
 
@@ -161,14 +132,13 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 
 	    E_Float* tab1;   
 	    E_Float* tab2;   
-	    E_Float* tab3;   
    	    E_Int ind;
 
 	    /// Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse 
 	    if (ipt_param_int[debut_rac + 25] > ipt_param_int[debut_rac + 24]) 
 
 	      {
-		E_Int donorPts_[6];  E_Int idir = 2;
+		E_Int donorPts_[6];
 		donorPts_[0] =  ipt_param_int[debut_rac + 7];
 		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
 		donorPts_[2] =  ipt_param_int[debut_rac + 9];
@@ -188,14 +158,7 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 		indice_boucle_lu_(NoD, ithread_loc, Nbre_thread_actif_loc, param_intt[NoD][ ITYPCP ],
 				  donorPts_,
 				  topology, ipt_ind_dm_omp_thread);
-		E_Int donorPts[6];
-		donorPts[0]=ipt_ind_dm_omp_thread[0];
-		donorPts[1]=ipt_ind_dm_omp_thread[1];
-		donorPts[2]=ipt_ind_dm_omp_thread[2];
-		donorPts[3]=ipt_ind_dm_omp_thread[3];
-		donorPts[4]=ipt_ind_dm_omp_thread[4];
-		donorPts[5]=ipt_ind_dm_omp_thread[5];
-
+		
 	        E_Int pos_tab = ipt_param_int[debut_rac + 26];	
 	  
 		if (nstep%cycle==cycle/2 and (nstep/cycle)%2==1) 
@@ -213,7 +176,7 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 	    else if (ipt_param_int[debut_rac + 25] < ipt_param_int[debut_rac + 24])
 	      {
 
-		E_Int donorPts_[6];  E_Int idir = 2;
+		E_Int donorPts_[6];
 		donorPts_[0] =  ipt_param_int[debut_rac + 7];
 		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
 		donorPts_[2] =  ipt_param_int[debut_rac + 9];
@@ -255,18 +218,7 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 		    copy_rk3localpara_(param_intt[NoD], donorPts ,donorPts_,  tab1, tab2,ind,taillefenetre);
 
 		  }
-
-
-
-
-
-
-
 	      }
-
-
-
-
 	  }
 
       } //boucle NoTransfert
@@ -275,13 +227,11 @@ PyObject* K_FASTS::recup3para_mpi(PyObject* self, PyObject* args)
 
   //#pragma omp barrier
 
-
-
-
-
+ RELEASESHAREDN( dtlocArray  , stk );
  RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL); 
  RELEASESHAREDN(pyParam_int    , param_int    );
- RELEASESHAREDN(pyParam_real   , param_real   );
+ 
+ delete[] param_intt; delete[] iptro_p1; delete[] iptro;
 
  Py_INCREF(Py_None);
  return Py_None;

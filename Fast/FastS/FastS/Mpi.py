@@ -105,7 +105,6 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                 param_real_tc= tc_compact[1]
                 param_int_tc = Internal.getNodeFromName1(tc, 'Parameter_int' )[1]
 
-                zones_tc    = Internal.getZones(tc)
                 nbcomIBC    = param_int_tc[1]
                 shift_graph = nbcomIBC + param_int_tc[2+nbcomIBC] + 2
                 comm_P2P    = param_int_tc[0]
@@ -131,58 +130,42 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
                 tps_cp += Time.time()-tic - tps_trIt
                 tps_tr += tps_trIt
 
+                # Choix du tableau pour application transfer et BC
+                vars = FastC.varsP
+                if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN 
+
                 # dtloc GJeanmasson
                 if exploc==1 and tc is not None and layer_mode==0:
 
-                    no_transfert = 1#comm_P2P
-                    process = Cmpi.rank
-
                     zonesD    = Internal.getZones(tc)
 
-                    fasts.dtlocal2para_mpi(zones,zonesD,param_int_tc,param_real_tc,hook1,0,nstep,ompmode,no_transfert,process)
-
-                    if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
-                    elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
+                    fasts.dtlocal2para_mpi(zones, zonesD, param_int_tc, hook1, nstep)
 
                     _applyBC(zones,metrics, hook1, nstep, var=vars[0])
 
                     FastC.switchPointers2__(zones,nitmax,nstep)
-                    # Ghostcell
-
-                    if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
-                    elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
 
                     if graph is not None and grapheliste == True:
                         procDict  = graph[nstep-1]['procDict']
                         graphID   = graph[nstep-1]['graphID']
                         graphIBCD = graph[nstep-1]['graphIBCD']
-                    else:
-                        procDict=None; graphID=None; graphIBCD=None
+
+                    # Ghostcell
                     _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc, isWireModel=isWireModel)
 
-                    no_transfert = 1#comm_P2P
-
-                    fasts.recup3para_mpi(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1)
+                    fasts.recup3para_mpi(zones, zonesD, param_int_tc, hook1, nstep)
 
                     if nstep%2 == 0:
-                        vars = ['Density']
                         if graph is not None and grapheliste == True:
                             procDict  = graph[nitmax+nstep-1]['procDict']
                             graphID   = graph[nitmax+nstep-1]['graphID']
                             graphIBCD = graph[nitmax+nstep-1]['graphIBCD']
-                        else:
-                            procDict=None; graphID=None; graphIBCD=None
                         _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, nitmax, hook1, graphID, graphIBCD, procDict, nitmax, rk, exploc, num_passage=2, isWireModel=isWireModel)
 
-                    if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
-                    elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
                     _applyBC(zones,metrics, hook1, nstep, var=vars[0])
-
 
                 else: ### Autres schemas
                     # Ghostcell
-                    vars = FastC.varsP
-                    if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
 
                     tic=Time.time()
 
@@ -1129,7 +1112,6 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
         t0=t1
 
         graph['procDict'] = D2.getProcDict(tc_skel)
-        graph['procList'] = D2.getProcList(tc_skel, sort=True)
         graph['graphIBCD']= Cmpi.computeGraph(tc_skel, type='IBCD', reduction=False, procDict=graph['procDict'])
 
         graph['graphID_Steady'],graph['graphID_Unsteady'] = Cmpi.computeGraph(tc_skel, type='ID_Unsteady', reduction=False, procDict=graph['procDict'])
@@ -1141,9 +1123,6 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
         t0=t1
 
         if rank==0: print("timelevel_motion= ", timelevel_motion,"timelevel_target= ", timelevel_target,"itGraph=",iteration_loc,"cout Graph=", t1-t0)
-
-        #print("steady",graph['graphID'] )
-
         #
         # Reordone les zones pour garantir meme ordre entre t et tc
         FastC._reorder(t, tc)

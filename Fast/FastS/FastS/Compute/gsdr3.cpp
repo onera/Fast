@@ -119,6 +119,14 @@ E_Int K_FASTS::gsdr3(
              param_real[nd][PSIROE]=0;
            }
        }
+       else
+       { 
+         for (E_Int nd = 0; nd < nidom; nd++)
+           { 
+             param_int[nd][IFLOW]=2;
+             param_real[nd][PSIROE]=0.5;
+           }
+       }
       //Modif LECLAIRE
 */   
 
@@ -129,7 +137,7 @@ E_Int K_FASTS::gsdr3(
 	   else
 	     {
 	        if (nitcfg != param_int[0][NSSITER]){iptro_ssiter = iptrotmp;  iptro_CL = iptro;}
-               else {iptro_ssiter  = iptrotmp; iptro_CL = iptro;}
+               else                                 {iptro_ssiter = iptrotmp;  iptro_CL = iptro;}
               }
 	   }
       else  // Explicit global ou Implicit
@@ -433,7 +441,8 @@ E_Int lrhs=0; E_Int lcorner=0;
        }
       //Modif LECLAIRE
 */     
-      
+  
+
 #ifdef _OPENMP  
      time_trans = time_trans + omp_get_wtime()-trans_deb;
 #else 
