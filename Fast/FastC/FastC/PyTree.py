@@ -3638,99 +3638,7 @@ def getMaxProc(t):
 #==============================================================================
 def loadFile(fileName='t.cgns', split='single', graph=False,
              mpirun=False, exploc=0):
-    """Load tree and connectivity tree."""
-    import os.path
-    baseName = os.path.basename(fileName)
-    baseName = os.path.splitext(baseName)[0] # name without extension
-    fileName = os.path.splitext(fileName)[0] # full path without extension
-
-    graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
-    if mpirun: # mpi run
-        rank = Cmpi.rank; size = Cmpi.size
-
-        if split == 'single':
-            FILE = fileName+'.cgns'
-            t = Cmpi.convertFile2SkeletonTree(FILE)
-            mp = getMaxProc(t)
-            #if mp+1 != size: #### COMMENTE PAR GUILLAUME POUR PASSER LE CREATE
-            #    raise ValueError('The number of mpi proc (%d) doesn t match the tree distribution (%d).'%(size,mp+1))
-
-            graphN = prepGraphs(t, exploc=exploc)
-
-            t = Cmpi.readZones(t, FILE, rank=rank)
-            t = Cmpi.convert2PartialTree(t, rank=rank)
-
-        else: # load 1 fichier par proc
-
-            if graph and exploc == 0:
-
-                # Try to load graph from file
-                if os.access('%s/graph.pk'%fileName, os.R_OK):
-                    try: import cPickle as pickle
-                    except: import pickle
-                    file = open('%s/graph.pk'%fileName, 'rb')
-                    graphN = pickle.load(file)
-                    file.close()
-                # Load all skeleton proc files
-                else:
-                    ret = 1; no = 0; t = []
-                    while ret == 1:
-                        FILE = '%s_%d.cgns'%(fileName, no)
-                        if not os.access(FILE, os.F_OK): ret = 0
-                        if ret == 1:
-                            t.append(Cmpi.convertFile2SkeletonTree(FILE))
-                        no += 1
-                    if t != []:
-                        t      = Internal.merge(t)
-                        graphN = prepGraphs(t)
-                    else: print('graph non calculable: manque de fichiers connectivite.')
-
-
-            if graph and exploc == 1: ## dtloc instationnaire
-
-                # Try to load graph from file
-                if os.access('%s/graph.pk'%fileName, os.R_OK):
-                    try: import cPickle as pickle
-                    except: import pickle
-                    file = open('%s/graph.pk'%fileName, 'rb')
-                    graphN = pickle.load(file)
-                    file.close()
-                # Load all skeleton proc files
-                else:
-                    ret = 1; no = 0; t = []
-                    while ret == 1:
-                        FILE = '%s_%d.cgns'%(fileName, no)
-                        if not os.access(FILE, os.F_OK): ret = 0
-                        if ret == 1:
-                            t.append(Cmpi.convertFile2SkeletonTree(FILE))
-                        no += 1
-                    if t != []:
-                        t = Internal.merge(t)
-                        list_graph = []
-                        graphN = prepGraphs(t, exploc=exploc)
-
-            FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
-            if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else: t = None
-
-    else: # sequential run
-        if split == 'single':
-            FILE = fileName+'.cgns'
-            if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else: t = None
-        else: # multiple
-            ret = 1; no = 0; t = []
-            while ret == 1:
-                FILE = '%s/%s_%d.cgns'%(fileName, baseName, no)
-                if not os.access(FILE, os.F_OK): ret = 0
-                if ret == 1: t.append(C.convertFile2PyTree(FILE))
-                no += 1
-            if t != []: t = Internal.merge(t)
-            else: t = None
-
-    if graph and not exploc: return t, graphN
-    elif graph and exploc:   return t, list_graph
-    else:     return t
+    return loadTree(fileName, split, graph, mpirun, exploc)
 
 #==============================================================================
 # Load one file
@@ -3903,83 +3811,75 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
 # the communication graph for IBM transfers
 # dir is the directory containing files to be read
 #==============================================================================
-def loadTree(fileName='t.cgns', split='single', directory='.', graph=False, mpirun=False):
+def loadTree(fileName='t.cgns', split='single', graph=False, mpirun=False,
+             exploc=0):
     """Load tree and connectivity tree."""
     import os.path
-    import Converter.PyTree as C
+    fileNameNoExt = os.path.splitext(fileName)[0]  # full path without extension
+    graphN = {'graphID': None, 'graphIBCD': None, 'procDict': None, 'procList': None}
 
-    fileName = os.path.splitext(fileName)[0] # full path without extension
-    if len(directory) > 0 and directory[-1] == '/': directory = directory[:-1]
-    if fileName[0] == '/': fileName = fileName[1:]
-
-    graphN = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
     if mpirun: # mpi run
         rank = Cmpi.rank; size = Cmpi.size
-
         if split == 'single':
-            # Load connect (tc)
-            FILE = directory+'/'+fileName+'.cgns'
-            t = Cmpi.convertFile2SkeletonTree(FILE)
-            if graph: graphN = prepGraphs(t)
-            t = Cmpi.readZones(t, FILE, rank=rank)
-            zones = Internal.getZones(t)
+            cgnsFile = fileNameNoExt + '.cgns'
+            t = Cmpi.convertFile2SkeletonTree(cgnsFile)
+            if graph: graphN = prepGraphs(t, exploc=exploc)
+            t = Cmpi.readZones(t, cgnsFile, rank=rank)
             t = Cmpi.convert2PartialTree(t, rank=rank)
-            zones = Internal.getZones(t)
 
         else: # load 1 fichier par proc
             if graph:
                 # Try to load graph
-                if os.access('%s/graph.pk'%directory, os.R_OK):
+                if os.access('%s/graph.pk'%fileNameNoExt, os.R_OK):
                     try: import cPickle as pickle
                     except: import pickle
-                    file = open('%s/graph.pk'%directory, 'rb')
+                    file = open('%s/graph.pk'%fileNameNoExt, 'rb')
                     graphN = pickle.load(file)
                     file.close()
                 # Load all skeleton proc files
                 else:
-                    ret = 1; no= 0; tmp= []
+                    ret = 1; no = 0; tmp = []
                     while ret == 1:
-                        #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, no)
-                        FILE = '%s/%s%d.cgns'%(directory, fileName, no)
-                        if not os.access(FILE, os.F_OK): ret = 0
+                        cgnsFile1 = '%s_%d.cgns'%(fileNameNoExt, no)  # same as save()
+                        cgnsFile2 = '%s%d.cgns'%(fileNameNoExt, no)  # legacy, unsafe
+                        if os.access(cgnsFile1, os.F_OK): cgnsFile = cgnsFile1
+                        elif os.access(cgnsFile2, os.F_OK): cgnsFile = cgnsFile2
+                        else: ret = 0
                         if ret == 1:
-                            tmp.append(Cmpi.convertFile2SkeletonTree(FILE))
+                            tmp.append(Cmpi.convertFile2SkeletonTree(cgnsFile))
                             no += 1
                     if no == size and tmp != []:
                         t      = Internal.merge(tmp)
-                        graphN = prepGraphs(t)
-                    else: print('graph non calculable: manque de fichiers connectivite.')
+                        graphN = prepGraphs(t, exploc=exploc)
+                    else:
+                        raise ValueError('Cannot compute graph: connectivity files missing')
 
-            #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
-            FILE = '%s/%s%d.cgns'%(directory, fileName, rank)
-            if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else:
-                #t = None
-                raise ValueError("File "+FILE+" not found")
+            cgnsFile1 = '%s_%d.cgns'%(fileNameNoExt, rank)  # same as save()
+            cgnsFile2 = '%s%d.cgns'%(fileNameNoExt, rank)  # legacy, unsafe
+            if os.access(cgnsFile1, os.F_OK): t = C.convertFile2PyTree(cgnsFile1)
+            elif os.access(cgnsFile2, os.F_OK): t = C.convertFile2PyTree(cgnsFile2)
+            else: raise ValueError("File "+cgnsFile1+" not found")
 
     else: # sequential run
         if split == 'single':
-            FILE = directory+'/'+fileName+'.cgns'
-            if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else:
-                #t = None
-                raise ValueError("File "+FILE+" not found")
+            cgnsFile = fileNameNoExt + '.cgns'
+            if os.access(cgnsFile, os.F_OK): t = C.convertFile2PyTree(cgnsFile)
+            else: raise ValueError("File "+cgnsFile+" not found")
         else: # multiple
-            # Load connectivity (tc)
-            ret = 1; no = 0; tc = []
+            ret = 1; no = 0; t = []
             while ret == 1:
-                #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, no)
-                FILE = '%s/%s%d.cgns'%(directory, fileName, no)
-                if not os.access(FILE, os.F_OK): ret = 0
-                if ret == 1: tc.append(C.convertFile2PyTree(FILE))
+                cgnsFile1 = '%s_%d.cgns'%(fileNameNoExt, no)
+                cgnsFile2 = '%s%d.cgns'%(fileNameNoExt, no)
+                if os.access(cgnsFile1, os.F_OK): cgnsFile = cgnsFile1
+                elif os.access(cgnsFile2, os.F_OK): cgnsFile = cgnsFile2
+                else: ret = 0
+                if ret == 1: t.append(C.convertFile2PyTree(cgnsFile))
                 no += 1
-            if  t != []: t = Internal.merge(t)
-            else:
-                # t = None
-                raise ValueError("File "+FILE+" not found")
+            if t != []: t = Internal.merge(t)
+            else: raise ValueError("File "+cgnsFile1+" not found")
 
     if graph: return t, graphN
-    else:     return t
+    return t
 
 #==============================================================================
 # Save t.cgns (data) tc.cgns (connectivity file) ts.cgns (stat)
@@ -4000,7 +3900,6 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
     fileName = os.path.splitext(fileName)[0] # full path without extension
 
     # Rip/add some useless/usefull data (FastS)
-    import Converter.PyTree as C
     t2 = C.rmVars(t, 'centers:Density_P1')
     C._rmVars(t2, 'centers:VelocityX_P1')
     C._rmVars(t2, 'centers:VelocityY_P1')
