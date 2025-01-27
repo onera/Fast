@@ -70,7 +70,7 @@ C._rmVars(t,['centers:r2'])
 
 C._addState(t, adim='dim3',UInf=u0,PInf=Pref,RoInf=Rhoref,LInf=L); C._addState(t, 'Mus', visco_nu)
 dt_list, tau_list = FastLBM.getTimeStepAndRelaxTime(t); print(dt_list,tau_list)
-FastLBM._convertToLatticeUnits(t,dt_list)
+# FastLBM._convertToLatticeUnits(t,dt_list)
 
 #==========================================
 # Parametres de calcul
@@ -125,6 +125,8 @@ Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 Internal._rmNodesByName(t, "*_P1")
 Internal._rmNodesByName(t, "niveaux_temps")
+
+FastLBM._convertToLatticeUnits(t,dt_list)
 
 VARSMACRO = ['Density','VelocityX','VelocityY','VelocityZ','Temperature','Sxx','Sxy','Sxz','Syy','Syz','Szz']
 for v in VARSMACRO: C._cpVars(t,'centers:'+v,tc,v)
