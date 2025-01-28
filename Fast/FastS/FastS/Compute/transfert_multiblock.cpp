@@ -14,7 +14,7 @@ E_Int exploc       = param_int[0][EXPLOC];
   }
   else if (param_int[0][EXPLOC] == 1)     // explicit local instationnaire
   {
-     K_FASTS::dtlocal2para_c(iptro, iptrotmp, param_int_tc, param_real_tc, param_int, param_real, iptdrodm, iptcoe, stock, drodmstock, constk, nitcfg, omp_mode, taille_tabs, nidom);
+     K_FASTS::dtlocal2para_c(iptro, iptrotmp, param_int_tc, param_int, param_real, iptdrodm, iptcoe, stock, drodmstock, constk, nitcfg, taille_tabs, nidom);
 
      for (E_Int nd=0; nd < nidom; nd++)
        {
@@ -35,7 +35,7 @@ E_Int exploc       = param_int[0][EXPLOC];
                                         linelets_int, linelets_real, it_target, nidom , ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage);
       }
 
-      K_FASTS::recup3para_c(iptro, param_int_tc, param_real_tc, param_int, stock, nitcfg, omp_mode, taille_tabs, nidom);
+      K_FASTS::recup3para_c(iptro, param_int_tc, param_int, stock, nitcfg, taille_tabs, nidom);
 
      //BC_local(iptro, iptrotmp, param_int_tc, param_real_tc, param_int, param_real, iptdrodm, iptcoe, ipt_ind_CL, ipti, iptj, iptk, iptx, ipty, iptz, iptventi, iptventj, iptventk, stock, drodmstock, constk, nitcfg, omp_mode, taille_tabs, nidom);
 

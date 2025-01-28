@@ -29,33 +29,10 @@ using namespace K_FLD;
 // Idem: in place + from zone + tc compact au niveau base 
 //=============================================================================
 void K_FASTS::recup3para_c(E_Float**& iptro, E_Int*& param_int_tc,
-				E_Float*& param_real_tc, E_Int**& param_int, 
-				E_Float*& iptstk, E_Int& nstep, E_Int& omp_mode, E_Int& taille_tabs, E_Int& nidom)
+                           E_Int**& param_int, 
+                           E_Float*& iptstk, E_Int& nstep, E_Int& taille_tabs, E_Int& nidom)
 
 {
-
-#ifdef NB_SOCKET
-  E_Int nb_socket=NB_SOCKET;
-#else
-  E_Int nb_socket=1;
-#endif
-#ifdef CORE_PER_SOCK
-  E_Int core_per_socket=CORE_PER_SOCK;
-#else
-  E_Int core_per_socket=__NUMTHREADS__;
-#endif
-
-  if( __NUMTHREADS__ <= core_per_socket)  nb_socket=1;
-
-  //printf(" socket core %d %d \n", nb_socket, core_per_socket);
-  
-  FldArrayI tab_activ_core_per_socket(nb_socket);   E_Int* activ_core_per_socket = tab_activ_core_per_socket.begin();
-
-  E_Int count = __NUMTHREADS__;
-  for (E_Int s = 0; s < nb_socket; s++)
-     {   if (count >= core_per_socket) {activ_core_per_socket[s]=  core_per_socket; count -= core_per_socket;}
-         else activ_core_per_socket[s] = count;
-     }
 
 #pragma omp parallel default(shared) //private(cycle)
   {
@@ -75,39 +52,23 @@ void K_FASTS::recup3para_c(E_Float**& iptro, E_Int*& param_int_tc,
     topology[2]=0;
 
     for (E_Int NoTransfert = 1; NoTransfert < param_int_tc[0] + 1; NoTransfert++)
-
       {
-
 	E_Int nbcomIBC = param_int_tc[1];
 	E_Int nbcomID  = param_int_tc[2+nbcomIBC];
   
 	E_Int shift_graph = nbcomIBC + nbcomID + 2;
 
-	E_Int ech            = param_int_tc[ NoTransfert +shift_graph];
- 
-	E_Int nrac = param_int_tc[ ech +1 ];
-
+	E_Int ech       = param_int_tc[ NoTransfert +shift_graph];
+	E_Int nrac      = param_int_tc[ ech +1 ];
+        E_Int timelevel = param_int_tc[ ech +3 ];
 
 	for  (E_Int irac=0; irac< nrac; irac++) // Boucle sur les différents raccords (frontières)
 	  {
+	    E_Int shift_rac = ech + 4 + timelevel*2 + irac;
+	    E_Int debut_rac = ech + 4 + timelevel*2 + nrac*18 + 27*irac;
+	    E_Int NoD       =  param_int_tc[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
 
-	    //E_Int shift_rac =  ech + 2 + irac;
-	    E_Int timelevel = param_int_tc[ ech +3 ];
-	    E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
-
-	    E_Int NoD      =  param_int_tc[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
-	    E_Int NoR      =  param_int_tc[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
-
-            //Si omp_mode=1, on modifie la distribution du travail pour ameliorer le numa
-	    //#           include "distrib_omp.h"
-
-	    E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
-
-	    E_Int ibcType = param_int_tc[shift_rac + nrac * 3];
-
-	    E_Int cycle;
-
-	    cycle = param_int[NoD][NSSITER]/param_int_tc[debut_rac +25];
+	    E_Int cycle = param_int[NoD][NSSITER]/param_int_tc[debut_rac +25];
 
 	    if (param_int_tc[debut_rac + 25] > param_int_tc[debut_rac + 24]) /// Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse 
 	      {

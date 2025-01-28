@@ -135,36 +135,31 @@ def _compute(t, metrics, nitrun, tc=None, graph=None, tc2=None, graph2=None, lay
 
                 timelevel_target = int(dtloc[4])
 
+                # Choix du tableau pour application transfer et BC
+                vars = FastC.varsP
+                if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN
+
                 # dtloc GJeanmasson
                 if exploc==1 and tc is not None and layer_mode==0:
-                    fasts.dtlocal2para_(zones, zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1, dest)
 
-                    if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
-                    elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
+                    fasts.dtlocal2para_(zones, zones_tc, param_int_tc, hook1, nstep)
+
                     _applyBC(zones,metrics, hook1, nstep, var=vars[0])
 
                     FastC.switchPointers2__(zones,nitmax,nstep)
 
                     # Ghostcell
-                    if    nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]  # Choix du tableau pour application transfer et BC
-                    elif  nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
                     _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep, ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc,isWireModel=isWireModel)
 
-                    fasts.recup3para_(zones,zones_tc, param_int_tc, param_real_tc, hook1, 0, nstep, ompmode, 1)
+                    fasts.recup3para_(zones, zones_tc, param_int_tc, hook1, nstep)
 
                     if nstep%2 == 0:
-                        vars = ['Density']
                         _fillGhostcells(zones, tc, metrics, timelevel_target, vars, nstep,  ompmode, hook1, nitmax=nitmax, rk=rk, exploc=exploc, num_passage=2,isWireModel=isWireModel)
 
-                    if   nstep%2 == 0 and itypcp == 2: vars = ['Density'  ]
-                    elif nstep%2 == 1 and itypcp == 2: vars = ['Density_P1']
                     _applyBC(zones, metrics, hook1, nstep, var=vars[0])
 
                 else:
                     #Ghostcell
-                    vars = FastC.varsP
-                    if nstep%2 == 0 and itypcp == 2: vars = FastC.varsN  # Choix du tableau pour application transfer et BC
-                    #t0=Time.time()
                     tic=Time.time()
 
                     if not tc2:
@@ -2876,8 +2871,8 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
         FamName = zsrname[1]
 
         zR      = Internal.getNodeFromName(t, zname)
-        Internal.createUniqueChild(zR, 'Conservative_Flux', 'UserDefinedData_t')
-        tmp1     = Internal.getNodeFromName(zR, 'Conservative_Flux')
+        Internal.createUniqueChild(zR, 'ConservativeWall', 'UserDefinedData_t')
+        tmp1     = Internal.getNodeFromName(zR, 'ConservativeWall')
         Internal.createUniqueChild(tmp1 ,FamName, 'UserDefinedData_t')
         tmp      = Internal.getNodeFromName(tmp1, FamName)
 
@@ -2920,7 +2915,7 @@ def _ConservativeWallIbm(t, tc, CHECK=False, zNameCheck='nada'):
             if CHECK: checKj  = Internal.getNodeFromName(zR, "cellJ#conservatif")[1]
             if CHECK and DimPb == 3: checKk  = Internal.getNodeFromName(zR, "cellK#conservatif")[1]
 
-            tmp1    = Internal.getNodeFromName(zR, "Conservative_Flux")
+            tmp1    = Internal.getNodeFromName(zR, "ConservativeWall")
             tmp     = Internal.getNodeFromName(tmp1, FamName)
             Fimin   = Internal.getNodeFromName(tmp, "Face_imin")[1]
             Fimax   = Internal.getNodeFromName(tmp, "Face_imax")[1]

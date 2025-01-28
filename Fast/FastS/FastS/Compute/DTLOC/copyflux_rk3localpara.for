@@ -127,37 +127,29 @@ C Var local
 
        endif
 
-
             
       else if (ind.eq.1) then ! Stockage de f(yn)
-
-       !print*, 'ndom= ', nzone, ' ', 'recup des flux'
 
        do  ne=1,neq
           do  k = ind_loop(5), ind_loop(6)
            do  j = ind_loop(3), ind_loop(4)
             do  i = ind_loop(1), ind_loop(2)    
                               
-              l = inddm(i,j,k)                            
+                   l = inddm(i,j,k)                            
         
-
                lstk  =  (i+1 - ind_loop_(1))
      &                +(j-ind_loop_(3))*nistk
-     &             +(k-ind_loop_(5))*nistk*nistk2
-
+     &                +(k-ind_loop_(5))*nistk*nistk2
 
              stock(lstk,ne) =  drodm(l,ne)
                                 
            enddo
-
          enddo
         enddo
        enddo
 
-     
        
       end if
       
-      !close(1)
              
       end

@@ -32,13 +32,11 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 {
   PyObject *zonesR, *zonesD;
   PyObject *work;
-  PyObject *pyParam_int, *pyParam_real;
-  E_Int loc, nstep, vartype;
-  E_Int omp_mode, NoTransfert, process;
+  PyObject *pyParam_int;
+  E_Int nstep;
 
-  if (!PYPARSETUPLE_(args, OOOO_ O_ IIII_ I_,
-                    &zonesR, &zonesD, &pyParam_int, &pyParam_real,&work,
-                    &vartype, &nstep, &omp_mode, &NoTransfert, &process))
+  if (!PYPARSETUPLE_(args, OOOO_ I_,
+                    &zonesR, &zonesD, &pyParam_int, &work, &nstep))
   {
       return NULL;
   }
@@ -47,8 +45,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
   vector<PyArrayObject*> hook;
 
   E_Int nidomR   = PyList_Size(zonesR);
-  E_Int nidomD   = PyList_Size(zonesD);
-  
+  E_Int omp_mode=0;
 
   //// Recuperation du tableau param_int de l'arbre t et des veceurs rop et roptmp
   E_Int**   param_intt = new E_Int*[nidomR];
@@ -57,7 +54,6 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
   E_Float** iptro    = new E_Float*[nidomR];
 
   for (E_Int nd = 0; nd < nidomR; nd++)
-
      {   
        PyObject* zone = PyList_GetItem(zonesR, nd);
  
@@ -75,10 +71,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
         o            = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
        PyObject* t1  = K_PYTREE::getNodeFromName1( o        , "Density");
        iptro[nd]     = K_PYTREE::getValueAF(t1, hook);
-
-
      }
-
 
  /// Recuperation du tableau de stockage des valeurs
   PyObject* dtlocArray = PyDict_GetItemString(work,"tab_dtloc"); FldArrayF* stk;
@@ -88,7 +81,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
   E_Int taille_tabs = stk_size/5;
 
   E_Float* iptdrodmstk = iptstk+ taille_tabs*3;
-  E_Float* iptcstk     = iptstk+ taille_tabs*4;
+  //E_Float* iptcstk     = iptstk+ taille_tabs*4;
   
   /// Tableau de travail communs explicite/implicite
   PyObject* drodmArray = PyDict_GetItemString(work,"rhs"); FldArrayF* drodm;
@@ -102,18 +95,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
   /* Extraction tableau int et real      */
   /*-------------------------------------*/
   FldArrayI* param_int;
-  E_Int res_donor = K_NUMPY::getFromNumpyArray(pyParam_int, param_int, true);
-  E_Int* ipt_param_int = param_int->begin();
-  FldArrayF* param_real;
-  res_donor = K_NUMPY::getFromNumpyArray(pyParam_real, param_real, true);
-  E_Float* ipt_param_real = param_real->begin();
-
-  E_Int nvars;
-
-  if( vartype <= 3 &&  vartype >= 1) nvars =5;
-  else                               nvars =6;
-
-
+  K_NUMPY::getFromNumpyArray(pyParam_int, param_int, true); E_Int* ipt_param_int = param_int->begin();
 
   E_Int a=0;
   E_Int b=0;
@@ -131,9 +113,8 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 	 b=b+param_intt[nd][ NDIMDX ]*param_intt[nd][ NEQ_COE ];	 
        }
 
-      E_Int taille_stk       = taille_tabs*3;
-      E_Int taille_drodmstk  = taille_tabs;
-      E_Int taille_cstck     = taille_tabs;
+      //E_Int taille_stk       = taille_tabs*3;
+      //E_Int taille_drodmstk  = taille_tabs;
 
 
   vector<E_Int> nbraczone(nidomR,0);
@@ -184,11 +165,8 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 	    E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
 
 	    E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
-	    E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
-	    E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 +1 ];
       
-	    E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
-	    E_Int ibcType = ipt_param_int[shift_rac + nrac * 3];
+	    E_Int debut_rac = ech + 4 + timelevel*2 + nrac*18 + 27*irac;
 
 	    E_Int cycle;
 	    cycle = param_intt[NoD][NSSITER]/ipt_param_int[debut_rac + 25];
@@ -197,10 +175,6 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 	    if (ipt_param_int[debut_rac + 25] > ipt_param_int[debut_rac + 24] )
 
 	      {
-
-		E_Int pos;
-		pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
-
 		E_Int donorPts_[6]; 
 		donorPts_[0] =  ipt_param_int[debut_rac + 7];
 		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
@@ -235,7 +209,6 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 
 		E_Float* tab1;   
 		E_Float* tab2;   
-		E_Float* tab3;   
 		E_Int ind;
 		if (nstep%cycle==1 and (nstep/cycle)%2==0) /// La 1ere sous-iteration du cycle
 		  {
@@ -277,7 +250,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 	    else if (ipt_param_int[debut_rac + 25] < ipt_param_int[debut_rac + 24] ) /// Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
 	      {
 
-		E_Int donorPts_[6];  E_Int idir = 2;
+		E_Int donorPts_[6];
 		donorPts_[0] =  ipt_param_int[debut_rac + 7];
 		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
 		donorPts_[2] =  ipt_param_int[debut_rac + 9];
@@ -349,7 +322,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 		    tab2 = iptstk + pos_tab + param_intt[NoD][NEQ]*taillefenetre;
 		    tab3 = iptro[NoD];
 
-		    interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, tab1, tab2, tab3, dir, taillefenetre, nstep, NoD);
+		    interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, tab1, tab2, tab3, dir, taillefenetre, nstep);
 		  }
 	      
 		/// Recuperation de y3 en position 1 dans le tableau de stockage du raccord 
@@ -386,7 +359,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 		    tab2 = iptstk + pos_tab + param_intt[NoD][NEQ]*taillefenetre;
 		    tab3 = iptro_p1[NoD];
 
-		    interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, tab1, tab2, tab3, dir, taillefenetre, nstep, NoD);
+		    interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, tab1, tab2, tab3, dir, taillefenetre, nstep);
 		  }
 	      }
 	  }// boucle raccords
@@ -453,22 +426,14 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 	    E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
 
 	    E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
-	    E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
-	    E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 +1 ];
 
-	    E_Int ibcType = ipt_param_int[shift_rac + nrac * 3];
-
-	    E_Int debut_rac = ech + 4 + timelevel*2 + 1 + nrac*16 + 27*irac;
+	    E_Int debut_rac = ech + 4 + timelevel*2 + nrac*18 + 27*irac;
 
 	    E_Int cycle;
 	    cycle = param_intt[NoD][NSSITER]/ipt_param_int[debut_rac + 25];
 
 	    if (ipt_param_int[debut_rac + 25] < ipt_param_int[debut_rac + 24] )/// Le pas de temps de la zone donneuse est plus grand que celui de la zone receveuse
 	      {
-
-		E_Int pos;
-		pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
-
 		E_Int donorPts_[6]; 
 		donorPts_[0] =  ipt_param_int[debut_rac + 7];
 		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
@@ -511,7 +476,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 		    tab2 = iptstk + pos_tab + param_intt[NoD][NEQ]*taillefenetre;
 		    tab3 = iptro_p1[NoD];
 
-		    interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, tab1, tab2, tab3, dir, taillefenetre, nstep, NoD);
+		    interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, tab1, tab2, tab3, dir, taillefenetre, nstep);
 		  }
 		if (nstep%cycle == cycle/2 + cycle/4)
 		  {
@@ -537,11 +502,7 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 	      }
 
 	    else if (ipt_param_int[debut_rac + 25] > ipt_param_int[debut_rac + 24])/// Le pas de temps de la zone donneuse est plus petit que celui de la zone receveuse 
-
 	      {
-
-		E_Int pos;
-		pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
 		E_Int donorPts_[6]; 
 		donorPts_[0] =  ipt_param_int[debut_rac + 7];
 		donorPts_[1] =  ipt_param_int[debut_rac + 8] ;
@@ -574,9 +535,6 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
 		E_Float* tab1;   
 		E_Float* tab2;   
 		E_Float* tab3;   
-		E_Int ind;
-		
-
 		if (nstep%cycle==cycle/2 and (nstep/cycle)%2==1)
 
 		  {
@@ -601,7 +559,6 @@ PyObject* K_FASTS::dtlocal2para_mpi(PyObject* self, PyObject* args)
  RELEASESHAREDN( dtlocArray  , stk );
  RELEASESHAREDZ(hook, (char*)NULL, (char*)NULL); 
  RELEASESHAREDN(pyParam_int    , param_int    );
- RELEASESHAREDN(pyParam_real   , param_real   );
  RELEASESHAREDN( coeArray,coe);
  RELEASESHAREDN( drodmArray,drodm);
 

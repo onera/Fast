@@ -58,6 +58,8 @@ tagBCDict = {
     "BCadimcoins": 25, #LBM
     "BCOversetLBM": 26, #LBM
     "BCEquilibrium": 27,
+    "BCFluxOctree_F": 28,
+    "BCFluxOctree_C": 29,
     "BCWallModel": 30,
     "BCWallExchange": 31,
     "BCWallViscousIsothermal": 32,
@@ -2789,12 +2791,18 @@ def _BCcompact(t):
     familyBCTypes = C.getFamilyBCNamesDict(t)
     for z in zones:
 
+        # zone ownData (generated)
+        o = Internal.getNodeFromName1(z, '.Solver#ownData')
+        param_int = Internal.getNodeFromName1(o, 'Parameter_int')
+        neq = param_int[1][VSHARE.NEQ]
+
         bcs   = Internal.getNodesFromType2(z, 'BC_t')
         Nb_bc = len(bcs)
         size_int  = 1 +  Nb_bc*2 + 9*Nb_bc
         size_real = 0
         for bc in bcs:
             btype = Internal.getValue(bc)
+            #print("btype", btype)
             ## Si la bc est une wall_viscous_transition on ajoute un data qui est un vecteur contenant des nombres random
             if btype == 'BCWallViscous_transition':
                 ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
@@ -2802,6 +2810,19 @@ def _BCcompact(t):
                 nb_cell = max([wrange[0][1] - wrange[0][0],1])* max([wrange[1][1] - wrange[1][0],1])*max([wrange[2][1] - wrange[2][0],1])
                 rand = numpy.zeros((1,nb_cell), dtype=numpy.float64)
                 Internal.createUniqueChild(bc, 'random_vec', 'DataArray_t', rand)
+
+            if 'BCFluxOctree' in btype:
+                Prop = Internal.getNodeFromName(bc,'.Solver#Property')
+                if Prop is None:
+                    Internal.createUniqueChild(bc,'.Solver#Property','UserDefinedData_t')
+                    Prop = Internal.getNodeFromName(bc,'.Solver#Property')
+
+                    ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
+                    rg  = ptrange[0][1]
+                    sz  = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
+                    #sz  = (rg[0,1]-rg[0,0]+1) * (rg[1,1]-rg[1,0] +1) * (rg[2,1]-rg[2,0]+1 )
+                    tab =  numpy.zeros(sz*neq, numpy.float64)
+                    Internal.createUniqueChild(Prop, 'FluxFaces', 'DataArray_t', value=tab)
 
             if btype == 'BCWallViscousIsothermal':
                 Prop = Internal.getNodeFromName(bc,'.Solver#Property')
@@ -2984,7 +3005,17 @@ def _BCcompact(t):
             ind_bc[4] = indrange[2][0]
             ind_bc[5] = indrange[2][1]
 
-            fastc.PygetRange(ind_bc,  param_int, pt_bc+ 1)
+            if 'BCFluxOctree' in btype:
+                if 'imin' == bc[0][-4:]: idir=1
+                if 'imax' == bc[0][-4:]: idir=2
+                if 'jmin' == bc[0][-4:]: idir=3
+                if 'jmax' == bc[0][-4:]: idir=4
+                if 'kmin' == bc[0][-4:]: idir=5
+                if 'kmax' == bc[0][-4:]: idir=6
+                param_int[pt_bc+ 1]=idir
+                param_int[pt_bc+ 2: pt_bc+ 8 ]= ind_bc[0:6]
+            else:
+                fastc.PygetRange(ind_bc,  param_int, pt_bc+ 1)
 
             bcdata  = Internal.getNodesFromType3(bc, 'DataArray_t')
             Nb_data = len(bcdata)
@@ -3296,7 +3327,7 @@ def _Fluxcompact(t):
     for b in bases:
         zones = Internal.getZones(b)
         for z in zones:
-            tmp  = Internal.getNodeFromName1( z, 'Conservative_Flux')
+            tmp  = Internal.getNodeFromName1( z, 'ConservativeWall')
             if tmp is not None:
                 tmp1 = Internal.getNodesFromType1( tmp[2], 'UserDefinedData_t')
                 for family in tmp1:
@@ -4441,28 +4472,26 @@ def tcStat_IBC(t,tc,vartTypeIBC=2,bcTypeIB=3):
 # Graph related functions
 #==============================================================================
 def prepGraphs(t, exploc=0):
-
     #reorder base pour avoir procList consistant avec reorder du warmup. Sinon boom possible miseaplatdonnorTree
     Internal._sortByName(t,recursive=False)
 
     graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=exploc)
     graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=exploc)
     procDict  = D2.getProcDict(t)
-    procList  = D2.getProcList(t, sort=True)
     list_graph= []
     if exploc == 0:
-        graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict, 'procList':procList }
+        graphN = {'graphID':graphID, 'graphIBCD':graphIBCD, 'procDict':procDict}
     else:
         i=0
         graphN={}
         if graphID is not None:
             for g in graphID:
-                graphN={'graphID':g, 'graphIBCD':{}, 'procDict':procDict, 'procList':procList}
+                graphN={'graphID':g, 'graphIBCD':{}, 'procDict':procDict}
                 list_graph.append(graphN)
                 i += 1
         elif graphIBCD is not None:
             for g in graphIBCD:
-                graphN={'graphID':{}, 'graphIBCD':g, 'procDict':procDict, 'procList':procList}
+                graphN={'graphID':g, 'graphIBCD':{}, 'procDict':procDict}
                 list_graph.append(graphN)
                 i += 1
         graphN = list_graph
@@ -4480,18 +4509,21 @@ def printGraph(t, directory='.', exploc=0):
 
 # Add immersed boundary - method = penalization
 # addTripIBCPenalization [CB:WL] ->FastS
-def addTripIBCPenalization(t, listTrips):
-    import FastS.PyTree as FastS
-    count = 1
-    for tsurf in listTrips:
-        bases = Internal.getBases(tsurf)
-        count = 1
-        for b in bases:
-            Internal.setName(b, "trip"+str(count))
-            count += 1
-    tsurf  = Internal.merge(listTrips)
-    t      = FastS.setIBCData_zero(t, tsurf)
-    return t
+#
+## IM: A deplacer dans FastS (voire supprimer: renommage de base n'a pas trop sa place dans le solveur, plutot dans script prep ou compute)
+#
+#def addTripIBCPenalization(t, listTrips):
+#    import FastS.PyTree as FastS
+#    count = 1
+#    for tsurf in listTrips:
+#        bases = Internal.getBases(tsurf)
+#        count = 1
+#        for b in bases:
+#            Internal.setName(b, "trip"+str(count))
+#            count += 1
+#    tsurf  = Internal.merge(listTrips)
+#    t      = FastS.setIBCData_zero(t, tsurf)
+#    return t
 
 ##Connect Near Match
 def connectNearmatchAfterGhost(t, dim, depth=2):

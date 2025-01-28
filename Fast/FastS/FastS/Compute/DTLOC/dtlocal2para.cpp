@@ -32,7 +32,7 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 {
   PyObject *zonesR, *zonesD;
   PyObject *work;
-  PyObject *pyParam_int, *pyParam_real;
+  PyObject *pyParam_int, *pyParam_real; // param de tc
   PyObject* drodmstock;
   PyObject* constk;
   PyObject* stock;
@@ -110,7 +110,7 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 
  
   /*-------------------------------------*/
-  /* Extraction tableau int et real      */
+  /* Extraction tableau int et real de tc*/
   /*-------------------------------------*/
   FldArrayI* param_int;
   E_Int res_donor = K_NUMPY::getFromNumpyArray(pyParam_int, param_int, true);
@@ -193,9 +193,9 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
       E_Int timelevel = ipt_param_int[ ech +3 ]; 
       E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
 
-      E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
-      E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
-      E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 +1 ];
+      E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5  ]; // Numero zone donneuse du irac concerné
+      E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 ]; // Numero zone receveuse du irac concerné
+      E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 ];
 
 
       E_Int cycle;
@@ -216,22 +216,15 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 	     E_Int pos;
 	     pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
 	     E_Int donorPts_[6]; 
-	     //donorPts_[0] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 7];
-             //donorPts_[1] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 8] ;
-             //donorPts_[2] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 9];
-             //donorPts_[3] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 10];
-             //donorPts_[4] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 11];
-             //donorPts_[5] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 12];
-	     //int dir = ipt_param_int[ech + 2 + nrac*16 + 14*irac + 13];
 
-
-	     donorPts_[0] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 7];
-             donorPts_[1] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 8] ;
-             donorPts_[2] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 9];
-             donorPts_[3] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 10];
-             donorPts_[4] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 11];
-             donorPts_[5] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 12];
-	     E_Int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
+             E_Int adr = ech + 4 + timelevel*2 + nrac*18 + 14*irac;
+	     donorPts_[0] = ipt_param_int[adr + 7];
+             donorPts_[1] = ipt_param_int[adr + 8] ;
+             donorPts_[2] = ipt_param_int[adr + 9];
+             donorPts_[3] = ipt_param_int[adr +10];
+             donorPts_[4] = ipt_param_int[adr +11];
+             donorPts_[5] = ipt_param_int[adr +12];
+	     E_Int dir    = ipt_param_int[adr +13];
 	     //cout << dir << endl;
 	     donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*1;
 
@@ -327,13 +320,14 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 	 //cout << NoD << endl;
 	 
 	 E_Int donorPts_[6];  E_Int idir = 2;
-	 donorPts_[0] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 7];
-         donorPts_[1] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 8] ;
-         donorPts_[2] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 9];
-         donorPts_[3] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 10];
-         donorPts_[4] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 11];
-         donorPts_[5] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 12];
-	 E_Int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
+         E_Int adr = ech + 4 + timelevel*2 + nrac*18 + 14*irac;
+         donorPts_[0] = ipt_param_int[adr + 7];
+         donorPts_[1] = ipt_param_int[adr + 8] ;
+         donorPts_[2] = ipt_param_int[adr + 9];
+         donorPts_[3] = ipt_param_int[adr +10];
+         donorPts_[4] = ipt_param_int[adr +11];
+         donorPts_[5] = ipt_param_int[adr +12];
+         E_Int dir    = ipt_param_int[adr +13];
 
 	 donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*1;
 		       
@@ -389,11 +383,8 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 	      if (nstep%cycle == cycle/4)
 
 		     {
-		       
-		      
 		       /// Interpolation de y2
-		       interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, iptstk + irac*taille + 0*taillefenetre,iptstk + irac*taille + 1*5*taillefenetre, iptro[NoD],dir,taillefenetre,nstep,NoD);
-
+		       interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts, donorPts_, iptstk + irac*taille + 0*taillefenetre,iptstk + irac*taille + 1*5*taillefenetre, iptro[NoD],dir,taillefenetre,nstep);
 		     }
 
 	      
@@ -461,29 +452,8 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 
 		  if (nstep%cycle == cycle/2 + 1)
 		     {
-		       /// Switch pointeurs
 
-		       // if (stockzone[NoD] != NoD)
-		       // {
-			   //switchvectors_(iptro[NoD],iptro_p1[NoD],param_intt[NoD]) ;
-
-
-			    // PyObject* zone = PyList_GetItem(zonesR, NoD);
-
-			    // PyObject* o  = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
-			    // PyObject* tp  = K_PYTREE::getNodeFromName1( o        , "Density_P1");
-
-			    // o            = K_PYTREE::getNodeFromName1(zone      , "FlowSolution#Centers");
-			    // PyObject* t  = K_PYTREE::getNodeFromName1( o        , "Density");
-
-			    // //cout << "pointeur density avant= " << PyList_GetItem(t,1)  << endl;
-
-			    // PyObject* t1 = PyList_GetItem(t,1);
-			    // PyList_SetItem(t,1, PyList_GetItem(tp,1));
-			    // PyList_SetItem(tp,1,t1);
-
-
-		       interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts,donorPts_, iptstk + irac*taille + 0*taillefenetre,iptstk + irac*taille + 1*5*taillefenetre, iptro_p1[NoD],dir,taillefenetre,nstep,NoD);
+		       interp_rk3local3para_(param_intt[NoD], param_realt[NoD], iptcoe+shift_coe[NoD], donorPts,donorPts_, iptstk + irac*taille + 0*taillefenetre,iptstk + irac*taille + 1*5*taillefenetre, iptro_p1[NoD],dir,taillefenetre,nstep);
 
 		     }
 
@@ -576,15 +546,14 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 	     E_Int pos;
 	     pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
 	     E_Int donorPts_[6]; 
-
-
-	     donorPts_[0] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 7];
-             donorPts_[1] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 8] ;
-             donorPts_[2] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 9];
-             donorPts_[3] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 10];
-             donorPts_[4] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 11];
-             donorPts_[5] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 12];
-	     E_Int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
+             E_Int adr = ech + 4 + timelevel*2 + nrac*18 + 14*irac;
+             donorPts_[0] = ipt_param_int[adr + 7];
+             donorPts_[1] = ipt_param_int[adr + 8] ;
+             donorPts_[2] = ipt_param_int[adr + 9];
+             donorPts_[3] = ipt_param_int[adr +10];
+             donorPts_[4] = ipt_param_int[adr +11];
+             donorPts_[5] = ipt_param_int[adr +12];
+             E_Int dir    = ipt_param_int[adr +13];
 	     donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*1;
 
 	     //cout << "irac= " <<irac<< endl;
@@ -649,13 +618,10 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 		       
 #pragma omp barrier // On attend que tous les threads aient écrit la solution dans iptro[NoD]
 
-		       E_Int nbRcvPts = ipt_param_int[ shift_rac +  nrac*10 + 1 ];
+		       E_Int nbRcvPts = ipt_param_int[ shift_rac +  nrac*10 ];
 		       E_Int pos;
-		       //pos  = ipt_param_int[ shift_rac + nrac*7 ]     ; E_Int* ntype      = ipt_param_int +  pos;
-		       //pos  = pos +1 + ntype[0]                       ; E_Int* types      = ipt_param_int +  pos;
-		       pos  = ipt_param_int[ shift_rac + nrac*6      ]; E_Int* donorPts2   = ipt_param_int +  pos;
-		       pos  = ipt_param_int[ shift_rac + nrac*12 + 1 ]; E_Int* rcvPts     = ipt_param_int +  pos;   // donor et receveur inverser car storage donor
-		       //pos  = ipt_param_int[ shift_rac + nrac*8      ]; E_Float* ptrCoefs = ipt_param_real + pos;
+		       pos  = ipt_param_int[ shift_rac + nrac*6  ]; E_Int* donorPts2   = ipt_param_int +  pos;
+		       pos  = ipt_param_int[ shift_rac + nrac*12 ]; E_Int* rcvPts     = ipt_param_int +  pos;   // donor et receveur inverser car storage donor
 
 		       E_Int size_bc =  nbRcvPts ;
 		       E_Int chunk   =  size_bc/Nbre_thread_actif;
@@ -700,13 +666,15 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 	     E_Int pos;
 	     pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
 	     E_Int donorPts_[6]; 
-	     donorPts_[0] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 7];
-             donorPts_[1] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 8] ;
-             donorPts_[2] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 9];
-             donorPts_[3] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 10];
-             donorPts_[4] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 11];
-             donorPts_[5] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 12];
-	     int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
+             E_Int adr = ech + 4 + timelevel*2 + nrac*18 + 14*irac;
+             donorPts_[0] = ipt_param_int[adr + 7];
+             donorPts_[1] = ipt_param_int[adr + 8] ;
+             donorPts_[2] = ipt_param_int[adr + 9];
+             donorPts_[3] = ipt_param_int[adr +10];
+             donorPts_[4] = ipt_param_int[adr +11];
+             donorPts_[5] = ipt_param_int[adr +12];
+             E_Int dir    = ipt_param_int[adr +13];
+
 	     donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] -(dir/abs(dir))*1;
 
 	     //cout << "irac= " <<irac<< endl;
@@ -1002,9 +970,9 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
       //E_Int shift_rac =  ech + 2 + irac;
       E_Int shift_rac =  ech + 4 + timelevel*2 + irac;
 
-      E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5     ]; // Numero zone donneuse du irac concerné
-      E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 +1 ]; // Numero zone receveuse du irac concerné
-      E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 +1 ];
+      E_Int NoD      =  ipt_param_int[ shift_rac + nrac*5  ]; // Numero zone donneuse du irac concerné
+      E_Int NoR      =  ipt_param_int[ shift_rac + nrac*11 ]; // Numero zone receveuse du irac concerné
+      E_Int nvars_loc=  ipt_param_int[ shift_rac + nrac*13 ];
 
        
      E_Int cycle = param_intt[NoD][NSSITER]/param_intt[NoD][LEVEL];
@@ -1015,15 +983,17 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
        {
 
 	 E_Int pos;E_Int ind;
-	     pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
+	     pos  = ipt_param_int[ shift_rac + nrac*6 ]; 
 	     E_Int donorPts_[6]; 
-	     donorPts_[0] =  ipt_param_int[ech + 4 +timelevel*2 + 1 + nrac*16 + 14*irac + 0];
-             donorPts_[1] =  ipt_param_int[ech + 4 +timelevel*2 + 1 + nrac*16 + 14*irac + 1] ;
-             donorPts_[2] =  ipt_param_int[ech + 4 +timelevel*2 + 1 + nrac*16 + 14*irac + 2];
-             donorPts_[3] =  ipt_param_int[ech + 4 +timelevel*2 + 1 + nrac*16 + 14*irac + 3];
-             donorPts_[4] =  ipt_param_int[ech + 4 +timelevel*2 + 1 + nrac*16 + 14*irac + 4];
-             donorPts_[5] =  ipt_param_int[ech + 4 +timelevel*2 + 1 + nrac*16 + 14*irac + 5];
-	     int dir = ipt_param_int[ech + 4 +timelevel*2 + 1 + nrac*16 + 14*irac + 6];
+             E_Int adr = ech + 4 + timelevel*2 + nrac*18 + 14*irac;
+             donorPts_[0] = ipt_param_int[adr + 0];
+             donorPts_[1] = ipt_param_int[adr + 1] ;
+             donorPts_[2] = ipt_param_int[adr + 2];
+             donorPts_[3] = ipt_param_int[adr + 3];
+             donorPts_[4] = ipt_param_int[adr + 4];
+             donorPts_[5] = ipt_param_int[adr + 5];
+             E_Int dir    = ipt_param_int[adr + 6];
+
 	     donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
 	     donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
 
@@ -1066,24 +1036,16 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 	       }
 
 
-	     pos  = ipt_param_int[ shift_rac + nrac*6      ]; 
+	     pos  = ipt_param_int[ shift_rac + nrac*6  ]; 
 	      
-	     //donorPts_[0] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 7];
-             //donorPts_[1] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 8] ;
-             //donorPts_[2] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 9];
-             //donorPts_[3] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 10];
-             //donorPts_[4] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 11];
-             //donorPts_[5] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 12];
-	     //dir = ipt_param_int[ech + 2 + nrac*16 + 14*irac + 13];
-
-	     donorPts_[0] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 7];
-             donorPts_[1] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 8] ;
-             donorPts_[2] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 9];
-             donorPts_[3] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 10];
-             donorPts_[4] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 11];
-             donorPts_[5] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 12];
-	     dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
-
+             E_Int adr = ech + 4 + timelevel*2 + nrac*18 + 14*irac;
+             donorPts_[0] = ipt_param_int[adr + 7];
+             donorPts_[1] = ipt_param_int[adr + 8] ;
+             donorPts_[2] = ipt_param_int[adr + 9];
+             donorPts_[3] = ipt_param_int[adr +10];
+             donorPts_[4] = ipt_param_int[adr +11];
+             donorPts_[5] = ipt_param_int[adr +12];
+             dir          = ipt_param_int[adr +13];
 
 	     donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
 	     donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
@@ -1110,21 +1072,15 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 
 	       }
 
-	     //donorPts_[0] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 7];
-             //donorPts_[1] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 8] ;
-             //donorPts_[2] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 9];
-             //donorPts_[3] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 10];
-             //donorPts_[4] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 11];
-             //donorPts_[5] =  ipt_param_int[ech + 2 + nrac*16 + 14*irac + 12];
+             E_Int adr = ech + 4 + timelevel*2 + nrac*18 + 14*irac;
+             donorPts_[0] = ipt_param_int[adr + 7];
+             donorPts_[1] = ipt_param_int[adr + 8] ;
+             donorPts_[2] = ipt_param_int[adr + 9];
+             donorPts_[3] = ipt_param_int[adr +10];
+             donorPts_[4] = ipt_param_int[adr +11];
+             donorPts_[5] = ipt_param_int[adr +12];
+             dir          = ipt_param_int[adr +13];
 
-	     donorPts_[0] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 7];
-             donorPts_[1] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 8] ;
-             donorPts_[2] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 9];
-             donorPts_[3] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 10];
-             donorPts_[4] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 11];
-             donorPts_[5] =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 12];
-	     //int dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
-	     dir = ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 13];
 	     donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))] +(dir/abs(dir))*1;
 	     donorPts_[2*abs(dir)-1-abs(dir-abs(dir))/(2*abs(dir))] = donorPts_[2*abs(dir)-1-(dir+abs(dir))/(2*abs(dir))];
 
@@ -1143,12 +1099,11 @@ PyObject* K_FASTS::dtlocal2para(PyObject* self, PyObject* args)
 	     donorPts[5]=ipt_ind_dm_omp_thread[5];
 
 	     E_Int* transfo;
-	     transfo = &ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 14];
+	     transfo = &ipt_param_int[adr + 14];
 	       
-
-             E_Int pt1 =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 17];
-             E_Int pt2 =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 18];
-             E_Int pt3 =  ipt_param_int[ech + 4 + timelevel*2 + 1 + nrac*16 + 14*irac + 19];
+             E_Int pt1 =  ipt_param_int[adr + 17];
+             E_Int pt2 =  ipt_param_int[adr + 18];
+             E_Int pt3 =  ipt_param_int[adr + 19];
 
 
 

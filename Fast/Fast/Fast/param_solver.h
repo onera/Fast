@@ -60,6 +60,8 @@
 #define BCPERIODIC               15
 #define BCOUTPRES                16
 #define BCINJ1                   17
+#define BCFluxOctree_F           28
+#define BCFluxOctree_C           29
 #define BCWALLMODEL              30
 #define BCWALLEXCHANGE           31
 
@@ -115,7 +117,7 @@
 #define DTLOC          46   
 #define SA_INT         47
                                                   
-#define RK             52
+#define RK	       52
 #define LEVEL	       53
 #define EXPLOC         54
 #define ITEXPLOC       55

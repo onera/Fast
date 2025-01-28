@@ -4,6 +4,7 @@
 cpp_srcs = ['FastC/checkNumericsValue.cpp',
             'FastC/getRange.cpp',
             'FastC/Init/initNuma.cpp',
+            'FastC/Init/copy2gpu.cpp',
             'FastC/Metric/init_metric.cpp',
             'FastC/ALE/motionlaw.cpp',
             'FastC/Compute/souszones_list.cpp',

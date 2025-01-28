@@ -67,7 +67,7 @@ for it in range(NIT):
     FastS._compute(t, metrics, it, tc,layer='Python')
     if it%display_probe_freq == 0:
         print('- %d / %d - %f'%(it+it0, NIT+it0, time0))
-        FastS.display_temporal_criteria(t, metrics, it, format='double')
+        FastS.display_temporal_criteria(t, metrics, it)
 
     time0 += time_step
 
