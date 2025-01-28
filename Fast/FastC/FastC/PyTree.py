@@ -58,8 +58,8 @@ tagBCDict = {
     "BCadimcoins": 25, #LBM
     "BCOversetLBM": 26, #LBM
     "BCEquilibrium": 27,
-    "BCFluxOctree_F": 28,
-    "BCFluxOctree_C": 29,
+    "BCFluxOctreeF": 28,
+    "BCFluxOctreeC": 29,
     "BCWallModel": 30,
     "BCWallExchange": 31,
     "BCWallViscousIsothermal": 32,

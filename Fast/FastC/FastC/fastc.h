@@ -55,8 +55,6 @@ namespace K_FASTC
   // - init Numa (optimisation placement memoire sur DRAM)
   //===========
   PyObject* initNuma(PyObject* self, PyObject* args);
-  PyObject* copy2gpu(PyObject* self, PyObject* args);
-
 
   //===== Distrib OMP Test
 
