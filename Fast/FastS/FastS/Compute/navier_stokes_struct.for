@@ -353,37 +353,12 @@ c       endif
 
           !correction flux pour paroi (Roe), wallmodel et raccord
           !conservatif nearmatch
-
-          nb_bc = param_int( param_int(PT_BC) )
-          if(param_int(KFLUDOM).eq.5.and.nb_bc.ne.0) then
-
-c          call correct_flux(ndo,ithread, param_int, param_real,
-c     &                  ind_dm_zone, ind_sdm, nitcfg, nitrun, cycl,
-c     &                  psi,wig,stat_wig, rop_ssiter, drodm,x,y,z,
-c     &                  ti,ti_df,tj,tj_df,tk,tk_df,
-c     &                  vol(1+shift_vol),vol_df,
-c     &                  venti, ventj, ventk, xmut)
-
-
-              call bfl3(ndo, ithread, param_int, param_real, 
-     &                  ind_dm_zone, ind_sdm,
-     &                  psi,wig,stat_wig, rop_ssiter, drodm,
-     &                  ti,ti_df,tj,tj_df,tk,tk_df,
-     &                  vol(1+shift_vol),vol_df,
-     &                  venti, ventj, ventk, xmut)
-          endif
-
-c          !boundary flux correction for LES wall model
-c          !if(param_int(NEQ).eq.5.and.nb_bc.ne.0) then
-          if(nb_bc.ne.0) then
-              call wall_model_flux(ndo,ithread, param_int, param_real,
+          call correct_flux(ndo,ithread, param_int, param_real,
      &                  ind_dm_zone, ind_sdm, nitcfg, nitrun, cycl,
      &                  psi,wig,stat_wig, rop_ssiter, drodm,x,y,z,
      &                  ti,ti_df,tj,tj_df,tk,tk_df,
      &                  vol(1+shift_vol),vol_df,
      &                  venti, ventj, ventk, xmut)
-          endif
-
 !         STEP IV: END
 
 !         STEP V: SOLUTION UPDATE           

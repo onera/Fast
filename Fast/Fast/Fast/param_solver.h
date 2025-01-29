@@ -308,6 +308,9 @@
 #define NUDGING_EQ5   70
 #define NUDGING_EQ6   71
 
+/*amortissememnt dissipation ausm: senseur like avec wig=cte entre 0 et 1) */
+#define WIG_AMP       72
+
 /*CONSTANTS*/
 #define SA_CKARM    0.41 
 #define SA_CB1      0.1355

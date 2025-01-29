@@ -757,6 +757,7 @@ void K_FASTC::setInterpTransfersIntra(
           pos = param_int_tc[shift_rac + nrac*8 ]; E_Float* ptrCoefs = param_real_tc + pos;
 
           E_Int nbInterpD = param_int_tc[shift_rac + nrac];
+          E_Int nbFluCons = param_int_tc[shift_rac + nrac*16];
           E_Float* xPC = NULL;
           E_Float* xPI = NULL;
           E_Float* xPW = NULL;
@@ -779,7 +780,23 @@ void K_FASTC::setInterpTransfersIntra(
                count_racIBC         = count_racIBC + 1;
                }
           }
-
+          // sommation flux fin et stokage dans flux grossier pour nearmatch conservatif
+          for (E_Int nbflu = 0; nbflu < nbFluCons; nbflu++)
+            {
+             if(nvars_loc==5)
+              {
+               #include "FastC/Com/flux_conservatif_5eq.cpp"
+              }
+             else if(nvars_loc==6)
+              {
+               #include "FastC/Com/flux_conservatif_6eq.cpp"
+              }
+             /*
+             if(nvars_loc==5)
+              {
+               #include "FastC/Com/slope_conservatif_5eq.cpp"
+              }*/
+            }
           E_Int ideb = 0;
           E_Int ifin = 0;
           E_Int shiftCoef = 0;

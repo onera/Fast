@@ -5,7 +5,7 @@ c     $Author: IvanMary $
 c***********************************************************************
       subroutine indice_cl_sdm(idir, npass, lskip, type_bc,
      &                       ific_ij_loc, ific_k_loc,
-     &                       ijkv, ind_fen, ind_dm, ind_sdm,
+     &                       ijkv, window, ind_dm, ind_sdm,
      &                       ind_CL, ind_CL119)
 c***********************************************************************
 c_U  USER : PECHIER
@@ -29,17 +29,18 @@ c_O   ind_CL, lskip
 c=======================================================================
       implicit none
 
+#include "FastC/param_solver.h"
 
       INTEGER_E lskip, idir,npass,ific_ij_loc,ific_k_loc,
-     &  ijkv(3),ind_fen(6), ind_sdm(6),ind_CL(6),ind_CL119(6), ind_dm(6)
+     &  ijkv(3),window(6), ind_sdm(6),ind_CL(6),ind_CL119(6), ind_dm(6)
       INTEGER_E type_bc
 
 C Var loc
-      INTEGER_E ic1
+      INTEGER_E ic1,si,sj,sk
 
 
 c      write(*,*)'ijkv', ijkv
-c      write(*,*)'fen',ind_fen
+c      write(*,*)'fen',window
 c      write(*,*)'sdm',ind_sdm
 c      write(*,*)'dm',ind_dm
 
@@ -50,18 +51,35 @@ c      write(*,*)'dm',ind_dm
       ind_CL(5) = 1
       ind_CL(6) = 0
 
-      IF(     (ind_sdm(1).le.ind_fen(2)).and.(ind_sdm(2).ge.ind_fen(1))
-     &   .and.(ind_sdm(3).le.ind_fen(4)).and.(ind_sdm(4).ge.ind_fen(3)) 
-     &   .and.(ind_sdm(5).le.ind_fen(6)).and.(ind_sdm(6).ge.ind_fen(5)))
+      si=0
+      sj=0
+      sk=0
+      If(type_bc.eq.BCFluxOctreeC.or.type_bc.eq.BCFluxOctreeF) then
+       if(idir.eq.2) si=1
+       if(idir.eq.4) sj=1
+       if(idir.eq.6) sk=1
+      Endif
+      
+      !if (ndom.eq.48) then
+      !write(*,'(a,4i4)')'i',ind_sdm(1),window(2),ind_sdm(2)+si,window(1)
+      !write(*,'(a,4i4)')'j',ind_sdm(3),window(4),ind_sdm(4)+sj,window(3)
+      !write(*,'(a,4i4)')'k',ind_sdm(5),window(6),ind_sdm(6)+sk,window(5)
+      !endif
+
+      IF(    (ind_sdm(1).le.window(2)).and.(ind_sdm(2)+si.ge.window(1))
+     &  .and.(ind_sdm(3).le.window(4)).and.(ind_sdm(4)+sj.ge.window(3))
+     &  .and.(ind_sdm(5).le.window(6)).and.(ind_sdm(6)+sk.ge.window(5)))
      &    THEN
 
-       ind_CL(1)=max(ind_fen(1),ind_sdm(1))
-       ind_CL(2)=min(ind_fen(2),ind_sdm(2))
-       ind_CL(3)=max(ind_fen(3),ind_sdm(3))
-       ind_CL(4)=min(ind_fen(4),ind_sdm(4))
-       ind_CL(5)=max(ind_fen(5),ind_sdm(5))
-       ind_CL(6)=min(ind_fen(6),ind_sdm(6))
+       ind_CL(1)=max(window(1),ind_sdm(1)   )
+       ind_CL(2)=min(window(2),ind_sdm(2)+si)
+       ind_CL(3)=max(window(3),ind_sdm(3)   )
+       ind_CL(4)=min(window(4),ind_sdm(4)+sj)
+       ind_CL(5)=max(window(5),ind_sdm(5)   )
+       ind_CL(6)=min(window(6),ind_sdm(6)+sk)
 
+       !Adaptation taille fenetre dans direction normal BC
+       If(type_bc.ne.BCFluxOctreeC.and.type_bc.ne.BCFluxOctreeF) Then
         if(idir.eq.1) then
            ind_CL(2)    = ind_CL(1)- 1
            ind_CL(1)    = ind_CL(1)- ific_ij_loc
@@ -81,6 +99,7 @@ c      write(*,*)'dm',ind_dm
              ind_CL(6)    = ind_CL(5)+ ific_k_loc
              ind_CL(5)    = ind_CL(5)+ 1
         endif
+       Endif
 
 
        ind_CL119(1) =  ind_CL(1)
@@ -147,10 +166,10 @@ C BC_farfield (cart normale maille coin = bofbof)
 C BC_fich ou BCWallViscous_isot_fich
           if(type_bc.eq.8.or.
      &       type_bc.eq.7) then
-           ind_CL(3) = max(ind_CL(3),ind_fen(3))
-           ind_CL(4) = min(ind_CL(4),ind_fen(4))
-           ind_CL(5) = max(ind_CL(5),ind_fen(5))
-           ind_CL(6) = min(ind_CL(6),ind_fen(6))
+           ind_CL(3) = max(ind_CL(3),window(3))
+           ind_CL(4) = min(ind_CL(4),window(4))
+           ind_CL(5) = max(ind_CL(5),window(5))
+           ind_CL(6) = min(ind_CL(6),window(6))
           endif
 
           !if(idir.eq.1) then
@@ -200,10 +219,10 @@ C BC_fich ou BCWallViscous_isot_fich
 C BC_fich ou BCWallViscous_isot_fich
           if(type_bc.eq.8.or.
      &       type_bc.eq.7) then
-           ind_CL(1) = max(ind_CL(1),ind_fen(1))
-           ind_CL(2) = min(ind_CL(2),ind_fen(2))
-           ind_CL(5) = max(ind_CL(5),ind_fen(5))
-           ind_CL(6) = min(ind_CL(6),ind_fen(6))
+           ind_CL(1) = max(ind_CL(1),window(1))
+           ind_CL(2) = min(ind_CL(2),window(2))
+           ind_CL(5) = max(ind_CL(5),window(5))
+           ind_CL(6) = min(ind_CL(6),window(6))
           endif
 
           !if(idir.eq.3) then
@@ -252,10 +271,10 @@ C BC_fich ou BCWallViscous_isot_fich
 C BC_fich ou BCWallViscous_isot_fich
           if(type_bc.eq.7.or.
      &       type_bc.eq.8) then
-           ind_CL(1) = max(ind_CL(1),ind_fen(1))
-           ind_CL(2) = min(ind_CL(2),ind_fen(2))
-           ind_CL(3) = max(ind_CL(3),ind_fen(3))
-           ind_CL(4) = min(ind_CL(4),ind_fen(4))
+           ind_CL(1) = max(ind_CL(1),window(1))
+           ind_CL(2) = min(ind_CL(2),window(2))
+           ind_CL(3) = max(ind_CL(3),window(3))
+           ind_CL(4) = min(ind_CL(4),window(4))
           endif
 
           !if(idir.eq.5) then

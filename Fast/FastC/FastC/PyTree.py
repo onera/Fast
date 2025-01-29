@@ -264,7 +264,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             #recuperation option de calcul
             define = Internal.getNodeFromName1(z, '.Solver#define')
             sponge = 0
-            a = Internal.getNodeFromName1(define, 'lbm_sponge')
+            a = Internal.getNodeFromName1(define, 'LBM_sponge')
             if a is not None: sponge = Internal.getValue(a)
             source = 0
             a = Internal.getNodeFromName1(define, 'source')
@@ -852,7 +852,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
 
     # init termes zone eponge
     sponge = 0
-    a = Internal.getNodeFromName1(define,'lbm_sponge')
+    a = Internal.getNodeFromName1(define,'LBM_sponge')
     if a is not None: sponge = Internal.getValue(a)
     if sponge == 1:
         if C.isNamePresent(zone, 'centers:ViscosityEddyCorrection') != 1: C._initVars(zone, 'centers:ViscosityEddyCorrection', 1.)
@@ -965,6 +965,7 @@ def _buildOwnData(t, Padding):
         'cfl':1,
         'niveaux_temps':0,
         'psiroe':1,
+        'ausmDamping':1,
         'coef_hyper':4,
         'prandtltb':1,
         'sfd':0,
@@ -1302,6 +1303,7 @@ def _buildOwnData(t, Padding):
             epsi_newton     = 0.1
             epsi_linear     = 0.01
             psiroe          = 0.1
+            ausmdamping     = 1
             cfl             = 1.
             rotation        = [ 0.,0.,0., 0.,0.,0.,0.,0.]
             ssdom_IJK       = [240,20,900]
@@ -1486,6 +1488,8 @@ def _buildOwnData(t, Padding):
                 if a is not None: prandtltb = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'psiroe')
                 if a is not None: psiroe = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'ausmDamping')
+                if a is not None: ausmdamping = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'sfd')
                 if a is not None: sfd = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'sfd_chi')
@@ -1573,8 +1577,6 @@ def _buildOwnData(t, Padding):
 
                 a = Internal.getNodeFromName1(d, 'LBM_sponge')
                 if a is not None: lbm_sponge = Internal.getValue(a)
-                # a = Internal.getNodeFromName1(d, 'lbm_sponge')
-                # if a is not None: lbm_sponge = Internal.getValue(a)
 
                 a = Internal.getNodeFromName1(d, 'LBM_overset')
                 if a is not None: lbm_overset = Internal.getValue(a)
@@ -1947,7 +1949,7 @@ def _buildOwnData(t, Padding):
             #=====================================================================
             # creation noeud parametre real
             #=====================================================================
-            number_of_defines_param_real = 71                                    # Number Param REAL
+            number_of_defines_param_real = 72                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
             if dtc < 0:
@@ -2024,6 +2026,9 @@ def _buildOwnData(t, Padding):
             ##Nudging
             datap[65]    = nudging_ampli #inutile??
             datap[66:72] = nudging_vector[:]*nudging_ampli
+
+            ##amortissememnt dissip AUSM: genre wiggle=cte=ausmdamping
+            datap[72] = ausmdamping
 
             # LBM related stuff
             datap[VSHARE.LBM_c0]        = lbm_c0
@@ -2819,9 +2824,9 @@ def _BCcompact(t):
 
                     ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
                     rg  = ptrange[0][1]
-                    sz  = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
-                    #sz  = (rg[0,1]-rg[0,0]+1) * (rg[1,1]-rg[1,0] +1) * (rg[2,1]-rg[2,0]+1 )
-                    tab =  numpy.zeros(sz*neq, numpy.float64)
+                    sz  = max(1, rg[0,1]-rg[0,0]+1) * max(1, rg[1,1]-rg[1,0]+1) * max(1, rg[2,1]-rg[2,0]+1)
+                    tab =  numpy.ones(sz*neq, numpy.float64)
+                    #tab =  numpy.ones(sz*neq*2, numpy.float64) #stockage 1 pente aussi
                     Internal.createUniqueChild(Prop, 'FluxFaces', 'DataArray_t', value=tab)
 
             if btype == 'BCWallViscousIsothermal':
@@ -3006,14 +3011,17 @@ def _BCcompact(t):
             ind_bc[5] = indrange[2][1]
 
             if 'BCFluxOctree' in btype:
-                if 'imin' == bc[0][-4:]: idir=1
-                if 'imax' == bc[0][-4:]: idir=2
-                if 'jmin' == bc[0][-4:]: idir=3
-                if 'jmax' == bc[0][-4:]: idir=4
-                if 'kmin' == bc[0][-4:]: idir=5
-                if 'kmax' == bc[0][-4:]: idir=6
-                param_int[pt_bc+ 1]=idir
-                param_int[pt_bc+ 2: pt_bc+ 8 ]= ind_bc[0:6]
+              name = bc[0].split('_')
+              idir=-100
+              if 'imin' == name[2][0:4]: idir=1
+              if 'imax' == name[2][0:4]: idir=2
+              if 'jmin' == name[2][0:4]: idir=3
+              if 'jmax' == name[2][0:4]: idir=4
+              if 'kmin' == name[2][0:4]: idir=5
+              if 'kmax' == name[2][0:4]: idir=6
+              param_int[pt_bc+ 1]=idir
+              param_int[pt_bc+ 2: pt_bc+ 8 ]= ind_bc[0:6]
+              #print(z[0], bc[0], idir,  param_int[pt_bc+ 1])
             else:
                 fastc.PygetRange(ind_bc,  param_int, pt_bc+ 1)
 

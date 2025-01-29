@@ -262,9 +262,7 @@ c**    Proto senseur de choc Sciacovelli directionnel
       IF(param_int(KFLUDOM).eq.2.and.iwig.eq.1) THEN
 
        if(param_int(SLOPE).ne.5.and.param_int(SLOPE).ne.7) then
-         !call wiggle2001(ndom, ithread, param_int, param_real,
-         call wiggle2001(ndom, param_int, param_real,
-     & ind_sdm, rop, wig)
+         call wiggle2001(ndom,param_int, param_real, ind_sdm, rop, wig)
 
        else !!wiggle pour o5 ou o5sc
          call wiggle2023(ndom, param_int, param_real,
