@@ -48,7 +48,7 @@ c.....Metrique
         tam =c3*son+sj
         tam1=max(0.,tam)*c2 ! fct amortissement: c3*Mach+1
         u   =0.25*(qn1+qn2)-tam1*(p2-p1)
-        tdu = max(abs(u),c1*sj)
+        tdu = max(abs(u),c1*sj)*wig_cte
 
         !Calcul du flux total
         p1p2= (p1+p2)*0.5
