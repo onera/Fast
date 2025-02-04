@@ -1,3 +1,22 @@
+/*    
+    Copyright 2013-2024 Onera.
+
+    This file is part of Cassiopee.
+
+    Cassiopee is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Cassiopee is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 # include "FastS/fastS.h"
 # include "FastC/fastc.h"
 # include "FastS/param_solver.h"
@@ -279,7 +298,7 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 #include   "FastS/Compute/cp_debitIBM.cpp"
 #endif
 
-#ifdef _WIN32
+#if defined __GNUC__ && defined _OPENMP
 #pragma omp barrier
 #endif
 
