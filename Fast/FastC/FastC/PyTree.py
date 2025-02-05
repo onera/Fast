@@ -1929,7 +1929,7 @@ def _buildOwnData(t, Padding):
             datap[VSHARE.SA_ROT_CORR] = 0 # active Rotation correction
             if d is not None:
                 a = Internal.getNodeFromName1(d, 'SA_add_LowRe')
-                if a is not None: 
+                if a is not None:
                     val = Internal.getValue(a)
                     if val == 1 or val == 'active' or val == True: datap[VSHARE.SA_LOW_RE] = 1
                 a = Internal.getNodeFromName1(d, 'SA_add_RotCorr')
@@ -3438,13 +3438,13 @@ def save(t, fileName='restart.cgns', tc=None, fileNameC='tc_restart.cgns', ts=No
     """Save all updated trees."""
 
     saveTree(t, fileName=fileName, split=split, compress=compress)
-    
-    if tc is not None: 
+
+    if tc is not None:
         saveTree(tc, fileName=fileNameC, split=split, compress=compress)
-    
-    if ts is not None: 
+
+    if ts is not None:
         saveTree(ts, fileName=fileNameS, split=split, compress=compress)
-    
+
 #============================================================================
 # Retourne le max proc pour les zones
 def getMaxProc(t):
