@@ -688,9 +688,10 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
         if C.isNamePresent(zone, 'centers:Temperature_f') != 1: C._initVars(zone, 'centers:Temperature_f', 0.)
         if (sa and  C.isNamePresent(zone, 'centers:TurbulentSANuTilde_f') != 1): C._initVars(zone, 'centers:TurbulentSANuTilde_f', 0.)
 
-    DES_debug = "none"
+    DES_debug = 0
     a = Internal.getNodeFromName2(zone, 'DES_debug')
     if a is not None: DES_debug = Internal.getValue(a)
+
     des = "none"
     a = Internal.getNodeFromName2(zone, 'DES')
     if a is not None: des = Internal.getValue(a)
@@ -710,9 +711,9 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
         elif des == "ZDES2_w" or des == "zdes2_w": ides = 5
         elif des == "ZDES3"   or des == "zdes3":   ides = 6
         elif des == "ZDES3_w" or des == "zdes3_w": ides = 7
-        if ides >= 2 and DES_debug != "none":
+        if ides >= 2 and DES_debug == 1:
             if C.isNamePresent(zone, 'centers:delta')!= 1: C._initVars(zone, 'centers:delta', 0.)
-        if (ides == 4 or ides == 5) and DES_debug != "none":
+        if (ides == 4 or ides == 5) and DES_debug == 1:
             if C.isNamePresent(zone, 'centers:fd')   != 1: C._initVars(zone, 'centers:fd', 0.)
 
         if (ides == 6 or ides == 7) and C.isNamePresent(zone, 'centers:zgris') != 1:
@@ -976,7 +977,7 @@ def _buildOwnData(t, Padding):
         'SA_add_LowRe': 0,
         'SA_add_RotCorr': 0,
         'snear': 1, # ignored
-        'DES_debug':['none','active'],
+        'DES_debug': 0,
         'extract_res':0,
         'IBC':3,
         'source':0,
@@ -1501,9 +1502,7 @@ def _buildOwnData(t, Padding):
                 a = Internal.getNodeFromName1(d, 'ransmodel')
                 if a is not None: ransmodel = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'DES_debug')
-                if a is not None:
-                    tmp = Internal.getValue(a)
-                    if tmp == 'active': DES_debug =1
+                if a is not None:  DES_debug = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'extract_res')
                 if a is not None: extract_res = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'IBC')
@@ -1930,7 +1929,7 @@ def _buildOwnData(t, Padding):
             datap[VSHARE.SA_ROT_CORR] = 0 # active Rotation correction
             if d is not None:
                 a = Internal.getNodeFromName1(d, 'SA_add_LowRe')
-                if a is not None:
+                if a is not None: 
                     val = Internal.getValue(a)
                     if val == 1 or val == 'active' or val == True: datap[VSHARE.SA_LOW_RE] = 1
                 a = Internal.getNodeFromName1(d, 'SA_add_RotCorr')
@@ -1951,7 +1950,7 @@ def _buildOwnData(t, Padding):
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
             if dtc < 0:
-                print('Warning: Fast: time_step set to default value (0.0001).')
+                if dtloc == 0: print('Warning: Fast: time_step_nature global requires a time_step value. time_step set to default value (0.0001).')
                 dtc = 0.0001
             datap[0] = dtc
 
@@ -3413,134 +3412,16 @@ def _Fluxcompact(t):
 # the communication graph for Chimera and abutting transfers
 # the communication graph for IBM transfers
 #==============================================================================
-def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
-         restart=False):
-    """Load tree and connectivity tree."""
-    import os.path
-    baseName = os.path.basename(fileName)
-    spl = os.path.splitext(baseName)
-    baseName = spl[0] # name without extension
-    ext      = spl[1] # extension
-    fileName = os.path.splitext(fileName)[0] # full path without extension
+def load(fileName='t.cgns', fileNameC=None, fileNameS=None, split='single', exploc=0):
+    """Load all updated trees."""
 
-    baseNameC = os.path.basename(fileNameC)
-    spl = os.path.splitext(baseNameC)
-    baseNameC = spl[0] # name without extension
-    extC      = spl[1] # extension
-    fileNameC = os.path.splitext(fileNameC)[0] # full path without extension
+    t = loadTree(fileName=fileName, split=split, graph=False, exploc=exploc)
 
-    baseNameS = os.path.basename(fileNameS)
-    spl = os.path.splitext(baseNameS)
-    baseNameS = spl[0] # name without extension
-    extS      = spl[1] # extension
-    fileNameS = os.path.splitext(fileNameS)[0] # full path without extension
+    if fileNameC is not None: tc, graph = loadTree(fileName=fileNameC, split=split, graph=True, exploc=exploc)
+    else: tc = None; graph = None
 
-    if ext == '': ext = '.cgns'
-    if extC == '': extC = '.cgns'
-    if extS == '': extS = '.cgns'
-
-    graph = {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
-    if Cmpi.size > 1: # mpi run
-        rank = Cmpi.rank; size = Cmpi.size
-
-        if split == 'single':
-            # Load connect (tc)
-            FILE = fileNameC+extC
-            tc = Cmpi.convertFile2SkeletonTree(FILE)
-            graph = prepGraphs(tc)
-            Cmpi._readZones(tc, FILE, rank=rank)
-            Cmpi._convert2PartialTree(tc, rank=rank)
-            # Load data (t)
-            FILE = fileName+ext
-            if restart and os.access('restart.cgns', os.F_OK): FILE = 'restart.cgns'
-            if os.access(FILE, os.F_OK):
-                t = Cmpi.convertFile2SkeletonTree(FILE)
-                Cmpi._readZones(t, FILE, rank=rank)
-                Cmpi._convert2PartialTree(t)
-            else: t = None
-            # Load stat (ts)
-            FILE = fileNameS+extS
-            if os.access(FILE, os.F_OK):
-                ts = Cmpi.convertFile2SkeletonTree(FILE)
-                Cmpi._readZones(ts, FILE, rank=rank)
-                Cmpi._convert2PartialTree(ts)
-            else: ts = None
-
-        else: # un fichier loade par proc
-            # Try to load graph
-            if os.access('%s/graph.pk'%fileName, os.R_OK):
-                try: import cPickle as pickle
-                except: import pickle
-                file = open('%s/graph.pk'%fileName, 'rb')
-                graph = pickle.load(file)
-                file.close()
-            FILE = '%s/%s_%d.cgns'%(fileNameC, baseNameC, rank)
-            if os.access(FILE, os.F_OK): tc = C.convertFile2PyTree(FILE)
-            else:
-                FILE = fileNameC+extC
-                tc = Cmpi.convertFile2SkeletonTree(FILE)
-                graph = prepGraphs(tc)
-                Cmpi._readZones(tc, FILE, rank=rank)
-                Cmpi._convert2PartialTree(tc)
-            # Load data (t)
-            FILE = '%s/%s_%d%s'%(fileName, baseName, rank, ext)
-            if restart and os.access('restart/restart_%d%s'%(rank,ext), os.F_OK):
-                FILE = 'restart/restart_%d%s'%(rank,ext)
-            if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else: t = None
-            # Load stat (ts)
-            FILE = '%s/%s_%d%s'%(fileNameS, baseNameS, rank, ext)
-            if os.access(FILE, os.F_OK): ts = C.convertFile2PyTree(FILE)
-            else: ts = None
-    else: # sequential run
-        if split == 'single':
-            # Load Connectivity (tc)
-            FILE = fileNameC+extC
-            if os.access(FILE, os.F_OK): tc = C.convertFile2PyTree(FILE)
-            else: tc = None
-            # Load Data (t)
-            FILE = fileName+ext
-            if restart and os.access('restart.cgns', os.F_OK): FILE = 'restart.cgns'
-            if os.access(FILE, os.F_OK): t = C.convertFile2PyTree(FILE)
-            else: t = None
-            # Load Stat (ts)
-            FILE = fileNameS+extS
-            if os.access(FILE, os.F_OK): ts = C.convertFile2PyTree(FILE)
-            else: ts = None
-        else: # multiple
-            # Load connectivity (tc)
-            ret = 1; no = 0; tc = []
-            while ret == 1:
-                FILE = '%s/%s_%d%s'%(fileNameC, baseNameC, no, extC)
-                if not os.access(FILE, os.F_OK): ret = 0
-                if ret == 1: tc.append(C.convertFile2PyTree(FILE))
-                no += 1
-            if tc != []: tc = Internal.merge(tc)
-            else:
-                FILE = fileNameC+extC
-                if os.access(FILE, os.F_OK): tc = C.convertFile2PyTree(FILE)
-                else: tc = None
-            # Load data (t)
-            ret = 1; no = 0; t = []
-            while ret == 1:
-                FILEIN = '%s/%s_%d%s'%(fileName, baseName, no, ext)
-                if os.access(FILEIN, os.F_OK): FILE = FILEIN
-                elif restart and os.access('restart/restart_%d%s'%(no, ext), os.F_OK):
-                    FILE = 'restart/restart_%d%s'%(no,ext)
-                else: ret = 0
-                if ret == 1: t.append(C.convertFile2PyTree(FILE))
-                no += 1
-            if t != []: t = Internal.merge(t)
-            else: t = None
-            # Load stat (ts)
-            ret = 1; no = 0; ts = []
-            while ret == 1:
-                FILE = '%s/%s_%d%s'%(fileNameS, baseNameS, no, extS)
-                if not os.access(FILEIN, os.F_OK): ret = 0
-                if ret == 1: ts.append(C.convertFile2PyTree(FILE))
-                no += 1
-            if ts != []: ts = Internal.merge(ts)
-            else: ts = None
+    if fileNameS is not None: ts = loadTree(fileName=fileNameS, split=split, graph=False, exploc=exploc)
+    else: ts = None
 
     return t, tc, ts, graph
 
@@ -3553,100 +3434,17 @@ def load(fileName='t', fileNameC='tc', fileNameS='tstat', split='single',
 # single: write restart.cgns (full)
 # multiple: write restart/restart_1.cgns, ... (partial trees)
 #==============================================================================
-def save(t, fileName='restart', split='single', NP=0, compress=0):
-    """Save tree and connectivity tree."""
-    # Rip file ext if any
-    import os.path
-    baseName = os.path.basename(fileName)
-    baseName = os.path.splitext(baseName)[0] # name without extension
-    fileName = os.path.splitext(fileName)[0] # full path without extension
+def save(t, fileName='restart.cgns', tc=None, fileNameC='tc_restart.cgns', ts=None, fileNameS='tstat_restart.cgns', split='single', compress=0):
+    """Save all updated trees."""
 
-    if split != 'single':
-        if NP > 0: # mpirun
-            if Cmpi.rank == 0:
-                if not os.path.exists(fileName): os.makedirs(fileName)
-            Cmpi.barrier()
-        else:
-            if not os.path.exists(fileName): os.makedirs(fileName)
-
-    # Rip some useless data (FastS)
-    t2 = C.rmVars(t, 'centers:Density_P1')
-    C._rmVars(t2, 'centers:VelocityX_P1')
-    C._rmVars(t2, 'centers:VelocityY_P1')
-    C._rmVars(t2, 'centers:VelocityZ_P1')
-    C._rmVars(t2, 'centers:Temperature_P1')
-    C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
-    Internal._rmNodesFromName(t2, 'Displacement#0')
-    Internal._rmNodesFromName(t2, 'Motion')
-
-    Internal._rmNodeByPath(t2, '.Solver#ownData')
-    zones = Internal.getZones(t2)
-    for z in zones:
-        Internal._rmNodeByPath(z, '.Solver#ownData')
-    if compress > 0:
-        import Compressor.PyTree as Compressor
-        if compress >= 1: Compressor._compressCartesian(t2)
-        if compress >= 2: Compressor._compressAll(t2)
-
-    flowsol = Internal.getNodeFromName1(zones[0], 'FlowSolution#Centers')
-    if flowsol is not None:
-        vars = Internal.getNodesFromType1(flowsol, 'DataArray_t')
-        for var in vars:
-            if ('Kry' in var[0]) and not('Kry_0' in var[0]):
-                C._rmVars(t2, 'centers:'+var[0])
-
-    for z in zones:
-        node = Internal.getNodeFromName1(z, '.Solver#define')
-        if node is not None:
-            integ = 'None'; nature = 'None'
-            n = Internal.getNodeFromName1(node, 'temporal_scheme')
-            if n is not None: integ = Internal.getValue(n)
-            n = Internal.getNodeFromName1(node, 'time_step_nature')
-            if n is not None: nature = Internal.getValue(n)
-            if integ == 'explicit' or nature == 'local':
-                C._rmVars(z, 'centers:Density_M1')
-                C._rmVars(z, 'centers:VelocityX_M1')
-                C._rmVars(z, 'centers:VelocityY_M1')
-                C._rmVars(z, 'centers:VelocityZ_M1')
-                C._rmVars(z, 'centers:Temperature_M1')
-                C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
-
-    # save
-    if Cmpi.size > 1: # mpi run
-        if split == 'single':  # output in a single file
-            Cmpi.convertPyTree2File(t2, fileName+'.cgns')
-        else:
-            rank = Cmpi.rank
-            C.convertPyTree2File(t2, '%s/%s_%d.cgns'%(fileName,baseName,rank))
-            # Rebuild graph
-            # skeleton -> gather -> merge -> graph
-    else: # sequential run
-        if split == 'single':
-            C.convertPyTree2File(t2, fileName+'.cgns')
-        else:
-            # Get and save graph
-            objet = prepGraphs(t2)
-
-            # Rebuild local trees
-            for i in range(max(1,-NP)):
-                tl = Internal.copyRef(t2)
-                bases = Internal.getNodesFromType1(tl, 'CGNSBase_t')
-                for b in bases:
-                    zones = Internal.getNodesFromType1(b, 'Zone_t')
-                    for z in zones:
-                        proc = Internal.getNodeFromName2(z, 'proc')
-                        if proc is not None:
-                            proc = Internal.getValue(proc)
-                            if proc != i: Internal._rmNode(b, z)
-                C.convertPyTree2File(tl, '%s/%s_%d.cgns'%(fileName,baseName,i))
-
-            # Write graph
-            try: import cPickle as pickle
-            except: import pickle
-            file = open('%s/graph.pk'%fileName, 'wb')
-            pickle.dump(objet, file, protocol=pickle.HIGHEST_PROTOCOL)
-            file.close()
-
+    saveTree(t, fileName=fileName, split=split, compress=compress)
+    
+    if tc is not None: 
+        saveTree(tc, fileName=fileNameC, split=split, compress=compress)
+    
+    if ts is not None: 
+        saveTree(ts, fileName=fileNameS, split=split, compress=compress)
+    
 #============================================================================
 # Retourne le max proc pour les zones
 def getMaxProc(t):
@@ -3667,9 +3465,8 @@ def getMaxProc(t):
 # return the communication graph for Chimera and abutting transfers
 # and the communication graph for IBM transfers
 #==============================================================================
-def loadFile(fileName='t.cgns', split='single', graph=False,
-             mpirun=False, exploc=0):
-    return loadTree(fileName, split, graph, mpirun, exploc)
+def loadFile(fileName='t.cgns', split='single', graph=False, exploc=0):
+    return loadTree(fileName, split, graph, exploc)
 
 #==============================================================================
 # Load one file
@@ -3751,7 +3548,6 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
     if graph: return t, list_graph
     else:     return t
 
-
 #==============================================================================
 # Save tree in one file.
 # si split='single': load t.cgns
@@ -3762,74 +3558,9 @@ def loadFileG(fileName='t.cgns', split='single', graph=False, mpirun=False):
 # the communication graph for Chimera and abutting transfers
 # the communication graph for IBM transfers
 #==============================================================================
-def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
-             mpirun=False, compress=0):
+def saveFile(t, fileName='restart.cgns', split='single', compress=0):
     """Save tree in file."""
-    import os.path
-    baseName = os.path.basename(fileName)
-    baseName = os.path.splitext(baseName)[0] # name without extension
-    fileName = os.path.splitext(fileName)[0] # full path without extension
-
-    # Rip/add some useless/usefull data (FastS)
-    t2 = C.rmVars(t, 'centers:Density_P1')
-    C._rmVars(t2, 'centers:VelocityX_P1')
-    C._rmVars(t2, 'centers:VelocityY_P1')
-    C._rmVars(t2, 'centers:VelocityZ_P1')
-    C._rmVars(t2, 'centers:Temperature_P1')
-    C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
-    zones = Internal.getZones(t2)
-    for z in zones: Internal._rmNodeByPath(z, '.Solver#ownData')
-    if compress > 0:
-        import Compressor.PyTree as Compressor
-        if compress >= 1: Compressor._compressCartesian(t2)
-        if compress >= 2: Compressor._compressAll(t2)
-
-    for z in zones:
-        node = Internal.getNodeFromName1(z, '.Solver#define')
-        if node is not None:
-            integ = 'None'; nature = 'None'
-            n = Internal.getNodeFromName1(node, 'temporal_scheme')
-            if n is not None: integ = Internal.getValue(n)
-            n = Internal.getNodeFromName1(node, 'time_step_nature')
-            if n is not None: nature = Internal.getValue(n)
-            if integ == 'explicit' or nature == 'local':
-                C._rmVars(z, 'centers:Density_M1')
-                C._rmVars(z, 'centers:VelocityX_M1')
-                C._rmVars(z, 'centers:VelocityY_M1')
-                C._rmVars(z, 'centers:VelocityZ_M1' )
-                C._rmVars(z, 'centers:Temperature_M1')
-                C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
-    # save
-    if mpirun: # mpi run
-        if split == 'single':  # output in a single file
-            FILE = fileName+'.cgns'
-            Cmpi.convertPyTree2File(t2, FILE)
-        else:
-            rank = Cmpi.rank
-            if rank == 0:
-                if not os.path.exists(fileName): os.makedirs(fileName)
-            Cmpi.barrier()
-            FILE = '%s/%s_%d.cgns'%(fileName, baseName, rank)
-            C.convertPyTree2File(t2, FILE)
-
-    else: # sequential run
-        if split == 'single':
-            FILE = fileName+'.cgns'
-            C.convertPyTree2File(t2, FILE)
-        else:
-            if NP == 0: NP = -getMaxProc(t2)-1
-            if not os.path.exists(fileName): os.makedirs(fileName)
-            for i in range(max(1,-NP)):
-                tl = Internal.copyRef(t2)
-                bases = Internal.getNodesFromType1(tl, 'CGNSBase_t')
-                for b in bases:
-                    zones = Internal.getNodesFromType1(b, 'Zone_t')
-                    for z in zones:
-                        proc = Internal.getNodeFromName2(z, 'proc')
-                        if proc is not None:
-                            proc = Internal.getValue(proc)
-                            if proc != i: Internal._rmNode(b, z)
-                C.convertPyTree2File(tl, '%s/%s_%d.cgns'%(fileName,baseName,i))
+    saveTree(t, fileName=fileName, split=split, compress=compress)
 
 #==============================================================================
 # Load t.cgns (data) tc.cgns (connectivity file) ts.cgns (stat)
@@ -3842,14 +3573,13 @@ def saveFile(t, fileName='restart.cgns', split='single', graph=False, NP=0,
 # the communication graph for IBM transfers
 # dir is the directory containing files to be read
 #==============================================================================
-def loadTree(fileName='t.cgns', split='single', graph=False, mpirun=False,
-             exploc=0):
-    """Load tree and connectivity tree."""
+def loadTree(fileName='t.cgns', split='single', graph=False, exploc=0):
+    """Load a single tree."""
     import os.path
     fileNameNoExt = os.path.splitext(fileName)[0]  # full path without extension
     graphN = {'graphID': None, 'graphIBCD': None, 'procDict': None, 'procList': None}
 
-    if mpirun: # mpi run
+    if Cmpi.size > 1: # mpirun
         rank = Cmpi.rank; size = Cmpi.size
         if split == 'single':
             cgnsFile = fileNameNoExt + '.cgns'
@@ -3923,28 +3653,52 @@ def loadTree(fileName='t.cgns', split='single', graph=False, mpirun=False,
 # the communication graph for IBM transfers
 # dir is the directory containing files to be read
 #==============================================================================
-def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=False, mpirun=False):
-    """Save tree and connectivity tree."""
+def saveTree(t, fileName='restart.cgns', split='single', compress=0):
+    """Save a single tree."""
+    # Rip file ext if any
     import os.path
     baseName = os.path.basename(fileName)
     baseName = os.path.splitext(baseName)[0] # name without extension
     fileName = os.path.splitext(fileName)[0] # full path without extension
 
-    # Rip/add some useless/usefull data (FastS)
+    if split != 'single':
+        if Cmpi.size > 1: # mpirun
+            if Cmpi.rank == 0:
+                if not os.path.exists(fileName): os.makedirs(fileName)
+            Cmpi.barrier()
+        else:
+            if not os.path.exists(fileName): os.makedirs(fileName)
+
+    # Rip some useless data (FastS)
     t2 = C.rmVars(t, 'centers:Density_P1')
     C._rmVars(t2, 'centers:VelocityX_P1')
     C._rmVars(t2, 'centers:VelocityY_P1')
     C._rmVars(t2, 'centers:VelocityZ_P1')
     C._rmVars(t2, 'centers:Temperature_P1')
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
+    Internal._rmNodesFromName(t2, 'Displacement#0')
+    Internal._rmNodesFromName(t2, 'Motion')
 
+    # delete param_int and param_real from tc tree
+    Internal._rmNodeByPath(t2, 'Parameter_int')
+    Internal._rmNodeByPath(t2, 'Parameter_real')
 
-    bases = Internal.getNodesFromType1(t2    , 'CGNSBase_t')       # noeud
-    own   = Internal.getNodeFromName1(bases[0], '.Solver#ownData')  # noeud
-    dtloc = None
-    if own is not None: dtloc = Internal.getNodeFromName1(own, '.Solver#dtloc')[1] # numpy
-
+    Internal._rmNodeByPath(t2, '.Solver#ownData')
     zones = Internal.getZones(t2)
+    for z in zones:
+        Internal._rmNodeByPath(z, '.Solver#ownData')
+    if compress > 0:
+        import Compressor.PyTree as Compressor
+        if compress >= 1: Compressor._compressCartesian(t2)
+        if compress >= 2: Compressor._compressAll(t2)
+
+    flowsol = Internal.getNodeFromName1(zones[0], 'FlowSolution#Centers')
+    if flowsol is not None:
+        vars = Internal.getNodesFromType1(flowsol, 'DataArray_t')
+        for var in vars:
+            if ('Kry' in var[0]) and not('Kry_0' in var[0]):
+                C._rmVars(t2, 'centers:'+var[0])
+
     for z in zones:
         node = Internal.getNodeFromName1(z, '.Solver#define')
         if node is not None:
@@ -3957,23 +3711,34 @@ def saveTree(t, fileName='restart.cgns', split='single', directory='.', graph=Fa
                 C._rmVars(z, 'centers:Density_M1')
                 C._rmVars(z, 'centers:VelocityX_M1')
                 C._rmVars(z, 'centers:VelocityY_M1')
-                C._rmVars(z, 'centers:VelocityZ_M1' )
+                C._rmVars(z, 'centers:VelocityZ_M1')
                 C._rmVars(z, 'centers:Temperature_M1')
                 C._rmVars(z, 'centers:TurbulentSANuTilde_M1')
+
     # save
-    if mpirun: # mpi run
+    if Cmpi.size > 1: # mpi run
         if split == 'single':  # output in a single file
-            FILE = directory+'/'+fileName+'.cgns'
-            Cmpi.convertPyTree2File(t2, FILE)
+            Cmpi.convertPyTree2File(t2, fileName+'.cgns')
         else:
             rank = Cmpi.rank
-            #FILE = '%s/%s_proc%d.cgns'%(directory, fileName, rank)
-            FILE = '%s/%s%d.cgns'%(directory, fileName, rank)
-            C.convertPyTree2File(t2, FILE)
-
+            C.convertPyTree2File(t2, '%s/%s_%d.cgns'%(fileName,baseName,rank))
     else: # sequential run
-        FILE = directory+'/'+fileName+'.cgns'
-        C.convertPyTree2File(t2, FILE)
+        if split == 'single':
+            C.convertPyTree2File(t2, fileName+'.cgns')
+        else:
+            NP = getMaxProc(t2)+1
+            # Rebuild local trees
+            for i in range(NP):
+                tl = Internal.copyRef(t2)
+                bases = Internal.getNodesFromType1(tl, 'CGNSBase_t')
+                for b in bases:
+                    zones = Internal.getNodesFromType1(b, 'Zone_t')
+                    for z in zones:
+                        proc = Internal.getNodeFromName2(z, 'proc')
+                        if proc is not None:
+                            proc = Internal.getValue(proc)
+                            if proc != i: Internal._rmNode(b, z)
+                C.convertPyTree2File(tl, '%s/%s_%d.cgns'%(fileName,baseName,i))
 
 #==============================================================================
 # Enhance IO (with colours) (cleaned)
