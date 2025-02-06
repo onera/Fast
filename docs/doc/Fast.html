@@ -61,17 +61,17 @@ import the module:</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#Fast.PyTree.setNum2Zones" title="Fast.PyTree.setNum2Zones"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.setNum2Zones</span></code></a></p></td>
 <td><p>Set numeric data dictionary  in zones.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Fast.PyTree.load" title="Fast.PyTree.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.load</span></code></a></p></td>
-<td><p>Load tree and connectivity tree.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Fast.PyTree.loadTree" title="Fast.PyTree.loadTree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.loadTree</span></code></a></p></td>
+<td><p>Load a single tree.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#Fast.PyTree.load" title="Fast.PyTree.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.load</span></code></a></p></td>
+<td><p>Load all updated trees.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#Fast.PyTree.saveTree" title="Fast.PyTree.saveTree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.saveTree</span></code></a></p></td>
+<td><p>Save a single tree.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#Fast.PyTree.save" title="Fast.PyTree.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.save</span></code></a></p></td>
-<td><p>Save tree and connectivity tree.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#Fast.PyTree.loadFile" title="Fast.PyTree.loadFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.loadFile</span></code></a></p></td>
-<td><p>Load tree and connectivity tree.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#Fast.PyTree.saveFile" title="Fast.PyTree.saveFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fast.PyTree.saveFile</span></code></a></p></td>
-<td><p>Save tree in file.</p></td>
+<td><p>Save all updated trees.</p></td>
 </tr>
 </tbody>
 </table>
@@ -96,28 +96,26 @@ and returns None.</p>
 </dl>
 <p>the <strong>keys</strong> of <strong>numb</strong> dictionary are:</p>
 <ul>
-<li><p><strong>&#8216;temporal_scheme&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;temporal_scheme&#8217;</strong>: numerical scheme for time integration. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>&#8216;explicit&#8217; (RK3 scheme, see p49 <a class="reference external" href="http://publications.onera.fr/exl-php/util/documents/accede_document.php">http://publications.onera.fr/exl-php/util/documents/accede_document.php</a>)</p></li>
-<li><p>&#8216;implicit&#8217; (BDF2 or BDF1 if local time stepping)</p></li>
+<li><p>&#8216;implicit&#8217; (BDF2 (second order Gear scheme for global time stepping) or BDF1 (first order Euler scheme for local time stepping))</p></li>
 <li><p>&#8216;implicit_local&#8217; (see p107 <a class="reference external" href="http://publications.onera.fr/exl-php/docs/ILS_DOC/227155/DOC356618_s1.pdf">http://publications.onera.fr/exl-php/docs/ILS_DOC/227155/DOC356618_s1.pdf</a>)</p></li>
 <li><p>default value is &#8216;implicit&#8217;</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;ss_iteration&#8217;</strong>:</p>
+<li><p><strong>&#8216;ss_iteration&#8217;</strong>: Newton iterations for implicit schemes.</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Newton Iterations for implicit schemes</p></li>
 <li><p>default value is 30</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;modulo_verif&#8217;</strong>:</p>
+<li><p><strong>&#8216;modulo_verif&#8217;</strong>: computation period for cfl (RK3 or BDF2), Newton convergence (all), and predictor estimation (implicit_local only)</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>period of computation for: cfl (RK3 or BDF2), newton convergence (all temporal_scheme) and predictor estimation for &#8216;implicit_local&#8217; scheme</p></li>
 <li><p>default value is 200</p></li>
 </ul>
 </div></blockquote>
@@ -161,57 +159,56 @@ and returns None.</p>
 </dl>
 <p>the <strong>keys</strong> of <strong>numz</strong> dictionary are:</p>
 <ul>
-<li><p><strong>&#8216;scheme&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;scheme&#8217;</strong>: numerical scheme for convective flux reconstruction. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>&#8216;ausmpred&#8217; (see p49 <a class="reference external" href="https://tel.archives-ouvertes.fr/pastel-00834850/document">https://tel.archives-ouvertes.fr/pastel-00834850/document</a>)</p></li>
-<li><p>&#8216;senseur&#8217;  (for DNS/LES, see p50 <a class="reference external" href="https://tel.archives-ouvertes.fr/pastel-00834850/document">https://tel.archives-ouvertes.fr/pastel-00834850/document</a>)</p></li>
-<li><p>&#8216;roe&#8217;      (classical Roe fluxes)</p></li>
+<li><p>&#8216;ausmpred&#8217; (AUSM+(P) reduced scheme, see p49 <a class="reference external" href="https://tel.archives-ouvertes.fr/pastel-00834850/document">https://tel.archives-ouvertes.fr/pastel-00834850/document</a>)</p></li>
+<li><p>&#8216;senseur&#8217;  (AUSM+(P)-based hybrid centered/decentered sensor scheme for DNS/LES, see p50 <a class="reference external" href="https://tel.archives-ouvertes.fr/pastel-00834850/document">https://tel.archives-ouvertes.fr/pastel-00834850/document</a>)</p></li>
+<li><p>&#8216;roe&#8217;      (classical Roe scheme)</p></li>
 <li><p>default value is &#8216;ausmpred&#8217;</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;slope&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;slope&#8217;</strong>: Slope reconstruction method. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>&#8216;o3&#8217;      (third order, see  p50 <a class="reference external" href="https://tel.archives-ouvertes.fr/pastel-00834850/document">https://tel.archives-ouvertes.fr/pastel-00834850/document</a>)</p></li>
-<li><p>&#8216;o3sc&#8217;    (third order with limiter, see <a class="reference download internal" download="" href="_downloads/38cdf3e9e4a201da304f87111e5a3eac/SCHEMA_lugrin.pdf"><code class="xref download docutils literal notranslate"><span class="pre">Lugrin</span> <span class="pre">scheme</span></code></a>)</p></li>
-<li><p>&#8216;o5&#8217;      (fifth order)</p></li>
-<li><p>&#8216;o5sc&#8217;    (fifth order with limiter)</p></li>
-<li><p>&#8216;o1&#8217;      (first order,  only valid for roe scheme)</p></li>
-<li><p>&#8216;minmod&#8217;  (second order with minmod limiter, only valid for roe scheme)</p></li>
+<li><p>&#8216;o1&#8217;      (first order MUSCL reconstrution, only valid for roe scheme)</p></li>
+<li><p>&#8216;minmod&#8217;  (second order MUSCL reconstrution with minmod limiter, only valid for roe scheme)</p></li>
+<li><p>&#8216;o3&#8217;      (third order MUSCL reconstrution, see  p50 <a class="reference external" href="https://tel.archives-ouvertes.fr/pastel-00834850/document">https://tel.archives-ouvertes.fr/pastel-00834850/document</a>)</p></li>
+<li><p>&#8216;o3sc&#8217;    (third order MUSCL reconstrution with slope limiter, see <a class="reference download internal" download="" href="_downloads/38cdf3e9e4a201da304f87111e5a3eac/SCHEMA_lugrin.pdf"><code class="xref download docutils literal notranslate"><span class="pre">Lugrin</span> <span class="pre">scheme</span></code></a>)</p></li>
+<li><p>&#8216;o5&#8217;      (fifth order MUSCL reconstrution)</p></li>
+<li><p>&#8216;o5sc&#8217;    (fifth order MUSCL reconstrution with slope limiter)</p></li>
 <li><p>default value is &#8216;o3&#8217;</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;senseurType&#8217;</strong>:  only valid for &#8216;senseur&#8217; scheme. Possible values are</p>
+<li><p><strong>&#8216;senseurType&#8217;</strong>:  Sensor mode for the &#8216;senseur&#8217; scheme. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>0 : correction for speed only</p></li>
-<li><p>1 : correction for speed, density and pressure</p></li>
+<li><p>0  (correction for speed only)</p></li>
+<li><p>1  (correction for speed, density and pressure)</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;motion&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;motion&#8217;</strong>: Motion mode for moving walls. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>&#8216;none&#8217; (no motion)</p></li>
-<li><p>&#8216;rigid&#8217; (rigid motion defined in Fast see p47 <a class="reference external" href="https://tel.archives-ouvertes.fr/tel-01011273/document">https://tel.archives-ouvertes.fr/tel-01011273/document</a>)</p></li>
-<li><p>&#8216;rigid_ext&#8217; (rigid motion defined externally by RigidMotion)</p></li>
+<li><p>&#8216;none&#8217;        (no motion)</p></li>
+<li><p>&#8216;rigid&#8217;       (rigid motion defined in Fast, see p47 <a class="reference external" href="https://tel.archives-ouvertes.fr/tel-01011273/document">https://tel.archives-ouvertes.fr/tel-01011273/document</a>)</p></li>
+<li><p>&#8216;rigid_ext&#8217;   (rigid motion defined externally by RigidMotion)</p></li>
 <li><p>&#8216;deformation&#8217; (ALE with deformation)</p></li>
 <li><p>default value is &#8216;none&#8217;</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;time_step&#8217;</strong>:</p>
+<li><p><strong>&#8216;time_step&#8217;</strong>: time step value</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>value of time step</p></li>
 <li><p>default value is 1e-4</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;time_step_nature&#8217;</strong>:</p>
+<li><p><strong>&#8216;time_step_nature&#8217;</strong>: time step nature. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>&#8216;global&#8217;</p></li>
@@ -220,123 +217,117 @@ and returns None.</p>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;epsi_newton&#8217;</strong>:</p>
+<li><p><strong>&#8216;cfl&#8217;</strong>: Courant-Friedrichs-Lewy condition (only for time_step_nature&#8217;=&#8217;local&#8217;)</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>newton stopping criteria on Loo norm</p></li>
-<li><p>default value is 0.1</p></li>
-</ul>
-</div></blockquote>
-</li>
-<li><p><strong>&#8216;inj1_newton_tol&#8217;</strong>:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Newton tolerence for BCinj1 inflow condition</p></li>
-<li><p>default value is 1e-5</p></li>
-</ul>
-</div></blockquote>
-</li>
-<li><p><strong>&#8216;inj1_newton_nit&#8217;</strong>:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Newton Iteration for BCinj1 inflow condition</p></li>
-<li><p>default value is 10</p></li>
-</ul>
-</div></blockquote>
-</li>
-<li><p><strong>&#8216;psiroe&#8217;</strong>:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Harten correction</p></li>
-<li><p>default value is 0.1</p></li>
-</ul>
-</div></blockquote>
-</li>
-<li><p><strong>&#8216;cfl&#8217;</strong>:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>usefull only if &#8216;time_step_nature&#8217;=&#8217;local&#8217;</p></li>
 <li><p>default value is 1</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;prandtltb&#8217;</strong>:</p>
+<li><p><strong>&#8216;epsi_newton&#8217;</strong>: Newton stopping criteria based on Loo norm</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>turbulent Prandtl number (only active for &#8216;model&#8217;=&#8217;NSTurbulent&#8217;)</p></li>
+<li><p>default value is 0.1</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>&#8216;inj1_newton_tol&#8217;</strong>: Newton tolerence for BCinj1 inflow condition</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>default value is 1e-5</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>&#8216;inj1_newton_nit&#8217;</strong>: Newton iterations for BCinj1 inflow condition</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>default value is 10</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>&#8216;psiroe&#8217;</strong>: Harten correction parameter</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>default value is 0.1</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>&#8216;prandtltb&#8217;</strong>: turbulent Prandtl number (only active for &#8216;model&#8217;=&#8217;NSTurbulent&#8217;)</p>
+<blockquote>
+<div><ul class="simple">
 <li><p>default value is 0.92</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;ransmodel&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;ransmodel&#8217;</strong>: RANS turbulence models. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>&#8220;SA&#8221;      (Standard Spalart-Allmaras model)</p></li>
-<li><p>&#8220;SA_comp&#8221; (SA with mixing layer compressible correction <a class="reference external" href="https://turbmodels.larc.nasa.gov/spalart.html">https://turbmodels.larc.nasa.gov/spalart.html</a>)</p></li>
+<li><p>&#8216;SA&#8217;      (Standard Spalart-Allmaras model)</p></li>
+<li><p>&#8216;SA_comp&#8217; (SA with mixing layer compressibility correction, see <a class="reference external" href="https://turbmodels.larc.nasa.gov/spalart.html">https://turbmodels.larc.nasa.gov/spalart.html</a>)</p></li>
 <li><p>default value is &#8216;SA&#8217;</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;SA_add_RotCorr&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;SA_add_RotCorr&#8217;</strong>: add rotation correction to the SA model (SA-R)</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>True: add rotation correction to spalart model.</p></li>
-<li><p>False</p></li>
-<li><p>default value is False</p></li>
+<li><p>0</p></li>
+<li><p>1  (toggle rotation correction)</p></li>
+<li><p>default value is 0</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;SA_add_LowRe&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;SA_add_LowRe&#8217;</strong>: add low Reynolds correction to the SA model (SA-LRe)</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>True: add low Reynolds correction to spalart model.</p></li>
-<li><p>False</p></li>
-<li><p>default value is False</p></li>
+<li><p>0</p></li>
+<li><p>1  (toggle low-Re correction)</p></li>
+<li><p>default value is 0</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;DES&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;DES&#8217;</strong>: toggle the turbulence models for DES simulations. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>&#8220;none&#8221;    (SA computation)</p></li>
-<li><p>&#8220;zdes1&#8221;   (mode 1, <a class="reference external" href="https://link.springer.com/content/pdf/10.1007%2Fs00162-011-0240-z.pdf">https://link.springer.com/content/pdf/10.1007%2Fs00162-011-0240-z.pdf</a>)</p></li>
-<li><p>&#8220;zdes1_w&#8221; (mode 1 by Chauvet)</p></li>
-<li><p>&#8220;zdes2&#8221;   (mode 2)</p></li>
-<li><p>&#8220;zdes2_w&#8221; (mode 2 by Chauvet)</p></li>
-<li><p>&#8220;zdes3&#8221;   (mode 3, see p118 <a class="reference external" href="https://tel.archives-ouvertes.fr/tel-01365361/document">https://tel.archives-ouvertes.fr/tel-01365361/document</a>)</p></li>
+<li><p>&#8216;none&#8217;    (SA computation)</p></li>
+<li><p>&#8216;zdes1&#8217;   (ZDES mode 1, see <a class="reference external" href="https://link.springer.com/content/pdf/10.1007%2Fs00162-011-0240-z.pdf">https://link.springer.com/content/pdf/10.1007%2Fs00162-011-0240-z.pdf</a>)</p></li>
+<li><p>&#8216;zdes1_w&#8217; (ZDES mode 1 by Chauvet)</p></li>
+<li><p>&#8216;zdes2&#8217;   (ZDES mode 2)</p></li>
+<li><p>&#8216;zdes2_w&#8217; (ZDES mode 2 by Chauvet)</p></li>
+<li><p>&#8216;zdes3&#8217;   (ZDES mode 3, see p118 <a class="reference external" href="https://tel.archives-ouvertes.fr/tel-01365361/document">https://tel.archives-ouvertes.fr/tel-01365361/document</a>)</p></li>
 <li><p>default value is &#8216;none&#8217;</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;DES_debug&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;DES_debug&#8217;</strong>: toggle data extraction for DES post-analysis. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>&#8220;none&#8221;</p></li>
-<li><p>&#8220;active&#8221;  (save delta and fd functions in the FlowSolution#Centers node)</p></li>
+<li><p>0</p></li>
+<li><p>1  (save delta and fd functions in the FlowSolution#Centers node)</p></li>
 <li><p>default value is &#8216;none&#8217;</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;sgsmodel&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;sgsmodel&#8217;</strong>: LES turbulence models. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>&#8220;Miles&#8221;   (ViscosityEddy==LaminarViscosity)</p></li>
-<li><p>&#8220;smsm&#8221;    (Selective Mixed Scale model, Lenormand et al, (2000), LES of sub and supersonic channel flow at moderate Re. Int. J. Numer. Meth. Fluids, 32: 369&#8211;406)</p></li>
+<li><p>&#8216;Miles&#8217;   (Monotonically integrated LES, for which ViscosityEddy==LaminarViscosity)</p></li>
+<li><p>&#8216;smsm&#8217;    (Selective mixed scale model, see Lenormand et al <a class="reference external" href="https://doi.org/10.1002/(SICI)1097-0363(20000229)32:4%3C369::AID-FLD943%3E3.0.CO;2-6">https://doi.org/10.1002/(SICI)1097-0363(20000229)32:4%3C369::AID-FLD943%3E3.0.CO;2-6</a>)</p></li>
 <li><p>default value is &#8216;Miles&#8217;</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;extract_res&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;extract_res&#8217;</strong>: toggle residual extraction during simulations. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>0</p></li>
+<li><p>0  (don&#8217;t save)</p></li>
 <li><p>1  (save div(F_Euler-F_viscous) in the FlowSolution#Centers node)</p></li>
 <li><p>2  (save dqdt + div(F_Euler-F_viscous) in the FlowSolution#Centers node)</p></li>
 <li><p>default value is 0</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;source&#8217;</strong>: possible values are</p>
+<li><p><strong>&#8216;source&#8217;</strong>: toggle a source term for CFD simulations. Possible values are</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>0</p></li>
@@ -345,11 +336,10 @@ and returns None.</p>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>&#8216;ratiom&#8217;</strong>:</p>
+<li><p><strong>&#8216;ratiom&#8217;</strong>: maximum cut-off for mut/mu</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>cut-off max of mut/mu</p></li>
-<li><p>default value is 10000.</p></li>
+<li><p>default value is 10000</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -379,30 +369,128 @@ and returns None.</p>
 
 <hr class="docutils" />
 <dl class="py function">
-<dt class="sig sig-object py" id="Fast.PyTree.load">
-<span class="sig-prename descclassname"><span class="pre">Fast.PyTree.</span></span><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'t.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileNameC</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tc.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileNameS</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tstat.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single'</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Load computation tree t from file.
-Optionaly load tc (connectivity file) or tstat (statistics file).
-Returns also the graph as a dictionary {&#8216;graphID&#8217;, &#8216;graphIBC&#8217;, &#8216;procDict&#8217;, &#8216;procList&#8217;}.
-If split=&#8217;single&#8217;, a single file is loaded.
-If split=&#8217;multiple&#8217;, mulitple file format is loaded (restart/restart_0.cgns, &#8230;).</p>
+<dt class="sig sig-object py" id="Fast.PyTree.loadTree">
+<span class="sig-prename descclassname"><span class="pre">Fast.PyTree.</span></span><span class="sig-name descname"><span class="pre">loadTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'t.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Load a tree from a file (solution tree t, connectivity tree tc, or statistics tree ts). The file can be a single CGNS file (e.g. &#8216;t.cgns&#8217;), or can be split with one file per processor (e.g. &#8216;t/t_1.cgns&#8217;, &#8216;t/t_2.cgns&#8217;, etc.).</p>
+<p>When executed in sequential mode, the function returns a complete tree.</p>
+<p>When executed in mpi mode, the function returns a partial tree on each processor.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>in MPI mode, the tree must already be distributed with the correct number of processors (with &#8216;proc&#8217; nodes within the zones).</p>
+</div>
+<p>If graph is true, create and return the communication graph for Chimera and abutting transfers (for MPI use only). The dictionary is of the form of: graph={&#8216;graphID&#8217;:[], &#8216;graphIBC&#8217;:[], &#8216;procDict&#8217;:[], &#8216;procList&#8217;:[]}.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>to create the communication graph, the loaded tree must be the connectivity tree (tc.cgns), not the solution tree (t.cgns).</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>a</strong> (<em>pyTree</em>) &#8211; input data</p></li>
-<li><p><strong>fileName</strong> (<em>string</em>) &#8211; name of file for save</p></li>
-<li><p><strong>split</strong> (<em>string</em>) &#8211; &#8216;single&#8217; or &#8216;multiple&#8217;</p></li>
+<li><p><strong>fileName</strong> (<em>string</em>) &#8211; name of the file to load</p></li>
+<li><p><strong>split</strong> (<em>string</em>) &#8211; file format: &#8216;single&#8217; or &#8216;multiple&#8217;</p></li>
+<li><p><strong>graph</strong> (<em>boolean</em>) &#8211; true for returning communication graph</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>t, tc, ts, graph</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-even"><p>t or tc or ts or (tc, graph)</p>
 </dd>
 </dl>
 <ul class="simple">
-<li><p><a class="reference external" href="Examples/Fast/loadPT.py">Load pyTree (pyTree)</a>:</p></li>
+<li><p><a class="reference external" href="Examples/Fast/loadTreePT.py">Load single pyTree (pyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - loadFile (pyTree) -</span>
+<span class="kn">import</span> <span class="nn">Fast.PyTree</span> <span class="k">as</span> <span class="nn">Fast</span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">Converter.Mpi</span> <span class="k">as</span> <span class="nn">Cmpi</span>
+
+<span class="c1"># Save a file</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Cmpi</span><span class="o">.</span><span class="n">setProc</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">Cmpi</span><span class="o">.</span><span class="n">setProc</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">])</span>
+<span class="n">Fast</span><span class="o">.</span><span class="n">saveTree</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">fileName</span><span class="o">=</span><span class="s1">&#39;t.cgns&#39;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load it back</span>
+<span class="n">Fast</span><span class="o">.</span><span class="n">loadTree</span><span class="p">(</span><span class="n">fileName</span><span class="o">=</span><span class="s1">&#39;t.cgns&#39;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>since Fast 4.1, loadFile and loadTree have been merged.</p>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="Fast.PyTree.saveTree">
+<span class="sig-prename descclassname"><span class="pre">Fast.PyTree.</span></span><span class="sig-name descname"><span class="pre">saveTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'restart.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Save a tree to a file (solution tree t, connectivity tree tc, or statistics tree ts). The file can be a single CGNS file (e.g. &#8216;t.cgns&#8217;), or can be split with one file per processor (e.g. &#8216;t/t_1.cgns&#8217;, &#8216;t/t_2.cgns&#8217;, etc.). The tree is also cleared of unnecessary flow fields and temporary work arrays.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>in MPI mode, the tree must already be distributed with the correct number of processors (with &#8216;proc&#8217; nodes within the zones).</p>
+</div>
+<p>Before saving the file, the flow fields can be compressed using the compress parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>tree</em>) &#8211; tree to save</p></li>
+<li><p><strong>fileName</strong> (<em>string</em>) &#8211; name of the file to load</p></li>
+<li><p><strong>split</strong> (<em>string</em>) &#8211; file format: &#8216;single&#8217; or &#8216;multiple&#8217;</p></li>
+<li><p><strong>compress</strong> (<em>integer</em>) &#8211; compression parameter: 0 (none), 1 (cart only), or 2 (all)</p></li>
+</ul>
+</dd>
+</dl>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/Fast/saveTreePT.py">Save single pyTree (pyTree)</a>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - saveFile (pyTree) -</span>
+<span class="kn">import</span> <span class="nn">Fast.PyTree</span> <span class="k">as</span> <span class="nn">Fast</span>
+<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
+<span class="kn">import</span> <span class="nn">Converter.Mpi</span> <span class="k">as</span> <span class="nn">Cmpi</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Cmpi</span><span class="o">.</span><span class="n">setProc</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">Cmpi</span><span class="o">.</span><span class="n">setProc</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">])</span>
+<span class="n">Fast</span><span class="o">.</span><span class="n">saveTree</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">fileName</span><span class="o">=</span><span class="s1">&#39;t.cgns&#39;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>since Fast 4.1, saveFile and saveTree have been merged.</p>
+</div>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="Fast.PyTree.load">
+<span class="sig-prename descclassname"><span class="pre">Fast.PyTree.</span></span><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'t.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileNameC</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileNameS</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single'</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Load all trees at once (solution tree t, connectivity tree tc, and/or statistics tree ts), using multiple calls of the Fast.PyTree.loadTree function. The files can be single CGNS files (e.g. &#8216;t.cgns&#8217;), or can be split with one file per processor (e.g. &#8216;t/t_1.cgns&#8217;, &#8216;t/t_2.cgns&#8217;, etc.).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>in MPI mode, the trees must already be distributed with the correct number of processors (with &#8216;proc&#8217; nodes within the zones).</p>
+</div>
+<p>If fileNameC is not None, the connectivity tree is loaded and the communication graph is automatically created.</p>
+<p>If filenameS is not None, the statistics tree is loaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fileName</strong> (<em>string</em>) &#8211; name of the solution file to load</p></li>
+<li><p><strong>fileNameC</strong> (<em>string</em>) &#8211; name of the connectivity file to load</p></li>
+<li><p><strong>fileNameS</strong> (<em>string</em>) &#8211; name of the statistics file to load</p></li>
+<li><p><strong>split</strong> (<em>string</em>) &#8211; file format: &#8216;single&#8217; or &#8216;multiple&#8217;</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(t, tc, ts, graph)</p>
+</dd>
+</dl>
+<ul class="simple">
+<li><p><a class="reference external" href="Examples/Fast/loadPT.py">Load pyTrees (pyTree)</a>:</p></li>
 </ul>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - load (pyTree) -</span>
 <span class="kn">import</span> <span class="nn">Fast.PyTree</span> <span class="k">as</span> <span class="nn">Fast</span>
@@ -419,7 +507,7 @@ If split=&#8217;multiple&#8217;, mulitple file format is loaded (restart/restart
     <span class="n">b</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
     <span class="n">b</span> <span class="o">=</span> <span class="n">Cmpi</span><span class="o">.</span><span class="n">setProc</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">])</span>
-    
+
     <span class="n">t</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">connectMatch</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
     <span class="n">t</span> <span class="o">=</span> <span class="n">Internal</span><span class="o">.</span><span class="n">addGhostCells</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">adaptBCs</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">C</span><span class="o">.</span><span class="n">convertPyTree2File</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;t.cgns&#39;</span><span class="p">)</span>
@@ -442,26 +530,32 @@ If split=&#8217;multiple&#8217;, mulitple file format is loaded (restart/restart
 <hr class="docutils" />
 <dl class="py function">
 <dt class="sig sig-object py" id="Fast.PyTree.save">
-<span class="sig-prename descclassname"><span class="pre">Fast.PyTree.</span></span><span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'restart.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temporal_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'implicit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Save computation tree t in file.
-If you run in mpi, NP must be the number of processor.
-If you run in seq mode, NP must be 0 or a negative number.
-If split=&#8217;single&#8217;, a single file is written.
-If split=&#8217;multiple&#8217;, different files are created
-depending on the proc number of each zone (restart/restart_0.cgns, &#8230;).</p>
+<span class="sig-prename descclassname"><span class="pre">Fast.PyTree.</span></span><span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'restart.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileNameC</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tc_restart.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileNameS</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tstat_restart.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Save all trees at once (solution tree t, connectivity tree tc, and/or statistics tree ts), using multiple calls of the Fast.PyTree.saveTree function. The files can be single CGNS files (e.g. &#8216;t.cgns&#8217;), or can be split with one file per processor (e.g. &#8216;t/t_1.cgns&#8217;, &#8216;t/t_2.cgns&#8217;, etc.). The trees are also cleared of unnecessary flow fields and temporary work arrays.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>in MPI mode, the trees must already be distributed with the correct number of processors (with &#8216;proc&#8217; nodes within the zones).</p>
+</div>
+<p>If tc is not None, the connectivity tree is saved.</p>
+<p>If ts is not None, the statistics tree is saved.</p>
+<p>Before saving the file, the flow fields can be compressed using the compress parameter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>a</strong> (<em>pyTree</em>) &#8211; input data</p></li>
-<li><p><strong>fileName</strong> (<em>string</em>) &#8211; name of file for save</p></li>
-<li><p><strong>split</strong> (<em>string</em>) &#8211; &#8216;single&#8217; or &#8216;multiple&#8217;</p></li>
-<li><p><strong>NP</strong> (<em>int</em>) &#8211; number of processors</p></li>
+<li><p><strong>t</strong> (<em>tree</em>) &#8211; updated solution tree to save</p></li>
+<li><p><strong>fileName</strong> (<em>string</em>) &#8211; name of the solution file</p></li>
+<li><p><strong>tc</strong> (<em>tree</em>) &#8211; updated connectivity tree to save</p></li>
+<li><p><strong>fileNameC</strong> (<em>string</em>) &#8211; name of the connectivity file</p></li>
+<li><p><strong>ts</strong> (<em>tree</em>) &#8211; updated statistics tree to save</p></li>
+<li><p><strong>fileNameS</strong> (<em>string</em>) &#8211; name of the statistics file</p></li>
+<li><p><strong>split</strong> (<em>string</em>) &#8211; file format: &#8216;single&#8217; or &#8216;multiple&#8217;</p></li>
+<li><p><strong>compress</strong> (<em>integer</em>) &#8211; compression parameter: 0 (none), 1 (cart only), or 2 (all)</p></li>
 </ul>
 </dd>
 </dl>
 <p><em>Example of use:</em></p>
 <ul class="simple">
-<li><p><a class="reference external" href="Examples/Fast/savePT.py">Save pyTree (pyTree)</a>:</p></li>
+<li><p><a class="reference external" href="Examples/Fast/savePT.py">Save pyTrees (pyTree)</a>:</p></li>
 </ul>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - save (pyTree) -</span>
 <span class="kn">import</span> <span class="nn">Fast.PyTree</span> <span class="k">as</span> <span class="nn">Fast</span>
@@ -474,93 +568,8 @@ depending on the proc number of each zone (restart/restart_0.cgns, &#8230;).</p>
 <span class="n">b</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
 <span class="n">b</span> <span class="o">=</span> <span class="n">Cmpi</span><span class="o">.</span><span class="n">setProc</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">])</span>
-<span class="n">Fast</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">fileName</span><span class="o">=</span><span class="s1">&#39;t.cgns&#39;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">NP</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<hr class="docutils" />
-<dl class="py function">
-<dt class="sig sig-object py" id="Fast.PyTree.loadFile">
-<span class="sig-prename descclassname"><span class="pre">Fast.PyTree.</span></span><span class="sig-name descname"><span class="pre">loadFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'t.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mpirun</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Load tree from file. The tree must be already distributed (with &#8216;proc&#8217; nodes).
-The file can be a single CGNS file (&#8220;t.cgns&#8221;) or a splitted per processor
-CGNS file (&#8220;t/t_1.cgns&#8221;, &#8220;t/t_2.cgns&#8221;, &#8230;)</p>
-<p>If you run in sequential mode, mpirun must be false.
-The function returns a full tree.</p>
-<p>If you run in mpi mode, mpirun must be true.
-The function returns a partial tree on each processor.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fileName</strong> (<em>string</em>) &#8211; name of file for load</p></li>
-<li><p><strong>split</strong> (<em>string</em>) &#8211; &#8216;single&#8217; or &#8216;multiple&#8217;</p></li>
-<li><p><strong>mpirun</strong> (<em>boolean</em>) &#8211; true if python is run with mpirun</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>t</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>CGNS tree</p>
-</dd>
-</dl>
-<ul class="simple">
-<li><p><a class="reference external" href="Examples/Fast/loadFilePT.py">Load single pyTree (pyTree)</a>:</p></li>
-</ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - loadFile (pyTree) -</span>
-<span class="kn">import</span> <span class="nn">Fast.PyTree</span> <span class="k">as</span> <span class="nn">Fast</span>
-<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
-<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
-<span class="kn">import</span> <span class="nn">Converter.Mpi</span> <span class="k">as</span> <span class="nn">Cmpi</span>
-
-<span class="c1"># Save a file</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">Cmpi</span><span class="o">.</span><span class="n">setProc</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">Cmpi</span><span class="o">.</span><span class="n">setProc</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">])</span>
-<span class="n">Fast</span><span class="o">.</span><span class="n">saveFile</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">fileName</span><span class="o">=</span><span class="s1">&#39;t.cgns&#39;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">mpirun</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-<span class="c1"># Load it back</span>
-<span class="n">Fast</span><span class="o">.</span><span class="n">loadFile</span><span class="p">(</span><span class="n">fileName</span><span class="o">=</span><span class="s1">&#39;t.cgns&#39;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">mpirun</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<hr class="docutils" />
-<dl class="py function">
-<dt class="sig sig-object py" id="Fast.PyTree.saveFile">
-<span class="sig-prename descclassname"><span class="pre">Fast.PyTree.</span></span><span class="sig-name descname"><span class="pre">saveFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'t.cgns'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mpirun</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Save tree to file. The tree must be already distributed (with &#8216;proc&#8217; nodes).</p>
-<p>The file can be a single CGNS file (&#8220;t.cgns&#8221;) or a splitted per processor
-CGNS file (&#8220;t/t_1.cgns&#8221;, &#8220;t_2.cgns&#8221;, &#8230;)</p>
-<p>If you run in seq mode, mpirun must be false.</p>
-<p>If you run in mpi mode, mpirun must be true.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fileName</strong> (<em>string</em>) &#8211; name of file for load</p></li>
-<li><p><strong>split</strong> (<em>string</em>) &#8211; &#8216;single&#8217; or &#8216;multiple&#8217;</p></li>
-<li><p><strong>mpirun</strong> &#8211; true if python is run with mpirun</p></li>
-</ul>
-</dd>
-</dl>
-<ul class="simple">
-<li><p><a class="reference external" href="Examples/Fast/saveFilePT.py">Save single pyTree (pyTree)</a>:</p></li>
-</ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># - saveFile (pyTree) -</span>
-<span class="kn">import</span> <span class="nn">Fast.PyTree</span> <span class="k">as</span> <span class="nn">Fast</span>
-<span class="kn">import</span> <span class="nn">Converter.PyTree</span> <span class="k">as</span> <span class="nn">C</span>
-<span class="kn">import</span> <span class="nn">Generator.PyTree</span> <span class="k">as</span> <span class="nn">G</span>
-<span class="kn">import</span> <span class="nn">Converter.Mpi</span> <span class="k">as</span> <span class="nn">Cmpi</span>
-
-<span class="n">a</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">Cmpi</span><span class="o">.</span><span class="n">setProc</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">cart</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">Cmpi</span><span class="o">.</span><span class="n">setProc</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">t</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">newPyTree</span><span class="p">([</span><span class="s1">&#39;Base&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">])</span>
-<span class="n">Fast</span><span class="o">.</span><span class="n">saveFile</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">fileName</span><span class="o">=</span><span class="s1">&#39;t.cgns&#39;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">mpirun</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">tc</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">node2Center</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="n">Fast</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">fileName</span><span class="o">=</span><span class="s1">&#39;t.cgns&#39;</span><span class="p">,</span> <span class="n">tc</span><span class="o">=</span><span class="n">tc</span><span class="p">,</span> <span class="n">fileNameC</span><span class="o">=</span><span class="s1">&#39;tc.cgns&#39;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>

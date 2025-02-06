@@ -28,10 +28,11 @@ List of functions
    
    Fast.PyTree.setNum2Base
    Fast.PyTree.setNum2Zones
+   Fast.PyTree.loadTree
    Fast.PyTree.load
+   Fast.PyTree.saveTree
    Fast.PyTree.save
-   Fast.PyTree.loadFile
-   Fast.PyTree.saveFile
+   
 .. Fast.metric ..
 
 
@@ -41,7 +42,6 @@ Contents
 
 Actions
 --------------------------
-
 
 .. py:function:: Fast.PyTree.setNum2Base(a, numb)
 
@@ -56,28 +56,26 @@ Actions
 
     the **keys** of **numb** dictionary are:
 
-    - **'temporal_scheme'**: possible values are
+    - **'temporal_scheme'**: numerical scheme for time integration. Possible values are
 
         + 'explicit' (RK3 scheme, see p49 http://publications.onera.fr/exl-php/util/documents/accede_document.php)
-        + 'implicit' (BDF2 or BDF1 if local time stepping)
+        + 'implicit' (BDF2 (second order Gear scheme for global time stepping) or BDF1 (first order Euler scheme for local time stepping))
         + 'implicit_local' (see p107 http://publications.onera.fr/exl-php/docs/ILS_DOC/227155/DOC356618_s1.pdf)
         + default value is 'implicit'
 
-    - **'ss_iteration'**: 
+    - **'ss_iteration'**: Newton iterations for implicit schemes.
 
-        + Newton Iterations for implicit schemes
         + default value is 30
 
-    - **'modulo_verif'**: 
+    - **'modulo_verif'**: computation period for cfl (RK3 or BDF2), Newton convergence (all), and predictor estimation (implicit_local only)
 
-        + period of computation for: cfl (RK3 or BDF2), newton convergence (all temporal_scheme) and predictor estimation for 'implicit_local' scheme
         + default value is 200
 
     *Example of use:*
 
     * `Set numerics to base (pyTree) <Examples/Fast/setNum2BasePT.py>`_:
 
-    .. literalinclude:: ../build/Examples/Fast/setNum2BasePT.py
+    .. literalinclude:: ../../test/setNum2BasePT.py
 
 ------------------------------------------------------------------
 
@@ -94,251 +92,251 @@ Actions
 
     the **keys** of **numz** dictionary are:
 
-    - **'scheme'**: possible values are
+    - **'scheme'**: numerical scheme for convective flux reconstruction. Possible values are
  
-        + 'ausmpred' (see p49 https://tel.archives-ouvertes.fr/pastel-00834850/document)
-        + 'senseur'  (for DNS/LES, see p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
-        + 'roe'      (classical Roe fluxes)
+        + 'ausmpred' (AUSM+(P) reduced scheme, see p49 https://tel.archives-ouvertes.fr/pastel-00834850/document)
+        + 'senseur'  (AUSM+(P)-based hybrid centered/decentered sensor scheme for DNS/LES, see p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
+        + 'roe'      (classical Roe scheme)
         + default value is 'ausmpred'
 
-    - **'slope'**: possible values are
+    - **'slope'**: Slope reconstruction method. Possible values are
 
-        + 'o3'      (third order, see  p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
-        + 'o3sc'    (third order with limiter, see :download:`Lugrin scheme <documents/SCHEMA_lugrin.pdf>`)
-        + 'o5'      (fifth order)
-        + 'o5sc'    (fifth order with limiter)
-        + 'o1'      (first order,  only valid for roe scheme)
-        + 'minmod'  (second order with minmod limiter, only valid for roe scheme)
+        + 'o1'      (first order MUSCL reconstrution, only valid for roe scheme)
+        + 'minmod'  (second order MUSCL reconstrution with minmod limiter, only valid for roe scheme)
+        + 'o3'      (third order MUSCL reconstrution, see  p50 https://tel.archives-ouvertes.fr/pastel-00834850/document)
+        + 'o3sc'    (third order MUSCL reconstrution with slope limiter, see :download:`Lugrin scheme <documents/SCHEMA_lugrin.pdf>`)
+        + 'o5'      (fifth order MUSCL reconstrution)
+        + 'o5sc'    (fifth order MUSCL reconstrution with slope limiter)
         + default value is 'o3'
 
-    - **'senseurType'**:  only valid for 'senseur' scheme. Possible values are
+    - **'senseurType'**:  Sensor mode for the 'senseur' scheme. Possible values are
 
-        + 0 : correction for speed only
-        + 1 : correction for speed, density and pressure
+        + 0  (correction for speed only)
+        + 1  (correction for speed, density and pressure)
         
-    - **'motion'**: possible values are
+    - **'motion'**: Motion mode for moving walls. Possible values are
 
-        + 'none' (no motion)
-        + 'rigid' (rigid motion defined in Fast see p47 https://tel.archives-ouvertes.fr/tel-01011273/document)
-        + 'rigid_ext' (rigid motion defined externally by RigidMotion)
+        + 'none'        (no motion)
+        + 'rigid'       (rigid motion defined in Fast, see p47 https://tel.archives-ouvertes.fr/tel-01011273/document)
+        + 'rigid_ext'   (rigid motion defined externally by RigidMotion)
         + 'deformation' (ALE with deformation)
         + default value is 'none'
 
-    - **'time_step'**: 
+    - **'time_step'**: time step value
 
-        + value of time step
         + default value is 1e-4
 
-    - **'time_step_nature'**: 
+    - **'time_step_nature'**: time step nature. Possible values are 
 
         + 'global'
         + 'local'
         + default value is 'global'
 
-    - **'epsi_newton'**: 
+    - **'cfl'**: Courant-Friedrichs-Lewy condition (only for time_step_nature'='local')
 
-        + newton stopping criteria on Loo norm
-        + default value is 0.1
-    
-    - **'inj1_newton_tol'**:
-
-        + Newton tolerence for BCinj1 inflow condition
-        + default value is 1e-5
-
-    - **'inj1_newton_nit'**: 
-
-        + Newton Iteration for BCinj1 inflow condition
-        + default value is 10
-
-    - **'psiroe'**: 
-
-        + Harten correction
-        + default value is 0.1
-        
-    - **'cfl'**: 
-
-        + usefull only if 'time_step_nature'='local'
         + default value is 1
 
-    - **'prandtltb'**:
+    - **'epsi_newton'**: Newton stopping criteria based on Loo norm
 
-        + turbulent Prandtl number (only active for 'model'='NSTurbulent')
+        + default value is 0.1
+    
+    - **'inj1_newton_tol'**: Newton tolerence for BCinj1 inflow condition
+
+        + default value is 1e-5
+
+    - **'inj1_newton_nit'**: Newton iterations for BCinj1 inflow condition
+
+        + default value is 10
+
+    - **'psiroe'**: Harten correction parameter
+
+        + default value is 0.1
+
+    - **'prandtltb'**: turbulent Prandtl number (only active for 'model'='NSTurbulent')
+
         + default value is 0.92
 
-    - **'ransmodel'**: possible values are
+    - **'ransmodel'**: RANS turbulence models. Possible values are
 
-        + "SA"      (Standard Spalart-Allmaras model)
-        + "SA_comp" (SA with mixing layer compressible correction https://turbmodels.larc.nasa.gov/spalart.html)
+        + 'SA'      (Standard Spalart-Allmaras model)
+        + 'SA_comp' (SA with mixing layer compressibility correction, see https://turbmodels.larc.nasa.gov/spalart.html)
         + default value is 'SA'
     
-    - **'SA_add_RotCorr'**: possible values are
+    - **'SA_add_RotCorr'**: add rotation correction to the SA model (SA-R)
 
-        + True: add rotation correction to spalart model.
-        + False
-        + default value is False
+        + 0
+        + 1  (toggle rotation correction)
+        + default value is 0
 
-    - **'SA_add_LowRe'**: possible values are
+    - **'SA_add_LowRe'**: add low Reynolds correction to the SA model (SA-LRe)
 
-        + True: add low Reynolds correction to spalart model.
-        + False
-        + default value is False
+        + 0
+        + 1  (toggle low-Re correction)
+        + default value is 0
 
-    - **'DES'**: possible values are
+    - **'DES'**: toggle the turbulence models for DES simulations. Possible values are
 
-        + "none"    (SA computation)
-        + "zdes1"   (mode 1, https://link.springer.com/content/pdf/10.1007%2Fs00162-011-0240-z.pdf)
-        + "zdes1_w" (mode 1 by Chauvet)
-        + "zdes2"   (mode 2)
-        + "zdes2_w" (mode 2 by Chauvet)
-        + "zdes3"   (mode 3, see p118 https://tel.archives-ouvertes.fr/tel-01365361/document)
+        + 'none'    (SA computation)
+        + 'zdes1'   (ZDES mode 1, see https://link.springer.com/content/pdf/10.1007%2Fs00162-011-0240-z.pdf)
+        + 'zdes1_w' (ZDES mode 1 by Chauvet)
+        + 'zdes2'   (ZDES mode 2)
+        + 'zdes2_w' (ZDES mode 2 by Chauvet)
+        + 'zdes3'   (ZDES mode 3, see p118 https://tel.archives-ouvertes.fr/tel-01365361/document)
         + default value is 'none'
 
-    - **'DES_debug'**: possible values are
+    - **'DES_debug'**: toggle data extraction for DES post-analysis. Possible values are
 
-        + "none"    
-        + "active"  (save delta and fd functions in the FlowSolution#Centers node)
+        + 0    
+        + 1  (save delta and fd functions in the FlowSolution#Centers node)
         + default value is 'none'
 
-    - **'sgsmodel'**: possible values are
+    - **'sgsmodel'**: LES turbulence models. Possible values are
 
-        + "Miles"   (ViscosityEddy==LaminarViscosity)
-        + "smsm"    (Selective Mixed Scale model, Lenormand et al, (2000), LES of sub and supersonic channel flow at moderate Re. Int. J. Numer. Meth. Fluids, 32: 369–406)
+        + 'Miles'   (Monotonically integrated LES, for which ViscosityEddy==LaminarViscosity)
+        + 'smsm'    (Selective mixed scale model, see Lenormand et al https://doi.org/10.1002/(SICI)1097-0363(20000229)32:4%3C369::AID-FLD943%3E3.0.CO;2-6)
         + default value is 'Miles'
 
-    - **'extract_res'**: possible values are
+    - **'extract_res'**: toggle residual extraction during simulations. Possible values are
 
-        + 0   
+        + 0  (don't save)
         + 1  (save div(F_Euler-F_viscous) in the FlowSolution#Centers node)
         + 2  (save dqdt + div(F_Euler-F_viscous) in the FlowSolution#Centers node)
         + default value is 0
 
-    - **'source'**: possible values are
+    - **'source'**: toggle a source term for CFD simulations. Possible values are
 
         + 0   
         + 1  (read a source terme in the FlowSolution#Centers node. The conservative variables centers:Density_src, centers:MomentumX_src, centers:MomentumY_src, centers:MomentumZ_src and centers:EnergyStagnationDensity_src are used.)
         + default value is 0
 
-    - **'ratiom'**:
+    - **'ratiom'**: maximum cut-off for mut/mu
 
-        + cut-off max of mut/mu   
-        + default value is 10000.
+        + default value is 10000
 
     *Example of use:*
 
     * `Set numerics to zone (pyTree) <Examples/Fast/setNum2ZonesPT.py>`_:
 
-    .. literalinclude:: ../build/Examples/Fast/setNum2ZonesPT.py
-
-..  ----------------------------------------------------
-.. ..py:function:: Fast.PyTree.metric(a)
-.. Compute the metric needed by the solvers.
-.. :param a: input data
-.. :type a: Zone, Base, pyTree
-.. :return: a, metrics
-.. * `Compute metric for zones (pyTree) <Examples/Fast/metricPT.py>`_:
-.. .. literalinclude:: ../build/Examples/Fast/metricPT.py
-
+    .. literalinclude:: ../../test/setNum2ZonesPT.py
 
 ----------------------------------------------------
 
-.. py:function:: Fast.PyTree.load(fileName='t.cgns', fileNameC='tc.cgns', fileNameS='tstat.cgns', split='single')
+.. py:function:: Fast.PyTree.loadTree(fileName='t.cgns', split='single', graph=False)
+
+    Load a tree from a file (solution tree t, connectivity tree tc, or statistics tree ts). The file can be a single CGNS file (e.g. 't.cgns'), or can be split with one file per processor (e.g. 't/t_1.cgns', 't/t_2.cgns', etc.).
     
-    Load computation tree t from file. 
-    Optionaly load tc (connectivity file) or tstat (statistics file).
-    Returns also the graph as a dictionary {'graphID', 'graphIBC', 'procDict', 'procList'}.
-    If split='single', a single file is loaded.
-    If split='multiple', mulitple file format is loaded (restart/restart_0.cgns, ...).
+    When executed in sequential mode, the function returns a complete tree.
 
-    :param a: input data
-    :type a: pyTree
-    :param fileName: name of file for save
+    When executed in mpi mode, the function returns a partial tree on each processor.
+
+    .. warning:: in MPI mode, the tree must already be distributed with the correct number of processors (with 'proc' nodes within the zones).
+
+    If graph is true, create and return the communication graph for Chimera and abutting transfers (for MPI use only). The dictionary is of the form of: graph={'graphID':[], 'graphIBC':[], 'procDict':[], 'procList':[]}.
+
+    .. warning:: to create the communication graph, the loaded tree must be the connectivity tree (tc.cgns), not the solution tree (t.cgns).
+
+    :param fileName: name of the file to load
     :type fileName: string
-    :param split: 'single' or 'multiple'
+    :param split: file format: 'single' or 'multiple'
     :type split: string
-    :return: t, tc, ts, graph
-    :rtype: tuple
+    :param graph: true for returning communication graph
+    :type graph: boolean
+    :return: t or tc or ts or (tc, graph)
 
-    * `Load pyTree (pyTree) <Examples/Fast/loadPT.py>`_:
+    * `Load single pyTree (pyTree) <Examples/Fast/loadTreePT.py>`_:
 
-    .. literalinclude:: ../build/Examples/Fast/loadPT.py
+    .. literalinclude:: ../../test/loadTreePT.py
+
+    .. note:: since Fast 4.1, loadFile and loadTree have been merged.
+
+----------------------------------------------------
+
+.. py:function:: Fast.PyTree.saveTree(t, fileName='restart.cgns', split='single', compress=0)
+    
+    Save a tree to a file (solution tree t, connectivity tree tc, or statistics tree ts). The file can be a single CGNS file (e.g. 't.cgns'), or can be split with one file per processor (e.g. 't/t_1.cgns', 't/t_2.cgns', etc.). The tree is also cleared of unnecessary flow fields and temporary work arrays.
+    
+    .. warning:: in MPI mode, the tree must already be distributed with the correct number of processors (with 'proc' nodes within the zones).
+
+    Before saving the file, the flow fields can be compressed using the compress parameter.
+    
+    :param t: tree to save
+    :type t: tree
+    :param fileName: name of the file to load
+    :type fileName: string
+    :param split: file format: 'single' or 'multiple'
+    :type split: string
+    :param compress: compression parameter: 0 (none), 1 (cart only), or 2 (all)
+    :type compress: integer
+    
+    * `Save single pyTree (pyTree) <Examples/Fast/saveTreePT.py>`_:
+
+    .. literalinclude:: ../../test/saveTreePT.py
+
+    .. note:: since Fast 4.1, saveFile and saveTree have been merged.
+
+----------------------------------------------------
+
+.. py:function:: Fast.PyTree.load(fileName='t.cgns', fileNameC=None, fileNameS=None, split='single')
+
+    Load all trees at once (solution tree t, connectivity tree tc, and/or statistics tree ts), using multiple calls of the Fast.PyTree.loadTree function. The files can be single CGNS files (e.g. 't.cgns'), or can be split with one file per processor (e.g. 't/t_1.cgns', 't/t_2.cgns', etc.).
+
+    .. warning:: in MPI mode, the trees must already be distributed with the correct number of processors (with 'proc' nodes within the zones).
+    
+    If fileNameC is not None, the connectivity tree is loaded and the communication graph is automatically created.
+
+    If filenameS is not None, the statistics tree is loaded.
+
+    :param fileName: name of the solution file to load
+    :type fileName: string
+    :param fileNameC: name of the connectivity file to load
+    :type fileNameC: string
+    :param fileNameS: name of the statistics file to load
+    :type fileNameS: string
+    :param split: file format: 'single' or 'multiple'
+    :type split: string
+    :return: (t, tc, ts, graph)
+
+    * `Load pyTrees (pyTree) <Examples/Fast/loadPT.py>`_:
+
+    .. literalinclude:: ../../test/loadPT.py
 
 
 ------------------------------------------------------------------
 
-.. py:function:: Fast.PyTree.save(t, fileName='restart.cgns', split='single', temporal_scheme='implicit', NP=0)
+.. py:function:: Fast.PyTree.save(t, fileName='restart.cgns', tc=None, fileNameC='tc_restart.cgns', ts=None, fileNameS='tstat_restart.cgns', split='single', compress=0)
     
-    Save computation tree t in file. 
-    If you run in mpi, NP must be the number of processor.
-    If you run in seq mode, NP must be 0 or a negative number.
-    If split='single', a single file is written.
-    If split='multiple', different files are created
-    depending on the proc number of each zone (restart/restart_0.cgns, ...).
+    Save all trees at once (solution tree t, connectivity tree tc, and/or statistics tree ts), using multiple calls of the Fast.PyTree.saveTree function. The files can be single CGNS files (e.g. 't.cgns'), or can be split with one file per processor (e.g. 't/t_1.cgns', 't/t_2.cgns', etc.). The trees are also cleared of unnecessary flow fields and temporary work arrays.
+
+    .. warning:: in MPI mode, the trees must already be distributed with the correct number of processors (with 'proc' nodes within the zones).
     
-    :param a: input data
-    :type a: pyTree
-    :param fileName: name of file for save
+    If tc is not None, the connectivity tree is saved.
+
+    If ts is not None, the statistics tree is saved.
+
+    Before saving the file, the flow fields can be compressed using the compress parameter.
+    
+    :param t: updated solution tree to save
+    :type t: tree
+    :param fileName: name of the solution file
     :type fileName: string
-    :param split: 'single' or 'multiple'
+    :param tc: updated connectivity tree to save
+    :type tc: tree
+    :param fileNameC: name of the connectivity file
+    :type fileNameC: string
+    :param ts: updated statistics tree to save
+    :type ts: tree
+    :param fileNameS: name of the statistics file
+    :type fileNameS: string
+    :param split: file format: 'single' or 'multiple'
     :type split: string
-    :param NP: number of processors
-    :type NP: int
+    :param compress: compression parameter: 0 (none), 1 (cart only), or 2 (all)
+    :type compress: integer
 
     *Example of use:*
 
-    * `Save pyTree (pyTree) <Examples/Fast/savePT.py>`_:
+    * `Save pyTrees (pyTree) <Examples/Fast/savePT.py>`_:
 
-    .. literalinclude:: ../build/Examples/Fast/savePT.py
-
-----------------------------------------------------
-
-.. py:function:: Fast.PyTree.loadFile(fileName='t.cgns', split='single', mpirun=False)
-    
-    Load tree from file. The tree must be already distributed (with 'proc' nodes).
-    The file can be a single CGNS file ("t.cgns") or a splitted per processor 
-    CGNS file ("t/t_1.cgns", "t/t_2.cgns", ...)
-    
-    If you run in sequential mode, mpirun must be false.
-    The function returns a full tree.
-
-    If you run in mpi mode, mpirun must be true.
-    The function returns a partial tree on each processor.
-
-    :param fileName: name of file for load
-    :type fileName: string
-    :param split: 'single' or 'multiple'
-    :type split: string
-    :param mpirun: true if python is run with mpirun
-    :type mpirun: boolean
-    :return: t
-    :rtype: CGNS tree
-
-    * `Load single pyTree (pyTree) <Examples/Fast/loadFilePT.py>`_:
-
-    .. literalinclude:: ../build/Examples/Fast/loadFilePT.py
-
-----------------------------------------------------
-
-.. py:function:: Fast.PyTree.saveFile(fileName='t.cgns', split='single', mpirun=False)
-    
-    Save tree to file. The tree must be already distributed (with 'proc' nodes).
-
-    The file can be a single CGNS file ("t.cgns") or a splitted per processor 
-    CGNS file ("t/t_1.cgns", "t_2.cgns", ...)
-    
-    If you run in seq mode, mpirun must be false.
-    
-    If you run in mpi mode, mpirun must be true.
-    
-    :param fileName: name of file for load
-    :type fileName: string
-    :param split: 'single' or 'multiple'
-    :type split: string
-    :param mpirun: true if python is run with mpirun
-    :type mpirune: boolean
-    
-    * `Save single pyTree (pyTree) <Examples/Fast/saveFilePT.py>`_:
-
-    .. literalinclude:: ../build/Examples/Fast/saveFilePT.py
+    .. literalinclude:: ../../test/savePT.py
 
 
 .. toctree::

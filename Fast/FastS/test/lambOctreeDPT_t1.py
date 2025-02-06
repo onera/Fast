@@ -37,7 +37,7 @@ Cmpi.convertPyTree2File(t, LOCAL+'/t1.cgns')
 Cmpi.convertPyTree2File(tc, LOCAL+'/t1c.cgns')
 #sys.exit()
 Cmpi.barrier()
-t,tc,ts,graph=Fast.load(LOCAL+'/t1.cgns', LOCAL+'/t1c.cgns', split='single', restart=False)
+t,tc,ts,graph=Fast.load(LOCAL+'/t1.cgns', LOCAL+'/t1c.cgns', split='single')
 
 # Init
 t = C.addState(t, 'GoverningEquations', 'Euler')
