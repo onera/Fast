@@ -63,11 +63,6 @@ Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 # Compute
 for it in range(1,50): FastS._compute(t, metrics, it, tc)
 
-# To match the ref
-for z in Internal.getZones(t):
-    cont = Internal.getNodeFromName(z, '.Solver#define')
-    Internal.createUniqueChild(cont, 'DES_debug', 'DataArray_t', 'active')
-
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 test.testT(t,1)
