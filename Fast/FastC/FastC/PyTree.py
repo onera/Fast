@@ -143,8 +143,8 @@ def _reorder(t, tc=None):
 
     if tc is not None:
         #reordone les bases, sinon souci potentiel en MPi si ordre base != entre proc
-        Internal._sortByName(tc,recursive=False)
-        Internal._sortByName(t, recursive=False)
+        #Internal._sortByName(tc,recursive=False)
+        #Internal._sortByName(t, recursive=False)
 
         #reordone les zones de tc par taille decroissante dans chaque base pour optim openmp
         bases_tc = Internal.getNodesFromType1(tc, 'CGNSBase_t')
@@ -180,7 +180,7 @@ def _reorder(t, tc=None):
         bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
         for base in bases:
 
-            zones = Internal.getNodesFromType1(base,'Zone_t')
+            zones = Internal.getNodesFromType1(base, 'Zone_t')
 
             #on cherche le matching entre base t et tc
             c  =0
