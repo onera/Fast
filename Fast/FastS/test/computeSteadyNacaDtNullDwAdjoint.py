@@ -130,8 +130,8 @@ print('Q2Inf = %f , Href = %f'%(Q2Inf,Href))
 
 #===================================================================================
 
-#FastC.save(t_m129, DOSSIER+'restart_129'+'.cgns', split='single', NP=NP)
+#FastC.save(t_m129, DOSSIER+'restart_129'+'.cgns', split='single')
 C.convertPyTree2File(t_eff, DOSSIER+'effort_m129_adj'+SUFFIXE+'.cgns')
-FastC.save(t_m129, DOSSIER+'restart_129_bis'+'.cgns', split='single', NP=NP)
+FastC.save(t_m129, DOSSIER+'restart_129_bis'+'.cgns', split='single')
 
 #===================================================================================

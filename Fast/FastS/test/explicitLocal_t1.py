@@ -52,7 +52,7 @@ t = T.makeDirect(t)
 ### Construction du tc ###
 tc = C.node2Center(t)
 tc = X.setInterpData3(t, tc, nature=1, loc='centers', storage='inverse',
-                      sameName=1, method='lagrangian',dim=2)
+                      sameName=1, method='lagrangian', dim=2)
 tc = C.rmVars(tc, 'FlowSolution')
 tc = C.rmVars(tc, 'CellN')
 
@@ -87,7 +87,7 @@ nit=100; times = 0.
 timeStep = numz['time_step']
 for it in range(nit):
     #FastS._computeguillaume1(t, metrics, it,tc,layer='c')
-    FastS._compute(t, metrics, it,tc,layer='Python')
+    FastS._compute(t, metrics, it, tc, layer='Python')
     if it%10 == 0:
         print('- %d - %f'%(it, times))
         FastS.display_temporal_criteria(t, metrics, it)

@@ -27,7 +27,7 @@ nit = 500; time = 0.
 #nit = 10; time = 0.
 for it in range(nit):
     FastS._compute(t, metrics, it)
-    if it%50 == 0:
+    if it%100 == 0:
         print('- %d - %g'%(it, time))
         FastS.display_temporal_criteria(t, metrics, it, format='double')
     time += numz['time_step']

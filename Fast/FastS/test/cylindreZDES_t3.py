@@ -54,8 +54,8 @@ numb["ss_iteration"]       = 20
 numz = {}
 numz["time_step"]          = 0.0001
 numz["scheme"]             = "ausmpred"
-numz["DES"]             = "zdes1_w"
-numz["DES_debug"]       = "active"
+numz["DES"]                = "zdes1_w"
+numz["DES_debug"]          = 1
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 # Prim vars, solver tag, compact, metrics

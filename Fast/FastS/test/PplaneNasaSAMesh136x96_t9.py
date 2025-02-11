@@ -56,9 +56,9 @@ numz = {'ssdom_IJK': [600, 30, 20000],
         'time_step': 0.00000152280,
         'time_step_nature': 'local',
         'cfl': 100,
-        'scheme':'roe',
-        'slope':'o3',
-        'wallmodel_sample':sample,
+        'scheme': 'roe',
+        'slope': 'o3',
+        'wallmodel_sample': sample,
         'epsi_newton': 0.02}
 Fast._setNum2Zones(t, numz) ; Fast._setNum2Base(t, numb)
 
@@ -68,7 +68,6 @@ t1=Internal.copyTree(t)
 Internal._rmNodesByName(t1, '.Solver#Param')
 Internal._rmNodesByName(t1, '.Solver#ownData')
 test.testT(t1, 1)
-#stop
 
 nit = 500; time = 0.
 #nit = 1; time = 0.
