@@ -334,7 +334,7 @@ def allocate_metric(t, nghost, verbose=1):
             else:
                 metrics.append(FastS.fasts.allocate_metric(z, nssiter, verbose))
         #else: metrics.append(FastP.fastp.allocate_metric(z, nssiter, verbose))
-                
+
     if verbose == 0: # bilan only
         total = len(zones)
         if cpt[0] > 0: print("Info: typezones: 3D curvilinear, %2.2f%% (%d/%d)"%((cpt[0]/total*100.), cpt[0], total))
