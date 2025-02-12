@@ -113,7 +113,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
-    metrics = allocate_metric(t, nghost)
+    metrics = allocate_metric(t, nghost, verbose)
     #print("apres alocate ", flush=True)
 
     metrics_str=[]; metrics_unstr=[]; metrics_ns=[]; metrics_lbm=[]
@@ -297,13 +297,15 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
 #==============================================================================
 # alloue retourne la metrique
 #==============================================================================
-def allocate_metric(t, nghost):
+def allocate_metric(t, nghost, verbose=1):
     zones        = Internal.getZones(t)
     dtloc        = Internal.getNodeFromName2(t, '.Solver#dtloc')
     dtloc_numpy  = Internal.getValue(dtloc)
     nssiter      = int(dtloc_numpy[0])
 
     metrics=[]; motion ='none'
+    cpt = [0,0,0,0] # to track type 0,1,2,3
+
     for z in zones:
         b = Internal.getNodeFromName2(z, 'motion')
         if b is not None: motion = Internal.getValue(b)
@@ -321,13 +323,26 @@ def allocate_metric(t, nghost):
         if ztype == 'Structured':
             param_int = Internal.getNodeFromName2(z, 'Parameter_int')[1]
 
+            if verbose == 0:
+                type_zone = param_int[25]
+                cpt[type_zone] += 1
+
             if param_int[27] == 4:   #IFLOW=4
                 if FASTLBM:
                     metrics.append(FastLBM.fastaslbm.allocate_metric(z, nssiter))
                 else: raise ValueError("FastLBM needed but not installed.")
             else:
-                metrics.append(FastS.fasts.allocate_metric(z, nssiter))
-        #else: metrics.append(FastP.fastp.allocate_metric(z, nssiter))
+                metrics.append(FastS.fasts.allocate_metric(z, nssiter, verbose))
+        #else: metrics.append(FastP.fastp.allocate_metric(z, nssiter, verbose))
+                
+    if verbose == 0: # bilan only
+        total = len(zones)
+        if cpt[0] > 0: print("Info: typezones: 3D curvilinear, %2.2f%% (%d/%d)"%((cpt[0]/total*100.), cpt[0], total))
+        if cpt[1] > 0: print("Info: typezones: 3D homogenous k direction with constant step, %2.2f%% (%d/%d)"%((cpt[1]/total*100.), cpt[1], total))
+        if cpt[2] > 0: print("Info: typezones: 3D Cartesian with constant step, %2.2f%% (%d/%d)"%((cpt[2]/total*100.), cpt[2], total))
+        if cpt[3] > 0: print("Info: typezones: 2D curvilinear, %2.2f%% (%d/%d)"%((cpt[3]/total*100.), cpt[3], total))
+        if sum(cpt) < total: print("Info: typezones: other, %2.2f%% (%d/%d)"%((sum(cpt)/total*100.), sum(cpt), total))
+
     return metrics
 
 #==============================================================================

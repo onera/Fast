@@ -797,7 +797,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
 
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
-    metrics = allocate_metric(t)
+    metrics = allocate_metric(t, verbose)
 
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t)
