@@ -903,7 +903,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         var = Internal.getNodesFromType1(sol[0] , 'DataArray_t')
         varmy=[]
         for v in var: varmy.append('centers:'+v[0])
-        FastC._compact(tmy, fields=varmy)
+        FastC._compact(tmy, fields=varmy, dtloc=dtlocPy)
 
     #
     # remplissage ghostcells
