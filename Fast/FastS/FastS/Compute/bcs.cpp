@@ -40,10 +40,8 @@
                if(nd>=0){ correct_coins_(nd,  param_int[nd], ipt_inddm_omp , iptro_CL[nd]); }
 	    }//autorisation
 
-
-       //Reinitialisation verrou omp
-       //
-        E_Int l =  ntask*mx_synchro*Nbre_thread_actif  + (ithread_loc-1)*mx_synchro;
-        for (E_Int i = 0;  i < mx_synchro ; i++) { ipt_lok[ l + i ]  = 0; }
+      //Reinitialisation verrou omp rhs
+      E_Int l =  ntask*mx_synchro*Nbre_thread_actif  + (ithread_loc-1)*mx_synchro;
+      for (E_Int i = 0;  i < mx_synchro ; i++) { ipt_lok[ l + i ]  = 0; }
 
      }//loop zone
