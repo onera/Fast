@@ -242,9 +242,11 @@ E_Int rank =0;
 
                    // calcul metric si maillage deformable
                    //
-#include           "../FastS/FastS/Metric/cp_metric.cpp"
+#include           "FastS/Metric/cp_metric.cpp"
                    }
 
+     // init verrou omp
+#include  "FastS/Compute/verrou_lhs_init.cpp"
         //---------------------------------------------------------------------
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
