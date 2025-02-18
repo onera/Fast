@@ -598,7 +598,9 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   FldArrayI shift_lu(mx_nidom*6*threadmax_sdm); E_Int* ipt_shift_lu   =  shift_lu.begin();
   FldArrayI ind_dm_omp(      12*threadmax_sdm); E_Int* ipt_ind_dm_omp =  ind_dm_omp.begin();
 
-  FldArrayI tab_verrou_lhs(2*mx_nidom*threadmax_sdm); E_Int* verrou_lhs =  tab_verrou_lhs.begin();
+  FldArrayI tab_verrou_lhs(2*mx_nidom*threadmax_sdm);
+  tab_verrou_lhs.setAllValuesAtNull(); //init value a zero
+  E_Int* verrou_lhs = tab_verrou_lhs.begin();
 
   FldArrayF cfl( nidom*3*threadmax_sdm); E_Float* ipt_cfl = cfl.begin();
 

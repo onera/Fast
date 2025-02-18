@@ -19,13 +19,6 @@
             //printf("topo %d %d %d %d %d \n",ipt_topo_omp[0], ipt_topo_omp[1],  ipt_topo_omp[2], Nbre_thread_actif_loc, nd );
             //printf("shif %d %d %d  \n", shift_zone,shift_coe, shift_wig );
 
-            //Init verrou rhs pour chaque sous zone et chaque thread actif:  init val to zero
-            E_Int type = 4;
-            E_Int* verrou_lhs_thread= verrou_lhs +             ntask*Nbre_thread_actif + ithread_loc -1; 
-            verrou_c_( verrou_lhs_thread, type);
-            verrou_lhs_thread       = verrou_lhs + (nbtask + ntask)*Nbre_thread_actif + ithread_loc -1; //pour calcul residu avant LU
-            verrou_c_( verrou_lhs_thread, type );
-
             //  Revoir cet adressage si scater et  socket>1 et ou nidom >1
             E_Int* ipt_lok_thread   = ipt_lok   + ntask*mx_synchro*Nbre_thread_actif;
 
@@ -58,19 +51,17 @@
 				  iptdrodm + shift_zone   , iptcoe  + shift_coe     , iptdelta[nd]        , iptro_res[nd]  , iptsrc[nd]   );
 
             //Flush Rhs
-            E_Int size = param_int[nd][NEQ]*param_int[nd][NDIMDX];
+            //E_Int size = param_int[nd][NEQ]*param_int[nd][NDIMDX];
             //flush_real_( size , iptdrodm + shift_zone);
             if(nitcfg==1)
             {
-              size = param_int[nd][NEQ_COE]*param_int[nd][NDIMDX];
+              E_Int size = param_int[nd][NEQ_COE]*param_int[nd][NDIMDX];
               flush_real_( size , iptcoe + shift_coe);
             }
-            //size = param_int[nd][NDIMDX];
-            //flush_real_( size , iptmut[nd]);
-            //#pragma omp flush
+
             //Go verrou rhs pour chaque sous zone et chaque thread actif: valeur mise a un
-            type             = 1;
-            verrou_lhs_thread= verrou_lhs + ntask*Nbre_thread_actif + ithread_loc -1; 
+            E_Int type             = 1;
+            E_Int* verrou_lhs_thread= verrou_lhs + ntask*Nbre_thread_actif + ithread_loc -1; 
             verrou_c_( verrou_lhs_thread, type );
 
             if(ithread_loc==1 && lexit_lu==0 && nitcfg*nitrun >15 and (nitcfg < 3 or nitcfg == nssiter-1) ){ timer_omp[cpu_perzone]+=1; } //nbre echantillon
