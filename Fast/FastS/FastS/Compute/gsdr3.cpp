@@ -232,40 +232,36 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
    E_Int* ipt_ind_dm_omp_thread  = ipt_ind_dm_socket  + 6;
 
    E_Int* ipt_nidom_loc, nb_subzone;
-     /****************************************************
+   /****************************************************
       -----Boucle sous-iteration
-     ****************************************************/
-        E_Int nbtask = ipt_omp[nitcfg-1]; 
-        E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+    ****************************************************/
+    E_Int nbtask = ipt_omp[nitcfg-1]; 
+    E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
 
-        if( nitcfg == 1)
-                  {
-                     //mise a jour metric et vent ale zone cart et 3dhom(3dfull et 2d a la volee)
-                     for (E_Int ntask = 0; ntask < nbtask; ntask++)
-                         {
-                            E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
-                            E_Int nd = ipt_omp[ pttask ];
-                           if(param_int[nd][LALE]==1) //maillage indeformable
-                             {
-                               mjr_ale_3dhomocart_(nd, param_int[nd] ,   param_real[nd]   ,
-                                                  socket             ,  Nbre_socket       , ithread_sock        , thread_parsock,
-                                                  ipt_ind_dm_socket  , ipt_topology_socket,
-                                                  iptx[nd]           , ipty[nd]           , iptz[nd]            ,
-                                                  ipti[nd]           , iptj[nd]           , iptk[nd]            ,
-                                                  ipti0[nd]          , iptj0[nd]          , iptk0[nd]           , iptvol[nd] ,
-                                                  iptventi[nd]       , iptventj[nd]       , iptventk[nd]        );
-                                 //modifier mjr_ale_3dhomocart_ pour faire sauter barrier
-                                 #pragma omp barrier
-                             }
-                         }//zone
-
-
-                   // calcul metric si maillage deformable
-                   //  
-#include           "FastS/Metric/cp_metric.cpp"
+    if( nitcfg == 1)
+        {
+           //mise a jour metric et vent ale zone cart et 3dhom(3dfull et 2d a la volee)
+           for (E_Int ntask = 0; ntask < nbtask; ntask++)
+               {
+                 E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+                 E_Int nd = ipt_omp[ pttask ];
+                 if(param_int[nd][LALE]==1) //maillage indeformable
+                   {
+                     mjr_ale_3dhomocart_(nd, param_int[nd] ,   param_real[nd]   ,
+                                        socket             ,  Nbre_socket       , ithread_sock        , thread_parsock,
+                                        ipt_ind_dm_socket  , ipt_topology_socket,
+                                        iptx[nd]           , ipty[nd]           , iptz[nd]            ,
+                                        ipti[nd]           , iptj[nd]           , iptk[nd]            ,
+                                        ipti0[nd]          , iptj0[nd]          , iptk0[nd]           , iptvol[nd] ,
+                                        iptventi[nd]       , iptventj[nd]       , iptventk[nd]        );
+                       //modifier mjr_ale_3dhomocart_ pour faire sauter barrier
+                       #pragma omp barrier
                    }
+               }//zone
 
-
+           // calcul metric si maillage deformable
+#include   "FastS/Metric/cp_metric.cpp"
+         }
         //---------------------------------------------------------------------
         // -----Boucle sur num.les domaines de la configuration
         // ---------------------------------------------------------------------
@@ -294,12 +290,9 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
              }
 #include "FastS/Compute/rhs.cpp"
           } 
+
 #ifdef Conservatif
 #include   "FastS/Compute/cp_debitIBM.cpp"
-#endif
-
-#if defined __GNUC__ && defined _OPENMP
-#pragma omp barrier
 #endif
 
           //
@@ -318,7 +311,6 @@ if(nitcfg==1){param_real[0][TEMPS] = 0.0;}
 	  {
 #include   "FastS/Compute/Linear_solver/lhs.cpp"
           }
-
 
           // LUSGS
           else
@@ -439,12 +431,15 @@ E_Int lrhs=0; E_Int lcorner=0;
 
    E_Int Nbre_thread_actif_loc, ithread_loc;
    //
-   //Apply BC (parcour Zones) + reinitialisation verrou pour calcul rhs
+   //Apply BC (parcour Zones)
    //
    if(lexit_lu ==0 && layer_mode>=1)
    { 
     #include   "FastS/Compute/bcs.cpp"
    }
+
+  //reinitialisation verrou pour calcul rhs et lhs
+#include  "FastS/Compute/verrou_lhs_init.cpp"
 
  }//fin zone omp
 
