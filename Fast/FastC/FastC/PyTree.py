@@ -3045,7 +3045,7 @@ def _BCcompact(t):
 def _setTimeLevels(t, verbose=0):
     """ Assigns to each zone in t the corresponding time level."""
     dict_info_zones = {}
-    
+
     # 1st step: searching for minimum dx in the tree
     hmin = 1.e30
     for z in Internal.getZones(t):
@@ -3060,7 +3060,7 @@ def _setTimeLevels(t, verbose=0):
         max_level = 1
         for zname in dict_info_zones:
             zone_level = round(numpy.log2(dict_info_zones[zname][0]/hmin)) + 1
-            dict_info_zones[zname].append(zone_level) 
+            dict_info_zones[zname].append(zone_level)
             if verbose:
                 print("Zone", zname, "with grid spacing dx =", dict_info_zones[zname][0], "has level = ", zone_level)
             max_level = max(max_level, zone_level)
@@ -3068,16 +3068,16 @@ def _setTimeLevels(t, verbose=0):
         expected_levels = set(range(1, max_level + 1))
         present_levels = set(zone_info[1] for zone_info in dict_info_zones.values())
         if expected_levels != present_levels:
-            raise ValueError(f"FastC._setTimeLevels: Some time levels between 1 and {max_level} are missing.")                                                  
-        
+            raise ValueError(f"FastC._setTimeLevels: Some time levels between 1 and {max_level} are missing.")
+
         # 3rd step: for each zone, the time level is added to '.Solver#define'
         bases = Internal.getNodesFromType1(t, 'CGNSBase_t')
         for b in bases:
             model_base = "Unknown"
             # Retrieve 'GoverningEquations' from base
             governing_eq_node = Internal.getNodeFromName2(b, 'GoverningEquations')
-            if governing_eq_node is not None: model_base = Internal.getValue(governing_eq_node)        
-            
+            if governing_eq_node is not None: model_base = Internal.getValue(governing_eq_node)
+
             zones = Internal.getNodesFromType1(b, 'Zone_t')
             for z in zones:
                 model_zone = model_base
@@ -3085,10 +3085,10 @@ def _setTimeLevels(t, verbose=0):
                 governing_eq_node = Internal.getNodeFromName2(z, 'GoverningEquations')
                 if governing_eq_node is not None: model_zone = Internal.getValue(governing_eq_node)
                 solver_define_node = Internal.getNodeFromName1(z, '.Solver#define')
-                
+
                 ## WARNING: Currently, the time level is added only for  LBM zones
                 if model_zone=="LBMLaminar":
-                    Internal.createUniqueChild(solver_define_node, 'niveaux_temps', 'DataArray_t', dict_info_zones[z[0]][-1])  
+                    Internal.createUniqueChild(solver_define_node, 'niveaux_temps', 'DataArray_t', dict_info_zones[z[0]][-1])
                     if verbose:
                         print(f"niveau_temps has been set to {dict_info_zones[z[0]][-1]} for zone {z[0]}")
 
