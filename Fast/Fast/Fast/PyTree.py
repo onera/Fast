@@ -81,7 +81,7 @@ def warmup(t, tc=None, graph=None, infos_ale=None, Adjoint=False, tmy=None, list
     # Necessaire avant _buildOwnData puisque stockes dans param_int/param_real
     if FASTLBM:
         FastLBM._setTimeStepAndRelaxTime(t,verbose)
-        FastLBM._setTimeLevels(t, verbose)
+    FastC._setTimeLevels(t, verbose)
 
     # Construction param_int et param_real des zones
     FastC._buildOwnData(t, Padding)
