@@ -110,4 +110,13 @@ Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
 #C.convertPyTree2File(t, 'out.cgns')
 
+####
+# The following lines are to avoid regression since the removal of sortByName in FastS warmup
+####
+Internal._sortByName(t, recursive=False)
+cgnslibver = Internal.getNodeByType(t, 'CGNSLibraryVersion_t')
+Internal._rmNodesByType(t, 'CGNSLibraryVersion_t')
+Internal.addChild(t, cgnslibver, 0)
+####
+
 test.testT(t, 1)
