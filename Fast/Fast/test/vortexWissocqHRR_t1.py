@@ -9,7 +9,7 @@ import FastC.PyTree as FastC
 import Fast.PyTree as Fast
 import FastASLBM.PyTree as FastLBM
 import Connector.PyTree as X
-import Apps.Fast.LBM as Apps_LBM
+import Fast.LBM as Apps_LBM
 import KCore.test as test
 
 import numpy
