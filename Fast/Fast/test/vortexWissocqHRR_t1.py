@@ -9,13 +9,11 @@ import FastC.PyTree as FastC
 import Fast.PyTree as Fast
 import FastASLBM.PyTree as FastLBM
 import Connector.PyTree as X
-import Apps.Fast.LBM as App
+import Fast.LBM as Apps_LBM
 import KCore.test as test
 
 import numpy
 import time
-
-myApp = App.LBM(format='single')
 
 #==========================================
 # Generation du maillage
@@ -27,7 +25,7 @@ z_min = -4*dx
 
 a1 = G.cart((x_min,x_min,z_min), (dx,dx,dx), (Nx,Ny,Nz))
 t = C.newPyTree(['Base',a1])
-t,tc = myApp.prepare(t, t_out=None, tc_out=None, NP=0, translation=[(Nx-1)*dx, (Ny-1)*dx,(Nz-1)*dx],NG=2)
+t,tc = Apps_LBM.prepare(t, t_out=None, tc_out=None, NP=0, translation=[(Nx-1)*dx, (Ny-1)*dx,(Nz-1)*dx],NG=2)
 
 test.testT(t,1); test.testT(tc,2)
 

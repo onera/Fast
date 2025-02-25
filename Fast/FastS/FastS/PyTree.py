@@ -264,12 +264,14 @@ def _compute_matvec(t, metrics, no_vect_test, tc=None, graph=None):
 #==============================================================================
 # alloue retourne la metrique
 #==============================================================================
-def allocate_metric(t):
+def allocate_metric(t, verbose=1):
 
     own          = Internal.getNodeFromName1(t   , '.Solver#ownData')  # noeud
     dtloc        = Internal.getNodeFromName1(own , '.Solver#dtloc')    # noeud
     dtloc_numpy  = Internal.getValue(dtloc)
     nssiter      = int(dtloc_numpy[0])
+
+    cpt = [0,0,0,0] # to track type 0,1,2,3
 
     zones  = Internal.getZones(t)
     metrics=[]
@@ -286,7 +288,19 @@ def allocate_metric(t):
                 grid_init = Internal.copyTree(grids[0])
                 grid_init[0] = 'GridCoordinates#Init'
                 Internal.addChild(z, grid_init, pos=-1) # last
-        metrics.append(fasts.allocate_metric(z, nssiter))
+        metrics.append(fasts.allocate_metric(z, nssiter, verbose))
+        if verbose == 0:
+            param_int = Internal.getNodeFromName1(num, "Parameter_int")[1]
+            type_zone = param_int[25]
+            cpt[type_zone] += 1
+
+    if verbose == 0: # bilan only
+        total = len(zones)
+        if cpt[0] > 0: print("Info: typezones: 3D curvilinear, %2.2f%% (%d/%d)"%((cpt[0]/total*100.), cpt[0], total))
+        if cpt[1] > 0: print("Info: typezones: 3D homogenous k direction with constant step, %2.2f%% (%d/%d)"%((cpt[1]/total*100.), cpt[1], total))
+        if cpt[2] > 0: print("Info: typezones: 3D Cartesian with constant step, %2.2f%% (%d/%d)"%((cpt[2]/total*100.), cpt[2], total))
+        if cpt[3] > 0: print("Info: typezones: 2D curvilinear, %2.2f%% (%d/%d)"%((cpt[3]/total*100.), cpt[3], total))
+
     return metrics
 
 #==============================================================================
@@ -377,7 +391,7 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     FastC._build_omp(t)
     # alloue metric: tijk, ventijk, ssiter_loc
     # init         : ssiter_loc
-    metrics = allocate_metric(t)
+    metrics = allocate_metric(t, verbose)
     # Contruction BC_int et BC_real pour CL
     FastC._BCcompact(t)
     # Contruction Conservative_int

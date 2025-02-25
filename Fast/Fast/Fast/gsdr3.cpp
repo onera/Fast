@@ -242,7 +242,7 @@ E_Int rank =0;
 
                    // calcul metric si maillage deformable
                    //
-#include           "../FastS/FastS/Metric/cp_metric.cpp"
+#include           "FastS/Metric/cp_metric.cpp"
                    }
 
         //---------------------------------------------------------------------

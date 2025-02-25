@@ -9,9 +9,8 @@ import Transform.PyTree as T
 import KCore.test as test
 import math
 import numpy
-import Apps.Fast.LBM as App
+import Fast.LBM as Apps_LBM
 
-myApp = App.LBM(format='single')
 nit = 300
 VARSMACRO = ['Density','VelocityX','VelocityY','VelocityZ','Temperature']
 
@@ -49,7 +48,7 @@ z_0 = C.getMeanValue(a1,'CoordinateZ')
 zmean = C.getMeanValue(a1,'CoordinateZ')
 a1 = T.splitNParts(a1,8)
 t = C.newPyTree(['Base',a1])
-t,tc = myApp.prepare(t, t_out=None, tc_out=None, NP=0, translation=[(Nx-1)*dx, (Ny-1)*dx,(Nz-1)*dx])
+t,tc = Apps_LBM.prepare(t, t_out=None, tc_out=None, NP=0, translation=[(Nx-1)*dx, (Ny-1)*dx,(Nz-1)*dx])
 
 #-------------------------
 # Initialization
@@ -89,8 +88,6 @@ numz['cache_blocking_J']=1000000
 numz['cache_blocking_K']=1000000
 numz['cache_blocking_I']=1000000
 numz["time_step"]=dt # pour l instant pas de viscosite
-myApp.set(numb=numb)
-myApp.set(numz=numz)
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 #C.convertPyTree2File(t,"restart.cgns")
 (t, tc, metrics)  = FastLBM.warmup(t, tc)
