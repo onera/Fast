@@ -260,7 +260,7 @@ E_Int K_FASTS::BCzone(
     E_Int nbdata = param_int[pt_bc + BC_NBDATA];
     E_Int bc_type = param_int[pt_bc + BC_TYPE];
 
-    // printf("ptbc= %d , idir= %d , ndom= %d , bctype=  %d, nstep= %d , nbdata= %d , lrhs= %d \n", pt_bc, idir,nd,  bc_type, nstep,nbdata, lrhs_loc );
+    //printf("ptbc= %d , idir= %d , ndom= %d , bctype=  %d, nstep= %d , nbdata= %d , lrhs= %d  ndf= %d \n", pt_bc, idir,nd,  bc_type, nstep,nbdata, lrhs_loc , ndf);
 
     E_Int *iptsize_data = param_int + pt_bc + BC_NBDATA + 1;
 
@@ -424,6 +424,42 @@ E_Int K_FASTS::BCzone(
                                     param_real, c4, c5, c6,
                                     iptx, ipty, iptz, ipventijk, iptijk, iptrop, iptmut, ipt_data_loc);
         }
+/*
+        else if (bc_type == BCFLUXOCTREE_C && idir==1 && nstep !=1 )
+        { 
+          //printf("OCTREEBC nd %d , idir %d , fen  %d %d \n",nd, idir, ipt_ind_CL[2]+1,ipt_ind_CL[3]+1,   iptsize_data[0]);
+           E_Int v2 =  iptsize_data[0]/10;
+           E_Float *slp1 = ipt_data + v2*5;
+           E_Float c0   = 1./c6;
+           E_Float c7   = (c4-c5)*c0;
+
+           E_Int v1 = param_int[NDIMDX];
+          for (E_Int j =ipt_ind_CL[2]+1; j <= ipt_ind_CL[3]+1; j++)
+            {
+              E_Int l  = 1 + j*param_int[NIJK];
+              E_Int li = j-ipt_ind_CL[2]-1;
+
+              //printf("slp Av  %f %f %f %f %d %d  %f\n",iptrop[l],iptrop[l +v1], iptrop[l +v1*2],iptrop[l +v1*4],j-ipt_ind_CL[2]-1,iptsize_data[0],slp1[li]); 
+              //iptrop[l      ]=  ( slp1[ li      ] - c4*iptrop[l+1      ] - c6*iptrop[l+2      ] )/c5;
+              //iptrop[l +v1  ]=  ( slp1[ li +v2  ] - c4*iptrop[l+1 +v1  ] - c6*iptrop[l+2 +v1  ] )/c5;
+              //iptrop[l +v1*2]=  ( slp1[ li +v2*2] - c4*iptrop[l+1 +v1*2] - c6*iptrop[l+2 +v1*2] )/c5;
+              ////iptrop[l +v1*3]=  ( slp1[ li +v2*3] - c4*iptrop[l+1 +v1*3] - c6*iptrop[l+2 +v1*3] )/c5;
+              //iptrop[l +v1*4]=  ( slp1[ li +v2*4] - c4*iptrop[l+1 +v1*4] - c6*iptrop[l+2 +v1*4] )/c5;
+              //printf("slp AP  %f %f %f %f  \n",iptrop[l], iptrop[l +v1], iptrop[l +v1*2],iptrop[l +v1*4] ); 
+              //(slp1[ j-ipt_ind_CL[2]-1 ] - c4*rop(l +vslp) -c6 rop(np +vslp))/c5 = rop(nm  +vslp) ;
+
+              //iptrop[l      ]= c7*(iptrop[l+2      ] -iptrop[l+1      ] ) + iptrop[l+2      ];
+              //iptrop[l +v1  ]= c7*(iptrop[l+2 +v1  ] -iptrop[l+1 +v1  ] ) + iptrop[l+2 +v1  ];
+              //iptrop[l +v1*2]= c7*(iptrop[l+2 +v1*2] -iptrop[l+1 +v1*2] ) + iptrop[l+2 +v1*2];
+              //iptrop[l +v1*3]= c7*(iptrop[l+2 +v1*3] -iptrop[l+1 +v1*3] ) + iptrop[l+2 +v1*3];
+              //iptrop[l +v1*4]= c7*(iptrop[l+2 +v1*4] -iptrop[l+1 +v1*4] ) + iptrop[l+2 +v1*4];
+              //iptrop[l      ]= 0.5*(iptrop[l-1      ]+iptrop[l+1      ]);
+              //iptrop[l +v1  ]= 0.5*(iptrop[l-1 +v1  ]+iptrop[l+1 +v1  ]);
+              //iptrop[l +v1*2]= 0.5*(iptrop[l-1 +v1*2]+iptrop[l+1 +v1*2]);
+              //iptrop[l +v1*4]= 0.5*(iptrop[l-1 +v1*4]+iptrop[l+1 +v1*4]);
+            }
+        }
+*/
         else if (bc_type == 19)
         { // inflow Lund
           DEFAULT_STATE("BCInflowLund")

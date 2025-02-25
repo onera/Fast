@@ -135,6 +135,7 @@ for ale in TypeMotion:
                 elif eq == 'SA':
                     for i in range( len(lines) ):
                         lines[i]=lines[i].replace("fluVisc","SA/fluVisc").replace("assemble","SA/assemble").replace("flu_send","SA/flu_send")
+                        lines[i]=lines[i].replace("stk_flux","SA/stk_flux")
                     eq2=eq+'_'
 
                 # creation subroutine fortran du flux
@@ -182,10 +183,10 @@ for ale in TypeMotion:
                     select_out.append('       ELSEIF (option.eq.'+str(option)+') THEN\n')
                     select_out.append('                                               \n')
                     select_out.append('         call '+ name_routine+'(ndom,\n')
-                    select_out.append('     &                 ithread, idir,\n')
+                    select_out.append('     &                 ithread, idir,bctype, size_flux,\n')
                     select_out.append('     &                 param_int, param_real,\n')
-                    select_out.append('     &                 ind_loop,\n')
-                    select_out.append('     &                 rop, drodm , wig,\n')
+                    select_out.append('     &                 ind_loop, inc_bc,\n')
+                    select_out.append('     &                 rop, drodm , wig, flux,\n')
                     select_out.append('     &                 venti, ventj, ventk,\n')
                     #select_out.append('     &                 ti, tj, tk, vol)\n')  pour correction euler
                     select_out.append('     &                 ti, tj, tk, vol, xmut)\n')

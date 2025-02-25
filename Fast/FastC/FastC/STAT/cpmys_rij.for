@@ -48,12 +48,12 @@ c
 c Var loc
       INTEGER_E i,j,k,l,m,ideb,ifin,jdeb,jfin,kdeb,kfin,neq_tensrey,
      &        ind, ne,nd,type_zone,lx
-      INTEGER_E  c1,c2,c3, eq0
+      INTEGER_E  eq0
       REAL_E    u1,u2,u3,p,mu,dukdxk, s11,s22,s33,s12,s23,s13
       REAL_E    du1dx1,du1dx2,du1dx3,du2dx1,du2dx2,du2dx3,cnm, cn
       REAL_E    du3dx1,du3dx2,du3dx3,cmu,nu,c4,cvgam,rho,rho_1,t,rg
       REAL_E    rho_cn,rou_cn,rov_cn,row_cn,p_cn,mu_cn,t_cn,nu_cn,
-     &          r,co,si
+     &          r,co,si, c2,c1,c3
 
 #include "FastC/formule_param.h"
 #include "FastC/formule_mtr_param.h"
@@ -66,11 +66,11 @@ c Var loc
      &                   + (k_3+nijk_my(5)-1)*nijk_my(3)
 
       ! coeff pour moyenne glissante temporelle
-      c1           = moy_param(3)                    !nbr echantillon instant N
-      c2           = moy_param(3)-1                  !nbr echantillon instant N-1
-      c3           = moy_param(6)                    !nbr de cellule homogene sur lequel on somme les variables dans cpmys
-      cnm          = c2/float(c1)
-      cn           = 1./float(c1*c3)
+      c1           = float(moy_param(3) )          !nbr echantillon instant N
+      c2           = float(moy_param(3)-1 )        !nbr echantillon instant N-1
+      c3           = float(moy_param(6) )          !nbr de cellule homogene sur lequel on somme les variables dans cpmys
+      cnm          = c2/c1
+      cn           = 1./(c1*c3)
 
       rg       = cv*(gamma-1.)
       c4       = prandtl/cv/gamma
@@ -121,7 +121,6 @@ c      write(*,'(a,3i5)')'param_int(NEQ_IJ)',param_int(NEQ_IJ),
 c     &  param_int(NEQ_K)
 c      write(*,'(a,3i5)')'c1,c2',c1,c2,c3
 c      write(*,'(a,2f18.9)')'cn,cm',cn*c3,cnm
-
 
 !   Initialisation par la moyenne des n-1 echantillons
 #ifndef E_PERMUT

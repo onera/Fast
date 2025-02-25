@@ -6,7 +6,7 @@ import Converter.PyTree as C
 import Converter.Internal as Internal
 import Converter.Mpi as Cmpi
 import FastC.PyTree as FastC
-test.TOLERANCE = 2.e-5
+test.TOLERANCE = 2.e-12
 
 LOCAL = test.getLocal()
 

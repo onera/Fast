@@ -142,21 +142,8 @@ def _setNum2Base(a, num):
 def _reorder(t, tc=None):
 
     if tc is not None:
-        #reordone les bases, sinon souci potentiel en MPi si ordre base != entre proc
-        # Internal._sortByName(tc,recursive=False)
-        # Internal._sortByName(t, recursive=False)
-
         #reordone les bases de tc, sinon souci potentiel transfert si ordre base != entre t et tc
         Internal._copySort(t, tc, recursive=False)
-        # base_tcNew=[]
-        # for base in Internal.getBases(t):
-        #     base_tc = Internal.getNodeFromName(tc,base[0])
-        #     base_tcNew.append(base_tc)
-        # l = tc[2]
-        # orig = []
-        # for i in l:
-        #    if i[3] != 'CGNSBase_t': orig.append(i)
-        # tc[2] = orig+base_tcNew
 
         #reordone les zones de tc par taille decroissante dans chaque base pour optim openmp
         bases_tc = Internal.getNodesFromType1(tc, 'CGNSBase_t')
@@ -276,7 +263,7 @@ def _createPrimVars(t, omp_mode, rmConsVars=True, Adjoint=False, gradP=False, is
             #recuperation option de calcul
             define = Internal.getNodeFromName1(z, '.Solver#define')
             sponge = 0
-            a = Internal.getNodeFromName1(define, 'lbm_sponge')
+            a = Internal.getNodeFromName1(define, 'LBM_sponge')
             if a is not None: sponge = Internal.getValue(a)
             source = 0
             a = Internal.getNodeFromName1(define, 'source')
@@ -865,9 +852,9 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
 
     # init termes zone eponge
     sponge = 0
-    a = Internal.getNodeFromName1(define,'lbm_sponge')
+    a = Internal.getNodeFromName1(define,'LBM_sponge')
     if a is not None: sponge = Internal.getValue(a)
-    if sponge == 1:
+    if sponge == 1 and lbm == False:
         if C.isNamePresent(zone, 'centers:ViscosityEddyCorrection') != 1: C._initVars(zone, 'centers:ViscosityEddyCorrection', 1.)
         '''
        sgsmodel='Miles'
@@ -973,11 +960,14 @@ def _buildOwnData(t, Padding):
         'lu_match':1,
         'epsi_newton':1,
         'epsi_linear':1,
+        'nudging_ampli':1,
+        'nudging_vector':3,
         'inj1_newton_tol':1,
         'inj1_newton_nit':0,
         'cfl':1,
         'niveaux_temps':0,
         'psiroe':1,
+        'ausmDamping':1,
         'coef_hyper':4,
         'prandtltb':1,
         'sfd':0,
@@ -1117,7 +1107,6 @@ def _buildOwnData(t, Padding):
                 if a is not None: veclevel.append( Internal.getValue(a) )
                 else: veclevel.append(1)
             else:  veclevel.append(1)
-
     maxlevel = max(veclevel)
 
 
@@ -1315,6 +1304,7 @@ def _buildOwnData(t, Padding):
             epsi_newton     = 0.1
             epsi_linear     = 0.01
             psiroe          = 0.1
+            ausmdamping     = 1
             cfl             = 1.
             rotation        = [ 0.,0.,0., 0.,0.,0.,0.,0.]
             ssdom_IJK       = [240,20,900]
@@ -1499,6 +1489,8 @@ def _buildOwnData(t, Padding):
                 if a is not None: prandtltb = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'psiroe')
                 if a is not None: psiroe = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'ausmDamping')
+                if a is not None: ausmdamping = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'sfd')
                 if a is not None: sfd = Internal.getValue(a)
                 a = Internal.getNodeFromName1(d, 'sfd_chi')
@@ -1584,8 +1576,6 @@ def _buildOwnData(t, Padding):
 
                 a = Internal.getNodeFromName1(d, 'LBM_sponge')
                 if a is not None: lbm_sponge = Internal.getValue(a)
-                # a = Internal.getNodeFromName1(d, 'lbm_sponge')
-                # if a is not None: lbm_sponge = Internal.getValue(a)
 
                 a = Internal.getNodeFromName1(d, 'LBM_overset')
                 if a is not None: lbm_overset = Internal.getValue(a)
@@ -1958,7 +1948,7 @@ def _buildOwnData(t, Padding):
             #=====================================================================
             # creation noeud parametre real
             #=====================================================================
-            number_of_defines_param_real = 71                                    # Number Param REAL
+            number_of_defines_param_real = 72                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
             if dtc < 0:
@@ -2035,6 +2025,9 @@ def _buildOwnData(t, Padding):
             ##Nudging
             datap[65]    = nudging_ampli #inutile??
             datap[66:72] = nudging_vector[:]*nudging_ampli
+
+            ##amortissememnt dissip AUSM: genre wiggle=cte=ausmdamping
+            datap[72] = ausmdamping
 
             # LBM related stuff
             datap[VSHARE.LBM_c0]        = lbm_c0
@@ -2830,9 +2823,9 @@ def _BCcompact(t):
 
                     ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
                     rg  = ptrange[0][1]
-                    sz  = max(1, rg[0,1]-rg[0,0] ) * max(1, rg[1,1]-rg[1,0] ) * max(1, rg[2,1]-rg[2,0] )
-                    #sz  = (rg[0,1]-rg[0,0]+1) * (rg[1,1]-rg[1,0] +1) * (rg[2,1]-rg[2,0]+1 )
-                    tab =  numpy.zeros(sz*neq, numpy.float64)
+                    sz  = max(1, rg[0,1]-rg[0,0]+1) * max(1, rg[1,1]-rg[1,0]+1) * max(1, rg[2,1]-rg[2,0]+1)
+                    tab =  numpy.ones(sz*neq, numpy.float64)
+                    #tab =  numpy.ones(sz*neq*2, numpy.float64) #stockage 1 pente aussi
                     Internal.createUniqueChild(Prop, 'FluxFaces', 'DataArray_t', value=tab)
 
             if btype == 'BCWallViscousIsothermal':
@@ -3017,14 +3010,17 @@ def _BCcompact(t):
             ind_bc[5] = indrange[2][1]
 
             if 'BCFluxOctree' in btype:
-                if 'imin' == bc[0][-4:]: idir=1
-                if 'imax' == bc[0][-4:]: idir=2
-                if 'jmin' == bc[0][-4:]: idir=3
-                if 'jmax' == bc[0][-4:]: idir=4
-                if 'kmin' == bc[0][-4:]: idir=5
-                if 'kmax' == bc[0][-4:]: idir=6
+                name = bc[0].split('_')
+                idir=-100
+                if 'imin' == name[2][0:4]: idir=1
+                if 'imax' == name[2][0:4]: idir=2
+                if 'jmin' == name[2][0:4]: idir=3
+                if 'jmax' == name[2][0:4]: idir=4
+                if 'kmin' == name[2][0:4]: idir=5
+                if 'kmax' == name[2][0:4]: idir=6
                 param_int[pt_bc+ 1]=idir
                 param_int[pt_bc+ 2: pt_bc+ 8 ]= ind_bc[0:6]
+                #print(z[0], bc[0], idir,  param_int[pt_bc+ 1])
             else:
                 fastc.PygetRange(ind_bc,  param_int, pt_bc+ 1)
 
@@ -4340,8 +4336,6 @@ def tcStat_IBC(t,tc,vartTypeIBC=2,bcTypeIB=3):
 # Graph related functions
 #==============================================================================
 def prepGraphs(t, exploc=0):
-    #reorder base pour avoir procList consistant avec reorder du warmup. Sinon boom possible miseaplatdonnorTree
-    # Internal._sortByName(t,recursive=False)
 
     graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=exploc)
     graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=exploc)

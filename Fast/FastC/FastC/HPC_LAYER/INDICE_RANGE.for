@@ -29,18 +29,18 @@
       endif
 
 #if CHECK_BLOCK > 0
-       if(ithread.eq.param_int( IO_THREAD).and.nitrun.eq.0)then
-          !if(ibloc*jbloc*kbloc.le.1) then
-           write(*,'(a,6i4)')'sdm =',ind_sdm
-           write(*,'(a,6i4)')'grad=',ind_grad
-           write(*,'(a,6i4)')'coe =',ind_coe
-           write(*,'(a,6i4)')'rhs =',ind_rhs
-           write(*,'(a,6i4)')'mjr =',ind_mjr
-           write(*,'(a,6i4)')'ssa =',ind_ssa
-           write(*,'(a,6i4)')'hrr =',ind_hrr
-           write(*,'(a,6i4)')'gcb =',ind_gcb
-          !endif
-       endif
+c       if(ithread.eq.param_int( IO_THREAD).and.nitrun.eq.0)then
+c          !if(ibloc*jbloc*kbloc.le.1) then
+c           write(*,'(a,6i4)')'sdm =',ind_sdm
+c           write(*,'(a,6i4)')'grad=',ind_grad
+c           write(*,'(a,6i4)')'coe =',ind_coe
+c           write(*,'(a,6i4)')'rhs =',ind_rhs
+c           write(*,'(a,6i4)')'mjr =',ind_mjr
+c           write(*,'(a,6i4)')'ssa =',ind_ssa
+c           write(*,'(a,6i4)')'hrr =',ind_hrr
+c           write(*,'(a,6i4)')'gcb =',ind_gcb
+c          !endif
+c       endif
 #endif
 
 #if CHECK_SPLIT > 0

@@ -110,7 +110,6 @@ C Var loc
      & flag_wait,cells, it_dtloc, flag_NSLBM,lcomput,shift_vol,
      & shift_vol_n,shift_vol_m
 
-
       REAL_E rhs_begin,rhs_end
 
 !     !Note
@@ -145,8 +144,31 @@ C Var loc
        
 #include "FastC/HPC_LAYER/SIZE_MIN.for"
 #include "FastC/HPC_LAYER/WORK_DISTRIBUTION_BEGIN.for"
+        if(ithread_io.eq.param_int( IO_THREAD).and.nitrun.eq.0
+     &     .and.nitcfg.eq.1)then
+           write(*,'(a,3i4)')'NoZone =',ndo
+           write(*,'(a,3i4)')'thread_pos =',thread_pos
+           !write(*,'(a,3i4)')'IJKV socket=',ijkv_thread
+           write(*,'(a,3i4)')'IJKV thread=',ijkv_sdm
+           write(*,'(a,9i4)')'topo thread',thread_topology,ind_dm_omp
+           write(*,'(a,9i4)')'synchro_receive_th',synchro_receive_th
+           write(*,'(a,9i4)')'synchro_send_th',synchro_send_th
+       endif
 #include "FastC/HPC_LAYER/LOOP_CACHE_BEGIN.for"
 #include "FastC/HPC_LAYER/INDICE_RANGE.for"
+       if(ithread_io.eq.param_int( IO_THREAD).and.nitrun.eq.0
+     &     .and.nitcfg.eq.1)then
+          !if(ibloc*jbloc*kbloc.le.1) then
+           write(*,'(a,6i4)')'sdm =',ind_sdm
+           write(*,'(a,6i4)')'grad=',ind_grad
+           write(*,'(a,6i4)')'coe =',ind_coe
+           write(*,'(a,6i4)')'rhs =',ind_rhs
+           write(*,'(a,6i4)')'mjr =',ind_mjr
+           write(*,'(a,6i4)')'ssa =',ind_ssa
+           write(*,'(a,6i4)')'hrr =',ind_hrr
+           write(*,'(a,6i4)')'gcb =',ind_gcb
+          !endif
+       endif
 
 
           flag_wait = 0
@@ -353,37 +375,12 @@ c       endif
 
           !correction flux pour paroi (Roe), wallmodel et raccord
           !conservatif nearmatch
-
-          nb_bc = param_int( param_int(PT_BC) )
-          if(param_int(KFLUDOM).eq.5.and.nb_bc.ne.0) then
-
-c          call correct_flux(ndo,ithread, param_int, param_real,
-c     &                  ind_dm_zone, ind_sdm, nitcfg, nitrun, cycl,
-c     &                  psi,wig,stat_wig, rop_ssiter, drodm,x,y,z,
-c     &                  ti,ti_df,tj,tj_df,tk,tk_df,
-c     &                  vol(1+shift_vol),vol_df,
-c     &                  venti, ventj, ventk, xmut)
-
-
-              call bfl3(ndo, ithread, param_int, param_real, 
-     &                  ind_dm_zone, ind_sdm,
-     &                  psi,wig,stat_wig, rop_ssiter, drodm,
-     &                  ti,ti_df,tj,tj_df,tk,tk_df,
-     &                  vol(1+shift_vol),vol_df,
-     &                  venti, ventj, ventk, xmut)
-          endif
-
-c          !boundary flux correction for LES wall model
-c          !if(param_int(NEQ).eq.5.and.nb_bc.ne.0) then
-          if(nb_bc.ne.0) then
-              call wall_model_flux(ndo,ithread, param_int, param_real,
+          call correct_flux(ndo,ithread, param_int, param_real,
      &                  ind_dm_zone, ind_sdm, nitcfg, nitrun, cycl,
      &                  psi,wig,stat_wig, rop_ssiter, drodm,x,y,z,
      &                  ti,ti_df,tj,tj_df,tk,tk_df,
      &                  vol(1+shift_vol),vol_df,
      &                  venti, ventj, ventk, xmut)
-          endif
-
 !         STEP IV: END
 
 !         STEP V: SOLUTION UPDATE           
@@ -518,5 +515,15 @@ CCC#include "FastC/HPC_LAYER/WORK_DISTRIBUTION_END.for"
         timer_omp(2)=float(cells)
       endif
 
+
+c      if(nitrun.ge.20.and.nitcfg.eq.1) then
+c      do j = 30, 31
+c      do i = ind_dm_zone(1), ind_dm_zone(2)
+c        l = inddm(i,j,1)
+c!$OMP CRITICAL      
+c      write(*,*)i,j,abs(drodm(l))
+c!$OMP END CRITICAL
+c      enddo
+c      enddo
 
       end

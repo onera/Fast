@@ -82,7 +82,7 @@ C Var loc
      & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
      & qn,r,v,w,h,q,r_1,psiroe,avmin, xktvol, xmulam, xmutur, xmutot,
-     & c50,c51,c52,c53,c54
+     & c50,c51,c52,c53,c54,wig_cte
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -131,7 +131,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 
       roref= param_real( ROINF)
       uref = param_real( VINF )
-
+      wig_cte= param_real( WIG_AMP )
       psiroe= param_real( PSIROE )
       tmin_1= 100./param_real( TINF )!!si T< 0.01Tinf, alors limiteur null
 

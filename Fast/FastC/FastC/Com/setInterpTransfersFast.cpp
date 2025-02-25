@@ -262,7 +262,7 @@ void K_FASTC::setInterpTransfersFast(
       //comm multi processus: wait + remplissage IBC
         //printf("get IBM  %d %d %d \n", dest, nstep, nbcomIBC_S );
       //
-      K_FASTC::getTransfersInter(nbcomIBC_S, iptro_tmp, param_int, param_int_tc , pair_of_queue_IBC);
+      K_FASTC::getTransfersInter(nbcomIBC_S, iptro_tmp, param_int, param_real, param_int_tc , pair_of_queue_IBC);
 
       #ifdef TimeShow
       #ifdef _OPENMP
@@ -403,7 +403,7 @@ void K_FASTC::setInterpTransfersFast(
        E_Int nbcomID = nbcomID_S + nbcomID_U;
        //printf(" get ID  %d %d \n",  nstep,  nbcomID);
 
-       K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_int_tc , pair_of_queue);
+       K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc , pair_of_queue);
 
        //printf(" apres get ID  %d %d \n", nstep,  nbcomID);
 
@@ -757,6 +757,7 @@ void K_FASTC::setInterpTransfersIntra(
           pos = param_int_tc[shift_rac + nrac*8 ]; E_Float* ptrCoefs = param_real_tc + pos;
 
           E_Int nbInterpD = param_int_tc[shift_rac + nrac];
+          E_Int nbFluCons = param_int_tc[shift_rac + nrac*16];
           E_Float* xPC = NULL;
           E_Float* xPI = NULL;
           E_Float* xPW = NULL;
@@ -779,7 +780,23 @@ void K_FASTC::setInterpTransfersIntra(
                count_racIBC         = count_racIBC + 1;
                }
           }
-
+          // sommation flux fin et stokage dans flux grossier pour nearmatch conservatif
+          for (E_Int nbflu = 0; nbflu < nbFluCons; nbflu++)
+            {
+             if(nvars_loc==5)
+              {
+               #include "FastC/Com/flux_conservatif_5eq.cpp"
+              }
+             else if(nvars_loc==6)
+              {
+               #include "FastC/Com/flux_conservatif_6eq.cpp"
+              }
+             /*
+             if(nvars_loc==5)
+              {
+               #include "FastC/Com/slope_conservatif_5eq.cpp"
+              }*/
+            }
           E_Int ideb = 0;
           E_Int ifin = 0;
           E_Int shiftCoef = 0;
@@ -1180,6 +1197,7 @@ if (has_data_to_send)
 	    E_Int nbRcvPts  = param_int_tc[shift_rac + nrac*10];
 	    E_Int nvars_loc = param_int_tc[shift_rac + nrac*13];  // flag raccord rans/LES
 	    E_Int Nozone    = param_int_tc[shift_rac + nrac*11];
+            E_Int nbFluCons = param_int_tc[shift_rac + nrac*16];
 
             // on determine un No zone pipeau pour skipper remplissage inutile en implicit local
             E_Int NoD       = param_int_tc[shift_rac + nrac*5];
@@ -1199,14 +1217,34 @@ if (has_data_to_send)
 
             //if(Nozone==5 and count_rac==0 ) { printf("Nozone_loc %d \n", Nozone_loc);}
 
-	    send_buffer << Nozone_loc;  
+	    send_buffer << Nozone_loc;
+           
+            E_Int  nbFlu_nvar = nbFluCons +100*nvars_loc;
+	    send_buffer << nbFlu_nvar;
 
-	    pck_data.push_back(&send_buffer.push_inplace_array(nvars_loc * nbRcvPts_loc * sizeof(E_Float) ));    
+            //dimensionnement tableau real pour envoi (interp + flux)
+            E_Int sz_real=nbRcvPts_loc;
+            E_Int scale =4;                          //rapport nombre de face fin/grossier
+            if(param_int[ NoD ][NIJK+4]==0){scale=2;} // 2D
+            for (E_Int nflu=0; nflu < nbFluCons; nflu++)
+              { E_Int   pos = param_int_tc[shift_rac + nrac*17];
+                E_Int* fluD = param_int_tc + pos +4*nflu;
+                    sz_real += fluD[1]/scale;
+              }
+            
+            
+	    //pck_data.push_back(&send_buffer.push_inplace_array(nvars_loc * nbRcvPts_loc * sizeof(E_Float) ));    
+	    pck_data.push_back(&send_buffer.push_inplace_array(nvars_loc * sz_real * sizeof(E_Float) ));    
 	    E_Int PtlistDonor  = param_int_tc[shift_rac + nrac*12];
 	    E_Int* ipt_listRcv = param_int_tc + PtlistDonor;
 
 	    send_buffer << CMP::vector_view<E_Int>(ipt_listRcv, nbRcvPts_loc);
-
+ 
+            if(nbFluCons !=0)
+             { E_Int   pos = param_int_tc[shift_rac + nrac*17];
+               E_Int* fluD = param_int_tc + pos;
+	       send_buffer << CMP::vector_view<E_Int>(fluD, 4*nbFluCons);
+             }
             //printf("size rac %d %d %d %d \n", nbRcvPts_loc*nvars_loc, count_rac, irac, pass_inst);
 
 	    //count_rac += 1;
@@ -1402,6 +1440,7 @@ if (has_data_to_send)
                      E_Float* ptrCoefs = param_real_tc + pos;
   
                      E_Int nbInterpD = param_int_tc[shift_rac + nrac];
+                     E_Int nbFluCons = param_int_tc[shift_rac + nrac*16];
                      E_Float* xPC = NULL;
                      E_Float* xPI = NULL;
                      E_Float* xPW = NULL;
@@ -1424,6 +1463,19 @@ if (has_data_to_send)
                            count_racIBC = count_racIBC + 1;
                           }
                      }
+                     for (E_Int nbflu = 0; nbflu < nbFluCons; nbflu++)
+                       { E_Int shift_fluR=0;
+                        if(nvars_loc==5)
+                        {
+                          #include "FastC/Com/flux_conservatif_5eq_D.cpp"
+                        }
+                        //else if(nvars_loc==6)
+                        // {
+                        //  #include "FastC/Com/flux_conservatif_6eq.cpp"
+                        // }
+                       }
+/*
+*/
 
                      E_Int ideb = 0;
                      E_Int ifin = 0;
@@ -1586,7 +1638,7 @@ if (has_data_to_send)
 // Retourne une liste de numpy directement des champs interpoles
 // in place + from zone + tc compact
 //=============================================================================
-void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param_int, E_Int*& param_int_tc, std::pair<RecvQueue*, SendQueue*>*& pair_of_queue_loc) {
+void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param_int, E_Float**& param_real, E_Int*& param_int_tc, std::pair<RecvQueue*, SendQueue*>*& pair_of_queue_loc) {
  
   if( nbcom != 0)
   {
@@ -1598,8 +1650,11 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
      vector<E_Int> recv_nvarloc(2048);
      vector<E_Int> recv_size(2048);
      vector<CMP::vector_view<E_Int> > recv_listRc(2048);
+     vector<CMP::vector_view<E_Int> > recv_fluxRc(2048);
 
      RecvQueue  pt_rcv_queue = *pair_of_queue_loc->first;
+
+
 
      while (not pt_rcv_queue.empty())
     {
@@ -1621,15 +1676,22 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
          recv_nozone.resize(recv_nrac);
          recv_nvarloc.resize(recv_nrac);
          recv_listRc.resize(recv_nrac);
+         recv_fluxRc.resize(recv_nrac);
 
          //recuperation des infos raccord en sequentiel
          for (E_Int irac = 0; irac < recv_nrac; ++irac)
          { 
-          recv_buffer >> recv_nozone[irac] >> recv_frp[irac] >> recv_listRc[irac];
+          //recv_buffer >> recv_nozone[irac] >> recv_frp[irac] >> recv_listRc[irac];
 
+          recv_buffer >> recv_nozone[irac] >> recv_nvarloc[irac] >> recv_frp[irac] >> recv_listRc[irac];
+          //recv_buffer >> recv_nozone[irac] >> recv_nvarloc[irac] >> recv_frp[irac] >> recv_listRc[irac] >> recv_fluxRc[irac];
+
+          E_Int nvars_loc = recv_nvarloc[irac]/100;
+          E_Int nbFluCons = recv_nvarloc[irac] - nvars_loc*100;
+          if(nbFluCons !=0){ recv_buffer >> recv_fluxRc[irac]; }
           recv_size[irac] = recv_listRc[irac].size();
-          recv_nvarloc[irac] = recv_frp[irac].size() / recv_size[irac];
-          
+
+          //recv_nvarloc[irac] = recv_frp[irac].size() / recv_size[irac];
            //printf("Nozone Verif= %d %d %d  \n", recv_nozone[irac],recv_size[irac], irac );
          }
 
@@ -1638,58 +1700,67 @@ void K_FASTC::getTransfersInter( E_Int& nbcom, E_Float**& ipt_ro, E_Int**& param
           for (E_Int irac = 0; irac < recv_nrac; ++irac)
           { 
             E_Int NoR = recv_nozone[irac];
-            //printf("Nozone Verif= %d \n", NoR);
-            //fflush(stdout);
 
             if (NoR == -999) continue;
 
             E_Int ilistrecv;
-            E_Int sz = recv_size[irac];
+            E_Int nbRcvPts  = recv_size[irac];
+            E_Int nvars_loc   = recv_nvarloc[irac]/100;
+            E_Int nbFluCons = recv_nvarloc[irac] - nvars_loc*100;
             E_Int decal = param_int[ NoR ] [ NDIMDX ];
             if (NoR < 0) decal=0;
 
-            if (recv_nvarloc[irac] == 5)
+            //printf("Nozone Verif= %d nvar: %d , nflux: %d\n", NoR,nvars_loc, nbFluCons  );
+            //fflush(stdout);
+            if ( nvars_loc == 5)
             {
+             // stokage dans flux grossier pour nearmatch conservatif
+             E_Int shift_fluR = 0;
+             for (E_Int nbflu = 0; nbflu < nbFluCons; nbflu++)
+             {
+              #include "FastC/Com/flux_conservatif_5eq_Recep.cpp"
+             }
+              
               //#pragma omp for nowait
               #pragma omp for
-              for (E_Int irecv = 0; irecv < sz; ++irecv) 
+              for (E_Int irecv = 0; irecv <  nbRcvPts; ++irecv) 
                {
 
                 ilistrecv = recv_listRc[irac] [irecv];
 
                 ipt_ro[NoR][ilistrecv          ] = recv_frp[irac][irecv];
-                ipt_ro[NoR][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * sz];
-                ipt_ro[NoR][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * sz];
-                ipt_ro[NoR][ilistrecv + 3*decal] = recv_frp[irac][irecv + 3 * sz];
-                ipt_ro[NoR][ilistrecv + 4*decal] = recv_frp[irac][irecv + 4 * sz];
+                ipt_ro[NoR][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * nbRcvPts];
+                ipt_ro[NoR][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * nbRcvPts];
+                ipt_ro[NoR][ilistrecv + 3*decal] = recv_frp[irac][irecv + 3 * nbRcvPts];
+                ipt_ro[NoR][ilistrecv + 4*decal] = recv_frp[irac][irecv + 4 * nbRcvPts];
                }
             } 
-            else if (recv_nvarloc[irac] == 6)
+            else if ( nvars_loc == 6)
             {
             //#pragma omp for nowait
             #pragma omp for
-            for (E_Int irecv = 0; irecv < sz; ++irecv)
+            for (E_Int irecv = 0; irecv < nbRcvPts; ++irecv)
                {
 
                 ilistrecv = recv_listRc[irac] [irecv]; 
 
                 ipt_ro[NoR][ilistrecv          ] = recv_frp[irac][irecv];
-                ipt_ro[NoR][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * sz];
-                ipt_ro[NoR][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * sz];
-                ipt_ro[NoR][ilistrecv + 3*decal] = recv_frp[irac][irecv + 3 * sz];
-                ipt_ro[NoR][ilistrecv + 4*decal] = recv_frp[irac][irecv + 4 * sz];
-                ipt_ro[NoR][ilistrecv + 5*decal] = recv_frp[irac][irecv + 5 * sz];
+                ipt_ro[NoR][ilistrecv +   decal] = recv_frp[irac][irecv + 1 * nbRcvPts];
+                ipt_ro[NoR][ilistrecv + 2*decal] = recv_frp[irac][irecv + 2 * nbRcvPts];
+                ipt_ro[NoR][ilistrecv + 3*decal] = recv_frp[irac][irecv + 3 * nbRcvPts];
+                ipt_ro[NoR][ilistrecv + 4*decal] = recv_frp[irac][irecv + 4 * nbRcvPts];
+                ipt_ro[NoR][ilistrecv + 5*decal] = recv_frp[irac][irecv + 5 * nbRcvPts];
                }
             } 
             else  {
-                 for (int eq = 0; eq < recv_nvarloc[irac]; ++eq)
+                 for (int eq = 0; eq < nvars_loc; ++eq)
                  {
                   #pragma omp for nowait
-                  for (E_Int irecv = 0; irecv < sz; ++irecv)
+                  for (E_Int irecv = 0; irecv < nbRcvPts; ++irecv)
                    {
                     ilistrecv = recv_listRc[irac] [irecv]; 
 
-                    ipt_ro[NoR][ilistrecv + eq*decal] = recv_frp[irac][irecv + eq * sz];
+                    ipt_ro[NoR][ilistrecv + eq*decal] = recv_frp[irac][irecv + eq * nbRcvPts];
                    }  
                  }
                 }
