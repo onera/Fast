@@ -54,7 +54,7 @@ numz = {}
 numz["time_step"]          = 0.0001
 numz["scheme"]             = "ausmpred"
 numz["DES"]                = "zdes1"
-numz["DES_debug"]          = 1
+numz["DES_debug"]          = "active"
 Fast._setNum2Zones(t, numz); Fast._setNum2Base(t, numb)
 
 # Prim vars, solver tag, compact, metrics

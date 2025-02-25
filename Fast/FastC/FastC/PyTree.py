@@ -142,21 +142,8 @@ def _setNum2Base(a, num):
 def _reorder(t, tc=None):
 
     if tc is not None:
-        #reordone les bases, sinon souci potentiel en MPi si ordre base != entre proc
-        # Internal._sortByName(tc,recursive=False)
-        # Internal._sortByName(t, recursive=False)
-
         #reordone les bases de tc, sinon souci potentiel transfert si ordre base != entre t et tc
         Internal._copySort(t, tc, recursive=False)
-        # base_tcNew=[]
-        # for base in Internal.getBases(t):
-        #     base_tc = Internal.getNodeFromName(tc,base[0])
-        #     base_tcNew.append(base_tc)
-        # l = tc[2]
-        # orig = []
-        # for i in l:
-        #    if i[3] != 'CGNSBase_t': orig.append(i)
-        # tc[2] = orig+base_tcNew
 
         #reordone les zones de tc par taille decroissante dans chaque base pour optim openmp
         bases_tc = Internal.getNodesFromType1(tc, 'CGNSBase_t')
@@ -867,7 +854,7 @@ def _createVarsFast(base, zone, omp_mode, rmConsVars=True, adjoint=False, gradP=
     sponge = 0
     a = Internal.getNodeFromName1(define,'LBM_sponge')
     if a is not None: sponge = Internal.getValue(a)
-    if sponge == 1:
+    if sponge == 1 and lbm == False:
         if C.isNamePresent(zone, 'centers:ViscosityEddyCorrection') != 1: C._initVars(zone, 'centers:ViscosityEddyCorrection', 1.)
         '''
        sgsmodel='Miles'
@@ -973,6 +960,8 @@ def _buildOwnData(t, Padding):
         'lu_match':1,
         'epsi_newton':1,
         'epsi_linear':1,
+        'nudging_ampli':1,
+        'nudging_vector':3,
         'inj1_newton_tol':1,
         'inj1_newton_nit':0,
         'cfl':1,
@@ -1118,7 +1107,6 @@ def _buildOwnData(t, Padding):
                 if a is not None: veclevel.append( Internal.getValue(a) )
                 else: veclevel.append(1)
             else:  veclevel.append(1)
-
     maxlevel = max(veclevel)
 
 
@@ -4348,8 +4336,6 @@ def tcStat_IBC(t,tc,vartTypeIBC=2,bcTypeIB=3):
 # Graph related functions
 #==============================================================================
 def prepGraphs(t, exploc=0):
-    #reorder base pour avoir procList consistant avec reorder du warmup. Sinon boom possible miseaplatdonnorTree
-    # Internal._sortByName(t,recursive=False)
 
     graphID   = Cmpi.computeGraph(t, type='ID'  , reduction=False, exploc=exploc)
     graphIBCD = Cmpi.computeGraph(t, type='IBCD', reduction=False, exploc=exploc)

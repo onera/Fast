@@ -50,9 +50,6 @@
                                   iptwig   + shift_wig    , iptstat_wig + shift_wig , iptrot+ shift_wig   ,
 				  iptdrodm + shift_zone   , iptcoe  + shift_coe     , iptdelta[nd]        , iptro_res[nd]  , iptsrc[nd]   );
 
-            //Flush Rhs
-            //E_Int size = param_int[nd][NEQ]*param_int[nd][NDIMDX];
-            //flush_real_( size , iptdrodm + shift_zone);
             if(nitcfg==1)
             {
               E_Int size = param_int[nd][NEQ_COE]*param_int[nd][NDIMDX];

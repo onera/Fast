@@ -1,5 +1,5 @@
          pos = param_int_tc[shift_rac + nrac*17];
-         E_Int* fluD = param_int_tc + pos;
+         E_Int* fluD = param_int_tc + pos + 4*nbflu;
          E_Int idir    = fluD[0];
          E_Int sizefluD= fluD[1];
          E_Int nobcD   = fluD[2];
@@ -53,6 +53,7 @@
                   E_Int lr  = i;
                   E_Int ld0 = i*2;
                   E_Int ld1 = i*2 +1;
+                 //if(NoR==28) {printf("ir %d, lr %d , ld0 %d , ld1 %d , sizeRD %d %d, nobcR %d\n", i, lr, ld0, ld1,sizefluR,sizefluD, nobcR);}
                 
                   fluxR[lr            ] = fluxD[ld0            ];
                   fluxR[lr            ]+= fluxD[ld1            ];
@@ -64,6 +65,7 @@
                   fluxR[lr +sizefluR*3]+= fluxD[ld1 +sizefluD*3];
                   fluxR[lr +sizefluR*4] = fluxD[ld0 +sizefluD*4];
                   fluxR[lr +sizefluR*4]+= fluxD[ld1 +sizefluD*4];
+      //if(NoR==28)  printf("fluR %f %f %f %f %f %f \n", fluxR[lr],fluxR[lr +sizefluR],fluxR[lr +sizefluR*2],fluxR[lr +sizefluR*4],fluxD[ld0],fluxD[ld1] );
                 }
               }
            }
@@ -85,6 +87,8 @@
                  E_Int ld1 = ld0 +1 ;
                  E_Int ld2 = ld0 +inck;
                  E_Int ld3 = ld1 +inck;
+            //printf("indice0 %d %d %d %d %d \n", lr, ld0, ld3, j,k);
+            //fflush(stdout);
 
                  fluxR[lr            ] = fluxD[ld0];
                  fluxR[lr            ]+= fluxD[ld1];
@@ -106,6 +110,8 @@
                  fluxR[lr +sizefluR*4]+= fluxD[ld1 +sizefluD*4];
                  fluxR[lr +sizefluR*4]+= fluxD[ld2 +sizefluD*4];
                  fluxR[lr +sizefluR*4]+= fluxD[ld3 +sizefluD*4];
+            //printf("indice1 %d %d %d %d %d \n", lr, ld0, ld3, j,k);
+            //fflush(stdout);
                 }
                }
              }

@@ -45,14 +45,14 @@
      &                    synchro_receive_th, synchro_send_th,
      &                    ind_dm_zone   , ind_dm_omp, ijkv_sdm )
 
-        if(ithread.eq.param_int( IO_THREAD).and.nitrun.eq.0)then
-           write(*,'(a,3i4)')'thread_pos =',thread_pos
-           !write(*,'(a,3i4)')'IJKV socket=',ijkv_thread
-           write(*,'(a,3i4)')'IJKV thread=',ijkv_sdm
-           write(*,'(a,9i4)')'topo thread',thread_topology,ind_dm_omp
-           write(*,'(a,9i4)')'synchro_receive_th',synchro_receive_th
-           write(*,'(a,9i4)')'synchro_send_th',synchro_send_th
-       endif
+c        if(ithread.eq.param_int( IO_THREAD).and.nitrun.eq.0)then
+c           write(*,'(a,3i4)')'thread_pos =',thread_pos
+c           !write(*,'(a,3i4)')'IJKV socket=',ijkv_thread
+c           write(*,'(a,3i4)')'IJKV thread=',ijkv_sdm
+c           write(*,'(a,9i4)')'topo thread',thread_topology,ind_dm_omp
+c           write(*,'(a,9i4)')'synchro_receive_th',synchro_receive_th
+c           write(*,'(a,9i4)')'synchro_send_th',synchro_send_th
+c       endif
 
 ccc#include   "../FastC/FastC/HPC_LAYER/topo_cache.for"
 ccc#include   "../FastC/FastC/HPC_LAYER/loopBloc_begin.for"
