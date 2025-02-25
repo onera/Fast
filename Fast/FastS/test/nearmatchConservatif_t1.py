@@ -5,7 +5,7 @@ import Converter.Mpi as Cmpi
 import Converter
 import Fast.PyTree as Fast
 import Generator.PyTree as G
-import Connector.IBM as C_IBM
+import Connector.IBM as X_IBM
 import Geom.PyTree as D
 import Geom.IBM as G_IBM
 import Transform.PyTree as T
@@ -62,10 +62,10 @@ for base in Internal.getBases(tb):
     C._addState(base, 'EquationDimension', 2)
     C._addState(base, UInf=U0, RoInf=R0, PInf=P0, LInf=L0, alphaZ=0., adim='dim3')
 
-t,tc=AppIBM.prepare1(tb, t_out, tc_out,   vmin=15, snearsf=snearsf, frontType=frontType, cleanCellN=False,
+t,tc=AppIBM.prepare1(tb, None, None,   vmin=15, snearsf=snearsf, frontType=frontType, cleanCellN=False,
                      nature=1, order=2, ext=ext, optimized=optimized, check=True)
 
-C_IBM._buildConservativeFlux(t, tc, verbose=1)
+X_IBM._buildConservativeFlux(t, tc, verbose=1)
 
 t1c= Internal.copyRef(tc)
 test.testT(t1c, 1)
