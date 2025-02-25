@@ -3010,17 +3010,17 @@ def _BCcompact(t):
             ind_bc[5] = indrange[2][1]
 
             if 'BCFluxOctree' in btype:
-              name = bc[0].split('_')
-              idir=-100
-              if 'imin' == name[2][0:4]: idir=1
-              if 'imax' == name[2][0:4]: idir=2
-              if 'jmin' == name[2][0:4]: idir=3
-              if 'jmax' == name[2][0:4]: idir=4
-              if 'kmin' == name[2][0:4]: idir=5
-              if 'kmax' == name[2][0:4]: idir=6
-              param_int[pt_bc+ 1]=idir
-              param_int[pt_bc+ 2: pt_bc+ 8 ]= ind_bc[0:6]
-              #print(z[0], bc[0], idir,  param_int[pt_bc+ 1])
+                name = bc[0].split('_')
+                idir=-100
+                if 'imin' == name[2][0:4]: idir=1
+                if 'imax' == name[2][0:4]: idir=2
+                if 'jmin' == name[2][0:4]: idir=3
+                if 'jmax' == name[2][0:4]: idir=4
+                if 'kmin' == name[2][0:4]: idir=5
+                if 'kmax' == name[2][0:4]: idir=6
+                param_int[pt_bc+ 1]=idir
+                param_int[pt_bc+ 2: pt_bc+ 8 ]= ind_bc[0:6]
+                #print(z[0], bc[0], idir,  param_int[pt_bc+ 1])
             else:
                 fastc.PygetRange(ind_bc,  param_int, pt_bc+ 1)
 

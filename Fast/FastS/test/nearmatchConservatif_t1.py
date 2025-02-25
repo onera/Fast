@@ -58,9 +58,9 @@ T0= Tref
 IFLOW='NSLaminar'
 
 for base in Internal.getBases(tb):
-  C._addState(base, 'GoverningEquations', IFLOW)
-  C._addState(base, 'EquationDimension', 2)
-  C._addState(base, UInf=U0, RoInf=R0, PInf=P0, LInf=L0, alphaZ=0., adim='dim3')
+    C._addState(base, 'GoverningEquations', IFLOW)
+    C._addState(base, 'EquationDimension', 2)
+    C._addState(base, UInf=U0, RoInf=R0, PInf=P0, LInf=L0, alphaZ=0., adim='dim3')
 
 t,tc=AppIBM.prepare1(tb, t_out, tc_out,   vmin=15, snearsf=snearsf, frontType=frontType, cleanCellN=False,
                      nature=1, order=2, ext=ext, optimized=optimized, check=True)
@@ -99,9 +99,8 @@ t1= Internal.copyRef(t)
 test.testT(t1, 4)
 
 for it in range(100):
-     FastS._compute(t, metrics, it, tc)
-     if it%(modulo_verif) == 0:
-         FastS.displayTemporalCriteria(t, metrics, it)
+    FastS._compute(t, metrics, it, tc)
+    if it%(modulo_verif) == 0:
+        FastS.displayTemporalCriteria(t, metrics, it)
 
 test.testT(t, 5)
-
