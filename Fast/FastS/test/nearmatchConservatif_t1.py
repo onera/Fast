@@ -16,10 +16,7 @@ import Fast.PyTree as Fast
 import FastC.PyTree as FastC
 import FastS.PyTree as FastS
 
-
 STEP = 1
-t_out = 't.cgns'
-tc_out = 'tc.cgns'
 
 snearsf = [0.035, 0.07]
 frontType=1
@@ -63,7 +60,7 @@ for base in Internal.getBases(tb):
     C._addState(base, UInf=U0, RoInf=R0, PInf=P0, LInf=L0, alphaZ=0., adim='dim3')
 
 t,tc=AppIBM.prepare1(tb, None, None,   vmin=15, snearsf=snearsf, frontType=frontType, cleanCellN=False,
-                     nature=1, order=2, ext=ext, optimized=optimized, check=True)
+                     nature=1, order=2, ext=ext, optimized=optimized, check=False)
 
 X_IBM._buildConservativeFlux(t, tc, verbose=1)
 
