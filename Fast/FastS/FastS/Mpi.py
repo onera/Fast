@@ -844,8 +844,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
             sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
             ro = Internal.getNodeFromName1(sol, 'Density')
             metrics[c][2] = ro[1]
-        elif motion == 'deformation': ale = 2
-        else: ale = 1
+        elif motion == 'rigid': ale = 1
+        elif motion == 'rigid_ext': ale = 2
+        elif motion == 'deformation': ale = 3
+        else: raise ValueError('warmup: invalid value for motion.')
         c += 1
 
     #
@@ -862,6 +864,15 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         else: time = 0.
         R._evalPosition(t, time)
         R._evalGridSpeed(t, time)
+        copy_velocity_ale(t, metrics)
+    elif ale == 3:
+        # force init (provisoire)
+        first = Internal.getNodeFromName1(t, 'Time')
+        if first is not None: time = Internal.getValue(first)
+        else: time = 0.
+        R._evalPosition(t, time)
+        R._evalGridSpeed(t, time)
+        # end force
         copy_velocity_ale(t, metrics)
     #
     # Compactage arbre transfert
