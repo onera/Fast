@@ -1208,95 +1208,16 @@ def setInterpData_Hybride(t_octree, tc_octree, t_curvi, blankingMatrix=None, bla
 #====================================================================================
 # Redistrib on NP processors
 #====================================================================================
-def _distribute(t_in, tc_in, NP, algorithm='graph', tc2_in=None, useCom='ID'):
-    if isinstance(tc_in, str):
-        tcs = Cmpi.convertFile2SkeletonTree(tc_in, maxDepth=3)
-    else: tcs = tc_in
-    stats = D2._distribute(tcs, NP, algorithm=algorithm, useCom=useCom)
-    if isinstance(tc_in, str):
-        paths = []; ns = []
-        bases = Internal.getBases(tcs)
-        for b in bases:
-            zones = Internal.getZones(b)
-            for z in zones:
-                nodes = Internal.getNodesFromName2(z, 'proc')
-                for n in nodes:
-                    p = 'CGNSTree/%s/%s/.Solver#Param/proc'%(b[0],z[0])
-                    paths.append(p); ns.append(n)
-        Filter.writeNodesFromPaths(tc_in, paths, ns, maxDepth=0, mode=1)
-
-    if isinstance(t_in, str):
-        ts = Cmpi.convertFile2SkeletonTree(t_in, maxDepth=3)
-    else: ts = t_in
-
-    D2._copyDistribution(ts, tcs)
-
-    if isinstance(t_in, str):
-        paths = []; ns = []
-        bases = Internal.getBases(ts)
-        for b in bases:
-            zones = Internal.getZones(b)
-            for z in zones:
-                nodes = Internal.getNodesFromName2(z, 'proc')
-                for n in nodes:
-                    p = 'CGNSTree/%s/%s/.Solver#Param/proc'%(b[0],z[0])
-                    paths.append(p); ns.append(n)
-        Filter.writeNodesFromPaths(t_in, paths, ns, maxDepth=0, mode=1)
-
-    if tc2_in is not None:
-        if isinstance(tc2_in, str):
-            tc2s = Cmpi.convertFile2SkeletonTree(tc2_in, maxDepth=3)
-        else: tc2s = tc2_in
-        D2._copyDistribution(tc2s, tcs)
-
-        if isinstance(tc2_in, str):
-            paths = []; ns = []
-            bases = Internal.getBases(tc2s)
-            for b in bases:
-                zones = Internal.getZones(b)
-                for z in zones:
-                    nodes = Internal.getNodesFromName2(z, 'proc')
-                    for n in nodes:
-                        p = 'CGNSTree/%s/%s/.Solver#Param/proc'%(b[0],z[0])
-                        paths.append(p); ns.append(n)
-            Filter.writeNodesFromPaths(tc2_in, paths, ns, maxDepth=0, mode=1)
-
-    _checkNcellsNptsPerProc(ts,NP)
+def _distribute(tIn, tcIn, NP, algorithm='graph', tc2In=None, useCom='ID'):
+    D2._distributeSkeletonTree(tIn, tcIn, NP, algorithm=algorithm, tc2In=tcIn, useCom=useCom)
     return None
-
 
 #====================================================================================
 # Check number of points and cells per zone & in total
 #====================================================================================
 def _checkNcellsNptsPerProc(ts, NP, isAtCenter=False):
-    NPTS   = numpy.zeros(NP, dtype=Internal.E_NpyInt)
-    NCELLS = numpy.zeros(NP, dtype=Internal.E_NpyInt)
-    ##Done by zone for flexibility
-    for z in Internal.getZones(ts):
-        proc_num        = Cmpi.getProc(z)
-        NPTS[proc_num] += C.getNPts(z)
-        if not isAtCenter:
-            NCELLS[proc_num] += C.getNCells(z)
-        else:
-            NCELLS[proc_num]  = NPTS[proc_num]
-
-    NPTS     = Cmpi.allreduce(NPTS  ,op=Cmpi.SUM)
-    NCELLS   = Cmpi.allreduce(NCELLS,op=Cmpi.SUM)
-    NptsTot  = numpy.sum(NPTS)
-    NcellsTot= numpy.sum(NCELLS)
-    ncells_percent=[]
-    if Cmpi.rank == 0:
-        for i in range(NP):
-            ncells_percent.append(NCELLS[i]/NcellsTot*100.)
-            if isAtCenter: print('Rank {} has {} cells & {} % of cells'.format(i,int(NCELLS[i]),round(ncells_percent[i],2)))
-            else:          print('Rank {} has {} points & {} cells & {} % of cells'.format(i,int(NPTS[i]),int(NCELLS[i]),round(ncells_percent[i],2)))
-
-        if isAtCenter:   print('All points: {} million cells'.format(NcellsTot/1.e6))
-        else:            print('All points: {} million points & {} million cells'.format(NptsTot/1.e6,NcellsTot/1.e6))
-        print('Range of % of cells: {} - {}'.format(round(min(ncells_percent),2),round(max(ncells_percent),2)))
-
+    D2._checkNcellsNptsPerProc(ts, NP, isAtCenter=isAtCenter)
     return None
-
 
 #====================================================================================
 ##This interpolation complements the function _initialize_t in the class IBM.
@@ -3443,8 +3364,8 @@ class IBM(Common):
 
     ##"STAND ALONE" FUNCTIONS
     # distribute
-    def _distribute(self, t_in, tc_in,algorithm='graph', tc2_in=None):
-        return _distribute(t_in, tc_in, self.NP, algorithm='graph', tc2_in=None)
+    def _distribute(self, tIn, tcIn,algorithm='graph', tc2In=None):
+        return _distribute(tIn, tcIn, self.NP, algorithm='graph', tc2In=None)
 
 
     # check nulber of points and cells per zone and i total
