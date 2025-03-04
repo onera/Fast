@@ -1209,7 +1209,12 @@ def setInterpData_Hybride(t_octree, tc_octree, t_curvi, blankingMatrix=None, bla
 # Redistrib on NP processors
 #====================================================================================
 def _distribute(tIn, tcIn, NP, algorithm='graph', tc2In=None, useCom='ID'):
-    D2._distributeSkeletonTree(tIn, tcIn, NP, algorithm=algorithm, tc2In=tcIn, useCom=useCom)
+    if isinstance(tIn , str)==False or isinstance(tcIn, str)==False or (isinstance(tc2In, str)==False and tc2In):
+        print("ERROR:: The arguments for Fast/Apps/IBM.py have changed. tIn, tcIn, & tc2In must be a filename. Exiting...", flush=True)
+        exit()
+    tInLocal = [tIn,tcIn]
+    if tc2In: tInLocal.append(tc2In)
+    D2._distributeSkeletonTree(tInLocal, NP, algorithm=algorithm, useCom=useCom)
     return None
 
 #====================================================================================
