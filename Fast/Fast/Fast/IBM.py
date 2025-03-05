@@ -1212,7 +1212,7 @@ def _distribute(tIn, tcIn, NP, algorithm='graph', tc2In=None, useCom='ID'):
     if isinstance(tIn , str)==False or isinstance(tcIn, str)==False or (isinstance(tc2In, str)==False and tc2In):
         print("ERROR:: The arguments for Fast/Apps/IBM.py have changed. tIn, tcIn, & tc2In must be a filename. Exiting...", flush=True)
         exit()
-    tInLocal = [tIn,tcIn]
+    tInLocal = [tcIn,tIn]
     if tc2In: tInLocal.append(tc2In)
     D2._distributeSkeletonTree(tInLocal, NP, algorithm=algorithm, useCom=useCom)
     return None
