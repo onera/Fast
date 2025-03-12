@@ -185,7 +185,7 @@ if NEW:
                 else:
                     pos += 1
 ####
-                    
+
 test.testT(tc_3d, 3)
 test.testT(t_3d, 4)
 

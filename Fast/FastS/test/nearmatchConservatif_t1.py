@@ -58,7 +58,7 @@ for base in Internal.getBases(tb):
 #                      nature=1, order=2, ext=ext, optimized=optimized, check=False)
 
 t,tc=X_IBM.prepareIBMData(tb, None, None, vmin=15, snearsf=snearsf, frontType=frontType,
-                    ext=ext+1, optimized=optimized, check=False, cleanCellN=False)
+                          ext=ext+1, optimized=optimized, check=False, cleanCellN=False)
 
 ####
 # The following lines are to avoid regression
@@ -112,7 +112,7 @@ for b in Internal.getBases(tc):
             else:
                 pos += 1
 ####
-                
+
 X_IBM._buildConservativeFlux(t, tc, verbose=1)
 
 t1c= Internal.copyRef(tc)
