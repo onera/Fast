@@ -1,6 +1,6 @@
-from Generator.IBM import buildOctree, generateIBMMesh, createRefinementBodies
+from Generator.IBM import buildOctree, generateIBMMesh, createRefinementBodies, extrudeCartesianZDir
 
-from Connector.IBM import prepareIBMData, dist2wallIBM, blankingIBM, buildFrontIBM, setInterpDataIBM, initializeIBM
+from Connector.IBM import prepareIBMData, prepareIBMDataExtrude, dist2wallIBM, blankingIBM, buildFrontIBM, setInterpDataIBM, initializeIBM
 
 from Geom.IBM import setSnear, _setSnear, setDfar, _setDfar, setIBCType, _setIBCType, _setFluidInside, _setFluidOutside, snearFactor, _snearFactor, setIBCType, changeIBCType, _changeIBCType, initOutflow, _initOutflow, initInj, _initInj, setFluidInside, setFluidOutside, flatPlate, bumpInChannel, naca0012
 
