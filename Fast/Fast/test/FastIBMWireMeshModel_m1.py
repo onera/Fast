@@ -1,6 +1,6 @@
 ## test case - Wire Mesh Model
 import Connector.IBM as X_IBM
-import Fast.IBM as App
+import Distributor2.PyTree as D2
 import Converter.PyTree as C
 import Converter.Mpi as Cmpi
 import Converter.Internal as Internal
@@ -50,7 +50,7 @@ vmin      = 11
 X_IBM.prepareIBMData(tb               , tFile        , tcFile   , tbox=tboffset,
                      snears=snears    , dfars=dfars  , vmin=vmin,
                      check=False       , frontType=1  , cartesian=False)
-App._distribute(tFile, tcFile, NP=Cmpi.size)
+D2._distributeSkeletonTree([tcFile, tFile], Cmpi.size)
 t       = Fast.loadTree(tFile, split='single')
 tc,graph= Fast.loadFile(tcFile, split='single', graph=True)
 

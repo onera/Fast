@@ -1,5 +1,4 @@
 # - compute (pyTree) -
-import Fast.IBM as Apps
 import Fast.FastIBM as FastIBM
 import Converter.Internal as Internal
 import Converter.Mpi as Cmpi
@@ -101,8 +100,8 @@ Cson    = (1.4*Rgaz*Tsta)**(0.5)
 Vref    = Mach*Cson
 Pout    = Psta-0.5*Ro*Vref*Vref*Psi*Ltube/Diam
 stagEnt = Gamma*cvInf*Tgen0
-Apps._initOutflow(tc, 'outlet', Pout, isDensityConstant=False)
-Apps._initInj(tc, 'inlet', Pgen0, stagEnt, injDir=[1.,0.,0.])
+FastIBM._initOutflow(tc, 'outlet', Pout, isDensityConstant=False)
+FastIBM._initInj(tc, 'inlet', Pgen0, stagEnt, injDir=[1.,0.,0.])
 
 test.testT(tc,2)
 test.testT(t ,3)
