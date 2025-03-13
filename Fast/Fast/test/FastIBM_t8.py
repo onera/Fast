@@ -13,7 +13,7 @@ test.TOLERANCE = 1.e-6
 
 LOCAL = test.getLocal()
 
-NEW = False
+NEW = True
 
 interpDataType = 1 # on suppose maillage non cartesion pour interp
 cartesian = False
