@@ -87,8 +87,8 @@ for it in range(NIT):
 
 Internal.createUniqueChild(t, 'Iteration', 'DataArray_t', value=NIT)
 Internal.createUniqueChild(t, 'Time', 'DataArray_t', value=time0)
-Fast.saveTree(t, 'restart.cgns', split='single', compress=0)
-Fast.saveTree(tc, 'tc_restart.cgns', split='single')
+Fast.saveTree(t, LOCAL+'/restart.cgns', split='single', compress=0)
+Fast.saveTree(tc, LOCAL+'/tc_restart.cgns', split='single')
 t = C.convertFile2PyTree(LOCAL+'/restart.cgns')
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
