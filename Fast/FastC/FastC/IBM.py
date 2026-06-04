@@ -170,23 +170,23 @@ def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=N
     #===================
     #mise a zero cellN dans Ghost BC
     for z in Internal.getZones(t):
-      bcs   = Internal.getNodesFromType2(z, 'BC_t')
-      sol   = Internal.getNodeFromName1(z, "FlowSolution#Centers")
-      cellN = Internal.getNodeFromName1(sol,"cellNChim")[1]
-      for bc in bcs:
-        btype = Internal.getValue(bc)
-        if btype != "BCOverlap":
-          ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
-          rg      = ptrange[0][1]
-          if rg[0,1]==rg[0,0]:
-            if rg[0,1]==1: cellN[0:2,:,:]=1
-            else         : cellN[-2:,:,:]=1
-          elif rg[1,1]==rg[1,0]:
-            if rg[1,1]==1: cellN[:, 0:2,:]=1
-            else         : cellN[:, -2:,:]=1
-          elif rg[2,1]==rg[2,0] and dimPb==3:
-            if rg[2,1]==1: cellN[:,:,0:2]=1
-            else         : cellN[:,:,2: ]=1
+        bcs   = Internal.getNodesFromType2(z, 'BC_t')
+        sol   = Internal.getNodeFromName1(z, "FlowSolution#Centers")
+        cellN = Internal.getNodeFromName1(sol,"cellNChim")[1]
+        for bc in bcs:
+            btype = Internal.getValue(bc)
+            if btype != "BCOverlap":
+                ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
+                rg      = ptrange[0][1]
+                if rg[0,1]==rg[0,0]:
+                    if rg[0,1]==1: cellN[0:2,:,:]=1
+                    else         : cellN[-2:,:,:]=1
+                elif rg[1,1]==rg[1,0]:
+                    if rg[1,1]==1: cellN[:, 0:2,:]=1
+                    else         : cellN[:, -2:,:]=1
+                elif rg[2,1]==rg[2,0] and dimPb==3:
+                    if rg[2,1]==1: cellN[:,:,0:2]=1
+                    else         : cellN[:,:,2: ]=1
 
     if verbose: pt0 = python_time.time(); C_IBM.printTimeAndMemory__('compute interpolation data (Abutting & Chimera)', time=-1)
     tc = C.node2Center(t)

@@ -785,10 +785,10 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
             else:           FilterPass='pass'+str(nOpass)
 
             if 'graphID_Unsteady' in graphLoc.keys():
-              print("mise a plat basee sur graphID_Unsteady: No Pass", nOpass,flush=True)
-              PACK.miseAPlatDonorTree__(t, tc, graphID_Unsteady=graphLoc, procDict=graphLoc['procDict'], nbpts_linelets=nbpts_linelets, FilterPass=FilterPass)
+                print("mise a plat basee sur graphID_Unsteady: No Pass", nOpass,flush=True)
+                PACK.miseAPlatDonorTree__(t, tc, graphID_Unsteady=graphLoc, procDict=graphLoc['procDict'], nbpts_linelets=nbpts_linelets, FilterPass=FilterPass)
             else:
-              PACK.miseAPlatDonorTree__(t, tc, graph=graphLoc['graphPass'+str(nOpass)], procDict=graphLoc['procDict'], nbpts_linelets=nbpts_linelets, FilterPass=FilterPass)
+                PACK.miseAPlatDonorTree__(t, tc, graph=graphLoc['graphPass'+str(nOpass)], procDict=graphLoc['procDict'], nbpts_linelets=nbpts_linelets, FilterPass=FilterPass)
 
             tmp= Internal.getNodeFromName1( tc, 'Pass'+str(nOpass) )
             key = 'param_int_tc'+str(nOpass)
@@ -1012,10 +1012,10 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
             iteration_loc = timelevel_motion
 
         for tree in [tc_inst, tc_inst_skel]:
-           for z in Internal.getZones(tree):
-              subRegions  =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
-              for s in subRegions:
-                 s[0]=s[0]+'_pass1'
+            for z in Internal.getZones(tree):
+                subRegions  =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+                for s in subRegions:
+                    s[0]=s[0]+'_pass1'
 
         tc      = Internal.merge( [tc     , tc_inst     ] )
         tc_skel = Internal.merge( [tc_skel, tc_inst_skel] )
@@ -1045,7 +1045,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
                 elif s[0][-6:]== '_pass3' and Nbpass<=2: Nbpass=3
                 elif s[0][-6:]== '_pass4' and Nbpass<=3: Nbpass=4
         Nbpass = Cmpi.allreduce(Nbpass, op=Cmpi.MAX)
- 
+
         #calcul graph stationnaire et instationnaire pour les Npass
         graph['procDict'] = D2.getProcDict(tc_skel)
 
@@ -1054,9 +1054,9 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
 
         graph['graphID_Steady']   = listS
         graph['graphID_Unsteady'] = listU
-        graph['graphPass1'] = Cmpi.mergeGraph( listS[0], listU[0][iteration_loc] ) 
+        graph['graphPass1'] = Cmpi.mergeGraph( listS[0], listU[0][iteration_loc] )
         for nOpass in range(2,Nbpass+1):
-          graph['graphPass'+str(nOpass)] = listS[nOpass -1]
+            graph['graphPass'+str(nOpass)] = listS[nOpass -1]
 
         t1=timeit.default_timer()
         cpu_graph = t1 -t0
@@ -1074,18 +1074,18 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
             t0=timeit.default_timer()
 
             for nOpass in range(1,Nbpass+1):
-               if (Nbpass==1): FilterPass=None
-               else:           FilterPass='pass'+str(nOpass)
+                if (Nbpass==1): FilterPass=None
+                else:           FilterPass='pass'+str(nOpass)
 
-               PACK.miseAPlatDonorTree__( t, tc, graphID_Unsteady=graph, procDict=graph['procDict'], nbpts_linelets=0, FilterPass=FilterPass)
+                PACK.miseAPlatDonorTree__( t, tc, graphID_Unsteady=graph, procDict=graph['procDict'], nbpts_linelets=0, FilterPass=FilterPass)
 
-               tmp= Internal.getNodeFromName1( tc, 'Pass'+str(nOpass) )
-               key = 'param_int_tc'+str(nOpass)
-               FastC.HOOK[key] = Internal.getNodeFromName1( tmp, 'Parameter_int' )[1]
-               param_real_tc = Internal.getNodeFromName1 (tmp, 'Parameter_real')
-               key = 'param_real_tc'+str(nOpass)
-               if param_real_tc is not None: FastC.HOOK[key] = param_real_tc[1]
-               else:  FastC.HOOK[key] = None
+                tmp= Internal.getNodeFromName1( tc, 'Pass'+str(nOpass) )
+                key = 'param_int_tc'+str(nOpass)
+                FastC.HOOK[key] = Internal.getNodeFromName1( tmp, 'Parameter_int' )[1]
+                param_real_tc = Internal.getNodeFromName1 (tmp, 'Parameter_real')
+                key = 'param_real_tc'+str(nOpass)
+                if param_real_tc is not None: FastC.HOOK[key] = param_real_tc[1]
+                else:  FastC.HOOK[key] = None
 
             t1=timeit.default_timer()
             cpu_plat = t1 -t0

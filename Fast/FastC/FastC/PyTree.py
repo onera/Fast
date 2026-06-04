@@ -3717,16 +3717,16 @@ def loadTree(fileName='t.cgns', split='single', graph=False, exploc=0):
                     if no == size and tmp != []:
                         t      = Internal.merge(tmp)
                         if graph:
-                          Nbpass = 1
-                          for z in Internal.getZones(t):
-                            subRegions = Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
-                            for s in subRegions:
-                              if   s[0][-6:]== '_pass2' and Nbpass==1: Nbpass=2
-                              elif s[0][-6:]== '_pass3' and Nbpass<=2: Nbpass=3
-                              elif s[0][-6:]== '_pass4' and Nbpass<=3: Nbpass=4
+                            Nbpass = 1
+                            for z in Internal.getZones(t):
+                                subRegions = Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+                                for s in subRegions:
+                                    if   s[0][-6:]== '_pass2' and Nbpass==1: Nbpass=2
+                                    elif s[0][-6:]== '_pass3' and Nbpass<=2: Nbpass=3
+                                    elif s[0][-6:]== '_pass4' and Nbpass<=3: Nbpass=4
 
-                          Nbpass = Cmpi.allreduce(Nbpass, op=Cmpi.MAX)
-                          graphN = prepGraphs(t, exploc=exploc, Nbpass=Nbpass)
+                            Nbpass = Cmpi.allreduce(Nbpass, op=Cmpi.MAX)
+                            graphN = prepGraphs(t, exploc=exploc, Nbpass=Nbpass)
 
                     else:
                         raise ValueError('Cannot compute graph: connectivity files missing')
@@ -4576,80 +4576,80 @@ def cassiopee2Pointwise(fileName):
 ## merge tree connectivity
 def _mergeTree(tc1,tc2, verbose=0):
 
-  basename1=[]
-  for b1 in Internal.getBases(tc1): basename1.append( b1[0] )
+    basename1=[]
+    for b1 in Internal.getBases(tc1): basename1.append( b1[0] )
 
-  for b1 in Internal.getBases(tc1):
-    zonesname1=[]
-    for z1 in Internal.getZones(b1): zonesname1.append( z1[0] )
+    for b1 in Internal.getBases(tc1):
+        zonesname1=[]
+        for z1 in Internal.getZones(b1): zonesname1.append( z1[0] )
 
-    for b2 in Internal.getBases(tc2):
-      #la base de tc2  n'existe pas dans tc1: on l'ajoute brutal
-      if b2[0] not in basename1:
-         if verbose != 0: print("ajout brutale base:" , b2[0])
-         tc1[2].append( b2 )
-      else:
-        if b2[0] == b1[0]:
-          for z2 in Internal.getZones(b2):
-            #la zone z2  n'existe pas dans tc1: on l'ajoute brutal
-            if z2[0] not in zonesname1:
-              if verbose != 0: print("ajout brutale zone:" , z2[0],  'dans base1:', b1[0])
-              b1[2].append( z2 )
+        for b2 in Internal.getBases(tc2):
+            #la base de tc2  n'existe pas dans tc1: on l'ajoute brutal
+            if b2[0] not in basename1:
+                if verbose != 0: print("ajout brutale base:" , b2[0])
+                tc1[2].append( b2 )
             else:
-              #print('z2:', z2[0])
-              z1 = Internal.getNodeFromName2(b1,z2[0])
-              racs2 = Internal.getNodesFromType1(z2,'ZoneSubRegion_t')
-              racs1 = Internal.getNodesFromType1(z1,'ZoneSubRegion_t')
-              for rac2 in racs2:
-                #print("rac a traiter:", rac2[0])
-                lfusion=False
-                for rac1 in racs1:
-                  if rac1[0]==rac2[0]:
-                     if verbose != 0: print("Fusion raccord:", rac1[0], 'z1:', z1[0], 'base12:', b1[0], b2[0])
-                     lfusion=True
-                     r1 = rac1
+                if b2[0] == b1[0]:
+                    for z2 in Internal.getZones(b2):
+                        #la zone z2  n'existe pas dans tc1: on l'ajoute brutal
+                        if z2[0] not in zonesname1:
+                            if verbose != 0: print("ajout brutale zone:" , z2[0],  'dans base1:', b1[0])
+                            b1[2].append( z2 )
+                        else:
+                            #print('z2:', z2[0])
+                            z1 = Internal.getNodeFromName2(b1,z2[0])
+                            racs2 = Internal.getNodesFromType1(z2,'ZoneSubRegion_t')
+                            racs1 = Internal.getNodesFromType1(z1,'ZoneSubRegion_t')
+                            for rac2 in racs2:
+                                #print("rac a traiter:", rac2[0])
+                                lfusion=False
+                                for rac1 in racs1:
+                                    if rac1[0]==rac2[0]:
+                                        if verbose != 0: print("Fusion raccord:", rac1[0], 'z1:', z1[0], 'base12:', b1[0], b2[0])
+                                        lfusion=True
+                                        r1 = rac1
 
-                if lfusion:
-                  ptlist2    = Internal.getNodeFromName1(rac2 ,'PointList')
-                  ptlistD2   = Internal.getNodeFromName1(rac2 ,'PointListDonor')
-                  interpD2   = Internal.getNodeFromName1(rac2 ,'InterpolantsDonor')
-                  interpType2= Internal.getNodeFromName1(rac2 ,'InterpolantsType')
-                  ptlist1    = Internal.getNodeFromName1(r1   ,'PointList')
-                  ptlistD1   = Internal.getNodeFromName1(r1   ,'PointListDonor')
-                  interpD1   = Internal.getNodeFromName1(r1   ,'InterpolantsDonor')
-                  interpType1= Internal.getNodeFromName1(r1   ,'InterpolantsType')
+                                if lfusion:
+                                    ptlist2    = Internal.getNodeFromName1(rac2 ,'PointList')
+                                    ptlistD2   = Internal.getNodeFromName1(rac2 ,'PointListDonor')
+                                    interpD2   = Internal.getNodeFromName1(rac2 ,'InterpolantsDonor')
+                                    interpType2= Internal.getNodeFromName1(rac2 ,'InterpolantsType')
+                                    ptlist1    = Internal.getNodeFromName1(r1   ,'PointList')
+                                    ptlistD1   = Internal.getNodeFromName1(r1   ,'PointListDonor')
+                                    interpD1   = Internal.getNodeFromName1(r1   ,'InterpolantsDonor')
+                                    interpType1= Internal.getNodeFromName1(r1   ,'InterpolantsType')
 
-                  old_szInt1 = numpy.size(ptlist1[1])
-                  old_szInt2 = numpy.size(ptlist2[1])
-                  new_szInt = old_szInt1 + old_szInt2
-                  old_szReal1= numpy.size(interpD1[1])
-                  old_szReal2= numpy.size(interpD2[1])
-                  new_szReal= old_szReal1 + old_szReal2
+                                    old_szInt1 = numpy.size(ptlist1[1])
+                                    old_szInt2 = numpy.size(ptlist2[1])
+                                    new_szInt = old_szInt1 + old_szInt2
+                                    old_szReal1= numpy.size(interpD1[1])
+                                    old_szReal2= numpy.size(interpD2[1])
+                                    new_szReal= old_szReal1 + old_szReal2
 
-                  ptlist     = numpy.empty( new_szInt, numpy.int32)
-                  ptlistD    = numpy.empty( new_szInt, numpy.int32)
-                  interpType = numpy.ones(  new_szInt, numpy.int32)
-                  interpD    = numpy.ones( new_szReal, numpy.float64)
+                                    ptlist     = numpy.empty( new_szInt, numpy.int32)
+                                    ptlistD    = numpy.empty( new_szInt, numpy.int32)
+                                    interpType = numpy.ones(  new_szInt, numpy.int32)
+                                    interpD    = numpy.ones( new_szReal, numpy.float64)
 
-                  ptlist[   0        :old_szInt1]  = ptlist1[1][    0 : old_szInt1]
-                  ptlist[  old_szInt1:new_szInt ]  = ptlist2[1][    0 : old_szInt2]
-                  ptlistD[  0        :old_szInt1]  = ptlistD1[1][   0 : old_szInt1]
-                  ptlistD[ old_szInt1:new_szInt ]  = ptlistD2[1][   0 : old_szInt2]
-                  interpType[ 0      :old_szInt1]  = interpType1[1][0 : old_szInt1]
-                  interpType[old_szInt1:new_szInt] = interpType2[1][0 : old_szInt2]
+                                    ptlist[   0        :old_szInt1]  = ptlist1[1][    0 : old_szInt1]
+                                    ptlist[  old_szInt1:new_szInt ]  = ptlist2[1][    0 : old_szInt2]
+                                    ptlistD[  0        :old_szInt1]  = ptlistD1[1][   0 : old_szInt1]
+                                    ptlistD[ old_szInt1:new_szInt ]  = ptlistD2[1][   0 : old_szInt2]
+                                    interpType[ 0      :old_szInt1]  = interpType1[1][0 : old_szInt1]
+                                    interpType[old_szInt1:new_szInt] = interpType2[1][0 : old_szInt2]
 
-                  interpD[ 0         :old_szReal1]  = interpD1[1][   0 : old_szReal1]
-                  interpD[old_szReal1:new_szReal ]  = interpD2[1][   0 : old_szReal2]
+                                    interpD[ 0         :old_szReal1]  = interpD1[1][   0 : old_szReal1]
+                                    interpD[old_szReal1:new_szReal ]  = interpD2[1][   0 : old_szReal2]
 
-                  ptlist1[1]   = ptlist
-                  ptlistD1[1]   = ptlistD
-                  interpD1[1]   = interpD
-                  interpType1[1]= interpType
-                else:
-                  if verbose != 0: print('ajout brutal raccord:', rac2[0], 'dans zone:', z1[0], 'de base:', b1[0])
-                  z1[2].append(rac2)
+                                    ptlist1[1]   = ptlist
+                                    ptlistD1[1]   = ptlistD
+                                    interpD1[1]   = interpD
+                                    interpType1[1]= interpType
+                                else:
+                                    if verbose != 0: print('ajout brutal raccord:', rac2[0], 'dans zone:', z1[0], 'de base:', b1[0])
+                                    z1[2].append(rac2)
 
-  return None
+    return None
 
 ## construction info pour raccord nearmatch conservatif
 def _buildConservativeFlux(t, tc, verbose=0):

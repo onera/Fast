@@ -48,18 +48,18 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
         elif FilterPass == 'pass2':  pass_tg=1
         elif FilterPass == 'pass3':  pass_tg=2
         elif FilterPass == 'pass4':  pass_tg=3
-        else: 
-          print("Error mise a plat: npass > 4", flush=True)
-          stop 
+        else:
+            print("Error mise a plat: npass > 4", flush=True)
+            stop
         print("mise a plat: filterpass:", FilterPass, pass_tg)
 
         graphID   = None
         graphID_U = graphID_Unsteady['graphID_Unsteady'][pass_tg]
         if len(graphID_U) ==0:
-           print("Graph unsteady vide: graphID_U = None")
-           graphID_U = None
+            print("Graph unsteady vide: graphID_U = None")
+            graphID_U = None
         graphID_S = graphID_Unsteady['graphID_Steady'][pass_tg]
-        
+
     else:
         procDict=None; graphID=None; graphID_U = None; graphID_S = None
 
