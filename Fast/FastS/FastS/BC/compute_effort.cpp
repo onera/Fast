@@ -118,8 +118,9 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
     //Pointeur maillage
     //
     //
-    if(ipt_param_int[nd][ LALE ]== 0){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
-    else                             { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
+    GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])
+    //if(ipt_param_int[nd][ LALE ]== 0){ GET_XYZ( "GridCoordinates"     , zone, iptx[nd], ipty[nd], iptz[nd])}
+    //else                             { GET_XYZ( "GridCoordinates#Init", zone, iptx[nd], ipty[nd], iptz[nd])}
 
     //
     //Pointeur var primitive + visco + distance paroi + cellN
@@ -261,7 +262,7 @@ PyObject* K_FASTS::compute_effort(PyObject* self, PyObject* args)
                     {
                       E_Float* effort_omp   = effort.begin()  + ithread*sz_eff;
 
-                        //printf("surf %f %d \n",  effort_omp[6], ithread );
+                       //printf("momt %f %d \n",  effort_omp[3], ithread );
                        ipteff[0]  = ipteff[0]  + effort_omp[0];
                        ipteff[1]  = ipteff[1]  + effort_omp[1];
                        ipteff[2]  = ipteff[2]  + effort_omp[2];

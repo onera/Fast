@@ -672,7 +672,7 @@ PyObject* K_FASTC::__setInterpTransfersD(PyObject* self, PyObject* args)
             noi     = shiftDonor;  // compteur sur le tableau d indices donneur
             indCoef = ( pt_deb - ideb ) * sizecoefs + shiftCoef;
 
-            //E_Int NoR = ipt_param_int[shift_rac + nrac*11]; 
+            E_Int NoR = ipt_param_int[shift_rac + nrac*11]; 
       
             if ( nvars_loc == 5 || (ibc==1 && solver_R==4) )
             {
