@@ -2326,7 +2326,7 @@ def createStressNodes(t, BC=None, windows=None):
                         kdeb = dim[2,0]+inck
                         kfin = dim[2,1]+inck
 
-                        #print('subZ', ideb,ifin,jdeb,jfin,kdeb,kfin)
+                        #print('subZ', z[0],  ideb,ifin,jdeb,jfin,kdeb,kfin)
                         zp = T.subzone(z, (ideb,jdeb,kdeb), (ifin,jfin,kfin))
                         zp[0] = z[0]+'_'+v[0]+str(inum)
                         inum  += 1
@@ -2439,7 +2439,7 @@ def createStressNodes(t, BC=None, windows=None):
     Internal._rmNodesByType(teff, 'ZoneBC_t')
     Internal._rmNodesByType(teff, 'Rind_t')
     Internal._rmNodesByName(teff, '.Solver#define')
-    Internal._rmNodesByName(teff, 'Parameter_real')
+    #Internal._rmNodesByName(teff, 'Parameter_real')
     Internal._rmNodesByName(teff, 'CFL_minmaxmoy')
     Internal._rmNodesByName(teff, 'type_zone')
     Internal._rmNodesByName(teff, 'model')

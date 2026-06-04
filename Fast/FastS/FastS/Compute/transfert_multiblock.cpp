@@ -8,9 +8,9 @@ E_Int exploc       = param_int[0][EXPLOC];
 
   if (param_int[0][EXPLOC] == 0) //   dt constant
   {
-      //printf("Nbpass trans %d \n", iptdtloc[12]);
       for (E_Int nopass = 0; nopass < iptdtloc[12]; nopass++)
         {
+         //printf("N0pass trans %d \n",  nopass+1);fflush(0);
          K_FASTC::setInterpTransfersFast(iptro_CL, vartype, int_tc[nopass], real_tc[nopass] , param_int, param_real, ipt_omp,
                                      linelets_int, linelets_real, it_target, nidom, ipt_timecount, mpi, nitcfg, nssiter, rk, exploc, numpassage, nopass );
         }

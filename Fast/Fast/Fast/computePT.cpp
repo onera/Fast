@@ -100,8 +100,8 @@ PyObject* K_FAST::_computePT(PyObject* self, PyObject* args)
   E_Int it_target = iptdtloc[4];
 
   E_Int npass_transfer = iptdtloc[12];
-  E_Int* int_tc[npass_transfer];
-  E_Float* real_tc[npass_transfer];
+  E_Int* int_tc[npass_transfer+1];
+  E_Float* real_tc[npass_transfer+1];
 
   lssiter_verif = 0; // par defaut, pas de calcul cfl , ni residu Newton
   if(nitrun % iptdtloc[1] == 0 || nitrun == 1) lcfl =1;

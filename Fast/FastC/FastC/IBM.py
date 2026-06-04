@@ -168,6 +168,26 @@ def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=N
     #===================
     # STEP 4 : INTERP DATA CHIM
     #===================
+    #mise a zero cellN dans Ghost BC
+    for z in Internal.getZones(t):
+        bcs   = Internal.getNodesFromType2(z, 'BC_t')
+        sol   = Internal.getNodeFromName1(z, "FlowSolution#Centers")
+        cellN = Internal.getNodeFromName1(sol,"cellNChim")[1]
+        for bc in bcs:
+            btype = Internal.getValue(bc)
+            if btype != "BCOverlap":
+                ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
+                rg      = ptrange[0][1]
+                if rg[0,1]==rg[0,0]:
+                    if rg[0,1]==1: cellN[0:2,:,:]=1
+                    else         : cellN[-2:,:,:]=1
+                elif rg[1,1]==rg[1,0]:
+                    if rg[1,1]==1: cellN[:, 0:2,:]=1
+                    else         : cellN[:, -2:,:]=1
+                elif rg[2,1]==rg[2,0] and dimPb==3:
+                    if rg[2,1]==1: cellN[:,:,0:2]=1
+                    else         : cellN[:,:,2: ]=1
+
     if verbose: pt0 = python_time.time(); C_IBM.printTimeAndMemory__('compute interpolation data (Abutting & Chimera)', time=-1)
     tc = C.node2Center(t)
 
@@ -192,7 +212,6 @@ def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=N
                                         Internal.__FlowSolutionNodes__,
                                         Internal.__FlowSolutionCenters__)
     '''
-
     if verbose: C_IBM.printTimeAndMemory__('build IBM front', time=python_time.time()-pt0)
 
     #on recalcule les interp chimere en supprimant les coin maintenant que le calcul du front est ok
@@ -530,10 +549,12 @@ def buildFrontIBM(t, tc, tb=None, dimPb=3, frontType=1, cartesian=True, twoFront
                         if tmp[i,j,k] >= 1.99 and tmp[i,j,k] <= 2.01: tmp[i,j,k]=2.
 
         for z in Internal.getZones(t):
+            #if z[0]=='Cart.553X0':  C.convertPyTree2File(z, '553AvtUpdate.cgns')
             fastc._updateNatureForIBMGhost(z,
                                            Internal.__GridCoordinates__,
                                            Internal.__FlowSolutionNodes__,
                                            Internal.__FlowSolutionCenters__)
+            #if z[0]=='Cart.553X0':  C.convertPyTree2File(z, '553AprUpdate.cgns')
 
     if check and Cmpi.rank == 0:
         C.convertPyTree2File(front, 'front.cgns')
@@ -744,12 +765,16 @@ def _setInterpDataIBM(t, tc, tb, front, front2=None, dimPb=3, frontType=1, IBCTy
                                             if abs(cellN[i, j, nk-1-k]-1.5) < 0.01: cellN[i, j , nk-1-k]= val
 
                     ''' pour debug gros cas
-                    if zrname =='Cart.1X0':
-                      C.convertPyTree2File(zrcv,'Rec_'+zrname+'.cgns')
-                      C.convertPyTree2File(dnrZones,'Dnr_'+zrname+'.cgns')
+                    if zrname =='Cart.553X0':
+                      C.convertPyTree2File(zrcv,'RecIBM_'+zrname+'.cgns')
+                      C.convertPyTree2File(dnrZones,'DnrIBM_'+zrname+'.cgns')
                       import pickle
                       with open ("Interp_"+zrname+".lst", "wb" ) as inter:
                          pickle.dump ( allInterpPts[nozr]  , inter )
+                      with open ("wall_"+zrname+".lst", "wb" ) as wall:
+                         pickle.dump ( allWallPts[nozr]  , wall )
+                      with open ("Corrected_"+zrname+".lst", "wb" ) as corrected:
+                         pickle.dump ( allCorrectedPts[nozr]  , corrected )
                     '''
                     XOD._setIBCDataForZone__(zrcv, dnrZones, allCorrectedPts[nozr], allWallPts[nozr], allInterpPts[nozr],
                                              nature=nature, penalty=penalty, extrap=extrap, loc='centers', storage='inverse', dim=dimPb,
@@ -1772,12 +1797,12 @@ def setInterpDataAndSetInterpTransfer__(t, tc, nature=1, loc='centers', storage=
             if dnrZones != []:
                 X._setInterpData(zr, dnrZones, nature=1, penalty=1, extrap=0, loc='centers', storage='inverse',
                                  interpDataType=interpDataTypeL, hook=hookL, sameName=1, order=2, itype='chimera', verbose=0)
-                '''
                 fix='Nocorner'
                 if corner: fix='corner'
-                if zr[0]=='Cart.48X0':
-                      C.convertPyTree2File(zr,'t48_E1_'+fix+'.cgns')
-                      C.convertPyTree2File(dnrZones,'tc48_E1_'+fix+'.cgns')
+                '''
+                if zr[0]=='Cart.553X0':
+                      C.convertPyTree2File(zr,'t553_E1_'+fix+'.cgns')
+                      C.convertPyTree2File(dnrZones,'tc553_E1_'+fix+'.cgns')
                 '''
 
             modCellN = []
@@ -1843,13 +1868,6 @@ def setInterpDataAndSetInterpTransfer__(t, tc, nature=1, loc='centers', storage=
             sol= Internal.getNodeFromName2(zr, 'FlowSolution#Centers')
             cellN= Internal.getNodeFromName1(sol, 'cellN')[1]
 
-            '''
-        fix='Nocorner'
-        if corner: fix='corner'
-        if zr[0]=='Cart.48X0':
-            C.convertPyTree2File(zr,'t48_E2_'+fix+'.cgns')
-            C.convertPyTree2File(zd,'tc48_E2_'+zd[0]+fix+'.cgns')
-        '''
 
             sh   = numpy.shape(cellN)
             nxny = sh[0]*sh[1]
@@ -1868,6 +1886,14 @@ def setInterpDataAndSetInterpTransfer__(t, tc, nature=1, loc='centers', storage=
                     i    = rest -j*nx
 
                     cellN[i,j,k]=val #si nature=0 , 0 sinon
+
+    '''
+    '''
+    fix='Nocorner'
+    if corner: fix='corner'
+    #zr = Internal.getNodeFromName2(t,'Cart.553X0')
+    #if zr[0]=='Cart.553X0':
+    #    C.convertPyTree2File(zr,'t553_E2_'+fix+'.cgns')
 
     C._cpVars(t,'centers:cellN',tc,'cellN')
     Cmpi._addXZones(tc, graph, variables=['cellN'], noCoordinates=False, cartesian=cartesian, zoneGC=False, keepOldNodes=False)
@@ -1907,12 +1933,12 @@ def setInterpDataAndSetInterpTransfer__(t, tc, nature=1, loc='centers', storage=
                 X._setInterpData(zr, dnrZones, nature=1, penalty=1, extrap=0, loc='centers', storage='inverse',
                                  interpDataType=interpDataTypeL, hook=hookL, sameName=1, order=2, itype='chimera', verbose=0)
 
-                '''
                 fix='Nocorner'
                 if corner: fix='corner'
-                if zr[0]=='Cart.48X0':
-                      C.convertPyTree2File(zr,'t48_E3_'+fix+'.cgns')
-                      C.convertPyTree2File(dnrZones,'tc48_E3_'+fix+'.cgns')
+                '''
+                if zr[0]=='Cart.553X0':
+                    C.convertPyTree2File(zr,'t553_E3_'+fix+'.cgns')
+                    C.convertPyTree2File(dnrZones,'tc553_E3_'+fix+'.cgns')
                 '''
 
             modCellN = []
@@ -1993,6 +2019,12 @@ def setInterpDataAndSetInterpTransfer__(t, tc, nature=1, loc='centers', storage=
 
                     cellN[i,j,k]=val #si nature=0 , 0 sinon
 
+    fix='Nocorner'
+    if corner: fix='corner'
+    #zr = Internal.getNodeFromName2(t,'Cart.553X0')
+    #if zr[0]=='Cart.553X0':
+    #    C.convertPyTree2File(zr,'t553_E4_'+fix+'.cgns')
+
     C._cpVars(t,'centers:cellN',tc,'cellN')
 
     Cmpi._addXZones(tc, graph, variables=['cellN'], noCoordinates=False, cartesian=cartesian, zoneGC=False, keepOldNodes=False)
@@ -2033,12 +2065,12 @@ def setInterpDataAndSetInterpTransfer__(t, tc, nature=1, loc='centers', storage=
                 #                 sameName=1, interpDataType=interpDataTypeL, hook=hookL, order=order, itype='chimera')
                 X._setInterpData(zr, dnrZones, nature=1, penalty=1, loc='centers', storage='inverse', extrap=0, verbose=0,
                                  sameName=1, interpDataType=interpDataTypeL, hook=hookL, order=order, itype='chimera')
-                ''' 
                 fix='Nocorner'
                 if corner: fix='corner'
-                if zr[0]=='Cart.48X0':
-                      C.convertPyTree2File(zr,'t48_E5_'+fix+'.cgns')
-                      C.convertPyTree2File(dnrZones,'tc48_E5_'+fix+'.cgns')
+                '''
+                if zr[0]=='Cart.553X0':
+                      C.convertPyTree2File(zr,'t553_E5_'+fix+'.cgns')
+                      C.convertPyTree2File(dnrZones,'tc553_E5_'+fix+'.cgns')
                 '''
             for zd in dnrZones:
                 zdname = zd[0]
@@ -2109,6 +2141,12 @@ def setInterpDataAndSetInterpTransfer__(t, tc, nature=1, loc='centers', storage=
 
                         cellN[i,j,k]=val #si nature=0 , 0 sinon
 
+        fix='Nocorner'
+        if corner: fix='corner'
+        #zr = Internal.getNodeFromName2(t,'Cart.553X0')
+        #if zr[0]=='Cart.553X0':
+        #   C.convertPyTree2File(zr,'t553_E6_'+fix+'.cgns')
+
         C._cpVars(t,'centers:cellN',tc,'cellN')
 
         Cmpi._addXZones(tc, graph, variables=['cellN'], noCoordinates=False, cartesian=cartesian, zoneGC=False, keepOldNodes=False)
@@ -2147,6 +2185,15 @@ def setInterpDataAndSetInterpTransfer__(t, tc, nature=1, loc='centers', storage=
                 if dnrZones != []:
                     X._setInterpData(zr, dnrZones, nature=nature, penalty=1, loc='centers', storage='inverse', extrap=extrap, verbose=3,
                                      sameName=1, interpDataType=interpDataTypeL, hook=hookL, order=order, itype='chimera')
+
+                    fix='Nocorner'
+                    if corner: fix='corner'
+                    '''
+                    if zr[0]=='Cart.553X0':
+                       C.convertPyTree2File(zr,'t553_E7_'+fix+'.cgns')
+                       C.convertPyTree2File(dnrZones,'tc553_E7_'+fix+'.cgns')
+                    '''
+
                 for zd in dnrZones:
                     zdname = zd[0]
                     destProc = procDict[zdname]

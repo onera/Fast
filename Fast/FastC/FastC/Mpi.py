@@ -48,19 +48,25 @@ def __setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, it_t
         pt_ech = param_int[comm_P2P + shift_graph]
         dest   = param_int[pt_ech]
 
+
+        rank  = Cmpi.rank
+        #print('dest:', dest, 'rank', rank, flush=True)
         no_transfert = comm_P2P
         if dest == Cmpi.rank: # transfert intra_processus
 
 
             FastC.fastc.___setInterpTransfers( zones, zonesD, vars, dtloc, param_int, param_real, it_target, varType, no_transfert, nstep,
                                                nitmax, rk, exploc, num_passage)
+            #print('apres ___setInterpTransfers',  flush=True)
         else:
             rank  = Cmpi.rank
             type_transfert =2 #inutile
             infos = FastC.fastc.__setInterpTransfersD(zones, zonesD, vars, dtloc, param_int, param_real, it_target, varType,
                                                       type_transfert, no_transfert, nstep, nitmax, rk, exploc, num_passage, rank,
                                                       isIbmMoving_int)
-            infos = []
+
+            #infos = []
+            print("ATTENTION fillghost: transferD Reactive")
             if infos != []:
                 for n in infos:
                     rcvNode = dest
@@ -69,6 +75,7 @@ def __setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, it_t
 
     # Envoie des numpys suivant le graph
     if graph is not None:
+        print("graph is not None dans fillghost", flush=True)
         rcvDatas = Cmpi.sendRecvC(datas, graph)
         #rcvDatas = Cmpi.sendRecv(datas, graph)
     else: rcvDatas = {}
@@ -82,10 +89,10 @@ def __setInterpTransfers(zones, zonesD, vars, dtloc, param_int, param_real, it_t
             field = n[1]
 
             isSetPartialFields = True
-            if isSetPartialFieldsCheck==1 and field != []:
-                minfld = numpy.ndarray.min(field[1][0])
-                maxfld = numpy.ndarray.max(field[1][0])
-                if maxfld == minfld and maxfld < -1.e05: isSetPartialFields=False
+            #if isSetPartialFieldsCheck==1 and field != []:
+            #    minfld = numpy.ndarray.min(field[1][0])
+            #    maxfld = numpy.ndarray.max(field[1][0])
+            #    if maxfld == minfld and maxfld < -1.e05: isSetPartialFields=False
 
             if isSetPartialFields:
                 listIndices = n[2]

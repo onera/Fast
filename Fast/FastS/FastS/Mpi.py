@@ -784,7 +784,11 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
             if (Nbpass==1): FilterPass=None
             else:           FilterPass='pass'+str(nOpass)
 
-            PACK.miseAPlatDonorTree__(t, tc, graph=graphLoc['graphPass'+str(nOpass)], procDict=graphLoc['procDict'], nbpts_linelets=nbpts_linelets, FilterPass=FilterPass)
+            if 'graphID_Unsteady' in graphLoc.keys():
+                print("mise a plat basee sur graphID_Unsteady: No Pass", nOpass,flush=True)
+                PACK.miseAPlatDonorTree__(t, tc, graphID_Unsteady=graphLoc, procDict=graphLoc['procDict'], nbpts_linelets=nbpts_linelets, FilterPass=FilterPass)
+            else:
+                PACK.miseAPlatDonorTree__(t, tc, graph=graphLoc['graphPass'+str(nOpass)], procDict=graphLoc['procDict'], nbpts_linelets=nbpts_linelets, FilterPass=FilterPass)
 
             tmp= Internal.getNodeFromName1( tc, 'Pass'+str(nOpass) )
             key = 'param_int_tc'+str(nOpass)
@@ -841,7 +845,6 @@ def _computeStress(t, teff, metrics, xyz_ref=(0.,0.,0.)):
     """Compute efforts in teff."""
     ret = PyTree._computeStress(t, teff, metrics, xyz_ref)
     ret = numpy.array(ret, dtype=numpy.float64)
-    #ret1 = numpy.empty(ret.shape, dtype=numpy.float64)
     ret1 = numpy.zeros(ret.shape, dtype=numpy.float64)
     #Cmpi.Allreduce(ret, ret1, op=Cmpi.SUM)
     Cmpi.KCOMM.Allreduce(ret, ret1, op=Cmpi.SUM)
@@ -871,7 +874,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
 
     #on cree/initialise le dico infos graph
     if graph =={} or graph is None:
-        graph= {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
+        graph = {'graphPass1': None, 'procDict': None, 'procList': None}
 
     #on cree les noeud infos insta pour chimere perio s'il n'existe pas
     TimeLevelOpts=['TimeLevelMotion','TimeLevelTarget','Iteration']
@@ -899,9 +902,10 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
     #target in no more in tc; need need data in a new file
     #
 
+    print("VERIF: target", timelevel_target, 'perfile:', timelevel_perfile, 'motion:', timelevel_motion, 'period:', timelevel_period, flush=True)
     if timelevel_target == timelevel_perfile or tc is None or timelevel_motion%timelevel_period == 0:
 
-        graph= {'graphID':None, 'graphIBCD':None, 'procDict':None, 'procList':None}
+        graph = {'graphPass1': None, 'procDict': None, 'procList': None}
         tc =None; tc_skel =None
 
         rank = Cmpi.rank
@@ -958,8 +962,11 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
             # unsteady part: toto_Nit_skeleton.cgns
             t0=timeit.default_timer()
             FILE_Skeleton = dir_unsteady +'_'+str(root) +'/'+ root_unsteady +str(root) + '_skeleton.cgns'
+
             if os.access(FILE_Skeleton, os.F_OK):
                 tc_inst_skel = C.convertFile2PyTree(FILE_Skeleton)
+            else:
+                print('Souci lecture FILE_Skeleton',FILE_Skeleton, flush=True)
 
             t1=timeit.default_timer()
             cpu_skelU = t1 -t0
@@ -1004,6 +1011,12 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
         else:
             iteration_loc = timelevel_motion
 
+        for tree in [tc_inst, tc_inst_skel]:
+            for z in Internal.getZones(tree):
+                subRegions  =  Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+                for s in subRegions:
+                    s[0]=s[0]+'_pass1'
+
         tc      = Internal.merge( [tc     , tc_inst     ] )
         tc_skel = Internal.merge( [tc_skel, tc_inst_skel] )
 
@@ -1021,12 +1034,29 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
         cpu_merge = t1 -t0
         t0=t1
 
+
+
+        #calcul nombre de passe  pour tc
+        Nbpass = 1
+        for z in Internal.getZones(tc):
+            subRegions = Internal.getNodesFromType1(z, 'ZoneSubRegion_t')
+            for s in subRegions:
+                if   s[0][-6:]== '_pass2' and Nbpass==1: Nbpass=2
+                elif s[0][-6:]== '_pass3' and Nbpass<=2: Nbpass=3
+                elif s[0][-6:]== '_pass4' and Nbpass<=3: Nbpass=4
+        Nbpass = Cmpi.allreduce(Nbpass, op=Cmpi.MAX)
+
+        #calcul graph stationnaire et instationnaire pour les Npass
         graph['procDict'] = D2.getProcDict(tc_skel)
-        graph['graphIBCD']= Cmpi.computeGraph(tc_skel, type='IBCD', reduction=False, procDict=graph['procDict'])
 
-        graph['graphID_Steady'],graph['graphID_Unsteady'] = Cmpi.computeGraph(tc_skel, type='ID_Unsteady', reduction=False, procDict=graph['procDict'])
+        listS, listU = Cmpi.computeGraph(tc_skel, type='ID_Unsteady', reduction=False, procDict=graph['procDict'], nbpass=Nbpass)
 
-        graph['graphID'] = Cmpi.mergeGraph( graph['graphID_Steady'], graph['graphID_Unsteady'][iteration_loc] )
+
+        graph['graphID_Steady']   = listS
+        graph['graphID_Unsteady'] = listU
+        graph['graphPass1'] = Cmpi.mergeGraph( listS[0], listU[0][iteration_loc] )
+        for nOpass in range(2,Nbpass+1):
+            graph['graphPass'+str(nOpass)] = listS[nOpass -1]
 
         t1=timeit.default_timer()
         cpu_graph = t1 -t0
@@ -1041,20 +1071,28 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
         #
         if not init:
 
-            zones = Internal.getZones(t)
-
             t0=timeit.default_timer()
-            X.miseAPlatDonorTree__(zones, tc, graph=graph)
+
+            for nOpass in range(1,Nbpass+1):
+                if (Nbpass==1): FilterPass=None
+                else:           FilterPass='pass'+str(nOpass)
+
+                PACK.miseAPlatDonorTree__( t, tc, graphID_Unsteady=graph, procDict=graph['procDict'], nbpts_linelets=0, FilterPass=FilterPass)
+
+                tmp= Internal.getNodeFromName1( tc, 'Pass'+str(nOpass) )
+                key = 'param_int_tc'+str(nOpass)
+                FastC.HOOK[key] = Internal.getNodeFromName1( tmp, 'Parameter_int' )[1]
+                param_real_tc = Internal.getNodeFromName1 (tmp, 'Parameter_real')
+                key = 'param_real_tc'+str(nOpass)
+                if param_real_tc is not None: FastC.HOOK[key] = param_real_tc[1]
+                else:  FastC.HOOK[key] = None
+
             t1=timeit.default_timer()
             cpu_plat = t1 -t0
             t0=t1
 
             #print("cout skelS=",cpu_skelS, 'skelU=', cpu_skelU, "S=",cpu_S, 'U=', cpu_U, 'merge', cpu_merge, 'graph', cpu_graph, 'plat', cpu_plat, 'rank=', rank)
             #sys.stdout.flush
-
-            FastC.HOOK['param_int_tc'] = Internal.getNodeFromName1( tc, 'Parameter_int')[1]
-            param_real_tc              = Internal.getNodeFromName1( tc, 'Parameter_real')
-            if param_real_tc is not None: FastC.HOOK['param_real_tc']= param_real_tc[1]
 
     else:
         if layer =='Python':
@@ -1068,8 +1106,7 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
             rank = Cmpi.rank
 
             t0=timeit.default_timer()
-            graph['graphID'] = Cmpi.mergeGraph( graph['graphID_Steady'], graph['graphID_Unsteady'][iteration_loc] )
-            #graph['graphID']  = Cmpi.computeGraph(tc_skel, type='ID', reduction=False, procDict=graph['procDict'], it=iteration_loc)
+            graph['graphPass1'] = Cmpi.mergeGraph( graph['graphID_Steady'], graph['graphID_Unsteady'][iteration_loc] )
             t1=timeit.default_timer()
             if rank==0:
                 print('calcul du graph it', iteration_loc, "cout graphID= ", t1-t0)

@@ -21,6 +21,7 @@ __KCURV__ = 'KCurv'
 #==============================================================================
 def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None, nbpts_linelets=0, FilterPass=None):
     if isinstance(graph, list):
+
         ###########################IMPORTANT ######################################
         #test pour savoir si graph est une liste de dictionnaires (explicite local)
         #ou juste un dictionnaire (explicite global, implicite)
@@ -33,16 +34,32 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
 
     zones = Internal.getZones(t)
 
+    #print('graphliste', graphliste, flush=True)
+
     if graph is not None and graphliste==False:
         graphID   = graph
-        if graphID_Unsteady is not None:
-            graphID_U = graphID_Unsteady['graphID_Unsteady']
-            graphID_S = graphID_Unsteady['graphID_Steady']
-        else:
-            graphID_U = None; graphID_S = None
+        graphID_U = None; graphID_S = None
     elif graph is not None and graphliste==True:
         graphID   = graph[0]
         graphID_U = None; graphID_S = None
+    elif graphID_Unsteady is not None and graphliste==False :
+
+        if FilterPass == None or FilterPass == 'pass1': pass_tg=0
+        elif FilterPass == 'pass2':  pass_tg=1
+        elif FilterPass == 'pass3':  pass_tg=2
+        elif FilterPass == 'pass4':  pass_tg=3
+        else:
+            print("Error mise a plat: npass > 4", flush=True)
+            stop
+        print("mise a plat: filterpass:", FilterPass, pass_tg)
+
+        graphID   = None
+        graphID_U = graphID_Unsteady['graphID_Unsteady'][pass_tg]
+        if len(graphID_U) ==0:
+            print("Graph unsteady vide: graphID_U = None")
+            graphID_U = None
+        graphID_S = graphID_Unsteady['graphID_Steady'][pass_tg]
+
     else:
         procDict=None; graphID=None; graphID_U = None; graphID_S = None
 
@@ -166,6 +183,9 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
                         inst[ numero_iter ]= [ [s],[c],[meshtype], [proc], [neq_trans] ]
 
                 TimeLevelNumber = len(inst)
+
+                #print("mise a plat: timelevelNumber, min, max",  TimeLevelNumber, numero_min, numero_max, inst['3000'][1], flush=True)
+                #print("mise a plat: timelevelNumber, min, max",  TimeLevelNumber, numero_min, numero_max, FilterPass, flush=True)
 
                 if TimeLevelNumber != 1+numero_max-numero_min and len(inst) != 0:
                     raise ValueError("miseAPlatDonorTree__: missing timestep in tc : %d %d %d")%(numero_max,numero_min, TimeLevelNumber)
@@ -348,6 +368,7 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
             S_ID = _procSource(rank, S_ID, pos_ID, graphID_S, graphrcv_S, graphIDrcv_)
             #on ajoute les infos UNsteady
             for nstep in range(numero_min,numero_max+1):
+                #print("Nstep", nstep, flush=True)
                 graphloc=[]
                 S_ID = _procSource(rank, S_ID, pos_ID, graphID_U[nstep], graphloc, graphIDrcv_, filterGraph=graphrcv_S)
 
@@ -398,6 +419,8 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
         Internal.createUniqueChild(cont, 'Parameter_real', 'DataArray_t', param_real)
 
     _graphID = numpy.asarray([len(graphIDrcv)] +graphIDrcv, dtype=Internal.E_NpyInt)
+
+    #print("len(graphIDrcv)", len(graphIDrcv), "NbP2P", NbP2P, 'grapRcv', _graphID, flush=True)
 
     #param_int[2                 :3+len(graphIBCrcv)                ] = _graphIBC
     param_int[ 2                 :3+len(graphIDrcv) ] = _graphID
@@ -515,11 +538,11 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
 
             nrac_inst_fin  = nrac_inst_deb + NracInsta
 
-            #print('NracInsta=',NracInsta,'TimeLevel=',i, 'dest=',proc)
 
             param_int[ pt_ech +4 + i                  ] = nrac_inst_deb   #unsteadyJoins(No rac debut)
             param_int[ pt_ech +4 + i + TimeLevelNumber] = nrac_inst_fin   #unsteadyJoins(No rac fin)
 
+            #print('NracInsta=',NracInsta,'TimeLevel=',i, 'dest=',proc, 'nracinstDeb:', nrac_inst_deb, 'nracinstDeb:', nrac_inst_fin, 'adr:',  pt_ech +4 + i, pt_ech +4 + i + TimeLevelNumber, flush=True)
             nrac_inst_deb  = nrac_inst_fin
 
         iadr2    = pt_ech + 4 + TimeLevelNumber*2
@@ -1990,9 +2013,9 @@ def _procSource(rank, S_pos, pos_list, graph, graphloc, graphrcv_, filterGraph=N
     graphrcv_.append(k_pos)
     S_pos += k_pos +1
     for proc in graphloc:
-        #print('proc in graphloc', proc)
+        #print('proc in graphloc', proc, flush=True)
         graphrcv_.append(proc)
 
-    #print("Spos=", S_pos,graphrcv_, filterGraph )
+    #print("Spos=", S_pos,graphrcv_, filterGraph, flush=True )
 
     return S_pos
