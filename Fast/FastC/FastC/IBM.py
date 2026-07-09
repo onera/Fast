@@ -42,7 +42,7 @@ TypesOfIBC  = XOD.TypesOfIBC
 def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=None, tbCurvi=None,
                    snears=0.01, snearsf=None, dfars=10., dfarDir=0, vmin=21, depth=2, frontType=1, octreeMode=0,
                    IBCType=1, verbose=True, expand=3, ext=-1, order=2, extrap=1, dTarget=1000,
-                   check=False, twoFronts=False, cartesian=True, cleanCellN=True,
+                   check=False, twoFronts=False, cartesian=True, cleanCellN=True, frontFile=None,
                    yplus=100., Lref=1., correctionMultiCorpsF42=False, blankingF42=False, wallAdaptF42=None, heightMaxF42=-1.):
 
     import Generator.IBM as G_IBM
@@ -132,7 +132,8 @@ def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=N
         Internal._rmNodesFromName(tb,"SYM")
         test.printMem("Info: prepareIBMData: generate Cartesian mesh [end]")
 
-        C_IBM._redispatch__(t=t)
+
+        #C_IBM._redispatch__(t=t)
         if verbose: C_IBM.printTimeAndMemory__('generate Cartesian mesh', time=python_time.time()-pt0)
 
     else:
@@ -162,8 +163,9 @@ def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=N
                        wallAdaptF42=wallAdaptF42, blankingF42=blankingF42,
                        tbFilament=tbFilament, cleanCellN=cleanCellN)
 
+
     Cmpi.barrier()
-    C_IBM._redispatch__(t=t)
+    #C_IBM._redispatch__(t=t)
     if verbose: C_IBM.printTimeAndMemory__('blank by IBC bodies', time=python_time.time()-pt0)
     #===================
     # STEP 4 : INTERP DATA CHIM
@@ -194,6 +196,7 @@ def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=N
     if Internal.getNodeFromType(t, "GridConnectivity1to1_t") is not None:
         Xmpi._setInterpData(t, tc, nature=1, loc='centers', storage='inverse', sameName=1, dim=dimPb, itype='abutting', order=2, cartesian=cartesian)
 
+
     setInterpDataAndSetInterpTransfer__(t,tc, nature=nature, loc='centers', storage='inverse', sameName=1, sameBase=1, dim=dimPb, order=order, extrap=extrap, cartesian=cartesian, corner=True)
 
     if verbose: C_IBM.printTimeAndMemory__('compute interpolation data (Abutting & Chimera)', time=python_time.time()-pt0)
@@ -205,6 +208,8 @@ def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=N
     t, tc, front, front2, frontWMM = buildFrontIBM(t, tc, tb=tb, dimPb=dimPb, frontType=frontType,
                                                    cartesian=cartesian, twoFronts=twoFronts, check=check,
                                                    tbFilament=tbFilament, optimized=optimized)
+
+    if frontFile is not None: front = C.convertFile2PyTree(frontFile)
     '''
     for z in Internal.getZones(t):
          fastc._updateNatureForIBMGhost(z,
@@ -245,7 +250,7 @@ def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=N
     t, tc, tc2 = C_IBM.initializeIBM(t, tc, tb, tinit=tinit, tbCurvi=tbCurvi, dimPb=dimPb, twoFronts=twoFronts,
                                      tbFilament=tbFilament, cleanCellN=cleanCellN)
 
-    C_IBM._redispatch__(t=t, tc=tc, tc2=tc2)
+    #C_IBM._redispatch__(t=t, tc=tc, tc2=tc2)
 
     C_IBM._setInjOutlet__(tc, tb)
 
@@ -275,7 +280,7 @@ def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=N
 
 def prepareIBMDataExtrude(t_case, t_out, tc_out, t, to=None,
                           depth=2, frontType=1, octreeMode=0, IBCType=1, nature=1, order=2, optimized=-1, extrap=1,
-                          verbose=True, check=False, twoFronts=False, cartesian=True,
+                          verbose=True, check=False, twoFronts=False, cartesian=True, frontFile=None, cleanCellN=False,
                           yplus=100., Lref=1., correctionMultiCorpsF42=False, blankingF42=False, wallAdaptF42=None, heightMaxF42=-1.,
                           tbox=None, extrusion='cart'):
     import Generator.IBM as G_IBM
@@ -337,7 +342,7 @@ def prepareIBMDataExtrude(t_case, t_out, tc_out, t, to=None,
     #===================
     if verbose: pt0 = python_time.time(); C_IBM.printTimeAndMemory__('blank by IBC bodies', time=-1, functionName='prepareIBMDataExtrude')
     C_IBM._blankingIBM(t, tb, dimPb=dimPb, frontType=frontType, IBCType=IBCType, depth=depth,
-                       Reynolds=Reynolds, yplus=yplus, Lref=Lref, twoFronts=twoFronts,
+                       Reynolds=Reynolds, yplus=yplus, Lref=Lref, twoFronts=twoFronts, cleanCellN=cleanCellN,
                        heightMaxF42=heightMaxF42, correctionMultiCorpsF42=correctionMultiCorpsF42,
                        wallAdaptF42=wallAdaptF42, blankingF42=blankingF42,
                        tbFilament=tbFilament)
@@ -356,15 +361,37 @@ def prepareIBMDataExtrude(t_case, t_out, tc_out, t, to=None,
 
     C._initVars(t,'{centers:cellN}=maximum(0.,{centers:cellNChim})')# vaut -3, 0, 1, 2 initialement  #__
 
+    #C.convertPyTree2File(t,'verifBlank.cgns')
+
 
     Cmpi.barrier()
-    C_IBM._redispatch__(t=t)
+    #C_IBM._redispatch__(t=t)
     if verbose: C_IBM.printTimeAndMemory__('blank by IBC bodies', time=python_time.time()-pt0, functionName='prepareIBMDataExtrude')
     #===================
     # STEP 4 : INTERP DATA CHIM
     #===================
     ## REQUIREMENT:: cellN mush be correct here      --> _setInterpData uses cellN
     ##               if cellN* is correct henceforth --> correct values at the end of prepareIBMDataExtrude
+    #mise a zero cellN dans Ghost BC
+    for z in Internal.getZones(t):
+        bcs   = Internal.getNodesFromType2(z, 'BC_t')
+        sol   = Internal.getNodeFromName1(z, "FlowSolution#Centers")
+        cellN = Internal.getNodeFromName1(sol,"cellNChim")[1]
+        for bc in bcs:
+            btype = Internal.getValue(bc)
+            if btype != "BCOverlap":
+                ptrange = Internal.getNodesFromType1(bc, 'IndexRange_t')
+                rg      = ptrange[0][1]
+                if rg[0,1]==rg[0,0]:
+                    if rg[0,1]==1: cellN[0:2,:,:]=1
+                    else         : cellN[-2:,:,:]=1
+                elif rg[1,1]==rg[1,0]:
+                    if rg[1,1]==1: cellN[:, 0:2,:]=1
+                    else         : cellN[:, -2:,:]=1
+                elif rg[2,1]==rg[2,0] and dimPb==3:
+                    if rg[2,1]==1: cellN[:,:,0:2]=1
+                    else         : cellN[:,:,2: ]=1
+
     if verbose: pt0 = python_time.time(); C_IBM.printTimeAndMemory__('compute interpolation data (Abutting & Chimera)', time=-1, functionName='prepareIBMDataExtrude')
     tc = C.node2Center(t)
 
@@ -378,21 +405,31 @@ def prepareIBMDataExtrude(t_case, t_out, tc_out, t, to=None,
     #===================
     # STEP 5 : BUILD FRONT
     #===================
-    if verbose: pt0 = python_time.time(); C_IBM.printTimeAndMemory__('build IBM front', time=-1, functionName='prepareIBMDataExtrude')
+    if verbose: pt0 = python_time.time(); C_IBM.printTimeAndMemory__('build IBM front Extrude', time=-1, functionName='prepareIBMDataExtrude')
+
+
+
+    #C.convertPyTree2File(t, 'AvtFront.cgns')
 
     t, tc, front, front2, frontWMM = buildFrontIBM(t, tc, tb=tb, dimPb=dimPb, frontType=frontType,
                                                    cartesian=cartesian, twoFronts=twoFronts, check=check,
                                                    tbFilament=tbFilament, optimized=optimized)
+
+    #C.convertPyTree2File(t, 'AprFront.cgns')
+    if frontFile is not None: front = C.convertFile2PyTree(frontFile)
+
+    '''
     for z in Internal.getZones(t):
         fastc._updateNatureForIBMGhost(z, Internal.__GridCoordinates__, Internal.__FlowSolutionNodes__, Internal.__FlowSolutionCenters__)
+    '''
 
-    if verbose: C_IBM.printTimeAndMemory__('build IBM front', time=python_time.time()-pt0)
+    if verbose: C_IBM.printTimeAndMemory__('build IBM front Extrude', time=python_time.time()-pt0)
 
     # on recalcule les interp chimere en supprimant les coin maintenant que le calcul du front est ok
     setInterpDataAndSetInterpTransfer__(t, tc, nature=nature, loc='centers', storage='inverse', sameName=1, sameBase=1, dim=dimPb,\
                                         extrap=extrap, order=order, cartesian=cartesian, corner=False)
 
-    if verbose: C_IBM.printTimeAndMemory__('build IBM front', time=python_time.time()-pt0, functionName='prepareIBMDataExtrude')
+    if verbose: C_IBM.printTimeAndMemory__('build IBM front Extrude', time=python_time.time()-pt0, functionName='prepareIBMDataExtrude')
     #===================
     # STEP 6 : INTERP DATA IBM
     #===================
@@ -401,10 +438,29 @@ def prepareIBMDataExtrude(t_case, t_out, tc_out, t, to=None,
     extrap_loc = 1
     val        = 1
 
+    ##set the kmin et kmax Ghost cells are potential donor
+    '''
+    '''
+    #on empeche la creation de point IBc en k=-1 et 0  et on rend ces cellules non donneuse
+    todo =[['cellNIBC',t,'FlowSolution#Centers', 1.], ['cellN',tc,'FlowSolution', 1.25]]
+    for task in todo:
+        val=task[3]
+        for z in Internal.getZones(task[1]):
+            sol            = Internal.getNodeFromName(z,task[2])
+            var = task[0]
+            cellN          = Internal.getNodeFromName(sol,var)[1]
+            sh             = numpy.shape(cellN)
+            for k in [0,1, sh[2]-2, sh[2]-1]:
+                for j in range(sh[1]):
+                    for i in range(sh[0]):
+                        if  cellN[i,j,k] != 0:  cellN[i,j,k] =val
+
+    #C.convertPyTree2File(t, 'AvtIBM.cgns')
     _setInterpDataIBM(t, tc, tb, front, front2=front2, dimPb=dimPb, frontType=frontType, IBCType=IBCType, depth=depth,
                       Reynolds=Reynolds, yplus=yplus, Lref=Lref,
                       cartesian=cartesian, twoFronts=twoFronts, check=check,optimized=optimized, nature=nature_loc, penalty=1, extrap=extrap_loc, val=val,
                       tbFilament=tbFilament, frontWMM=frontWMM)
+    #C.convertPyTree2File(t, 'AprIBM.cgns')
 
     if verbose: C_IBM.printTimeAndMemory__('compute interpolation data (IBM)', time=python_time.time()-pt0, functionName='prepareIBMDataExtrude')
     #===================
@@ -415,7 +471,7 @@ def prepareIBMDataExtrude(t_case, t_out, tc_out, t, to=None,
     t     = None                    #
     t, tc, tc2 = C_IBM.initializeIBM(t, tc, tb, dimPb=dimPb, twoFronts=twoFronts, tbFilament=tbFilament)
     t = Internal.copyTree(tsave)    # Modification needed to by pass the initialization of t in the macro function initializeIBM
-    C_IBM._redispatch__(t=t, tc=tc, tc2=tc2)
+    #C_IBM._redispatch__(t=t, tc=tc, tc2=tc2)
 
     if extrusion == 'cyl':                                                                              #__
         T._cyl2Cart(t, (0,0,0),(1,0,0))                                                                 #  |
@@ -467,13 +523,16 @@ def buildFrontIBM(t, tc, tb=None, dimPb=3, frontType=1, cartesian=True, twoFront
     interpDataType = 0 if cartesian else 1
 
     C._initVars(t,'{centers:cellNIBCDnr}=minimum(2.,abs({centers:cellNIBC}))')
-    C._initVars(t,'{centers:cellNIBC}=maximum(0.,{centers:cellNIBC})')# vaut -3, 0, 1, 2, 3 initialement
+    #C._initVars(t,'{centers:cellNIBC}=maximum(0.,{centers:cellNIBC})')# vaut -3, 0, 1, 2, 3 initialement
     if optimized==-1:
         npass=2
         #met les valeur 3 (ghost non masquee) a 1.5 (donneuse dans algo opt=-1). la valeur 1.5 est modifiee a 1 avant interpIBM
         for z in Internal.getZones(t):
             tmp = Internal.getNodeFromName(z,'cellNIBC')[1]
             tmp[tmp >= 2.5] = 1.5
+            #tmp[tmp >= 2.5] = 1.05
+            #tmp[tmp >= 2.5] = 1.02
+            tmp[tmp <=-2.5] = 2
 
         C._cpVars(t,'centers:cellNIBC',t,'centers:cellN')
         Internal._rmNodesByName(tc,'cellN')
@@ -485,11 +544,12 @@ def buildFrontIBM(t, tc, tb=None, dimPb=3, frontType=1, cartesian=True, twoFront
             cellNc= Internal.getNodeFromName(sol,'cellN')[1]
             sh = numpy.shape(cellNc)
             sh2 = numpy.shape(cellN)
-            if len(sh)==3 and sh[2]!=1: cellN[:,:,:]=cellNc[:,:,:]
-            elif len(sh)==3 and sh[2]==1: cellN[:,:]=cellNc[:,:,0]
+            if   len(sh)==3 and sh[2]!=1: cellN[:,:,:]=cellNc[:,:,:]
+            elif len(sh)==3 and sh[2]==1: cellN[:,:]  =cellNc[:,:,0]
             else: cellN[:,:]=cellNc[:,:]
 
     else:
+        C._initVars(t,'{centers:cellNIBC}=maximum(0.,{centers:cellNIBC})')# vaut -3, 0, 1, 2, 3 initialement
         npass = 1
         C._initVars(t,'{centers:cellNIBC}={centers:cellNIBC}*({centers:cellNIBC}<2.5)') #met les valeur 3 (ghost non masquee) a zero (non donneuse dans algo legacy)
         C._cpVars(t,'centers:cellNIBC',t,'centers:cellN')
@@ -533,6 +593,9 @@ def buildFrontIBM(t, tc, tb=None, dimPb=3, frontType=1, cartesian=True, twoFront
         frontWMM = None
 
 
+    #C.convertPyTree2File(t, 'Infront.cgns')
+
+
     if optimized==-1:
         for l in range(npass):
             # Transfert du cellNIBC (= cellN a cet endroit)
@@ -543,18 +606,28 @@ def buildFrontIBM(t, tc, tb=None, dimPb=3, frontType=1, cartesian=True, twoFront
         for z in Internal.getZones(t):
             tmp = Internal.getNodeFromName(z,'cellN')[1]
             sh = numpy.shape(tmp)
+            hole= Internal.getNodeFromName(z,'cellNIBC_hole')
+            if hole is not None:
+                hole=hole[1]
+                tmp[ hole == 2. ] = 2.
+            #tmp[ tmp<=1.9 and tmp >=2.1 ] = 2.
             for k in range(sh[2]):
                 for j in range(sh[1]):
                     for i in range(sh[0]):
+                        #if hole[i,j,k] == 2:
                         if tmp[i,j,k] >= 1.99 and tmp[i,j,k] <= 2.01: tmp[i,j,k]=2.
+                        #if tmp[i,j,k] >= 1.03 and tmp[i,j,k] <= 2.01: tmp[i,j,k]=2.
+            '''
+            if z[0]=='Cart.356X0':  C.convertPyTree2File(z, '356Avtpdate.cgns')
+            '''
 
         for z in Internal.getZones(t):
-            #if z[0]=='Cart.553X0':  C.convertPyTree2File(z, '553AvtUpdate.cgns')
             fastc._updateNatureForIBMGhost(z,
                                            Internal.__GridCoordinates__,
                                            Internal.__FlowSolutionNodes__,
                                            Internal.__FlowSolutionCenters__)
-            #if z[0]=='Cart.553X0':  C.convertPyTree2File(z, '553AprUpdate.cgns')
+
+            #if z[0]=='Cart.356X0':  C.convertPyTree2File(z, '356AprUpdate.cgns')
 
     if check and Cmpi.rank == 0:
         C.convertPyTree2File(front, 'front.cgns')
@@ -741,6 +814,7 @@ def _setInterpDataIBM(t, tc, tb, front, front2=None, dimPb=3, frontType=1, IBCTy
                         else: dnrZones.append(zd)
 
                     if optimized ==-1 : # correction ghost non masque pour les rendre donneuse: val=1
+                        valRef=1.5
                         for z in dnrZones:
                             cellN = Internal.getNodeFromName(z,'cellN')[1]
                             #print("shape", z[0], z[1], numpy.shape(cellN))
@@ -750,22 +824,22 @@ def _setInterpDataIBM(t, tc, tb, front, front2=None, dimPb=3, frontType=1, IBCTy
                             for k in range(nk):
                                 for j in range(nj):
                                     for i in range(2):
-                                        if abs(cellN[i     , j, k]-1.5) < 0.01: cellN[i,j,k       ]= val
-                                        if abs(cellN[ni-1-i, j, k]-1.5) < 0.01: cellN[ni-1-i, j, k]= val
+                                        if abs(cellN[i     , j, k]-valRef) < 0.01: cellN[i,j,k       ]= val
+                                        if abs(cellN[ni-1-i, j, k]-valRef) < 0.01: cellN[ni-1-i, j, k]= val
                             for k in range(nk):
                                 for j in range(2):
                                     for i in range(ni):
-                                        if abs(cellN[i     , j     , k     ]-1.5) < 0.01: cellN[i,j     , k]= val
-                                        if abs(cellN[i     , nj-1-j, k     ]-1.5) < 0.01: cellN[i,nj-1-j, k]= val
+                                        if abs(cellN[i     , j     , k     ]-valRef) < 0.01: cellN[i,j     , k]= val
+                                        if abs(cellN[i     , nj-1-j, k     ]-valRef) < 0.01: cellN[i,nj-1-j, k]= val
                             if dimPb ==3:
                                 for k in range(2):
                                     for j in range(nj):
                                         for i in range(ni):
-                                            if abs(cellN[i, j, k     ]-1.5) < 0.01: cellN[i, j , k     ]= val
-                                            if abs(cellN[i, j, nk-1-k]-1.5) < 0.01: cellN[i, j , nk-1-k]= val
+                                            if abs(cellN[i, j, k     ]-valRef) < 0.01: cellN[i, j , k     ]= val
+                                            if abs(cellN[i, j, nk-1-k]-valRef) < 0.01: cellN[i, j , nk-1-k]= val
 
-                    ''' pour debug gros cas
-                    if zrname =='Cart.553X0':
+                    '''
+                    if zrname in ['Cart.359X0','Cart.396X0'] :
                       C.convertPyTree2File(zrcv,'RecIBM_'+zrname+'.cgns')
                       C.convertPyTree2File(dnrZones,'DnrIBM_'+zrname+'.cgns')
                       import pickle
@@ -1547,7 +1621,7 @@ def doInterp3(t, tc, tbb, tb=None, typeI='ID', dim=3, dictOfADT=None, frontType=
 
         front = getIBMFront(tc, 'cellNFront', dim, frontType)
         # Sortie du front pour debug
-        C.convertPyTree2File(front, 'front.cgns')
+        #C.convertPyTree2File(front, 'front.cgns')
 
         res = C_IBM.getAllIBMPoints(zonesRIBC, loc='centers',tb=tb, tfront=front, frontType=frontType, \
                                     cellNName='cellNIBC', depth=depth, IBCType=IBCType, Reynolds=Reynolds, yplus=yplus, Lref=Lref, check=check)

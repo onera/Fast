@@ -34,7 +34,6 @@ c_/    drodm    : increment de la solution
 c***********************************************************************
       implicit none
 
-
       real souszero
       parameter(souszero=-1e-12)
 
@@ -68,7 +67,7 @@ C Var loc
      & lt200,lt100,lt010,lt210,lt020,lt110,lt002,lt012,lt102,lt001,
      & lt021,lt201,lt120,lvo,lvo200,lvo020,lvo002,vslp,lvol,lvor,ir,il,
      & l200,l100,l010,l020,l110,l101,l011,v1mtr,v2mtr,v3mtr,
-     & l001,l002,l210,l220,l201,l202,l021,l022,l120,l102,l012,kcorr
+     & l001,l002,l210,l220,l201,l202,l021,l022,l120,l102,l012
 
       REAL_E c1,c2,c3,c4,c5,c6,c4sa,c5sa,c6sa,si,sj,sk,qm,qp,
      & tcx,tcy,tcz,tc,r1,h1,rou1,rov1,row1,r2,h2,rou2,rov2,row2,
@@ -82,7 +81,7 @@ C Var loc
      & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
      & qn,r,v,w,h,q,r_1,psiroe, xktvol, xmulam, xmutur, xmutot,
-     & c50,c51,c52,c53,c54
+     & c50,c51,c52,c53,c54,wig_cte
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -129,14 +128,14 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 
       roref= param_real( ROINF)
       uref = param_real( VINF )
-
+      wig_cte= param_real( WIG_AMP )
       psiroe= param_real( PSIROE )
       tmin_1= 100./param_real( TINF )!!si T< 0.01Tinf, alors limiteur null
 
       c1     = 0.02*uref         ! modif suite chant metrique et suppression tc dans flux final
       c2     = 0.02/(uref*roref) ! modif suite chant metrique et suppression tc dans flux final
       c3     = -2.
-      opt0   = float(param_int(SENSORTYPE))
+      opt0   = param_real(WIG_DAMPING)
 
       !    roff MUSCL
       c6     = 1./6.
@@ -155,13 +154,8 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 
       icorr = 0 !correction indice boucle i pour traiter l'interface ind_loop(2)+1 si necessaire
       jcorr = 0 
-      kcorr = 0 
       If(icache.eq.ijkv_cache(1).and.synchro_receive_th(1).eq.0) icorr=1
       If(jcache.eq.ijkv_cache(2).and.synchro_receive_th(2).eq.0) jcorr=1
-      If(kcache.eq.ijkv_cache(3).and.synchro_receive_th(3).eq.0) kcorr=1
-
-c      if(ithread.eq.2)write(*,'(a,6i4)')'f2001', icorr, jcorr,kcorr,
-c     & icache,jcache, kcache
 
       v1 = 0
       v2 =   param_int(NDIMDX)
@@ -192,11 +186,9 @@ c     & icache,jcache, kcache
 
 #include "FastS/Compute/loopI_begin.for"                  
             l0= l  - inck                   
-#include    "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3_3dcart_k.for"
+#include    "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3_3dcart_k.for"  
 #include    "FastS/Compute/fluvisq_3dcart_k.for"          
 #include    "FastS/Compute/assemble_drodm_plus_vec1.for"  
-c       if(ndom.eq.0.and.l.eq.25786) write(*,*)'f1k',flu1,drodm(l  +v1)
-c       if(ndom.eq.0.and.l0.eq.25786) write(*,*)'f0k',flu1,drodm(l0  +v1)
           enddo                             
 
 #include  "FastS/Compute/loopI_begin.for"
@@ -204,8 +196,6 @@ c       if(ndom.eq.0.and.l0.eq.25786) write(*,*)'f0k',flu1,drodm(l0  +v1)
 #include    "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3_3dcart_j.for"
 #include    "FastS/Compute/fluvisq_3dcart_j.for"
 #include    "FastS/Compute/assemble_drodm_plus_vec1.for"
-c       if(ndom.eq.0.and.l.eq.25788) write(*,*)'f1j',flu1,drodm(l  +v1)
-c       if(ndom.eq.0.and.l0.eq.25788) write(*,*)'f0j',flu1,drodm(l0  +v1)
           enddo
 
 #include "FastS/Compute/loopI_begin.for"
@@ -213,8 +203,6 @@ c       if(ndom.eq.0.and.l0.eq.25788) write(*,*)'f0j',flu1,drodm(l0  +v1)
 #include    "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3_3dcart_i.for"
 #include    "FastS/Compute/fluvisq_3dcart_i.for"
 #include    "FastS/Compute/assemble_drodm_plus_vec1.for"
-c       if(ndom.eq.0.and.l.eq.25788) write(*,*)'f1i',flu1,drodm(l  +v1)
-c       if(ndom.eq.0.and.l0.eq.25788) write(*,*)'f0i',flu1,drodm(l0  +v1)
           enddo
 
           if(icorr.eq.1) then !flux manquant en I
@@ -225,12 +213,8 @@ c       if(ndom.eq.0.and.l0.eq.25788) write(*,*)'f0i',flu1,drodm(l0  +v1)
 #include    "FastS/Compute/fluvisq_3dcart_i.for"
               ls = l -inci
 #include    "FastS/Compute/flu_send_scater_vec1.for"
-c       if(ndom.eq.0.and.l.eq.25788)write(*,*)'f1imax',flu1,drodm(l+v1)
-c       if(ndom.eq.0.and.l0.eq.25788)write(*,*)'f0imax',flu1,drodm(ls+v1)
           endif !
        ENDDO !do j
-
-
 
        !Complement fluj en Jmax
        If(jcorr.eq.1) then
@@ -239,12 +223,10 @@ c       if(ndom.eq.0.and.l0.eq.25788)write(*,*)'f0imax',flu1,drodm(ls+v1)
 
 #include "FastS/Compute/loopI_begin.for"
 
-#include     "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3_3dcart_j.for"
+#include       "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3_3dcart_j.for"
 #include       "FastS/Compute/fluvisq_3dcart_j.for"
                ls = l -incj
 #include       "FastS/Compute/flu_send_scater_vec1.for"
-c       if(ndom.eq.0.and.l.eq.25788)write(*,*)'f1jmax',flu1,drodm(l+v1)
-c       if(ndom.eq.0.and.l0.eq.25788)write(*,*)'f0jmax',flu1,drodm(ls+v1)
          enddo
         Endif
 
@@ -256,16 +238,13 @@ c       if(ndom.eq.0.and.l0.eq.25788)write(*,*)'f0jmax',flu1,drodm(ls+v1)
                                                                        
         k    = ind_loop(6)+1               
         do j = ind_loop(3),ind_loop(4)     
-        
-                                   
+                                           
 #include "FastS/Compute/loopI_begin.for"                 
                                            
 #include   "FastS/Compute/SENSOR/3dcart/fluFaceEuler_o3_3dcart_k.for"  
 #include   "FastS/Compute/fluvisq_3dcart_k.for"          
             ls = l -inck                   
 #include    "FastS/Compute/flu_send_scater_vec1.for"     
-c       if(ndom.eq.0.and.l.eq.25786)write(*,*)'f1kmax',flu1,drodm(l+v1)
-c       if(ndom.eq.0.and.l0.eq.25786)write(*,*)'f0kmax',flu1,drodm(ls+v1)
           enddo                            
         enddo                              
       Endif                                

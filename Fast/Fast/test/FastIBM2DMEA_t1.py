@@ -1,6 +1,9 @@
 import FastC.PyTree as FastC
 import FastS.PyTree as FastS
-import Fast.FastIBM as FastIBM
+#import Fast.FastIBM as FastIBM
+import Connector.IBM as CIBM
+import Geom.IBM as D_IBM
+import Post.IBM as P_IBM
 import Converter.Internal as Internal
 import Converter.PyTree as C
 import Transform.PyTree as T
@@ -29,9 +32,9 @@ def multiElementAirfoil(snear=0.001, ibctype='Musker', alpha=16.):
 
     t = C.newPyTree(['Base', zones])
 
-    FastIBM._setSnear(t, snear)
-    FastIBM._setIBCType(t, ibctype)
-    FastIBM._setDfar(t, 100)
+    D_IBM._setSnear(t, snear)
+    D_IBM._setIBCType(t, ibctype)
+    D_IBM._setDfar(t, 100)
 
     C._addState(t, adim='adim1', MInf=0.2, alphaZ=alpha, alphaY=0., ReInf=5.e6,\
                 MutSMuInf=0.2, TurbLevelInf=0.0001, EquationDimension=2, GoverningEquations='NSTurbulent')
@@ -39,7 +42,8 @@ def multiElementAirfoil(snear=0.001, ibctype='Musker', alpha=16.):
     return t
 
 tb = multiElementAirfoil(snear=0.005)
-t,tc = FastIBM.prepareIBMData(tb, None, None, vmin=21, expand=3, frontType=1)
+#t,tc = FastIBM.prepareIBMData(tb, None, None, vmin=21, expand=3, frontType=1)
+t,tc = CIBM.prepareIBMData(tb, None, None, vmin=21, expand=3, frontType=1)
 
 ####
 # The following lines are to avoid regression since the bug fix for duplicate information in tc
@@ -102,8 +106,10 @@ for z in Internal.getZones(tc):
 test.testT(tc, 5)
 
 ##POST
-graphIBCDPost, ts = FastIBM.prepareSkinReconstruction(tb, tc, dimPb=2, ibctypes=[3])
-FastIBM._computeSkinVariables(ts, tc, graphIBCDPost, ibctypes=[3], dimPb=2)
+#graphIBCDPost, ts = FastIBM.prepareSkinReconstruction(tb, tc, dimPb=2, ibctypes=[3])
+#FastIBM._computeSkinVariables(ts, tc, graphIBCDPost, ibctypes=[3], dimPb=2)
+graphIBCDPost, ts = P_IBM.prepareSkinReconstruction(tb, tc, dimPb=2, ibctypes=[3])
+P_IBM._computeSkinVariables(ts, tc, graphIBCDPost, ibctypes=[3], dimPb=2)
 C._rmVars(ts, ['yplus', 'yplusIP'])
 
 test.testT(ts, 6)

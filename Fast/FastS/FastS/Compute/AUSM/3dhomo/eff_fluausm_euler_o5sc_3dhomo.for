@@ -167,7 +167,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       c1     = 0.02*uref         ! modif suite chant metrique et suppression tc dans flux final
       c2     = 0.02/(uref*roref) ! modif suite chant metrique et suppression tc dans flux final
       c3     = -2.
-      opt0   = float(param_int(SENSORTYPE))
+      opt0   = param_real(WIG_DAMPING)
 
       !    roff MUSCL
       c6     = 1./6.
@@ -273,7 +273,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
              flu(lf+v2flu*16)= gradT_nz*2.*volinv     
              flu(lf+v2flu*17)= (0.5*(p1+p2)-param_real(PINF))*norm
              flu(lf+v2flu*18)= 0. !mut=0
-             flu(lf+v2flu*19)= 0.5*(qm1+qp1)
+             flu(lf+v2flu*19)= 0.5*(r1+r2)
              flu(lf+v2flu*20)= 0.5*(p1+p2)
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
@@ -333,7 +333,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
              flu(lf+v2flu*16)= gradT_nz*2.*volinv     
              flu(lf+v2flu*17)= (0.5*(p1+p2)-param_real(PINF))*norm
              flu(lf+v2flu*18)= 0. !mut=0
-             flu(lf+v2flu*19)= 0.5*(qm1+qp1)
+             flu(lf+v2flu*19)= 0.5*(r1+r2)
              flu(lf+v2flu*20)= 0.5*(p1+p2)
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
@@ -393,7 +393,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
              flu(lf+v2flu*16)= gradT_nz*2.*volinv      
              flu(lf+v2flu*17)= (0.5*(p1+p2)-param_real(PINF))*norm  
              flu(lf+v2flu*18)= 0. !mut=0 
-             flu(lf+v2flu*19)= 0.5*(qm1+qp1)           
+             flu(lf+v2flu*19)= 0.5*(r1+r2)             
              flu(lf+v2flu*20)= 0.5*(p1+p2)             
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3)) 

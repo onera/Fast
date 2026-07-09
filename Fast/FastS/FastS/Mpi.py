@@ -21,6 +21,7 @@ try:
     import Connector
     import FastC.PyTree as FastC
     import FastC.compactTransfers as PACK
+    import Fast.VariablesSharePyTree as VSHARE
     import FastC.Mpi as FCmpi
     import RigidMotion.PyTree as R
     import os
@@ -700,6 +701,8 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     t, FIRST_IT, zones2compact = FastC.createPrimVars(t, ompmode, rmConsVars, adjoint, gradP, isWireModel)
     FastC.HOOK['FIRST_IT']= FIRST_IT
 
+    zones = Internal.getZones(t) # car create primvar rend zones caduc
+
     #compactage des champs en fonction option de calcul
     count = -1
     if ompmode == 1: count = 0
@@ -710,8 +713,25 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
         for fields in varnames:
             FastC._compact(zone, fields=fields, mode=count, dtloc=dtlocPy)
 
+    # init et Partage senseur dans FlowSolutionCenter
+    wig= FastC.HOOK['wiggle']
+    shift =0; val=0.; no_zone=0;
+    for z in zones:
+        param_int= Internal.getNodeFromName2(z, 'Parameter_int')
+        if param_int[1][VSHARE.KFLUDOM] == 2:
+            fasts.initVars(wig, param_int, dtlocPy, shift, no_zone,  val)
+            nvar=0
+            sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+            for var in ['wigI','wigJ','wigK']:
+                C._initVars(z,'{centers:'+var+'}=0.')
+                tmp = Internal.getNodeFromName1(sol, var)
+                #partage memoire entre wig du hook et celui de flowsolutionCenter
+                tmp[1]= wig[ shift + param_int[1][VSHARE.NDIMDX]*nvar : shift + param_int[1][VSHARE.NDIMDX]*(nvar+1)]
+                nvar +=1
+            shift += param_int[1][VSHARE.NDIMDX]*3
+        no_zone +=1
+
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
-    zones = Internal.getZones(t) # car create primvar rend zones caduc
     c   = 0
     ale = 0
     for z in zones:
@@ -772,6 +792,17 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
                 if   s[0][-6:]== '_pass2' and Nbpass==1: Nbpass=2
                 elif s[0][-6:]== '_pass3' and Nbpass<=2: Nbpass=3
                 elif s[0][-6:]== '_pass4' and Nbpass<=3: Nbpass=4
+                elif s[0][-6:]== '_pass5' and Nbpass<=4: Nbpass=5
+                elif s[0][-6:]== '_pass6' and Nbpass<=5: Nbpass=6
+                elif s[0][-6:]== '_pass7' and Nbpass<=6: Nbpass=7
+                elif s[0][-6:]== '_pass8' and Nbpass<=7: Nbpass=8
+                elif s[0][-6:]== '_pass9' and Nbpass<=8: Nbpass=9
+                elif s[0][-7:]== '_pass10' and Nbpass<=9: Nbpass=10
+                elif s[0][-7:]== '_pass11' and Nbpass<=10: Nbpass=11
+                elif s[0][-7:]== '_pass12' and Nbpass<=11: Nbpass=12
+                elif s[0][-7:]== '_pass13' and Nbpass<=12: Nbpass=13
+                elif s[0][-7:]== '_pass14' and Nbpass<=13: Nbpass=14
+                elif s[0][-7:]== '_pass15' and Nbpass<=14: Nbpass=15
 
         Nbpass = Cmpi.allreduce(Nbpass, op=Cmpi.MAX)
 
@@ -1044,6 +1075,18 @@ def _UpdateUnsteadyJoinParam(t, tc, tc_skel, graph, omega, timelevelInfos, split
                 if   s[0][-6:]== '_pass2' and Nbpass==1: Nbpass=2
                 elif s[0][-6:]== '_pass3' and Nbpass<=2: Nbpass=3
                 elif s[0][-6:]== '_pass4' and Nbpass<=3: Nbpass=4
+                elif s[0][-6:]== '_pass5' and Nbpass<=4: Nbpass=5
+                elif s[0][-6:]== '_pass6' and Nbpass<=5: Nbpass=6
+                elif s[0][-6:]== '_pass7' and Nbpass<=6: Nbpass=7
+                elif s[0][-6:]== '_pass8' and Nbpass<=7: Nbpass=8
+                elif s[0][-6:]== '_pass9' and Nbpass<=8: Nbpass=9
+                elif s[0][-7:]== '_pass10' and Nbpass<=9: Nbpass=10
+                elif s[0][-7:]== '_pass11' and Nbpass<=10: Nbpass=11
+                elif s[0][-7:]== '_pass12' and Nbpass<=11: Nbpass=12
+                elif s[0][-7:]== '_pass13' and Nbpass<=12: Nbpass=13
+                elif s[0][-7:]== '_pass14' and Nbpass<=13: Nbpass=14
+                elif s[0][-7:]== '_pass15' and Nbpass<=14: Nbpass=15
+
         Nbpass = Cmpi.allreduce(Nbpass, op=Cmpi.MAX)
 
         #calcul graph stationnaire et instationnaire pour les Npass

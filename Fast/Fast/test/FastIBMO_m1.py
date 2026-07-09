@@ -23,6 +23,9 @@ t,tc = myApp.prepare(FILE, t_out=LOCAL+'/t.cgns', tc_out=LOCAL+'/tc.cgns', expan
 if Cmpi.rank == 0: test.testT(t,1)
 Cmpi.barrier()
 
+t = FastC.loadTree(LOCAL+'/t.cgns')
+Internal._rmNodesByName(t,'senseurType')
+Cmpi.convertPyTree2File(t,LOCAL+'/t.cgns')
 
 #on reload pour avoir arbre decompresse
 tc, graph = FastC.loadTree(LOCAL+'/tc.cgns', graph=True)

@@ -16,13 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with Cassiopee.  If not, see <http://www.gnu.org/licenses/>.
 */
-# include <stdio.h>
-# include <stdlib.h>
-# include <string.h>
-
 # include "FastS/fastS.h"
-//# include "converter.h"
-# include "kcore.h"
+# include "FastS/param_solver.h"
 
 using namespace std;
 using namespace K_FLD;
@@ -32,126 +27,105 @@ using namespace K_FLD;
 //=============================================================================
 PyObject* K_FASTS::initVars(PyObject* self, PyObject* args)
 {
-  PyObject* array;
+  PyObject* Pywig; PyObject* Pyparam_int; PyObject* Pydtloc;
   E_Float val;
-  char* varName;
+  E_Int shift; E_Int nd_tg;
 
+#if defined E_DOUBLEINT
 #ifdef E_DOUBLEREAL
-  if (!PyArg_ParseTuple(args, "Osd", &array, &varName, &val))
+  if (!PyArg_ParseTuple(args, "OOOlld" , &Pywig  , &Pyparam_int, &Pydtloc, &shift, &nd_tg,  &val )) return NULL;
+#else 
+  if (!PyArg_ParseTuple(args, "OOOllf" , &Pywig  , &Pyparam_int, &Pydtloc, &shift, &nd_tg, &val )) return NULL;
+#endif
 #else
-  if (!PyArg_ParseTuple(args, "Osf", &array, &varName, &val))
+#ifdef E_DOUBLEREAL
+  if (!PyArg_ParseTuple(args, "OOOiid" , &Pywig  , &Pyparam_int, &Pydtloc, &shift, &nd_tg, &val )) return NULL;
+#else 
+  if (!PyArg_ParseTuple(args, "OOOiif" , &Pywig  , &Pyparam_int, &Pydtloc, &shift, &nd_tg, &val )) return NULL;
 #endif
-  {
-    return NULL;
-  }
-
-  // Check array
-  E_Int ni, nj, nk;
-  FldArrayF* f; FldArrayI* cn;
-  char* varString; char* eltType;
-  E_Int res = K_ARRAY::getFromArray(array, varString, f, 
-                                    ni, nj, nk, cn, eltType, true);
-
-  if (res != 1 && res != 2)
-  {
-    PyErr_SetString(PyExc_TypeError,
-                    "initVars: invalid array definition.");
-    return NULL;
-  }
-
-  E_Int posvar = K_ARRAY::isNamePresent(varName, varString)+1;
-  if (posvar == 0)
-  {
-    printf("Warning: initVars: variable name %s is not in array. Skipped...\n",varName);
-  }
-  else 
-  { 
-
-   E_Float* fnp = f->begin(posvar);
-
-  E_Int ndo    =1;
-  E_Int lmin   =4;
-  E_Int max_thread = 1;
-#ifdef _OPENMP
-  max_thread = omp_get_max_threads(); // !nombre de thread maximal dans le calcul
 #endif
-  FldArrayI thread_topology(3*max_thread);
-  FldArrayI ind_dm_omp_thread(6*max_thread);
-  FldArrayI ind_dm_thread(6*max_thread);  
-  E_Int  ni_loc = ni;
-  E_Int  nj_loc = nj;
-  //E_Int  nk_loc = nk;
 
-  //printf("ni =%d %d %d \n",ni,nj,nk);
+  vector<PyArrayObject*> hook;
+  E_Int* ipt_param_int  = K_PYTREE::getValueAI(Pyparam_int, hook);
+  E_Int* iptdtloc       = K_PYTREE::getValueAI(Pydtloc, hook);
+
+  E_Int nssiter = iptdtloc[0];
+  E_Int shift_omp= iptdtloc[11];
+  E_Int* ipt_omp = iptdtloc + shift_omp;
+
+  E_Int nitcfg = 1;
+  E_Int nbtask = ipt_omp[nitcfg-1]; 
+  E_Int ptiter = ipt_omp[nssiter+ nitcfg-1];
+
+
+  FldArrayF* wig;
+  K_NUMPY::getFromNumpyArray(Pywig, wig); E_Float* iptwig  = wig->begin();
 
 #pragma omp parallel default(shared)
   {
-      //#ifdef E_OMP_SOUS_DOMAIN
 #ifdef _OPENMP 
        E_Int  ithread           = omp_get_thread_num() +1;
-       E_Int  Nbre_thread_actif = omp_get_num_threads(); // !nombre de thread actif dans cette zone
+       E_Int  Nbre_thread_actif = omp_get_num_threads(); 
 #else
        E_Int  ithread           = 1;
-       E_Int  Nbre_thread_actif = 1; // !nombre de thread actif dans cette zone
+       E_Int  Nbre_thread_actif = 1;
 #endif
-      //#else
-      // E_Int ithread = 1;
-      // E_Int Nbre_thread_actif = 1;
-      //#endif
       
-      E_Int ific =2;
-      E_Int kfic =2;
-      if( nk == 1) kfic = 0;
+      E_Int ni     =ipt_param_int[NIJK  ];
+      E_Int nj     =ipt_param_int[NIJK+1];
+      E_Int nk     =ipt_param_int[NIJK+2];
+      E_Int ific   =ipt_param_int[NIJK+3];
+      E_Int kfic   =ipt_param_int[NIJK+4];
+      E_Int ndimdx = ipt_param_int[NDIMDX];
 
-      E_Int* ipt_thread_topology   = thread_topology.begin()   + 3*(ithread-1);
-      E_Int* ipt_ind_dm_thread     = ind_dm_thread.begin()     + 6*(ithread-1);
-      E_Int* ipt_ind_dm_omp_thread = ind_dm_omp_thread.begin() + 6*(ithread-1);
+        for (E_Int ntask = 0; ntask < nbtask; ntask++)
+          {
+             E_Int pttask = ptiter + ntask*(6+Nbre_thread_actif*7);
+             E_Int nd = ipt_omp[ pttask ];
 
-      ipt_ind_dm_thread[0] = 1;
-      ipt_ind_dm_thread[2] = 1;
-      ipt_ind_dm_thread[4] = 1;
-      ipt_ind_dm_thread[1] = ni -2*ific-1;
-      ipt_ind_dm_thread[3] = nj -2*ific-1;
-      ipt_ind_dm_thread[5] = nk -2*kfic-1;
-      if( nk == 1) ipt_ind_dm_thread[5] = 1;
-      
+             if(nd==nd_tg)
+              {
+                E_Int* ipt_inddm_omp;
 
-      indice_boucle_lu_(ndo, ithread, Nbre_thread_actif, lmin,
-                        ipt_ind_dm_thread, 
-                        ipt_thread_topology,  ipt_ind_dm_omp_thread);
+                E_Int ithread_loc     = ipt_omp[ pttask + 2 + ithread -1 ] +1 ;
+                ipt_inddm_omp         = ipt_omp + pttask + 2 + Nbre_thread_actif +4 + (ithread_loc-1)*6;
 
-     E_Int iloop1 = ipt_ind_dm_omp_thread[0];
-     E_Int jloop1 = ipt_ind_dm_omp_thread[2];
-     E_Int kloop1 = ipt_ind_dm_omp_thread[4];
-     if( iloop1 == 1) iloop1 = iloop1 -ific;
-     if( jloop1 == 1) jloop1 = jloop1 -ific;
-     if( kloop1 == 1) kloop1 = kloop1 -kfic;
+                if (ithread_loc == -1) {continue;}
+               
+                E_Int iloop1 = ipt_inddm_omp[0];
+                E_Int jloop1 = ipt_inddm_omp[2];
+                E_Int kloop1 = ipt_inddm_omp[4];
+                if( iloop1 == 1) iloop1 = iloop1 -ific;
+                if( jloop1 == 1) jloop1 = jloop1 -ific;
+                if( kloop1 == 1) kloop1 = kloop1 -kfic;
 
-     E_Int iloop2 = ipt_ind_dm_omp_thread[1];
-     E_Int jloop2 = ipt_ind_dm_omp_thread[3];
-     E_Int kloop2 = ipt_ind_dm_omp_thread[5];
-     if( iloop2 == ipt_ind_dm_thread[1]) iloop2 = iloop2 +ific+1;
-     if( jloop2 == ipt_ind_dm_thread[3]) jloop2 = jloop2 +ific+1;
-     if( kloop2 == ipt_ind_dm_thread[5]) kloop2 = kloop2 +kfic+1;
+                E_Int iloop2 = ipt_inddm_omp[1];
+                E_Int jloop2 = ipt_inddm_omp[3];
+                E_Int kloop2 = ipt_inddm_omp[5];
+                if( iloop2 == ipt_param_int[IJKV  ]) iloop2 = iloop2 +ific;
+                if( jloop2 == ipt_param_int[IJKV+1]) jloop2 = jloop2 +ific;
+                if( kloop2 == ipt_param_int[IJKV+2]) kloop2 = kloop2 +kfic;
 
-      for ( E_Int k = kloop1; k <= kloop2; k++)
-        {
-         for ( E_Int j = jloop1; j <= jloop2; j++)
-           {
-            for ( E_Int i = iloop1; i <= iloop2; i++)
-             {
+                //printf("init %d%  d  %d %d %d %d \n",iloop1,iloop2,jloop1,jloop2,kloop1,kloop2 );
+                for ( E_Int k = kloop1; k <= kloop2; k++) {
+                 for ( E_Int j = jloop1; j <= jloop2; j++) {
+                  for ( E_Int i = iloop1; i <= iloop2; i++) {
+                    E_Int l = (i+ific-1) + (j+ific-1)*ni +(k+kfic-1)*ni*nj;
 
-                E_Int l = (i+ific-1) + (j+ific-1)*ni_loc +(k+kfic-1)*ni_loc*nj_loc;
+                    iptwig[l]          = val;
+                    iptwig[l+ndimdx]   = val;
+                    iptwig[l+ndimdx*2] = val;
+                   }
+                  }
+                 }
+              }//nd_tg
+          }//task
+  }//omp
 
-                fnp[l] = val;
-                //printf("init %f %d%  d  %d\n", fnp[l], j,i,l);
-             }
-           }
-        }
-  }
 
- }
-  RELEASESHAREDB(res, array, f, cn);
+  RELEASESHAREDN( Pywig       , wig  );
+  RELEASEHOOK(hook)
+
   Py_INCREF(Py_None);
   return Py_None;
 }
