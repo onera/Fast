@@ -85,13 +85,25 @@ PyObject* K_FASTS::_computePT(PyObject* self, PyObject* args)
  // 
  // 
  //
- PyObject* pyParam_int_tc1; PyObject* pyParam_int_tc2; PyObject* pyParam_int_tc3; PyObject* pyParam_int_tc4;
- PyObject* pyParam_real_tc1; PyObject* pyParam_real_tc2; PyObject* pyParam_real_tc3; PyObject* pyParam_real_tc4;
+ PyObject* pyParam_int_tc1; PyObject* pyParam_int_tc2; PyObject* pyParam_int_tc3; PyObject* pyParam_int_tc4; PyObject* pyParam_int_tc5;
+ PyObject* pyParam_int_tc6; PyObject* pyParam_int_tc7; PyObject* pyParam_int_tc8; PyObject* pyParam_int_tc9; PyObject* pyParam_int_tc10;
+ PyObject* pyParam_int_tc11; PyObject* pyParam_int_tc12; PyObject* pyParam_int_tc13; PyObject* pyParam_int_tc14; PyObject* pyParam_int_tc15;
+
+ PyObject* pyParam_real_tc1; PyObject* pyParam_real_tc2; PyObject* pyParam_real_tc3; PyObject* pyParam_real_tc4; PyObject* pyParam_real_tc5;
+ PyObject* pyParam_real_tc6; PyObject* pyParam_real_tc7; PyObject* pyParam_real_tc8; PyObject* pyParam_real_tc9; PyObject* pyParam_real_tc10;
+ PyObject* pyParam_real_tc11; PyObject* pyParam_real_tc12; PyObject* pyParam_real_tc13; PyObject* pyParam_real_tc14; PyObject* pyParam_real_tc15;
+
  PyObject* iskipArray;
  PyObject* pyLinlets_int; PyObject* pyLinlets_real; 
  FldArrayI* iskip_lu; FldArrayI* linelets_int;
- FldArrayI* param_int_tc1; FldArrayI* param_int_tc2; FldArrayI* param_int_tc3; FldArrayI* param_int_tc4; 
- FldArrayF* param_real_tc1; FldArrayF* param_real_tc2; FldArrayF* param_real_tc3; FldArrayF* param_real_tc4;
+ FldArrayI* param_int_tc1; FldArrayI* param_int_tc2; FldArrayI* param_int_tc3; FldArrayI* param_int_tc4; FldArrayI* param_int_tc5;
+ FldArrayI* param_int_tc6; FldArrayI* param_int_tc7; FldArrayI* param_int_tc8; FldArrayI* param_int_tc9; FldArrayI* param_int_tc10;
+ FldArrayI* param_int_tc11; FldArrayI* param_int_tc12; FldArrayI* param_int_tc13; FldArrayI* param_int_tc14; FldArrayI* param_int_tc15;
+
+ FldArrayF* param_real_tc1; FldArrayF* param_real_tc2; FldArrayF* param_real_tc3; FldArrayF* param_real_tc4; FldArrayF* param_real_tc5;
+ FldArrayF* param_real_tc6; FldArrayF* param_real_tc7; FldArrayF* param_real_tc8; FldArrayF* param_real_tc9; FldArrayF* param_real_tc10;
+ FldArrayF* param_real_tc11; FldArrayF* param_real_tc12; FldArrayF* param_real_tc13; FldArrayF* param_real_tc14; FldArrayF* param_real_tc15;
+ 
  FldArrayF* linelets_real;
  E_Int* ipt_iskip_lu; E_Int* ipt_param_int_tc;
  E_Float* ipt_param_real_tc; E_Float* ipt_linelets_real; E_Int* ipt_linelets_int;

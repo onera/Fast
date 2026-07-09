@@ -145,6 +145,7 @@
 #define IBC            76
 #define SRC            83
 #define MESHTYPE       84
+#define SENSORFILTER   85
 #define SENSORTYPE     85
 #define SCHEDULER      86
 #define WM_FUNCTION    87
@@ -315,6 +316,9 @@
 #define FORCAGE_DEBN  73
 #define FORCAGE_DEB0  74
 
+/* ponderation wiggle  terme pression */
+#define WIG_DAMPING   75
+ 
 /*CONSTANTS*/
 #define SA_CKARM    0.41 
 #define SA_CB1      0.1355

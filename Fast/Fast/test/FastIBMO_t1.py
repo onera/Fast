@@ -41,6 +41,8 @@ numb={"temporal_scheme": "explicit", "ss_iteration":5, "omp_mode":0}
 numz={"time_step": time_step, "scheme":"roe_min", "time_step_nature":"local", "cfl":0.5}
 FastC._setNum2Base(t, numb); FastC._setNum2Zones(t, numz)
 
+Internal._rmNodesByName(t,'senseurType')
+
 t, tc, metrics = FastS.warmup(t, tc)
 
 time0 = 0.

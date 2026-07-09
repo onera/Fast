@@ -151,6 +151,7 @@ FastC._attributeNoPassTransfer(tc, cutoff=1.e-8, verbose=1)
 t1 = Internal.copyRef(t)
 Internal._rmNodesByName(t1, '.Solver#Param')
 Internal._rmNodesByName(t1, '.Solver#ownData')
+Internal._rmNodesByName(t1, 'wig*')
 test.testT(t1, 2)
 t1c = Internal.copyRef(tc)
 Internal._rmNodesByName(t1c, '.Solver#Param')
@@ -176,5 +177,6 @@ for it in range(nit):
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
+Internal._rmNodesByName(t, 'wig*')
 
 test.testT(t, 1)

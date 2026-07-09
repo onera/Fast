@@ -979,7 +979,8 @@ def _buildOwnData(t, Padding):
         'source':0,
         'channelBodyForce':0,
         'Cups':4,
-        'senseurType':0,
+        'senseurFilter':0,
+        'senseurDamping':1,
         'ratiom':1,
         #=========================================================
         # LBM specific keywords
@@ -1323,8 +1324,9 @@ def _buildOwnData(t, Padding):
             channelBodyForce= 0
             cups            = [1.,1.,1.]
             ratiom          = 10000.
-            meshtype        = 1  #structured
-            senseurtype     = 1  #version celia laurent du schema senseur
+            meshtype        = 1   #structured
+            senseurfilter   = 1   #pas de filtrage temporelle
+            senseurdamping  = 1.  #senseur celia Laurent
             coef_hyper      = [0.009,0.015] # coeff schema hypersonique M Lugrin
 
             ##LBM
@@ -1520,8 +1522,10 @@ def _buildOwnData(t, Padding):
                     cupsLen = numpy.size(cups)
                 a = Internal.getNodeFromName1(d, 'ratiom')
                 if a is not None: ratiom = Internal.getValue(a)
-                a = Internal.getNodeFromName1(d, 'senseurType')
-                if a is not None: senseurtype = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'senseurFilter')
+                if a is not None: senseurfilter = Internal.getValue(a)
+                a = Internal.getNodeFromName1(d, 'senseurDamping')
+                if a is not None:  senseurdamping= Internal.getValue(a)
 
                 a = Internal.getNodeFromName1(d, 'KWire_p')
                 if a is not None:KWire_p = Internal.getValue(a)
@@ -1865,7 +1869,7 @@ def _buildOwnData(t, Padding):
             datap[76:83]= ibc[0:7]
             datap[83]   = source
             datap[84]   = meshtype
-            datap[85]   = senseurtype
+            datap[85]   = senseurfilter
             datap[86]   = -1
             datap[87]   = iwallmodel
             datap[88]   = wallmodel_sample
@@ -1952,7 +1956,7 @@ def _buildOwnData(t, Padding):
             #=====================================================================
             # creation noeud parametre real
             #=====================================================================
-            number_of_defines_param_real = 74                                    # Number Param REAL
+            number_of_defines_param_real = 75                                    # Number Param REAL
             size_real                    = number_of_defines_param_real+1
             datap                        = numpy.zeros(size_real, numpy.float64)
             if dtc < 0:
@@ -2035,6 +2039,8 @@ def _buildOwnData(t, Padding):
             ##forcage Debit pour channel flow
             datap[73] = 0.
             datap[74] = 0.
+            ##amortissememnt dissip wiggle terle pression: dissip
+            datap[75] = senseurdamping
 
             # LBM related stuff
             datap[VSHARE.LBM_c0]        = lbm_c0
@@ -3687,6 +3693,17 @@ def loadTree(fileName='t.cgns', split='single', graph=False, exploc=0):
                         if   s[0][-6:]== '_pass2' and Nbpass==1: Nbpass=2
                         elif s[0][-6:]== '_pass3' and Nbpass<=2: Nbpass=3
                         elif s[0][-6:]== '_pass4' and Nbpass<=3: Nbpass=4
+                        elif s[0][-6:]== '_pass5' and Nbpass<=4: Nbpass=5
+                        elif s[0][-6:]== '_pass6' and Nbpass<=5: Nbpass=6
+                        elif s[0][-6:]== '_pass7' and Nbpass<=6: Nbpass=7
+                        elif s[0][-6:]== '_pass8' and Nbpass<=7: Nbpass=8
+                        elif s[0][-6:]== '_pass9' and Nbpass<=8: Nbpass=9
+                        elif s[0][-7:]== '_pass10' and Nbpass<=9: Nbpass=10
+                        elif s[0][-7:]== '_pass11' and Nbpass<=10: Nbpass=11
+                        elif s[0][-7:]== '_pass12' and Nbpass<=11: Nbpass=12
+                        elif s[0][-7:]== '_pass13' and Nbpass<=12: Nbpass=13
+                        elif s[0][-7:]== '_pass14' and Nbpass<=13: Nbpass=14
+                        elif s[0][-7:]== '_pass15' and Nbpass<=14: Nbpass=15
 
                 graphN = prepGraphs(t, exploc=exploc, Nbpass=Nbpass)
 
@@ -3724,6 +3741,17 @@ def loadTree(fileName='t.cgns', split='single', graph=False, exploc=0):
                                     if   s[0][-6:]== '_pass2' and Nbpass==1: Nbpass=2
                                     elif s[0][-6:]== '_pass3' and Nbpass<=2: Nbpass=3
                                     elif s[0][-6:]== '_pass4' and Nbpass<=3: Nbpass=4
+                                    elif s[0][-6:]== '_pass5' and Nbpass<=4: Nbpass=5
+                                    elif s[0][-6:]== '_pass6' and Nbpass<=5: Nbpass=6
+                                    elif s[0][-6:]== '_pass7' and Nbpass<=6: Nbpass=7
+                                    elif s[0][-6:]== '_pass8' and Nbpass<=7: Nbpass=8
+                                    elif s[0][-6:]== '_pass9' and Nbpass<=8: Nbpass=9
+                                    elif s[0][-7:]== '_pass10' and Nbpass<=9: Nbpass=10
+                                    elif s[0][-7:]== '_pass11' and Nbpass<=10: Nbpass=11
+                                    elif s[0][-7:]== '_pass12' and Nbpass<=11: Nbpass=12
+                                    elif s[0][-7:]== '_pass13' and Nbpass<=12: Nbpass=13
+                                    elif s[0][-7:]== '_pass14' and Nbpass<=13: Nbpass=14
+                                    elif s[0][-7:]== '_pass15' and Nbpass<=14: Nbpass=15
 
                             Nbpass = Cmpi.allreduce(Nbpass, op=Cmpi.MAX)
                             graphN = prepGraphs(t, exploc=exploc, Nbpass=Nbpass)
@@ -3769,7 +3797,7 @@ def loadTree(fileName='t.cgns', split='single', graph=False, exploc=0):
 # the communication graph for IBM transfers
 # dir is the directory containing files to be read
 #==============================================================================
-def saveTree(t, fileName='restart.cgns', split='single', compress=0):
+def saveTree(t, fileName='restart.cgns', split='single', compress=0, wiggle=False):
     """Save a single tree."""
     # Rip file ext if any
     import os.path
@@ -3794,6 +3822,10 @@ def saveTree(t, fileName='restart.cgns', split='single', compress=0):
     C._rmVars(t2, 'centers:TurbulentSANuTilde_P1')
     Internal._rmNodesFromName(t2, 'Displacement#0')
     Internal._rmNodesFromName(t2, 'Motion')
+    if not wiggle:
+      C._rmVars(t2, 'centers:wigI')
+      C._rmVars(t2, 'centers:wigJ')
+      C._rmVars(t2, 'centers:wigK')
 
     # delete param_int and param_real from tc tree
     Internal._rmNodeByPath(t2, 'Parameter_int')
@@ -4359,6 +4391,7 @@ def prepGraphs(t, exploc=0, Nbpass=1):
     if not exploc:
         graphList=[]
         for i in range(1,Nbpass+1):
+            pass_tg = '_pass'+str(i)
             graph ={}
             for z in zones:
                 proc = D1.getProcLocal__(z, procDict)
@@ -4368,7 +4401,7 @@ def prepGraphs(t, exploc=0, Nbpass=1):
                     idn = Internal.getNodesFromName1(s,'InterpolantsDonor')
                     if idn != []: # la subRegion decrit des interpolations/IBC
                         popp = D1.getProcGlobal__(donor, t, procDict)
-                        if Nbpass==1 or s[0][-6:]== '_pass'+str(i):
+                        if Nbpass==1 or s[0][-6:]== pass_tg or s[0][-7:]== pass_tg:
                             D1.updateGraph__(graph, proc, popp, z[0])
             newList = graph.copy()
             graphList.append(newList)
@@ -4390,6 +4423,7 @@ def prepGraphs(t, exploc=0, Nbpass=1):
         for ssiter in range(1,2*nssiter+1):
             graphList=[]
             for i in range(1,Nbpass+1):
+                pass_tg = '_pass'+str(i)
                 graph = {}
                 for z in zones:
                     proc = D1.getProcLocal__(z, procDict)
@@ -4408,20 +4442,20 @@ def prepGraphs(t, exploc=0, Nbpass=1):
 
                             if levdnr > levrcv and ssiter <= nssiter:
                                 if ssiter%cycl==cycl-1 or ssiter%cycl==cycl//2 and (ssiter//cycl)%2==1:
-                                    if Nbpass==1 or s[0][-6:]== '_pass'+str(i):
+                                    if Nbpass==1 or s[0][-6:]== pass_tg or s[0][-7:]== pass_tg:
                                         D1.updateGraph__(graph, proc, popp, z[0])
                             if levdnr < levrcv and ssiter <= nssiter:
                                 if (ssiter%cycl==1 or ssiter%cycl==cycl//4 or ssiter%cycl==cycl//2-1 or ssiter%cycl==cycl//2+1 or ssiter%cycl==cycl//2+cycl//4 or ssiter%cycl==cycl-1):
-                                    if Nbpass==1 or s[0][-6:]== '_pass'+str(i):
+                                    if Nbpass==1 or s[0][-6:]== pass_tg or s[0][-7:]== pass_tg:
                                         D1.updateGraph__(graph, proc, popp, z[0])
                             if levdnr == levrcv and ssiter <= nssiter:
                                 if (ssiter%cycl==cycl//2-1 or (ssiter%cycl==cycl//2 and (ssiter//cycl)%2==0) or ssiter%cycl==cycl-1):
-                                    if Nbpass==1 or s[0][-6:]== '_pass'+str(i):
+                                    if Nbpass==1 or s[0][-6:]== pass_tg or s[0][-7:]== pass_tg:
                                         D1.updateGraph__(graph, proc, popp, z[0])
                             if levdnr == levrcv and ssiter > nssiter:
                                 ssiter_ = ssiter - nssiter
                                 if ssiter_%cycl==cycl//2 and (ssiter_//cycl)%2==1:
-                                    if Nbpass==1 or s[0][-6:]== '_pass'+str(i):
+                                    if Nbpass==1 or s[0][-6:]== pass_tg or s[0][-7:]== pass_tg:
                                         D1.updateGraph__(graph, proc, popp, z[0])
 
                 newList = graph.copy()

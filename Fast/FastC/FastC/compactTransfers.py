@@ -37,8 +37,8 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
     #print('graphliste', graphliste, flush=True)
 
     if graph is not None and graphliste==False:
-        graphID   = graph
-        graphID_U = None; graphID_S = None
+        graphID_S = graph
+        graphID_U = None
     elif graph is not None and graphliste==True:
         graphID   = graph[0]
         graphID_U = None; graphID_S = None
@@ -48,18 +48,27 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
         elif FilterPass == 'pass2':  pass_tg=1
         elif FilterPass == 'pass3':  pass_tg=2
         elif FilterPass == 'pass4':  pass_tg=3
+        elif FilterPass == 'pass5':  pass_tg=4
+        elif FilterPass == 'pass6':  pass_tg=5
+        elif FilterPass == 'pass7':  pass_tg=6
+        elif FilterPass == 'pass8':  pass_tg=7
+        elif FilterPass == 'pass9':  pass_tg=8
+        elif FilterPass == 'pass10':  pass_tg=9
+        elif FilterPass == 'pass11':  pass_tg=10
+        elif FilterPass == 'pass12':  pass_tg=11
+        elif FilterPass == 'pass13':  pass_tg=12
+        elif FilterPass == 'pass14':  pass_tg=13
+        elif FilterPass == 'pass15':  pass_tg=14
         else:
-            print("Error mise a plat: npass > 4", flush=True)
+            print("Error mise a plat: npass > 15", flush=True)
             stop
         print("mise a plat: filterpass:", FilterPass, pass_tg)
 
-        graphID   = None
+        graphID_S = graphID_Unsteady['graphID_Steady'][pass_tg]
         graphID_U = graphID_Unsteady['graphID_Unsteady'][pass_tg]
         if len(graphID_U) ==0:
             print("Graph unsteady vide: graphID_U = None")
             graphID_U = None
-        graphID_S = graphID_Unsteady['graphID_Steady'][pass_tg]
-
     else:
         procDict=None; graphID=None; graphID_U = None; graphID_S = None
 
@@ -77,6 +86,8 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
     sizeNbFlu = []
     sizeType  = []
     nrac      = 0
+
+    #print(FilterPass, 'listProcInit', listproc, 'len:',len(listproc), flush=True)
 
     ordered_subRegions=[]
     neq_subRegions=[]
@@ -152,7 +163,7 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
                 zRname = Internal.getValue(s)
                 proc = 0
                 if procDict is not None: proc = procDict[zRname]
-
+                #print(FilterPass, 'proc receveur', procDict[zRname],'zR:', zRname, 'zD:', z[0], s[0], flush=True) 
                 #tri des pas de temps instationnaire
                 #  1) les stationnaires
                 #  2) les instationnaires regroupes par pas de temps
@@ -347,6 +358,9 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
     a        = Internal.getNodeFromName2(base, 'GoverningEquations')
     if a is not None: model = Internal.getValue(a)
 
+    #for lpr in range(len(listproc)):
+    #  print(FilterPass, 'Proc dest', listproc[lpr], 'len:',len(listproc), flush=True)
+
     NbP2P     = len(listproc)  #nombre Comm MPI point a Point pour envoi
     sizeproc  = []
     ntab_tot  = ntab_int
@@ -374,11 +388,15 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
 
             graphIDrcv   = pos_ID  + graphIDrcv_
 
+            #print('Unsteady: Pass', FilterPass, 'pos_ID:', pos_ID, 'kpos:', graphIDrcv_[0], 'procs envoyeur:', graphIDrcv_[1:], flush=True)
+
         else:
             #on recupere les infos ID Steady
             graphIDrcv_=[];graphloc=[]; pos_ID=[]; S_ID=1
-            if graphID is not None:
-                S_ID = _procSource(rank, S_ID, pos_ID, graphID, graphloc, graphIDrcv_)
+            if graphID_S is not None:
+                S_ID = _procSource(rank, S_ID, pos_ID, graphID_S, graphloc, graphIDrcv_)
+
+                #print('Steady: Pass', FilterPass, 'pos_ID:', pos_ID, 'kpos:', graphIDrcv_[0], 'procs envoyeur:', graphIDrcv_[1:],flush=True )
 
                 graphIDrcv = pos_ID + graphIDrcv_
 
@@ -418,14 +436,15 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
     if size_real != 0:
         Internal.createUniqueChild(cont, 'Parameter_real', 'DataArray_t', param_real)
 
+    #[len(graphIDrcv), pos, kpos, procs envoyeurs ] = taille 3 si pas de reception
     _graphID = numpy.asarray([len(graphIDrcv)] +graphIDrcv, dtype=Internal.E_NpyInt)
 
-    #print("len(graphIDrcv)", len(graphIDrcv), "NbP2P", NbP2P, 'grapRcv', _graphID, flush=True)
+    #print(FilterPass, "len(graphIDrcv)", len(graphIDrcv), "NbP2P: nombre envoi: ", NbP2P, 'grapRcv', _graphID, flush=True)
 
-    #param_int[2                 :3+len(graphIBCrcv)                ] = _graphIBC
     param_int[ 2                 :3+len(graphIDrcv) ] = _graphID
 
-    # print("param_int is ",param_int[0:2+len(graphIBCrcv)+len(graphIDrcv)+1])
+    #if (size_int + len(graphIDrcv) + 1) > 5:
+    #   print(FilterPass, "param_int reception is ",param_int[1:3+len(graphIDrcv)], 'Nb Recept', param_int[4], flush=True)
 
     #
     #initialisation numpy
@@ -440,7 +459,6 @@ def miseAPlatDonorTree__(t, tc, graph=None, procDict=None, graphID_Unsteady=None
     size_coef   = []
     adr_coef    = []   # pour cibler debut de echange dans param_real
 
-    #shift_graph = len(graphIDrcv) + len(graphIBCrcv) + 4
     shift_graph = len(graphIDrcv) + 3
 
     # print("shift_graph is ",shift_graph)

@@ -62,6 +62,17 @@ static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass1 = NULL;
 static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass2 = NULL;
 static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass3 = NULL;
 static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass4 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass5 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass6 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass7 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass8 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass9 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass10 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass11 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass12 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass13 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass14 = NULL;
+static std::pair<RecvQueue*, SendQueue*>* pair_of_queue_pass15 = NULL;
 
 void K_FASTC::init_TransferInter(
     std::pair<RecvQueue*, SendQueue*>*& pair_of_queue_loc) {
@@ -124,7 +135,7 @@ void K_FASTC::setInterpTransfersFast(
         E_Int ech        = param_int_tc[1 + shift_graph];
         timelevel_tc     = param_int_tc[ech + 3];
      }
-    //printf("VERIF: szCom et Nbp2p_send  %d %d init= %d  %p, nstep = %d , mpi= %d , timelevel_tc %d \n", sizecomID, Nbp2p_send , param_int_tc[0], param_real_tc,  nstep, mpi, timelevel_tc);fflush(0);
+    //printf("VERIF: szComRecep et Nbp2p_send  %d %d init= %d  %p, nstep = %d , mpi= %d , timelevel_tc %d \n", sizecomID-2, Nbp2p_send , param_int_tc[0], param_real_tc,  nstep, mpi, timelevel_tc);fflush(0);
 
     #ifdef _MPI
     //std::pair<RecvQueue*, SendQueue*>* pair_of_queue;
@@ -149,8 +160,19 @@ void K_FASTC::setInterpTransfersFast(
         else if(Nopass==1 && pair_of_queue_pass2 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass2);}
         else if(Nopass==2 && pair_of_queue_pass3 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass3);}
         else if(Nopass==3 && pair_of_queue_pass4 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass4);}
+        else if(Nopass==4 && pair_of_queue_pass5 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass5);}
+        else if(Nopass==5 && pair_of_queue_pass6 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass6);}
+        else if(Nopass==6 && pair_of_queue_pass7 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass7);}
+        else if(Nopass==7 && pair_of_queue_pass8 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass8);}
+        else if(Nopass==8 && pair_of_queue_pass9 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass9);}
+        else if(Nopass==9 && pair_of_queue_pass10 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass10);}
+        else if(Nopass==10 && pair_of_queue_pass11 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass11);}
+        else if(Nopass==11 && pair_of_queue_pass12 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass12);}
+        else if(Nopass==12 && pair_of_queue_pass13 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass13);}
+        else if(Nopass==13 && pair_of_queue_pass14 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass14);}
+        else if(Nopass==14 && pair_of_queue_pass15 != NULL ){ K_FASTC::del_TransferInter(pair_of_queue_pass15);}
 
-        if (Nopass >=4)  { printf("Error pair of queue too small: del transfert failed \n");exit(0);}
+        if (Nopass >=15)  { printf("Error pair of queue too small: del transfert failed \n");exit(0);}
 
         //if (pair_of_queue_loc  != NULL ) { K_FASTC::del_TransferInter(pair_of_queue_loc);}
 
@@ -172,8 +194,12 @@ void K_FASTC::setInterpTransfersFast(
     else { nbcomID_U =0;}
 
     // info Comm ID stationnaire en reception
-    pt_debID_S = param_int_tc[2+iter] + 2 +1;
-    nbcomID_S  = param_int_tc[ pt_debID_S ];
+    if (sizecomID !=0 )
+     {
+      pt_debID_S = param_int_tc[2+iter] + 2 +1;
+      nbcomID_S  = param_int_tc[ pt_debID_S ];
+     }
+    else{ nbcomID_S = 0;}
 
 
     E_Int send_mpi=0;  // flag pour connaitre existence envoi mpi
@@ -184,7 +210,19 @@ void K_FASTC::setInterpTransfersFast(
       else if(Nopass==1 && pair_of_queue_pass2 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass2); }
       else if(Nopass==2 && pair_of_queue_pass3 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass3); }
       else if(Nopass==3 && pair_of_queue_pass4 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass4); }
-      if (Nopass >=4)  { printf("Error pair of queue too small: init  transfert failed \n");exit(0);}
+      else if(Nopass==4 && pair_of_queue_pass5 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass5);}
+      else if(Nopass==5 && pair_of_queue_pass6 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass6);}
+      else if(Nopass==6 && pair_of_queue_pass7 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass7);}
+      else if(Nopass==7 && pair_of_queue_pass8 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass8);}
+      else if(Nopass==8 && pair_of_queue_pass9 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass9);}
+      else if(Nopass==9 && pair_of_queue_pass10 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass10);}
+      else if(Nopass==10 && pair_of_queue_pass11 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass11);}
+      else if(Nopass==11 && pair_of_queue_pass12 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass12);}
+      else if(Nopass==12 && pair_of_queue_pass13 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass13);}
+      else if(Nopass==13 && pair_of_queue_pass14 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass14);}
+      else if(Nopass==14 && pair_of_queue_pass15 == NULL ){ K_FASTC::init_TransferInter(pair_of_queue_pass15);}
+
+      if (Nopass >=15)  { printf("Error pair of queue too small: init  transfert failed \n");exit(0);}
 
       //if (pair_of_queue_loc == NULL ) { K_FASTC::init_TransferInter(pair_of_queue_loc );}
 
@@ -203,6 +241,17 @@ void K_FASTC::setInterpTransfersFast(
       else if(Nopass==1 ){ pt_rcv_queue = pair_of_queue_pass2->first;}
       else if(Nopass==2 ){ pt_rcv_queue = pair_of_queue_pass3->first;}
       else if(Nopass==3 ){ pt_rcv_queue = pair_of_queue_pass4->first;}
+      else if(Nopass==4 ){ pt_rcv_queue = pair_of_queue_pass5->first;}
+      else if(Nopass==5 ){ pt_rcv_queue = pair_of_queue_pass6->first;}
+      else if(Nopass==6 ){ pt_rcv_queue = pair_of_queue_pass7->first;}
+      else if(Nopass==7 ){ pt_rcv_queue = pair_of_queue_pass8->first;}
+      else if(Nopass==8 ){ pt_rcv_queue = pair_of_queue_pass9->first;}
+      else if(Nopass==9 ){ pt_rcv_queue = pair_of_queue_pass10->first;}
+      else if(Nopass==10 ){ pt_rcv_queue = pair_of_queue_pass11->first;}
+      else if(Nopass==11 ){ pt_rcv_queue = pair_of_queue_pass12->first;}
+      else if(Nopass==12 ){ pt_rcv_queue = pair_of_queue_pass13->first;}
+      else if(Nopass==13 ){ pt_rcv_queue = pair_of_queue_pass14->first;}
+      else if(Nopass==14 ){ pt_rcv_queue = pair_of_queue_pass15->first;}
       //pt_rcv_queue = pair_of_queue_loc->first;
 
       if (pt_rcv_queue->size() == 0 )
@@ -210,20 +259,20 @@ void K_FASTC::setInterpTransfersFast(
           for (E_Int ircv = 1; ircv < nbcomID_S +1; ++ircv)
            {
             E_Int source = param_int_tc[ pt_debID_S + ircv];
+            //printf("reception ID Steady source  %d  ,nstep/n0pass %d %d \n", source, nstep, Nopass ); fflush(0);
             pt_rcv_queue->emplace_back( source , etiquette);
             CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
             recv_buffer.irecv();
             //bool flag = recv_buffer.test();
-            //printf("reception ID Steady source  %d %d \n", source, nstep ); fflush(0);
            }
           for (E_Int ircv = 1; ircv < nbcomID_U +1; ++ircv)
            {
             E_Int source = param_int_tc[ pt_debID_U + ircv];
+            //printf("reception ID Unsteady source  %d ,nstep/Nopass %d %d \n", source, nstep , Nopass); fflush(0);
             pt_rcv_queue->emplace_back( source , etiquette);
             CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
             recv_buffer.irecv();
             //bool flag = recv_buffer.test();
-            //printf("reception ID Unsteady source  %d %d \n", source, nstep ); fflush(0);
            }
         }
       else
@@ -231,19 +280,19 @@ void K_FASTC::setInterpTransfersFast(
             assert(pt_rcv_queue->size() == nbcomID_S );
             for ( auto iterBuf = pt_rcv_queue->begin(); iterBuf != pt_rcv_queue->end(); ++iterBuf )
               {
+                //printf("reception ID OLD    nstep/npass: %d  %d \n", nstep, Nopass ); fflush(0);
                 CMP::RecvBuffer& recv_buffer = iterBuf->get_message_buffer();
                 recv_buffer.irecv();
                 //bool flag = recv_buffer.test();
-                //printf("reception ID OLD     %d  \n", nstep ); fflush(0);
               }
             for (E_Int ircv = 1; ircv < nbcomID_U +1; ++ircv)
               {
                  E_Int source = param_int_tc[ pt_debID_U + ircv];
+                 //printf("reception ID Unsteady source %d , nstep/Nopass:  %d %d \n", source, nstep,Nopass ); fflush(0);
                  pt_rcv_queue->emplace_back( source , etiquette);
                  CMP::RecvBuffer& recv_buffer = pt_rcv_queue->back_message_buffer();
                  recv_buffer.irecv();
                  //bool flag = recv_buffer.test();
-                //printf("reception ID Unsteady source  %d %d \n", source, nstep ); fflush(0);
               }
         }
 
@@ -262,7 +311,7 @@ void K_FASTC::setInterpTransfersFast(
         E_Int ech  = param_int_tc[ip2p + shift_graph];
         dest       = param_int_tc[ech];
 
-        //printf("avt setInterpTransfersInter: dest rank %d %d \n", dest, rank);fflush(0);
+        //printf("avt setInterpTransfersInter: dest rank %d %d  pass: %d \n", dest, rank, Nopass);fflush(0);
 
         if (dest != rank && param_real_tc != NULL)  // Inter Process ibc
         {
@@ -271,6 +320,7 @@ void K_FASTC::setInterpTransfersFast(
           #ifdef _MPI
           send_mpi=1;
           
+          //printf("Transfert inter: dest  %d , nstep,  %d , Nopass %d \n", dest, nstep, Nopass ); fflush(0);
           if     (Nopass==0 ){ 
                               K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
                                           param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
@@ -292,8 +342,63 @@ void K_FASTC::setInterpTransfersFast(
                                           param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
                                           pair_of_queue_pass4, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
                              }
+          else if(Nopass==4 ){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass5, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
+          else if(Nopass==5 ){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass6, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
+          else if(Nopass==6 ){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass7, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
+          else if(Nopass==7 ){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass8, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
+          else if(Nopass==8 ){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass9, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
+          else if(Nopass==9 ){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass10, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
+          else if(Nopass==10){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass11, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
+          else if(Nopass==11){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass12, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
+          else if(Nopass==12){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass13, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
+          else if(Nopass==13){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass14, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
+          else if(Nopass==14){ 
+                              K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
+                                          param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
+                                          pair_of_queue_pass15, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
+                             }
 
-          // printf("Transfert inter: dest  %d , nstep,  %d , Nopass %d \n", dest, nstep, Nopass ); fflush(0);
+           //printf("Transfert inter: dest  %d , nstep,  %d , Nopass %d \n", dest, nstep, Nopass ); fflush(0);
           //K_FASTC::setInterpTransfersInter(iptro_tmp    , vartype      , param_int_tc, param_real_tc,
           //                                 param_int    , param_real   , ipt_omp     , linelets_int, linelets_real, TypeTransfert, it_target , nidom , ip2p, 
           //                                 pair_of_queue_loc, etiquette,  ipt_timecount, nstep       , nitmax       , rk           , exploc    , numpassage, nb_send_buffer);
@@ -332,7 +437,7 @@ void K_FASTC::setInterpTransfersFast(
       //comm multi processus: wait + remplissage point cible
       
       E_Int nbcomID = nbcomID_S + nbcomID_U;  // nbr dechange PaP  en reception
-      //printf("get ID: nbP2P: %d , nstep: %d ,npass: %d \n", nbcomID,  nstep, Nopass ); fflush(0);
+      //if(nbcomID  !=0) { printf("get ID: Nb reception: %d , nstep: %d ,npass: %d \n", nbcomID,  nstep, Nopass ); fflush(0); }
       if (Nopass==0)
           {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass1, ipt_timecount);}
              if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass1->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
@@ -349,10 +454,52 @@ void K_FASTC::setInterpTransfersFast(
           {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass4, ipt_timecount);}
              if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass4->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
           }
+      else if (Nopass==4)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass5, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass5->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+      else if (Nopass==5)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass6, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass6->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+      else if (Nopass==6)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass7, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass7->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+      else if (Nopass==7)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass8, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass8->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+      else if (Nopass==8)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass9, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass9->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+      else if (Nopass==9)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass10, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass10->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+      else if (Nopass==10)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass11, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass11->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+      else if (Nopass==11)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass12, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass12->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+      else if (Nopass==12)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass13, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass13->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+      else if (Nopass==13)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass14, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass14->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+      else if (Nopass==14)
+          {  if(nbcomID  !=0){ K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc ,pair_of_queue_pass15, ipt_timecount);}
+             if(send_mpi ==1){   SendQueue* pt_snd_queue =  pair_of_queue_pass15->second; pt_snd_queue->waitAll(); pt_snd_queue->clear(); }
+          }
+
       //printf("apres get ID: nbP2P: %d , nstep: %d ,npass: %d \n", nbcomID,  nstep, Nopass ); fflush(0);
-
-      //K_FASTC::getTransfersInter(nbcomID, iptro_tmp, param_int, param_real, param_int_tc , pair_of_queue_loc);
-
       #ifdef TimeShow
       #ifdef _OPENMP
        E_Float time_out = omp_get_wtime();

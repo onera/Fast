@@ -42,8 +42,7 @@ c***********************************************************************
       INTEGER_E ndom, ithread, nptpsi,
      & icache, jcache, kcache,
      & ijkv_cache(3),ind_loop(6),ind_dm(6),
-     & synchro_send_th(3),
-     & synchro_receive_th(3), param_int(0:*)
+     & synchro_send_th(3), synchro_receive_th(3), param_int(0:*)
 
       REAL_E  xmut( param_int(NDIMDX) )
       REAL_E   rop( param_int(NDIMDX)     * param_int(NEQ)     )
@@ -82,7 +81,7 @@ C Var loc
      & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
      & qn,r,v,w,h,q,r_1,psiroe, xktvol, xmulam, xmutur, xmutot,
-     & c50,c51,c52,c53,c54
+     & c50,c51,c52,c53,c54,wig_cte
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -129,14 +128,14 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
 
       roref= param_real( ROINF)
       uref = param_real( VINF )
-
+      wig_cte= param_real( WIG_AMP )
       psiroe= param_real( PSIROE )
       tmin_1= 100./param_real( TINF )!!si T< 0.01Tinf, alors limiteur null
 
       c1     = 0.02*uref         ! modif suite chant metrique et suppression tc dans flux final
       c2     = 0.02/(uref*roref) ! modif suite chant metrique et suppression tc dans flux final
       c3     = -2.
-      opt0   = float(param_int(SENSORTYPE))
+      opt0   = param_real(WIG_DAMPING)
 
       !    roff MUSCL
       c6     = 1./6.
@@ -245,7 +244,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
                                                                        
                                                                        
       !Complement fluk en Kmax                                         
-      If(kcache.eq.ijkv_cache(3).and.synchro_receive_th(3).eq.0) then
+      If(kcache.eq.ijkv_cache(3).and.synchro_receive_th(3).eq.0) then  
                                                                        
         k    = ind_loop(6)+1               
         do j = ind_loop(3),ind_loop(4)     

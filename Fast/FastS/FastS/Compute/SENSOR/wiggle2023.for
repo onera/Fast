@@ -36,7 +36,7 @@ c Var loc
       REAL_E f1i,f1im,f1ip
       REAL_E f1i_m,f1im_m,f1ip_m
       REAL_E f1i_p,f1im_p,f1ip_p
-      REAL_E sig_m1,sig_m2,sig_p1,sig_p2,h,g
+      REAL_E sig_m1,sig_m2,sig_p1,sig_p2,h,g,c1,c2
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -55,6 +55,8 @@ c Var loc
       vref2_inv  = 1./(param_real(VINF)*param_real(VINF))
       tref2_inv  = 1./(param_real(TINF)*param_real(TINF))
 
+      c1=1.
+      c2=0.
       IF(param_int(ITYPZONE).ne.3)  THEN
        !
        !wig_k

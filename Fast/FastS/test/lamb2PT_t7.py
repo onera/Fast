@@ -42,4 +42,5 @@ for it in range(nit):
 
 Internal._rmNodesByName(t, '.Solver#Param')
 Internal._rmNodesByName(t, '.Solver#ownData')
+Internal._rmNodesByName(t, 'wig*')
 test.testT(t, 1)

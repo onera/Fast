@@ -12,7 +12,10 @@ c***********************************************************************
 
       REAL_E souszero, cutoff
       parameter(souszero=-1e-12)
-      parameter(cutoff=1e-10)
+
+      !!cutoff: annule dissipation si delta(phi)**2 < cutofff
+      parameter(cutoff=1e-8)
+      !parameter(cutoff=1e-10)
 
 #include "FastS/param_solver.h"
 
@@ -27,7 +30,7 @@ c Var loc
      & nm,nm2,np, v1,v2,v3,v4,v5,icorr,jcorr,kcorr
 
       REAL_E qm1,qp1,qm2,qp2,qm3,qp3,qm4,qp4,qm5,qp5,f1,f2,f3,f4,f5,test
-      REAL_E c3, c5,roref2_inv,vref2_inv,tref2_inv
+      REAL_E c3, c5,roref2_inv,vref2_inv,tref2_inv,c1,c2
 
 #include "FastS/formule_param.h"
 #include "FastS/formule_mtr_param.h"
@@ -58,6 +61,8 @@ c Var loc
       vref2_inv  = 1./(param_real(VINF)*param_real(VINF))
       tref2_inv  = 1./(param_real(TINF)*param_real(TINF))
 
+      c1 = 1./float(param_int(SENSORFILTER))
+      c2 = 1.-c1
       IF(param_int(ITYPZONE).eq.3)  THEN
 
 #include "FastC/HPC_LAYER/loop_begin.for"                  

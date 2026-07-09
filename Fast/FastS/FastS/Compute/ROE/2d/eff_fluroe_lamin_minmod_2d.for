@@ -90,7 +90,7 @@ C Var loc
      & gradW_nx,gradW_ny,gradW_nz, gradT_nx,gradT_ny,gradT_nz,
      & delp,delm,delq,slq,slp,roff,tmin_1,du,dv,dw,dp,dqn,s_1,nx,ny,nz,
      & qn,r,v,w,h,q,r_1,psiroe,avmin,sens,sens1,flagi,flagj,flagk,norm,
-     & xktvol, xmulam, xmutur, xmutot,
+     & xktvol, xmulam, xmutur, xmutot, wig_cte,
      & c50,c51,c52,c53,c54
 
 #include "FastS/formule_param.h"
@@ -159,13 +159,14 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
       roref= param_real( ROINF)
       uref = param_real( VINF )
 
+      wig_cte= param_real( WIG_AMP )
       psiroe= param_real( PSIROE )
       tmin_1= 100./param_real( TINF )!!si T< 0.01Tinf, alors limiteur null
 
       c1     = 0.02*uref         ! modif suite chant metrique et suppression tc dans flux final
       c2     = 0.02/(uref*roref) ! modif suite chant metrique et suppression tc dans flux final
       c3     = -2.
-      opt0   = float(param_int(SENSORTYPE))
+      opt0   = param_real(WIG_DAMPING)
 
       !    roff MUSCL
       c6     = 1./6.
@@ -266,7 +267,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
              flu(lf+v2flu*10)= gradT_ny*2.*volinv 
              flu(lf+v2flu*11)= (0.5*(p1+p2)-param_real(PINF))*norm
              flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
-             flu(lf+v2flu*13)= 0.5*(qm1+qp1)
+             flu(lf+v2flu*13)= 0.5*(r1+r2)
              flu(lf+v2flu*14)= 0.5*(p1+p2)
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
@@ -321,7 +322,7 @@ CC!DIR$ ASSUME_ALIGNED xmut: CACHELINE
              flu(lf+v2flu*10)= gradT_ny*2.*volinv 
              flu(lf+v2flu*11)= (0.5*(p1+p2)-param_real(PINF))*norm
              flu(lf+v2flu*12)= 0.5*(xmut(ir)+xmut(il))
-             flu(lf+v2flu*13)= 0.5*(qm1+qp1)
+             flu(lf+v2flu*13)= 0.5*(r1+r2)
              flu(lf+v2flu*14)= 0.5*(p1+p2)
 
              f4 =0.25*(x(lx)+ x(lx+inc_x1)+ x(lx+inc_x2)+ x(lx+inc_x3))
