@@ -3823,9 +3823,9 @@ def saveTree(t, fileName='restart.cgns', split='single', compress=0, wiggle=Fals
     Internal._rmNodesFromName(t2, 'Displacement#0')
     Internal._rmNodesFromName(t2, 'Motion')
     if not wiggle:
-      C._rmVars(t2, 'centers:wigI')
-      C._rmVars(t2, 'centers:wigJ')
-      C._rmVars(t2, 'centers:wigK')
+        C._rmVars(t2, 'centers:wigI')
+        C._rmVars(t2, 'centers:wigJ')
+        C._rmVars(t2, 'centers:wigK')
 
     # delete param_int and param_real from tc tree
     Internal._rmNodeByPath(t2, 'Parameter_int')

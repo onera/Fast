@@ -717,19 +717,19 @@ def warmup(t, tc, graph=None, infos_ale=None, Adjoint=False, tmy=None, list_grap
     wig= FastC.HOOK['wiggle']
     shift =0; val=0.; no_zone=0;
     for z in zones:
-       param_int= Internal.getNodeFromName2(z, 'Parameter_int')
-       if param_int[1][VSHARE.KFLUDOM] == 2:
-         fasts.initVars(wig, param_int, dtlocPy, shift, no_zone,  val)
-         nvar=0
-         sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
-         for var in ['wigI','wigJ','wigK']:
-           C._initVars(z,'{centers:'+var+'}=0.')
-           tmp = Internal.getNodeFromName1(sol, var)
-           #partage memoire entre wig du hook et celui de flowsolutionCenter
-           tmp[1]= wig[ shift + param_int[1][VSHARE.NDIMDX]*nvar : shift + param_int[1][VSHARE.NDIMDX]*(nvar+1)]
-           nvar +=1
-         shift += param_int[1][VSHARE.NDIMDX]*3
-       no_zone +=1
+        param_int= Internal.getNodeFromName2(z, 'Parameter_int')
+        if param_int[1][VSHARE.KFLUDOM] == 2:
+            fasts.initVars(wig, param_int, dtlocPy, shift, no_zone,  val)
+            nvar=0
+            sol = Internal.getNodeFromName1(z, 'FlowSolution#Centers')
+            for var in ['wigI','wigJ','wigK']:
+                C._initVars(z,'{centers:'+var+'}=0.')
+                tmp = Internal.getNodeFromName1(sol, var)
+                #partage memoire entre wig du hook et celui de flowsolutionCenter
+                tmp[1]= wig[ shift + param_int[1][VSHARE.NDIMDX]*nvar : shift + param_int[1][VSHARE.NDIMDX]*(nvar+1)]
+                nvar +=1
+            shift += param_int[1][VSHARE.NDIMDX]*3
+        no_zone +=1
 
     #corection pointeur ventijk si ale=0: pointeur Ro perdu par compact.
     c   = 0

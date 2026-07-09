@@ -165,7 +165,7 @@ def prepareIBMData(t_case, t_out, tc_out, t_in=None, to=None, tbox=None, tinit=N
 
 
     Cmpi.barrier()
-    #C_IBM._redispatch__(t=t)  
+    #C_IBM._redispatch__(t=t)
     if verbose: C_IBM.printTimeAndMemory__('blank by IBC bodies', time=python_time.time()-pt0)
     #===================
     # STEP 4 : INTERP DATA CHIM
@@ -362,7 +362,7 @@ def prepareIBMDataExtrude(t_case, t_out, tc_out, t, to=None,
     C._initVars(t,'{centers:cellN}=maximum(0.,{centers:cellNChim})')# vaut -3, 0, 1, 2 initialement  #__
 
     #C.convertPyTree2File(t,'verifBlank.cgns')
-    
+
 
     Cmpi.barrier()
     #C_IBM._redispatch__(t=t)
@@ -442,18 +442,18 @@ def prepareIBMDataExtrude(t_case, t_out, tc_out, t, to=None,
     '''
     '''
     #on empeche la creation de point IBc en k=-1 et 0  et on rend ces cellules non donneuse
-    todo =[['cellNIBC',t,'FlowSolution#Centers', 1.], ['cellN',tc,'FlowSolution', 1.25]] 
+    todo =[['cellNIBC',t,'FlowSolution#Centers', 1.], ['cellN',tc,'FlowSolution', 1.25]]
     for task in todo:
-      val=task[3]                                                           
-      for z in Internal.getZones(task[1]):                                    
-        sol            = Internal.getNodeFromName(z,task[2])                 
-        var = task[0]
-        cellN          = Internal.getNodeFromName(sol,var)[1]          
-        sh             = numpy.shape(cellN)                           
-        for k in [0,1, sh[2]-2, sh[2]-1]:                            
-            for j in range(sh[1]):                                  
-                for i in range(sh[0]):                             
-                    if  cellN[i,j,k] != 0:  cellN[i,j,k] =val
+        val=task[3]
+        for z in Internal.getZones(task[1]):
+            sol            = Internal.getNodeFromName(z,task[2])
+            var = task[0]
+            cellN          = Internal.getNodeFromName(sol,var)[1]
+            sh             = numpy.shape(cellN)
+            for k in [0,1, sh[2]-2, sh[2]-1]:
+                for j in range(sh[1]):
+                    for i in range(sh[0]):
+                        if  cellN[i,j,k] != 0:  cellN[i,j,k] =val
 
     #C.convertPyTree2File(t, 'AvtIBM.cgns')
     _setInterpDataIBM(t, tc, tb, front, front2=front2, dimPb=dimPb, frontType=frontType, IBCType=IBCType, depth=depth,
@@ -608,13 +608,13 @@ def buildFrontIBM(t, tc, tb=None, dimPb=3, frontType=1, cartesian=True, twoFront
             sh = numpy.shape(tmp)
             hole= Internal.getNodeFromName(z,'cellNIBC_hole')
             if hole is not None:
-              hole=hole[1]
-              tmp[ hole == 2. ] = 2.
+                hole=hole[1]
+                tmp[ hole == 2. ] = 2.
             #tmp[ tmp<=1.9 and tmp >=2.1 ] = 2.
             for k in range(sh[2]):
                 for j in range(sh[1]):
                     for i in range(sh[0]):
-                        #if hole[i,j,k] == 2: 
+                        #if hole[i,j,k] == 2:
                         if tmp[i,j,k] >= 1.99 and tmp[i,j,k] <= 2.01: tmp[i,j,k]=2.
                         #if tmp[i,j,k] >= 1.03 and tmp[i,j,k] <= 2.01: tmp[i,j,k]=2.
             '''
