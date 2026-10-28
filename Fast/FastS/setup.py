@@ -34,7 +34,7 @@ Dist.writeBuildInfo("FastS/FastS.py")
 (connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkModuleCassiopee("Connector")
 
 # Test if fast exists =======================================================
-(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkModuleCassiopee("FastC")
+(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkModuleFast("FastC")
 
 # Test if libmpi exists ======================================================
 (mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi()
