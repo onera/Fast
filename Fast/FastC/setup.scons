@@ -9,9 +9,11 @@ import KCore.Dist as Dist
 # KCore library
 #==============================================================================
 
-# Get prefix from command line
-prefix = ARGUMENTS.get('prefix', '')
-installPath = Dist.getInstallPath(prefix)
+installPath = Dist.getInstallPath()
+f77compiler = Dist.getFromConfigDict("f77compiler", "gfortran")
+additionalLibPaths = Dist.getAdditionalLibPaths()
+additionalIncludePaths = Dist.getAdditionalIncludePaths()
+additionalLibs = Dist.getAdditionalLibs()
 
 # Get compilers from Distutils ================================================
 (cc, cxx, opt, basecflags, ccshared, ldshared, so_ext) = Dist.getDistUtilsCompilers()
@@ -30,12 +32,6 @@ installPath = Dist.getInstallPath(prefix)
 
 # Test if connector exists =====================================================
 (connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkModuleCassiopee("Connector")
-
-
-f77compiler = Dist.getFromConfigDict("f77compiler", "gfortran")
-additionalLibPaths = Dist.getAdditionalLibPaths()
-additionalIncludePaths = Dist.getAdditionalIncludePaths()
-additionalLibs = Dist.getAdditionalLibs()
 
 # Test if libmpi exists ======================================================
 (mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi()
@@ -63,13 +59,15 @@ import srcs
 if Dist.getSystem()[0] == 'mingw': tools = ['mingw']
 else: tools = None
 AR = Dist.getAR()
-env = Environment(tools=tools, CC=cc, CXX=cxx, AR=AR, CPPFLAGS=[],
-                  FORTRAN=f77compiler,
-                  LIBPATH=additionalLibPaths+libraryDirs,
-                  LIBS=libraries+additionalLibs,
-                  SHLIBSUFFIX=so_ext, SHLIBPREFIX='',
-                  LINKFLAGS=Dist.getLinkArgs(),
-                  ENV=Dist.getEnvForScons())
+env = Environment(
+    tools=tools, CC=cc, CXX=cxx, AR=AR, CPPFLAGS=[],
+    FORTRAN=f77compiler,
+    LIBPATH=additionalLibPaths+libraryDirs,
+    LIBS=libraries+additionalLibs,
+    SHLIBSUFFIX=so_ext, SHLIBPREFIX='',
+    LINKFLAGS=Dist.getLinkArgs(),
+    ENV=Dist.getEnvForScons()
+)
 
 ELSAPROD = os.environ.get('ELSAPROD', 'x86_r8')
 env.SConsignFile('build/'+ELSAPROD+'/.sconsign.dblite')
@@ -89,17 +87,17 @@ else: addFPPArgs += ' -DCACHELINE=%d'%cacheLine
 nbsocket = Dist.getNbSocket()
 if nbsocket == 1: addFPPArgs += ' -DNB_SOCKET=1'
 else: addFPPArgs += ' -DNB_SOCKET=%d'%nbsocket
-if Dist.DEBUG: addFPPArgs += ' -D__DEBUG__'
+if Dist.DEBUG(): addFPPArgs += ' -D__DEBUG__'
 corePerSock = Dist.getCorePerSocket()
 if corePerSock== 1: addFPPArgs += ' -DCORE_PER_SOCK=1'
 else: addFPPArgs += ' -DCORE_PER_SOCK=%d'%corePerSock
 
 if f77compiler == 'ifort':
-   version = Dist.getForVersion() # A utiliser version=(13,4)
-   addFFlags += [ '-fno-alias', '-fno-fnalias', '-ip' ]
-   if version[0] >= 17:
-      addFFlags += ['-qopt-report5', '-qopt-report-phase=loop,vec,cg', '-qopt-report-embed',  '-unroll0']
-   else: addFFlags += ['-unroll0']
+    version = Dist.getForVersion() # A utiliser version=(13,4)
+    addFFlags += [ '-fno-alias', '-fno-fnalias', '-ip' ]
+    if version[0] >= 17:
+        addFFlags += ['-qopt-report5', '-qopt-report-phase=loop,vec,cg', '-qopt-report-embed',  '-unroll0']
+    else: addFFlags += ['-unroll0']
 
 env = Dist.createFortranBuilder(env, dirs=["."], 
    additionalPPArgs=addFPPArgs, additionalFortranArgs=addFFlags)
