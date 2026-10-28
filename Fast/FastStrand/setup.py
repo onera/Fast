@@ -48,7 +48,7 @@ libraries = [ "faststrand", "fastc", "connector", "xcore", "kcore"]
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs([], additionalLibPaths)
 libraryDirs += paths; libraries += libs
-ADDITIONALCPPFLAGS=[]
+ADDITIONALCPPFLAGS = []
 if mpi:
     libraryDirs.append(mpiLibDir)
     includeDirs.append(mpiIncDir)
@@ -56,20 +56,21 @@ if mpi:
     libraries += mpiLibs
 
 # Extensions ==================================================================
-listExtensions = []
-listExtensions.append(
-    Extension('FastStrand.faststrand',
-              sources=['FastStrand/fastStrand.cpp'],
-              include_dirs=[".","FastStrand"]+additionalIncludePaths+includeDirs,
-              library_dirs=additionalLibPaths+libraryDirs,
-              libraries=libraries+additionalLibs,
-              extra_compile_args=Dist.getCppArgs(),
-              extra_link_args=Dist.getLinkArgs()+['-p']
-              ) )
+listExtensions = [
+    Extension(
+        'FastStrand.faststrand',
+        sources=['FastStrand/fastStrand.cpp'],
+        include_dirs=[".","FastStrand"]+additionalIncludePaths+includeDirs,
+        library_dirs=additionalLibPaths+libraryDirs,
+        libraries=libraries+additionalLibs,
+        extra_compile_args=Dist.getCppArgs(),
+        extra_link_args=Dist.getLinkArgs()+['-p']
+    )
+]
 
 # setup ======================================================================
 setup(
-    name="FastStrand",
+    name="fast-faststrand",
     version="4.0",
     description="Fast for strand grids.",
     author="ONERA",
@@ -78,6 +79,3 @@ setup(
     package_dir={"":"."},
     ext_modules=listExtensions
 )
-
-# Check PYTHONPATH ===========================================================
-Dist.checkPythonPath(); Dist.checkLdLibraryPath()

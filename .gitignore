@@ -12,7 +12,6 @@ docs/doc/Examples
 docs/doc/*.pdf
 docs/doc/documents
 docs/Download
-Fast/FastC/installPath.py
 Fast/FastC/doc/source/FastS.rst
 Fast/FastC/doc/source/Fast.rst
 tools/MigrationSVN

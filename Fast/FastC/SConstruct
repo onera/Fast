@@ -1,10 +1,4 @@
 import os
-import KCore.Dist as Dist
 
-#==============================================================================
-# Write FastC installation path to installPath.py
-Dist.writeInstallPath()
-
-prod = os.getenv("ELSAPROD")
-if prod is None: prod = 'xx'
+prod = os.getenv("ELSAPROD") or 'xx'
 SConscript('setup.scons', variant_dir='build/'+prod)

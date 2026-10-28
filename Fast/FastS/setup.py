@@ -8,26 +8,18 @@
 #=============================================================================
 import os
 from setuptools import setup, Extension
-from importlib.util import spec_from_file_location, module_from_spec
+import KCore.Dist as Dist
 
-def loadModuleFromPath(modname):
-    # Load a Python file by filesystem path (PEP-517 isolated build requirement)
-    helper = os.path.join(os.path.dirname(__file__), modname + ".py")
-    spec = spec_from_file_location(modname, helper)
-    mod = module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-# Compiler settings must be set in installBase.py / installBaseUser.py
-Dist = loadModuleFromPath('../../../Cassiopee/Cassiopee/KCore/Dist')
-installBase = loadModuleFromPath('../../../Cassiopee/Cassiopee/KCore/installBase')
-Dist.setConfigDict(installBase.installDict)
+# Compiler settings must be set in installBase.json / installBaseUser.json
 additionalLibPaths = Dist.getAdditionalLibPaths()
 additionalIncludePaths = Dist.getAdditionalIncludePaths()
 additionalLibs = Dist.getAdditionalLibs()
 
 # Write setup.cfg file
 Dist.writeSetupCfg()
+
+# Write build info to file
+Dist.writeBuildInfo("FastS/FastS.py")
 
 # Test if numpy exists =======================================================
 (numpyVersion, numpyIncDir, numpyLibDir) = Dist.checkNumpy()
@@ -42,25 +34,25 @@ Dist.writeSetupCfg()
 (connectorVersion, connectorIncDir, connectorLibDir) = Dist.checkModuleCassiopee("Connector")
 
 # Test if fast exists =======================================================
-(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkModuleFast("FastC")
+(fastcVersion, fastcIncDir, fastcLibDir) = Dist.checkModuleCassiopee("FastC")
 
 # Test if libmpi exists ======================================================
 (mpi, mpiIncDir, mpiLibDir, mpiLibs) = Dist.checkMpi()
 
-# Compilation des fortrans ====================================================
 prod = os.getenv("ELSAPROD")
-if prod is None: prod = 'xx'
+if prod is None:
+    raise ValueError("Environment variable ELSAPROD must be set.")
 
 # Setting libraryDirs, include dirs and libraries =============================
 libraryDirs = ["build/"+prod, kcoreLibDir, xcoreLibDir, connectorLibDir, fastcLibDir, '.']
 includeDirs = [numpyIncDir, kcoreIncDir, xcoreIncDir, connectorIncDir, fastcIncDir]
-libraries = [ "fasts", "fastc", "connector", "xcore", "kcore"]
+libraries = ["fasts", "fastc", "connector", "xcore", "kcore"]
 
 (ok, libs, paths) = Dist.checkFortranLibs()
 libraryDirs += paths; libraries += libs
 (ok, libs, paths) = Dist.checkCppLibs()
 libraryDirs += paths; libraries += libs
-ADDITIONALCPPFLAGS=[]
+ADDITIONALCPPFLAGS = []
 if mpi:
     libraryDirs.append(mpiLibDir)
     includeDirs.append(mpiIncDir)
@@ -68,20 +60,21 @@ if mpi:
     libraries += mpiLibs
 
 # Extensions ==================================================================
-listExtensions = []
-listExtensions.append(
-    Extension('FastS.fasts',
-              sources=['FastS/fastS.cpp'],
-              include_dirs=[".","FastS"]+additionalIncludePaths+includeDirs,
-              library_dirs=additionalLibPaths+libraryDirs,
-              libraries=libraries+additionalLibs,
-              extra_compile_args=Dist.getCppArgs(),
-              extra_link_args=Dist.getLinkArgs()+['-p']
-              ) )
+listExtensions = [
+    Extension(
+        'FastS.fasts',
+        sources=['FastS/fastS.cpp'],
+        include_dirs=[".","FastS"]+additionalIncludePaths+includeDirs,
+        library_dirs=additionalLibPaths+libraryDirs,
+        libraries=libraries+additionalLibs,
+        extra_compile_args=Dist.getCppArgs(),
+        extra_link_args=Dist.getLinkArgs()+['-p']
+    )
+]
 
 # setup ======================================================================
 setup(
-    name="FastS",
+    name="fast-fastS",
     version="4.0",
     description="Fast for structured grids.",
     author="ONERA",
@@ -90,6 +83,3 @@ setup(
     package_dir={"":"."},
     ext_modules=listExtensions
 )
-
-# Check PYTHONPATH ===========================================================
-Dist.checkPythonPath(); Dist.checkLdLibraryPath()
