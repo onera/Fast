@@ -7,6 +7,7 @@ __pycache__
 core.*
 setup.cfg
 merge.l
+buildInfo.json
 
 docs/doc/Examples
 docs/doc/*.pdf
