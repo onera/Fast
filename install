@@ -52,6 +52,7 @@ if [ -z "$PYTHONEXE" ]; then
 fi
 
 # Load module names
+cd ./Fast
 . ./MODULES
 
 # Install modules and/or docs
