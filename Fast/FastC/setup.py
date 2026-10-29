@@ -71,7 +71,7 @@ listExtensions = [
 
 # setup ======================================================================
 setup(
-    name="fast-fastC",
+    name="fast-fastc",
     version="4.0",
     description="FastC common part of fluid solvers.",
     author="ONERA",
