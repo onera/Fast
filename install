@@ -2,8 +2,8 @@
 # Print help message
 usage() {
   cat <<EOF
-Usage: $0                                             : Install all modules
-       $0 --all, -a                                   : Install modules and docs
+Usage: $0                                             : Install all modules listed in ./Fast/MODULES
+       $0 --all, -a                                   : Install all modules and docs
        $0 --doc, -d                                   : Install docs only
        $0 --help, -h                                  : Print help message
 EOF
@@ -16,63 +16,17 @@ if [ -z "$CASSIOPEE" ]; then
 fi
 
 # Parse command-line arguments
-INSTALL_DOCS=0
-INSTALL_MODS=1
 while [ -n "$1" ]; do
   case "$1" in
-    --all | -a)
-      INSTALL_DOCS=1
-      INSTALL_MODS=1
-      ;;
-    --doc | -d)
-      INSTALL_DOCS=1
-      INSTALL_MODS=0
-      ;;
     --help | -h)
       usage; exit 0
       ;;
     *)
-      echo "Invalid argument: $1"
-      usage >&2; exit 1
       ;;
   esac
   shift
 done
 
-if [ "$INSTALL_MODS" -eq 1 ]; then
-    if [ -z "$ELSAPROD" ]; then
-        echo "Environment variable ELSAPROD must be set."
-        echo "ELSAPROD identifies the target machine or computing environment."
-        usage >&2; exit 1
-    fi
-fi
-
-if [ -z "$PYTHONEXE" ]; then
-    export PYTHONEXE=python
-fi
-
-# Load module names
 cd ./Fast
-. ./MODULES
-
-# Install modules and/or docs
-for mod in $FULLMODULES
-do
-    if test -e $mod
-    then
-        cd $mod
-        if [ "$INSTALL_MODS" -eq 1 ]; then
-            ./install
-            [ $? -ne 0 ] && exit 1;
-        fi
-        if [ "$INSTALL_DOCS" -eq 1 ]; then
-            cd doc
-            ./install
-            [ $? -ne 0 ] && exit 1;
-            cd ..
-        fi
-        cd ..
-    else
-        echo "Directory, $mod, not found."
-    fi
-done
+./install "$@"
+cd ../
