@@ -9,6 +9,12 @@ Usage: $0                                             : Remove build/ and .scons
 EOF
 }
 
+if [ -z "$CASSIOPEE" ]; then
+    echo "Environment variable CASSIOPEE must be set."
+    echo "CASSIOPEE identifies the root directory of the Cassiopee repository."
+    usage >&2; exit 1
+fi
+
 # Parse command-line arguments
 while [ -n "$1" ]; do
   case "$1" in
@@ -22,13 +28,5 @@ while [ -n "$1" ]; do
 done
 
 cd ./Fast
-. ./MODULES
-
-for mod in $FULLMODULES
-do
-  if test -e $mod; then
-      cd $mod
-      ./clean "$@"
-      cd ../
-  fi
-done
+./clean "$@"
+cd ../
