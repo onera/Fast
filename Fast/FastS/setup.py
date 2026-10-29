@@ -74,7 +74,7 @@ listExtensions = [
 
 # setup ======================================================================
 setup(
-    name="fast-fastS",
+    name="fast-fasts",
     version="4.0",
     description="Fast for structured grids.",
     author="ONERA",

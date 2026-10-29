@@ -21,7 +21,7 @@ COPY . $FAST
 
 # Source environment and run install script
 RUN . $CASSIOPEE/Cassiopee/Envs/sh_Cassiopee_r8 \
-    && cd $FAST/Fast \
+    && cd $FAST \
     && ./install
 
 # Change the default shell to be the bash shell
